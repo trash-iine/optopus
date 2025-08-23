@@ -1,3 +1,3 @@
-pub mod algorithm;
+pub mod heuristic;
 pub mod problem;
 pub mod search_state;

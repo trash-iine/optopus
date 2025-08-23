@@ -27,3 +27,14 @@ pub trait EnumerateMoveToNeighbor<MoveToNeighbor> {
 pub trait Evaluable<T> {
     fn evaluate(&self) -> T;
 }
+
+pub trait EnabledTabu {
+    type TabuMap;
+    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool;
+    fn add_to_tabu_map(
+        &self,
+        tabu_map: &mut Self::TabuMap,
+        iteration: u64,
+        tabu_tenure: (u64, u64),
+    );
+}

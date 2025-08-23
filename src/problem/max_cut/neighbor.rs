@@ -1,13 +1,12 @@
 // ! Defines the neighbor structure and the methods to enumerate neighbors for the MaxCut problem.
-
 use super::MaxCut;
-use crate::search_state::{EnumerateMoveToNeighbor, Evaluable, SearchState};
+use crate::search_state::{EnabledTabu, EnumerateMoveToNeighbor, Evaluable, SearchState};
 
 /// Represents a neighbor in the MaxCut problem where a vertex is flipped.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct MaxCutFlipNeighbor {
-    i: usize,
-    gain: f32,
+    pub i: usize,
+    pub gain: f32,
 }
 
 impl std::hash::Hash for MaxCutFlipNeighbor {
@@ -22,6 +21,26 @@ impl std::cmp::PartialEq for MaxCutFlipNeighbor {
     }
 }
 impl std::cmp::Eq for MaxCutFlipNeighbor {}
+
+impl EnabledTabu for MaxCutFlipNeighbor {
+    type TabuMap = std::collections::HashMap<usize, u64>;
+
+    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
+        tabu_map
+            .get(&self.i)
+            .map_or(true, |&tabu_tenure| iteration > tabu_tenure)
+    }
+
+    fn add_to_tabu_map(
+        &self,
+        tabu_map: &mut Self::TabuMap,
+        iteration: u64,
+        tabu_tenure: (u64, u64),
+    ) {
+        let tabu_duration = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        tabu_map.insert(self.i, iteration + tabu_duration);
+    }
+}
 
 impl<'a> EnumerateMoveToNeighbor<MaxCutFlipNeighbor> for SearchState<'a, MaxCut> {
     fn apply_to_iteration(&mut self, _: &MaxCutFlipNeighbor) {
@@ -58,7 +77,7 @@ impl<'a> EnumerateMoveToNeighbor<MaxCutFlipNeighbor> for SearchState<'a, MaxCut>
     }
 
     fn iter_on_move_to_neighbor(&self) -> impl Iterator<Item = MaxCutFlipNeighbor> {
-        (0..self.instance.len()).map(move |i| MaxCutFlipNeighbor {
+        self.solution.cut.keys().map(move |&i| MaxCutFlipNeighbor {
             i,
             gain: *self
                 .solution
@@ -91,10 +110,11 @@ impl Evaluable<f64> for MaxCutFlipNeighbor {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct MaxCutSwapNeighbor {
-    i: usize,
-    j: usize,
-    gain: f32,
+    pub i: usize,
+    pub j: usize,
+    pub gain: f32,
 }
 
 impl std::hash::Hash for MaxCutSwapNeighbor {
@@ -104,28 +124,56 @@ impl std::hash::Hash for MaxCutSwapNeighbor {
     }
 }
 
+impl std::cmp::PartialEq for MaxCutSwapNeighbor {
+    fn eq(&self, other: &Self) -> bool {
+        (self.i == other.i && self.j == other.j) || (self.i == other.j && self.j == other.i)
+    }
+}
+impl std::cmp::Eq for MaxCutSwapNeighbor {}
+
+impl EnabledTabu for MaxCutSwapNeighbor {
+    type TabuMap = std::collections::HashMap<usize, u64>;
+
+    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
+        let enabled_i = tabu_map
+            .get(&self.i)
+            .map_or(true, |&tabu_tenure| iteration > tabu_tenure);
+        let enabled_j = tabu_map
+            .get(&self.j)
+            .map_or(true, |&tabu_tenure| iteration > tabu_tenure);
+        enabled_i && enabled_j
+    }
+
+    fn add_to_tabu_map(
+        &self,
+        tabu_map: &mut Self::TabuMap,
+        iteration: u64,
+        tabu_tenure: (u64, u64),
+    ) {
+        let tabu_duration = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        tabu_map.insert(self.i, iteration + tabu_duration);
+
+        let tabu_duration = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        tabu_map.insert(self.j, iteration + tabu_duration);
+    }
+}
+
 impl<'a> EnumerateMoveToNeighbor<MaxCutSwapNeighbor> for SearchState<'a, MaxCut> {
     fn apply_to_iteration(&mut self, _: &MaxCutSwapNeighbor) {
         self.iteration += 2;
     }
 
     fn apply_to_solution(&mut self, neighbor: &MaxCutSwapNeighbor) {
-        // cut side of the vertex
-        let bi = *self
-            .solution
-            .cut
-            .get(&neighbor.i)
-            .expect(format!("vertex {} is not found in solution.", neighbor.i).as_str());
-        let bj = *self
-            .solution
-            .cut
-            .get(&neighbor.j)
-            .expect(format!("vertex {} is not found in solution.", neighbor.j).as_str());
-
-        self.solution.cut.insert(neighbor.i, bj);
-        self.solution.cut.insert(neighbor.j, bi);
-
-        // Update the gain for the swapped vertices
+        let flip_i = MaxCutFlipNeighbor {
+            i: neighbor.i,
+            gain: self.solution.gain[&neighbor.i],
+        };
+        self.apply_to_solution(&flip_i);
+        let flip_j = MaxCutFlipNeighbor {
+            i: neighbor.j,
+            gain: self.solution.gain[&neighbor.j],
+        };
+        self.apply_to_solution(&flip_j);
     }
 
     fn apply_to_objective(&mut self, neighbor: &MaxCutSwapNeighbor) {
@@ -133,8 +181,18 @@ impl<'a> EnumerateMoveToNeighbor<MaxCutSwapNeighbor> for SearchState<'a, MaxCut>
     }
 
     fn iter_on_move_to_neighbor(&self) -> impl Iterator<Item = MaxCutSwapNeighbor> {
-        (0..self.instance.len())
-            .flat_map(move |i| (0..i).map(move |j| MaxCutSwapNeighbor { i, j, gain: 0.0 }))
+        self.instance.iter_on_vertices().flat_map(move |&i| {
+            self.instance
+                .iter_on_vertices()
+                .filter(move |&&j| j < i && (self.solution.cut[&i] ^ self.solution.cut[&j]))
+                .map(move |&j| MaxCutSwapNeighbor {
+                    i,
+                    j,
+                    gain: self.solution.gain[&i]
+                        + self.solution.gain[&j]
+                        + 2.0 * self.instance.get_weight(i, j),
+                })
+        })
     }
 
     fn is_move_to_be_better_than_currernt(&self, neighbor: &MaxCutSwapNeighbor) -> bool {

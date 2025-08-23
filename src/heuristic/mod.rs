@@ -2,12 +2,14 @@ mod local_search;
 mod random_walk;
 mod sequential;
 mod simulated_annealing;
+mod specific;
 mod tabu_search;
 
 pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;
 pub use sequential::Sequential;
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing};
+pub use specific::bls_for_max_cut::BreakoutLocalSearch as BreakoutLocalSearchForMaxCut;
 pub use tabu_search::TabuSearch;
 
 use crate::search_state::{ProblemTrait, SearchState};
@@ -53,7 +55,7 @@ impl StopCondition {
 
     pub fn is_done<'a, Problem: ProblemTrait>(&self, state: &SearchState<'a, Problem>) -> bool {
         if let Some(max_iter) = self.max_iteration {
-            if state.iteration >= max_iter {
+            if state.iteration - state.start_iteration >= max_iter {
                 return true;
             }
         }
