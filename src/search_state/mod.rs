@@ -1,5 +1,6 @@
 pub mod specific_trait;
 
+use rayon::prelude::*;
 pub use specific_trait::{EnabledTabu, EnumerateMoveToNeighbor, Evaluable, ProblemTrait};
 
 /// The type of the search state clone
@@ -176,6 +177,70 @@ where
 
     pub fn progress_iteration(&mut self) {
         self.iteration += 1;
+    }
+
+    pub fn get_best_move<MoveToNeighbor>(
+        &self,
+        move_list: impl Iterator<Item = MoveToNeighbor>,
+    ) -> Option<MoveToNeighbor>
+    where
+        Self: EnumerateMoveToNeighbor<MoveToNeighbor>,
+    {
+        move_list.max_by(|first, second| {
+            if self.is_first_move_better_than_second(first, second) {
+                std::cmp::Ordering::Greater
+            } else if self.is_first_move_better_than_second(second, first) {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        })
+    }
+
+    pub fn get_best_move_par_chunks<MoveToNeighbor>(
+        &self,
+        move_list: impl Iterator<Item = MoveToNeighbor>,
+        chunk_size: usize,
+    ) -> Option<MoveToNeighbor>
+    where
+        Self: EnumerateMoveToNeighbor<MoveToNeighbor>,
+        MoveToNeighbor: Send + Sync + Clone,
+        Problem: Sync,
+        Problem::Solution: Sync,
+        Problem::Objective: Sync,
+    {
+        let move_vec: Vec<_> = move_list.collect();
+        let opt = move_vec
+            .par_chunks(chunk_size)
+            .map(|chunk| {
+                chunk
+                    .into_iter()
+                    .max_by(|first, second| {
+                        if self.is_first_move_better_than_second(first, second) {
+                            std::cmp::Ordering::Greater
+                        } else if self.is_first_move_better_than_second(second, first) {
+                            std::cmp::Ordering::Less
+                        } else {
+                            std::cmp::Ordering::Equal
+                        }
+                    })
+                    .unwrap()
+            })
+            .max_by(|first, second| {
+                if self.is_first_move_better_than_second(first, second) {
+                    std::cmp::Ordering::Greater
+                } else if self.is_first_move_better_than_second(second, first) {
+                    std::cmp::Ordering::Less
+                } else {
+                    std::cmp::Ordering::Equal
+                }
+            });
+
+        if let Some(v) = opt {
+            Some(v.clone())
+        } else {
+            None
+        }
     }
 }
 

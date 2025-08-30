@@ -124,15 +124,21 @@ impl MaxCut {
     /// assert_eq!(mc.get_weight(0, 1), 3.0);
     /// ```
     pub fn get_weight(&self, i: usize, j: usize) -> f32 {
-        if let Some(hm) = self.adj.get(&i) {
-            if let Some(&w) = hm.get(&j) {
-                return w;
-            } else {
-                return 0.0;
-            }
-        } else {
-            return 0.0;
-        }
+        // if let Some(hm) = self.adj.get(&i) {
+        //     if let Some(&w) = hm.get(&j) {
+        //         return w;
+        //     } else {
+        //         return 0.0;
+        //     }
+        // } else {
+        //     return 0.0;
+        // }
+        // *self.adj.get(&i).and_then(|hm| hm.get(&j)).unwrap_or(&0.0)
+        self.adj[&i][&j]
+    }
+
+    pub fn has_edge(&self, i: usize, j: usize) -> bool {
+        self.adj.get(&i).and_then(|hm| hm.get(&j)).is_some()
     }
 
     /// Calculates the cut size of the given cut.
@@ -233,16 +239,18 @@ impl ProblemTrait for MaxCut {
     type Solution = MaxCutSolution;
     type Objective = f32;
     fn new_solution(&self, rng: &mut impl rand::Rng) -> Self::Solution {
-        let mut cut = HashMap::new();
-        for &i in self.iter_on_vertices() {
-            cut.insert(i, rng.random_bool(0.5));
-        }
+        let cut: HashMap<_, _> = self
+            .iter_on_vertices()
+            .map(|&i| (i, rng.random_bool(0.5)))
+            .collect();
 
-        let mut gain = HashMap::new();
-        for &i in self.iter_on_vertices() {
-            let g = self.calculate_gain(&cut, i);
-            gain.insert(i, g);
-        }
+        let gain: HashMap<_, _> = self
+            .iter_on_vertices()
+            .map(|&i| {
+                let g = self.calculate_gain(&cut, i);
+                (i, g)
+            })
+            .collect();
 
         return MaxCutSolution { cut, gain };
     }

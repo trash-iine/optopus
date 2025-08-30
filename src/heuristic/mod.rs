@@ -16,17 +16,36 @@ use crate::search_state::{ProblemTrait, SearchState};
 
 pub trait Heuristic<Problem: ProblemTrait> {
     fn clear(&mut self) {}
+    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool;
     fn run_once<'a>(
         &self,
         state: &mut SearchState<'a, Problem>,
     ) -> Result<(), Box<dyn std::error::Error>>;
-    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool;
     fn run<'a>(
         &self,
         state: &mut SearchState<'a, Problem>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         while !self.is_done(&state) {
             self.run_once(state)?;
+        }
+
+        return Ok(());
+    }
+}
+
+pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
+    fn run_once_par<'a>(
+        &self,
+        state: &mut SearchState<'a, Problem>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.run_once(state)
+    }
+    fn run_par<'a>(
+        &self,
+        state: &mut SearchState<'a, Problem>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        while !self.is_done(&state) {
+            self.run_once_par(state)?;
         }
 
         return Ok(());

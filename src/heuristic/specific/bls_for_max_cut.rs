@@ -22,12 +22,13 @@ fn is_same_solution(
     if prev_solution.cut.len() != current_solution.cut.len() {
         return false;
     }
-    for (i, &value) in prev_solution.cut.iter() {
-        if value != current_solution.cut[i] {
-            return false;
-        }
-    }
-    true
+
+    prev_solution.cut.iter().all(|(i, &value)| {
+        current_solution
+            .cut
+            .get(i)
+            .map_or(false, |&current_value| value == current_value)
+    })
 }
 
 pub struct BreakoutLocalSearch {
@@ -199,21 +200,9 @@ impl BreakoutLocalSearch {
     ) -> Result<(), Box<dyn std::error::Error>> {
         for _ in 0..*self.l.borrow() {
             // check is there existing a move to update best solution
-            let mut best_move_option = None;
-            for neighbor in
-                EnumerateMoveToNeighbor::<MaxCutSwapNeighbor>::iter_on_move_to_neighbor(state)
-            {
-                if let Some(best_move) = best_move_option {
-                    if state.is_first_move_better_than_second(&neighbor, &best_move) {
-                        best_move_option = Some(neighbor);
-                    } else {
-                        best_move_option = Some(best_move);
-                    }
-                } else {
-                    best_move_option = Some(neighbor);
-                }
-            }
-
+            let best_move_option = state.get_best_move(
+                EnumerateMoveToNeighbor::<MaxCutSwapNeighbor>::iter_on_move_to_neighbor(state),
+            );
             if let Some(best_move) = best_move_option {
                 if state.is_move_to_be_better_than_best(&best_move) {
                     best_move.add_to_tabu_map(
@@ -260,28 +249,19 @@ impl BreakoutLocalSearch {
                 }
             }
 
-            best_move_option = None;
-            for &v0 in v0_list.iter() {
-                for &v1 in v1_list.iter() {
-                    let swap_neighbor = MaxCutSwapNeighbor {
-                        i: v0.i,
-                        j: v1.i,
-                        gain: state.solution.gain[&v0.i]
-                            + state.solution.gain[&v1.i]
-                            + 2.0 * state.instance.get_weight(v0.i, v1.i),
-                    };
-
-                    if let Some(best_move) = best_move_option {
-                        if state.is_first_move_better_than_second(&swap_neighbor, &best_move) {
-                            best_move_option = Some(swap_neighbor);
+            let best_move_option = state.get_best_move(v0_list.iter().flat_map(|v0| {
+                v1_list.iter().map(|v1| MaxCutSwapNeighbor {
+                    i: v0.i,
+                    j: v1.i,
+                    gain: state.solution.gain[&v0.i]
+                        + state.solution.gain[&v1.i]
+                        + if state.instance.has_edge(v0.i, v1.i) {
+                            2.0 * state.instance.get_weight(v0.i, v1.i)
                         } else {
-                            best_move_option = Some(best_move);
-                        }
-                    } else {
-                        best_move_option = Some(swap_neighbor);
-                    }
-                }
-            }
+                            0.0
+                        },
+                })
+            }));
 
             if let Some(best_move) = best_move_option {
                 best_move.add_to_tabu_map(

@@ -1,6 +1,8 @@
 use optopus::{
-    heuristic::{BreakoutLocalSearchForMaxCut, Heuristic, StopCondition},
-    problem::max_cut::MaxCut,
+    heuristic::{
+        BreakoutLocalSearchForMaxCut, Heuristic, ParallelHeuristic, StopCondition, TabuSearch,
+    },
+    problem::{max_cut::MaxCut, MaxCutFlipNeighbor, MaxCutSwapNeighbor},
     search_state::SearchState,
 };
 use serde::Serialize;
@@ -27,10 +29,25 @@ fn main() {
 
     let files = glob::glob("data/max_cut/G*").unwrap();
     for file in files {
+        let instance_number = file
+            .as_ref()
+            .unwrap()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .replace("G", "")
+            .parse::<u64>()
+            .unwrap();
+        if instance_number > 40 {
+            continue;
+        }
+
         tracing::info!("Processing file: {:?}", file);
         let mc = MaxCut::load_from_file(file.as_ref().unwrap().to_str().unwrap()).unwrap();
         let mut state = SearchState::new(&mc, rand::rng());
-        let sc = StopCondition::new(Some(200000), None, None);
+        // let sc = StopCondition::new(Some(200000), None, None);
+        let sc = StopCondition::new(Some(30000), None, None);
         let bls = BreakoutLocalSearchForMaxCut::new(
             (3, (mc.len() / 10) as u64),
             sc,
@@ -39,8 +56,22 @@ fn main() {
             0.8,
             0.5,
         );
+        let ts = TabuSearch::<MaxCutFlipNeighbor>::new(
+            // StopCondition::new(Some(200000), None, None),
+            StopCondition::new(Some(1000000), None, None),
+            (3, (mc.len() / 100) as u64),
+            None,
+        );
+        // let status = bls.run(&mut state);
+        let start = std::time::Instant::now();
+        // let status = ts.run(&mut state);
         let status = bls.run(&mut state);
-        tracing::info!("Best objective: {}", state.best_objective);
+        let end = std::time::Instant::now();
+        tracing::info!(
+            "Best objective: {} ({:?})",
+            state.best_objective,
+            end - start
+        );
         results.push(BenchmarkResult {
             status: {
                 match status {
@@ -66,6 +97,7 @@ fn main() {
                 .map(|(&i, _)| i)
                 .collect(),
         });
+        break;
     }
 
     // Serialize results to TOML

@@ -190,7 +190,11 @@ impl<'a> EnumerateMoveToNeighbor<MaxCutSwapNeighbor> for SearchState<'a, MaxCut>
                     j,
                     gain: self.solution.gain[&i]
                         + self.solution.gain[&j]
-                        + 2.0 * self.instance.get_weight(i, j),
+                        + if self.instance.has_edge(i, j) {
+                            2.0 * self.instance.get_weight(i, j)
+                        } else {
+                            0.0
+                        },
                 })
         })
     }
