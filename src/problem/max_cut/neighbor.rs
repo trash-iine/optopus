@@ -9,19 +9,6 @@ pub struct MaxCutFlipNeighbor {
     pub gain: f32,
 }
 
-impl std::hash::Hash for MaxCutFlipNeighbor {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.i.hash(state);
-    }
-}
-
-impl std::cmp::PartialEq for MaxCutFlipNeighbor {
-    fn eq(&self, other: &Self) -> bool {
-        self.i == other.i
-    }
-}
-impl std::cmp::Eq for MaxCutFlipNeighbor {}
-
 impl EnabledTabu for MaxCutFlipNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
@@ -116,20 +103,6 @@ pub struct MaxCutSwapNeighbor {
     pub j: usize,
     pub gain: f32,
 }
-
-impl std::hash::Hash for MaxCutSwapNeighbor {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.i.hash(state);
-        self.j.hash(state);
-    }
-}
-
-impl std::cmp::PartialEq for MaxCutSwapNeighbor {
-    fn eq(&self, other: &Self) -> bool {
-        (self.i == other.i && self.j == other.j) || (self.i == other.j && self.j == other.i)
-    }
-}
-impl std::cmp::Eq for MaxCutSwapNeighbor {}
 
 impl EnabledTabu for MaxCutSwapNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
