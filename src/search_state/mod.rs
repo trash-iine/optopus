@@ -51,7 +51,6 @@ where
 impl<'a, Problem> SearchState<'a, Problem>
 where
     Problem: ProblemTrait,
-    Problem::Solution: Clone,
 {
     pub fn new(instance: &'a Problem, mut rng: rand::rngs::ThreadRng) -> Self {
         let solution = instance.new_solution(&mut rng);
