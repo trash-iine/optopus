@@ -1,5 +1,5 @@
 use super::{Heuristic, StopCondition};
-use crate::search_state::{EnumerateMoveToNeighbor, ProblemTrait, SearchState};
+use crate::search_state::{filter_best, MoveToNeigbor, ProblemTrait, Rankable, SearchState};
 use std::cell::RefCell;
 
 /// A local search algorithm that iteratively explores the neighborhood of the current solution.
@@ -22,13 +22,13 @@ use std::cell::RefCell;
 /// let ls = LocalSearch::<MaxCutFlipNeighbor>::new(sc);
 /// ls.run(&mut state);
 /// ```
-pub struct LocalSearch<MoveToNeighbor> {
+pub struct LocalSearch<N> {
     pub stop_condition: StopCondition,
-    phantom_neighbor: std::marker::PhantomData<MoveToNeighbor>,
+    phantom_neighbor: std::marker::PhantomData<N>,
     no_best_move: RefCell<bool>,
 }
 
-impl<MoveToNeighbor> LocalSearch<MoveToNeighbor> {
+impl<N> LocalSearch<N> {
     pub fn new(stop_condition: StopCondition) -> Self {
         let mut stop_condition = stop_condition;
         if let Some(max_failed_update) = stop_condition.max_failed_update {
@@ -47,33 +47,20 @@ impl<MoveToNeighbor> LocalSearch<MoveToNeighbor> {
     }
 }
 
-impl<Problem, MoveToNeighbor> Heuristic<Problem> for LocalSearch<MoveToNeighbor>
+impl<P, N> Heuristic<P> for LocalSearch<N>
 where
-    Problem: ProblemTrait,
-    for<'a> SearchState<'a, Problem>: EnumerateMoveToNeighbor<MoveToNeighbor>,
+    P: ProblemTrait,
+    N: MoveToNeigbor<P> + Rankable,
 {
     fn run_once<'a>(
         &self,
-        state: &mut SearchState<'a, Problem>,
+        state: &mut SearchState<'a, P>,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let mut best_move_option = None;
-        for neighbor in state.iter_on_move_to_neighbor() {
-            if !state.is_move_to_be_better_than_currernt(&neighbor) {
-                continue;
-            }
-
-            if let Some(best_move) = best_move_option {
-                if state.is_first_move_better_than_second(&neighbor, &best_move) {
-                    best_move_option = Some(neighbor);
-                } else {
-                    best_move_option = Some(best_move);
-                }
-            } else {
-                best_move_option = Some(neighbor);
-            }
-        }
-
-        if let Some(best_move) = best_move_option {
+        let mut best_list = filter_best(
+            N::iter(&state.instance, &state.solution)
+                .filter(|n| state.is_neighbor_better_than_current(n)),
+        );
+        if let Some(best_move) = best_list.pop() {
             state.apply(&best_move);
         } else {
             *self.no_best_move.borrow_mut() = true;
@@ -82,7 +69,7 @@ where
         Ok(())
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool {
+    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state) || *self.no_best_move.borrow()
     }
 }

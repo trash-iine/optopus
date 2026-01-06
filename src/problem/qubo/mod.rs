@@ -1,5 +1,5 @@
-pub mod neighbor;
-pub mod problem;
+mod neighbor;
+mod problem;
 
 pub use neighbor::QuboFlipNeighbour;
-pub use problem::Qubo;
+pub use problem::{Qubo, QuboSolution};

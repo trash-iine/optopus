@@ -1,5 +1,5 @@
-pub mod neighbor;
-pub mod problem;
+mod neighbor;
+mod problem;
 
 pub use neighbor::{MaxCutFlipNeighbor, MaxCutSwapNeighbor};
-pub use problem::MaxCut;
+pub use problem::{MaxCut, MaxCutSolution};

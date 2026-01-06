@@ -1,12 +1,20 @@
 // ! Defines the neighbor structure and the methods to enumerate neighbors for the MaxCut problem.
 use super::MaxCut;
-use crate::search_state::{EnabledTabu, EnumerateMoveToNeighbor, Evaluable, SearchState};
+use crate::{
+    problem::max_cut::problem::MaxCutSolution,
+    search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable},
+};
 
 /// Represents a neighbor in the MaxCut problem where a vertex is flipped.
 #[derive(Debug, Clone, Copy)]
 pub struct MaxCutFlipNeighbor {
     pub i: usize,
     pub gain: f32,
+}
+impl Rankable for MaxCutFlipNeighbor {
+    fn is_better_than(&self, other: &Self) -> bool {
+        self.gain > other.gain
+    }
 }
 
 impl EnabledTabu for MaxCutFlipNeighbor {
@@ -29,65 +37,50 @@ impl EnabledTabu for MaxCutFlipNeighbor {
     }
 }
 
-impl<'a> EnumerateMoveToNeighbor<MaxCutFlipNeighbor> for SearchState<'a, MaxCut> {
-    fn apply_to_iteration(&mut self, _: &MaxCutFlipNeighbor) {
-        self.iteration += 1;
-    }
-    fn apply_to_solution(&mut self, neighbor: &MaxCutFlipNeighbor) {
+impl MoveToNeigbor<MaxCut> for MaxCutFlipNeighbor {
+    fn apply_to_solution(&self, prob: &MaxCut, solution: &mut MaxCutSolution) {
         // cut side of the vertex
-        let bi = *self
-            .solution
+        let bi = *solution
             .cut
-            .get(&neighbor.i)
-            .expect(format!("vertex {} is not found in solution.", neighbor.i).as_str());
+            .get(&self.i)
+            .expect(format!("vertex {} is not found in solution.", self.i).as_str());
 
-        self.solution.cut.insert(neighbor.i, !bi);
+        solution.cut.insert(self.i, !bi);
 
         // Update the gain for the flipped vertex
-        self.solution.gain.insert(neighbor.i, -neighbor.gain);
-        for (&j, &w) in self.instance.iter_on_adjacency(&neighbor.i) {
-            let bj = *self
-                .solution
+        solution.gain.insert(self.i, -self.gain);
+        for (&j, &w) in prob.iter_on_adjacency(&self.i) {
+            let bj = *solution
                 .cut
                 .get(&j)
                 .expect(format!("vertex {} is not found in the solution.", j).as_str());
             if bi ^ bj {
-                *self.solution.gain.entry(j).or_insert(0.0) += w * 2.0;
+                *solution.gain.entry(j).or_insert(0.0) += w * 2.0;
             } else {
-                *self.solution.gain.entry(j).or_insert(0.0) -= w * 2.0;
+                *solution.gain.entry(j).or_insert(0.0) -= w * 2.0;
             }
         }
+
+        solution.objective += self.gain;
     }
 
-    fn apply_to_objective(&mut self, neighbor: &MaxCutFlipNeighbor) {
-        self.objective += neighbor.gain;
-    }
-
-    fn iter_on_move_to_neighbor(&self) -> impl Iterator<Item = MaxCutFlipNeighbor> {
-        self.solution.cut.keys().map(move |&i| MaxCutFlipNeighbor {
+    fn iter(_: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
+        sol.cut.keys().map(move |&i| MaxCutFlipNeighbor {
             i,
-            gain: *self
-                .solution
+            gain: *sol
                 .gain
                 .get(&i)
                 .expect(format!("vertex {} is not found in the solution.", i).as_str()),
         })
     }
 
-    fn is_move_to_be_better_than_currernt(&self, neighbor: &MaxCutFlipNeighbor) -> bool {
-        neighbor.gain > 0.0
-    }
-
-    fn is_move_to_be_better_than_best(&self, neighbor: &MaxCutFlipNeighbor) -> bool {
-        neighbor.gain + self.objective > self.best_objective
-    }
-
-    fn is_first_move_better_than_second(
+    fn move_to_be_better_than(
         &self,
-        first: &MaxCutFlipNeighbor,
-        second: &MaxCutFlipNeighbor,
+        _: &MaxCut,
+        src: &<MaxCut as crate::search_state::ProblemTrait>::Solution,
+        other: &<MaxCut as crate::search_state::ProblemTrait>::Solution,
     ) -> bool {
-        first.gain > second.gain
+        self.gain + src.objective > other.objective
     }
 }
 
@@ -102,6 +95,12 @@ pub struct MaxCutSwapNeighbor {
     pub i: usize,
     pub j: usize,
     pub gain: f32,
+}
+
+impl Rankable for MaxCutSwapNeighbor {
+    fn is_better_than(&self, other: &Self) -> bool {
+        self.gain > other.gain
+    }
 }
 
 impl EnabledTabu for MaxCutSwapNeighbor {
@@ -131,40 +130,38 @@ impl EnabledTabu for MaxCutSwapNeighbor {
     }
 }
 
-impl<'a> EnumerateMoveToNeighbor<MaxCutSwapNeighbor> for SearchState<'a, MaxCut> {
-    fn apply_to_iteration(&mut self, _: &MaxCutSwapNeighbor) {
-        self.iteration += 2;
+impl MoveToNeigbor<MaxCut> for MaxCutSwapNeighbor {
+    fn apply_to_iteration(&self, iter: u64) -> u64 {
+        iter + 2
     }
-
-    fn apply_to_solution(&mut self, neighbor: &MaxCutSwapNeighbor) {
+    fn apply_to_solution(
+        &self,
+        prob: &MaxCut,
+        sol: &mut <MaxCut as crate::search_state::ProblemTrait>::Solution,
+    ) {
         let flip_i = MaxCutFlipNeighbor {
-            i: neighbor.i,
-            gain: self.solution.gain[&neighbor.i],
+            i: self.i,
+            gain: sol.gain[&self.i],
         };
-        self.apply_to_solution(&flip_i);
+        flip_i.apply_to_solution(prob, sol);
         let flip_j = MaxCutFlipNeighbor {
-            i: neighbor.j,
-            gain: self.solution.gain[&neighbor.j],
+            i: self.j,
+            gain: sol.gain[&self.j],
         };
-        self.apply_to_solution(&flip_j);
+        flip_j.apply_to_solution(prob, sol);
     }
 
-    fn apply_to_objective(&mut self, neighbor: &MaxCutSwapNeighbor) {
-        self.objective += neighbor.gain;
-    }
-
-    fn iter_on_move_to_neighbor(&self) -> impl Iterator<Item = MaxCutSwapNeighbor> {
-        self.instance.iter_on_vertices().flat_map(move |&i| {
-            self.instance
-                .iter_on_vertices()
-                .filter(move |&&j| j < i && (self.solution.cut[&i] ^ self.solution.cut[&j]))
-                .map(move |&j| MaxCutSwapNeighbor {
+    fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
+        prob.iter_on_vertices().flat_map(move |&i| {
+            prob.iter_on_vertices()
+                .filter(move |&&j| j < i && (sol.cut[&i] ^ sol.cut[&j]))
+                .map(move |&j| Self {
                     i,
                     j,
-                    gain: self.solution.gain[&i]
-                        + self.solution.gain[&j]
-                        + if self.instance.has_edge(i, j) {
-                            2.0 * self.instance.get_weight(i, j)
+                    gain: sol.gain[&i]
+                        + sol.gain[&j]
+                        + if prob.has_edge(i, j) {
+                            2.0 * prob.get_weight(i, j)
                         } else {
                             0.0
                         },
@@ -172,20 +169,13 @@ impl<'a> EnumerateMoveToNeighbor<MaxCutSwapNeighbor> for SearchState<'a, MaxCut>
         })
     }
 
-    fn is_move_to_be_better_than_currernt(&self, neighbor: &MaxCutSwapNeighbor) -> bool {
-        neighbor.gain > 0.0
-    }
-
-    fn is_move_to_be_better_than_best(&self, neighbor: &MaxCutSwapNeighbor) -> bool {
-        neighbor.gain + self.objective > self.best_objective
-    }
-
-    fn is_first_move_better_than_second(
+    fn move_to_be_better_than(
         &self,
-        first: &MaxCutSwapNeighbor,
-        second: &MaxCutSwapNeighbor,
+        _: &MaxCut,
+        src: &<MaxCut as crate::search_state::ProblemTrait>::Solution,
+        other: &<MaxCut as crate::search_state::ProblemTrait>::Solution,
     ) -> bool {
-        first.gain > second.gain
+        self.gain + src.objective > other.objective
     }
 }
 

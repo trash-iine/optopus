@@ -3,19 +3,25 @@ use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use crate::search_state::ProblemTrait;
+use crate::search_state::{ProblemTrait, Rankable};
 
 pub type Coefficient = i32;
-
-#[derive(Debug, Clone)]
-pub struct Qubo {
-    q: HashMap<usize, HashMap<usize, Coefficient>>,
-}
 
 #[derive(Debug, Clone)]
 pub struct QuboSolution {
     pub x: HashMap<usize, bool>,
     pub gain: HashMap<usize, Coefficient>,
+    pub objective: Coefficient,
+}
+impl Rankable for QuboSolution {
+    fn is_better_than(&self, other: &Self) -> bool {
+        self.objective < other.objective
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Qubo {
+    q: HashMap<usize, HashMap<usize, Coefficient>>,
 }
 
 impl Qubo {
@@ -155,7 +161,6 @@ impl Qubo {
 
 impl ProblemTrait for Qubo {
     type Solution = QuboSolution;
-    type Objective = Coefficient;
 
     fn new_solution(&self, rng: &mut impl rand::Rng) -> Self::Solution {
         let mut x = HashMap::new();
@@ -169,19 +174,9 @@ impl ProblemTrait for Qubo {
             gain.insert(i, g);
         }
 
-        return QuboSolution { x, gain };
-    }
+        let objective = self.calculate_energy(&x);
 
-    fn calculate_objective(&self, sol: &Self::Solution) -> Self::Objective {
-        self.calculate_energy(&sol.x)
-    }
-
-    fn is_first_objective_better_than_second(
-        &self,
-        first: &Self::Objective,
-        second: &Self::Objective,
-    ) -> bool {
-        first < second
+        return QuboSolution { x, gain, objective };
     }
 }
 

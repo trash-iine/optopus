@@ -1,19 +1,19 @@
 use super::{Heuristic, StopCondition};
-use crate::search_state::{EnumerateMoveToNeighbor, Evaluable, ProblemTrait, SearchState};
+use crate::search_state::{Evaluable, MoveToNeigbor, ProblemTrait, SearchState};
 use rand::seq::IteratorRandom;
 use rand::Rng;
 use std::cell::RefCell;
 use std::ops::{DivAssign, MulAssign};
 
-pub struct SimulatedAnnealing<MoveToNeighbor> {
+pub struct SimulatedAnnealing<N> {
     pub stop_condition: StopCondition,
     pub initial_temperature: f64,
     pub cooling_rate: f64,
-    phantom_neighbor: std::marker::PhantomData<MoveToNeighbor>,
+    phantom_neighbor: std::marker::PhantomData<N>,
     current_temperature: RefCell<f64>,
 }
 
-impl<MoveToNeighbor> SimulatedAnnealing<MoveToNeighbor> {
+impl<N> SimulatedAnnealing<N> {
     pub fn new(stop_condition: StopCondition, initial_temperature: f64, cooling_rate: f64) -> Self {
         Self {
             stop_condition,
@@ -25,25 +25,23 @@ impl<MoveToNeighbor> SimulatedAnnealing<MoveToNeighbor> {
     }
 }
 
-impl<Problem, MoveToNeighbor> Heuristic<Problem> for SimulatedAnnealing<MoveToNeighbor>
+impl<P, N> Heuristic<P> for SimulatedAnnealing<N>
 where
-    Problem: ProblemTrait,
-    for<'a> SearchState<'a, Problem>: EnumerateMoveToNeighbor<MoveToNeighbor>,
-    MoveToNeighbor: Evaluable<f64>,
+    P: ProblemTrait,
+    N: MoveToNeigbor<P> + Evaluable<f64>,
 {
-    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool {
+    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state)
     }
 
     fn run_once<'a>(
         &self,
-        state: &mut SearchState<'a, Problem>,
+        state: &mut SearchState<'a, P>,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let neighbor = state
-            .iter_on_move_to_neighbor()
+        let neighbor = N::iter(&state.instance, &state.solution)
             .choose(&mut rand::rng())
             .ok_or("No neighbor found")?;
-        if state.is_move_to_be_better_than_currernt(&neighbor)
+        if state.is_neighbor_better_than_current(&neighbor)
             || rand::rng().random::<f64>()
                 < (-neighbor.evaluate() / *self.current_temperature.borrow()).exp()
         {
@@ -58,18 +56,18 @@ where
     }
 }
 
-pub struct BangBangSimulatedAnnealing<MoveToNeighbor> {
+pub struct BangBangSimulatedAnnealing<N> {
     pub stop_condition: StopCondition,
     pub initial_temperature: f64,
     pub cooling_rate: f64,
     pub min_wave_threashold: f64,
     pub max_wave_threashold: f64,
-    phantom_neighbor: std::marker::PhantomData<MoveToNeighbor>,
+    phantom_neighbor: std::marker::PhantomData<N>,
     current_temperature: RefCell<f64>,
     is_going_down: RefCell<bool>,
 }
 
-impl<MoveToNeighbor> BangBangSimulatedAnnealing<MoveToNeighbor> {
+impl<N> BangBangSimulatedAnnealing<N> {
     pub fn new(
         stop_condition: StopCondition,
         initial_temperature: f64,
@@ -90,26 +88,24 @@ impl<MoveToNeighbor> BangBangSimulatedAnnealing<MoveToNeighbor> {
     }
 }
 
-impl<Problem, MoveToNeighbor> Heuristic<Problem> for BangBangSimulatedAnnealing<MoveToNeighbor>
+impl<P, N> Heuristic<P> for BangBangSimulatedAnnealing<N>
 where
-    Problem: ProblemTrait,
-    for<'a> SearchState<'a, Problem>: EnumerateMoveToNeighbor<MoveToNeighbor>,
-    MoveToNeighbor: Evaluable<f64>,
+    P: ProblemTrait,
+    N: MoveToNeigbor<P> + Evaluable<f64>,
 {
-    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool {
+    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state)
     }
 
     fn run_once<'a>(
         &self,
-        state: &mut SearchState<'a, Problem>,
+        state: &mut SearchState<'a, P>,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let neighbor = state
-            .iter_on_move_to_neighbor()
+        let neighbor = N::iter(&state.instance, &state.solution)
             .choose(&mut rand::rng())
             .ok_or("No neighbor found")?;
 
-        if state.is_move_to_be_better_than_currernt(&neighbor)
+        if state.is_neighbor_better_than_current(&neighbor)
             || rand::rng().random::<f64>()
                 < (-neighbor.evaluate() / *self.current_temperature.borrow()).exp()
         {

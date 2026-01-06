@@ -1,13 +1,50 @@
+pub trait Rankable {
+    fn is_better_than(&self, other: &Self) -> bool;
+}
+
+pub fn filter_best<R: Rankable, T: Iterator<Item = R>>(iter: T) -> Vec<R> {
+    let mut best_list = vec![];
+    for r in iter {
+        if best_list.is_empty() {
+            best_list = vec![r];
+        } else {
+            let sample = &best_list[0];
+            if r.is_better_than(sample) {
+                best_list = vec![r];
+            } else if !sample.is_better_than(&r) {
+                best_list.push(r);
+            }
+        }
+    }
+
+    return best_list;
+}
+
 pub trait ProblemTrait {
-    type Solution: Clone;
-    type Objective: Clone;
+    type Solution: Clone + Rankable;
     fn new_solution(&self, rng: &mut impl rand::Rng) -> Self::Solution;
-    fn calculate_objective(&self, sol: &Self::Solution) -> Self::Objective;
-    fn is_first_objective_better_than_second(
+}
+
+pub trait MoveToNeigbor<Problem>
+where
+    Problem: ProblemTrait,
+    Problem::Solution: Rankable,
+{
+    fn apply_to_iteration(&self, iter: u64) -> u64 {
+        iter + 1
+    }
+    fn apply_to_solution(&self, prob: &Problem, sol: &mut Problem::Solution);
+    fn iter(prob: &Problem, sol: &Problem::Solution) -> impl Iterator<Item = Self> + Send;
+    fn move_to_be_better_than(
         &self,
-        first: &Self::Objective,
-        second: &Self::Objective,
-    ) -> bool;
+        prob: &Problem,
+        src: &Problem::Solution,
+        other: &Problem::Solution,
+    ) -> bool {
+        let mut cloned = src.clone();
+        self.apply_to_solution(prob, &mut cloned);
+        cloned.is_better_than(other)
+    }
 }
 
 pub trait EnumerateMoveToNeighbor<MoveToNeighbor> {

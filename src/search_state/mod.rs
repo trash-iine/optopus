@@ -1,7 +1,10 @@
 pub mod specific_trait;
 
 use rayon::prelude::*;
-pub use specific_trait::{EnabledTabu, EnumerateMoveToNeighbor, Evaluable, ProblemTrait};
+pub use specific_trait::{
+    filter_best, EnabledTabu, EnumerateMoveToNeighbor, Evaluable, MoveToNeigbor, ProblemTrait,
+    Rankable,
+};
 
 /// The type of the search state clone
 #[derive(Clone, Debug)]
@@ -41,11 +44,9 @@ where
     pub instance: &'a Problem,
     pub iteration: u64,
     pub solution: Problem::Solution,
-    pub objective: Problem::Objective,
     pub best_time: std::time::Instant,
     pub best_iteration: u64,
     pub best_solution: Problem::Solution,
-    pub best_objective: Problem::Objective,
 }
 
 impl<'a, Problem> SearchState<'a, Problem>
@@ -55,19 +56,15 @@ where
     pub fn new(instance: &'a Problem, mut rng: rand::rngs::ThreadRng) -> Self {
         let solution = instance.new_solution(&mut rng);
         let best_solution = solution.clone();
-        let objective = instance.calculate_objective(&solution);
-        let best_objective = objective.clone();
         Self {
             start_iteration: 0,
             start_time: std::time::Instant::now(),
             instance,
             iteration: 0,
             solution,
-            objective,
             best_time: std::time::Instant::now(),
             best_iteration: 0,
             best_solution,
-            best_objective,
         }
     }
 
@@ -76,13 +73,10 @@ where
     }
 
     pub fn update_best(&mut self) -> bool {
-        let ret = self
-            .instance
-            .is_first_objective_better_than_second(&self.objective, &self.best_objective);
+        let ret = self.solution.is_better_than(&self.best_solution);
 
         if ret {
             self.best_solution = self.solution.clone();
-            self.best_objective = self.objective.clone();
             self.best_time = std::time::Instant::now();
             self.best_iteration = self.iteration;
         }
@@ -99,11 +93,9 @@ where
                 instance: self.instance,
                 iteration: self.iteration,
                 solution: self.solution.clone(),
-                objective: self.objective.clone(),
                 best_time: self.best_time,
                 best_iteration: self.best_iteration,
                 best_solution: self.best_solution.clone(),
-                best_objective: self.best_objective.clone(),
             },
             SearchStateCloneType::ClearBest => Self {
                 start_iteration: 0,
@@ -111,11 +103,9 @@ where
                 instance: self.instance,
                 iteration: 0,
                 solution: self.solution.clone(),
-                objective: self.objective.clone(),
                 best_time: now,
                 best_iteration: 0,
                 best_solution: self.solution.clone(),
-                best_objective: self.objective.clone(),
             },
             SearchStateCloneType::StartBest => Self {
                 start_iteration: 0,
@@ -123,11 +113,9 @@ where
                 instance: self.instance,
                 iteration: 0,
                 solution: self.best_solution.clone(),
-                objective: self.best_objective.clone(),
                 best_time: now,
                 best_iteration: 0,
                 best_solution: self.best_solution.clone(),
-                best_objective: self.best_objective.clone(),
             },
         }
     }
@@ -146,31 +134,28 @@ where
 
         // update the current state with the new state
         self.solution = cloned_state.solution;
-        self.objective = cloned_state.objective;
 
         // add iteration into the current iteration
         self.iteration += cloned_state.iteration - cloned_state.start_iteration;
 
         // update the best solution if the one of the new state is better than the current
-        if self.instance.is_first_objective_better_than_second(
-            &cloned_state.best_objective,
-            &self.best_objective,
-        ) {
+        if cloned_state
+            .best_solution
+            .is_better_than(&self.best_solution)
+        {
             self.best_solution = cloned_state.best_solution;
-            self.best_objective = cloned_state.best_objective;
             self.best_time = cloned_state.best_time;
             self.best_iteration =
                 self.iteration + cloned_state.best_iteration - cloned_state.start_iteration;
         }
     }
 
-    pub fn apply<MoveToNeighbor>(&mut self, neighbor: &MoveToNeighbor)
+    pub fn apply<Move>(&mut self, neighbor: &Move)
     where
-        Self: EnumerateMoveToNeighbor<MoveToNeighbor>,
+        Move: MoveToNeigbor<Problem>,
     {
-        self.apply_to_iteration(neighbor);
-        self.apply_to_solution(neighbor);
-        self.apply_to_objective(neighbor);
+        self.iteration = neighbor.apply_to_iteration(self.iteration);
+        neighbor.apply_to_solution(&self.instance, &mut self.solution);
         self.update_best();
     }
 
@@ -178,22 +163,18 @@ where
         self.iteration += 1;
     }
 
-    pub fn get_best_move<MoveToNeighbor>(
-        &self,
-        move_list: impl Iterator<Item = MoveToNeighbor>,
-    ) -> Option<MoveToNeighbor>
+    pub fn is_neighbor_better_than_current<Move>(&self, m: &Move) -> bool
     where
-        Self: EnumerateMoveToNeighbor<MoveToNeighbor>,
+        Move: MoveToNeigbor<Problem>,
     {
-        move_list.max_by(|first, second| {
-            if self.is_first_move_better_than_second(first, second) {
-                std::cmp::Ordering::Greater
-            } else if self.is_first_move_better_than_second(second, first) {
-                std::cmp::Ordering::Less
-            } else {
-                std::cmp::Ordering::Equal
-            }
-        })
+        m.move_to_be_better_than(&self.instance, &self.solution, &self.solution)
+    }
+
+    pub fn is_neighbor_better_than_best<Move>(&self, m: &Move) -> bool
+    where
+        Move: MoveToNeigbor<Problem>,
+    {
+        m.move_to_be_better_than(&self.instance, &self.solution, &self.best_solution)
     }
 
     pub fn get_best_move_par_chunks<MoveToNeighbor>(
@@ -206,7 +187,6 @@ where
         MoveToNeighbor: Send + Sync + Clone,
         Problem: Sync,
         Problem::Solution: Sync,
-        Problem::Objective: Sync,
     {
         let move_vec: Vec<_> = move_list.collect();
         let opt = move_vec
@@ -246,7 +226,7 @@ where
 impl<'a, Problem> std::fmt::Debug for SearchState<'a, Problem>
 where
     Problem: ProblemTrait,
-    Problem::Objective: std::fmt::Debug,
+    Problem::Solution: std::fmt::Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SearchState")
@@ -255,7 +235,7 @@ where
                 &(
                     self.start_time.elapsed(),
                     self.iteration,
-                    self.objective.clone(),
+                    self.solution.clone(),
                 ),
             )
             .field(
@@ -263,7 +243,7 @@ where
                 &(
                     self.best_time - self.start_time,
                     self.best_iteration,
-                    self.best_objective.clone(),
+                    self.best_solution.clone(),
                 ),
             )
             .finish()

@@ -27,7 +27,8 @@ fn main() {
 
     let mut results = Vec::new();
 
-    let files = glob::glob("data/max_cut/G*").unwrap();
+    // let files = glob::glob("data/max_cut/G*").unwrap();
+    let files = glob::glob("data/max_cut/G1").unwrap();
     for file in files {
         let instance_number = file
             .as_ref()
@@ -69,7 +70,7 @@ fn main() {
         let end = std::time::Instant::now();
         tracing::info!(
             "Best objective: {} ({:?})",
-            state.best_objective,
+            state.best_solution.objective,
             end - start
         );
         results.push(BenchmarkResult {
@@ -86,7 +87,7 @@ fn main() {
                 .to_str()
                 .unwrap()
                 .to_string(),
-            best_objective: state.best_objective.into(),
+            best_objective: state.best_solution.objective.into(),
             best_iteration: state.best_iteration,
             time_taken: state.best_time.elapsed().as_secs_f64(),
             solution: state

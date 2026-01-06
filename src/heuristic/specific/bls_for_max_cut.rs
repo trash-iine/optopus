@@ -6,7 +6,9 @@ use rand::seq::IteratorRandom;
 use super::super::{Heuristic, StopCondition, TabuSearch};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
-use crate::search_state::{EnabledTabu, EnumerateMoveToNeighbor, ProblemTrait, SearchState};
+use crate::search_state::{
+    filter_best, EnabledTabu, MoveToNeigbor, ProblemTrait, Rankable, SearchState,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PerturbationType {
@@ -40,7 +42,7 @@ pub struct BreakoutLocalSearch {
     q: f64,
     omega: RefCell<u64>,
     l: RefCell<u64>,
-    prev_best_objective: RefCell<Option<<MaxCut as ProblemTrait>::Objective>>,
+    prev_best_objective: RefCell<Option<f32>>,
     prev_solution: RefCell<Option<<MaxCut as ProblemTrait>::Solution>>,
     tabu_map: RefCell<HashMap<usize, u64>>,
 }
@@ -72,15 +74,13 @@ impl BreakoutLocalSearch {
     fn local_search_with_updating_tabu(&self, state: &mut SearchState<'_, MaxCut>) {
         loop {
             let mut best_move_option = None;
-            for neighbor in
-                EnumerateMoveToNeighbor::<MaxCutFlipNeighbor>::iter_on_move_to_neighbor(state)
-            {
-                if !state.is_move_to_be_better_than_currernt(&neighbor) {
+            for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
+                if !state.is_neighbor_better_than_current(&neighbor) {
                     continue;
                 }
 
                 if let Some(best_move) = best_move_option {
-                    if state.is_first_move_better_than_second(&neighbor, &best_move) {
+                    if neighbor.is_better_than(&best_move) {
                         best_move_option = Some(neighbor);
                     } else {
                         best_move_option = Some(best_move);
@@ -106,10 +106,7 @@ impl BreakoutLocalSearch {
     fn update_omega(&self, state: &SearchState<'_, MaxCut>) {
         let mut update = true;
         if let Some(&prev_best_objective) = self.prev_best_objective.borrow().as_ref() {
-            if state
-                .instance
-                .is_first_objective_better_than_second(&state.objective, &prev_best_objective)
-            {
+            if state.solution.objective > prev_best_objective {
                 tracing::info!("Best objective updated: {:?}", state);
                 *self.omega.borrow_mut() = 0;
             } else {
@@ -125,7 +122,7 @@ impl BreakoutLocalSearch {
         if update {
             self.prev_best_objective
                 .borrow_mut()
-                .replace(state.objective);
+                .replace(state.solution.objective);
         }
     }
 
@@ -167,10 +164,9 @@ impl BreakoutLocalSearch {
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         for _ in 0..*self.l.borrow() {
-            let neighbor =
-                EnumerateMoveToNeighbor::<MaxCutFlipNeighbor>::iter_on_move_to_neighbor(state)
-                    .choose(&mut rand::rng())
-                    .ok_or("No neighbor found")?;
+            let neighbor = MaxCutFlipNeighbor::iter(&state.instance, &state.solution)
+                .choose(&mut rand::rng())
+                .ok_or("No neighbor found")?;
 
             neighbor.add_to_tabu_map(
                 &mut self.tabu_map.borrow_mut(),
@@ -199,27 +195,9 @@ impl BreakoutLocalSearch {
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         for _ in 0..*self.l.borrow() {
-            // check is there existing a move to update best solution
-            let best_move_option = state.get_best_move(
-                EnumerateMoveToNeighbor::<MaxCutSwapNeighbor>::iter_on_move_to_neighbor(state),
-            );
-            if let Some(best_move) = best_move_option {
-                if state.is_move_to_be_better_than_best(&best_move) {
-                    best_move.add_to_tabu_map(
-                        &mut self.tabu_map.borrow_mut(),
-                        state.iteration,
-                        self.tabu_tenure,
-                    );
-                    state.apply(&best_move);
-                    continue;
-                }
-            }
-
             let mut v0_list = Vec::new();
             let mut v1_list = Vec::new();
-            for neighbor in
-                EnumerateMoveToNeighbor::<MaxCutFlipNeighbor>::iter_on_move_to_neighbor(state)
-            {
+            for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
                 if !neighbor.is_move_enabled(&self.tabu_map.borrow(), state.iteration) {
                     continue;
                 }
@@ -229,9 +207,9 @@ impl BreakoutLocalSearch {
                         v0_list.push(neighbor);
                     } else {
                         let sample = v0_list[0];
-                        if state.is_first_move_better_than_second(&neighbor, &sample) {
+                        if neighbor.is_better_than(&sample) {
                             v0_list = vec![neighbor];
-                        } else if !state.is_first_move_better_than_second(&sample, &neighbor) {
+                        } else if !sample.is_better_than(&neighbor) {
                             v0_list.push(neighbor);
                         }
                     }
@@ -240,16 +218,16 @@ impl BreakoutLocalSearch {
                         v1_list.push(neighbor);
                     } else {
                         let sample = v1_list[0];
-                        if state.is_first_move_better_than_second(&neighbor, &sample) {
+                        if neighbor.is_better_than(&sample) {
                             v1_list = vec![neighbor];
-                        } else if !state.is_first_move_better_than_second(&sample, &neighbor) {
+                        } else if !sample.is_better_than(&neighbor) {
                             v1_list.push(neighbor);
                         }
                     }
                 }
             }
 
-            let best_move_option = state.get_best_move(v0_list.iter().flat_map(|v0| {
+            let mut best_list = filter_best(v0_list.iter().flat_map(|v0| {
                 v1_list.iter().map(|v1| MaxCutSwapNeighbor {
                     i: v0.i,
                     j: v1.i,
@@ -263,7 +241,7 @@ impl BreakoutLocalSearch {
                 })
             }));
 
-            if let Some(best_move) = best_move_option {
+            if let Some(best_move) = best_list.pop() {
                 best_move.add_to_tabu_map(
                     &mut self.tabu_map.borrow_mut(),
                     state.iteration,

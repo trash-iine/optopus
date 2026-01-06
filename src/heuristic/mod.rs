@@ -9,10 +9,11 @@ pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;
 pub use sequential::Sequential;
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing};
-pub use specific::bls_for_max_cut::BreakoutLocalSearch as BreakoutLocalSearchForMaxCut;
+pub use specific::BreakoutLocalSearchForMaxCut;
 pub use tabu_search::TabuSearch;
 
 use crate::search_state::{ProblemTrait, SearchState};
+use serde::Serialize;
 
 pub trait Heuristic<Problem: ProblemTrait> {
     fn clear(&mut self) {}
@@ -52,7 +53,7 @@ pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct StopCondition {
     pub max_iteration: Option<u64>,
     pub max_duration: Option<std::time::Duration>,

@@ -1,13 +1,13 @@
 use super::{Heuristic, StopCondition};
-use crate::search_state::{EnumerateMoveToNeighbor, ProblemTrait, SearchState};
+use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState};
 use rand::seq::IteratorRandom;
 
-pub struct RandomWalk<MoveToNeighbor> {
+pub struct RandomWalk<N> {
     pub stop_condition: StopCondition,
-    phantom_neighbor: std::marker::PhantomData<MoveToNeighbor>,
+    phantom_neighbor: std::marker::PhantomData<N>,
 }
 
-impl<MoveToNeighbor> RandomWalk<MoveToNeighbor> {
+impl<N> RandomWalk<N> {
     pub fn new(stop_condition: StopCondition) -> Self {
         Self {
             stop_condition,
@@ -16,21 +16,20 @@ impl<MoveToNeighbor> RandomWalk<MoveToNeighbor> {
     }
 }
 
-impl<Problem, MoveToNeighbor> Heuristic<Problem> for RandomWalk<MoveToNeighbor>
+impl<P, N> Heuristic<P> for RandomWalk<N>
 where
-    Problem: ProblemTrait,
-    for<'a> SearchState<'a, Problem>: EnumerateMoveToNeighbor<MoveToNeighbor>,
+    P: ProblemTrait,
+    N: MoveToNeigbor<P> + Rankable,
 {
-    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool {
+    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state)
     }
     fn run_once<'a>(
         &self,
-        state: &mut SearchState<'a, Problem>,
+        state: &mut SearchState<'a, P>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         while !self.stop_condition.is_done(state) {
-            let neighbor = state
-                .iter_on_move_to_neighbor()
+            let neighbor = N::iter(&state.instance, &state.solution)
                 .choose(&mut rand::rng())
                 .ok_or("No neighbor found")?;
 

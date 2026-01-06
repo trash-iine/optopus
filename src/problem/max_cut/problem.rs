@@ -1,4 +1,4 @@
-use crate::search_state::ProblemTrait;
+use crate::search_state::{ProblemTrait, Rankable};
 use std::{collections::HashMap, io::BufRead};
 
 /// The MaxCut problem.
@@ -10,6 +10,13 @@ pub struct MaxCut {
 pub struct MaxCutSolution {
     pub cut: HashMap<usize, bool>,
     pub gain: HashMap<usize, f32>,
+    pub objective: f32,
+}
+
+impl Rankable for MaxCutSolution {
+    fn is_better_than(&self, other: &Self) -> bool {
+        self.objective > other.objective
+    }
 }
 
 impl MaxCut {
@@ -237,7 +244,6 @@ impl MaxCut {
 
 impl ProblemTrait for MaxCut {
     type Solution = MaxCutSolution;
-    type Objective = f32;
     fn new_solution(&self, rng: &mut impl rand::Rng) -> Self::Solution {
         let cut: HashMap<_, _> = self
             .iter_on_vertices()
@@ -252,19 +258,13 @@ impl ProblemTrait for MaxCut {
             })
             .collect();
 
-        return MaxCutSolution { cut, gain };
-    }
+        let objective = self.calculate_cut_size(&cut);
 
-    fn calculate_objective(&self, sol: &Self::Solution) -> Self::Objective {
-        self.calculate_cut_size(&sol.cut)
-    }
-
-    fn is_first_objective_better_than_second(
-        &self,
-        first: &Self::Objective,
-        second: &Self::Objective,
-    ) -> bool {
-        first > second
+        return MaxCutSolution {
+            cut,
+            gain,
+            objective,
+        };
     }
 }
 
