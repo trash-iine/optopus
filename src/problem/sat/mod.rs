@@ -1,5 +1,5 @@
 mod definition;
-mod search_state;
+mod neighbor;
 
 pub use definition::{Sat, SatSolution};
-pub use search_state::SatFlipSearchState;
+pub use neighbor::{SatFlipNeighbor, SatSwapNeighbor};

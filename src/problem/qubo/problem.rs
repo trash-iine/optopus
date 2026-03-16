@@ -124,11 +124,7 @@ impl Qubo {
         let i_side = *x
             .get(&i)
             .expect(format!("{} is not found in solution", i).as_str());
-        if i_side {
-            -gain
-        } else {
-            gain
-        }
+        if i_side { -gain } else { gain }
     }
 
     pub fn calculate_energy(&self, x: &HashMap<usize, bool>) -> Coefficient {
@@ -143,7 +139,13 @@ impl Qubo {
             }
 
             for (&j, &q) in self.iter_on_adjacency(i) {
-                if i <= j {
+                if i == j {
+                    // 対角項: Q_ii * x_i^2 = Q_ii * x_i (x_i = 1 が保証されている)
+                    energy += q;
+                    continue;
+                }
+                if i < j {
+                    // 上三角をスキップして二重計上を防ぐ
                     continue;
                 }
                 let j_side = *x
@@ -184,7 +186,7 @@ pub fn calc_xor_of_solutions(sol1: &QuboSolution, sol2: &QuboSolution) -> usize 
     sol1.x
         .values()
         .zip(sol2.x.values())
-        .filter(|(&i, &j)| i ^ j)
+        .filter(|(i, j)| **i ^ **j)
         .count()
 }
 

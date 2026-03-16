@@ -7,7 +7,7 @@ use super::super::{Heuristic, StopCondition, TabuSearch};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::{
-    filter_best, EnabledTabu, MoveToNeigbor, ProblemTrait, Rankable, SearchState,
+    EnabledTabu, MoveToNeigbor, ProblemTrait, Rankable, SearchState, filter_best,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,30 +73,28 @@ impl BreakoutLocalSearch {
 
     fn local_search_with_updating_tabu(&self, state: &mut SearchState<'_, MaxCut>) {
         loop {
-            let mut best_move_option = None;
+            let mut best_move_option: Option<MaxCutFlipNeighbor> = None;
             for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
                 if !state.is_neighbor_better_than_current(&neighbor) {
                     continue;
                 }
 
-                if let Some(best_move) = best_move_option {
-                    if neighbor.is_better_than(&best_move) {
-                        best_move_option = Some(neighbor);
-                    } else {
-                        best_move_option = Some(best_move);
-                    }
+                if let Some(best_move) = best_move_option
+                    && best_move.is_better_than(&neighbor)
+                {
+                    best_move_option = Some(best_move);
                 } else {
                     best_move_option = Some(neighbor);
                 }
             }
 
             if let Some(best_move) = best_move_option {
-                state.apply(&best_move);
                 best_move.add_to_tabu_map(
                     &mut self.tabu_map.borrow_mut(),
                     state.iteration,
                     self.tabu_tenure,
                 );
+                state.apply(&best_move);
             } else {
                 return;
             }
@@ -104,49 +102,43 @@ impl BreakoutLocalSearch {
     }
 
     fn update_omega(&self, state: &SearchState<'_, MaxCut>) {
-        let mut update = true;
-        if let Some(&prev_best_objective) = self.prev_best_objective.borrow().as_ref() {
-            if state.solution.objective > prev_best_objective {
-                tracing::info!("Best objective updated: {:?}", state);
-                *self.omega.borrow_mut() = 0;
-            } else {
-                update = false;
-                *self.omega.borrow_mut() += 1;
-            }
+        if let Some(&prev_best_objective) = self.prev_best_objective.borrow().as_ref()
+            && prev_best_objective >= state.solution.objective
+        {
+            *self.omega.borrow_mut() += 1;
         } else {
             *self.omega.borrow_mut() = 0;
         }
+
         if *self.omega.borrow() > self.t {
             *self.omega.borrow_mut() = 0;
         }
-        if update {
-            self.prev_best_objective
-                .borrow_mut()
-                .replace(state.solution.objective);
-        }
+
+        self.prev_best_objective
+            .borrow_mut()
+            .replace(state.best_solution.objective);
     }
 
     fn update_l(&self, state: &SearchState<'_, MaxCut>) {
-        if let Some(prev_solution) = self.prev_solution.borrow().as_ref() {
-            if is_same_solution(prev_solution, &state.solution) {
-                *self.l.borrow_mut() += 1;
-            } else {
-                *self.l.borrow_mut() = self.l0;
-            }
+        if let Some(prev_solution) = self.prev_solution.borrow().as_ref()
+            && is_same_solution(prev_solution, &state.solution)
+        {
+            *self.l.borrow_mut() += 1;
         } else {
             *self.l.borrow_mut() = self.l0;
         }
+
         self.prev_solution
             .borrow_mut()
             .replace(state.solution.clone());
     }
 
     fn get_perturbation_type(&self) -> PerturbationType {
-        if *self.omega.borrow() == 0 {
+        let omega = *self.omega.borrow();
+        if omega == 0 {
             PerturbationType::Strong
         } else {
-            let p = (std::f64::consts::E.powf(-(*self.omega.borrow() as f64 / self.t as f64)))
-                .max(self.p0);
+            let p = (std::f64::consts::E.powf(-(omega as f64 / self.t as f64))).max(self.p0);
 
             let prob: f64 = rand::random_range(0.0..=1.0);
             if prob <= p * self.q {
@@ -195,40 +187,62 @@ impl BreakoutLocalSearch {
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         for _ in 0..*self.l.borrow() {
-            let mut v0_list = Vec::new();
-            let mut v1_list = Vec::new();
+            let mut v0_best = Vec::new();
+            let mut v1_best = Vec::new();
+            let mut v0_tabu = Vec::new();
+            let mut v1_tabu = Vec::new();
             for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
+                if state.solution.cut[&neighbor.i] {
+                    if let Some(sample) = v0_best.first() {
+                        if neighbor.is_better_than(sample) {
+                            v0_best = vec![neighbor];
+                        } else if !sample.is_better_than(&neighbor) {
+                            v0_best.push(neighbor);
+                        }
+                    } else {
+                        v0_best.push(neighbor);
+                    }
+                } else {
+                    if let Some(sample) = v1_best.first() {
+                        if neighbor.is_better_than(sample) {
+                            v1_best = vec![neighbor];
+                        } else if !sample.is_better_than(&neighbor) {
+                            v1_best.push(neighbor);
+                        }
+                    } else {
+                        v1_best.push(neighbor);
+                    }
+                }
+
                 if !neighbor.is_move_enabled(&self.tabu_map.borrow(), state.iteration) {
                     continue;
                 }
 
                 if state.solution.cut[&neighbor.i] {
-                    if v0_list.is_empty() {
-                        v0_list.push(neighbor);
-                    } else {
-                        let sample = v0_list[0];
-                        if neighbor.is_better_than(&sample) {
-                            v0_list = vec![neighbor];
+                    if let Some(sample) = v0_tabu.first() {
+                        if neighbor.is_better_than(sample) {
+                            v0_tabu = vec![neighbor];
                         } else if !sample.is_better_than(&neighbor) {
-                            v0_list.push(neighbor);
+                            v0_tabu.push(neighbor);
                         }
+                    } else {
+                        v0_tabu.push(neighbor);
                     }
                 } else {
-                    if v1_list.is_empty() {
-                        v1_list.push(neighbor);
-                    } else {
-                        let sample = v1_list[0];
-                        if neighbor.is_better_than(&sample) {
-                            v1_list = vec![neighbor];
+                    if let Some(sample) = v1_tabu.first() {
+                        if neighbor.is_better_than(sample) {
+                            v1_tabu = vec![neighbor];
                         } else if !sample.is_better_than(&neighbor) {
-                            v1_list.push(neighbor);
+                            v1_tabu.push(neighbor);
                         }
+                    } else {
+                        v1_tabu.push(neighbor);
                     }
                 }
             }
 
-            let mut best_list = filter_best(v0_list.iter().flat_map(|v0| {
-                v1_list.iter().map(|v1| MaxCutSwapNeighbor {
+            let mut best_list = filter_best(v0_best.iter().flat_map(|v0| {
+                v1_best.iter().map(|v1| MaxCutSwapNeighbor {
                     i: v0.i,
                     j: v1.i,
                     gain: state.solution.gain[&v0.i]
@@ -240,8 +254,13 @@ impl BreakoutLocalSearch {
                         },
                 })
             }));
-
-            if let Some(best_move) = best_list.pop() {
+            if let Some(best_move) = best_list.pop()
+                && best_move.move_to_be_better_than(
+                    &state.instance,
+                    &state.solution,
+                    &state.best_solution,
+                )
+            {
                 best_move.add_to_tabu_map(
                     &mut self.tabu_map.borrow_mut(),
                     state.iteration,
@@ -249,8 +268,72 @@ impl BreakoutLocalSearch {
                 );
                 state.apply(&best_move);
             } else {
-                tracing::warn!("No valid swap neighbor found for perturbation");
-                state.progress_iteration();
+                let i = v0_tabu
+                    .iter()
+                    .min_by(|a, b| {
+                        self.tabu_map
+                            .borrow()
+                            .get(&a.i)
+                            .unwrap_or(&0)
+                            .cmp(&self.tabu_map.borrow().get(&b.i).unwrap_or(&0))
+                    })
+                    .ok_or("No tabu v0")?
+                    .i;
+                let j = v1_tabu
+                    .iter()
+                    .min_by(|a, b| {
+                        self.tabu_map
+                            .borrow()
+                            .get(&a.i)
+                            .unwrap_or(&0)
+                            .cmp(&self.tabu_map.borrow().get(&b.i).unwrap_or(&0))
+                    })
+                    .ok_or("No tabu v1")?
+                    .i;
+                let neighbor = MaxCutSwapNeighbor {
+                    i: i,
+                    j: j,
+                    gain: state.solution.gain[&i]
+                        + state.solution.gain[&j]
+                        + if state.instance.has_edge(i, j) {
+                            2.0 * state.instance.get_weight(i, j)
+                        } else {
+                            0.0
+                        },
+                };
+                neighbor.add_to_tabu_map(
+                    &mut self.tabu_map.borrow_mut(),
+                    state.iteration,
+                    self.tabu_tenure,
+                );
+                state.apply(&neighbor);
+                /*
+                               let mut best_list = filter_best(v0_tabu.iter().flat_map(|v0| {
+                                   v1_tabu.iter().map(|v1| MaxCutSwapNeighbor {
+                                       i: v0.i,
+                                       j: v1.i,
+                                       gain: state.solution.gain[&v0.i]
+                                           + state.solution.gain[&v1.i]
+                                           + if state.instance.has_edge(v0.i, v1.i) {
+                                               2.0 * state.instance.get_weight(v0.i, v1.i)
+                                           } else {
+                                               0.0
+                                           },
+                                   })
+                               }));
+
+                               if let Some(best_move) = best_list.pop() {
+                                   best_move.add_to_tabu_map(
+                                       &mut self.tabu_map.borrow_mut(),
+                                       state.iteration,
+                                       self.tabu_tenure,
+                                   );
+                                   state.apply(&best_move);
+                               } else {
+                                   tracing::warn!("No valid swap neighbor found for perturbation");
+                                   state.progress_iteration();
+                               }
+                */
             }
         }
         Ok(())

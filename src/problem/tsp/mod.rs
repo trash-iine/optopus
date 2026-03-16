@@ -1,5 +1,5 @@
 mod definition;
-mod swap_search_state;
+mod neighbor;
 
-pub use definition::{calculate_tour_length, TspTour, TspWithCoordinates};
-pub use swap_search_state::TspSwapSearchState;
+pub use definition::{calculate_tour_length, TspSolution, TspTour, TspWithCoordinates};
+pub use neighbor::{TspRelocateNeighbor, TspTwoOptNeighbor};

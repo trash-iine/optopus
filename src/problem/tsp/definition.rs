@@ -2,7 +2,35 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+use crate::search_state::{ProblemTrait, Rankable};
+
 pub type TspTour = Vec<usize>;
+
+/// ツアーとその目的関数値（巡回路の総距離）を保持する解
+#[derive(Debug, Clone)]
+pub struct TspSolution {
+    pub tour: TspTour,
+    pub objective: f64,
+}
+
+impl Rankable for TspSolution {
+    // TSP は最小化問題なので、距離が短い方が優れた解
+    fn is_better_than(&self, other: &Self) -> bool {
+        self.objective < other.objective
+    }
+}
+
+impl ProblemTrait for TspWithCoordinates {
+    type Solution = TspSolution;
+
+    fn new_solution(&self, rng: &mut impl rand::Rng) -> TspSolution {
+        use rand::seq::SliceRandom;
+        let mut tour: Vec<usize> = (0..self.get_n()).collect();
+        tour.shuffle(rng);
+        let objective = calculate_tour_length(self, &tour);
+        TspSolution { tour, objective }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct TspWithCoordinates {

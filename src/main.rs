@@ -2,7 +2,7 @@ use optopus::{
     heuristic::{
         BreakoutLocalSearchForMaxCut, Heuristic, ParallelHeuristic, StopCondition, TabuSearch,
     },
-    problem::{max_cut::MaxCut, MaxCutFlipNeighbor, MaxCutSwapNeighbor},
+    problem::{MaxCutFlipNeighbor, MaxCutSwapNeighbor, max_cut::MaxCut},
     search_state::SearchState,
 };
 use serde::Serialize;
@@ -27,8 +27,8 @@ fn main() {
 
     let mut results = Vec::new();
 
-    // let files = glob::glob("data/max_cut/G*").unwrap();
-    let files = glob::glob("data/max_cut/G1").unwrap();
+    let files = glob::glob("data/max_cut/G*").unwrap();
+    // let files = glob::glob("data/max_cut/G1").unwrap();
     for file in files {
         let instance_number = file
             .as_ref()
@@ -47,8 +47,8 @@ fn main() {
         tracing::info!("Processing file: {:?}", file);
         let mc = MaxCut::load_from_file(file.as_ref().unwrap().to_str().unwrap()).unwrap();
         let mut state = SearchState::new(&mc, rand::rng());
-        // let sc = StopCondition::new(Some(200000), None, None);
-        let sc = StopCondition::new(Some(30000), None, None);
+        let sc = StopCondition::new(Some(10_000_000), None, None);
+        // let sc = StopCondition::new(Some(30000), None, None);
         let bls = BreakoutLocalSearchForMaxCut::new(
             (3, (mc.len() / 10) as u64),
             sc,
@@ -69,8 +69,10 @@ fn main() {
         let status = bls.run(&mut state);
         let end = std::time::Instant::now();
         tracing::info!(
-            "Best objective: {} ({:?})",
+            "Best objective: {} ({:?}, {:?}), time taken: {:?}",
             state.best_solution.objective,
+            state.best_iteration,
+            state.best_time - state.start_time,
             end - start
         );
         results.push(BenchmarkResult {
@@ -94,11 +96,10 @@ fn main() {
                 .best_solution
                 .cut
                 .iter()
-                .filter(|(_, &v)| v)
+                .filter(|(_, v)| **v)
                 .map(|(&i, _)| i)
                 .collect(),
         });
-        break;
     }
 
     // Serialize results to TOML
