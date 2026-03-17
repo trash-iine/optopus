@@ -311,6 +311,6 @@ mod tests {
     #[test]
     fn test_search_state_new() {
         let qubo = make_qubo();
-        let _state = SearchState::new(&qubo, rand::rng());
+        let _state = SearchState::new(&qubo);
     }
 }

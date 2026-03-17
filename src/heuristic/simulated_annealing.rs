@@ -1,4 +1,5 @@
 use super::{Heuristic, StopCondition};
+use crate::error::OptError;
 use crate::search_state::{Evaluable, MoveToNeigbor, ProblemTrait, SearchState};
 use rand::seq::IteratorRandom;
 use rand::Rng;
@@ -37,10 +38,10 @@ where
     fn run_once<'a>(
         &self,
         state: &mut SearchState<'a, P>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         let neighbor = N::iter(&state.instance, &state.solution)
             .choose(&mut rand::rng())
-            .ok_or("No neighbor found")?;
+            .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
         if state.is_neighbor_better_than_current(&neighbor)
             || rand::rng().random::<f64>()
                 < (-neighbor.evaluate() / *self.current_temperature.borrow()).exp()
@@ -100,10 +101,10 @@ where
     fn run_once<'a>(
         &self,
         state: &mut SearchState<'a, P>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         let neighbor = N::iter(&state.instance, &state.solution)
             .choose(&mut rand::rng())
-            .ok_or("No neighbor found")?;
+            .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
 
         if state.is_neighbor_better_than_current(&neighbor)
             || rand::rng().random::<f64>()

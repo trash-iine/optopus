@@ -10,4 +10,5 @@ pub use formula::{
 };
 pub use max_cut::{MaxCut, MaxCutFlipNeighbor, MaxCutSwapNeighbor};
 pub use qubo::{Qubo, QuboFlipNeighbour, QuboSwapNeighbour, QuboSolution};
+pub use sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor};
 pub use tsp::{TspRelocateNeighbor, TspSolution, TspTour, TspTwoOptNeighbor, TspWithCoordinates};

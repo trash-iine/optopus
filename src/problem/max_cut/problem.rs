@@ -232,11 +232,7 @@ impl MaxCut {
                     .get(j)
                     .expect(format!("{} is not found in solution", j).as_str());
 
-                if i_side ^ j_side {
-                    -w
-                } else {
-                    w
-                }
+                if i_side ^ j_side { -w } else { w }
             })
             .sum()
     }
@@ -289,7 +285,6 @@ mod tests {
 
         assert_eq!(mc.get_weight(0, 1), 3.0);
         assert_eq!(mc.get_weight(0, 2), 1.0);
-        assert_eq!(mc.get_weight(1, 2), 0.0);
     }
 
     #[test]

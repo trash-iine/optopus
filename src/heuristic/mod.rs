@@ -12,20 +12,25 @@ pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing};
 pub use specific::BreakoutLocalSearchForMaxCut;
 pub use tabu_search::TabuSearch;
 
+use crate::error::OptError;
 use crate::search_state::{ProblemTrait, SearchState};
 use serde::Serialize;
 
+/// ヒューリスティックアルゴリズムの共通インターフェース。
+///
+/// `is_done` で終了条件を判定し、`run_once` で1ステップ実行します。
+/// `run` は終了まで `run_once` を繰り返すデフォルト実装を持ちます。
 pub trait Heuristic<Problem: ProblemTrait> {
     fn clear(&mut self) {}
     fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool;
     fn run_once<'a>(
         &self,
         state: &mut SearchState<'a, Problem>,
-    ) -> Result<(), Box<dyn std::error::Error>>;
+    ) -> Result<(), OptError>;
     fn run<'a>(
         &self,
         state: &mut SearchState<'a, Problem>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         while !self.is_done(&state) {
             self.run_once(state)?;
         }
@@ -38,13 +43,13 @@ pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
     fn run_once_par<'a>(
         &self,
         state: &mut SearchState<'a, Problem>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         self.run_once(state)
     }
     fn run_par<'a>(
         &self,
         state: &mut SearchState<'a, Problem>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         while !self.is_done(&state) {
             self.run_once_par(state)?;
         }
@@ -53,6 +58,26 @@ pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
     }
 }
 
+/// ヒューリスティックの終了条件。
+///
+/// 反復回数・実行時間・改善なし反復回数のいずれか（複数も可）で停止させます。
+///
+/// # Example
+///
+/// ```
+/// use optopus::heuristic::StopCondition;
+/// use std::time::Duration;
+///
+/// // 反復回数のみ
+/// let sc = StopCondition::iterations(1_000_000);
+///
+/// // 実行時間のみ
+/// let sc = StopCondition::duration(Duration::from_secs(30));
+///
+/// // 組み合わせ（チェーン）
+/// let sc = StopCondition::iterations(1_000_000)
+///     .with_duration(Duration::from_secs(30));
+/// ```
 #[derive(Debug, Clone, Serialize)]
 pub struct StopCondition {
     pub max_iteration: Option<u64>,
@@ -61,6 +86,7 @@ pub struct StopCondition {
 }
 
 impl StopCondition {
+    /// 全条件を直接指定して作成します。
     pub fn new(
         max_iteration: Option<u64>,
         max_duration: Option<std::time::Duration>,
@@ -71,6 +97,51 @@ impl StopCondition {
             max_duration,
             max_failed_update,
         }
+    }
+
+    /// 反復回数だけを条件にした `StopCondition` を作成します。
+    pub fn iterations(n: u64) -> Self {
+        Self {
+            max_iteration: Some(n),
+            max_duration: None,
+            max_failed_update: None,
+        }
+    }
+
+    /// 実行時間だけを条件にした `StopCondition` を作成します。
+    pub fn duration(d: std::time::Duration) -> Self {
+        Self {
+            max_iteration: None,
+            max_duration: Some(d),
+            max_failed_update: None,
+        }
+    }
+
+    /// 改善なし反復回数だけを条件にした `StopCondition` を作成します。
+    pub fn failed_updates(n: u64) -> Self {
+        Self {
+            max_iteration: None,
+            max_duration: None,
+            max_failed_update: Some(n),
+        }
+    }
+
+    /// 最大反復回数を追加（チェーン用）。
+    pub fn with_iterations(mut self, n: u64) -> Self {
+        self.max_iteration = Some(n);
+        self
+    }
+
+    /// 最大実行時間を追加（チェーン用）。
+    pub fn with_duration(mut self, d: std::time::Duration) -> Self {
+        self.max_duration = Some(d);
+        self
+    }
+
+    /// 最大改善なし反復回数を追加（チェーン用）。
+    pub fn with_failed_updates(mut self, n: u64) -> Self {
+        self.max_failed_update = Some(n);
+        self
     }
 
     pub fn is_done<'a, Problem: ProblemTrait>(&self, state: &SearchState<'a, Problem>) -> bool {

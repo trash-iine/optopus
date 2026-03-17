@@ -1,4 +1,5 @@
 use super::Heuristic;
+use crate::error::OptError;
 use crate::search_state::{ProblemTrait, SearchStateCloneType};
 
 pub struct Sequential<Problem: ProblemTrait> {
@@ -25,7 +26,7 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Sequential<Problem> {
     fn run_once<'a>(
         &self,
         state: &mut crate::search_state::SearchState<'a, Problem>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         for heuristic in self.heuristics.iter() {
             let mut cloned = state.clone_for_new_run(SearchStateCloneType::ClearBest);
 

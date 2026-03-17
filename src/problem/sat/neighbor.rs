@@ -220,7 +220,7 @@ mod tests {
     #[test]
     fn test_search_state_new() {
         let sat = make_sat();
-        let _state = SearchState::new(&sat, rand::rng());
+        let _state = SearchState::new(&sat);
     }
 
     #[test]

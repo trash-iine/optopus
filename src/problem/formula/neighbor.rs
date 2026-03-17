@@ -198,7 +198,7 @@ mod tests {
     #[test]
     fn test_search_state_new() {
         let prob = make_problem();
-        let _state = SearchState::new(&prob, rand::rng());
+        let _state = SearchState::new(&prob);
     }
 
     #[test]

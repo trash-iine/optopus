@@ -375,7 +375,7 @@ fn run_max_cut(s: &MaxCutBenchmarkSetting) -> BenchmarkResult {
         Ok(v) => v,
         Err(e) => return error_result(e),
     };
-    let mut state = SearchState::new(&mc, rand::rng());
+    let mut state = SearchState::new(&mc);
     let heuristic = s.heuristic.build(s.stop_condition.clone());
 
     let start = std::time::Instant::now();
@@ -404,7 +404,7 @@ fn run_qubo(s: &QuboBenchmarkSetting) -> BenchmarkResult {
         Ok(v) => v,
         Err(e) => return error_result(e),
     };
-    let mut state = SearchState::new(&qubo, rand::rng());
+    let mut state = SearchState::new(&qubo);
     let heuristic = s.heuristic.build(s.stop_condition.clone());
 
     let start = std::time::Instant::now();
@@ -433,7 +433,7 @@ fn run_sat(s: &SatBenchmarkSetting) -> BenchmarkResult {
         Ok(v) => v,
         Err(e) => return error_result(e),
     };
-    let mut state = SearchState::new(&sat, rand::rng());
+    let mut state = SearchState::new(&sat);
     let heuristic = s.heuristic.build(s.stop_condition.clone());
 
     let start = std::time::Instant::now();
@@ -458,7 +458,7 @@ fn run_tsp(s: &TspBenchmarkSetting) -> BenchmarkResult {
         Ok(v) => v,
         Err(e) => return error_result(e),
     };
-    let mut state = SearchState::new(&tsp, rand::rng());
+    let mut state = SearchState::new(&tsp);
     let heuristic = s.heuristic.build(s.stop_condition.clone());
 
     let start = std::time::Instant::now();
@@ -476,7 +476,7 @@ fn run_tsp(s: &TspBenchmarkSetting) -> BenchmarkResult {
     }
 }
 
-fn status_str(r: Result<(), Box<dyn std::error::Error>>) -> String {
+fn status_str(r: Result<(), crate::error::OptError>) -> String {
     match r {
         Ok(_) => "success".to_string(),
         Err(e) => format!("error: {}", e),

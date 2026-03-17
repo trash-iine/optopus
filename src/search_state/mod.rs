@@ -53,8 +53,8 @@ impl<'a, Problem> SearchState<'a, Problem>
 where
     Problem: ProblemTrait,
 {
-    pub fn new(instance: &'a Problem, mut rng: rand::rngs::ThreadRng) -> Self {
-        let solution = instance.new_solution(&mut rng);
+    pub fn new(instance: &'a Problem) -> Self {
+        let solution = instance.new_solution(&mut rand::rng());
         let best_solution = solution.clone();
         Self {
             start_iteration: 0,

@@ -1,4 +1,5 @@
 use super::{Heuristic, StopCondition};
+use crate::error::OptError;
 use crate::search_state::{
     filter_best, EnabledTabu, MoveToNeigbor, ProblemTrait, Rankable, SearchState,
 };
@@ -61,7 +62,7 @@ where
     fn run_once<'a>(
         &self,
         state: &mut SearchState<'a, P>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         let mut best_list = filter_best(N::iter(&state.instance, &state.solution).filter(|n| {
             n.is_move_enabled(&self.borrow_tabu_map(), state.iteration)
                 || state.is_neighbor_better_than_best(n)

@@ -1,4 +1,5 @@
 use super::{Heuristic, StopCondition};
+use crate::error::OptError;
 use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState};
 use rand::seq::IteratorRandom;
 
@@ -27,11 +28,11 @@ where
     fn run_once<'a>(
         &self,
         state: &mut SearchState<'a, P>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         while !self.stop_condition.is_done(state) {
             let neighbor = N::iter(&state.instance, &state.solution)
                 .choose(&mut rand::rng())
-                .ok_or("No neighbor found")?;
+                .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
 
             state.apply(&neighbor);
         }

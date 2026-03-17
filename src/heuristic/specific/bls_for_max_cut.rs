@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use rand::seq::IteratorRandom;
 
 use super::super::{Heuristic, StopCondition, TabuSearch};
+use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::{
@@ -154,11 +155,11 @@ impl BreakoutLocalSearch {
     fn apply_strong_perturbation(
         &self,
         state: &mut SearchState<'_, MaxCut>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         for _ in 0..*self.l.borrow() {
             let neighbor = MaxCutFlipNeighbor::iter(&state.instance, &state.solution)
                 .choose(&mut rand::rng())
-                .ok_or("No neighbor found")?;
+                .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
 
             neighbor.add_to_tabu_map(
                 &mut self.tabu_map.borrow_mut(),
@@ -173,7 +174,7 @@ impl BreakoutLocalSearch {
     fn apply_weak_flip_perturbation(
         &self,
         state: &mut SearchState<'_, MaxCut>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         let sc = StopCondition::new(Some(*self.l.borrow() + state.iteration), None, None);
         let perturb =
             TabuSearch::<MaxCutFlipNeighbor>::new(sc, self.tabu_tenure, Some(self.tabu_map.take()));
@@ -185,7 +186,7 @@ impl BreakoutLocalSearch {
     fn apply_weak_swap_perturbation(
         &self,
         state: &mut SearchState<'_, MaxCut>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         for _ in 0..*self.l.borrow() {
             let mut v0_best = Vec::new();
             let mut v1_best = Vec::new();
@@ -277,7 +278,7 @@ impl BreakoutLocalSearch {
                             .unwrap_or(&0)
                             .cmp(&self.tabu_map.borrow().get(&b.i).unwrap_or(&0))
                     })
-                    .ok_or("No tabu v0")?
+                    .ok_or_else(|| OptError::InvalidState("No tabu v0".to_string()))?
                     .i;
                 let j = v1_tabu
                     .iter()
@@ -288,7 +289,7 @@ impl BreakoutLocalSearch {
                             .unwrap_or(&0)
                             .cmp(&self.tabu_map.borrow().get(&b.i).unwrap_or(&0))
                     })
-                    .ok_or("No tabu v1")?
+                    .ok_or_else(|| OptError::InvalidState("No tabu v1".to_string()))?
                     .i;
                 let neighbor = MaxCutSwapNeighbor {
                     i: i,
@@ -344,7 +345,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
     fn run_once<'a>(
         &self,
         state: &mut SearchState<'a, MaxCut>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         self.local_search_with_updating_tabu(state);
 
         self.update_omega(state);

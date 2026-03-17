@@ -1,3 +1,6 @@
+/// 解の優劣を比較するトレイト。
+///
+/// `is_better_than` が `true` を返すとき `self` の方が良い解とみなされます。
 pub trait Rankable {
     fn is_better_than(&self, other: &Self) -> bool;
 }
@@ -20,11 +23,35 @@ pub fn filter_best<R: Rankable, T: Iterator<Item = R>>(iter: T) -> Vec<R> {
     return best_list;
 }
 
+/// 最適化問題を表すトレイト。
+///
+/// 独自の問題を定義するときは `Solution` 型と `new_solution` を実装してください。
+///
+/// # Example
+///
+/// ```rust,ignore
+/// struct MyProblem { /* ... */ }
+/// struct MySolution { value: f64 }
+///
+/// impl Rankable for MySolution {
+///     fn is_better_than(&self, other: &Self) -> bool { self.value > other.value }
+/// }
+/// impl ProblemTrait for MyProblem {
+///     type Solution = MySolution;
+///     fn new_solution(&self, _rng: &mut impl rand::Rng) -> MySolution {
+///         MySolution { value: 0.0 }
+///     }
+/// }
+/// ```
 pub trait ProblemTrait {
     type Solution: Clone + Rankable;
     fn new_solution(&self, rng: &mut impl rand::Rng) -> Self::Solution;
 }
 
+/// 近傍移動（1ステップの変化）を表すトレイト。
+///
+/// `iter` で現在の解から到達可能な近傍を列挙し、
+/// `apply_to_solution` で解にその移動を適用します。
 pub trait MoveToNeigbor<Problem>
 where
     Problem: ProblemTrait,

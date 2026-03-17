@@ -198,7 +198,7 @@ mod tests {
         mc.add_weight(0, 2, 1.0);
         mc.add_weight(1, 2, 1.0);
 
-        let _ = SearchState::new(&mc, rand::rng());
+        let _ = SearchState::new(&mc);
     }
 
     #[test]
@@ -208,7 +208,7 @@ mod tests {
         mc.add_weight(0, 2, 1.0);
         mc.add_weight(1, 2, 1.0);
 
-        let mut state = SearchState::new(&mc, rand::rng());
+        let mut state = SearchState::new(&mc);
         state.solution.cut.insert(0, true);
         state.solution.cut.insert(1, false);
         state.solution.cut.insert(2, true);

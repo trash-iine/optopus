@@ -1,4 +1,5 @@
 use super::{Heuristic, StopCondition};
+use crate::error::OptError;
 use crate::search_state::{filter_best, MoveToNeigbor, ProblemTrait, Rankable, SearchState};
 use std::cell::RefCell;
 
@@ -8,19 +9,18 @@ use std::cell::RefCell;
 /// # Example
 ///
 /// ```
-/// use optopus::algorithm::{StopCondition, Heuristic, LocalSearch};
+/// use optopus::heuristic::{StopCondition, Heuristic, LocalSearch};
 /// use optopus::search_state::SearchState;
-/// use optopus::problem::max_cut::{MaxCut, MaxCutFlipNeighbor};
+/// use optopus::problem::{MaxCut, MaxCutFlipNeighbor};
 ///
 /// let mut mc = MaxCut::new();
 /// mc.add_weight(0, 1, 1.0);
 /// mc.add_weight(0, 2, 1.0);
 /// mc.add_weight(1, 2, 1.0);
 ///
-/// let mut state = SearchState::new(&mc, rand::rng());
-/// let sc = StopCondition::new(Some(1000), None, None);
-/// let ls = LocalSearch::<MaxCutFlipNeighbor>::new(sc);
-/// ls.run(&mut state);
+/// let mut state = SearchState::new(&mc);
+/// let ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000));
+/// ls.run(&mut state).unwrap();
 /// ```
 pub struct LocalSearch<N> {
     pub stop_condition: StopCondition,
@@ -55,7 +55,7 @@ where
     fn run_once<'a>(
         &self,
         state: &mut SearchState<'a, P>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), OptError> {
         let mut best_list = filter_best(
             N::iter(&state.instance, &state.solution)
                 .filter(|n| state.is_neighbor_better_than_current(n)),
