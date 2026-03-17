@@ -1,3 +1,4 @@
+mod beam_search;
 mod local_search;
 mod random_walk;
 mod sequential;
@@ -5,6 +6,7 @@ mod simulated_annealing;
 mod specific;
 mod tabu_search;
 
+pub use beam_search::BeamSearch;
 pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;
 pub use sequential::Sequential;

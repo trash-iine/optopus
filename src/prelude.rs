@@ -14,7 +14,7 @@ pub use crate::search_state::{SearchState, SearchStateCloneType};
 
 // ヒューリスティック
 pub use crate::heuristic::{
-    BangBangSimulatedAnnealing, BreakoutLocalSearchForMaxCut, Heuristic, LocalSearch,
+    BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, Heuristic, LocalSearch,
     ParallelHeuristic, RandomWalk, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
 };
 
