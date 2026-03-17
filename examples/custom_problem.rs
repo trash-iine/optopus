@@ -52,8 +52,13 @@ struct FlipMove {
 }
 
 impl MoveToNeigbor<OneMaxProblem> for FlipMove {
-    fn apply_to_solution(&self, _prob: &OneMaxProblem, sol: &mut OneMaxSolution) {
+    fn apply_to_solution(
+        &self,
+        _prob: &OneMaxProblem,
+        sol: &mut OneMaxSolution,
+    ) -> Result<(), optopus::error::OptError> {
         sol.bits[self.index] = !sol.bits[self.index];
+        Ok(())
     }
 
     fn iter(prob: &OneMaxProblem, _sol: &OneMaxSolution) -> impl Iterator<Item = Self> + Send {
@@ -67,7 +72,8 @@ impl MoveToNeigbor<OneMaxProblem> for FlipMove {
         other: &OneMaxSolution,
     ) -> bool {
         let mut cloned = src.clone();
-        self.apply_to_solution(prob, &mut cloned);
+        self.apply_to_solution(prob, &mut cloned)
+            .expect("apply_to_solution should not fail");
         cloned.is_better_than(other)
     }
 }

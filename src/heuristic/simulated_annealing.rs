@@ -46,7 +46,7 @@ where
             || rand::rng().random::<f64>()
                 < (-neighbor.evaluate() / *self.current_temperature.borrow()).exp()
         {
-            state.apply(&neighbor);
+            state.apply(&neighbor)?;
         }
 
         self.current_temperature
@@ -110,7 +110,7 @@ where
             || rand::rng().random::<f64>()
                 < (-neighbor.evaluate() / *self.current_temperature.borrow()).exp()
         {
-            state.apply(&neighbor);
+            state.apply(&neighbor)?;
         }
 
         if *self.is_going_down.borrow() {

@@ -66,7 +66,7 @@ impl Qubo {
     }
 
     pub fn load_file_as_max_cut(filename: &str) -> Result<Self, Box<dyn error::Error>> {
-        let file = File::open(filename).unwrap();
+        let file = File::open(filename)?;
         let reader = BufReader::new(file);
         let mut line_iter = reader.lines();
         let (_, _) = {

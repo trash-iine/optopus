@@ -75,7 +75,7 @@ where
                 self.tabu_tenure,
             );
 
-            state.apply(&best_move);
+            state.apply(&best_move)?;
         } else {
             tracing::warn!("No best move found");
             state.progress_iteration();

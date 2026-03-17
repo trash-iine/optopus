@@ -54,7 +54,7 @@ where
         }
 
         if let Some(best_move) = best_move_option {
-            state.apply(&best_move);
+            state.apply(&best_move)?;
         } else {
             *self.no_best_move.borrow_mut() = true;
         }

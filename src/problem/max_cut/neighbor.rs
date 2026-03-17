@@ -1,6 +1,7 @@
 // ! Defines the neighbor structure and the methods to enumerate neighbors for the MaxCut problem.
 use super::MaxCut;
 use crate::{
+    error::OptError,
     problem::max_cut::problem::MaxCutSolution,
     search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable},
 };
@@ -38,12 +39,16 @@ impl EnabledTabu for MaxCutFlipNeighbor {
 }
 
 impl MoveToNeigbor<MaxCut> for MaxCutFlipNeighbor {
-    fn apply_to_solution(&self, prob: &MaxCut, solution: &mut MaxCutSolution) {
+    fn apply_to_solution(
+        &self,
+        prob: &MaxCut,
+        solution: &mut MaxCutSolution,
+    ) -> Result<(), OptError> {
         // cut side of the vertex
         let bi = *solution
             .cut
             .get(&self.i)
-            .expect(format!("vertex {} is not found in solution.", self.i).as_str());
+            .ok_or_else(|| OptError::InvalidState(format!("vertex {} is not found in solution.", self.i)))?;
 
         solution.cut.insert(self.i, !bi);
 
@@ -53,7 +58,7 @@ impl MoveToNeigbor<MaxCut> for MaxCutFlipNeighbor {
             let bj = *solution
                 .cut
                 .get(&j)
-                .expect(format!("vertex {} is not found in the solution.", j).as_str());
+                .ok_or_else(|| OptError::InvalidState(format!("vertex {} is not found in the solution.", j)))?;
             if bi ^ bj {
                 *solution.gain.entry(j).or_insert(0.0) += w * 2.0;
             } else {
@@ -62,6 +67,7 @@ impl MoveToNeigbor<MaxCut> for MaxCutFlipNeighbor {
         }
 
         solution.objective += self.gain;
+        Ok(())
     }
 
     fn iter(_: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
@@ -70,7 +76,7 @@ impl MoveToNeigbor<MaxCut> for MaxCutFlipNeighbor {
             gain: *sol
                 .gain
                 .get(&i)
-                .expect(format!("vertex {} is not found in the solution.", i).as_str()),
+                .expect("gain entry must exist for every vertex in cut"),
         })
     }
 
@@ -144,17 +150,18 @@ impl MoveToNeigbor<MaxCut> for MaxCutSwapNeighbor {
         &self,
         prob: &MaxCut,
         sol: &mut <MaxCut as crate::search_state::ProblemTrait>::Solution,
-    ) {
+    ) -> Result<(), OptError> {
         let flip_i = MaxCutFlipNeighbor {
             i: self.i,
             gain: sol.gain[&self.i],
         };
-        flip_i.apply_to_solution(prob, sol);
+        flip_i.apply_to_solution(prob, sol)?;
         let flip_j = MaxCutFlipNeighbor {
             i: self.j,
             gain: sol.gain[&self.j],
         };
-        flip_j.apply_to_solution(prob, sol);
+        flip_j.apply_to_solution(prob, sol)?;
+        Ok(())
     }
 
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
@@ -214,7 +221,7 @@ mod tests {
         state.solution.cut.insert(2, true);
 
         let neighbor = MaxCutFlipNeighbor { i: 1, gain: -2.0 };
-        state.apply(&neighbor);
+        state.apply(&neighbor).unwrap();
 
         assert_eq!(state.solution.cut[&1], true);
     }

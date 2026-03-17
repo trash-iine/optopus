@@ -150,13 +150,14 @@ where
         }
     }
 
-    pub fn apply<Move>(&mut self, neighbor: &Move)
+    pub fn apply<Move>(&mut self, neighbor: &Move) -> Result<(), crate::error::OptError>
     where
         Move: MoveToNeigbor<Problem>,
     {
         self.iteration = neighbor.apply_to_iteration(self.iteration);
-        neighbor.apply_to_solution(&self.instance, &mut self.solution);
+        neighbor.apply_to_solution(&self.instance, &mut self.solution)?;
         self.update_best();
+        Ok(())
     }
 
     pub fn progress_iteration(&mut self) {

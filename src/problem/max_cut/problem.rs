@@ -25,7 +25,7 @@ impl MaxCut {
     /// # Examples
     ///
     /// ```
-    /// let mc = optopus::problem::max_cut::problem::MaxCut::new();
+    /// let mc = optopus::problem::MaxCut::new();
     /// ```
     pub fn new() -> Self {
         Self {
@@ -38,7 +38,7 @@ impl MaxCut {
     /// # Examples
     ///
     /// ```
-    /// let mc = optopus::problem::max_cut::problem::MaxCut::new();
+    /// let mut mc = optopus::problem::MaxCut::new();
     /// assert_eq!(mc.len(), 0);
     ///
     /// mc.add_weight(0, 1, 1.0);
@@ -54,7 +54,7 @@ impl MaxCut {
     /// # Examples
     ///
     /// ```
-    /// let mut mc = optopus::problem::max_cut::problem::MaxCut::new();
+    /// let mut mc = optopus::problem::MaxCut::new();
     /// mc.add_weight(0, 1, 1.0);
     /// mc.add_weight(0, 2, 1.0);
     /// assert_eq!(mc.len(), 3);
@@ -72,7 +72,7 @@ impl MaxCut {
     /// # Examples
     ///
     /// ```
-    /// let mut mc = optopus::problem::max_cut::problem::MaxCut::new();
+    /// let mut mc = optopus::problem::MaxCut::new();
     /// mc.add_weight(0, 1, 1.0);
     /// mc.add_weight(0, 2, 1.0);
     /// mc.add_weight(1, 2, 1.0);
@@ -96,10 +96,10 @@ impl MaxCut {
     /// # Examples
     ///
     /// ```
-    /// let mut mc = optopus::problem::max_cut::problem::MaxCut::new();
-    /// mc.add_adj(0, 1, 1.0);
-    /// mc.add_adj(0, 2, 1.0);
-    /// mc.add_adj(0, 1, 2.0);
+    /// let mut mc = optopus::problem::MaxCut::new();
+    /// mc.add_weight(0, 1, 1.0);
+    /// mc.add_weight(0, 2, 1.0);
+    /// mc.add_weight(0, 1, 2.0);
     /// ```
     pub fn add_weight(&mut self, i: usize, j: usize, w: f32) {
         *self
@@ -121,7 +121,7 @@ impl MaxCut {
     /// # Examples
     ///
     /// ```
-    /// let mut mc = optopus::problem::max_cut::problem::MaxCut::new();
+    /// let mut mc = optopus::problem::MaxCut::new();
     /// mc.add_weight(0, 1, 1.0);
     /// mc.add_weight(0, 2, 1.0);
     ///
@@ -153,7 +153,7 @@ impl MaxCut {
     /// # Examples
     ///
     /// ```
-    /// let mut mc = optopus::problem::max_cut::problem::MaxCut::new();
+    /// let mut mc = optopus::problem::MaxCut::new();
     /// mc.add_weight(0, 1, 1.0);
     /// mc.add_weight(0, 2, 1.0);
     /// mc.add_weight(1, 2, 1.0);
@@ -183,7 +183,7 @@ impl MaxCut {
     }
 
     pub fn load_from_file(filename: &str) -> Result<Self, Box<dyn core::error::Error>> {
-        let file = std::fs::File::open(filename).unwrap();
+        let file = std::fs::File::open(filename)?;
         let reader = std::io::BufReader::new(file);
         let mut line_iter = reader.lines();
 
@@ -219,7 +219,7 @@ impl MaxCut {
     /// mc.add_weight(0, 2, 1.0);
     /// mc.add_weight(1, 2, 1.0);
     ///
-    /// let cut = std::collections::HashMap::from([(0, false), (1, false), (2, true)]);
+    /// let cut = std::collections::HashMap::from([(0, true), (1, false), (2, false)]);
     /// assert_eq!(mc.calculate_gain(&cut, 0), -2.0);
     /// ```
     pub fn calculate_gain(&self, cut: &HashMap<usize, bool>, i: usize) -> f32 {

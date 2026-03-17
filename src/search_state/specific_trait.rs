@@ -60,7 +60,11 @@ where
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 1
     }
-    fn apply_to_solution(&self, prob: &Problem, sol: &mut Problem::Solution);
+    fn apply_to_solution(
+        &self,
+        prob: &Problem,
+        sol: &mut Problem::Solution,
+    ) -> Result<(), crate::error::OptError>;
     fn iter(prob: &Problem, sol: &Problem::Solution) -> impl Iterator<Item = Self> + Send;
     fn move_to_be_better_than(
         &self,
@@ -69,7 +73,8 @@ where
         other: &Problem::Solution,
     ) -> bool {
         let mut cloned = src.clone();
-        self.apply_to_solution(prob, &mut cloned);
+        self.apply_to_solution(prob, &mut cloned)
+            .expect("apply_to_solution should not fail");
         cloned.is_better_than(other)
     }
 }

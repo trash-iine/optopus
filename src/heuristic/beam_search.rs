@@ -81,7 +81,7 @@ where
         for beam_sol in beam.iter() {
             for neighbor in N::iter(&state.instance, beam_sol) {
                 let mut candidate = beam_sol.clone();
-                neighbor.apply_to_solution(&state.instance, &mut candidate);
+                neighbor.apply_to_solution(&state.instance, &mut candidate)?;
                 candidates.push(candidate);
             }
         }

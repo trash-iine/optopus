@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::definition::{FormulaProblem, FormulaSolution, Value};
-use crate::search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable};
+use crate::{error::OptError, search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable}};
 
 // ---------------------------------------------------------------------------
 // Flip 近傍 (1-opt: 変数を 1 つフリップ)
@@ -47,7 +47,7 @@ impl EnabledTabu for FormulaFlipNeighbor {
 }
 
 impl MoveToNeigbor<FormulaProblem> for FormulaFlipNeighbor {
-    fn apply_to_solution(&self, prob: &FormulaProblem, sol: &mut FormulaSolution) {
+    fn apply_to_solution(&self, prob: &FormulaProblem, sol: &mut FormulaSolution) -> Result<(), OptError> {
         sol.x[self.i] = !sol.x[self.i];
         sol.score += self.gain;
         sol.gain[self.i] = -self.gain;
@@ -58,6 +58,7 @@ impl MoveToNeigbor<FormulaProblem> for FormulaFlipNeighbor {
                 sol.gain[j] = prob.calc_gain(&sol.x, j);
             }
         }
+        Ok(())
     }
 
     fn iter(prob: &FormulaProblem, sol: &FormulaSolution) -> impl Iterator<Item = Self> + Send {
@@ -128,12 +129,13 @@ impl MoveToNeigbor<FormulaProblem> for FormulaSwapNeighbor {
         iter + 2
     }
 
-    fn apply_to_solution(&self, prob: &FormulaProblem, sol: &mut FormulaSolution) {
+    fn apply_to_solution(&self, prob: &FormulaProblem, sol: &mut FormulaSolution) -> Result<(), OptError> {
         let flip_i = FormulaFlipNeighbor { i: self.i, gain: sol.gain[self.i] };
-        flip_i.apply_to_solution(prob, sol);
+        flip_i.apply_to_solution(prob, sol)?;
 
         let flip_j = FormulaFlipNeighbor { i: self.j, gain: sol.gain[self.j] };
-        flip_j.apply_to_solution(prob, sol);
+        flip_j.apply_to_solution(prob, sol)?;
+        Ok(())
     }
 
     fn iter(prob: &FormulaProblem, sol: &FormulaSolution) -> impl Iterator<Item = Self> + Send {
@@ -225,7 +227,7 @@ mod tests {
 
         for neighbor in FormulaFlipNeighbor::iter(&prob, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&prob, &mut s);
+            neighbor.apply_to_solution(&prob, &mut s).unwrap();
 
             let expected_score = prob.eval_score(&s.x);
             assert!(
@@ -270,7 +272,7 @@ mod tests {
 
         for neighbor in FormulaSwapNeighbor::iter(&prob, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&prob, &mut s);
+            neighbor.apply_to_solution(&prob, &mut s).unwrap();
 
             let expected_score = prob.eval_score(&s.x);
             assert!(

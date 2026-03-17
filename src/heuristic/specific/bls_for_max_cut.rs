@@ -72,7 +72,10 @@ impl BreakoutLocalSearch {
         }
     }
 
-    fn local_search_with_updating_tabu(&self, state: &mut SearchState<'_, MaxCut>) {
+    fn local_search_with_updating_tabu(
+        &self,
+        state: &mut SearchState<'_, MaxCut>,
+    ) -> Result<(), OptError> {
         loop {
             let mut best_move_option: Option<MaxCutFlipNeighbor> = None;
             for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
@@ -95,9 +98,9 @@ impl BreakoutLocalSearch {
                     state.iteration,
                     self.tabu_tenure,
                 );
-                state.apply(&best_move);
+                state.apply(&best_move)?;
             } else {
-                return;
+                return Ok(());
             }
         }
     }
@@ -166,7 +169,7 @@ impl BreakoutLocalSearch {
                 state.iteration,
                 self.tabu_tenure,
             );
-            state.apply(&neighbor);
+            state.apply(&neighbor)?;
         }
         Ok(())
     }
@@ -267,7 +270,7 @@ impl BreakoutLocalSearch {
                     state.iteration,
                     self.tabu_tenure,
                 );
-                state.apply(&best_move);
+                state.apply(&best_move)?;
             } else {
                 let i = v0_tabu
                     .iter()
@@ -307,7 +310,7 @@ impl BreakoutLocalSearch {
                     state.iteration,
                     self.tabu_tenure,
                 );
-                state.apply(&neighbor);
+                state.apply(&neighbor)?;
                 /*
                                let mut best_list = filter_best(v0_tabu.iter().flat_map(|v0| {
                                    v1_tabu.iter().map(|v1| MaxCutSwapNeighbor {
@@ -346,7 +349,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
         &self,
         state: &mut SearchState<'a, MaxCut>,
     ) -> Result<(), OptError> {
-        self.local_search_with_updating_tabu(state);
+        self.local_search_with_updating_tabu(state)?;
 
         self.update_omega(state);
         self.update_l(state);

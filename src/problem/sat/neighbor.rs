@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use super::definition::{Sat, SatSolution};
-use crate::search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable};
+use crate::{error::OptError, search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable}};
 
 // ---------------------------------------------------------------------------
 // Flip 近傍 (1-opt)
@@ -50,7 +50,7 @@ impl Evaluable<f64> for SatFlipNeighbor {
 }
 
 impl MoveToNeigbor<Sat> for SatFlipNeighbor {
-    fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) {
+    fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
         // フリップにより gain が変化する可能性がある変数を収集 (適用前に実施)
         let mut affected: HashSet<usize> = HashSet::new();
         for clause in prob.clauses_of_var(self.i) {
@@ -75,6 +75,7 @@ impl MoveToNeigbor<Sat> for SatFlipNeighbor {
         for j in affected {
             sol.gain[j] = prob.calc_gain(&sol.x, j);
         }
+        Ok(())
     }
 
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
@@ -141,19 +142,20 @@ impl MoveToNeigbor<Sat> for SatSwapNeighbor {
         iter + 2
     }
 
-    fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) {
+    fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
         // i をフリップ → j をフリップ (gain[j] は i フリップ後の値を使う)
         let flip_i = SatFlipNeighbor {
             i: self.i,
             gain: sol.gain[self.i],
         };
-        flip_i.apply_to_solution(prob, sol);
+        flip_i.apply_to_solution(prob, sol)?;
 
         let flip_j = SatFlipNeighbor {
             i: self.j,
             gain: sol.gain[self.j],
         };
-        flip_j.apply_to_solution(prob, sol);
+        flip_j.apply_to_solution(prob, sol)?;
+        Ok(())
     }
 
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
@@ -247,7 +249,7 @@ mod tests {
 
         for neighbor in SatFlipNeighbor::iter(&sat, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&sat, &mut s);
+            neighbor.apply_to_solution(&sat, &mut s).unwrap();
 
             let expected_n_sat = sat.calc_satisfied(&s.x);
             assert_eq!(
@@ -292,7 +294,7 @@ mod tests {
 
         for neighbor in SatSwapNeighbor::iter(&sat, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&sat, &mut s);
+            neighbor.apply_to_solution(&sat, &mut s).unwrap();
 
             let expected_n_sat = sat.calc_satisfied(&s.x);
             assert_eq!(

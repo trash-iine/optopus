@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use super::definition::{TspSolution, TspWithCoordinates};
-use crate::search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable};
+use crate::{error::OptError, search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable}};
 
 // ---------------------------------------------------------------------------
 // 2-opt 近傍
@@ -53,9 +53,10 @@ impl EnabledTabu for TspTwoOptNeighbor {
 }
 
 impl MoveToNeigbor<TspWithCoordinates> for TspTwoOptNeighbor {
-    fn apply_to_solution(&self, _: &TspWithCoordinates, sol: &mut TspSolution) {
+    fn apply_to_solution(&self, _: &TspWithCoordinates, sol: &mut TspSolution) -> Result<(), OptError> {
         sol.tour[self.i + 1..=self.j].reverse();
         sol.objective += self.gain;
+        Ok(())
     }
 
     fn iter(prob: &TspWithCoordinates, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
@@ -140,7 +141,7 @@ impl EnabledTabu for TspRelocateNeighbor {
 }
 
 impl MoveToNeigbor<TspWithCoordinates> for TspRelocateNeighbor {
-    fn apply_to_solution(&self, _: &TspWithCoordinates, sol: &mut TspSolution) {
+    fn apply_to_solution(&self, _: &TspWithCoordinates, sol: &mut TspSolution) -> Result<(), OptError> {
         let city = sol.tour.remove(self.pos);
         // pos を除去後のインデックス変化を補正して挿入位置を決める
         let insert_at = if self.ins < self.pos {
@@ -150,6 +151,7 @@ impl MoveToNeigbor<TspWithCoordinates> for TspRelocateNeighbor {
         };
         sol.tour.insert(insert_at, city);
         sol.objective += self.gain;
+        Ok(())
     }
 
     fn iter(prob: &TspWithCoordinates, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
@@ -224,7 +226,7 @@ mod tests {
         let tsp = make_square_tsp();
         // 初期ツアー [0,1,3,2] は交差あり (長さ = 1 + sqrt(2) + 1 + sqrt(2))
         let tour = vec![0, 1, 3, 2];
-        let objective = calculate_tour_length(&tsp, &tour);
+        let objective = calculate_tour_length(&tsp, &tour).unwrap();
         let sol = TspSolution { tour, objective };
 
         // 2-opt (i=1, j=2): エッジ (1,3) と (2,0) を (1,2) と (3,0) に置換
@@ -237,8 +239,8 @@ mod tests {
         assert!(best.gain < 0.0, "最良の2-opt移動は改善のはず");
 
         let mut sol2 = sol.clone();
-        best.apply_to_solution(&tsp, &mut sol2);
-        let expected = calculate_tour_length(&tsp, &sol2.tour);
+        best.apply_to_solution(&tsp, &mut sol2).unwrap();
+        let expected = calculate_tour_length(&tsp, &sol2.tour).unwrap();
         assert!((sol2.objective - expected).abs() < 1e-9);
     }
 
@@ -247,13 +249,13 @@ mod tests {
         let tsp = make_square_tsp();
         let sol = TspSolution {
             tour: vec![0, 2, 1, 3],
-            objective: calculate_tour_length(&tsp, &vec![0, 2, 1, 3]),
+            objective: calculate_tour_length(&tsp, &vec![0, 2, 1, 3]).unwrap(),
         };
 
         for neighbor in TspTwoOptNeighbor::iter(&tsp, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&tsp, &mut s);
-            let expected = calculate_tour_length(&tsp, &s.tour);
+            neighbor.apply_to_solution(&tsp, &mut s).unwrap();
+            let expected = calculate_tour_length(&tsp, &s.tour).unwrap();
             assert!(
                 (s.objective - expected).abs() < 1e-9,
                 "2-opt ({},{}) after: objective={} expected={}",
@@ -270,13 +272,13 @@ mod tests {
         let tsp = make_square_tsp();
         let sol = TspSolution {
             tour: vec![0, 1, 2, 3],
-            objective: calculate_tour_length(&tsp, &vec![0, 1, 2, 3]),
+            objective: calculate_tour_length(&tsp, &vec![0, 1, 2, 3]).unwrap(),
         };
 
         for neighbor in TspRelocateNeighbor::iter(&tsp, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&tsp, &mut s);
-            let expected = calculate_tour_length(&tsp, &s.tour);
+            neighbor.apply_to_solution(&tsp, &mut s).unwrap();
+            let expected = calculate_tour_length(&tsp, &s.tour).unwrap();
             assert!(
                 (s.objective - expected).abs() < 1e-9,
                 "relocate (pos={}, ins={}) after: objective={} expected={}",
@@ -293,12 +295,12 @@ mod tests {
         let tsp = make_square_tsp();
         let sol = TspSolution {
             tour: vec![0, 1, 2, 3],
-            objective: calculate_tour_length(&tsp, &vec![0, 1, 2, 3]),
+            objective: calculate_tour_length(&tsp, &vec![0, 1, 2, 3]).unwrap(),
         };
 
         for neighbor in TspRelocateNeighbor::iter(&tsp, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&tsp, &mut s);
+            neighbor.apply_to_solution(&tsp, &mut s).unwrap();
             let mut sorted = s.tour.clone();
             sorted.sort();
             assert_eq!(sorted, vec![0, 1, 2, 3], "ツアーは有効な順列のはず");

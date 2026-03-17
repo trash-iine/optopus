@@ -34,7 +34,7 @@ where
                 .choose(&mut rand::rng())
                 .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
 
-            state.apply(&neighbor);
+            state.apply(&neighbor)?;
         }
 
         Ok(())

@@ -61,7 +61,7 @@ where
                 .filter(|n| state.is_neighbor_better_than_current(n)),
         );
         if let Some(best_move) = best_list.pop() {
-            state.apply(&best_move);
+            state.apply(&best_move)?;
         } else {
             *self.no_best_move.borrow_mut() = true;
         }

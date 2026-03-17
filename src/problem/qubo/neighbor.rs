@@ -1,5 +1,6 @@
 use super::problem::{Coefficient, Qubo};
 use crate::{
+    error::OptError,
     problem::qubo::problem::QuboSolution,
     search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable},
 };
@@ -56,11 +57,11 @@ impl Evaluable<f64> for QuboFlipNeighbour {
 }
 
 impl MoveToNeigbor<Qubo> for QuboFlipNeighbour {
-    fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) {
+    fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
         let bi = *sol
             .x
             .get(&self.i)
-            .expect(format!("{} is not found in solution", self.i).as_str());
+            .ok_or_else(|| OptError::InvalidState(format!("{} is not found in solution", self.i)))?;
 
         // 1. 変数をフリップ
         sol.x.insert(self.i, !bi);
@@ -79,13 +80,14 @@ impl MoveToNeigbor<Qubo> for QuboFlipNeighbour {
             let bj = *sol
                 .x
                 .get(&j)
-                .expect(format!("{} is not found in solution", j).as_str());
+                .ok_or_else(|| OptError::InvalidState(format!("{} is not found in solution", j)))?;
             let delta = if bi == bj { q } else { -q };
             *sol.gain.entry(j).or_insert(0) += delta;
         }
 
         // 4. 目的関数値を更新
         sol.objective += self.gain;
+        Ok(())
     }
 
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
@@ -153,19 +155,20 @@ impl MoveToNeigbor<Qubo> for QuboSwapNeighbour {
         iter + 2
     }
 
-    fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) {
+    fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
         // i をフリップ → j をフリップ (gain[j] は i フリップ後の値を使う)
         let flip_i = QuboFlipNeighbour {
             i: self.i,
             gain: sol.gain[&self.i],
         };
-        flip_i.apply_to_solution(prob, sol);
+        flip_i.apply_to_solution(prob, sol)?;
 
         let flip_j = QuboFlipNeighbour {
             i: self.j,
             gain: sol.gain[&self.j],
         };
-        flip_j.apply_to_solution(prob, sol);
+        flip_j.apply_to_solution(prob, sol)?;
+        Ok(())
     }
 
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
@@ -233,7 +236,7 @@ mod tests {
 
         for neighbor in QuboFlipNeighbour::iter(&qubo, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&qubo, &mut s);
+            neighbor.apply_to_solution(&qubo, &mut s).unwrap();
 
             // objective が正しく更新されているか
             let expected_obj = qubo.calculate_energy(&s.x);
@@ -279,7 +282,7 @@ mod tests {
 
         for neighbor in QuboSwapNeighbour::iter(&qubo, &sol) {
             let mut s = sol.clone();
-            neighbor.apply_to_solution(&qubo, &mut s);
+            neighbor.apply_to_solution(&qubo, &mut s).unwrap();
 
             let expected_obj = qubo.calculate_energy(&s.x);
             assert_eq!(
