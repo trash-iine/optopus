@@ -103,6 +103,12 @@ impl Rankable for MaxCutSwapNeighbor {
     }
 }
 
+impl Evaluable<f64> for MaxCutSwapNeighbor {
+    fn evaluate(&self) -> f64 {
+        self.gain as f64
+    }
+}
+
 impl EnabledTabu for MaxCutSwapNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 

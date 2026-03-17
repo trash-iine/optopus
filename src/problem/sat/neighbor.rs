@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use super::definition::{Sat, SatSolution};
-use crate::search_state::{EnabledTabu, MoveToNeigbor, Rankable};
+use crate::search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable};
 
 // ---------------------------------------------------------------------------
 // Flip 近傍 (1-opt)
@@ -39,6 +39,13 @@ impl EnabledTabu for SatFlipNeighbor {
     ) {
         let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
         tabu_map.insert(self.i, iteration + d);
+    }
+}
+
+// SAT は最大化問題: SA の受理確率には「悪化量 = -gain」を渡す
+impl Evaluable<f64> for SatFlipNeighbor {
+    fn evaluate(&self) -> f64 {
+        -(self.gain as f64)
     }
 }
 
@@ -120,6 +127,12 @@ impl EnabledTabu for SatSwapNeighbor {
         tabu_map.insert(self.i, iteration + d);
         let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
         tabu_map.insert(self.j, iteration + d);
+    }
+}
+
+impl Evaluable<f64> for SatSwapNeighbor {
+    fn evaluate(&self) -> f64 {
+        -(self.gain as f64)
     }
 }
 

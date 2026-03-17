@@ -48,6 +48,13 @@ impl Evaluable<Coefficient> for QuboFlipNeighbour {
     }
 }
 
+// QUBO は最小化問題: gain = コスト変化量 (正 = 悪化) → SA の受理確率 exp(-gain/T) が正しく機能する
+impl Evaluable<f64> for QuboFlipNeighbour {
+    fn evaluate(&self) -> f64 {
+        self.gain as f64
+    }
+}
+
 impl MoveToNeigbor<Qubo> for QuboFlipNeighbour {
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) {
         let bi = *sol
@@ -85,18 +92,11 @@ impl MoveToNeigbor<Qubo> for QuboFlipNeighbour {
         // 変数インデックスが連続 0..n である保証はないため keys() から収集する
         let vars: Vec<usize> = prob.iter_on_variables().copied().collect();
         let gain = sol.gain.clone();
-        vars.into_iter().map(move |i| QuboFlipNeighbour {
-            i,
-            gain: gain[&i],
-        })
+        vars.into_iter()
+            .map(move |i| QuboFlipNeighbour { i, gain: gain[&i] })
     }
 
-    fn move_to_be_better_than(
-        &self,
-        _: &Qubo,
-        src: &QuboSolution,
-        other: &QuboSolution,
-    ) -> bool {
+    fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
         self.gain + src.objective < other.objective
     }
 }
@@ -120,16 +120,18 @@ impl Rankable for QuboSwapNeighbour {
     }
 }
 
+impl Evaluable<f64> for QuboSwapNeighbour {
+    fn evaluate(&self) -> f64 {
+        self.gain as f64
+    }
+}
+
 impl EnabledTabu for QuboSwapNeighbour {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let enabled_i = tabu_map
-            .get(&self.i)
-            .map_or(true, |&t| iteration > t);
-        let enabled_j = tabu_map
-            .get(&self.j)
-            .map_or(true, |&t| iteration > t);
+        let enabled_i = tabu_map.get(&self.i).map_or(true, |&t| iteration > t);
+        let enabled_j = tabu_map.get(&self.j).map_or(true, |&t| iteration > t);
         enabled_i && enabled_j
     }
 
@@ -183,18 +185,17 @@ impl MoveToNeigbor<Qubo> for QuboSwapNeighbour {
                 let bj = x[&j];
                 let delta_ij = if bi == bj { q_ij } else { -q_ij };
                 let swap_gain = gain[&i] + gain[&j] + delta_ij;
-                items.push(QuboSwapNeighbour { i, j, gain: swap_gain });
+                items.push(QuboSwapNeighbour {
+                    i,
+                    j,
+                    gain: swap_gain,
+                });
             }
         }
         items.into_iter()
     }
 
-    fn move_to_be_better_than(
-        &self,
-        _: &Qubo,
-        src: &QuboSolution,
-        other: &QuboSolution,
-    ) -> bool {
+    fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
         self.gain + src.objective < other.objective
     }
 }
@@ -220,10 +221,7 @@ mod tests {
     }
 
     fn make_solution(qubo: &Qubo, x: HashMap<usize, bool>) -> QuboSolution {
-        let gain: HashMap<_, _> = x
-            .keys()
-            .map(|&i| (i, qubo.calculate_gain(&x, i)))
-            .collect();
+        let gain: HashMap<_, _> = x.keys().map(|&i| (i, qubo.calculate_gain(&x, i))).collect();
         let objective = qubo.calculate_energy(&x);
         QuboSolution { x, gain, objective }
     }
@@ -231,10 +229,7 @@ mod tests {
     #[test]
     fn test_flip_apply_consistency() {
         let qubo = make_qubo();
-        let sol = make_solution(
-            &qubo,
-            HashMap::from([(0, true), (1, false), (2, true)]),
-        );
+        let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
 
         for neighbor in QuboFlipNeighbour::iter(&qubo, &sol) {
             let mut s = sol.clone();
@@ -263,10 +258,7 @@ mod tests {
     #[test]
     fn test_flip_gain_matches_energy_delta() {
         let qubo = make_qubo();
-        let sol = make_solution(
-            &qubo,
-            HashMap::from([(0, true), (1, false), (2, true)]),
-        );
+        let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
 
         for neighbor in QuboFlipNeighbour::iter(&qubo, &sol) {
             let mut flipped_x = sol.x.clone();
@@ -283,10 +275,7 @@ mod tests {
     #[test]
     fn test_swap_apply_consistency() {
         let qubo = make_qubo();
-        let sol = make_solution(
-            &qubo,
-            HashMap::from([(0, true), (1, false), (2, true)]),
-        );
+        let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
 
         for neighbor in QuboSwapNeighbour::iter(&qubo, &sol) {
             let mut s = sol.clone();
@@ -304,10 +293,7 @@ mod tests {
     #[test]
     fn test_swap_gain_matches_energy_delta() {
         let qubo = make_qubo();
-        let sol = make_solution(
-            &qubo,
-            HashMap::from([(0, true), (1, false), (2, true)]),
-        );
+        let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
 
         for neighbor in QuboSwapNeighbour::iter(&qubo, &sol) {
             let mut flipped_x = sol.x.clone();

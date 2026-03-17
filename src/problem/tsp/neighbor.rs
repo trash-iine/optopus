@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use super::definition::{TspSolution, TspWithCoordinates};
-use crate::search_state::{MoveToNeigbor, Rankable};
+use crate::search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable};
 
 // ---------------------------------------------------------------------------
 // 2-opt 近傍
@@ -21,6 +21,34 @@ pub struct TspTwoOptNeighbor {
 impl Rankable for TspTwoOptNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
+    }
+}
+
+// TSP は最小化問題: gain = ツアー長の変化量 (正 = 悪化) → SA に直接渡せる
+impl Evaluable<f64> for TspTwoOptNeighbor {
+    fn evaluate(&self) -> f64 {
+        self.gain
+    }
+}
+
+impl EnabledTabu for TspTwoOptNeighbor {
+    // (i, j) のペアをキーにして禁断リストを管理する
+    type TabuMap = std::collections::HashMap<(usize, usize), u64>;
+
+    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
+        let key = (self.i.min(self.j), self.i.max(self.j));
+        tabu_map.get(&key).map_or(true, |&t| iteration > t)
+    }
+
+    fn add_to_tabu_map(
+        &self,
+        tabu_map: &mut Self::TabuMap,
+        iteration: u64,
+        tabu_tenure: (u64, u64),
+    ) {
+        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        let key = (self.i.min(self.j), self.i.max(self.j));
+        tabu_map.insert(key, iteration + d);
     }
 }
 
@@ -46,8 +74,7 @@ impl MoveToNeigbor<TspWithCoordinates> for TspTwoOptNeighbor {
                     let (x2, y2) = coords[b];
                     ((x1 - x2).powi(2) + (y1 - y2).powi(2)).sqrt()
                 };
-                let gain = dist(tour[i], tour[j])
-                    + dist(tour[i + 1], tour[(j + 1) % n])
+                let gain = dist(tour[i], tour[j]) + dist(tour[i + 1], tour[(j + 1) % n])
                     - dist(tour[i], tour[i + 1])
                     - dist(tour[j], tour[(j + 1) % n]);
                 TspTwoOptNeighbor { i, j, gain }
@@ -82,6 +109,33 @@ pub struct TspRelocateNeighbor {
 impl Rankable for TspRelocateNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
+    }
+}
+
+impl Evaluable<f64> for TspRelocateNeighbor {
+    fn evaluate(&self) -> f64 {
+        self.gain
+    }
+}
+
+impl EnabledTabu for TspRelocateNeighbor {
+    // (pos, ins) のペアをキーにして禁断リストを管理する
+    type TabuMap = std::collections::HashMap<(usize, usize), u64>;
+
+    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
+        tabu_map
+            .get(&(self.pos, self.ins))
+            .map_or(true, |&t| iteration > t)
+    }
+
+    fn add_to_tabu_map(
+        &self,
+        tabu_map: &mut Self::TabuMap,
+        iteration: u64,
+        tabu_tenure: (u64, u64),
+    ) {
+        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        tabu_map.insert((self.pos, self.ins), iteration + d);
     }
 }
 
@@ -124,13 +178,11 @@ impl MoveToNeigbor<TspWithCoordinates> for TspRelocateNeighbor {
                 let ins_next = (ins + 1) % n;
 
                 // pos を prev-pos-next から取り除くコスト削減
-                let removal_gain = dist(tour[prev], tour[pos])
-                    + dist(tour[pos], tour[next])
+                let removal_gain = dist(tour[prev], tour[pos]) + dist(tour[pos], tour[next])
                     - dist(tour[prev], tour[next]);
 
                 // pos を ins-ins_next の間へ挿入する追加コスト
-                let insertion_cost = dist(tour[ins], tour[pos])
-                    + dist(tour[pos], tour[ins_next])
+                let insertion_cost = dist(tour[ins], tour[pos]) + dist(tour[pos], tour[ins_next])
                     - dist(tour[ins], tour[ins_next]);
 
                 let gain = insertion_cost - removal_gain;
