@@ -23,11 +23,12 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Sequential<Problem> {
     fn is_done<'a>(&self, state: &crate::search_state::SearchState<'a, Problem>) -> bool {
         self.stop_condition.is_done(state)
     }
+
     fn run_once<'a>(
-        &self,
+        &mut self,
         state: &mut crate::search_state::SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
-        for heuristic in self.heuristics.iter() {
+        for heuristic in self.heuristics.iter_mut() {
             let mut cloned = state.clone_for_new_run(SearchStateCloneType::ClearBest);
 
             heuristic.run(&mut cloned)?;

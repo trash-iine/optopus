@@ -26,14 +26,15 @@ pub trait Heuristic<Problem: ProblemTrait> {
     fn clear(&mut self) {}
     fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool;
     fn run_once<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, Problem>,
     ) -> Result<(), OptError>;
     fn run<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
-        while !self.is_done(&state) {
+        self.clear();
+        while !self.is_done(state) {
             self.run_once(state)?;
         }
 
@@ -43,16 +44,17 @@ pub trait Heuristic<Problem: ProblemTrait> {
 
 pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
     fn run_once_par<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
         self.run_once(state)
     }
     fn run_par<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
-        while !self.is_done(&state) {
+        self.clear();
+        while !self.is_done(state) {
             self.run_once_par(state)?;
         }
 

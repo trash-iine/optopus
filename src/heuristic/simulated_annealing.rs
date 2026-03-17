@@ -3,7 +3,6 @@ use crate::error::OptError;
 use crate::search_state::{Evaluable, MoveToNeigbor, ProblemTrait, SearchState};
 use rand::seq::IteratorRandom;
 use rand::Rng;
-use std::cell::RefCell;
 use std::ops::{DivAssign, MulAssign};
 
 pub struct SimulatedAnnealing<N> {
@@ -11,7 +10,7 @@ pub struct SimulatedAnnealing<N> {
     pub initial_temperature: f64,
     pub cooling_rate: f64,
     phantom_neighbor: std::marker::PhantomData<N>,
-    current_temperature: RefCell<f64>,
+    current_temperature: f64,
 }
 
 impl<N> SimulatedAnnealing<N> {
@@ -20,7 +19,7 @@ impl<N> SimulatedAnnealing<N> {
             stop_condition,
             initial_temperature,
             cooling_rate,
-            current_temperature: RefCell::new(initial_temperature),
+            current_temperature: initial_temperature,
             phantom_neighbor: std::marker::PhantomData,
         }
     }
@@ -31,12 +30,16 @@ where
     P: ProblemTrait,
     N: MoveToNeigbor<P> + Evaluable<f64>,
 {
+    fn clear(&mut self) {
+        self.current_temperature = self.initial_temperature;
+    }
+
     fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state)
     }
 
     fn run_once<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, P>,
     ) -> Result<(), OptError> {
         let neighbor = N::iter(&state.instance, &state.solution)
@@ -44,14 +47,12 @@ where
             .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
         if state.is_neighbor_better_than_current(&neighbor)
             || rand::rng().random::<f64>()
-                < (-neighbor.evaluate() / *self.current_temperature.borrow()).exp()
+                < (-neighbor.evaluate() / self.current_temperature).exp()
         {
             state.apply(&neighbor)?;
         }
 
-        self.current_temperature
-            .borrow_mut()
-            .mul_assign(self.cooling_rate);
+        self.current_temperature.mul_assign(self.cooling_rate);
 
         return Ok(());
     }
@@ -64,8 +65,8 @@ pub struct BangBangSimulatedAnnealing<N> {
     pub min_wave_threashold: f64,
     pub max_wave_threashold: f64,
     phantom_neighbor: std::marker::PhantomData<N>,
-    current_temperature: RefCell<f64>,
-    is_going_down: RefCell<bool>,
+    current_temperature: f64,
+    is_going_down: bool,
 }
 
 impl<N> BangBangSimulatedAnnealing<N> {
@@ -82,8 +83,8 @@ impl<N> BangBangSimulatedAnnealing<N> {
             cooling_rate,
             min_wave_threashold,
             max_wave_threashold,
-            current_temperature: RefCell::new(initial_temperature),
-            is_going_down: RefCell::new(true),
+            current_temperature: initial_temperature,
+            is_going_down: true,
             phantom_neighbor: std::marker::PhantomData,
         }
     }
@@ -94,12 +95,17 @@ where
     P: ProblemTrait,
     N: MoveToNeigbor<P> + Evaluable<f64>,
 {
+    fn clear(&mut self) {
+        self.current_temperature = self.initial_temperature;
+        self.is_going_down = true;
+    }
+
     fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state)
     }
 
     fn run_once<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, P>,
     ) -> Result<(), OptError> {
         let neighbor = N::iter(&state.instance, &state.solution)
@@ -108,26 +114,22 @@ where
 
         if state.is_neighbor_better_than_current(&neighbor)
             || rand::rng().random::<f64>()
-                < (-neighbor.evaluate() / *self.current_temperature.borrow()).exp()
+                < (-neighbor.evaluate() / self.current_temperature).exp()
         {
             state.apply(&neighbor)?;
         }
 
-        if *self.is_going_down.borrow() {
-            self.current_temperature
-                .borrow_mut()
-                .mul_assign(self.cooling_rate);
-            if *self.current_temperature.borrow() < self.min_wave_threashold {
+        if self.is_going_down {
+            self.current_temperature.mul_assign(self.cooling_rate);
+            if self.current_temperature < self.min_wave_threashold {
                 tracing::info!("Wave detected, going up");
-                *self.is_going_down.borrow_mut() = false;
+                self.is_going_down = false;
             }
         } else {
-            self.current_temperature
-                .borrow_mut()
-                .div_assign(self.cooling_rate);
-            if *self.current_temperature.borrow() > self.max_wave_threashold {
+            self.current_temperature.div_assign(self.cooling_rate);
+            if self.current_temperature > self.max_wave_threashold {
                 tracing::info!("Wave detected, going down");
-                *self.is_going_down.borrow_mut() = true;
+                self.is_going_down = true;
             }
         }
 

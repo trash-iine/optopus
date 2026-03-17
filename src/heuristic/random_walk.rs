@@ -26,7 +26,7 @@ where
         self.stop_condition.is_done(state)
     }
     fn run_once<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, P>,
     ) -> Result<(), OptError> {
         while !self.stop_condition.is_done(state) {

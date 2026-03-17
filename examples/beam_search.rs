@@ -25,7 +25,7 @@ fn main() {
 
     // --- Beam Search (beam_width = 3) ---
     let mut state = SearchState::new(&mc);
-    let bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(sc.clone(), 3);
+    let mut bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(sc.clone(), 3);
     bs.run(&mut state).unwrap();
     println!(
         "[BeamSearch w=3]  best = {:.1} (iter {})",
@@ -34,7 +34,7 @@ fn main() {
 
     // --- Beam Search (beam_width = 1 = LocalSearch に相当) ---
     let mut state = SearchState::new(&mc);
-    let bs1 = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(sc.clone(), 1);
+    let mut bs1 = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(sc.clone(), 1);
     bs1.run(&mut state).unwrap();
     println!(
         "[BeamSearch w=1]  best = {:.1} (iter {})",
@@ -43,7 +43,7 @@ fn main() {
 
     // --- LocalSearch (比較用) ---
     let mut state = SearchState::new(&mc);
-    let ls = LocalSearch::<MaxCutFlipNeighbor>::new(sc.clone());
+    let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(sc.clone());
     ls.run(&mut state).unwrap();
     println!(
         "[LocalSearch]     best = {:.1} (iter {})",

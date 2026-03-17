@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 
 use rand::seq::IteratorRandom;
@@ -41,11 +40,11 @@ pub struct BreakoutLocalSearch {
     l0: u64,
     p0: f64,
     q: f64,
-    omega: RefCell<u64>,
-    l: RefCell<u64>,
-    prev_best_objective: RefCell<Option<f32>>,
-    prev_solution: RefCell<Option<<MaxCut as ProblemTrait>::Solution>>,
-    tabu_map: RefCell<HashMap<usize, u64>>,
+    omega: u64,
+    l: u64,
+    prev_best_objective: Option<f32>,
+    prev_solution: Option<<MaxCut as ProblemTrait>::Solution>,
+    tabu_map: HashMap<usize, u64>,
 }
 
 impl BreakoutLocalSearch {
@@ -64,16 +63,16 @@ impl BreakoutLocalSearch {
             l0,
             p0,
             q,
-            omega: RefCell::new(0),
-            l: RefCell::new(l0),
-            prev_best_objective: RefCell::new(None),
-            prev_solution: RefCell::new(None),
-            tabu_map: RefCell::new(HashMap::new()),
+            omega: 0,
+            l: l0,
+            prev_best_objective: None,
+            prev_solution: None,
+            tabu_map: HashMap::new(),
         }
     }
 
     fn local_search_with_updating_tabu(
-        &self,
+        &mut self,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
         loop {
@@ -94,7 +93,7 @@ impl BreakoutLocalSearch {
 
             if let Some(best_move) = best_move_option {
                 best_move.add_to_tabu_map(
-                    &mut self.tabu_map.borrow_mut(),
+                    &mut self.tabu_map,
                     state.iteration,
                     self.tabu_tenure,
                 );
@@ -105,44 +104,39 @@ impl BreakoutLocalSearch {
         }
     }
 
-    fn update_omega(&self, state: &SearchState<'_, MaxCut>) {
-        if let Some(&prev_best_objective) = self.prev_best_objective.borrow().as_ref()
+    fn update_omega(&mut self, state: &SearchState<'_, MaxCut>) {
+        if let Some(prev_best_objective) = self.prev_best_objective
             && prev_best_objective >= state.solution.objective
         {
-            *self.omega.borrow_mut() += 1;
+            self.omega += 1;
         } else {
-            *self.omega.borrow_mut() = 0;
+            self.omega = 0;
         }
 
-        if *self.omega.borrow() > self.t {
-            *self.omega.borrow_mut() = 0;
+        if self.omega > self.t {
+            self.omega = 0;
         }
 
-        self.prev_best_objective
-            .borrow_mut()
-            .replace(state.best_solution.objective);
+        self.prev_best_objective = Some(state.best_solution.objective);
     }
 
-    fn update_l(&self, state: &SearchState<'_, MaxCut>) {
-        if let Some(prev_solution) = self.prev_solution.borrow().as_ref()
+    fn update_l(&mut self, state: &SearchState<'_, MaxCut>) {
+        if let Some(ref prev_solution) = self.prev_solution
             && is_same_solution(prev_solution, &state.solution)
         {
-            *self.l.borrow_mut() += 1;
+            self.l += 1;
         } else {
-            *self.l.borrow_mut() = self.l0;
+            self.l = self.l0;
         }
 
-        self.prev_solution
-            .borrow_mut()
-            .replace(state.solution.clone());
+        self.prev_solution = Some(state.solution.clone());
     }
 
     fn get_perturbation_type(&self) -> PerturbationType {
-        let omega = *self.omega.borrow();
-        if omega == 0 {
+        if self.omega == 0 {
             PerturbationType::Strong
         } else {
-            let p = (std::f64::consts::E.powf(-(omega as f64 / self.t as f64))).max(self.p0);
+            let p = (std::f64::consts::E.powf(-(self.omega as f64 / self.t as f64))).max(self.p0);
 
             let prob: f64 = rand::random_range(0.0..=1.0);
             if prob <= p * self.q {
@@ -156,16 +150,16 @@ impl BreakoutLocalSearch {
     }
 
     fn apply_strong_perturbation(
-        &self,
+        &mut self,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
-        for _ in 0..*self.l.borrow() {
+        for _ in 0..self.l {
             let neighbor = MaxCutFlipNeighbor::iter(&state.instance, &state.solution)
                 .choose(&mut rand::rng())
                 .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
 
             neighbor.add_to_tabu_map(
-                &mut self.tabu_map.borrow_mut(),
+                &mut self.tabu_map,
                 state.iteration,
                 self.tabu_tenure,
             );
@@ -175,22 +169,23 @@ impl BreakoutLocalSearch {
     }
 
     fn apply_weak_flip_perturbation(
-        &self,
+        &mut self,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
-        let sc = StopCondition::new(Some(*self.l.borrow() + state.iteration), None, None);
-        let perturb =
-            TabuSearch::<MaxCutFlipNeighbor>::new(sc, self.tabu_tenure, Some(self.tabu_map.take()));
+        let sc = StopCondition::new(Some(self.l + state.iteration), None, None);
+        let tabu_map = std::mem::take(&mut self.tabu_map);
+        let mut perturb =
+            TabuSearch::<MaxCutFlipNeighbor>::new(sc, self.tabu_tenure, Some(tabu_map));
         perturb.run(state)?;
-        self.tabu_map.replace(perturb.take_tabu_map());
+        self.tabu_map = perturb.take_tabu_map();
         Ok(())
     }
 
     fn apply_weak_swap_perturbation(
-        &self,
+        &mut self,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
-        for _ in 0..*self.l.borrow() {
+        for _ in 0..self.l {
             let mut v0_best = Vec::new();
             let mut v1_best = Vec::new();
             let mut v0_tabu = Vec::new();
@@ -218,7 +213,7 @@ impl BreakoutLocalSearch {
                     }
                 }
 
-                if !neighbor.is_move_enabled(&self.tabu_map.borrow(), state.iteration) {
+                if !neighbor.is_move_enabled(&self.tabu_map, state.iteration) {
                     continue;
                 }
 
@@ -266,7 +261,7 @@ impl BreakoutLocalSearch {
                 )
             {
                 best_move.add_to_tabu_map(
-                    &mut self.tabu_map.borrow_mut(),
+                    &mut self.tabu_map,
                     state.iteration,
                     self.tabu_tenure,
                 );
@@ -276,10 +271,9 @@ impl BreakoutLocalSearch {
                     .iter()
                     .min_by(|a, b| {
                         self.tabu_map
-                            .borrow()
                             .get(&a.i)
                             .unwrap_or(&0)
-                            .cmp(&self.tabu_map.borrow().get(&b.i).unwrap_or(&0))
+                            .cmp(&self.tabu_map.get(&b.i).unwrap_or(&0))
                     })
                     .ok_or_else(|| OptError::InvalidState("No tabu v0".to_string()))?
                     .i;
@@ -287,10 +281,9 @@ impl BreakoutLocalSearch {
                     .iter()
                     .min_by(|a, b| {
                         self.tabu_map
-                            .borrow()
                             .get(&a.i)
                             .unwrap_or(&0)
-                            .cmp(&self.tabu_map.borrow().get(&b.i).unwrap_or(&0))
+                            .cmp(&self.tabu_map.get(&b.i).unwrap_or(&0))
                     })
                     .ok_or_else(|| OptError::InvalidState("No tabu v1".to_string()))?
                     .i;
@@ -306,7 +299,7 @@ impl BreakoutLocalSearch {
                         },
                 };
                 neighbor.add_to_tabu_map(
-                    &mut self.tabu_map.borrow_mut(),
+                    &mut self.tabu_map,
                     state.iteration,
                     self.tabu_tenure,
                 );
@@ -345,8 +338,16 @@ impl BreakoutLocalSearch {
 }
 
 impl Heuristic<MaxCut> for BreakoutLocalSearch {
+    fn clear(&mut self) {
+        self.omega = 0;
+        self.l = self.l0;
+        self.prev_best_objective = None;
+        self.prev_solution = None;
+        self.tabu_map = HashMap::new();
+    }
+
     fn run_once<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, MaxCut>,
     ) -> Result<(), OptError> {
         self.local_search_with_updating_tabu(state)?;

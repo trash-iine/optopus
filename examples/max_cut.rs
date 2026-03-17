@@ -24,7 +24,7 @@ fn main() {
 
     // --- Local Search ---
     let mut state = SearchState::new(&mc);
-    let ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100_000));
+    let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100_000));
     ls.run(&mut state).unwrap();
     println!(
         "[LocalSearch]  best objective = {:.1} (iter {})",
@@ -33,7 +33,7 @@ fn main() {
 
     // --- Tabu Search ---
     let mut state = SearchState::new(&mc);
-    let ts = TabuSearch::<MaxCutFlipNeighbor>::new(
+    let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
         StopCondition::iterations(100_000),
         (3, 7),
         None,

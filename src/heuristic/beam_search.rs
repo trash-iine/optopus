@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::cmp::Ordering;
 
 use super::{Heuristic, StopCondition};
@@ -24,7 +23,7 @@ use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState};
 /// mc.add_weight(1, 2, 1.0);
 ///
 /// let mut state = SearchState::new(&mc);
-/// let bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
+/// let mut bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
 ///     StopCondition::iterations(1000),
 ///     5,
 /// );
@@ -33,7 +32,7 @@ use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState};
 pub struct BeamSearch<P: ProblemTrait, N> {
     pub stop_condition: StopCondition,
     pub beam_width: usize,
-    beam: RefCell<Vec<P::Solution>>,
+    beam: Vec<P::Solution>,
     _phantom: std::marker::PhantomData<N>,
 }
 
@@ -45,13 +44,9 @@ impl<P: ProblemTrait, N> BeamSearch<P, N> {
         Self {
             stop_condition,
             beam_width,
-            beam: RefCell::new(Vec::new()),
+            beam: Vec::new(),
             _phantom: std::marker::PhantomData,
         }
-    }
-
-    fn clear_beam(&self) {
-        self.beam.borrow_mut().clear();
     }
 }
 
@@ -61,24 +56,22 @@ where
     N: MoveToNeigbor<P> + Rankable,
 {
     fn clear(&mut self) {
-        self.clear_beam();
+        self.beam.clear();
     }
 
     fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state)
     }
 
-    fn run_once<'a>(&self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let mut beam = self.beam.borrow_mut();
-
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         // 初回: state.solution からビームを初期化
-        if beam.is_empty() {
-            beam.push(state.solution.clone());
+        if self.beam.is_empty() {
+            self.beam.push(state.solution.clone());
         }
 
         // 全ビーム候補の近傍を展開して candidates に収集
         let mut candidates: Vec<P::Solution> = Vec::new();
-        for beam_sol in beam.iter() {
+        for beam_sol in self.beam.iter() {
             for neighbor in N::iter(&state.instance, beam_sol) {
                 let mut candidate = beam_sol.clone();
                 neighbor.apply_to_solution(&state.instance, &mut candidate)?;
@@ -88,7 +81,6 @@ where
 
         // 近傍が空なら iteration だけ進めて終了
         if candidates.is_empty() {
-            drop(beam);
             state.progress_iteration();
             return Ok(());
         }
@@ -107,21 +99,11 @@ where
 
         // state をビームの最良解で更新
         state.solution = candidates[0].clone();
-        drop(beam);
-
         state.update_best();
         state.progress_iteration();
 
-        *self.beam.borrow_mut() = candidates;
+        self.beam = candidates;
 
-        Ok(())
-    }
-
-    fn run<'a>(&self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        self.clear_beam();
-        while !self.is_done(state) {
-            self.run_once(state)?;
-        }
         Ok(())
     }
 }

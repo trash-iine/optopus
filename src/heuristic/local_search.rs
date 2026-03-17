@@ -1,7 +1,6 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
 use crate::search_state::{filter_best, MoveToNeigbor, ProblemTrait, Rankable, SearchState};
-use std::cell::RefCell;
 
 /// A local search algorithm that iteratively explores the neighborhood of the current solution.
 /// This algorithm applies the best move from the neighborhood until no better moves are found.
@@ -19,13 +18,13 @@ use std::cell::RefCell;
 /// mc.add_weight(1, 2, 1.0);
 ///
 /// let mut state = SearchState::new(&mc);
-/// let ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000));
+/// let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000));
 /// ls.run(&mut state).unwrap();
 /// ```
 pub struct LocalSearch<N> {
     pub stop_condition: StopCondition,
     phantom_neighbor: std::marker::PhantomData<N>,
-    no_best_move: RefCell<bool>,
+    no_best_move: bool,
 }
 
 impl<N> LocalSearch<N> {
@@ -42,7 +41,7 @@ impl<N> LocalSearch<N> {
         Self {
             stop_condition,
             phantom_neighbor: std::marker::PhantomData,
-            no_best_move: RefCell::new(false),
+            no_best_move: false,
         }
     }
 }
@@ -52,8 +51,12 @@ where
     P: ProblemTrait,
     N: MoveToNeigbor<P> + Rankable,
 {
+    fn clear(&mut self) {
+        self.no_best_move = false;
+    }
+
     fn run_once<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, P>,
     ) -> Result<(), OptError> {
         let mut best_list = filter_best(
@@ -63,13 +66,13 @@ where
         if let Some(best_move) = best_list.pop() {
             state.apply(&best_move)?;
         } else {
-            *self.no_best_move.borrow_mut() = true;
+            self.no_best_move = true;
         }
 
         Ok(())
     }
 
     fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state) || *self.no_best_move.borrow()
+        self.stop_condition.is_done(state) || self.no_best_move
     }
 }

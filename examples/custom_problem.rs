@@ -89,7 +89,7 @@ fn main() {
     let prob = OneMaxProblem { n: 20 };
     let mut state = SearchState::new(&prob);
 
-    let ls = LocalSearch::<FlipMove>::new(StopCondition::iterations(10_000));
+    let mut ls = LocalSearch::<FlipMove>::new(StopCondition::iterations(10_000));
     ls.run(&mut state).unwrap();
 
     println!(

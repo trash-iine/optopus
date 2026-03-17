@@ -376,7 +376,7 @@ fn run_max_cut(s: &MaxCutBenchmarkSetting) -> BenchmarkResult {
         Err(e) => return error_result(e),
     };
     let mut state = SearchState::new(&mc);
-    let heuristic = s.heuristic.build(s.stop_condition.clone());
+    let mut heuristic = s.heuristic.build(s.stop_condition.clone());
 
     let start = std::time::Instant::now();
     let status = heuristic.run(&mut state);
@@ -405,7 +405,7 @@ fn run_qubo(s: &QuboBenchmarkSetting) -> BenchmarkResult {
         Err(e) => return error_result(e),
     };
     let mut state = SearchState::new(&qubo);
-    let heuristic = s.heuristic.build(s.stop_condition.clone());
+    let mut heuristic = s.heuristic.build(s.stop_condition.clone());
 
     let start = std::time::Instant::now();
     let status = heuristic.run(&mut state);
@@ -434,7 +434,7 @@ fn run_sat(s: &SatBenchmarkSetting) -> BenchmarkResult {
         Err(e) => return error_result(e),
     };
     let mut state = SearchState::new(&sat);
-    let heuristic = s.heuristic.build(s.stop_condition.clone());
+    let mut heuristic = s.heuristic.build(s.stop_condition.clone());
 
     let start = std::time::Instant::now();
     let status = heuristic.run(&mut state);
@@ -459,7 +459,7 @@ fn run_tsp(s: &TspBenchmarkSetting) -> BenchmarkResult {
         Err(e) => return error_result(e),
     };
     let mut state = SearchState::new(&tsp);
-    let heuristic = s.heuristic.build(s.stop_condition.clone());
+    let mut heuristic = s.heuristic.build(s.stop_condition.clone());
 
     let start = std::time::Instant::now();
     let status = heuristic.run(&mut state);

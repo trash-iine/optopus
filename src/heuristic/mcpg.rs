@@ -1,11 +1,10 @@
 use super::{Heuristic, StopCondition};
 use crate::search_state::{EnumerateMoveToNeighbor, ProblemTrait, SearchState};
-use std::cell::RefCell;
 
 pub struct MonteCarloPolicyGradient<MoveToNeighbor> {
     pub stop_condition: StopCondition,
     phantom_neighbor: std::marker::PhantomData<MoveToNeighbor>,
-    no_best_move: RefCell<bool>,
+    no_best_move: bool,
 }
 
 impl<MoveToNeighbor> MonteCarloPolicyGradient<MoveToNeighbor> {
@@ -22,7 +21,7 @@ impl<MoveToNeighbor> MonteCarloPolicyGradient<MoveToNeighbor> {
         Self {
             stop_condition,
             phantom_neighbor: std::marker::PhantomData,
-            no_best_move: RefCell::new(false),
+            no_best_move: false,
         }
     }
 }
@@ -32,8 +31,12 @@ where
     Problem: ProblemTrait,
     for<'a> SearchState<'a, Problem>: EnumerateMoveToNeighbor<MoveToNeighbor>,
 {
+    fn clear(&mut self) {
+        self.no_best_move = false;
+    }
+
     fn run_once<'a>(
-        &self,
+        &mut self,
         state: &mut SearchState<'a, Problem>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut best_move_option = None;
@@ -56,13 +59,13 @@ where
         if let Some(best_move) = best_move_option {
             state.apply(&best_move)?;
         } else {
-            *self.no_best_move.borrow_mut() = true;
+            self.no_best_move = true;
         }
 
         Ok(())
     }
 
     fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool {
-        self.stop_condition.is_done(state) || *self.no_best_move.borrow()
+        self.stop_condition.is_done(state) || self.no_best_move
     }
 }
