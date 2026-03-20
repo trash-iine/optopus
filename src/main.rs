@@ -12,7 +12,7 @@ fn main() {
 
     let mut benchmark = Benchmark::new();
 
-    let files = glob::glob("data/max_cut/G*").unwrap();
+    let files = glob::glob("data/max_cut/G1*").unwrap();
     for file in files {
         let path = file.unwrap();
         let instance_number = path
@@ -48,7 +48,11 @@ fn main() {
         benchmark.run(setting);
     }
 
-    let toml_str = toml::to_string(&benchmark.results).unwrap();
+    #[derive(serde::Serialize)]
+    struct ResultWrapper {
+        results: Vec<optopus::benchmark::BenchmarkResult>,
+    }
+    let toml_str = toml::to_string(&ResultWrapper { results: benchmark.results }).unwrap();
     let output_file = chrono::Local::now()
         .format("result/%Y%m%d_%H%M%S.toml")
         .to_string();
