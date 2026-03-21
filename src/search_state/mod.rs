@@ -4,8 +4,7 @@ pub mod specific_trait;
 
 use rayon::prelude::*;
 pub use specific_trait::{
-    EnabledTabu, EnumerateMoveToNeighbor, Evaluable, MoveToNeighbor, ProblemTrait, Rankable,
-    filter_best,
+    EnabledTabu, Evaluable, MoveToNeighbor, ProblemTrait, Rankable, filter_best,
 };
 
 /// Controls how [`SearchState`] is cloned when starting a sub-run.
@@ -219,8 +218,7 @@ where
         chunk_size: usize,
     ) -> Option<MoveToNeighbor>
     where
-        Self: EnumerateMoveToNeighbor<MoveToNeighbor>,
-        MoveToNeighbor: Send + Sync + Clone,
+        MoveToNeighbor: Send + Sync + Clone + Rankable,
         Problem: Sync,
         Problem::Solution: Sync,
     {
@@ -231,9 +229,9 @@ where
                 chunk
                     .into_iter()
                     .max_by(|first, second| {
-                        if self.is_first_move_better_than_second(first, second) {
+                        if first.is_better_than(second) {
                             std::cmp::Ordering::Greater
-                        } else if self.is_first_move_better_than_second(second, first) {
+                        } else if second.is_better_than(first) {
                             std::cmp::Ordering::Less
                         } else {
                             std::cmp::Ordering::Equal
@@ -242,9 +240,9 @@ where
                     .unwrap()
             })
             .max_by(|first, second| {
-                if self.is_first_move_better_than_second(first, second) {
+                if first.is_better_than(second) {
                     std::cmp::Ordering::Greater
-                } else if self.is_first_move_better_than_second(second, first) {
+                } else if second.is_better_than(first) {
                     std::cmp::Ordering::Less
                 } else {
                     std::cmp::Ordering::Equal
