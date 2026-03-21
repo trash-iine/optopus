@@ -1,29 +1,29 @@
-/// よく使う型・トレイトをまとめてインポートするためのモジュール。
-///
-/// ```rust
-/// use optopus::prelude::*;
-/// ```
-///
-/// で以下のすべてが使えるようになります。
+//! Convenience re-exports of the most commonly used types and traits.
+//!
+//! Import everything with:
+//!
+//! ```rust
+//! use optopus::prelude::*;
+//! ```
 
-// エラー型
+// Error type
 pub use crate::error::OptError;
 
-// 探索状態
+// Search state
 pub use crate::search_state::{SearchState, SearchStateCloneType};
 
-// ヒューリスティック
+// Heuristics
 pub use crate::heuristic::{
     BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, Heuristic, LocalSearch,
     ParallelHeuristic, RandomWalk, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
 };
 
-// トレイト
+// Traits
 pub use crate::search_state::{
     EnabledTabu, Evaluable, MoveToNeigbor, ProblemTrait, Rankable,
 };
 
-// 問題型と近傍型
+// Problem and neighbor types
 pub use crate::problem::{
     // MaxCut
     MaxCut,
