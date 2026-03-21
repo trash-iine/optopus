@@ -1,17 +1,19 @@
-/// Optopus のエラー型。
+//! Error types for the optopus library.
+
+/// The unified error type for optopus.
 ///
-/// ヒューリスティックや問題定義から発生するエラーを統一した型で表現します。
+/// Represents errors that can occur during heuristic execution or problem parsing.
 #[derive(Debug, thiserror::Error)]
 pub enum OptError {
-    /// IO エラー（ファイル読み込みなど）
+    /// An I/O error (e.g., file not found or read failure).
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
-    /// パースエラー（入力フォーマットが不正）
+    /// A parse error (e.g., malformed input format).
     #[error("Parse error: {0}")]
     Parse(String),
 
-    /// 探索状態が無効（近傍が空など）
+    /// An invalid search state (e.g., empty neighborhood).
     #[error("Invalid state: {0}")]
     InvalidState(String),
 }
