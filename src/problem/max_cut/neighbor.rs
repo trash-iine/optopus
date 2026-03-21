@@ -1,15 +1,20 @@
-// ! Defines the neighbor structure and the methods to enumerate neighbors for the MaxCut problem.
+//! Neighborhood move types for the [`MaxCut`] problem.
+
 use super::MaxCut;
 use crate::{
     error::OptError,
     problem::max_cut::problem::MaxCutSolution,
-    search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
 };
 
-/// Represents a neighbor in the MaxCut problem where a vertex is flipped.
+/// A flip move that transfers vertex `i` to the opposite partition side.
+///
+/// `gain` holds the change in cut weight after the flip (positive = improvement).
 #[derive(Debug, Clone, Copy)]
 pub struct MaxCutFlipNeighbor {
+    /// Index of the vertex to flip.
     pub i: usize,
+    /// Change in cut weight after the flip.
     pub gain: f32,
 }
 impl Rankable for MaxCutFlipNeighbor {
@@ -21,12 +26,16 @@ impl Rankable for MaxCutFlipNeighbor {
 impl EnabledTabu for MaxCutFlipNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
+    /// A flip move is tabu if the vertex `i` is in the tabu map with a tenure greater than the current iteration.
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         tabu_map
             .get(&self.i)
             .map_or(true, |&tabu_tenure| iteration > tabu_tenure)
     }
 
+    /// When a flip move is applied,
+    /// the vertex `i` is added to the tabu map with a tenure
+    /// randomly chosen between `tabu_tenure.0` and `tabu_tenure.1`.
     fn add_to_tabu_map(
         &self,
         tabu_map: &mut Self::TabuMap,
@@ -38,27 +47,26 @@ impl EnabledTabu for MaxCutFlipNeighbor {
     }
 }
 
-impl MoveToNeigbor<MaxCut> for MaxCutFlipNeighbor {
+impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
     fn apply_to_solution(
         &self,
         prob: &MaxCut,
         solution: &mut MaxCutSolution,
     ) -> Result<(), OptError> {
         // cut side of the vertex
-        let bi = *solution
-            .cut
-            .get(&self.i)
-            .ok_or_else(|| OptError::InvalidState(format!("vertex {} is not found in solution.", self.i)))?;
+        let bi = *solution.cut.get(&self.i).ok_or_else(|| {
+            OptError::InvalidState(format!("vertex {} is not found in solution.", self.i))
+        })?;
 
+        // Flip
         solution.cut.insert(self.i, !bi);
 
         // Update the gain for the flipped vertex
         solution.gain.insert(self.i, -self.gain);
         for (&j, &w) in prob.iter_on_adjacency(&self.i) {
-            let bj = *solution
-                .cut
-                .get(&j)
-                .ok_or_else(|| OptError::InvalidState(format!("vertex {} is not found in the solution.", j)))?;
+            let bj = *solution.cut.get(&j).ok_or_else(|| {
+                OptError::InvalidState(format!("vertex {} is not found in the solution.", j))
+            })?;
             if bi ^ bj {
                 *solution.gain.entry(j).or_insert(0.0) += w * 2.0;
             } else {
@@ -66,7 +74,9 @@ impl MoveToNeigbor<MaxCut> for MaxCutFlipNeighbor {
             }
         }
 
+        // Update the objective value
         solution.objective += self.gain;
+
         Ok(())
     }
 
@@ -83,8 +93,8 @@ impl MoveToNeigbor<MaxCut> for MaxCutFlipNeighbor {
     fn move_to_be_better_than(
         &self,
         _: &MaxCut,
-        src: &<MaxCut as crate::search_state::ProblemTrait>::Solution,
-        other: &<MaxCut as crate::search_state::ProblemTrait>::Solution,
+        src: &MaxCutSolution,
+        other: &MaxCutSolution,
     ) -> bool {
         self.gain + src.objective > other.objective
     }
@@ -96,6 +106,10 @@ impl Evaluable<f64> for MaxCutFlipNeighbor {
     }
 }
 
+/// A swap move that simultaneously flips vertices `i` and `j` to opposite sides.
+///
+/// Only pairs where `i` and `j` are currently on different sides are generated.
+/// `gain` is the combined change in cut weight (positive = improvement).
 #[derive(Debug, Clone)]
 pub struct MaxCutSwapNeighbor {
     pub i: usize,
@@ -118,6 +132,8 @@ impl Evaluable<f64> for MaxCutSwapNeighbor {
 impl EnabledTabu for MaxCutSwapNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
+    /// A swap move is tabu if either vertex `i` or `j` is in the tabu map with a tenure
+    /// greater than the current iteration.
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         let enabled_i = tabu_map
             .get(&self.i)
@@ -142,15 +158,12 @@ impl EnabledTabu for MaxCutSwapNeighbor {
     }
 }
 
-impl MoveToNeigbor<MaxCut> for MaxCutSwapNeighbor {
+impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }
-    fn apply_to_solution(
-        &self,
-        prob: &MaxCut,
-        sol: &mut <MaxCut as crate::search_state::ProblemTrait>::Solution,
-    ) -> Result<(), OptError> {
+
+    fn apply_to_solution(&self, prob: &MaxCut, sol: &mut MaxCutSolution) -> Result<(), OptError> {
         let flip_i = MaxCutFlipNeighbor {
             i: self.i,
             gain: sol.gain[&self.i],
@@ -185,8 +198,8 @@ impl MoveToNeigbor<MaxCut> for MaxCutSwapNeighbor {
     fn move_to_be_better_than(
         &self,
         _: &MaxCut,
-        src: &<MaxCut as crate::search_state::ProblemTrait>::Solution,
-        other: &<MaxCut as crate::search_state::ProblemTrait>::Solution,
+        src: &MaxCutSolution,
+        other: &MaxCutSolution,
     ) -> bool {
         self.gain + src.objective > other.objective
     }
