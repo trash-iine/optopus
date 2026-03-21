@@ -4,11 +4,12 @@ use super::{Heuristic, StopCondition};
 use crate::error::OptError;
 use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState};
 
-/// ビーム探索アルゴリズム。
+/// Beam search heuristic.
 ///
-/// `beam_width` 個の候補解を並行して管理し、各ステップで全候補の近傍を展開して
-/// 上位 `beam_width` 個を次のビームとして保持します。
-/// 各ステップで最良解が `SearchState::best_solution` に自動的に記録されます。
+/// Maintains a beam of `beam_width` candidate solutions in parallel.
+/// At each step, the neighborhood of every candidate is expanded and the top
+/// `beam_width` solutions (by [`Rankable`] order) are kept as the next beam.
+/// The best solution across all beam members is tracked in `SearchState::best_solution`.
 ///
 /// # Example
 ///
@@ -37,6 +38,8 @@ pub struct BeamSearch<P: ProblemTrait, N> {
 }
 
 impl<P: ProblemTrait, N> BeamSearch<P, N> {
+    /// Create a new [`BeamSearch`] with the given stopping condition and beam width.
+    /// `beam_width` must be greater than 0.
     pub fn new(stop_condition: StopCondition, beam_width: usize) -> Self {
         if beam_width == 0 {
             panic!("beam_width must be greater than 0");
@@ -55,6 +58,7 @@ where
     P: ProblemTrait,
     N: MoveToNeigbor<P> + Rankable,
 {
+    /// Clear the beam to reset the heuristic state.
     fn clear(&mut self) {
         self.beam.clear();
     }
@@ -64,13 +68,13 @@ where
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        // 初回: state.solution からビームを初期化
+        // Initialize the beam from solution
         if self.beam.is_empty() {
             self.beam.push(state.solution.clone());
         }
 
-        // 全ビーム候補の近傍を展開して candidates に収集
-        let mut candidates: Vec<P::Solution> = Vec::new();
+        // Expand the neighborhood of every beam candidate
+        let mut candidates: Vec<_> = Vec::new();
         for beam_sol in self.beam.iter() {
             for neighbor in N::iter(&state.instance, beam_sol) {
                 let mut candidate = beam_sol.clone();
@@ -79,13 +83,13 @@ where
             }
         }
 
-        // 近傍が空なら iteration だけ進めて終了
+        // If no neighbors exist, just advance the iteration counter
         if candidates.is_empty() {
             state.progress_iteration();
             return Ok(());
         }
 
-        // Rankable による降順ソート（良い順）→ 上位 beam_width を保持
+        // Sort in descending order (best first) and keep the top beam_width candidates
         candidates.sort_unstable_by(|a, b| {
             if a.is_better_than(b) {
                 Ordering::Less
@@ -97,11 +101,13 @@ where
         });
         candidates.truncate(self.beam_width);
 
-        // state をビームの最良解で更新
+        // Update the state with the best candidate in the beam
+        // NOTE: These processes are almost equivalent to call [`SearchState::apply_neighbor`] with the best neighbor.
         state.solution = candidates[0].clone();
         state.update_best();
         state.progress_iteration();
 
+        // Store the candidates as the new beam for the next iteration
         self.beam = candidates;
 
         Ok(())
