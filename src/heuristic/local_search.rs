@@ -1,6 +1,6 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{filter_best, MoveToNeigbor, ProblemTrait, Rankable, SearchState};
+use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState, filter_best};
 
 /// A local search algorithm that iteratively explores the neighborhood of the current solution.
 /// This algorithm applies the best move from the neighborhood until no better moves are found.
@@ -28,6 +28,7 @@ pub struct LocalSearch<N> {
 }
 
 impl<N> LocalSearch<N> {
+    /// Create a new [`LocalSearch`] with the given stopping condition.
     pub fn new(stop_condition: StopCondition) -> Self {
         let mut stop_condition = stop_condition;
         if let Some(max_failed_update) = stop_condition.max_failed_update {
@@ -55,10 +56,7 @@ where
         self.no_best_move = false;
     }
 
-    fn run_once<'a>(
-        &mut self,
-        state: &mut SearchState<'a, P>,
-    ) -> Result<(), OptError> {
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let mut best_list = filter_best(
             N::iter(&state.instance, &state.solution)
                 .filter(|n| state.is_neighbor_better_than_current(n)),
