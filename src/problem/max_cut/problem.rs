@@ -2,14 +2,21 @@ use crate::search_state::{ProblemTrait, Rankable};
 use std::{collections::HashMap, io::BufRead};
 
 /// The MaxCut problem.
+///
+/// Given an undirected weighted graph, MaxCut seeks a partition of the vertices into
+/// two sets that maximizes the total weight of edges crossing the partition.
 pub struct MaxCut {
     adj: HashMap<usize, HashMap<usize, f32>>,
 }
 
+/// A solution for the MaxCut problem.
 #[derive(Debug, Clone)]
 pub struct MaxCutSolution {
+    /// The cut assignment for each vertex (true/false for each side).
     pub cut: HashMap<usize, bool>,
+    /// The gain of flipping the cut of each vertex.
     pub gain: HashMap<usize, f32>,
+    /// The total weight of edges crossing the cut.
     pub objective: f32,
 }
 
@@ -144,6 +151,16 @@ impl MaxCut {
         self.adj[&i][&j]
     }
 
+    /// Checks if there is an edge between the node `i` and `j`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut mc = optopus::problem::MaxCut::new();
+    /// mc.add_weight(0, 1, 1.0);
+    /// assert!(mc.has_edge(0, 1));
+    /// assert!(!mc.has_edge(0, 2));
+    /// ```
     pub fn has_edge(&self, i: usize, j: usize) -> bool {
         self.adj.get(&i).and_then(|hm| hm.get(&j)).is_some()
     }
@@ -182,6 +199,13 @@ impl MaxCut {
         return ret / 2.0;
     }
 
+    /// Loads a MaxCut problem instance from a file.
+    /// The file format should be as follows:
+    /// ```
+    /// N M
+    /// i j w
+    /// i j w
+    /// ...
     pub fn load_from_file(filename: &str) -> Result<Self, Box<dyn core::error::Error>> {
         let file = std::fs::File::open(filename)?;
         let reader = std::io::BufReader::new(file);
