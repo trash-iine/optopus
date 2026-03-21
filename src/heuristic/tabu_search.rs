@@ -1,7 +1,7 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
 use crate::search_state::{
-    EnabledTabu, MoveToNeigbor, ProblemTrait, Rankable, SearchState, filter_best,
+    EnabledTabu, MoveToNeighbor, ProblemTrait, Rankable, SearchState, filter_best,
 };
 
 /// Tabu search heuristic.
@@ -71,7 +71,7 @@ where
 impl<P, N> Heuristic<P> for TabuSearch<N>
 where
     P: ProblemTrait,
-    N: MoveToNeigbor<P> + Clone + EnabledTabu + Rankable,
+    N: MoveToNeighbor<P> + Clone + EnabledTabu + Rankable,
     N::TabuMap: Default,
 {
     fn clear(&mut self) {

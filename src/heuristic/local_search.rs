@@ -1,6 +1,6 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState, filter_best};
+use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState, filter_best};
 
 /// A local search algorithm that iteratively explores the neighborhood of the current solution.
 /// This algorithm applies the best move from the neighborhood until no better moves are found.
@@ -50,7 +50,7 @@ impl<N> LocalSearch<N> {
 impl<P, N> Heuristic<P> for LocalSearch<N>
 where
     P: ProblemTrait,
-    N: MoveToNeigbor<P> + Rankable,
+    N: MoveToNeighbor<P> + Rankable,
 {
     fn clear(&mut self) {
         self.no_best_move = false;

@@ -1,6 +1,6 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState};
+use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
 use rand::seq::IteratorRandom;
 
 /// Random walk heuristic.
@@ -26,7 +26,7 @@ impl<N> RandomWalk<N> {
 impl<P, N> Heuristic<P> for RandomWalk<N>
 where
     P: ProblemTrait,
-    N: MoveToNeigbor<P> + Rankable,
+    N: MoveToNeighbor<P> + Rankable,
 {
     fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state)

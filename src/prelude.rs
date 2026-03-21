@@ -19,39 +19,37 @@ pub use crate::heuristic::{
 };
 
 // Traits
-pub use crate::search_state::{
-    EnabledTabu, Evaluable, MoveToNeigbor, ProblemTrait, Rankable,
-};
+pub use crate::search_state::{EnabledTabu, Evaluable, MoveToNeighbor, ProblemTrait, Rankable};
 
 // Problem and neighbor types
 pub use crate::problem::{
+    // Formula
+    Constraint,
+    ConstraintRel,
+    Expr,
+    FormulaFlipNeighbor,
+    FormulaProblem,
+    FormulaSolution,
+    FormulaSwapNeighbor,
     // MaxCut
     MaxCut,
     MaxCutFlipNeighbor,
     MaxCutSwapNeighbor,
-    // SAT
-    Sat,
-    SatFlipNeighbor,
-    SatSolution,
-    SatSwapNeighbor,
+    OptDirection,
     // QUBO
     Qubo,
     QuboFlipNeighbour,
     QuboSolution,
     QuboSwapNeighbour,
+    // SAT
+    Sat,
+    SatFlipNeighbor,
+    SatSolution,
+    SatSwapNeighbor,
     // TSP
     TspRelocateNeighbor,
     TspSolution,
     TspTour,
     TspTwoOptNeighbor,
     TspWithCoordinates,
-    // Formula
-    Constraint,
-    ConstraintRel,
-    Expr,
-    FormulaProblem,
-    FormulaSolution,
-    FormulaFlipNeighbor,
-    FormulaSwapNeighbor,
-    OptDirection,
 };

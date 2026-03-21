@@ -1,6 +1,6 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{Evaluable, MoveToNeigbor, ProblemTrait, SearchState};
+use crate::search_state::{Evaluable, MoveToNeighbor, ProblemTrait, SearchState};
 use rand::Rng;
 use rand::seq::IteratorRandom;
 use std::ops::{DivAssign, MulAssign};
@@ -38,7 +38,7 @@ impl<N> SimulatedAnnealing<N> {
 impl<P, N> Heuristic<P> for SimulatedAnnealing<N>
 where
     P: ProblemTrait,
-    N: MoveToNeigbor<P> + Evaluable<f64>,
+    N: MoveToNeighbor<P> + Evaluable<f64>,
 {
     /// Reset the temperature to the initial value.
     fn clear(&mut self) {
@@ -109,7 +109,7 @@ impl<N> BangBangSimulatedAnnealing<N> {
 impl<P, N> Heuristic<P> for BangBangSimulatedAnnealing<N>
 where
     P: ProblemTrait,
-    N: MoveToNeigbor<P> + Evaluable<f64>,
+    N: MoveToNeighbor<P> + Evaluable<f64>,
 {
     /// Reset the temperature and phase to the initial state.
     fn clear(&mut self) {

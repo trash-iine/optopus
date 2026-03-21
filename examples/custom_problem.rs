@@ -51,7 +51,7 @@ struct FlipMove {
     index: usize,
 }
 
-impl MoveToNeigbor<OneMaxProblem> for FlipMove {
+impl MoveToNeighbor<OneMaxProblem> for FlipMove {
     fn apply_to_solution(
         &self,
         _prob: &OneMaxProblem,

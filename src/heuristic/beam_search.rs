@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{MoveToNeigbor, ProblemTrait, Rankable, SearchState};
+use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
 
 /// Beam search heuristic.
 ///
@@ -56,7 +56,7 @@ impl<P: ProblemTrait, N> BeamSearch<P, N> {
 impl<P, N> Heuristic<P> for BeamSearch<P, N>
 where
     P: ProblemTrait,
-    N: MoveToNeigbor<P> + Rankable,
+    N: MoveToNeighbor<P> + Rankable,
 {
     /// Clear the beam to reset the heuristic state.
     fn clear(&mut self) {

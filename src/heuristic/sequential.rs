@@ -45,7 +45,7 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Sequential<Problem> {
 
             heuristic.run(&mut cloned)?;
 
-            state.update(cloned);
+            state.update_state(cloned);
 
             if self.stop_condition.is_done(state) {
                 return Ok(());
