@@ -1,3 +1,5 @@
+//! heuristic module provides various heuristic algorithms for combinatorial optimization problems.
+
 mod beam_search;
 mod local_search;
 mod random_walk;
@@ -18,22 +20,29 @@ use crate::error::OptError;
 use crate::search_state::{ProblemTrait, SearchState};
 use serde::Serialize;
 
-/// ヒューリスティックアルゴリズムの共通インターフェース。
+/// [`Heuristic`] trait is a common interface for heuristics.
 ///
-/// `is_done` で終了条件を判定し、`run_once` で1ステップ実行します。
-/// `run` は終了まで `run_once` を繰り返すデフォルト実装を持ちます。
+/// To implement a heuristic, you need to implement [`Heuristic::is_done`] and [`Heuristic::run_once`] methods.
+///
+/// - [`Heuristic::is_done`] method checks if the heuristic should stop based on the current search state.
+/// - [`Heuristic::run_once`] method performs one iteration of the heuristic and updates the search state accordingly
+///
+/// Please see [`local_search::LocalSearch`] as an example implementation of the `Heuristic` trait.
 pub trait Heuristic<Problem: ProblemTrait> {
+    /// Clear the internal state of the heuristic before running. This is called at the beginning of [`Heuristic::run`].
     fn clear(&mut self) {}
+
+    /// Check if the heuristic should stop based on the current search state.
     fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool;
-    fn run_once<'a>(
-        &mut self,
-        state: &mut SearchState<'a, Problem>,
-    ) -> Result<(), OptError>;
-    fn run<'a>(
-        &mut self,
-        state: &mut SearchState<'a, Problem>,
-    ) -> Result<(), OptError> {
+
+    /// Perform one iteration of the heuristic and update the search state accordingly.
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError>;
+
+    /// Run the heuristic until the stopping condition is met.
+    /// This method calls [`Heuristic::clear`] at the beginning and then repeatedly calls [`Heuristic::run_once`] until [`Heuristic::is_done`] returns true.
+    fn run<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError> {
         self.clear();
+
         while !self.is_done(state) {
             self.run_once(state)?;
         }
@@ -43,16 +52,10 @@ pub trait Heuristic<Problem: ProblemTrait> {
 }
 
 pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
-    fn run_once_par<'a>(
-        &mut self,
-        state: &mut SearchState<'a, Problem>,
-    ) -> Result<(), OptError> {
+    fn run_once_par<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError> {
         self.run_once(state)
     }
-    fn run_par<'a>(
-        &mut self,
-        state: &mut SearchState<'a, Problem>,
-    ) -> Result<(), OptError> {
+    fn run_par<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError> {
         self.clear();
         while !self.is_done(state) {
             self.run_once_par(state)?;
@@ -62,9 +65,14 @@ pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
     }
 }
 
-/// ヒューリスティックの終了条件。
+/// This struct represents the stopping condition for heuristics.
 ///
-/// 反復回数・実行時間・改善なし反復回数のいずれか（複数も可）で停止させます。
+/// It can be configured with
+/// - a maximum number of iterations,
+/// - a maximum duration,
+/// - and a maximum number of iterations without improvement.
+///
+/// The [`StopCondition::is_done`] method checks if any of the conditions are met based on the current search state.
 ///
 /// # Example
 ///
@@ -72,25 +80,28 @@ pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
 /// use optopus::heuristic::StopCondition;
 /// use std::time::Duration;
 ///
-/// // 反復回数のみ
+/// // only iterations
 /// let sc = StopCondition::iterations(1_000_000);
 ///
-/// // 実行時間のみ
+/// // only execution time
 /// let sc = StopCondition::duration(Duration::from_secs(30));
 ///
-/// // 組み合わせ（チェーン）
+/// // combination of iterations and execution time
 /// let sc = StopCondition::iterations(1_000_000)
 ///     .with_duration(Duration::from_secs(30));
 /// ```
 #[derive(Debug, Clone, Serialize)]
 pub struct StopCondition {
+    /// Maximum number of iterations to run the heuristic.
     pub max_iteration: Option<u64>,
+    /// Maximum duration to run the heuristic.
     pub max_duration: Option<std::time::Duration>,
+    /// Maximum number of iterations without improvement to run the heuristic.
     pub max_failed_update: Option<u64>,
 }
 
 impl StopCondition {
-    /// 全条件を直接指定して作成します。
+    /// Create a new `StopCondition` with the given parameters.
     pub fn new(
         max_iteration: Option<u64>,
         max_duration: Option<std::time::Duration>,
@@ -103,7 +114,7 @@ impl StopCondition {
         }
     }
 
-    /// 反復回数だけを条件にした `StopCondition` を作成します。
+    /// Create a `StopCondition` with only the maximum number of iterations.
     pub fn iterations(n: u64) -> Self {
         Self {
             max_iteration: Some(n),
@@ -112,7 +123,7 @@ impl StopCondition {
         }
     }
 
-    /// 実行時間だけを条件にした `StopCondition` を作成します。
+    /// Create a `StopCondition` with only the maximum duration.
     pub fn duration(d: std::time::Duration) -> Self {
         Self {
             max_iteration: None,
@@ -121,7 +132,7 @@ impl StopCondition {
         }
     }
 
-    /// 改善なし反復回数だけを条件にした `StopCondition` を作成します。
+    /// Create a `StopCondition` with only the maximum number of iterations without improvement.
     pub fn failed_updates(n: u64) -> Self {
         Self {
             max_iteration: None,
@@ -130,24 +141,25 @@ impl StopCondition {
         }
     }
 
-    /// 最大反復回数を追加（チェーン用）。
+    /// Add the maximum number of iterations (for chaining).
     pub fn with_iterations(mut self, n: u64) -> Self {
         self.max_iteration = Some(n);
         self
     }
 
-    /// 最大実行時間を追加（チェーン用）。
+    /// Add the maximum duration (for chaining).
     pub fn with_duration(mut self, d: std::time::Duration) -> Self {
         self.max_duration = Some(d);
         self
     }
 
-    /// 最大改善なし反復回数を追加（チェーン用）。
+    /// Add the maximum number of iterations without improvement (for chaining).
     pub fn with_failed_updates(mut self, n: u64) -> Self {
         self.max_failed_update = Some(n);
         self
     }
 
+    /// Check if any of the stopping conditions are met based on the current search state.
     pub fn is_done<'a, Problem: ProblemTrait>(&self, state: &SearchState<'a, Problem>) -> bool {
         if let Some(max_iter) = self.max_iteration {
             if state.iteration - state.start_iteration >= max_iter {
