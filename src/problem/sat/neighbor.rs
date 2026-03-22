@@ -1,24 +1,27 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use super::definition::{Sat, SatSolution};
-use crate::{error::OptError, search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable}};
+use super::problem::{Sat, SatSolution};
+use crate::{
+    error::OptError,
+    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
+};
 
-// ---------------------------------------------------------------------------
-// Flip 近傍 (1-opt)
-// ---------------------------------------------------------------------------
-
-/// 変数を1つフリップする近傍
+/// A flip move that toggles a single variable `i`.
+///
+/// `gain` is the change in the number of satisfied clauses after the flip
+/// (positive = improvement, since MaxSAT is maximized).
 #[derive(Debug, Clone)]
 pub struct SatFlipNeighbor {
+    /// Index of the variable to flip.
     pub i: usize,
-    /// 充足節数の変化量 (正 = 改善)
+    /// Change in satisfied-clause count when this variable is flipped (positive = improvement).
     pub gain: i64,
 }
 
 impl Rankable for SatFlipNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
-        self.gain > other.gain // 充足節数を最大化
+        self.gain > other.gain
     }
 }
 
@@ -26,9 +29,7 @@ impl EnabledTabu for SatFlipNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map
-            .get(&self.i)
-            .map_or(true, |&t| iteration > t)
+        tabu_map.get(&self.i).map_or(true, |&t| iteration > t)
     }
 
     fn add_to_tabu_map(
@@ -42,16 +43,15 @@ impl EnabledTabu for SatFlipNeighbor {
     }
 }
 
-// SAT は最大化問題: SA の受理確率には「悪化量 = -gain」を渡す
 impl Evaluable<f64> for SatFlipNeighbor {
     fn evaluate(&self) -> f64 {
-        -(self.gain as f64)
+        self.gain as f64
     }
 }
 
-impl MoveToNeigbor<Sat> for SatFlipNeighbor {
+impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
-        // フリップにより gain が変化する可能性がある変数を収集 (適用前に実施)
+        // Collect variables that share a clause with i (their gain may change after the flip)
         let mut affected: HashSet<usize> = HashSet::new();
         for clause in prob.clauses_of_var(self.i) {
             for &lit in clause {
@@ -62,16 +62,16 @@ impl MoveToNeigbor<Sat> for SatFlipNeighbor {
             }
         }
 
-        // x[i] をフリップ
+        // Flip x[i]
         sol.x[self.i] = !sol.x[self.i];
 
-        // n_satisfied を更新
+        // Update n_satisfied
         sol.n_satisfied = (sol.n_satisfied as i64 + self.gain) as usize;
 
-        // gain[i] を更新: 再フリップすると符号が反転
+        // Update gain[i]: flipping again reverts to the original (sign flip)
         sol.gain[self.i] = -self.gain;
 
-        // 共有節を持つ変数の gain を再計算
+        // Recompute gain for variables sharing a clause with i
         for j in affected {
             sol.gain[j] = prob.calc_gain(&sol.x, j);
         }
@@ -80,8 +80,10 @@ impl MoveToNeigbor<Sat> for SatFlipNeighbor {
 
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
         let n = prob.n_vars();
-        let gain = sol.gain.clone();
-        (0..n).map(move |i| SatFlipNeighbor { i, gain: gain[i] })
+        (0..n).map(move |i| SatFlipNeighbor {
+            i,
+            gain: sol.gain[i],
+        })
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
@@ -89,17 +91,18 @@ impl MoveToNeigbor<Sat> for SatFlipNeighbor {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Swap 近傍 (2-opt: 同じ節に含まれる変数ペアを同時にフリップ)
-// ---------------------------------------------------------------------------
-
-/// 変数 i と j を同時にフリップする近傍
-/// 節を共有するペアのみ列挙することで探索空間を絞る
+/// A swap move that simultaneously flips variables `i` and `j`.
+///
+/// Only pairs that appear together in at least one clause are enumerated,
+/// which reduces the search space relative to all O(n²) pairs.
+/// `gain` is the combined change in satisfied-clause count (positive = improvement).
 #[derive(Debug, Clone)]
 pub struct SatSwapNeighbor {
+    /// Index of the first variable to flip.
     pub i: usize,
+    /// Index of the second variable to flip.
     pub j: usize,
-    /// 充足節数の変化量 (正 = 改善)
+    /// Combined change in satisfied-clause count (positive = improvement).
     pub gain: i64,
 }
 
@@ -113,9 +116,9 @@ impl EnabledTabu for SatSwapNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let ok_i = tabu_map.get(&self.i).map_or(true, |&t| iteration > t);
-        let ok_j = tabu_map.get(&self.j).map_or(true, |&t| iteration > t);
-        ok_i && ok_j
+        let enabled_i = tabu_map.get(&self.i).map_or(true, |&t| iteration > t);
+        let enabled_j = tabu_map.get(&self.j).map_or(true, |&t| iteration > t);
+        enabled_i && enabled_j
     }
 
     fn add_to_tabu_map(
@@ -137,13 +140,13 @@ impl Evaluable<f64> for SatSwapNeighbor {
     }
 }
 
-impl MoveToNeigbor<Sat> for SatSwapNeighbor {
+impl MoveToNeighbor<Sat> for SatSwapNeighbor {
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }
 
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
-        // i をフリップ → j をフリップ (gain[j] は i フリップ後の値を使う)
+        // Flip i first, then flip j using the updated gain[j] after the first flip
         let flip_i = SatFlipNeighbor {
             i: self.i,
             gain: sol.gain[self.i],
@@ -155,6 +158,7 @@ impl MoveToNeigbor<Sat> for SatSwapNeighbor {
             gain: sol.gain[self.j],
         };
         flip_j.apply_to_solution(prob, sol)?;
+
         Ok(())
     }
 
@@ -162,7 +166,7 @@ impl MoveToNeigbor<Sat> for SatSwapNeighbor {
         let x = Arc::new(sol.x.clone());
         let gain = Arc::new(sol.gain.clone());
 
-        // 節を共有するペア (i, j) を重複なく列挙する
+        // Enumerate clause-sharing pairs (i, j) without duplicates
         let mut seen: HashSet<(usize, usize)> = HashSet::new();
         let mut items: Vec<SatSwapNeighbor> = Vec::new();
 
@@ -178,11 +182,14 @@ impl MoveToNeigbor<Sat> for SatSwapNeighbor {
                     let (i, j) = pair;
 
                     // gain_swap = gain_i + gain_j_after_flip_i
-                    let gain_j_after_flip_i =
-                        prob.calc_gain_with_virtual_flip(&x, i, j);
+                    let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&x, i, j);
                     let swap_gain = gain[i] + gain_j_after_flip_i;
 
-                    items.push(SatSwapNeighbor { i, j, gain: swap_gain });
+                    items.push(SatSwapNeighbor {
+                        i,
+                        j,
+                        gain: swap_gain,
+                    });
                 }
             }
         }
@@ -216,7 +223,11 @@ mod tests {
     fn make_solution(sat: &Sat, x: Vec<bool>) -> SatSolution {
         let gain: Vec<i64> = (0..sat.n_vars()).map(|i| sat.calc_gain(&x, i)).collect();
         let n_satisfied = sat.calc_satisfied(&x);
-        SatSolution { x, gain, n_satisfied }
+        SatSolution {
+            x,
+            gain,
+            n_satisfied,
+        }
     }
 
     #[test]
