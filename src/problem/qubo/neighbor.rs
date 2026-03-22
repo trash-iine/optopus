@@ -2,18 +2,17 @@ use super::problem::{Coefficient, Qubo};
 use crate::{
     error::OptError,
     problem::qubo::problem::QuboSolution,
-    search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
 };
 
-// ---------------------------------------------------------------------------
-// Flip 近傍 (1-opt)
-// ---------------------------------------------------------------------------
-
-/// 変数を1つフリップする近傍
+/// A flip move that toggles a single variable `i`.
+///
+/// `gain` is the change in energy after the flip (negative = improvement, since QUBO is minimized).
 #[derive(Debug, Clone)]
 pub struct QuboFlipNeighbour {
+    /// Index of the variable to flip.
     pub i: usize,
-    /// 目的関数値の変化量 (負 = 改善)
+    /// Change in objective value when this variable is flipped (negative = improvement).
     pub gain: Coefficient,
 }
 
@@ -49,34 +48,31 @@ impl Evaluable<Coefficient> for QuboFlipNeighbour {
     }
 }
 
-// QUBO は最小化問題: gain = コスト変化量 (正 = 悪化) → SA の受理確率 exp(-gain/T) が正しく機能する
+// QUBO is a minimization problem: gain = change in energy (positive = worsening).
+// Passing gain directly to SA yields the correct acceptance probability exp(-gain/T).
 impl Evaluable<f64> for QuboFlipNeighbour {
     fn evaluate(&self) -> f64 {
         self.gain as f64
     }
 }
 
-impl MoveToNeigbor<Qubo> for QuboFlipNeighbour {
+impl MoveToNeighbor<Qubo> for QuboFlipNeighbour {
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
-        let bi = *sol
-            .x
-            .get(&self.i)
-            .ok_or_else(|| OptError::InvalidState(format!("{} is not found in solution", self.i)))?;
+        let bi = *sol.x.get(&self.i).ok_or_else(|| {
+            OptError::InvalidState(format!("{} is not found in solution", self.i))
+        })?;
 
-        // 1. 変数をフリップ
+        // Flip the variable
         sol.x.insert(self.i, !bi);
 
-        // 2. gain[i] を更新: 再度フリップすると元に戻る = 符号反転
+        // Update gain
         sol.gain.insert(self.i, -self.gain);
 
-        // 3. i の近傍 j の gain を更新
-        //    x_i が bi → !bi に変化したとき、gain[j] の変化量は:
-        //      bi == x_j のとき: +Q[i][j]
-        //      bi != x_j のとき: -Q[i][j]
         for (&j, &q) in prob.iter_on_adjacency(self.i) {
             if j == self.i {
-                continue; // 対角項は他変数の gain に影響しない
+                continue;
             }
+
             let bj = *sol
                 .x
                 .get(&j)
@@ -85,17 +81,17 @@ impl MoveToNeigbor<Qubo> for QuboFlipNeighbour {
             *sol.gain.entry(j).or_insert(0) += delta;
         }
 
-        // 4. 目的関数値を更新
+        // Update objective
         sol.objective += self.gain;
+
         Ok(())
     }
 
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
-        // 変数インデックスが連続 0..n である保証はないため keys() から収集する
-        let vars: Vec<usize> = prob.iter_on_variables().copied().collect();
-        let gain = sol.gain.clone();
-        vars.into_iter()
-            .map(move |i| QuboFlipNeighbour { i, gain: gain[&i] })
+        prob.iter_on_variables().map(move |&i| QuboFlipNeighbour {
+            i,
+            gain: sol.gain[&i],
+        })
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
@@ -103,16 +99,16 @@ impl MoveToNeigbor<Qubo> for QuboFlipNeighbour {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Swap 近傍 (2-opt: 変数を2つ同時にフリップ)
-// ---------------------------------------------------------------------------
-
-/// 変数 i と j を同時にフリップする近傍
+/// A swap move that simultaneously flips variables `i` and `j`.
+///
+/// `gain` is the combined change in energy (negative = improvement).
 #[derive(Debug, Clone)]
 pub struct QuboSwapNeighbour {
+    /// Index of the first variable to flip.
     pub i: usize,
+    /// Index of the second variable to flip.
     pub j: usize,
-    /// 目的関数値の変化量 (負 = 改善)
+    /// Combined change in objective value when both variables are flipped (negative = improvement).
     pub gain: Coefficient,
 }
 
@@ -150,13 +146,12 @@ impl EnabledTabu for QuboSwapNeighbour {
     }
 }
 
-impl MoveToNeigbor<Qubo> for QuboSwapNeighbour {
+impl MoveToNeighbor<Qubo> for QuboSwapNeighbour {
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }
 
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
-        // i をフリップ → j をフリップ (gain[j] は i フリップ後の値を使う)
         let flip_i = QuboFlipNeighbour {
             i: self.i,
             gain: sol.gain[&self.i],
@@ -168,44 +163,27 @@ impl MoveToNeigbor<Qubo> for QuboSwapNeighbour {
             gain: sol.gain[&self.j],
         };
         flip_j.apply_to_solution(prob, sol)?;
+
         Ok(())
     }
 
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
-        let vars: Vec<usize> = prob.iter_on_variables().copied().collect();
-        let n = vars.len();
-        let x = sol.x.clone();
-        let gain = sol.gain.clone();
-
-        // 全ペア (i, j) に対して gain を事前計算
-        // gain(swap i,j) = gain_i + gain_j + delta_ij
-        // delta_ij = Q[i][j] * (x_i == x_j ? 1 : -1)
-        let mut items: Vec<QuboSwapNeighbour> = Vec::with_capacity(n * (n - 1) / 2);
-        for (idx_i, &i) in vars.iter().enumerate() {
-            for &j in &vars[idx_i + 1..] {
-                let q_ij = prob.get_q(i, j).unwrap_or(0);
-                let bi = x[&i];
-                let bj = x[&j];
-                let delta_ij = if bi == bj { q_ij } else { -q_ij };
-                let swap_gain = gain[&i] + gain[&j] + delta_ij;
-                items.push(QuboSwapNeighbour {
+        prob.iter_on_variables().flat_map(move |&i| {
+            prob.iter_on_variables()
+                .filter(move |&&j| j < i && (sol.x[&i] ^ sol.x[&j]))
+                .map(move |&j| Self {
                     i,
                     j,
-                    gain: swap_gain,
-                });
-            }
-        }
-        items.into_iter()
+                    gain: sol.gain[&i] + sol.gain[&j]
+                        - if let Some(q) = prob.get_q(i, j) { q } else { 0 },
+                })
+        })
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
         self.gain + src.objective < other.objective
     }
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -215,7 +193,7 @@ mod tests {
 
     fn make_qubo() -> Qubo {
         let mut q = Qubo::new();
-        // 3変数のQUBO: Q[0][1]=1, Q[1][2]=2, Q[0][2]=3, Q[2][2]=1
+        // 3-variable QUBO: Q[0][1]=1, Q[1][2]=2, Q[0][2]=3, Q[2][2]=1
         q.set_q(0, 1, 1);
         q.set_q(1, 2, 2);
         q.set_q(0, 2, 3);
@@ -238,7 +216,7 @@ mod tests {
             let mut s = sol.clone();
             neighbor.apply_to_solution(&qubo, &mut s).unwrap();
 
-            // objective が正しく更新されているか
+            // objective should be updated correctly
             let expected_obj = qubo.calculate_energy(&s.x);
             assert_eq!(
                 s.objective, expected_obj,
@@ -246,7 +224,7 @@ mod tests {
                 neighbor.i, s.objective, expected_obj
             );
 
-            // gain が正しく更新されているか
+            // gain should be updated correctly
             for &i in qubo.iter_on_variables() {
                 let expected_gain = qubo.calculate_gain(&s.x, i);
                 assert_eq!(

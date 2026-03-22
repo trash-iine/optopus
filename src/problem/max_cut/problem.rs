@@ -201,7 +201,7 @@ impl MaxCut {
 
     /// Loads a MaxCut problem instance from a file.
     /// The file format should be as follows:
-    /// ```
+    /// ```skip
     /// N M
     /// i j w
     /// i j w
