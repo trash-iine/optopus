@@ -5,8 +5,14 @@ use std::io::{BufRead, BufReader};
 
 use crate::search_state::{ProblemTrait, Rankable};
 
+/// Integer coefficient type used in the Q matrix.
 pub type Coefficient = i32;
 
+/// A solution to the QUBO problem.
+///
+/// - `x` — variable assignment (`x[i] = true` means variable `i` is set to 1)
+/// - `gain` — incremental energy change for each variable flip (`gain[i] < 0` means flipping `i` improves the objective)
+/// - `objective` — current energy value (minimized)
 #[derive(Debug, Clone)]
 pub struct QuboSolution {
     pub x: HashMap<usize, bool>,
@@ -19,6 +25,10 @@ impl Rankable for QuboSolution {
     }
 }
 
+/// QUBO problem instance.
+///
+/// Stores the upper-triangular Q matrix as a symmetric sparse adjacency map.
+/// Diagonal entries `Q[i][i]` represent linear coefficients.
 #[derive(Debug, Clone)]
 pub struct Qubo {
     q: HashMap<usize, HashMap<usize, Coefficient>>,
@@ -105,19 +115,23 @@ impl Qubo {
         Ok(qubo)
     }
 
+    /// Calculates the change in energy when variable `i` is flipped.
+    ///
+    /// Returns `gain` such that `E(x') = E(x) + gain` where `x'` is `x` with variable `i` flipped.
+    /// A negative value indicates an improvement (energy decrease).
     pub fn calculate_gain(&self, x: &HashMap<usize, bool>, i: usize) -> Coefficient {
         let mut gain = 0;
         for (&j, &q) in self.iter_on_adjacency(i) {
             if i == j {
                 gain += q;
-                continue;
-            }
-            let j_side = *x
-                .get(&j)
-                .expect(format!("{} is not found in solution", j).as_str());
+            } else {
+                let j_side = *x
+                    .get(&j)
+                    .expect(format!("{} is not found in solution", j).as_str());
 
-            if j_side {
-                gain += q;
+                if j_side {
+                    gain += q;
+                }
             }
         }
 
@@ -127,6 +141,7 @@ impl Qubo {
         if i_side { -gain } else { gain }
     }
 
+    /// Calculates the total energy `E(x) = Σ Q[i][j] * x[i] * x[j]` for the given assignment.
     pub fn calculate_energy(&self, x: &HashMap<usize, bool>) -> Coefficient {
         let mut energy = 0;
         for &i in self.iter_on_variables() {
@@ -139,24 +154,25 @@ impl Qubo {
             }
 
             for (&j, &q) in self.iter_on_adjacency(i) {
-                if i == j {
-                    // 対角項: Q_ii * x_i^2 = Q_ii * x_i (x_i = 1 が保証されている)
-                    energy += q;
-                    continue;
-                }
                 if i < j {
-                    // 上三角をスキップして二重計上を防ぐ
                     continue;
                 }
-                let j_side = *x
-                    .get(&j)
-                    .expect(format!("{} is not found in solution", j).as_str());
 
-                if j_side {
+                if i == j {
+                    // Diagonal term: Q_ii * x_i^2 = Q_ii * x_i (x_i == 1 is guaranteed here)
                     energy += q;
+                } else {
+                    let j_side = *x
+                        .get(&j)
+                        .expect(format!("{} is not found in solution", j).as_str());
+
+                    if j_side {
+                        energy += q;
+                    }
                 }
             }
         }
+
         energy
     }
 }
