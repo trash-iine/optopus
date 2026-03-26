@@ -7,4 +7,4 @@ mod neighbor;
 mod problem;
 
 pub use neighbor::{TspRelocateNeighbor, TspTwoOptNeighbor};
-pub use problem::{TspSolution, TspTour, TspWithCoordinates, calculate_tour_length};
+pub use problem::{TspSolution, TspTour, TspWithCoordinates};

@@ -1,20 +1,23 @@
 use std::sync::Arc;
 
-use super::definition::{TspSolution, TspWithCoordinates};
-use crate::{error::OptError, search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable}};
+use super::problem::{TspSolution, TspWithCoordinates, normalize_edge_pair};
+use crate::{
+    error::OptError,
+    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
+};
 
-// ---------------------------------------------------------------------------
-// 2-opt 近傍
-// ---------------------------------------------------------------------------
-
-/// 2-opt 移動: エッジ (tour[i], tour[i+1]) と (tour[j], tour[(j+1)%n]) を除去し、
-/// (tour[i], tour[j]) と (tour[i+1], tour[(j+1)%n]) で繋ぎ直す。
-/// 実装上は tour[i+1..=j] を反転させる。
+/// A 2-opt move that removes edges `(tour[i], tour[i+1])` and `(tour[j], tour[(j+1)%n])`,
+/// then reconnects as `(tour[i], tour[j])` and `(tour[i+1], tour[(j+1)%n])`.
+///
+/// Implemented by reversing the sub-segment `tour[i+1..=j]`.
+/// `gain` is the change in tour length after the move (negative = improvement).
 #[derive(Debug, Clone)]
 pub struct TspTwoOptNeighbor {
+    /// Smallest index of the two removed edges.
     pub i: usize,
+    /// Largest index of the two removed edges.
     pub j: usize,
-    /// 目的関数値の変化量 (負 = 改善)
+    /// Change in tour length (negative = improvement).
     pub gain: f64,
 }
 
@@ -24,7 +27,6 @@ impl Rankable for TspTwoOptNeighbor {
     }
 }
 
-// TSP は最小化問題: gain = ツアー長の変化量 (正 = 悪化) → SA に直接渡せる
 impl Evaluable<f64> for TspTwoOptNeighbor {
     fn evaluate(&self) -> f64 {
         self.gain
@@ -32,7 +34,7 @@ impl Evaluable<f64> for TspTwoOptNeighbor {
 }
 
 impl EnabledTabu for TspTwoOptNeighbor {
-    // (i, j) のペアをキーにして禁断リストを管理する
+    // Keyed by the (i, j) pair (normalized so i < j)
     type TabuMap = std::collections::HashMap<(usize, usize), u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
@@ -52,33 +54,43 @@ impl EnabledTabu for TspTwoOptNeighbor {
     }
 }
 
-impl MoveToNeigbor<TspWithCoordinates> for TspTwoOptNeighbor {
-    fn apply_to_solution(&self, _: &TspWithCoordinates, sol: &mut TspSolution) -> Result<(), OptError> {
+impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
+    fn apply_to_solution(
+        &self,
+        prob: &TspWithCoordinates,
+        sol: &mut TspSolution,
+    ) -> Result<(), OptError> {
+        let n = sol.tour.len();
+        // All edges at positions [i..=j] change: boundaries swap endpoints, internals reverse.
+        for k in self.i..=self.j {
+            let e = (sol.tour[k], sol.tour[(k + 1) % n]);
+            prob.update_gains_for_removed_edge(sol, e);
+        }
         sol.tour[self.i + 1..=self.j].reverse();
         sol.objective += self.gain;
+        for k in self.i..=self.j {
+            let e = (sol.tour[k], sol.tour[(k + 1) % n]);
+            prob.update_gains_for_added_edge(sol, e);
+        }
         Ok(())
     }
 
     fn iter(prob: &TspWithCoordinates, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
-        let n = prob.get_n();
-        let tour = Arc::new(sol.tour.clone());
-        let coords = Arc::new(prob.coordinates.clone());
-
+        let n = sol.tour.len();
         (0..n - 1).flat_map(move |i| {
-            let tour = Arc::clone(&tour);
-            let coords = Arc::clone(&coords);
-            // i=0 のとき j=n-1 は全体の逆順（無向グラフでは gain=0 の自明移動）なので除外
+            // When i=0, j=n-1 would reverse the entire tour (trivially equivalent for undirected),
+            // so exclude that case to avoid redundant moves
             let max_j = if i == 0 { n - 1 } else { n };
             (i + 2..max_j).map(move |j| {
-                let dist = |a: usize, b: usize| -> f64 {
-                    let (x1, y1) = coords[a];
-                    let (x2, y2) = coords[b];
-                    ((x1 - x2).powi(2) + (y1 - y2).powi(2)).sqrt()
-                };
-                let gain = dist(tour[i], tour[j]) + dist(tour[i + 1], tour[(j + 1) % n])
-                    - dist(tour[i], tour[i + 1])
-                    - dist(tour[j], tour[(j + 1) % n]);
-                TspTwoOptNeighbor { i, j, gain }
+                let e1 = prob.get_edge_from(&sol.tour, i);
+                let e2 = prob.get_edge_from(&sol.tour, j);
+                let key = normalize_edge_pair(e1, e2);
+
+                TspTwoOptNeighbor {
+                    i,
+                    j,
+                    gain: sol.gain[&key],
+                }
             })
         })
     }
@@ -93,17 +105,18 @@ impl MoveToNeigbor<TspWithCoordinates> for TspTwoOptNeighbor {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Relocate 近傍 (Or-opt 1-city)
-// ---------------------------------------------------------------------------
-
-/// Relocate 移動: ツアー上の都市 tour[pos] を取り出し、tour[ins] の直後に挿入する。
-/// ins は元のツアー上のインデックスで指定する。
+/// A relocate move that removes city `tour[pos]` from its current position
+/// and inserts it immediately after `tour[ins]`.
+///
+/// `pos` and `ins` are indices in the original tour before the move is applied.
+/// `gain` is the change in tour length (negative = improvement).
 #[derive(Debug, Clone)]
 pub struct TspRelocateNeighbor {
+    /// Index of the city to be relocated.
     pub pos: usize,
+    /// Index of the city after which the relocated city will be inserted.
     pub ins: usize,
-    /// 目的関数値の変化量 (負 = 改善)
+    /// Change in tour length (negative = improvement).
     pub gain: f64,
 }
 
@@ -120,7 +133,7 @@ impl Evaluable<f64> for TspRelocateNeighbor {
 }
 
 impl EnabledTabu for TspRelocateNeighbor {
-    // (pos, ins) のペアをキーにして禁断リストを管理する
+    // Keyed by the (pos, ins) pair
     type TabuMap = std::collections::HashMap<(usize, usize), u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
@@ -140,17 +153,35 @@ impl EnabledTabu for TspRelocateNeighbor {
     }
 }
 
-impl MoveToNeigbor<TspWithCoordinates> for TspRelocateNeighbor {
-    fn apply_to_solution(&self, _: &TspWithCoordinates, sol: &mut TspSolution) -> Result<(), OptError> {
+impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
+    fn apply_to_solution(
+        &self,
+        prob: &TspWithCoordinates,
+        sol: &mut TspSolution,
+    ) -> Result<(), OptError> {
+        let n = sol.tour.len();
+        let prev = (self.pos + n - 1) % n;
+        let next = (self.pos + 1) % n;
+        let ins_next = (self.ins + 1) % n;
+        let c_prev = sol.tour[prev];
+        let c_pos = sol.tour[self.pos];
+        let c_next = sol.tour[next];
+        let c_ins = sol.tour[self.ins];
+        let c_ins_next = sol.tour[ins_next];
+        prob.update_gains_for_removed_edge(sol, (c_prev, c_pos));
+        prob.update_gains_for_removed_edge(sol, (c_pos, c_next));
+        prob.update_gains_for_removed_edge(sol, (c_ins, c_ins_next));
         let city = sol.tour.remove(self.pos);
-        // pos を除去後のインデックス変化を補正して挿入位置を決める
         let insert_at = if self.ins < self.pos {
-            self.ins + 1 // ins は pos より前なのでインデックスは不変 → 直後に挿入
+            self.ins + 1
         } else {
-            self.ins // ins > pos だったので除去後は ins-1 に移動 → ins に挿入して直後に
+            self.ins
         };
         sol.tour.insert(insert_at, city);
         sol.objective += self.gain;
+        prob.update_gains_for_added_edge(sol, (c_prev, c_next));
+        prob.update_gains_for_added_edge(sol, (c_ins, c_pos));
+        prob.update_gains_for_added_edge(sol, (c_pos, c_ins_next));
         Ok(())
     }
 
@@ -166,7 +197,8 @@ impl MoveToNeigbor<TspWithCoordinates> for TspRelocateNeighbor {
             let next = (pos + 1) % n;
 
             (0..n).filter_map(move |ins| {
-                // pos 自身または直前 (prev) への挿入は元の位置と同じなので除外
+                // Inserting after pos itself or after its predecessor (prev) would
+                // leave the tour unchanged, so skip these cases
                 if ins == pos || ins == prev {
                     return None;
                 }
@@ -179,11 +211,11 @@ impl MoveToNeigbor<TspWithCoordinates> for TspRelocateNeighbor {
 
                 let ins_next = (ins + 1) % n;
 
-                // pos を prev-pos-next から取り除くコスト削減
+                // Cost saved by removing city pos from prev-pos-next
                 let removal_gain = dist(tour[prev], tour[pos]) + dist(tour[pos], tour[next])
                     - dist(tour[prev], tour[next]);
 
-                // pos を ins-ins_next の間へ挿入する追加コスト
+                // Additional cost of inserting city pos between ins and ins_next
                 let insertion_cost = dist(tour[ins], tour[pos]) + dist(tour[pos], tour[ins_next])
                     - dist(tour[ins], tour[ins_next]);
 
@@ -203,18 +235,13 @@ impl MoveToNeigbor<TspWithCoordinates> for TspRelocateNeighbor {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::problem::tsp::definition::calculate_tour_length;
 
     fn make_square_tsp() -> TspWithCoordinates {
-        // 正方形の4都市: (0,0), (1,0), (1,1), (0,1)
-        // 辺長 = 1, 対角線 = sqrt(2)
+        // 4 cities forming a unit square: (0,0), (1,0), (1,1), (0,1)
+        // Edge length = 1, diagonal = sqrt(2)
         TspWithCoordinates::new(
             "square".to_string(),
             vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
@@ -224,38 +251,50 @@ mod tests {
     #[test]
     fn test_two_opt_gain_calculation() {
         let tsp = make_square_tsp();
-        // 初期ツアー [0,1,3,2] は交差あり (長さ = 1 + sqrt(2) + 1 + sqrt(2))
+        // Initial tour [0,1,3,2] has a crossing (length = 1 + sqrt(2) + 1 + sqrt(2))
         let tour = vec![0, 1, 3, 2];
-        let objective = calculate_tour_length(&tsp, &tour).unwrap();
-        let sol = TspSolution { tour, objective };
+        let objective = tsp.calculate_tour_length(&tour).unwrap();
+        let gain = tsp.compute_all_gains(&tour);
+        let sol = TspSolution {
+            tour,
+            objective,
+            gain,
+        };
 
-        // 2-opt (i=1, j=2): エッジ (1,3) と (2,0) を (1,2) と (3,0) に置換
-        // → ツアー [0,1,2,3] (長さ = 4.0)
+        // 2-opt (i=1, j=2): replace edges (1,3) and (2,0) with (1,2) and (3,0)
+        // → tour [0,1,2,3] (length = 4.0)
         let neighbors: Vec<_> = TspTwoOptNeighbor::iter(&tsp, &sol).collect();
         let best = neighbors
             .iter()
             .min_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
             .unwrap();
-        assert!(best.gain < 0.0, "最良の2-opt移動は改善のはず");
+        assert!(
+            best.gain < 0.0,
+            "the best 2-opt move should be an improvement"
+        );
 
         let mut sol2 = sol.clone();
         best.apply_to_solution(&tsp, &mut sol2).unwrap();
-        let expected = calculate_tour_length(&tsp, &sol2.tour).unwrap();
+        let expected = tsp.calculate_tour_length(&sol2.tour).unwrap();
         assert!((sol2.objective - expected).abs() < 1e-9);
     }
 
     #[test]
     fn test_two_opt_apply_consistency() {
         let tsp = make_square_tsp();
+        let tour = vec![0, 2, 1, 3];
+        let objective = tsp.calculate_tour_length(&tour).unwrap();
+        let gain = tsp.compute_all_gains(&tour);
         let sol = TspSolution {
-            tour: vec![0, 2, 1, 3],
-            objective: calculate_tour_length(&tsp, &vec![0, 2, 1, 3]).unwrap(),
+            tour,
+            objective,
+            gain,
         };
 
         for neighbor in TspTwoOptNeighbor::iter(&tsp, &sol) {
             let mut s = sol.clone();
             neighbor.apply_to_solution(&tsp, &mut s).unwrap();
-            let expected = calculate_tour_length(&tsp, &s.tour).unwrap();
+            let expected = tsp.calculate_tour_length(&s.tour).unwrap();
             assert!(
                 (s.objective - expected).abs() < 1e-9,
                 "2-opt ({},{}) after: objective={} expected={}",
@@ -264,21 +303,38 @@ mod tests {
                 s.objective,
                 expected
             );
+            let expected_gains = tsp.compute_all_gains(&s.tour);
+            for (key, &val) in &s.gain {
+                let exp = expected_gains[key];
+                assert!(
+                    (val - exp).abs() < 1e-9,
+                    "2-opt ({},{}) gain[{:?}]: {} expected {}",
+                    neighbor.i,
+                    neighbor.j,
+                    key,
+                    val,
+                    exp
+                );
+            }
         }
     }
 
     #[test]
     fn test_relocate_apply_consistency() {
         let tsp = make_square_tsp();
+        let tour = vec![0, 1, 2, 3];
+        let objective = tsp.calculate_tour_length(&tour).unwrap();
+        let gain = tsp.compute_all_gains(&tour);
         let sol = TspSolution {
-            tour: vec![0, 1, 2, 3],
-            objective: calculate_tour_length(&tsp, &vec![0, 1, 2, 3]).unwrap(),
+            tour,
+            objective,
+            gain,
         };
 
         for neighbor in TspRelocateNeighbor::iter(&tsp, &sol) {
             let mut s = sol.clone();
             neighbor.apply_to_solution(&tsp, &mut s).unwrap();
-            let expected = calculate_tour_length(&tsp, &s.tour).unwrap();
+            let expected = tsp.calculate_tour_length(&s.tour).unwrap();
             assert!(
                 (s.objective - expected).abs() < 1e-9,
                 "relocate (pos={}, ins={}) after: objective={} expected={}",
@@ -287,15 +343,32 @@ mod tests {
                 s.objective,
                 expected
             );
+            let expected_gains = tsp.compute_all_gains(&s.tour);
+            for (key, &val) in &s.gain {
+                let exp = expected_gains[key];
+                assert!(
+                    (val - exp).abs() < 1e-9,
+                    "relocate (pos={}, ins={}) gain[{:?}]: {} expected {}",
+                    neighbor.pos,
+                    neighbor.ins,
+                    key,
+                    val,
+                    exp
+                );
+            }
         }
     }
 
     #[test]
     fn test_relocate_tour_is_valid_permutation() {
         let tsp = make_square_tsp();
+        let tour = vec![0, 1, 2, 3];
+        let objective = tsp.calculate_tour_length(&tour).unwrap();
+        let gain = tsp.compute_all_gains(&tour);
         let sol = TspSolution {
-            tour: vec![0, 1, 2, 3],
-            objective: calculate_tour_length(&tsp, &vec![0, 1, 2, 3]).unwrap(),
+            tour,
+            objective,
+            gain,
         };
 
         for neighbor in TspRelocateNeighbor::iter(&tsp, &sol) {
@@ -303,7 +376,11 @@ mod tests {
             neighbor.apply_to_solution(&tsp, &mut s).unwrap();
             let mut sorted = s.tour.clone();
             sorted.sort();
-            assert_eq!(sorted, vec![0, 1, 2, 3], "ツアーは有効な順列のはず");
+            assert_eq!(
+                sorted,
+                vec![0, 1, 2, 3],
+                "tour should remain a valid permutation"
+            );
         }
     }
 }
