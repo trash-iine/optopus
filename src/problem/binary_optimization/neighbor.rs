@@ -1,17 +1,19 @@
 use std::collections::HashMap;
 
-use super::definition::{FormulaProblem, FormulaSolution, Value};
-use crate::{error::OptError, search_state::{EnabledTabu, Evaluable, MoveToNeigbor, Rankable}};
+use super::problem::{FormulaProblem, FormulaSolution, Value};
+use crate::{
+    error::OptError,
+    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
+};
 
-// ---------------------------------------------------------------------------
-// Flip 近傍 (1-opt: 変数を 1 つフリップ)
-// ---------------------------------------------------------------------------
-
-/// 変数 i を 1 つフリップする近傍
+/// A flip move that toggles a single variable `i`.
+///
+/// `gain` is the change in score after the flip (positive = improvement).
 #[derive(Debug, Clone)]
 pub struct FormulaFlipNeighbor {
+    /// Index of the variable to flip.
     pub i: usize,
-    /// スコアの変化量 (正 = 改善)
+    /// Change in score when this variable is flipped (positive = improvement).
     pub gain: Value,
 }
 
@@ -22,7 +24,7 @@ impl Rankable for FormulaFlipNeighbor {
 }
 
 impl Evaluable<f64> for FormulaFlipNeighbor {
-    /// SA 用: 正 = 悪化量
+    /// Returns the worsening amount for SA acceptance: positive when the move degrades the score.
     fn evaluate(&self) -> f64 {
         -self.gain
     }
@@ -46,16 +48,29 @@ impl EnabledTabu for FormulaFlipNeighbor {
     }
 }
 
-impl MoveToNeigbor<FormulaProblem> for FormulaFlipNeighbor {
-    fn apply_to_solution(&self, prob: &FormulaProblem, sol: &mut FormulaSolution) -> Result<(), OptError> {
+impl MoveToNeighbor<FormulaProblem> for FormulaFlipNeighbor {
+    fn apply_to_solution(
+        &self,
+        prob: &FormulaProblem,
+        sol: &mut FormulaSolution,
+    ) -> Result<(), OptError> {
+        // Update constraint_vals BEFORE flipping (eval_poly_delta uses current x[i] value)
+        for (cv, poly) in sol
+            .constraint_vals
+            .iter_mut()
+            .zip(prob.constraint_polys.iter())
+        {
+            *cv += prob.eval_poly_delta(poly, &sol.x, self.i);
+        }
+
         sol.x[self.i] = !sol.x[self.i];
         sol.score += self.gain;
         sol.gain[self.i] = -self.gain;
 
-        // i 以外の全変数のゲインを再計算
+        // Recompute gains for all other variables using O(d) method (no allocation)
         for j in 0..prob.n_vars {
             if j != self.i {
-                sol.gain[j] = prob.calc_gain(&sol.x, j);
+                sol.gain[j] = prob.calc_gain_fast(&sol.x, &sol.constraint_vals, j);
             }
         }
         Ok(())
@@ -77,16 +92,14 @@ impl MoveToNeigbor<FormulaProblem> for FormulaFlipNeighbor {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Swap 近傍 (2-opt: 変数 2 つを同時にフリップ)
-// ---------------------------------------------------------------------------
-
-/// 変数 i と j を同時にフリップする近傍
+/// A swap move that simultaneously flips variables `i` and `j`.
+///
+/// `gain` is the combined change in score (positive = improvement).
 #[derive(Debug, Clone)]
 pub struct FormulaSwapNeighbor {
     pub i: usize,
     pub j: usize,
-    /// スコアの変化量 (正 = 改善)
+    /// Combined change in score (positive = improvement).
     pub gain: Value,
 }
 
@@ -124,31 +137,64 @@ impl EnabledTabu for FormulaSwapNeighbor {
     }
 }
 
-impl MoveToNeigbor<FormulaProblem> for FormulaSwapNeighbor {
+impl MoveToNeighbor<FormulaProblem> for FormulaSwapNeighbor {
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }
 
-    fn apply_to_solution(&self, prob: &FormulaProblem, sol: &mut FormulaSolution) -> Result<(), OptError> {
-        let flip_i = FormulaFlipNeighbor { i: self.i, gain: sol.gain[self.i] };
+    fn apply_to_solution(
+        &self,
+        prob: &FormulaProblem,
+        sol: &mut FormulaSolution,
+    ) -> Result<(), OptError> {
+        let flip_i = FormulaFlipNeighbor {
+            i: self.i,
+            gain: sol.gain[self.i],
+        };
         flip_i.apply_to_solution(prob, sol)?;
 
-        let flip_j = FormulaFlipNeighbor { i: self.j, gain: sol.gain[self.j] };
+        let flip_j = FormulaFlipNeighbor {
+            i: self.j,
+            gain: sol.gain[self.j],
+        };
         flip_j.apply_to_solution(prob, sol)?;
         Ok(())
     }
 
     fn iter(prob: &FormulaProblem, sol: &FormulaSolution) -> impl Iterator<Item = Self> + Send {
         let n = prob.n_vars;
-        let x = sol.x.clone();
-        let gain = sol.gain.clone();
+        let mut x = sol.x.clone();
+        let mut cv = sol.constraint_vals.clone();
 
-        let mut items = Vec::with_capacity(n * n / 2);
+        let mut items = Vec::with_capacity(n * (n - 1) / 2);
         for i in 0..n {
+            // Pre-compute constraint deltas for flipping i (needed for undo as well)
+            let delta_i: Vec<Value> = prob
+                .constraint_polys
+                .iter()
+                .map(|poly| prob.eval_poly_delta(poly, &x, i))
+                .collect();
+            let gain_i = prob.calc_gain_fast(&x, &cv, i);
+
+            // Apply virtual flip of i
+            for (v, &d) in cv.iter_mut().zip(delta_i.iter()) {
+                *v += d;
+            }
+            x[i] = !x[i];
+
             for j in (i + 1)..n {
-                let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&x, i, j);
-                let swap_gain = gain[i] + gain_j_after_flip_i;
-                items.push(FormulaSwapNeighbor { i, j, gain: swap_gain });
+                let gain_j = prob.calc_gain_fast(&x, &cv, j);
+                items.push(FormulaSwapNeighbor {
+                    i,
+                    j,
+                    gain: gain_i + gain_j,
+                });
+            }
+
+            // Restore virtual flip of i
+            x[i] = !x[i];
+            for (v, &d) in cv.iter_mut().zip(delta_i.iter()) {
+                *v -= d;
             }
         }
         items.into_iter()
@@ -164,14 +210,10 @@ impl MoveToNeigbor<FormulaProblem> for FormulaSwapNeighbor {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::problem::formula::definition::{
+    use crate::problem::binary_optimization::problem::{
         Constraint, ConstraintRel, Expr, FormulaProblem, OptDirection,
     };
     use crate::search_state::SearchState;
@@ -193,8 +235,16 @@ mod tests {
 
     fn make_solution(prob: &FormulaProblem, x: Vec<bool>) -> FormulaSolution {
         let score = prob.eval_score(&x);
-        let gain: Vec<Value> = (0..prob.n_vars).map(|i| prob.calc_gain(&x, i)).collect();
-        FormulaSolution { x, gain, score }
+        let constraint_vals = prob.eval_constraint_vals(&x);
+        let gain: Vec<Value> = (0..prob.n_vars)
+            .map(|i| prob.calc_gain_fast(&x, &constraint_vals, i))
+            .collect();
+        FormulaSolution {
+            x,
+            gain,
+            score,
+            constraint_vals,
+        }
     }
 
     #[test]
@@ -215,7 +265,9 @@ mod tests {
             assert!(
                 (neighbor.gain - expected).abs() < 1e-9,
                 "flip {}: gain={} expected={}",
-                neighbor.i, neighbor.gain, expected
+                neighbor.i,
+                neighbor.gain,
+                expected
             );
         }
     }
@@ -233,7 +285,9 @@ mod tests {
             assert!(
                 (s.score - expected_score).abs() < 1e-9,
                 "flip {}: score={} expected={}",
-                neighbor.i, s.score, expected_score
+                neighbor.i,
+                s.score,
+                expected_score
             );
 
             for i in 0..prob.n_vars {
@@ -241,7 +295,10 @@ mod tests {
                 assert!(
                     (s.gain[i] - expected_gain).abs() < 1e-9,
                     "flip {}: gain[{}]={} expected={}",
-                    neighbor.i, i, s.gain[i], expected_gain
+                    neighbor.i,
+                    i,
+                    s.gain[i],
+                    expected_gain
                 );
             }
         }
@@ -260,7 +317,10 @@ mod tests {
             assert!(
                 (neighbor.gain - expected).abs() < 1e-9,
                 "swap ({},{}): gain={} expected={}",
-                neighbor.i, neighbor.j, neighbor.gain, expected
+                neighbor.i,
+                neighbor.j,
+                neighbor.gain,
+                expected
             );
         }
     }
@@ -278,7 +338,10 @@ mod tests {
             assert!(
                 (s.score - expected_score).abs() < 1e-9,
                 "swap ({},{}): score={} expected={}",
-                neighbor.i, neighbor.j, s.score, expected_score
+                neighbor.i,
+                neighbor.j,
+                s.score,
+                expected_score
             );
 
             for i in 0..prob.n_vars {
@@ -286,7 +349,11 @@ mod tests {
                 assert!(
                     (s.gain[i] - expected_gain).abs() < 1e-9,
                     "swap ({},{}): gain[{}]={} expected={}",
-                    neighbor.i, neighbor.j, i, s.gain[i], expected_gain
+                    neighbor.i,
+                    neighbor.j,
+                    i,
+                    s.gain[i],
+                    expected_gain
                 );
             }
         }
