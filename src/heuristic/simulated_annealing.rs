@@ -5,6 +5,15 @@ use rand::Rng;
 use rand::seq::IteratorRandom;
 use std::ops::{DivAssign, MulAssign};
 
+/// Returns `true` with Boltzmann probability `exp(-delta / temperature)`.
+///
+/// `delta` is the worsening amount of a move. Negative values (improving moves)
+/// always return `true`. Used as the acceptance criterion in simulated annealing.
+pub fn boltzmann_accept<N: Evaluable<f64>>(neighbor: &N, temperature: f64) -> bool {
+    let delta = neighbor.evaluate();
+    delta < 0.0 || rand::rng().random::<f64>() < (-delta / temperature).exp()
+}
+
 /// Simulated annealing heuristic.
 ///
 /// At each iteration a random neighbor is selected.
@@ -53,10 +62,10 @@ where
         let neighbor = N::iter(&state.instance, &state.solution)
             .choose(&mut rand::rng())
             .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
-        if state.is_neighbor_better_than_current(&neighbor)
-            || rand::rng().random::<f64>() < (-neighbor.evaluate() / self.current_temperature).exp()
-        {
+        if boltzmann_accept(&neighbor, self.current_temperature) {
             state.apply(&neighbor)?;
+        } else {
+            state.progress_iteration();
         }
 
         self.current_temperature *= self.cooling_rate;
@@ -126,9 +135,7 @@ where
             .choose(&mut rand::rng())
             .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
 
-        if state.is_neighbor_better_than_current(&neighbor)
-            || rand::rng().random::<f64>() < (-neighbor.evaluate() / self.current_temperature).exp()
-        {
+        if boltzmann_accept(&neighbor, self.current_temperature) {
             state.apply(&neighbor)?;
         }
 
@@ -137,12 +144,16 @@ where
             if self.current_temperature < self.min_wave_threashold {
                 tracing::debug!("Wave detected, going up");
                 self.is_going_down = false;
+            } else {
+                state.progress_iteration();
             }
         } else {
             self.current_temperature.div_assign(self.cooling_rate);
             if self.current_temperature > self.max_wave_threashold {
                 tracing::debug!("Wave detected, going down");
                 self.is_going_down = true;
+            } else {
+                state.progress_iteration();
             }
         }
 
