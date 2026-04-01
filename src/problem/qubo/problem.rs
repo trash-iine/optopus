@@ -206,19 +206,18 @@ pub fn calc_xor_of_solutions(sol1: &QuboSolution, sol2: &QuboSolution) -> usize 
         .count()
 }
 
-pub fn make_sub_problem_from(qubo: &Qubo, sol1: &QuboSolution, sol2: &QuboSolution) -> Qubo {
+pub fn make_sub_problem_from(qubo: &Qubo, parents: &[&QuboSolution]) -> Qubo {
     let mut ind_set = HashSet::new();
     for &ind in qubo.iter_on_variables() {
-        let i = *sol1
+        let base = *parents[0]
             .x
             .get(&ind)
             .expect(format!("{} is not found in solution", ind).as_str());
-        let j = *sol2
-            .x
-            .get(&ind)
-            .expect(format!("{} is not found in solution", ind).as_str());
-
-        if i ^ j {
+        let is_free = parents[1..].iter().any(|p| {
+            let v = *p.x.get(&ind).expect(format!("{} is not found in solution", ind).as_str());
+            v != base
+        });
+        if is_free {
             ind_set.insert(ind);
         }
     }
@@ -237,7 +236,7 @@ pub fn make_sub_problem_from(qubo: &Qubo, sol1: &QuboSolution, sol2: &QuboSoluti
                         sub_qubo.set_q(ind, ind, v);
                     }
                 }
-            } else if sol1.x[&j] {
+            } else if parents[0].x[&j] {
                 if let Some(old_v) = sub_qubo.get_q(ind, ind) {
                     sub_qubo.set_q(ind, ind, old_v + v);
                 } else {

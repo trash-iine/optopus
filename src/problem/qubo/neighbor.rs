@@ -2,27 +2,27 @@ use super::problem::{Coefficient, Qubo};
 use crate::{
     error::OptError,
     problem::qubo::problem::QuboSolution,
-    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 
 /// A flip move that toggles a single variable `i`.
 ///
 /// `gain` is the change in energy after the flip (negative = improvement, since QUBO is minimized).
 #[derive(Debug, Clone)]
-pub struct QuboFlipNeighbour {
+pub struct QuboFlipNeighbor {
     /// Index of the variable to flip.
     pub i: usize,
     /// Change in objective value when this variable is flipped (negative = improvement).
     pub gain: Coefficient,
 }
 
-impl Rankable for QuboFlipNeighbour {
+impl Rankable for QuboFlipNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
     }
 }
 
-impl EnabledTabu for QuboFlipNeighbour {
+impl EnabledTabu for QuboFlipNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
@@ -42,21 +42,20 @@ impl EnabledTabu for QuboFlipNeighbour {
     }
 }
 
-impl Evaluable<Coefficient> for QuboFlipNeighbour {
-    fn evaluate(&self) -> Coefficient {
-        self.gain
-    }
-}
-
 // QUBO is a minimization problem: gain = change in energy (positive = worsening).
-// Passing gain directly to SA yields the correct acceptance probability exp(-gain/T).
-impl Evaluable<f64> for QuboFlipNeighbour {
-    fn evaluate(&self) -> f64 {
-        self.gain as f64
+impl Evaluate for QuboFlipNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Minimize(self.gain as f64)
     }
 }
 
-impl MoveToNeighbor<Qubo> for QuboFlipNeighbour {
+impl Evaluate<Coefficient> for QuboFlipNeighbor {
+    fn evaluate(&self) -> Evaluable<Coefficient> {
+        Evaluable::Minimize(self.gain)
+    }
+}
+
+impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
         let bi = *sol.x.get(&self.i).ok_or_else(|| {
             OptError::InvalidState(format!("{} is not found in solution", self.i))
@@ -88,7 +87,7 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbour {
     }
 
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
-        prob.iter_on_variables().map(move |&i| QuboFlipNeighbour {
+        prob.iter_on_variables().map(move |&i| QuboFlipNeighbor {
             i,
             gain: sol.gain[&i],
         })
@@ -103,7 +102,7 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbour {
 ///
 /// `gain` is the combined change in energy (negative = improvement).
 #[derive(Debug, Clone)]
-pub struct QuboSwapNeighbour {
+pub struct QuboSwapNeighbor {
     /// Index of the first variable to flip.
     pub i: usize,
     /// Index of the second variable to flip.
@@ -112,19 +111,19 @@ pub struct QuboSwapNeighbour {
     pub gain: Coefficient,
 }
 
-impl Rankable for QuboSwapNeighbour {
+impl Rankable for QuboSwapNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
     }
 }
 
-impl Evaluable<f64> for QuboSwapNeighbour {
-    fn evaluate(&self) -> f64 {
-        self.gain as f64
+impl Evaluate for QuboSwapNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Minimize(self.gain as f64)
     }
 }
 
-impl EnabledTabu for QuboSwapNeighbour {
+impl EnabledTabu for QuboSwapNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
@@ -146,19 +145,19 @@ impl EnabledTabu for QuboSwapNeighbour {
     }
 }
 
-impl MoveToNeighbor<Qubo> for QuboSwapNeighbour {
+impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }
 
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
-        let flip_i = QuboFlipNeighbour {
+        let flip_i = QuboFlipNeighbor {
             i: self.i,
             gain: sol.gain[&self.i],
         };
         flip_i.apply_to_solution(prob, sol)?;
 
-        let flip_j = QuboFlipNeighbour {
+        let flip_j = QuboFlipNeighbor {
             i: self.j,
             gain: sol.gain[&self.j],
         };
@@ -212,7 +211,7 @@ mod tests {
         let qubo = make_qubo();
         let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
 
-        for neighbor in QuboFlipNeighbour::iter(&qubo, &sol) {
+        for neighbor in QuboFlipNeighbor::iter(&qubo, &sol) {
             let mut s = sol.clone();
             neighbor.apply_to_solution(&qubo, &mut s).unwrap();
 
@@ -241,7 +240,7 @@ mod tests {
         let qubo = make_qubo();
         let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
 
-        for neighbor in QuboFlipNeighbour::iter(&qubo, &sol) {
+        for neighbor in QuboFlipNeighbor::iter(&qubo, &sol) {
             let mut flipped_x = sol.x.clone();
             flipped_x.insert(neighbor.i, !flipped_x[&neighbor.i]);
             let expected_delta = qubo.calculate_energy(&flipped_x) - sol.objective;
@@ -258,7 +257,7 @@ mod tests {
         let qubo = make_qubo();
         let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
 
-        for neighbor in QuboSwapNeighbour::iter(&qubo, &sol) {
+        for neighbor in QuboSwapNeighbor::iter(&qubo, &sol) {
             let mut s = sol.clone();
             neighbor.apply_to_solution(&qubo, &mut s).unwrap();
 
@@ -276,7 +275,7 @@ mod tests {
         let qubo = make_qubo();
         let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
 
-        for neighbor in QuboSwapNeighbour::iter(&qubo, &sol) {
+        for neighbor in QuboSwapNeighbor::iter(&qubo, &sol) {
             let mut flipped_x = sol.x.clone();
             flipped_x.insert(neighbor.i, !flipped_x[&neighbor.i]);
             flipped_x.insert(neighbor.j, !flipped_x[&neighbor.j]);
