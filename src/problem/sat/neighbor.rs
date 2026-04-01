@@ -4,7 +4,7 @@ use std::sync::Arc;
 use super::problem::{Sat, SatSolution};
 use crate::{
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, Rankable},
 };
 
 /// A flip move that toggles a single variable `i`.
@@ -43,9 +43,9 @@ impl EnabledTabu for SatFlipNeighbor {
     }
 }
 
-impl Evaluable<f64> for SatFlipNeighbor {
-    fn evaluate(&self) -> f64 {
-        self.gain as f64
+impl Evaluate for SatFlipNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(self.gain as f64)
     }
 }
 
@@ -134,9 +134,9 @@ impl EnabledTabu for SatSwapNeighbor {
     }
 }
 
-impl Evaluable<f64> for SatSwapNeighbor {
-    fn evaluate(&self) -> f64 {
-        -(self.gain as f64)
+impl Evaluate for SatSwapNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(self.gain as f64)
     }
 }
 
