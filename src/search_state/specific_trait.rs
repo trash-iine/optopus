@@ -100,20 +100,107 @@ where
     }
 }
 
-/// Is for evaluating a move or solution as a scalar value.
+/// The change in objective value resulting from a move, with explicit optimization direction.
 ///
-/// Used by [`crate::heuristic::SimulatedAnnealing`] to compute acceptance probabilities.
-pub trait Evaluable<T> {
-    fn evaluate(&self) -> T;
+/// `T` is the numeric type of the change (commonly `f64`, but any type is accepted).
+///
+/// Choose the variant that matches your problem's optimization direction:
+/// - [`Evaluable::Maximize`]: the objective is being maximized (positive = improvement).
+/// - [`Evaluable::Minimize`]: the cost is being minimized (positive = worsening).
+#[derive(Clone, Copy, Debug)]
+pub enum Evaluable<T = f64> {
+    /// Change in a maximized objective (positive = improvement, negative = worsening).
+    Maximize(T),
+    /// Change in a minimized cost (positive = worsening, negative = improvement).
+    Minimize(T),
+}
+
+impl Evaluable<f64> {
+    /// Returns the worsening amount: positive when the move degrades the objective.
+    ///
+    /// Used internally by `boltzmann_accept` to compute `exp(-worsening / T)`.
+    pub fn worsening_amount(self) -> f64 {
+        match self {
+            Evaluable::Maximize(gain) => -gain,
+            Evaluable::Minimize(cost_delta) => cost_delta,
+        }
+    }
+}
+
+/// Implemented by neighbor types that can evaluate their objective change for SA acceptance.
+///
+/// `T` is the numeric type returned (default `f64`). Use `T = f64` for compatibility
+/// with [`crate::heuristic::SimulatedAnnealing`] and [`crate::heuristic::boltzmann_accept`].
+pub trait Evaluate<T = f64> {
+    fn evaluate(&self) -> Evaluable<T>;
+}
+
+/// Combines parent solutions into a single offspring solution.
+///
+/// Implement this for each crossover operator you want to use.
+///
+/// # `&mut self`
+///
+/// `&mut self` is required so that operators like [`crate::heuristic::SubProblemBasedCrossover`]
+/// can call an inner heuristic's `run` method during crossover.
+/// Stateless operators (e.g. uniform crossover) simply do not mutate `self`.
+pub trait Crossover<Problem: ProblemTrait> {
+    fn crossover(
+        &mut self,
+        prob: &Problem,
+        sol1: &Problem::Solution,
+        sol2: &Problem::Solution,
+    ) -> Problem::Solution;
+}
+
+/// Enables a problem to create a sub-problem from multiple parent solutions and lift the result back.
+///
+/// Used by [`crate::heuristic::SubProblemBasedCrossover`] to implement crossover by:
+/// 1. Finding variables where the parents disagree (free variables).
+/// 2. Building a reduced sub-problem containing only those variables.
+///    Contributions from fixed (agreeing) variables are folded into the sub-problem objective.
+/// 3. Solving the sub-problem with any [`crate::heuristic::Heuristic`].
+/// 4. Lifting the sub-solution back to the full solution space.
+///
+/// # Example (MaxCut)
+///
+/// - Vertices with the same side in both parents → fixed; their edges become bias terms.
+/// - Vertices with different sides → free; form the sub-MaxCut instance.
+/// - `lift_solution` merges fixed assignments (from `sol1`) with the sub-problem result.
+///
+/// # Sized bound
+///
+/// Required because `extract_sub_problem` returns `Self`.
+pub trait SubProblemExtractable: ProblemTrait + Sized {
+    /// Creates a sub-problem containing only the variables that differ between the two parents.
+    ///
+    /// Fixed variables' contributions (edges to free variables) must be incorporated
+    /// into the sub-problem objective so the sub-problem remains self-contained.
+    fn extract_sub_problem(
+        &self,
+        sol1: &Self::Solution,
+        sol2: &Self::Solution,
+    ) -> Self;
+
+    /// Reconstructs a full solution from a sub-problem solution.
+    ///
+    /// - Variables that agreed in both parents: value taken from `sol1`.
+    /// - Variables that differed (free variables): value taken from `sub_solution`.
+    fn lift_solution(
+        &self,
+        sol1: &Self::Solution,
+        sol2: &Self::Solution,
+        sub_solution: &Self::Solution,
+    ) -> Self::Solution;
 }
 
 /// Is for moves that support a tabu list mechanism.
 ///
 /// A move is considered *enabled* if it is not currently forbidden by the tabu map.
 /// After a move is applied, it can be added to the tabu map with a given tenure.
-pub trait EnabledTabu {
+pub trait EnabledTabu: Clone {
     /// The data structure used to store the tabu list (e.g., `HashMap<usize, u64>`).
-    type TabuMap;
+    type TabuMap: Default;
 
     /// Returns `true` if this move is allowed under the current tabu map at the given iteration.
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool;

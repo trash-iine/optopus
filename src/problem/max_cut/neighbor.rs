@@ -4,7 +4,7 @@ use super::MaxCut;
 use crate::{
     error::OptError,
     problem::max_cut::problem::MaxCutSolution,
-    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, Rankable},
 };
 
 /// A flip move that transfers vertex `i` to the opposite partition side.
@@ -100,9 +100,9 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
     }
 }
 
-impl Evaluable<f64> for MaxCutFlipNeighbor {
-    fn evaluate(&self) -> f64 {
-        self.gain as f64
+impl Evaluate for MaxCutFlipNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(self.gain as f64)
     }
 }
 
@@ -123,9 +123,9 @@ impl Rankable for MaxCutSwapNeighbor {
     }
 }
 
-impl Evaluable<f64> for MaxCutSwapNeighbor {
-    fn evaluate(&self) -> f64 {
-        self.gain as f64
+impl Evaluate for MaxCutSwapNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(self.gain as f64)
     }
 }
 

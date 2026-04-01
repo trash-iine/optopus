@@ -4,7 +4,8 @@ pub mod specific_trait;
 
 use rayon::prelude::*;
 pub use specific_trait::{
-    EnabledTabu, Evaluable, MoveToNeighbor, ProblemTrait, Rankable, filter_best,
+    Crossover, EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, ProblemTrait, Rankable,
+    SubProblemExtractable, filter_best,
 };
 
 /// Controls how [`SearchState`] is cloned when starting a sub-run.
@@ -42,9 +43,9 @@ where
     Problem: ProblemTrait,
 {
     /// Iteration count at the start of the current sub-run.
-    pub start_iteration: u64,
+    pub(crate) start_iteration: u64,
     /// Wall-clock time when the current sub-run started.
-    pub start_time: std::time::Instant,
+    pub(crate) start_time: std::time::Instant,
     /// Reference to the problem instance.
     pub instance: &'a Problem,
     /// Current iteration count.
@@ -66,6 +67,26 @@ where
     /// Creates a new [`SearchState`] with a randomly generated initial solution.
     pub fn new(instance: &'a Problem) -> Self {
         let solution = instance.new_solution(&mut rand::rng());
+        let best_solution = solution.clone();
+        let state = Self {
+            start_iteration: 0,
+            start_time: std::time::Instant::now(),
+            instance,
+            iteration: 0,
+            solution,
+            best_time: std::time::Instant::now(),
+            best_iteration: 0,
+            best_solution,
+        };
+        tracing::debug!("SearchState initialized");
+        state
+    }
+
+    /// Creates a new [`SearchState`] starting from a specific solution.
+    ///
+    /// Use this for warm starts, deterministic testing, or when a known-good solution
+    /// should be the starting point. The provided solution is also set as the initial best.
+    pub fn with_solution(instance: &'a Problem, solution: Problem::Solution) -> Self {
         let best_solution = solution.clone();
         Self {
             start_iteration: 0,
@@ -94,6 +115,11 @@ where
             self.best_solution = self.solution.clone();
             self.best_time = std::time::Instant::now();
             self.best_iteration = self.iteration;
+            tracing::debug!(
+                iteration = self.best_iteration,
+                elapsed_secs = self.duration().as_secs_f64(),
+                "Best solution updated"
+            );
         }
 
         return ret;
@@ -163,6 +189,8 @@ where
         self.solution = cloned_state.solution;
 
         // add iteration into the current iteration
+        let sub_run_best_offset = cloned_state.best_iteration - cloned_state.start_iteration;
+        let old_iteration = self.iteration;
         self.iteration += cloned_state.iteration - cloned_state.start_iteration;
 
         // update the best solution if the one of the new state is better than the current
@@ -172,9 +200,13 @@ where
         {
             self.best_solution = cloned_state.best_solution;
             self.best_time = cloned_state.best_time;
-            self.best_iteration =
-                self.iteration + cloned_state.best_iteration - cloned_state.start_iteration;
+            self.best_iteration = old_iteration + sub_run_best_offset;
         }
+        tracing::debug!(
+            iteration = self.iteration,
+            best_iteration = self.best_iteration,
+            "Sub-run state merged"
+        );
     }
 
     /// Applies a neighborhood move, updates the iteration counter, and refreshes the best solution.
@@ -212,13 +244,13 @@ where
     }
 
     /// Returns the best move from `move_list` using parallel chunk-based evaluation.
-    pub fn get_best_move_par_chunks<MoveToNeighbor>(
+    pub fn get_best_move_par_chunks<M>(
         &self,
-        move_list: impl Iterator<Item = MoveToNeighbor>,
+        move_list: impl Iterator<Item = M>,
         chunk_size: usize,
-    ) -> Option<MoveToNeighbor>
+    ) -> Option<M>
     where
-        MoveToNeighbor: Send + Sync + Clone + Rankable,
+        M: Send + Sync + Clone + Rankable,
         Problem: Sync,
         Problem::Solution: Sync,
     {
@@ -249,11 +281,7 @@ where
                 }
             });
 
-        if let Some(v) = opt {
-            Some(v.clone())
-        } else {
-            None
-        }
+        opt.cloned()
     }
 }
 
