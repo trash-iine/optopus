@@ -3,7 +3,7 @@ use std::sync::Arc;
 use super::problem::{TspSolution, TspWithCoordinates, normalize_edge_pair};
 use crate::{
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, Rankable},
 };
 
 /// A 2-opt move that removes edges `(tour[i], tour[i+1])` and `(tour[j], tour[(j+1)%n])`,
@@ -27,9 +27,9 @@ impl Rankable for TspTwoOptNeighbor {
     }
 }
 
-impl Evaluable<f64> for TspTwoOptNeighbor {
-    fn evaluate(&self) -> f64 {
-        self.gain
+impl Evaluate for TspTwoOptNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Minimize(self.gain)
     }
 }
 
@@ -126,9 +126,9 @@ impl Rankable for TspRelocateNeighbor {
     }
 }
 
-impl Evaluable<f64> for TspRelocateNeighbor {
-    fn evaluate(&self) -> f64 {
-        self.gain
+impl Evaluate for TspRelocateNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Minimize(self.gain)
     }
 }
 
