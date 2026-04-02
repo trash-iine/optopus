@@ -314,6 +314,54 @@ fn constraint_penalty_from_val(c: &Constraint, val: Value) -> Value {
     }
 }
 
+/// For each variable `i`, the set of variables `j` (j ≠ i) whose gain may change when `i`
+/// is flipped.
+///
+/// Two sources of dependency:
+/// 1. **Objective**: `i` and `j` share a monomial → flipping `i` changes j's objective delta.
+/// 2. **Constraint**: `i` and `j` both appear in the same constraint expression
+///    (even in separate monomials) → flipping `i` shifts the base `cv[c]`, and because
+///    the penalty function `max(0,·)` / `abs(·)` is non-linear, j's penalty delta can
+///    change even when the expression delta for `j` itself is unaffected.
+fn build_interaction_neighbors(
+    obj_poly: &CompiledPoly,
+    constraint_polys: &[CompiledPoly],
+    n_vars: usize,
+) -> Vec<Vec<usize>> {
+    use std::collections::HashSet;
+    let mut nbrs: Vec<HashSet<usize>> = (0..n_vars).map(|_| HashSet::new()).collect();
+
+    // Objective: only variables that share a monomial are neighbors.
+    for m in &obj_poly.terms {
+        for (a, &va) in m.vars.iter().enumerate() {
+            for &vb in m.vars.iter().skip(a + 1) {
+                nbrs[va].insert(vb);
+                nbrs[vb].insert(va);
+            }
+        }
+    }
+
+    // Constraints: all pairs of variables that appear anywhere in the same constraint
+    // expression are neighbors (non-linear penalty makes the base value matter).
+    for poly in constraint_polys {
+        let vars_in_constraint: Vec<usize> = poly
+            .terms
+            .iter()
+            .flat_map(|m| m.vars.iter().copied())
+            .collect::<HashSet<usize>>()
+            .into_iter()
+            .collect();
+        for (a, &va) in vars_in_constraint.iter().enumerate() {
+            for &vb in vars_in_constraint.iter().skip(a + 1) {
+                nbrs[va].insert(vb);
+                nbrs[vb].insert(va);
+            }
+        }
+    }
+
+    nbrs.into_iter().map(|s| s.into_iter().collect()).collect()
+}
+
 /// A binary optimization problem defined by an arithmetic expression.
 ///
 /// The score is always maximized internally:
@@ -328,6 +376,10 @@ pub struct FormulaProblem {
     // Compiled polynomial representations — built once at construction time.
     pub(super) obj_poly: CompiledPoly,
     pub(super) constraint_polys: Vec<CompiledPoly>,
+    /// For each variable `i`, the variables whose gain may change when `i` is flipped.
+    /// Computed once at construction; used by `FormulaFlipNeighbor::apply_to_solution`
+    /// to skip variables that cannot be affected.
+    pub(super) interaction_neighbors: Vec<Vec<usize>>,
 }
 
 /// A solution to a [`FormulaProblem`].
@@ -415,10 +467,11 @@ impl FormulaProblem {
         constraints: Vec<Constraint>,
     ) -> Self {
         let obj_poly = compile_poly(&objective, n_vars);
-        let constraint_polys = constraints
+        let constraint_polys: Vec<CompiledPoly> = constraints
             .iter()
             .map(|c| compile_constraint_expr(c, n_vars))
             .collect();
+        let interaction_neighbors = build_interaction_neighbors(&obj_poly, &constraint_polys, n_vars);
         Self {
             n_vars,
             objective,
@@ -426,6 +479,7 @@ impl FormulaProblem {
             constraints,
             obj_poly,
             constraint_polys,
+            interaction_neighbors,
         }
     }
 

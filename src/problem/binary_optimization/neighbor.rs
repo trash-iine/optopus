@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::problem::{FormulaProblem, FormulaSolution, Value};
 use crate::{
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, Rankable},
 };
 
 /// A flip move that toggles a single variable `i`.
@@ -23,10 +23,9 @@ impl Rankable for FormulaFlipNeighbor {
     }
 }
 
-impl Evaluable<f64> for FormulaFlipNeighbor {
-    /// Returns the worsening amount for SA acceptance: positive when the move degrades the score.
-    fn evaluate(&self) -> f64 {
-        -self.gain
+impl Evaluate for FormulaFlipNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(self.gain)
     }
 }
 
@@ -67,11 +66,10 @@ impl MoveToNeighbor<FormulaProblem> for FormulaFlipNeighbor {
         sol.score += self.gain;
         sol.gain[self.i] = -self.gain;
 
-        // Recompute gains for all other variables using O(d) method (no allocation)
-        for j in 0..prob.n_vars {
-            if j != self.i {
-                sol.gain[j] = prob.calc_gain_fast(&sol.x, &sol.constraint_vals, j);
-            }
+        // Only recompute gains for variables that share a monomial with `self.i`.
+        // Variables with no shared monomial are guaranteed to be unaffected.
+        for &j in &prob.interaction_neighbors[self.i] {
+            sol.gain[j] = prob.calc_gain_fast(&sol.x, &sol.constraint_vals, j);
         }
         Ok(())
     }
@@ -109,9 +107,9 @@ impl Rankable for FormulaSwapNeighbor {
     }
 }
 
-impl Evaluable<f64> for FormulaSwapNeighbor {
-    fn evaluate(&self) -> f64 {
-        -self.gain
+impl Evaluate for FormulaSwapNeighbor {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(self.gain)
     }
 }
 
