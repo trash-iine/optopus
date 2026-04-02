@@ -23,11 +23,14 @@ pub mod tsp_2d;
 
 pub use binary_optimization::{
     Constraint, ConstraintRel, Expr, FormulaFlipNeighbor, FormulaProblem, FormulaSolution,
-    FormulaSwapNeighbor, OptDirection,
+    FormulaSwapNeighbor, FormulaUniformCrossover, OptDirection,
 };
-pub use max_cut::{MaxCut, MaxCutFlipNeighbor, MaxCutSwapNeighbor};
-pub use qubo::{Qubo, QuboFlipNeighbour, QuboSolution, QuboSwapNeighbour};
-pub use sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor};
+pub use max_cut::{
+    MaxCut, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, MaxCutUniformCrossover,
+};
+pub use qubo::{Qubo, QuboFlipNeighbor, QuboSolution, QuboSwapNeighbor, QuboUniformCrossover};
+pub use sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor, SatUniformCrossover};
 pub use tsp_2d::{
-    TspRelocateNeighbor, TspSolution, TspTour, TspTwoOptNeighbor, TspWithCoordinates,
+    TspOrderCrossover, TspRelocateNeighbor, TspSolution, TspTour, TspTwoOptNeighbor,
+    TspWithCoordinates,
 };
