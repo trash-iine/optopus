@@ -200,18 +200,43 @@ impl MaxCut {
     /// i j w
     /// i j w
     /// ...
-    pub fn load_from_file(filename: &str) -> Result<Self, Box<dyn core::error::Error>> {
+    pub fn load_from_file(filename: &str) -> Result<Self, crate::error::OptError> {
+        use crate::error::OptError;
         use std::io::BufRead;
-        let file = std::fs::File::open(filename)?;
+
+        let err = |line: usize, detail: String| OptError::FileLoad {
+            path: filename.to_string(),
+            line,
+            detail,
+        };
+
+        let file = std::fs::File::open(filename)
+            .map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = std::io::BufReader::new(file);
         let mut line_iter = reader.lines();
 
         // parse the number of vertices and edges
         let (n, _) = {
-            let line = line_iter.next().ok_or("File is empty")??;
+            let line = line_iter
+                .next()
+                .ok_or_else(|| err(1, "file is empty, expected header 'N M'".into()))?
+                .map_err(|e| err(1, format!("failed to read header line: {e}")))?;
             let mut iter = line.split_whitespace();
-            let n = iter.next().ok_or("Not found N")?.parse::<usize>()?;
-            let m = iter.next().ok_or("Not found M")?.parse::<usize>()?;
+            let n = iter
+                .next()
+                .ok_or_else(|| err(1, "expected header 'N M', but line is empty".into()))?
+                .parse::<usize>()
+                .map_err(|e| err(1, format!("failed to parse vertex count N: {e}")))?;
+            let m = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        1,
+                        "expected header 'N M', but edge count M is missing".into(),
+                    )
+                })?
+                .parse::<usize>()
+                .map_err(|e| err(1, format!("failed to parse edge count M: {e}")))?;
             (n, m)
         };
 
@@ -219,11 +244,58 @@ impl MaxCut {
             adj: vec![vec![]; n],
             vertices: (0..n).collect(),
         };
-        while let Some(Ok(line)) = line_iter.next() {
+        let mut line_num = 1;
+        while let Some(result) = line_iter.next() {
+            line_num += 1;
+            let line = result.map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
+            if line.trim().is_empty() {
+                continue;
+            }
             let mut iter = line.split_whitespace();
-            let i = iter.next().ok_or("Not found i")?.parse::<usize>()? - 1;
-            let j = iter.next().ok_or("Not found j")?.parse::<usize>()? - 1;
-            let w = iter.next().ok_or("Not found w")?.parse::<f32>()?;
+            let i = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        line_num,
+                        "expected edge 'i j w', but vertex i is missing".into(),
+                    )
+                })?
+                .parse::<usize>()
+                .map_err(|e| err(line_num, format!("failed to parse vertex i: {e}")))?;
+            if i == 0 {
+                return Err(err(
+                    line_num,
+                    "vertex index i must be >= 1 (1-indexed)".into(),
+                ));
+            }
+            let i = i - 1;
+            let j = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        line_num,
+                        "expected edge 'i j w', but vertex j is missing".into(),
+                    )
+                })?
+                .parse::<usize>()
+                .map_err(|e| err(line_num, format!("failed to parse vertex j: {e}")))?;
+            if j == 0 {
+                return Err(err(
+                    line_num,
+                    "vertex index j must be >= 1 (1-indexed)".into(),
+                ));
+            }
+            let j = j - 1;
+            let w = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        line_num,
+                        "expected edge 'i j w', but weight w is missing".into(),
+                    )
+                })?
+                .parse::<f32>()
+                .map_err(|e| err(line_num, format!("failed to parse edge weight w: {e}")))?;
             // File-loaded instances never have duplicate edges, so push directly.
             mc.adj[i].push((j, w));
             mc.adj[j].push((i, w));

@@ -62,7 +62,7 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let neighbor = N::iter(&state.instance, &state.solution)
             .choose(&mut rand::rng())
-            .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
+            .ok_or_else(|| OptError::InvalidState("SimulatedAnnealing: neighborhood is empty, no move can be selected".to_string()))?;
         if boltzmann_accept(neighbor.evaluate(), self.current_temperature) {
             state.apply(&neighbor)?;
         } else {
@@ -134,7 +134,7 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let neighbor = N::iter(&state.instance, &state.solution)
             .choose(&mut rand::rng())
-            .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
+            .ok_or_else(|| OptError::InvalidState("SimulatedAnnealing (bang-bang): neighborhood is empty, no move can be selected".to_string()))?;
 
         if boltzmann_accept(neighbor.evaluate(), self.current_temperature) {
             state.apply(&neighbor)?;

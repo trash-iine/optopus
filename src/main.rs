@@ -34,7 +34,8 @@ fn run() -> Result<(), OptError> {
         }
     };
 
-    let config_str = std::fs::read_to_string(&config_file)?;
+    let config_str = std::fs::read_to_string(&config_file)
+        .map_err(|e| OptError::Config(format!("failed to read config file '{}': {}", config_file, e)))?;
 
     let config: BenchmarkConfig = toml::from_str(&config_str)
         .map_err(|e| OptError::Config(format!("failed to parse config file '{}': {}", config_file, e)))?;
@@ -45,7 +46,11 @@ fn run() -> Result<(), OptError> {
         .map_err(|e| OptError::Config(format!("failed to serialize benchmark report: {}", e)))?;
 
     let output_dir = std::path::Path::new("result");
-    std::fs::create_dir_all(output_dir)?;
+    std::fs::create_dir_all(output_dir).map_err(|e| OptError::FileLoad {
+        path: output_dir.display().to_string(),
+        line: 0,
+        detail: format!("failed to create output directory: {e}"),
+    })?;
 
     let output_file = output_dir.join(
         chrono::Local::now()
@@ -53,7 +58,11 @@ fn run() -> Result<(), OptError> {
             .to_string(),
     );
 
-    std::fs::write(&output_file, toml_str)?;
+    std::fs::write(&output_file, toml_str).map_err(|e| OptError::FileLoad {
+        path: output_file.display().to_string(),
+        line: 0,
+        detail: format!("failed to write result file: {e}"),
+    })?;
 
     tracing::info!("Results written to {}", output_file.display());
     Ok(())

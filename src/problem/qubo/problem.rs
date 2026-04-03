@@ -103,15 +103,45 @@ impl Qubo {
         self.variables.len()
     }
 
-    pub fn load_file_as_max_cut(filename: &str) -> Result<Self, Box<dyn core::error::Error>> {
-        let file = File::open(filename)?;
+    pub fn load_file_as_max_cut(filename: &str) -> Result<Self, crate::error::OptError> {
+        use crate::error::OptError;
+
+        let err = |line: usize, detail: String| OptError::FileLoad {
+            path: filename.to_string(),
+            line,
+            detail,
+        };
+
+        let file = File::open(filename).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
         let mut line_iter = reader.lines();
         let (n, _) = {
-            let line = line_iter.next().ok_or("File is empty")??;
+            let line = line_iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        1,
+                        "file is empty, expected header 'N M' (MaxCut format for QUBO conversion)"
+                            .into(),
+                    )
+                })?
+                .map_err(|e| err(1, format!("failed to read header line: {e}")))?;
             let mut iter = line.split_whitespace();
-            let n = iter.next().ok_or("Not found N")?.parse::<usize>()?;
-            let m = iter.next().ok_or("Not found M")?.parse::<usize>()?;
+            let n = iter
+                .next()
+                .ok_or_else(|| err(1, "expected header 'N M', but line is empty".into()))?
+                .parse::<usize>()
+                .map_err(|e| err(1, format!("failed to parse variable count N: {e}")))?;
+            let m = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        1,
+                        "expected header 'N M', but entry count M is missing".into(),
+                    )
+                })?
+                .parse::<usize>()
+                .map_err(|e| err(1, format!("failed to parse entry count M: {e}")))?;
             (n, m)
         };
 
@@ -120,11 +150,52 @@ impl Qubo {
             variables: (0..n).collect(),
         };
 
-        while let Some(Ok(line)) = line_iter.next() {
+        let mut line_num = 1;
+        while let Some(result) = line_iter.next() {
+            line_num += 1;
+            let line = result.map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
+            if line.trim().is_empty() {
+                continue;
+            }
             let mut iter = line.split_whitespace();
-            let i = iter.next().ok_or("Not found i")?.parse::<usize>()? - 1;
-            let j = iter.next().ok_or("Not found j")?.parse::<usize>()? - 1;
-            let v = iter.next().ok_or("Not found v")?.parse::<i32>()?;
+            let i = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        line_num,
+                        "expected entry 'i j v', but index i is missing".into(),
+                    )
+                })?
+                .parse::<usize>()
+                .map_err(|e| err(line_num, format!("failed to parse index i: {e}")))?;
+            if i == 0 {
+                return Err(err(line_num, "index i must be >= 1 (1-indexed)".into()));
+            }
+            let i = i - 1;
+            let j = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        line_num,
+                        "expected entry 'i j v', but index j is missing".into(),
+                    )
+                })?
+                .parse::<usize>()
+                .map_err(|e| err(line_num, format!("failed to parse index j: {e}")))?;
+            if j == 0 {
+                return Err(err(line_num, "index j must be >= 1 (1-indexed)".into()));
+            }
+            let j = j - 1;
+            let v = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        line_num,
+                        "expected entry 'i j v', but coefficient v is missing".into(),
+                    )
+                })?
+                .parse::<i32>()
+                .map_err(|e| err(line_num, format!("failed to parse coefficient v: {e}")))?;
 
             // MaxCut → QUBO transformation:
             // edge (i,j,w) contributes: Q[i][j] += 2w, Q[i][i] -= w, Q[j][j] -= w

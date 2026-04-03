@@ -38,7 +38,7 @@ pub trait BenchmarkSolution: Clone {
 
 impl BenchmarkProblem for MaxCut {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        MaxCut::load_from_file(path).map_err(|e| OptError::Parse(e.to_string()))
+        MaxCut::load_from_file(path)
     }
 }
 
@@ -58,7 +58,7 @@ impl BenchmarkSolution for MaxCutSolution {
 
 impl BenchmarkProblem for Qubo {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        Qubo::load_file_as_max_cut(path).map_err(|e| OptError::Parse(e.to_string()))
+        Qubo::load_file_as_max_cut(path)
     }
 }
 
@@ -78,7 +78,7 @@ impl BenchmarkSolution for QuboSolution {
 
 impl BenchmarkProblem for Sat {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        Sat::load_file(path).map_err(|e| OptError::Parse(e.to_string()))
+        Sat::load_file(path)
     }
 }
 
@@ -98,7 +98,7 @@ impl BenchmarkSolution for SatSolution {
 
 impl BenchmarkProblem for TspWithCoordinates {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        TspWithCoordinates::load_file(path).map_err(|e| OptError::Parse(e.to_string()))
+        TspWithCoordinates::load_file(path)
     }
 }
 
@@ -765,7 +765,7 @@ impl HeuristicConfig {
                 let steps = self
                     .steps
                     .as_ref()
-                    .ok_or("'steps' required for Sequential")?;
+                    .ok_or("'steps' required for MaxCut Sequential")?;
                 let converted: Result<Vec<MaxCutSequentialStep>, String> = steps
                     .iter()
                     .map(|s| {
@@ -778,9 +778,15 @@ impl HeuristicConfig {
                 Ok(MaxCutHeuristicSetting::Sequential(converted?))
             }
             "Iterated" => {
-                let steps = self.steps.as_ref().ok_or("'steps' required for Iterated")?;
+                let steps = self
+                    .steps
+                    .as_ref()
+                    .ok_or("'steps' required for MaxCut Iterated")?;
                 if steps.len() != 2 {
-                    return Err("Iterated requires exactly 2 steps".into());
+                    return Err(format!(
+                        "MaxCut Iterated requires exactly 2 steps (search + perturbation), but got {}",
+                        steps.len()
+                    ));
                 }
                 let converted: Result<Vec<MaxCutSequentialStep>, String> = steps
                     .iter()
@@ -794,14 +800,20 @@ impl HeuristicConfig {
                 Ok(MaxCutHeuristicSetting::Iterated(converted?))
             }
             "Restart" => {
-                let steps = self.steps.as_ref().ok_or("'steps' required for Restart")?;
+                let steps = self
+                    .steps
+                    .as_ref()
+                    .ok_or("'steps' required for MaxCut Restart")?;
                 if steps.len() != 1 {
-                    return Err("Restart requires exactly 1 step".into());
+                    return Err(format!(
+                        "MaxCut Restart requires exactly 1 step (inner heuristic), but got {}",
+                        steps.len()
+                    ));
                 }
                 let rc = self
                     .restart_condition
                     .as_ref()
-                    .ok_or("'restart_condition' required for Restart")?;
+                    .ok_or("'restart_condition' required for MaxCut Restart")?;
                 Ok(MaxCutHeuristicSetting::Restart {
                     inner: Box::new(MaxCutSequentialStep {
                         heuristic: steps[0].to_max_cut_heuristic_setting()?,
@@ -836,7 +848,7 @@ impl HeuristicConfig {
                 let steps = self
                     .steps
                     .as_ref()
-                    .ok_or("'steps' required for Sequential")?;
+                    .ok_or("'steps' required for Qubo Sequential")?;
                 let converted: Result<Vec<QuboSequentialStep>, String> = steps
                     .iter()
                     .map(|s| {
@@ -849,9 +861,15 @@ impl HeuristicConfig {
                 Ok(QuboHeuristicSetting::Sequential(converted?))
             }
             "Iterated" => {
-                let steps = self.steps.as_ref().ok_or("'steps' required for Iterated")?;
+                let steps = self
+                    .steps
+                    .as_ref()
+                    .ok_or("'steps' required for Qubo Iterated")?;
                 if steps.len() != 2 {
-                    return Err("Iterated requires exactly 2 steps".into());
+                    return Err(format!(
+                        "Qubo Iterated requires exactly 2 steps (search + perturbation), but got {}",
+                        steps.len()
+                    ));
                 }
                 let converted: Result<Vec<QuboSequentialStep>, String> = steps
                     .iter()
@@ -865,14 +883,20 @@ impl HeuristicConfig {
                 Ok(QuboHeuristicSetting::Iterated(converted?))
             }
             "Restart" => {
-                let steps = self.steps.as_ref().ok_or("'steps' required for Restart")?;
+                let steps = self
+                    .steps
+                    .as_ref()
+                    .ok_or("'steps' required for Qubo Restart")?;
                 if steps.len() != 1 {
-                    return Err("Restart requires exactly 1 step".into());
+                    return Err(format!(
+                        "Qubo Restart requires exactly 1 step (inner heuristic), but got {}",
+                        steps.len()
+                    ));
                 }
                 let rc = self
                     .restart_condition
                     .as_ref()
-                    .ok_or("'restart_condition' required for Restart")?;
+                    .ok_or("'restart_condition' required for Qubo Restart")?;
                 Ok(QuboHeuristicSetting::Restart {
                     inner: Box::new(QuboSequentialStep {
                         heuristic: steps[0].to_qubo_heuristic_setting()?,
@@ -907,7 +931,7 @@ impl HeuristicConfig {
                 let steps = self
                     .steps
                     .as_ref()
-                    .ok_or("'steps' required for Sequential")?;
+                    .ok_or("'steps' required for Sat Sequential")?;
                 let converted: Result<Vec<SatSequentialStep>, String> = steps
                     .iter()
                     .map(|s| {
@@ -920,9 +944,15 @@ impl HeuristicConfig {
                 Ok(SatHeuristicSetting::Sequential(converted?))
             }
             "Iterated" => {
-                let steps = self.steps.as_ref().ok_or("'steps' required for Iterated")?;
+                let steps = self
+                    .steps
+                    .as_ref()
+                    .ok_or("'steps' required for Sat Iterated")?;
                 if steps.len() != 2 {
-                    return Err("Iterated requires exactly 2 steps".into());
+                    return Err(format!(
+                        "Sat Iterated requires exactly 2 steps (search + perturbation), but got {}",
+                        steps.len()
+                    ));
                 }
                 let converted: Result<Vec<SatSequentialStep>, String> = steps
                     .iter()
@@ -936,14 +966,20 @@ impl HeuristicConfig {
                 Ok(SatHeuristicSetting::Iterated(converted?))
             }
             "Restart" => {
-                let steps = self.steps.as_ref().ok_or("'steps' required for Restart")?;
+                let steps = self
+                    .steps
+                    .as_ref()
+                    .ok_or("'steps' required for Sat Restart")?;
                 if steps.len() != 1 {
-                    return Err("Restart requires exactly 1 step".into());
+                    return Err(format!(
+                        "Sat Restart requires exactly 1 step (inner heuristic), but got {}",
+                        steps.len()
+                    ));
                 }
                 let rc = self
                     .restart_condition
                     .as_ref()
-                    .ok_or("'restart_condition' required for Restart")?;
+                    .ok_or("'restart_condition' required for Sat Restart")?;
                 Ok(SatHeuristicSetting::Restart {
                     inner: Box::new(SatSequentialStep {
                         heuristic: steps[0].to_sat_heuristic_setting()?,
@@ -978,7 +1014,7 @@ impl HeuristicConfig {
                 let steps = self
                     .steps
                     .as_ref()
-                    .ok_or("'steps' required for Sequential")?;
+                    .ok_or("'steps' required for Tsp Sequential")?;
                 let converted: Result<Vec<TspSequentialStep>, String> = steps
                     .iter()
                     .map(|s| {
@@ -991,9 +1027,15 @@ impl HeuristicConfig {
                 Ok(TspHeuristicSetting::Sequential(converted?))
             }
             "Iterated" => {
-                let steps = self.steps.as_ref().ok_or("'steps' required for Iterated")?;
+                let steps = self
+                    .steps
+                    .as_ref()
+                    .ok_or("'steps' required for Tsp Iterated")?;
                 if steps.len() != 2 {
-                    return Err("Iterated requires exactly 2 steps".into());
+                    return Err(format!(
+                        "Tsp Iterated requires exactly 2 steps (search + perturbation), but got {}",
+                        steps.len()
+                    ));
                 }
                 let converted: Result<Vec<TspSequentialStep>, String> = steps
                     .iter()
@@ -1007,14 +1049,20 @@ impl HeuristicConfig {
                 Ok(TspHeuristicSetting::Iterated(converted?))
             }
             "Restart" => {
-                let steps = self.steps.as_ref().ok_or("'steps' required for Restart")?;
+                let steps = self
+                    .steps
+                    .as_ref()
+                    .ok_or("'steps' required for Tsp Restart")?;
                 if steps.len() != 1 {
-                    return Err("Restart requires exactly 1 step".into());
+                    return Err(format!(
+                        "Tsp Restart requires exactly 1 step (inner heuristic), but got {}",
+                        steps.len()
+                    ));
                 }
                 let rc = self
                     .restart_condition
                     .as_ref()
-                    .ok_or("'restart_condition' required for Restart")?;
+                    .ok_or("'restart_condition' required for Tsp Restart")?;
                 Ok(TspHeuristicSetting::Restart {
                     inner: Box::new(TspSequentialStep {
                         heuristic: steps[0].to_tsp_heuristic_setting()?,
