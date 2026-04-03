@@ -71,45 +71,129 @@ impl TspWithCoordinates {
     }
 
     /// Loads a TSP instance from a TSPLIB-format file.
-    pub fn load_file(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let file = File::open(file_path)?;
+    pub fn load_file(file_path: &str) -> Result<Self, crate::error::OptError> {
+        use crate::error::OptError;
+
+        let err = |line: usize, detail: String| OptError::FileLoad {
+            path: file_path.to_string(),
+            line,
+            detail,
+        };
+
+        let file =
+            File::open(file_path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
-        let name = lines
-            .next()
-            .ok_or("File is empty")??
+        let mut line_num = 0usize;
+
+        // Helper to read the next line with proper error handling
+        let next_line = |lines: &mut std::io::Lines<BufReader<File>>,
+                         line_num: &mut usize,
+                         expected: &str|
+         -> Result<String, OptError> {
+            *line_num += 1;
+            lines
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        *line_num,
+                        format!("unexpected end of file, expected {expected}"),
+                    )
+                })?
+                .map_err(|e| err(*line_num, format!("failed to read line: {e}")))
+        };
+
+        // NAME line
+        let name_line = next_line(&mut lines, &mut line_num, "'NAME: ...'")?;
+        let name = name_line
             .split_whitespace()
             .last()
-            .ok_or("Not found name")?
+            .ok_or_else(|| {
+                err(
+                    line_num,
+                    "expected 'NAME: <name>', but line is empty".into(),
+                )
+            })?
             .to_string();
 
-        // skip TYPE
-        lines.next();
-        // skip COMMENT
-        lines.next();
-        // skip DIMENSION
-        let n = lines
-            .next()
-            .ok_or("Not found DIMENSION")??
+        // TYPE line (skip)
+        next_line(&mut lines, &mut line_num, "'TYPE: ...'")?;
+        // COMMENT line (skip)
+        next_line(&mut lines, &mut line_num, "'COMMENT: ...'")?;
+
+        // DIMENSION line
+        let dim_line = next_line(&mut lines, &mut line_num, "'DIMENSION: N'")?;
+        let n = dim_line
             .split_whitespace()
             .last()
-            .ok_or("Not found DIMENSION")?
-            .parse::<usize>()?;
-        // skip EDGE_WEIGHT_TYPE
-        lines.next();
-        // skip NODE_COORD_SECTION
-        lines.next();
+            .ok_or_else(|| {
+                err(
+                    line_num,
+                    "expected 'DIMENSION: N', but line is empty".into(),
+                )
+            })?
+            .parse::<usize>()
+            .map_err(|e| err(line_num, format!("failed to parse DIMENSION value: {e}")))?;
+
+        // EDGE_WEIGHT_TYPE line (skip)
+        next_line(&mut lines, &mut line_num, "'EDGE_WEIGHT_TYPE: ...'")?;
+        // NODE_COORD_SECTION line (skip)
+        next_line(&mut lines, &mut line_num, "'NODE_COORD_SECTION'")?;
 
         let mut coord = vec![];
-        for _ in 0..n {
-            let line = lines.next().ok_or("Not found line")??;
+        for city_idx in 0..n {
+            let line = next_line(
+                &mut lines,
+                &mut line_num,
+                &format!("coordinate for city {}/{}", city_idx + 1, n),
+            )?;
             let mut iter = line.split_whitespace();
 
             // skip index
             let _ = iter.next();
 
-            let x = iter.next().ok_or("Not found x")?.parse::<f64>()?;
-            let y = iter.next().ok_or("Not found y")?.parse::<f64>()?;
+            let x = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        line_num,
+                        format!(
+                            "expected coordinate 'index x y' for city {}, but x is missing",
+                            city_idx + 1
+                        ),
+                    )
+                })?
+                .parse::<f64>()
+                .map_err(|e| {
+                    err(
+                        line_num,
+                        format!(
+                            "failed to parse x coordinate for city {}: {e}",
+                            city_idx + 1
+                        ),
+                    )
+                })?;
+            let y = iter
+                .next()
+                .ok_or_else(|| {
+                    err(
+                        line_num,
+                        format!(
+                            "expected coordinate 'index x y' for city {}, but y is missing",
+                            city_idx + 1
+                        ),
+                    )
+                })?
+                .parse::<f64>()
+                .map_err(|e| {
+                    err(
+                        line_num,
+                        format!(
+                            "failed to parse y coordinate for city {}: {e}",
+                            city_idx + 1
+                        ),
+                    )
+                })?;
 
             coord.push((x, y));
         }

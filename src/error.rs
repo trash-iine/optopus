@@ -17,7 +17,24 @@ pub enum OptError {
     #[error("Parse error: {0}")]
     Parse(String),
 
+    /// A file loading/parsing error with structured context.
+    /// `line == 0` means the error is not specific to a line (e.g., file-level validation).
+    #[error("{}", display_file_load(.path, .line, .detail))]
+    FileLoad {
+        path: String,
+        line: usize,
+        detail: String,
+    },
+
     /// An invalid search state (e.g., empty neighborhood).
     #[error("Invalid state: {0}")]
     InvalidState(String),
+}
+
+fn display_file_load(path: &str, line: &usize, detail: &str) -> String {
+    if *line == 0 {
+        format!("{path}: {detail}")
+    } else {
+        format!("{path}: line {line}: {detail}")
+    }
 }
