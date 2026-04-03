@@ -1,6 +1,6 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState, filter_best};
+use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
 
 /// A local search algorithm that iteratively explores the neighborhood of the current solution.
 /// This algorithm applies the best move from the neighborhood until no better moves are found.
@@ -57,14 +57,24 @@ where
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let mut best_list = filter_best(
-            N::iter(&state.instance, &state.solution)
-                .filter(|n| state.is_neighbor_better_than_current(n)),
-        );
-        if let Some(best_move) = best_list.pop() {
+        // max_by avoids the Vec allocation that filter_best() + pop() would incur;
+        // tie-breaking is arbitrary, which is fine for hill-climbing.
+        let best_move = N::iter(&state.instance, &state.solution)
+            .filter(|n| state.is_neighbor_better_than_current(n))
+            .max_by(|a, b| {
+                if a.is_better_than(b) {
+                    std::cmp::Ordering::Greater
+                } else if b.is_better_than(a) {
+                    std::cmp::Ordering::Less
+                } else {
+                    std::cmp::Ordering::Equal
+                }
+            });
+        if let Some(best_move) = best_move {
             state.apply(&best_move)?;
         } else {
             self.no_best_move = true;
+            state.progress_iteration();
         }
 
         Ok(())

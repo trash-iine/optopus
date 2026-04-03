@@ -1,17 +1,18 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{Evaluable, MoveToNeighbor, ProblemTrait, SearchState};
+use crate::search_state::{Evaluate, Evaluable, MoveToNeighbor, ProblemTrait, SearchState};
 use rand::Rng;
 use rand::seq::IteratorRandom;
 use std::ops::{DivAssign, MulAssign};
 
-/// Returns `true` with Boltzmann probability `exp(-delta / temperature)`.
+/// Returns `true` with Boltzmann probability `exp(-worsening / temperature)`.
 ///
-/// `delta` is the worsening amount of a move. Negative values (improving moves)
-/// always return `true`. Used as the acceptance criterion in simulated annealing.
-pub fn boltzmann_accept<N: Evaluable<f64>>(neighbor: &N, temperature: f64) -> bool {
-    let delta = neighbor.evaluate();
-    delta < 0.0 || rand::rng().random::<f64>() < (-delta / temperature).exp()
+/// Accepts an [`Evaluable<f64>`] value that encodes both the optimization direction and
+/// the objective change. Improving moves are always accepted; worsening moves are
+/// accepted with probability `exp(-worsening / T)`.
+pub fn boltzmann_accept(delta: Evaluable<f64>, temperature: f64) -> bool {
+    let worsening = delta.worsening_amount();
+    worsening < 0.0 || rand::rng().random::<f64>() < (-worsening / temperature).exp()
 }
 
 /// Simulated annealing heuristic.
@@ -47,7 +48,7 @@ impl<N> SimulatedAnnealing<N> {
 impl<P, N> Heuristic<P> for SimulatedAnnealing<N>
 where
     P: ProblemTrait,
-    N: MoveToNeighbor<P> + Evaluable<f64>,
+    N: MoveToNeighbor<P> + Evaluate,
 {
     /// Reset the temperature to the initial value.
     fn clear(&mut self) {
@@ -62,7 +63,7 @@ where
         let neighbor = N::iter(&state.instance, &state.solution)
             .choose(&mut rand::rng())
             .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
-        if boltzmann_accept(&neighbor, self.current_temperature) {
+        if boltzmann_accept(neighbor.evaluate(), self.current_temperature) {
             state.apply(&neighbor)?;
         } else {
             state.progress_iteration();
@@ -118,7 +119,7 @@ impl<N> BangBangSimulatedAnnealing<N> {
 impl<P, N> Heuristic<P> for BangBangSimulatedAnnealing<N>
 where
     P: ProblemTrait,
-    N: MoveToNeighbor<P> + Evaluable<f64>,
+    N: MoveToNeighbor<P> + Evaluate,
 {
     /// Reset the temperature and phase to the initial state.
     fn clear(&mut self) {
@@ -135,7 +136,7 @@ where
             .choose(&mut rand::rng())
             .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
 
-        if boltzmann_accept(&neighbor, self.current_temperature) {
+        if boltzmann_accept(neighbor.evaluate(), self.current_temperature) {
             state.apply(&neighbor)?;
         }
 

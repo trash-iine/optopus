@@ -7,13 +7,17 @@ use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::{
-    EnabledTabu, MoveToNeigbor, ProblemTrait, Rankable, SearchState, filter_best,
+    EnabledTabu, MoveToNeighbor, ProblemTrait, Rankable, SearchState, filter_best,
 };
 
+/// Perturbation type used inside Breakout Local Search.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PerturbationType {
+    /// Strong perturbation: apply `l` random flip moves.
     Strong,
+    /// Weak flip perturbation: run tabu search for `l` iterations.
     WeakFlip,
+    /// Weak swap perturbation: apply `l` swap moves guided by the tabu map.
     WeakSwap,
 }
 
@@ -21,18 +25,30 @@ fn is_same_solution(
     prev_solution: &<MaxCut as ProblemTrait>::Solution,
     current_solution: &<MaxCut as ProblemTrait>::Solution,
 ) -> bool {
-    if prev_solution.cut.len() != current_solution.cut.len() {
-        return false;
-    }
-
-    prev_solution.cut.iter().all(|(i, &value)| {
-        current_solution
-            .cut
-            .get(i)
-            .map_or(false, |&current_value| value == current_value)
-    })
+    prev_solution.cut == current_solution.cut
 }
 
+/// Breakout Local Search (BLS) for the MaxCut problem.
+///
+/// BLS alternates between a greedy local search phase (with tabu updates) and a
+/// perturbation phase. The perturbation type is chosen probabilistically based on
+/// the `omega` counter (number of consecutive non-improving iterations):
+///
+/// - `omega == 0` (first call or after improvement): **strong** perturbation.
+/// - `omega > 0` (stuck): **weak** perturbation with probability `p * q` (flip) or
+///   `p * (1 − q)` (swap), and **strong** otherwise.
+///   `p = max(exp(−omega / t), p0)` decays as `omega` grows.
+///
+/// The perturbation length `l` increases by 1 each time the solution does not change,
+/// resetting to `l0` whenever the solution changes.
+///
+/// # Parameters
+///
+/// - `tabu_tenure` — tabu tenure range `(min, max)` in iterations
+/// - `t` — period of the `omega` counter before it resets
+/// - `l0` — initial perturbation length
+/// - `p0` — minimum perturbation probability
+/// - `q` — fraction of weak perturbations that use the flip strategy (vs. swap)
 pub struct BreakoutLocalSearch {
     tabu_tenure: (u64, u64),
     stop_condition: StopCondition,
@@ -71,6 +87,8 @@ impl BreakoutLocalSearch {
         }
     }
 
+    /// Runs greedy local search until no improving flip move exists,
+    /// recording each applied move in the tabu map.
     fn local_search_with_updating_tabu(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
@@ -104,6 +122,7 @@ impl BreakoutLocalSearch {
         }
     }
 
+    /// Updates the `omega` counter based on whether the best objective improved.
     fn update_omega(&mut self, state: &SearchState<'_, MaxCut>) {
         if let Some(prev_best_objective) = self.prev_best_objective
             && prev_best_objective >= state.solution.objective
@@ -120,6 +139,7 @@ impl BreakoutLocalSearch {
         self.prev_best_objective = Some(state.best_solution.objective);
     }
 
+    /// Updates the perturbation length `l` based on whether the solution changed.
     fn update_l(&mut self, state: &SearchState<'_, MaxCut>) {
         if let Some(ref prev_solution) = self.prev_solution
             && is_same_solution(prev_solution, &state.solution)
@@ -132,6 +152,7 @@ impl BreakoutLocalSearch {
         self.prev_solution = Some(state.solution.clone());
     }
 
+    /// Determines the perturbation type for the current iteration.
     fn get_perturbation_type(&self) -> PerturbationType {
         if self.omega == 0 {
             PerturbationType::Strong
@@ -149,6 +170,7 @@ impl BreakoutLocalSearch {
         }
     }
 
+    /// Applies the strong perturbation: `l` random flip moves.
     fn apply_strong_perturbation(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
@@ -168,6 +190,7 @@ impl BreakoutLocalSearch {
         Ok(())
     }
 
+    /// Applies the weak flip perturbation: run tabu search for `l` iterations.
     fn apply_weak_flip_perturbation(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
@@ -181,6 +204,7 @@ impl BreakoutLocalSearch {
         Ok(())
     }
 
+    /// Applies the weak swap perturbation: `l` swap moves guided by the tabu map.
     fn apply_weak_swap_perturbation(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
@@ -191,7 +215,7 @@ impl BreakoutLocalSearch {
             let mut v0_tabu = Vec::new();
             let mut v1_tabu = Vec::new();
             for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
-                if state.solution.cut[&neighbor.i] {
+                if state.solution.cut[neighbor.i] {
                     if let Some(sample) = v0_best.first() {
                         if neighbor.is_better_than(sample) {
                             v0_best = vec![neighbor];
@@ -217,7 +241,7 @@ impl BreakoutLocalSearch {
                     continue;
                 }
 
-                if state.solution.cut[&neighbor.i] {
+                if state.solution.cut[neighbor.i] {
                     if let Some(sample) = v0_tabu.first() {
                         if neighbor.is_better_than(sample) {
                             v0_tabu = vec![neighbor];
@@ -244,8 +268,8 @@ impl BreakoutLocalSearch {
                 v1_best.iter().map(|v1| MaxCutSwapNeighbor {
                     i: v0.i,
                     j: v1.i,
-                    gain: state.solution.gain[&v0.i]
-                        + state.solution.gain[&v1.i]
+                    gain: state.solution.gain[v0.i]
+                        + state.solution.gain[v1.i]
                         + if state.instance.has_edge(v0.i, v1.i) {
                             2.0 * state.instance.get_weight(v0.i, v1.i)
                         } else {
@@ -290,8 +314,8 @@ impl BreakoutLocalSearch {
                 let neighbor = MaxCutSwapNeighbor {
                     i: i,
                     j: j,
-                    gain: state.solution.gain[&i]
-                        + state.solution.gain[&j]
+                    gain: state.solution.gain[i]
+                        + state.solution.gain[j]
                         + if state.instance.has_edge(i, j) {
                             2.0 * state.instance.get_weight(i, j)
                         } else {
@@ -304,33 +328,6 @@ impl BreakoutLocalSearch {
                     self.tabu_tenure,
                 );
                 state.apply(&neighbor)?;
-                /*
-                               let mut best_list = filter_best(v0_tabu.iter().flat_map(|v0| {
-                                   v1_tabu.iter().map(|v1| MaxCutSwapNeighbor {
-                                       i: v0.i,
-                                       j: v1.i,
-                                       gain: state.solution.gain[&v0.i]
-                                           + state.solution.gain[&v1.i]
-                                           + if state.instance.has_edge(v0.i, v1.i) {
-                                               2.0 * state.instance.get_weight(v0.i, v1.i)
-                                           } else {
-                                               0.0
-                                           },
-                                   })
-                               }));
-
-                               if let Some(best_move) = best_list.pop() {
-                                   best_move.add_to_tabu_map(
-                                       &mut self.tabu_map.borrow_mut(),
-                                       state.iteration,
-                                       self.tabu_tenure,
-                                   );
-                                   state.apply(&best_move);
-                               } else {
-                                   tracing::warn!("No valid swap neighbor found for perturbation");
-                                   state.progress_iteration();
-                               }
-                */
             }
         }
         Ok(())
@@ -350,12 +347,28 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
         &mut self,
         state: &mut SearchState<'a, MaxCut>,
     ) -> Result<(), OptError> {
+        tracing::debug!(
+            iteration = state.iteration,
+            omega = self.omega,
+            l = self.l,
+            "BLS: local search phase start"
+        );
+
         self.local_search_with_updating_tabu(state)?;
 
         self.update_omega(state);
         self.update_l(state);
 
-        match self.get_perturbation_type() {
+        let perturbation_type = self.get_perturbation_type();
+        tracing::debug!(
+            iteration = state.iteration,
+            omega = self.omega,
+            l = self.l,
+            perturbation = ?perturbation_type,
+            "BLS: perturbation selected"
+        );
+
+        match perturbation_type {
             PerturbationType::Strong => {
                 self.apply_strong_perturbation(state)?;
             }

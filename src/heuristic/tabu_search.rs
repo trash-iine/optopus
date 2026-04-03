@@ -27,7 +27,6 @@ where
 impl<N> TabuSearch<N>
 where
     N: Clone + EnabledTabu,
-    N::TabuMap: Default,
 {
     pub fn new(
         stop_condition: StopCondition,
@@ -72,7 +71,6 @@ impl<P, N> Heuristic<P> for TabuSearch<N>
 where
     P: ProblemTrait,
     N: MoveToNeighbor<P> + Clone + EnabledTabu + Rankable,
-    N::TabuMap: Default,
 {
     fn clear(&mut self) {
         self.tabu_map = N::TabuMap::default();

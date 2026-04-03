@@ -1,18 +1,22 @@
 //! heuristic module provides various heuristic algorithms for combinatorial optimization problems.
 
 mod beam_search;
+mod genetic_algorithm;
 mod local_search;
 mod random_walk;
+mod restart;
 mod sequential;
 mod simulated_annealing;
 mod specific;
 mod tabu_search;
 
 pub use beam_search::BeamSearch;
+pub use genetic_algorithm::{GeneticAlgorithm, SubProblemBasedCrossover};
 pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;
-pub use sequential::Sequential;
-pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing};
+pub use restart::Restart;
+pub use sequential::{Iterated, Sequential};
+pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
 pub use specific::BreakoutLocalSearchForMaxCut;
 pub use tabu_search::TabuSearch;
 
@@ -42,11 +46,18 @@ pub trait Heuristic<Problem: ProblemTrait> {
     /// This method calls [`Heuristic::clear`] at the beginning and then repeatedly calls [`Heuristic::run_once`] until [`Heuristic::is_done`] returns true.
     fn run<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError> {
         self.clear();
+        tracing::debug!("Heuristic run started");
 
         while !self.is_done(state) {
             self.run_once(state)?;
         }
 
+        tracing::debug!(
+            iteration = state.iteration,
+            best_iteration = state.best_iteration,
+            elapsed_secs = state.duration().as_secs_f64(),
+            "Heuristic run completed"
+        );
         return Ok(());
     }
 }

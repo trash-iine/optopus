@@ -1,60 +1,70 @@
-use optopus::{
-    benchmark::{
-        Benchmark, BenchmarkSetting, BreakoutLocalSearchSetting, MaxCutBenchmarkSetting,
-        MaxCutHeuristicSetting,
-    },
-    heuristic::StopCondition,
-    problem::max_cut::MaxCut,
-};
+//! Binary entry point: reads a TOML benchmark config file and runs the specified
+//! heuristics on the specified instances, writing results to a timestamped TOML file.
+//!
+//! Usage: `optopus <config_file>`
 
-fn main() {
+use std::process::ExitCode;
+
+use optopus::benchmark::{Benchmark, BenchmarkConfig};
+use optopus::error::OptError;
+
+const USAGE: &str = "Usage: optopus <config_file>";
+
+enum CliAction {
+    Run(String),
+    PrintHelp,
+}
+
+fn parse_args() -> Result<CliAction, OptError> {
+    match std::env::args().nth(1).as_deref() {
+        Some("-h") | Some("--help") => Ok(CliAction::PrintHelp),
+        Some(path) => Ok(CliAction::Run(path.to_string())),
+        None => Err(OptError::Config(USAGE.to_string())),
+    }
+}
+
+fn run() -> Result<(), OptError> {
     tracing_subscriber::fmt::init();
 
-    let mut benchmark = Benchmark::new();
-
-    let files = glob::glob("data/max_cut/G1*").unwrap();
-    for file in files {
-        let path = file.unwrap();
-        let instance_number = path
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .replace("G", "")
-            .parse::<u64>()
-            .unwrap();
-        if instance_number > 40 {
-            continue;
+    let config_file = match parse_args()? {
+        CliAction::Run(path) => path,
+        CliAction::PrintHelp => {
+            println!("{USAGE}");
+            return Ok(());
         }
+    };
 
-        let instance_path = path.to_str().unwrap().to_string();
-        tracing::info!("Processing file: {}", instance_path);
+    let config_str = std::fs::read_to_string(&config_file)?;
 
-        let mc = MaxCut::load_from_file(&instance_path).unwrap();
-        let n = mc.len();
+    let config: BenchmarkConfig = toml::from_str(&config_str)
+        .map_err(|e| OptError::Config(format!("failed to parse config file '{}': {}", config_file, e)))?;
 
-        let setting = BenchmarkSetting::MaxCut(MaxCutBenchmarkSetting {
-            instance_path,
-            heuristic: MaxCutHeuristicSetting::BreakoutLocalSearch(BreakoutLocalSearchSetting {
-                tabu_tenure: (3, (n / 10) as u64),
-                t: 1000,
-                l0: (n / 100) as u64,
-                p0: 0.8,
-                q: 0.5,
-            }),
-            stop_condition: StopCondition::new(Some(10_000_000), None, None),
-        });
+    let report = Benchmark::run_from_config(config, &config_file)?;
 
-        benchmark.run(setting);
+    let toml_str = toml::to_string(&report)
+        .map_err(|e| OptError::Config(format!("failed to serialize benchmark report: {}", e)))?;
+
+    let output_dir = std::path::Path::new("result");
+    std::fs::create_dir_all(output_dir)?;
+
+    let output_file = output_dir.join(
+        chrono::Local::now()
+            .format("%Y%m%d_%H%M%S.toml")
+            .to_string(),
+    );
+
+    std::fs::write(&output_file, toml_str)?;
+
+    tracing::info!("Results written to {}", output_file.display());
+    Ok(())
+}
+
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("{err}");
+            ExitCode::FAILURE
+        }
     }
-
-    #[derive(serde::Serialize)]
-    struct ResultWrapper {
-        results: Vec<optopus::benchmark::BenchmarkResult>,
-    }
-    let toml_str = toml::to_string(&ResultWrapper { results: benchmark.results }).unwrap();
-    let output_file = chrono::Local::now()
-        .format("result/%Y%m%d_%H%M%S.toml")
-        .to_string();
-    std::fs::write(output_file, toml_str).unwrap();
 }

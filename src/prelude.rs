@@ -14,12 +14,16 @@ pub use crate::search_state::{SearchState, SearchStateCloneType};
 
 // Heuristics
 pub use crate::heuristic::{
-    BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, Heuristic, LocalSearch,
-    ParallelHeuristic, RandomWalk, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
+    BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, GeneticAlgorithm,
+    Heuristic, Iterated, LocalSearch, ParallelHeuristic, RandomWalk, Restart, Sequential,
+    SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch, boltzmann_accept,
 };
 
 // Traits
-pub use crate::search_state::{EnabledTabu, Evaluable, MoveToNeighbor, ProblemTrait, Rankable};
+pub use crate::search_state::{
+    Crossover, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
+    SubProblemExtractable,
+};
 
 // Problem and neighbor types
 pub use crate::problem::{
@@ -38,9 +42,9 @@ pub use crate::problem::{
     OptDirection,
     // QUBO
     Qubo,
-    QuboFlipNeighbour,
+    QuboFlipNeighbor,
     QuboSolution,
-    QuboSwapNeighbour,
+    QuboSwapNeighbor,
     // SAT
     Sat,
     SatFlipNeighbor,
