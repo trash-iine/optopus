@@ -5,6 +5,10 @@
 /// Represents errors that can occur during heuristic execution or problem parsing.
 #[derive(Debug, thiserror::Error)]
 pub enum OptError {
+    /// A user-facing configuration error (e.g., invalid benchmark settings).
+    #[error("Config error: {0}")]
+    Config(String),
+
     /// An I/O error (e.g., file not found or read failure).
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),

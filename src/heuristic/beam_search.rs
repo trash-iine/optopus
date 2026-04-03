@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
 use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
@@ -89,25 +87,38 @@ where
             return Ok(());
         }
 
-        // Sort in descending order (best first) and keep the top beam_width candidates
-        candidates.sort_unstable_by(|a, b| {
-            if a.is_better_than(b) {
-                Ordering::Less
-            } else if b.is_better_than(a) {
-                Ordering::Greater
-            } else {
-                Ordering::Equal
-            }
-        });
-        candidates.truncate(self.beam_width);
-
-        // Update the state with the best candidate in the beam
-        // NOTE: These processes are almost equivalent to call [`SearchState::apply_neighbor`] with the best neighbor.
-        state.solution = candidates[0].clone();
+        // Update the state with the best candidate among all neighbors
+        state.solution = candidates
+            .iter()
+            .max_by(|a, b| {
+                if a.is_better_than(b) {
+                    std::cmp::Ordering::Greater
+                } else if b.is_better_than(a) {
+                    std::cmp::Ordering::Less
+                } else {
+                    std::cmp::Ordering::Equal
+                }
+            })
+            .expect("candidates must not be empty")
+            .clone();
         state.update_best();
         state.progress_iteration();
 
-        // Store the candidates as the new beam for the next iteration
+        // Keep the top beam_width candidates for the next iteration.
+        // select_nth_unstable_by is O(n) expected vs O(n log n) for a full sort;
+        // ordering within the surviving beam members does not matter.
+        if candidates.len() > self.beam_width {
+            candidates.select_nth_unstable_by(self.beam_width - 1, |a, b| {
+                if a.is_better_than(b) {
+                    std::cmp::Ordering::Less
+                } else if b.is_better_than(a) {
+                    std::cmp::Ordering::Greater
+                } else {
+                    std::cmp::Ordering::Equal
+                }
+            });
+            candidates.truncate(self.beam_width);
+        }
         self.beam = candidates;
 
         Ok(())
