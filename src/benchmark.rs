@@ -261,449 +261,53 @@ pub struct BenchmarkReport {
 }
 
 // ---------------------------------------------------------------------------
-// Common algorithm parameter structs
+// BenchmarkResult
 // ---------------------------------------------------------------------------
 
-/// Parameters for simulated annealing.
-#[derive(Clone, Serialize)]
-pub struct SimulatedAnnealingSetting {
-    pub initial_temperature: f64,
-    pub cooling_rate: f64,
-}
-
-/// Parameters for tabu search.
-#[derive(Clone, Serialize)]
-pub struct TabuSearchSetting {
-    pub tabu_tenure: (u64, u64),
-}
-
-/// Parameters for Breakout Local Search (MaxCut only).
-#[derive(Clone, Serialize)]
-pub struct BreakoutLocalSearchSetting {
-    pub tabu_tenure: (u64, u64),
-    pub t: u64,
-    pub l0: u64,
-    pub p0: f64,
-    pub q: f64,
-}
-
-// ---------------------------------------------------------------------------
-// MaxCut
-// ---------------------------------------------------------------------------
-
-/// Neighborhood type for MaxCut benchmarks.
-#[derive(Clone, Serialize)]
-pub enum MaxCutNeighborKind {
-    Flip,
-    Swap,
-}
-
-/// A single step in a [`Sequential`] meta-heuristic, parameterised by the heuristic setting type.
-#[derive(Clone, Serialize)]
-pub struct SequentialStep<S> {
-    pub heuristic: S,
-    pub stop_condition: StopCondition,
-}
-
-pub type MaxCutSequentialStep = SequentialStep<MaxCutHeuristicSetting>;
-
-/// Heuristic configuration for MaxCut benchmarks.
-#[derive(Clone, Serialize)]
-pub enum MaxCutHeuristicSetting {
-    LocalSearch(MaxCutNeighborKind),
-    TabuSearch(TabuSearchSetting, MaxCutNeighborKind),
-    SimulatedAnnealing(SimulatedAnnealingSetting, MaxCutNeighborKind),
-    BreakoutLocalSearch(BreakoutLocalSearchSetting),
-    /// Run each step in sequence, repeating the cycle until `cond` is satisfied.
-    Sequential(Vec<MaxCutSequentialStep>),
-    /// ILS: `steps[0]` = search phase, `steps[1]` = perturbation phase.
-    Iterated(Vec<MaxCutSequentialStep>),
-    /// Restart from a new random solution when `restart_condition` is met.
-    Restart {
-        inner: Box<MaxCutSequentialStep>,
-        restart_condition: StopCondition,
-    },
-}
-
-impl MaxCutHeuristicSetting {
-    fn build(&self, cond: StopCondition) -> Box<dyn Heuristic<MaxCut>> {
-        match self {
-            Self::LocalSearch(MaxCutNeighborKind::Flip) => {
-                Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(cond))
-            }
-            Self::LocalSearch(MaxCutNeighborKind::Swap) => {
-                Box::new(LocalSearch::<MaxCutSwapNeighbor>::new(cond))
-            }
-            Self::TabuSearch(s, MaxCutNeighborKind::Flip) => Box::new(TabuSearch::<
-                MaxCutFlipNeighbor,
-            >::new(
-                cond, s.tabu_tenure, None
-            )),
-            Self::TabuSearch(s, MaxCutNeighborKind::Swap) => Box::new(TabuSearch::<
-                MaxCutSwapNeighbor,
-            >::new(
-                cond, s.tabu_tenure, None
-            )),
-            Self::SimulatedAnnealing(s, MaxCutNeighborKind::Flip) => {
-                Box::new(SimulatedAnnealing::<MaxCutFlipNeighbor>::new(
-                    cond,
-                    s.initial_temperature,
-                    s.cooling_rate,
-                ))
-            }
-            Self::SimulatedAnnealing(s, MaxCutNeighborKind::Swap) => {
-                Box::new(SimulatedAnnealing::<MaxCutSwapNeighbor>::new(
-                    cond,
-                    s.initial_temperature,
-                    s.cooling_rate,
-                ))
-            }
-            Self::BreakoutLocalSearch(s) => Box::new(BreakoutLocalSearchForMaxCut::new(
-                s.tabu_tenure,
-                cond,
-                s.t,
-                s.l0,
-                s.p0,
-                s.q,
-            )),
-            Self::Sequential(steps) => {
-                let sub: Vec<Box<dyn Heuristic<MaxCut>>> = steps
-                    .iter()
-                    .map(|s| s.heuristic.build(s.stop_condition.clone()))
-                    .collect();
-                Box::new(Sequential::new(cond, sub))
-            }
-            Self::Iterated(steps) => {
-                assert_eq!(
-                    steps.len(),
-                    2,
-                    "Iterated requires exactly 2 steps (search, perturbation)"
-                );
-                let search = steps[0].heuristic.build(steps[0].stop_condition.clone());
-                let perturbation = steps[1].heuristic.build(steps[1].stop_condition.clone());
-                Box::new(Iterated::new(cond, search, perturbation))
-            }
-            Self::Restart {
-                inner,
-                restart_condition,
-            } => {
-                let heuristic = inner.heuristic.build(inner.stop_condition.clone());
-                Box::new(Restart::new(cond, heuristic, restart_condition.clone()))
-            }
-        }
-    }
-}
-
-/// Full benchmark configuration for a single run, parameterised by the heuristic setting type.
-#[derive(Clone, Serialize)]
-pub struct GenericBenchmarkSetting<H> {
+/// The result of a single experiment run (configuration + metrics).
+#[derive(Serialize)]
+pub struct BenchmarkResult {
     pub instance_path: String,
-    pub heuristic: H,
-    pub stop_condition: StopCondition,
-}
-
-pub type MaxCutBenchmarkSetting = GenericBenchmarkSetting<MaxCutHeuristicSetting>;
-
-// ---------------------------------------------------------------------------
-// QUBO
-// ---------------------------------------------------------------------------
-
-/// Neighborhood type for QUBO benchmarks.
-#[derive(Clone, Serialize)]
-pub enum QuboNeighborKind {
-    Flip,
-    Swap,
-}
-
-pub type QuboSequentialStep = SequentialStep<QuboHeuristicSetting>;
-
-/// Heuristic configuration for QUBO benchmarks.
-#[derive(Clone, Serialize)]
-pub enum QuboHeuristicSetting {
-    LocalSearch(QuboNeighborKind),
-    TabuSearch(TabuSearchSetting, QuboNeighborKind),
-    SimulatedAnnealing(SimulatedAnnealingSetting, QuboNeighborKind),
-    Sequential(Vec<QuboSequentialStep>),
-    Iterated(Vec<QuboSequentialStep>),
-    Restart {
-        inner: Box<QuboSequentialStep>,
-        restart_condition: StopCondition,
-    },
-}
-
-impl QuboHeuristicSetting {
-    fn build(&self, cond: StopCondition) -> Box<dyn Heuristic<Qubo>> {
-        match self {
-            Self::LocalSearch(QuboNeighborKind::Flip) => {
-                Box::new(LocalSearch::<QuboFlipNeighbor>::new(cond))
-            }
-            Self::LocalSearch(QuboNeighborKind::Swap) => {
-                Box::new(LocalSearch::<QuboSwapNeighbor>::new(cond))
-            }
-            Self::TabuSearch(s, QuboNeighborKind::Flip) => Box::new(
-                TabuSearch::<QuboFlipNeighbor>::new(cond, s.tabu_tenure, None),
-            ),
-            Self::TabuSearch(s, QuboNeighborKind::Swap) => Box::new(
-                TabuSearch::<QuboSwapNeighbor>::new(cond, s.tabu_tenure, None),
-            ),
-            Self::SimulatedAnnealing(s, QuboNeighborKind::Flip) => {
-                Box::new(SimulatedAnnealing::<QuboFlipNeighbor>::new(
-                    cond,
-                    s.initial_temperature,
-                    s.cooling_rate,
-                ))
-            }
-            Self::SimulatedAnnealing(s, QuboNeighborKind::Swap) => {
-                Box::new(SimulatedAnnealing::<QuboSwapNeighbor>::new(
-                    cond,
-                    s.initial_temperature,
-                    s.cooling_rate,
-                ))
-            }
-            Self::Sequential(steps) => {
-                let sub: Vec<Box<dyn Heuristic<Qubo>>> = steps
-                    .iter()
-                    .map(|s| s.heuristic.build(s.stop_condition.clone()))
-                    .collect();
-                Box::new(Sequential::new(cond, sub))
-            }
-            Self::Iterated(steps) => {
-                assert_eq!(steps.len(), 2, "Iterated requires exactly 2 steps");
-                let search = steps[0].heuristic.build(steps[0].stop_condition.clone());
-                let perturbation = steps[1].heuristic.build(steps[1].stop_condition.clone());
-                Box::new(Iterated::new(cond, search, perturbation))
-            }
-            Self::Restart {
-                inner,
-                restart_condition,
-            } => {
-                let heuristic = inner.heuristic.build(inner.stop_condition.clone());
-                Box::new(Restart::new(cond, heuristic, restart_condition.clone()))
-            }
-        }
-    }
-}
-
-pub type QuboBenchmarkSetting = GenericBenchmarkSetting<QuboHeuristicSetting>;
-
-// ---------------------------------------------------------------------------
-// SAT
-// ---------------------------------------------------------------------------
-
-/// Neighborhood type for SAT benchmarks.
-#[derive(Clone, Serialize)]
-pub enum SatNeighborKind {
-    Flip,
-    Swap,
-}
-
-pub type SatSequentialStep = SequentialStep<SatHeuristicSetting>;
-
-/// Heuristic configuration for SAT benchmarks.
-#[derive(Clone, Serialize)]
-pub enum SatHeuristicSetting {
-    LocalSearch(SatNeighborKind),
-    TabuSearch(TabuSearchSetting, SatNeighborKind),
-    SimulatedAnnealing(SimulatedAnnealingSetting, SatNeighborKind),
-    Sequential(Vec<SatSequentialStep>),
-    Iterated(Vec<SatSequentialStep>),
-    Restart {
-        inner: Box<SatSequentialStep>,
-        restart_condition: StopCondition,
-    },
-}
-
-impl SatHeuristicSetting {
-    fn build(&self, cond: StopCondition) -> Box<dyn Heuristic<Sat>> {
-        match self {
-            Self::LocalSearch(SatNeighborKind::Flip) => {
-                Box::new(LocalSearch::<SatFlipNeighbor>::new(cond))
-            }
-            Self::LocalSearch(SatNeighborKind::Swap) => {
-                Box::new(LocalSearch::<SatSwapNeighbor>::new(cond))
-            }
-            Self::TabuSearch(s, SatNeighborKind::Flip) => Box::new(
-                TabuSearch::<SatFlipNeighbor>::new(cond, s.tabu_tenure, None),
-            ),
-            Self::TabuSearch(s, SatNeighborKind::Swap) => Box::new(
-                TabuSearch::<SatSwapNeighbor>::new(cond, s.tabu_tenure, None),
-            ),
-            Self::SimulatedAnnealing(s, SatNeighborKind::Flip) => {
-                Box::new(SimulatedAnnealing::<SatFlipNeighbor>::new(
-                    cond,
-                    s.initial_temperature,
-                    s.cooling_rate,
-                ))
-            }
-            Self::SimulatedAnnealing(s, SatNeighborKind::Swap) => {
-                Box::new(SimulatedAnnealing::<SatSwapNeighbor>::new(
-                    cond,
-                    s.initial_temperature,
-                    s.cooling_rate,
-                ))
-            }
-            Self::Sequential(steps) => {
-                let sub: Vec<Box<dyn Heuristic<Sat>>> = steps
-                    .iter()
-                    .map(|s| s.heuristic.build(s.stop_condition.clone()))
-                    .collect();
-                Box::new(Sequential::new(cond, sub))
-            }
-            Self::Iterated(steps) => {
-                assert_eq!(steps.len(), 2, "Iterated requires exactly 2 steps");
-                let search = steps[0].heuristic.build(steps[0].stop_condition.clone());
-                let perturbation = steps[1].heuristic.build(steps[1].stop_condition.clone());
-                Box::new(Iterated::new(cond, search, perturbation))
-            }
-            Self::Restart {
-                inner,
-                restart_condition,
-            } => {
-                let heuristic = inner.heuristic.build(inner.stop_condition.clone());
-                Box::new(Restart::new(cond, heuristic, restart_condition.clone()))
-            }
-        }
-    }
-}
-
-pub type SatBenchmarkSetting = GenericBenchmarkSetting<SatHeuristicSetting>;
-
-// ---------------------------------------------------------------------------
-// TSP
-// ---------------------------------------------------------------------------
-
-/// Neighborhood type for TSP benchmarks.
-#[derive(Clone, Serialize)]
-pub enum TspNeighborKind {
-    TwoOpt,
-    Relocate,
-}
-
-pub type TspSequentialStep = SequentialStep<TspHeuristicSetting>;
-
-/// Heuristic configuration for TSP benchmarks.
-#[derive(Clone, Serialize)]
-pub enum TspHeuristicSetting {
-    LocalSearch(TspNeighborKind),
-    TabuSearch(TabuSearchSetting, TspNeighborKind),
-    SimulatedAnnealing(SimulatedAnnealingSetting, TspNeighborKind),
-    Sequential(Vec<TspSequentialStep>),
-    Iterated(Vec<TspSequentialStep>),
-    Restart {
-        inner: Box<TspSequentialStep>,
-        restart_condition: StopCondition,
-    },
-}
-
-impl TspHeuristicSetting {
-    fn build(&self, cond: StopCondition) -> Box<dyn Heuristic<TspWithCoordinates>> {
-        match self {
-            Self::LocalSearch(TspNeighborKind::TwoOpt) => {
-                Box::new(LocalSearch::<TspTwoOptNeighbor>::new(cond))
-            }
-            Self::LocalSearch(TspNeighborKind::Relocate) => {
-                Box::new(LocalSearch::<TspRelocateNeighbor>::new(cond))
-            }
-            Self::TabuSearch(s, TspNeighborKind::TwoOpt) => Box::new(
-                TabuSearch::<TspTwoOptNeighbor>::new(cond, s.tabu_tenure, None),
-            ),
-            Self::TabuSearch(s, TspNeighborKind::Relocate) => Box::new(TabuSearch::<
-                TspRelocateNeighbor,
-            >::new(
-                cond, s.tabu_tenure, None
-            )),
-            Self::SimulatedAnnealing(s, TspNeighborKind::TwoOpt) => {
-                Box::new(SimulatedAnnealing::<TspTwoOptNeighbor>::new(
-                    cond,
-                    s.initial_temperature,
-                    s.cooling_rate,
-                ))
-            }
-            Self::SimulatedAnnealing(s, TspNeighborKind::Relocate) => {
-                Box::new(SimulatedAnnealing::<TspRelocateNeighbor>::new(
-                    cond,
-                    s.initial_temperature,
-                    s.cooling_rate,
-                ))
-            }
-            Self::Sequential(steps) => {
-                let sub: Vec<Box<dyn Heuristic<TspWithCoordinates>>> = steps
-                    .iter()
-                    .map(|s| s.heuristic.build(s.stop_condition.clone()))
-                    .collect();
-                Box::new(Sequential::new(cond, sub))
-            }
-            Self::Iterated(steps) => {
-                assert_eq!(steps.len(), 2, "Iterated requires exactly 2 steps");
-                let search = steps[0].heuristic.build(steps[0].stop_condition.clone());
-                let perturbation = steps[1].heuristic.build(steps[1].stop_condition.clone());
-                Box::new(Iterated::new(cond, search, perturbation))
-            }
-            Self::Restart {
-                inner,
-                restart_condition,
-            } => {
-                let heuristic = inner.heuristic.build(inner.stop_condition.clone());
-                Box::new(Restart::new(cond, heuristic, restart_condition.clone()))
-            }
-        }
-    }
-}
-
-pub type TspBenchmarkSetting = GenericBenchmarkSetting<TspHeuristicSetting>;
-
-// ---------------------------------------------------------------------------
-// Master BenchmarkSetting
-// ---------------------------------------------------------------------------
-
-/// All information needed to reproduce a single experiment run.
-#[derive(Clone, Serialize)]
-pub enum BenchmarkSetting {
-    MaxCut(MaxCutBenchmarkSetting),
-    Qubo(QuboBenchmarkSetting),
-    Sat(SatBenchmarkSetting),
-    Tsp(TspBenchmarkSetting),
+    pub problem: ProblemKind,
+    pub heuristic: HeuristicConfig,
+    /// Run status: `"success"` or `"error: <message>"`.
+    pub status: String,
+    /// Best objective value found (maximized for MaxCut/SAT, minimized for QUBO/TSP).
+    pub best_objective: f64,
+    /// Iteration at which the best solution was found.
+    pub best_iteration: u64,
+    /// Elapsed time (seconds) until the best solution was found.
+    pub time_to_best_secs: f64,
+    /// Total elapsed time (seconds) for the run.
+    pub total_time_secs: f64,
+    /// Best solution encoded as a list of indices (0-indexed):
+    /// - MaxCut: vertex indices on the cut side
+    /// - QUBO: variable indices set to 1
+    /// - SAT: variable indices set to `true`
+    /// - TSP: city visit order
+    pub solution: Vec<usize>,
 }
 
 // ---------------------------------------------------------------------------
-// HeuristicConfig → BenchmarkSetting conversion
+// BenchmarkableProblem trait + per-problem implementations
 // ---------------------------------------------------------------------------
+
+/// Extends [`BenchmarkProblem`] with the ability to build heuristics from config.
+///
+/// Each problem implements `build_base_heuristic` to dispatch on [`NeighborKind`]
+/// and construct the concrete heuristic. Meta-heuristics (Sequential, Iterated,
+/// Restart) are handled generically by [`build_heuristic`].
+trait BenchmarkableProblem: BenchmarkProblem
+where
+    Self::Solution: BenchmarkSolution,
+{
+    fn build_base_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, String>;
+}
 
 impl HeuristicConfig {
-    /// Converts this config entry into a `BenchmarkSetting` for the given instance.
-    ///
-    /// `problem` is supplied by the caller (from `InstanceConfig`) rather than stored
-    /// in the heuristic config itself to avoid duplication.
-    pub fn to_benchmark_setting(
-        &self,
-        instance_path: &str,
-        problem: &ProblemKind,
-    ) -> Result<BenchmarkSetting, String> {
-        let stop_condition = self.stop_condition.to_stop_condition();
-        match problem {
-            ProblemKind::MaxCut => Ok(BenchmarkSetting::MaxCut(MaxCutBenchmarkSetting {
-                instance_path: instance_path.to_string(),
-                heuristic: self.to_max_cut_heuristic_setting()?,
-                stop_condition,
-            })),
-            ProblemKind::Qubo => Ok(BenchmarkSetting::Qubo(QuboBenchmarkSetting {
-                instance_path: instance_path.to_string(),
-                heuristic: self.to_qubo_heuristic_setting()?,
-                stop_condition,
-            })),
-            ProblemKind::Sat => Ok(BenchmarkSetting::Sat(SatBenchmarkSetting {
-                instance_path: instance_path.to_string(),
-                heuristic: self.to_sat_heuristic_setting()?,
-                stop_condition,
-            })),
-            ProblemKind::Tsp => Ok(BenchmarkSetting::Tsp(TspBenchmarkSetting {
-                instance_path: instance_path.to_string(),
-                heuristic: self.to_tsp_heuristic_setting()?,
-                stop_condition,
-            })),
-        }
-    }
-
     fn req_neighbor(&self, problem: &str) -> Result<&NeighborKind, String> {
         self.neighbor
             .as_ref()
@@ -725,426 +329,208 @@ impl HeuristicConfig {
         self.cooling_rate
             .ok_or_else(|| format!("'cooling_rate' required for {} {}", problem, self.kind))
     }
+}
 
-    fn to_max_cut_heuristic_setting(&self) -> Result<MaxCutHeuristicSetting, String> {
-        match self.kind.as_str() {
-            "LocalSearch" => Ok(MaxCutHeuristicSetting::LocalSearch(to_max_cut_neighbor(
-                self.req_neighbor("MaxCut")?,
-            )?)),
-            "TabuSearch" => Ok(MaxCutHeuristicSetting::TabuSearch(
-                TabuSearchSetting {
-                    tabu_tenure: self.req_tabu("MaxCut")?,
-                },
-                to_max_cut_neighbor(self.req_neighbor("MaxCut")?)?,
-            )),
-            "SimulatedAnnealing" => Ok(MaxCutHeuristicSetting::SimulatedAnnealing(
-                SimulatedAnnealingSetting {
-                    initial_temperature: self.req_temp("MaxCut")?,
-                    cooling_rate: self.req_cooling("MaxCut")?,
-                },
-                to_max_cut_neighbor(self.req_neighbor("MaxCut")?)?,
-            )),
-            "BreakoutLocalSearch" => Ok(MaxCutHeuristicSetting::BreakoutLocalSearch(
-                BreakoutLocalSearchSetting {
-                    tabu_tenure: self.req_tabu("MaxCut")?,
-                    t: self
-                        .t
-                        .ok_or("'t' required for MaxCut BreakoutLocalSearch")?,
-                    l0: self
-                        .l0
-                        .ok_or("'l0' required for MaxCut BreakoutLocalSearch")?,
-                    p0: self
-                        .p0
-                        .ok_or("'p0' required for MaxCut BreakoutLocalSearch")?,
-                    q: self
-                        .q
-                        .ok_or("'q' required for MaxCut BreakoutLocalSearch")?,
-                },
-            )),
-            "Sequential" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for MaxCut Sequential")?;
-                let converted: Result<Vec<MaxCutSequentialStep>, String> = steps
-                    .iter()
-                    .map(|s| {
-                        Ok(MaxCutSequentialStep {
-                            heuristic: s.to_max_cut_heuristic_setting()?,
-                            stop_condition: s.stop_condition.to_stop_condition(),
-                        })
-                    })
-                    .collect();
-                Ok(MaxCutHeuristicSetting::Sequential(converted?))
-            }
-            "Iterated" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for MaxCut Iterated")?;
-                if steps.len() != 2 {
-                    return Err(format!(
-                        "MaxCut Iterated requires exactly 2 steps (search + perturbation), but got {}",
-                        steps.len()
-                    ));
+impl BenchmarkableProblem for MaxCut {
+    fn build_base_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, String> {
+        match config.kind.as_str() {
+            "LocalSearch" => match config.req_neighbor("MaxCut")? {
+                NeighborKind::Flip => Ok(Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(cond))),
+                NeighborKind::Swap => Ok(Box::new(LocalSearch::<MaxCutSwapNeighbor>::new(cond))),
+                n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
+            },
+            "TabuSearch" => {
+                let tenure = config.req_tabu("MaxCut")?;
+                match config.req_neighbor("MaxCut")? {
+                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(cond, tenure, None))),
+                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<MaxCutSwapNeighbor>::new(cond, tenure, None))),
+                    n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
                 }
-                let converted: Result<Vec<MaxCutSequentialStep>, String> = steps
-                    .iter()
-                    .map(|s| {
-                        Ok(MaxCutSequentialStep {
-                            heuristic: s.to_max_cut_heuristic_setting()?,
-                            stop_condition: s.stop_condition.to_stop_condition(),
-                        })
-                    })
-                    .collect();
-                Ok(MaxCutHeuristicSetting::Iterated(converted?))
             }
-            "Restart" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for MaxCut Restart")?;
-                if steps.len() != 1 {
-                    return Err(format!(
-                        "MaxCut Restart requires exactly 1 step (inner heuristic), but got {}",
-                        steps.len()
-                    ));
+            "SimulatedAnnealing" => {
+                let temp = config.req_temp("MaxCut")?;
+                let cooling = config.req_cooling("MaxCut")?;
+                match config.req_neighbor("MaxCut")? {
+                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<MaxCutFlipNeighbor>::new(cond, temp, cooling))),
+                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<MaxCutSwapNeighbor>::new(cond, temp, cooling))),
+                    n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
                 }
-                let rc = self
-                    .restart_condition
-                    .as_ref()
-                    .ok_or("'restart_condition' required for MaxCut Restart")?;
-                Ok(MaxCutHeuristicSetting::Restart {
-                    inner: Box::new(MaxCutSequentialStep {
-                        heuristic: steps[0].to_max_cut_heuristic_setting()?,
-                        stop_condition: steps[0].stop_condition.to_stop_condition(),
-                    }),
-                    restart_condition: rc.to_stop_condition(),
-                })
+            }
+            "BreakoutLocalSearch" => {
+                let tenure = config.req_tabu("MaxCut")?;
+                let t = config.t.ok_or("'t' required for MaxCut BreakoutLocalSearch")?;
+                let l0 = config.l0.ok_or("'l0' required for MaxCut BreakoutLocalSearch")?;
+                let p0 = config.p0.ok_or("'p0' required for MaxCut BreakoutLocalSearch")?;
+                let q = config.q.ok_or("'q' required for MaxCut BreakoutLocalSearch")?;
+                Ok(Box::new(BreakoutLocalSearchForMaxCut::new(tenure, cond, t, l0, p0, q)))
             }
             k => Err(format!("Unknown kind '{}' for MaxCut", k)),
         }
     }
+}
 
-    fn to_qubo_heuristic_setting(&self) -> Result<QuboHeuristicSetting, String> {
-        match self.kind.as_str() {
-            "LocalSearch" => Ok(QuboHeuristicSetting::LocalSearch(to_qubo_neighbor(
-                self.req_neighbor("Qubo")?,
-            )?)),
-            "TabuSearch" => Ok(QuboHeuristicSetting::TabuSearch(
-                TabuSearchSetting {
-                    tabu_tenure: self.req_tabu("Qubo")?,
-                },
-                to_qubo_neighbor(self.req_neighbor("Qubo")?)?,
-            )),
-            "SimulatedAnnealing" => Ok(QuboHeuristicSetting::SimulatedAnnealing(
-                SimulatedAnnealingSetting {
-                    initial_temperature: self.req_temp("Qubo")?,
-                    cooling_rate: self.req_cooling("Qubo")?,
-                },
-                to_qubo_neighbor(self.req_neighbor("Qubo")?)?,
-            )),
-            "Sequential" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Qubo Sequential")?;
-                let converted: Result<Vec<QuboSequentialStep>, String> = steps
-                    .iter()
-                    .map(|s| {
-                        Ok(QuboSequentialStep {
-                            heuristic: s.to_qubo_heuristic_setting()?,
-                            stop_condition: s.stop_condition.to_stop_condition(),
-                        })
-                    })
-                    .collect();
-                Ok(QuboHeuristicSetting::Sequential(converted?))
-            }
-            "Iterated" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Qubo Iterated")?;
-                if steps.len() != 2 {
-                    return Err(format!(
-                        "Qubo Iterated requires exactly 2 steps (search + perturbation), but got {}",
-                        steps.len()
-                    ));
+impl BenchmarkableProblem for Qubo {
+    fn build_base_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, String> {
+        match config.kind.as_str() {
+            "LocalSearch" => match config.req_neighbor("Qubo")? {
+                NeighborKind::Flip => Ok(Box::new(LocalSearch::<QuboFlipNeighbor>::new(cond))),
+                NeighborKind::Swap => Ok(Box::new(LocalSearch::<QuboSwapNeighbor>::new(cond))),
+                n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
+            },
+            "TabuSearch" => {
+                let tenure = config.req_tabu("Qubo")?;
+                match config.req_neighbor("Qubo")? {
+                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<QuboFlipNeighbor>::new(cond, tenure, None))),
+                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<QuboSwapNeighbor>::new(cond, tenure, None))),
+                    n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
                 }
-                let converted: Result<Vec<QuboSequentialStep>, String> = steps
-                    .iter()
-                    .map(|s| {
-                        Ok(QuboSequentialStep {
-                            heuristic: s.to_qubo_heuristic_setting()?,
-                            stop_condition: s.stop_condition.to_stop_condition(),
-                        })
-                    })
-                    .collect();
-                Ok(QuboHeuristicSetting::Iterated(converted?))
             }
-            "Restart" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Qubo Restart")?;
-                if steps.len() != 1 {
-                    return Err(format!(
-                        "Qubo Restart requires exactly 1 step (inner heuristic), but got {}",
-                        steps.len()
-                    ));
+            "SimulatedAnnealing" => {
+                let temp = config.req_temp("Qubo")?;
+                let cooling = config.req_cooling("Qubo")?;
+                match config.req_neighbor("Qubo")? {
+                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<QuboFlipNeighbor>::new(cond, temp, cooling))),
+                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<QuboSwapNeighbor>::new(cond, temp, cooling))),
+                    n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
                 }
-                let rc = self
-                    .restart_condition
-                    .as_ref()
-                    .ok_or("'restart_condition' required for Qubo Restart")?;
-                Ok(QuboHeuristicSetting::Restart {
-                    inner: Box::new(QuboSequentialStep {
-                        heuristic: steps[0].to_qubo_heuristic_setting()?,
-                        stop_condition: steps[0].stop_condition.to_stop_condition(),
-                    }),
-                    restart_condition: rc.to_stop_condition(),
-                })
             }
             k => Err(format!("Unknown kind '{}' for Qubo", k)),
         }
     }
+}
 
-    fn to_sat_heuristic_setting(&self) -> Result<SatHeuristicSetting, String> {
-        match self.kind.as_str() {
-            "LocalSearch" => Ok(SatHeuristicSetting::LocalSearch(to_sat_neighbor(
-                self.req_neighbor("Sat")?,
-            )?)),
-            "TabuSearch" => Ok(SatHeuristicSetting::TabuSearch(
-                TabuSearchSetting {
-                    tabu_tenure: self.req_tabu("Sat")?,
-                },
-                to_sat_neighbor(self.req_neighbor("Sat")?)?,
-            )),
-            "SimulatedAnnealing" => Ok(SatHeuristicSetting::SimulatedAnnealing(
-                SimulatedAnnealingSetting {
-                    initial_temperature: self.req_temp("Sat")?,
-                    cooling_rate: self.req_cooling("Sat")?,
-                },
-                to_sat_neighbor(self.req_neighbor("Sat")?)?,
-            )),
-            "Sequential" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Sat Sequential")?;
-                let converted: Result<Vec<SatSequentialStep>, String> = steps
-                    .iter()
-                    .map(|s| {
-                        Ok(SatSequentialStep {
-                            heuristic: s.to_sat_heuristic_setting()?,
-                            stop_condition: s.stop_condition.to_stop_condition(),
-                        })
-                    })
-                    .collect();
-                Ok(SatHeuristicSetting::Sequential(converted?))
-            }
-            "Iterated" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Sat Iterated")?;
-                if steps.len() != 2 {
-                    return Err(format!(
-                        "Sat Iterated requires exactly 2 steps (search + perturbation), but got {}",
-                        steps.len()
-                    ));
+impl BenchmarkableProblem for Sat {
+    fn build_base_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, String> {
+        match config.kind.as_str() {
+            "LocalSearch" => match config.req_neighbor("Sat")? {
+                NeighborKind::Flip => Ok(Box::new(LocalSearch::<SatFlipNeighbor>::new(cond))),
+                NeighborKind::Swap => Ok(Box::new(LocalSearch::<SatSwapNeighbor>::new(cond))),
+                n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
+            },
+            "TabuSearch" => {
+                let tenure = config.req_tabu("Sat")?;
+                match config.req_neighbor("Sat")? {
+                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<SatFlipNeighbor>::new(cond, tenure, None))),
+                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<SatSwapNeighbor>::new(cond, tenure, None))),
+                    n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
                 }
-                let converted: Result<Vec<SatSequentialStep>, String> = steps
-                    .iter()
-                    .map(|s| {
-                        Ok(SatSequentialStep {
-                            heuristic: s.to_sat_heuristic_setting()?,
-                            stop_condition: s.stop_condition.to_stop_condition(),
-                        })
-                    })
-                    .collect();
-                Ok(SatHeuristicSetting::Iterated(converted?))
             }
-            "Restart" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Sat Restart")?;
-                if steps.len() != 1 {
-                    return Err(format!(
-                        "Sat Restart requires exactly 1 step (inner heuristic), but got {}",
-                        steps.len()
-                    ));
+            "SimulatedAnnealing" => {
+                let temp = config.req_temp("Sat")?;
+                let cooling = config.req_cooling("Sat")?;
+                match config.req_neighbor("Sat")? {
+                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<SatFlipNeighbor>::new(cond, temp, cooling))),
+                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<SatSwapNeighbor>::new(cond, temp, cooling))),
+                    n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
                 }
-                let rc = self
-                    .restart_condition
-                    .as_ref()
-                    .ok_or("'restart_condition' required for Sat Restart")?;
-                Ok(SatHeuristicSetting::Restart {
-                    inner: Box::new(SatSequentialStep {
-                        heuristic: steps[0].to_sat_heuristic_setting()?,
-                        stop_condition: steps[0].stop_condition.to_stop_condition(),
-                    }),
-                    restart_condition: rc.to_stop_condition(),
-                })
             }
             k => Err(format!("Unknown kind '{}' for Sat", k)),
         }
     }
+}
 
-    fn to_tsp_heuristic_setting(&self) -> Result<TspHeuristicSetting, String> {
-        match self.kind.as_str() {
-            "LocalSearch" => Ok(TspHeuristicSetting::LocalSearch(to_tsp_neighbor(
-                self.req_neighbor("Tsp")?,
-            )?)),
-            "TabuSearch" => Ok(TspHeuristicSetting::TabuSearch(
-                TabuSearchSetting {
-                    tabu_tenure: self.req_tabu("Tsp")?,
-                },
-                to_tsp_neighbor(self.req_neighbor("Tsp")?)?,
-            )),
-            "SimulatedAnnealing" => Ok(TspHeuristicSetting::SimulatedAnnealing(
-                SimulatedAnnealingSetting {
-                    initial_temperature: self.req_temp("Tsp")?,
-                    cooling_rate: self.req_cooling("Tsp")?,
-                },
-                to_tsp_neighbor(self.req_neighbor("Tsp")?)?,
-            )),
-            "Sequential" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Tsp Sequential")?;
-                let converted: Result<Vec<TspSequentialStep>, String> = steps
-                    .iter()
-                    .map(|s| {
-                        Ok(TspSequentialStep {
-                            heuristic: s.to_tsp_heuristic_setting()?,
-                            stop_condition: s.stop_condition.to_stop_condition(),
-                        })
-                    })
-                    .collect();
-                Ok(TspHeuristicSetting::Sequential(converted?))
-            }
-            "Iterated" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Tsp Iterated")?;
-                if steps.len() != 2 {
-                    return Err(format!(
-                        "Tsp Iterated requires exactly 2 steps (search + perturbation), but got {}",
-                        steps.len()
-                    ));
+impl BenchmarkableProblem for TspWithCoordinates {
+    fn build_base_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, String> {
+        match config.kind.as_str() {
+            "LocalSearch" => match config.req_neighbor("Tsp")? {
+                NeighborKind::TwoOpt => Ok(Box::new(LocalSearch::<TspTwoOptNeighbor>::new(cond))),
+                NeighborKind::Relocate => Ok(Box::new(LocalSearch::<TspRelocateNeighbor>::new(cond))),
+                n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
+            },
+            "TabuSearch" => {
+                let tenure = config.req_tabu("Tsp")?;
+                match config.req_neighbor("Tsp")? {
+                    NeighborKind::TwoOpt => Ok(Box::new(TabuSearch::<TspTwoOptNeighbor>::new(cond, tenure, None))),
+                    NeighborKind::Relocate => Ok(Box::new(TabuSearch::<TspRelocateNeighbor>::new(cond, tenure, None))),
+                    n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
                 }
-                let converted: Result<Vec<TspSequentialStep>, String> = steps
-                    .iter()
-                    .map(|s| {
-                        Ok(TspSequentialStep {
-                            heuristic: s.to_tsp_heuristic_setting()?,
-                            stop_condition: s.stop_condition.to_stop_condition(),
-                        })
-                    })
-                    .collect();
-                Ok(TspHeuristicSetting::Iterated(converted?))
             }
-            "Restart" => {
-                let steps = self
-                    .steps
-                    .as_ref()
-                    .ok_or("'steps' required for Tsp Restart")?;
-                if steps.len() != 1 {
-                    return Err(format!(
-                        "Tsp Restart requires exactly 1 step (inner heuristic), but got {}",
-                        steps.len()
-                    ));
+            "SimulatedAnnealing" => {
+                let temp = config.req_temp("Tsp")?;
+                let cooling = config.req_cooling("Tsp")?;
+                match config.req_neighbor("Tsp")? {
+                    NeighborKind::TwoOpt => Ok(Box::new(SimulatedAnnealing::<TspTwoOptNeighbor>::new(cond, temp, cooling))),
+                    NeighborKind::Relocate => Ok(Box::new(SimulatedAnnealing::<TspRelocateNeighbor>::new(cond, temp, cooling))),
+                    n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
                 }
-                let rc = self
-                    .restart_condition
-                    .as_ref()
-                    .ok_or("'restart_condition' required for Tsp Restart")?;
-                Ok(TspHeuristicSetting::Restart {
-                    inner: Box::new(TspSequentialStep {
-                        heuristic: steps[0].to_tsp_heuristic_setting()?,
-                        stop_condition: steps[0].stop_condition.to_stop_condition(),
-                    }),
-                    restart_condition: rc.to_stop_condition(),
-                })
             }
             k => Err(format!("Unknown kind '{}' for Tsp", k)),
         }
     }
 }
 
-fn to_max_cut_neighbor(n: &NeighborKind) -> Result<MaxCutNeighborKind, String> {
-    match n {
-        NeighborKind::Flip => Ok(MaxCutNeighborKind::Flip),
-        NeighborKind::Swap => Ok(MaxCutNeighborKind::Swap),
-        _ => Err(format!(
-            "Invalid neighbor {:?} for MaxCut (use Flip or Swap)",
-            n
-        )),
-    }
-}
-
-fn to_qubo_neighbor(n: &NeighborKind) -> Result<QuboNeighborKind, String> {
-    match n {
-        NeighborKind::Flip => Ok(QuboNeighborKind::Flip),
-        NeighborKind::Swap => Ok(QuboNeighborKind::Swap),
-        _ => Err(format!(
-            "Invalid neighbor {:?} for Qubo (use Flip or Swap)",
-            n
-        )),
-    }
-}
-
-fn to_sat_neighbor(n: &NeighborKind) -> Result<SatNeighborKind, String> {
-    match n {
-        NeighborKind::Flip => Ok(SatNeighborKind::Flip),
-        NeighborKind::Swap => Ok(SatNeighborKind::Swap),
-        _ => Err(format!(
-            "Invalid neighbor {:?} for Sat (use Flip or Swap)",
-            n
-        )),
-    }
-}
-
-fn to_tsp_neighbor(n: &NeighborKind) -> Result<TspNeighborKind, String> {
-    match n {
-        NeighborKind::TwoOpt => Ok(TspNeighborKind::TwoOpt),
-        NeighborKind::Relocate => Ok(TspNeighborKind::Relocate),
-        _ => Err(format!(
-            "Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)",
-            n
-        )),
-    }
-}
-
 // ---------------------------------------------------------------------------
-// BenchmarkResult
+// Generic heuristic builder
 // ---------------------------------------------------------------------------
 
-/// The result of a single experiment run (configuration + metrics).
-#[derive(Serialize)]
-pub struct BenchmarkResult {
-    /// Configuration required to reproduce this run (instance, heuristic, stopping condition).
-    pub setting: BenchmarkSetting,
-    /// Run status: `"success"` or `"error: <message>"`.
-    pub status: String,
-    /// Best objective value found (maximized for MaxCut/SAT, minimized for QUBO/TSP).
-    pub best_objective: f64,
-    /// Iteration at which the best solution was found.
-    pub best_iteration: u64,
-    /// Elapsed time (seconds) until the best solution was found.
-    pub time_to_best_secs: f64,
-    /// Total elapsed time (seconds) for the run.
-    pub total_time_secs: f64,
-    /// Best solution encoded as a list of indices (0-indexed):
-    /// - MaxCut: vertex indices on the cut side
-    /// - QUBO: variable indices set to 1
-    /// - SAT: variable indices set to `true`
-    /// - TSP: city visit order
-    pub solution: Vec<usize>,
+/// Builds a `Box<dyn Heuristic<P>>` from a [`HeuristicConfig`].
+///
+/// Meta-heuristics (Sequential, Iterated, Restart) are handled generically here.
+/// Base algorithms are dispatched to [`BenchmarkableProblem::build_base_heuristic`].
+fn build_heuristic<P: BenchmarkableProblem + 'static>(
+    config: &HeuristicConfig,
+) -> Result<Box<dyn Heuristic<P>>, String>
+where
+    P::Solution: BenchmarkSolution,
+{
+    let cond = config.stop_condition.to_stop_condition();
+    match config.kind.as_str() {
+        "Sequential" => {
+            let steps = config
+                .steps
+                .as_ref()
+                .ok_or("'steps' required for Sequential")?;
+            let sub: Result<Vec<Box<dyn Heuristic<P>>>, String> =
+                steps.iter().map(build_heuristic::<P>).collect();
+            Ok(Box::new(Sequential::new(cond, sub?)))
+        }
+        "Iterated" => {
+            let steps = config
+                .steps
+                .as_ref()
+                .ok_or("'steps' required for Iterated")?;
+            if steps.len() != 2 {
+                return Err(format!(
+                    "Iterated requires exactly 2 steps (search + perturbation), but got {}",
+                    steps.len()
+                ));
+            }
+            let search = build_heuristic::<P>(&steps[0])?;
+            let perturbation = build_heuristic::<P>(&steps[1])?;
+            Ok(Box::new(Iterated::new(cond, search, perturbation)))
+        }
+        "Restart" => {
+            let steps = config
+                .steps
+                .as_ref()
+                .ok_or("'steps' required for Restart")?;
+            if steps.len() != 1 {
+                return Err(format!(
+                    "Restart requires exactly 1 step (inner heuristic), but got {}",
+                    steps.len()
+                ));
+            }
+            let inner = build_heuristic::<P>(&steps[0])?;
+            let rc = config
+                .restart_condition
+                .as_ref()
+                .ok_or("'restart_condition' required for Restart")?;
+            Ok(Box::new(Restart::new(cond, inner, rc.to_stop_condition())))
+        }
+        _ => P::build_base_heuristic(config, cond),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1163,28 +549,18 @@ impl Benchmark {
         }
     }
 
-    /// Runs a single experiment defined by `setting` and appends the result.
-    pub fn run(&mut self, setting: BenchmarkSetting) {
-        let metrics = match &setting {
-            BenchmarkSetting::MaxCut(s) => run_problem::<MaxCut>(
-                &s.instance_path,
-                s.heuristic.build(s.stop_condition.clone()),
-            ),
-            BenchmarkSetting::Qubo(s) => run_problem::<Qubo>(
-                &s.instance_path,
-                s.heuristic.build(s.stop_condition.clone()),
-            ),
-            BenchmarkSetting::Sat(s) => run_problem::<Sat>(
-                &s.instance_path,
-                s.heuristic.build(s.stop_condition.clone()),
-            ),
-            BenchmarkSetting::Tsp(s) => run_problem::<TspWithCoordinates>(
-                &s.instance_path,
-                s.heuristic.build(s.stop_condition.clone()),
-            ),
-        };
+    /// Runs a single experiment and appends the result.
+    pub fn run(
+        &mut self,
+        instance_path: &str,
+        problem: &ProblemKind,
+        heuristic_config: &HeuristicConfig,
+    ) {
+        let metrics = run_for_problem_kind(problem, heuristic_config, instance_path);
         self.results.push(BenchmarkResult {
-            setting,
+            instance_path: instance_path.to_string(),
+            problem: problem.clone(),
+            heuristic: heuristic_config.clone(),
             status: metrics.status,
             best_objective: metrics.best_objective,
             best_iteration: metrics.best_iteration,
@@ -1196,7 +572,7 @@ impl Benchmark {
 }
 
 // ---------------------------------------------------------------------------
-// Generic run function
+// Generic run functions
 // ---------------------------------------------------------------------------
 
 struct RunMetrics {
@@ -1206,6 +582,39 @@ struct RunMetrics {
     time_to_best_secs: f64,
     total_time_secs: f64,
     solution: Vec<usize>,
+}
+
+fn run_for_problem_kind(
+    problem_kind: &ProblemKind,
+    config: &HeuristicConfig,
+    instance_path: &str,
+) -> RunMetrics {
+    match problem_kind {
+        ProblemKind::MaxCut => run_typed::<MaxCut>(instance_path, config),
+        ProblemKind::Qubo => run_typed::<Qubo>(instance_path, config),
+        ProblemKind::Sat => run_typed::<Sat>(instance_path, config),
+        ProblemKind::Tsp => run_typed::<TspWithCoordinates>(instance_path, config),
+    }
+}
+
+fn run_typed<P: BenchmarkableProblem + 'static>(instance_path: &str, config: &HeuristicConfig) -> RunMetrics
+where
+    P::Solution: BenchmarkSolution,
+{
+    let heuristic = match build_heuristic::<P>(config) {
+        Ok(h) => h,
+        Err(e) => {
+            return RunMetrics {
+                status: format!("config error: {}", e),
+                best_objective: 0.0,
+                best_iteration: 0,
+                time_to_best_secs: 0.0,
+                total_time_secs: 0.0,
+                solution: Vec::new(),
+            };
+        }
+    };
+    run_problem::<P>(instance_path, heuristic)
 }
 
 fn run_problem<P>(instance_path: &str, mut heuristic: Box<dyn Heuristic<P>>) -> RunMetrics
@@ -1360,7 +769,7 @@ fn expand_instance_paths(config: &BenchmarkConfig) -> Result<Vec<(String, Proble
 }
 
 impl Benchmark {
-    /// Runs all (instance × heuristic) combinations from a `BenchmarkConfig` and returns a report.
+    /// Runs all (instance x heuristic) combinations from a `BenchmarkConfig` and returns a report.
     ///
     /// Instance paths support glob patterns (e.g. `"data/max_cut/G[1-9]*"`).
     /// For each combination, the heuristic is run `config.num_runs` times.
@@ -1378,24 +787,6 @@ impl Benchmark {
                 let mut runs: Vec<SingleRunResult> = Vec::new();
 
                 for run_index in 0..config.num_runs {
-                    let setting =
-                        match heuristic_cfg.to_benchmark_setting(instance_path, problem_kind) {
-                            Ok(s) => s,
-                            Err(e) => {
-                                tracing::error!("Config error for {}: {}", instance_path, e);
-                                runs.push(SingleRunResult {
-                                    run_index,
-                                    status: format!("config error: {}", e),
-                                    best_objective: 0.0,
-                                    best_iteration: 0,
-                                    time_to_best_secs: 0.0,
-                                    total_time_secs: 0.0,
-                                    solution: Vec::new(),
-                                });
-                                continue;
-                            }
-                        };
-
                     tracing::info!(
                         run = run_index + 1,
                         total = config.num_runs,
@@ -1407,24 +798,8 @@ impl Benchmark {
                         "Starting run"
                     );
 
-                    let metrics = match &setting {
-                        BenchmarkSetting::MaxCut(s) => run_problem::<MaxCut>(
-                            &s.instance_path,
-                            s.heuristic.build(s.stop_condition.clone()),
-                        ),
-                        BenchmarkSetting::Qubo(s) => run_problem::<Qubo>(
-                            &s.instance_path,
-                            s.heuristic.build(s.stop_condition.clone()),
-                        ),
-                        BenchmarkSetting::Sat(s) => run_problem::<Sat>(
-                            &s.instance_path,
-                            s.heuristic.build(s.stop_condition.clone()),
-                        ),
-                        BenchmarkSetting::Tsp(s) => run_problem::<TspWithCoordinates>(
-                            &s.instance_path,
-                            s.heuristic.build(s.stop_condition.clone()),
-                        ),
-                    };
+                    let metrics =
+                        run_for_problem_kind(problem_kind, heuristic_cfg, instance_path);
 
                     tracing::info!(
                         run = run_index + 1,
