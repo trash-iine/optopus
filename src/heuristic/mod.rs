@@ -1,6 +1,7 @@
 //! heuristic module provides various heuristic algorithms for combinatorial optimization problems.
 
 mod beam_search;
+mod crossover;
 mod genetic_algorithm;
 mod local_search;
 mod random_walk;
@@ -11,7 +12,8 @@ mod specific;
 mod tabu_search;
 
 pub use beam_search::BeamSearch;
-pub use genetic_algorithm::{GeneticAlgorithm, SubProblemBasedCrossover};
+pub use crossover::SubProblemBasedCrossover;
+pub use genetic_algorithm::GeneticAlgorithm;
 pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;
 pub use restart::Restart;
