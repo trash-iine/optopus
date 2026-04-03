@@ -53,24 +53,19 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         prob: &MaxCut,
         solution: &mut MaxCutSolution,
     ) -> Result<(), OptError> {
-        // cut side of the vertex
-        let bi = *solution.cut.get(&self.i).ok_or_else(|| {
-            OptError::InvalidState(format!("vertex {} is not found in solution.", self.i))
-        })?;
+        let bi = solution.cut[self.i];
 
         // Flip
-        solution.cut.insert(self.i, !bi);
+        solution.cut[self.i] = !bi;
 
         // Update the gain for the flipped vertex
-        solution.gain.insert(self.i, -self.gain);
-        for (&j, &w) in prob.iter_on_adjacency(&self.i) {
-            let bj = *solution.cut.get(&j).ok_or_else(|| {
-                OptError::InvalidState(format!("vertex {} is not found in the solution.", j))
-            })?;
+        solution.gain[self.i] = -self.gain;
+        for &(j, w) in prob.iter_on_adjacency(self.i) {
+            let bj = solution.cut[j];
             if bi ^ bj {
-                *solution.gain.entry(j).or_insert(0.0) += w * 2.0;
+                solution.gain[j] += w * 2.0;
             } else {
-                *solution.gain.entry(j).or_insert(0.0) -= w * 2.0;
+                solution.gain[j] -= w * 2.0;
             }
         }
 
@@ -80,13 +75,10 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         Ok(())
     }
 
-    fn iter(_: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
-        sol.cut.keys().map(move |&i| MaxCutFlipNeighbor {
+    fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
+        prob.iter_on_vertices().map(|&i| MaxCutFlipNeighbor {
             i,
-            gain: *sol
-                .gain
-                .get(&i)
-                .expect("gain entry must exist for every vertex in cut"),
+            gain: sol.gain[i],
         })
     }
 
@@ -166,12 +158,12 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     fn apply_to_solution(&self, prob: &MaxCut, sol: &mut MaxCutSolution) -> Result<(), OptError> {
         let flip_i = MaxCutFlipNeighbor {
             i: self.i,
-            gain: sol.gain[&self.i],
+            gain: sol.gain[self.i],
         };
         flip_i.apply_to_solution(prob, sol)?;
         let flip_j = MaxCutFlipNeighbor {
             i: self.j,
-            gain: sol.gain[&self.j],
+            gain: sol.gain[self.j],
         };
         flip_j.apply_to_solution(prob, sol)?;
         Ok(())
@@ -180,12 +172,12 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
         prob.iter_on_vertices().flat_map(move |&i| {
             prob.iter_on_vertices()
-                .filter(move |&&j| j < i && (sol.cut[&i] ^ sol.cut[&j]))
+                .filter(move |&&j| j < i && (sol.cut[i] ^ sol.cut[j]))
                 .map(move |&j| Self {
                     i,
                     j,
-                    gain: sol.gain[&i]
-                        + sol.gain[&j]
+                    gain: sol.gain[i]
+                        + sol.gain[j]
                         + if prob.has_edge(i, j) {
                             2.0 * prob.get_weight(i, j)
                         } else {
@@ -229,13 +221,13 @@ mod tests {
         mc.add_weight(1, 2, 1.0);
 
         let mut state = SearchState::new(&mc);
-        state.solution.cut.insert(0, true);
-        state.solution.cut.insert(1, false);
-        state.solution.cut.insert(2, true);
+        state.solution.cut[0] = true;
+        state.solution.cut[1] = false;
+        state.solution.cut[2] = true;
 
         let neighbor = MaxCutFlipNeighbor { i: 1, gain: -2.0 };
         state.apply(&neighbor).unwrap();
 
-        assert_eq!(state.solution.cut[&1], true);
+        assert_eq!(state.solution.cut[1], true);
     }
 }

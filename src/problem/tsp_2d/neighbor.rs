@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use super::problem::{TspSolution, TspWithCoordinates, normalize_edge_pair};
 use crate::{
     error::OptError,
@@ -187,42 +185,38 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
 
     fn iter(prob: &TspWithCoordinates, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
         let n = prob.get_n();
-        let tour = Arc::new(sol.tour.clone());
-        let coords = Arc::new(prob.coordinates.clone());
+        // Eager collection: no Arc needed since all items are built before returning.
+        let mut items: Vec<TspRelocateNeighbor> = Vec::with_capacity(n * n.saturating_sub(2));
 
-        (0..n).flat_map(move |pos| {
-            let tour = Arc::clone(&tour);
-            let coords = Arc::clone(&coords);
+        for pos in 0..n {
             let prev = (pos + n - 1) % n;
             let next = (pos + 1) % n;
 
-            (0..n).filter_map(move |ins| {
+            for ins in 0..n {
                 // Inserting after pos itself or after its predecessor (prev) would
                 // leave the tour unchanged, so skip these cases
                 if ins == pos || ins == prev {
-                    return None;
+                    continue;
                 }
-
-                let dist = |a: usize, b: usize| -> f64 {
-                    let (x1, y1) = coords[a];
-                    let (x2, y2) = coords[b];
-                    ((x1 - x2).powi(2) + (y1 - y2).powi(2)).sqrt()
-                };
 
                 let ins_next = (ins + 1) % n;
 
                 // Cost saved by removing city pos from prev-pos-next
-                let removal_gain = dist(tour[prev], tour[pos]) + dist(tour[pos], tour[next])
-                    - dist(tour[prev], tour[next]);
+                let removal_gain = prob.distance(sol.tour[prev], sol.tour[pos])
+                    + prob.distance(sol.tour[pos], sol.tour[next])
+                    - prob.distance(sol.tour[prev], sol.tour[next]);
 
                 // Additional cost of inserting city pos between ins and ins_next
-                let insertion_cost = dist(tour[ins], tour[pos]) + dist(tour[pos], tour[ins_next])
-                    - dist(tour[ins], tour[ins_next]);
+                let insertion_cost = prob.distance(sol.tour[ins], sol.tour[pos])
+                    + prob.distance(sol.tour[pos], sol.tour[ins_next])
+                    - prob.distance(sol.tour[ins], sol.tour[ins_next]);
 
                 let gain = insertion_cost - removal_gain;
-                Some(TspRelocateNeighbor { pos, ins, gain })
-            })
-        })
+                items.push(TspRelocateNeighbor { pos, ins, gain });
+            }
+        }
+
+        items.into_iter()
     }
 
     fn move_to_be_better_than(

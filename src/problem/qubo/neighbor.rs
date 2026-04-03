@@ -57,27 +57,21 @@ impl Evaluate<Coefficient> for QuboFlipNeighbor {
 
 impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
-        let bi = *sol.x.get(&self.i).ok_or_else(|| {
-            OptError::InvalidState(format!("{} is not found in solution", self.i))
-        })?;
+        let bi = sol.x[self.i];
 
         // Flip the variable
-        sol.x.insert(self.i, !bi);
+        sol.x[self.i] = !bi;
 
-        // Update gain
-        sol.gain.insert(self.i, -self.gain);
+        // Update gain for flipped variable
+        sol.gain[self.i] = -self.gain;
 
-        for (&j, &q) in prob.iter_on_adjacency(self.i) {
+        for &(j, q) in prob.iter_on_adjacency(self.i) {
             if j == self.i {
                 continue;
             }
-
-            let bj = *sol
-                .x
-                .get(&j)
-                .ok_or_else(|| OptError::InvalidState(format!("{} is not found in solution", j)))?;
+            let bj = sol.x[j];
             let delta = if bi == bj { q } else { -q };
-            *sol.gain.entry(j).or_insert(0) += delta;
+            sol.gain[j] += delta;
         }
 
         // Update objective
@@ -89,7 +83,7 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
         prob.iter_on_variables().map(move |&i| QuboFlipNeighbor {
             i,
-            gain: sol.gain[&i],
+            gain: sol.gain[i],
         })
     }
 
@@ -153,13 +147,13 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
         let flip_i = QuboFlipNeighbor {
             i: self.i,
-            gain: sol.gain[&self.i],
+            gain: sol.gain[self.i],
         };
         flip_i.apply_to_solution(prob, sol)?;
 
         let flip_j = QuboFlipNeighbor {
             i: self.j,
-            gain: sol.gain[&self.j],
+            gain: sol.gain[self.j],
         };
         flip_j.apply_to_solution(prob, sol)?;
 
@@ -169,11 +163,11 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
         prob.iter_on_variables().flat_map(move |&i| {
             prob.iter_on_variables()
-                .filter(move |&&j| j < i && (sol.x[&i] ^ sol.x[&j]))
+                .filter(move |&&j| j < i && (sol.x[i] ^ sol.x[j]))
                 .map(move |&j| Self {
                     i,
                     j,
-                    gain: sol.gain[&i] + sol.gain[&j]
+                    gain: sol.gain[i] + sol.gain[j]
                         - if let Some(q) = prob.get_q(i, j) { q } else { 0 },
                 })
         })
@@ -188,7 +182,6 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
 mod tests {
     use super::*;
     use crate::search_state::SearchState;
-    use std::collections::HashMap;
 
     fn make_qubo() -> Qubo {
         let mut q = Qubo::new();
@@ -200,8 +193,16 @@ mod tests {
         q
     }
 
-    fn make_solution(qubo: &Qubo, x: HashMap<usize, bool>) -> QuboSolution {
-        let gain: HashMap<_, _> = x.keys().map(|&i| (i, qubo.calculate_gain(&x, i))).collect();
+    fn make_solution(qubo: &Qubo, assignments: &[(usize, bool)]) -> QuboSolution {
+        let n = qubo.iter_on_variables().copied().max().map(|m| m + 1).unwrap_or(0);
+        let mut x = vec![false; n];
+        for &(i, v) in assignments {
+            x[i] = v;
+        }
+        let mut gain = vec![0; n];
+        for &i in qubo.iter_on_variables() {
+            gain[i] = qubo.calculate_gain(&x, i);
+        }
         let objective = qubo.calculate_energy(&x);
         QuboSolution { x, gain, objective }
     }
@@ -209,7 +210,7 @@ mod tests {
     #[test]
     fn test_flip_apply_consistency() {
         let qubo = make_qubo();
-        let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
+        let sol = make_solution(&qubo, &[(0, true), (1, false), (2, true)]);
 
         for neighbor in QuboFlipNeighbor::iter(&qubo, &sol) {
             let mut s = sol.clone();
@@ -227,9 +228,9 @@ mod tests {
             for &i in qubo.iter_on_variables() {
                 let expected_gain = qubo.calculate_gain(&s.x, i);
                 assert_eq!(
-                    s.gain[&i], expected_gain,
+                    s.gain[i], expected_gain,
                     "flip {}: gain[{}]={} expected={}",
-                    neighbor.i, i, s.gain[&i], expected_gain
+                    neighbor.i, i, s.gain[i], expected_gain
                 );
             }
         }
@@ -238,11 +239,11 @@ mod tests {
     #[test]
     fn test_flip_gain_matches_energy_delta() {
         let qubo = make_qubo();
-        let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
+        let sol = make_solution(&qubo, &[(0, true), (1, false), (2, true)]);
 
         for neighbor in QuboFlipNeighbor::iter(&qubo, &sol) {
             let mut flipped_x = sol.x.clone();
-            flipped_x.insert(neighbor.i, !flipped_x[&neighbor.i]);
+            flipped_x[neighbor.i] = !flipped_x[neighbor.i];
             let expected_delta = qubo.calculate_energy(&flipped_x) - sol.objective;
             assert_eq!(
                 neighbor.gain, expected_delta,
@@ -255,7 +256,7 @@ mod tests {
     #[test]
     fn test_swap_apply_consistency() {
         let qubo = make_qubo();
-        let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
+        let sol = make_solution(&qubo, &[(0, true), (1, false), (2, true)]);
 
         for neighbor in QuboSwapNeighbor::iter(&qubo, &sol) {
             let mut s = sol.clone();
@@ -273,12 +274,12 @@ mod tests {
     #[test]
     fn test_swap_gain_matches_energy_delta() {
         let qubo = make_qubo();
-        let sol = make_solution(&qubo, HashMap::from([(0, true), (1, false), (2, true)]));
+        let sol = make_solution(&qubo, &[(0, true), (1, false), (2, true)]);
 
         for neighbor in QuboSwapNeighbor::iter(&qubo, &sol) {
             let mut flipped_x = sol.x.clone();
-            flipped_x.insert(neighbor.i, !flipped_x[&neighbor.i]);
-            flipped_x.insert(neighbor.j, !flipped_x[&neighbor.j]);
+            flipped_x[neighbor.i] = !flipped_x[neighbor.i];
+            flipped_x[neighbor.j] = !flipped_x[neighbor.j];
             let expected_delta = qubo.calculate_energy(&flipped_x) - sol.objective;
             assert_eq!(
                 neighbor.gain, expected_delta,

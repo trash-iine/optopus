@@ -1,21 +1,25 @@
 use crate::search_state::{ProblemTrait, Rankable};
-use std::{collections::HashMap, io::BufRead};
 
 /// The MaxCut problem.
 ///
 /// Given an undirected weighted graph, MaxCut seeks a partition of the vertices into
 /// two sets that maximizes the total weight of edges crossing the partition.
 pub struct MaxCut {
-    adj: HashMap<usize, HashMap<usize, f32>>,
+    /// `adj[i]` = list of `(j, weight)` for all neighbours of vertex `i`.
+    adj: Vec<Vec<(usize, f32)>>,
+    /// Sorted list of vertex IDs that appear in the graph (used by `iter_on_vertices`).
+    vertices: Vec<usize>,
 }
 
 /// A solution for the MaxCut problem.
 #[derive(Debug, Clone)]
 pub struct MaxCutSolution {
-    /// The cut assignment for each vertex (true/false for each side).
-    pub cut: HashMap<usize, bool>,
-    /// The gain of flipping the cut of each vertex.
-    pub gain: HashMap<usize, f32>,
+    /// The cut assignment for each vertex: `cut[i]` is the side of vertex `i`.
+    /// Sized to `max_vertex_id + 1`; only indices in `MaxCut::vertices` are meaningful.
+    pub cut: Vec<bool>,
+    /// The gain of flipping each vertex: `gain[i]` = change in cut weight when flipping `i`.
+    /// Sized to `max_vertex_id + 1`.
+    pub gain: Vec<f32>,
     /// The total weight of edges crossing the cut.
     pub objective: f32,
 }
@@ -26,8 +30,15 @@ impl Rankable for MaxCutSolution {
     }
 }
 
+impl MaxCutSolution {
+    /// Iterates over all vertices in the solution.
+    pub fn iter_on_vertices(&self) -> impl Iterator<Item = usize> + '_ {
+        0..self.cut.len()
+    }
+}
+
 impl MaxCut {
-    /// Creates a new [`MaxCut`].
+    /// Creates a new empty [`MaxCut`].
     ///
     /// # Examples
     ///
@@ -36,11 +47,12 @@ impl MaxCut {
     /// ```
     pub fn new() -> Self {
         Self {
-            adj: HashMap::new(),
+            adj: vec![],
+            vertices: vec![],
         }
     }
 
-    /// Returns the number of vertices in the max cut graph.
+    /// Returns the number of vertices in the graph (`max_vertex_id + 1`).
     ///
     /// # Examples
     ///
@@ -56,7 +68,7 @@ impl MaxCut {
         self.adj.len()
     }
 
-    /// Returns the iterator visiting all vertices in the graph.
+    /// Returns an iterator visiting all vertices that have at least one edge.
     ///
     /// # Examples
     ///
@@ -64,17 +76,16 @@ impl MaxCut {
     /// let mut mc = optopus::problem::MaxCut::new();
     /// mc.add_weight(0, 1, 1.0);
     /// mc.add_weight(0, 2, 1.0);
-    /// assert_eq!(mc.len(), 3);
     ///
     /// for i in mc.iter_on_vertices() {
-    ///    println!("{}", i); // 0, 1, 2 (in any order)
+    ///    println!("{}", i); // 0, 1, 2
     /// }
     /// ```
     pub fn iter_on_vertices(&self) -> impl Iterator<Item = &usize> {
-        return self.adj.keys();
+        self.vertices.iter()
     }
 
-    /// Returns the iterator visiting all edges of the vertex `i`.
+    /// Returns an iterator over `(neighbour_id, weight)` pairs for vertex `i`.
     ///
     /// # Examples
     ///
@@ -83,22 +94,19 @@ impl MaxCut {
     /// mc.add_weight(0, 1, 1.0);
     /// mc.add_weight(0, 2, 1.0);
     /// mc.add_weight(1, 2, 1.0);
-    /// for (&j, &w) in mc.iter_on_adjacency(&0) {
+    /// for &(j, w) in mc.iter_on_adjacency(0) {
     ///     println!("{} {}", j, w); // 1 1.0, 2 1.0
     /// }
     /// ```
-    pub fn iter_on_adjacency<'a>(
-        &'a self,
-        i: &usize,
-    ) -> Box<dyn Iterator<Item = (&'a usize, &'a f32)> + 'a> {
-        if let Some(hm) = self.adj.get(i) {
-            return Box::new(hm.iter());
+    pub fn iter_on_adjacency(&self, i: usize) -> std::slice::Iter<'_, (usize, f32)> {
+        if i < self.adj.len() {
+            self.adj[i].iter()
         } else {
-            return Box::new(std::iter::empty());
+            [].iter()
         }
     }
 
-    /// Adds the weight `w` between the node `i` and `j`.
+    /// Adds (or accumulates) the weight `w` on edge `(i, j)`.
     ///
     /// # Examples
     ///
@@ -109,21 +117,29 @@ impl MaxCut {
     /// mc.add_weight(0, 1, 2.0);
     /// ```
     pub fn add_weight(&mut self, i: usize, j: usize, w: f32) {
-        *self
-            .adj
-            .entry(i)
-            .or_insert(HashMap::new())
-            .entry(j)
-            .or_insert(0.0) += w;
-        *self
-            .adj
-            .entry(j)
-            .or_insert(HashMap::new())
-            .entry(i)
-            .or_insert(0.0) += w;
+        let n = i.max(j) + 1;
+        if self.adj.len() < n {
+            self.adj.resize_with(n, Vec::new);
+        }
+        self.add_directed(i, j, w);
+        self.add_directed(j, i, w);
+        // Update the sorted vertex list for any newly seen vertices.
+        for &v in &[i, j] {
+            if let Err(pos) = self.vertices.binary_search(&v) {
+                self.vertices.insert(pos, v);
+            }
+        }
     }
 
-    /// Gets the weight between the node `i` and `j`.
+    fn add_directed(&mut self, from: usize, to: usize, w: f32) {
+        if let Some(entry) = self.adj[from].iter_mut().find(|(v, _)| *v == to) {
+            entry.1 += w;
+        } else {
+            self.adj[from].push((to, w));
+        }
+    }
+
+    /// Gets the weight of edge `(i, j)`, returning `0.0` if no such edge exists.
     ///
     /// # Examples
     ///
@@ -138,20 +154,18 @@ impl MaxCut {
     /// assert_eq!(mc.get_weight(0, 1), 3.0);
     /// ```
     pub fn get_weight(&self, i: usize, j: usize) -> f32 {
-        // if let Some(hm) = self.adj.get(&i) {
-        //     if let Some(&w) = hm.get(&j) {
-        //         return w;
-        //     } else {
-        //         return 0.0;
-        //     }
-        // } else {
-        //     return 0.0;
-        // }
-        // *self.adj.get(&i).and_then(|hm| hm.get(&j)).unwrap_or(&0.0)
-        self.adj[&i][&j]
+        if i < self.adj.len() {
+            self.adj[i]
+                .iter()
+                .find(|(v, _)| *v == j)
+                .map(|(_, w)| *w)
+                .unwrap_or(0.0)
+        } else {
+            0.0
+        }
     }
 
-    /// Checks if there is an edge between the node `i` and `j`.
+    /// Returns `true` if there is a non-zero-weight edge between `i` and `j`.
     ///
     /// # Examples
     ///
@@ -162,41 +176,21 @@ impl MaxCut {
     /// assert!(!mc.has_edge(0, 2));
     /// ```
     pub fn has_edge(&self, i: usize, j: usize) -> bool {
-        self.adj.get(&i).and_then(|hm| hm.get(&j)).is_some()
+        i < self.adj.len() && self.adj[i].iter().any(|(v, _)| *v == j)
     }
 
-    /// Calculates the cut size of the given cut.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let mut mc = optopus::problem::MaxCut::new();
-    /// mc.add_weight(0, 1, 1.0);
-    /// mc.add_weight(0, 2, 1.0);
-    /// mc.add_weight(1, 2, 1.0);
-    ///
-    /// let cut = std::collections::HashMap::from([(0, false), (1, false), (2, true)]);
-    /// assert_eq!(mc.calculate_cut_size(&cut), 2.0);
-    /// ```
-    pub fn calculate_cut_size(&self, cut: &HashMap<usize, bool>) -> f32 {
+    /// Calculates the cut size of the given assignment slice (indexed by vertex ID).
+    pub fn calculate_cut_size(&self, cut: &[bool]) -> f32 {
         let mut ret = 0.0;
-
-        for i in self.iter_on_vertices() {
-            let i_side = *cut
-                .get(i)
-                .expect(format!("{} is not found in solution", *i).as_str());
-            for (j, &w) in self.iter_on_adjacency(i) {
-                let j_side = *cut
-                    .get(j)
-                    .expect(format!("{} is not found in solution", *j).as_str());
-
-                if i_side ^ j_side {
+        for &i in &self.vertices {
+            let bi = cut[i];
+            for &(j, w) in &self.adj[i] {
+                if bi ^ cut[j] {
                     ret += w;
                 }
             }
         }
-
-        return ret / 2.0;
+        ret / 2.0
     }
 
     /// Loads a MaxCut problem instance from a file.
@@ -207,12 +201,13 @@ impl MaxCut {
     /// i j w
     /// ...
     pub fn load_from_file(filename: &str) -> Result<Self, Box<dyn core::error::Error>> {
+        use std::io::BufRead;
         let file = std::fs::File::open(filename)?;
         let reader = std::io::BufReader::new(file);
         let mut line_iter = reader.lines();
 
-        // parse the number of vertices and edges (not used)
-        let (_, _) = {
+        // parse the number of vertices and edges
+        let (n, _) = {
             let line = line_iter.next().ok_or("File is empty")??;
             let mut iter = line.split_whitespace();
             let n = iter.next().ok_or("Not found N")?.parse::<usize>()?;
@@ -220,44 +215,29 @@ impl MaxCut {
             (n, m)
         };
 
-        let mut mc = MaxCut::new();
+        let mut mc = MaxCut {
+            adj: vec![vec![]; n],
+            vertices: (0..n).collect(),
+        };
         while let Some(Ok(line)) = line_iter.next() {
             let mut iter = line.split_whitespace();
             let i = iter.next().ok_or("Not found i")?.parse::<usize>()? - 1;
             let j = iter.next().ok_or("Not found j")?.parse::<usize>()? - 1;
             let w = iter.next().ok_or("Not found w")?.parse::<f32>()?;
-
-            mc.add_weight(i, j, w);
+            // File-loaded instances never have duplicate edges, so push directly.
+            mc.adj[i].push((j, w));
+            mc.adj[j].push((i, w));
         }
 
         Ok(mc)
     }
 
-    /// Calculates the gain of flipping the cut of vertex `i`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let mut mc = optopus::problem::MaxCut::new();
-    /// mc.add_weight(0, 1, 1.0);
-    /// mc.add_weight(0, 2, 1.0);
-    /// mc.add_weight(1, 2, 1.0);
-    ///
-    /// let cut = std::collections::HashMap::from([(0, true), (1, false), (2, false)]);
-    /// assert_eq!(mc.calculate_gain(&cut, 0), -2.0);
-    /// ```
-    pub fn calculate_gain(&self, cut: &HashMap<usize, bool>, i: usize) -> f32 {
-        let i_side = *cut
-            .get(&i)
-            .expect(format!("{} is not found in solution", i).as_str());
-        self.iter_on_adjacency(&i)
-            .map(|(j, &w)| {
-                let j_side = *cut
-                    .get(j)
-                    .expect(format!("{} is not found in solution", j).as_str());
-
-                if i_side ^ j_side { -w } else { w }
-            })
+    /// Calculates the gain of flipping vertex `i` given the current cut assignment slice.
+    pub fn calculate_gain(&self, cut: &[bool], i: usize) -> f32 {
+        let bi = cut[i];
+        self.adj[i]
+            .iter()
+            .map(|&(j, w)| if bi ^ cut[j] { -w } else { w })
             .sum()
     }
 }
@@ -265,26 +245,21 @@ impl MaxCut {
 impl ProblemTrait for MaxCut {
     type Solution = MaxCutSolution;
     fn new_solution(&self, rng: &mut impl rand::Rng) -> Self::Solution {
-        let cut: HashMap<_, _> = self
-            .iter_on_vertices()
-            .map(|&i| (i, rng.random_bool(0.5)))
-            .collect();
-
-        let gain: HashMap<_, _> = self
-            .iter_on_vertices()
-            .map(|&i| {
-                let g = self.calculate_gain(&cut, i);
-                (i, g)
-            })
-            .collect();
-
+        let n = self.adj.len();
+        let mut cut = vec![false; n];
+        for &i in &self.vertices {
+            cut[i] = rng.random_bool(0.5);
+        }
+        let mut gain = vec![0.0; n];
+        for &i in &self.vertices {
+            gain[i] = self.calculate_gain(&cut, i);
+        }
         let objective = self.calculate_cut_size(&cut);
-
-        return MaxCutSolution {
+        MaxCutSolution {
             cut,
             gain,
             objective,
-        };
+        }
     }
 }
 
@@ -319,19 +294,19 @@ mod tests {
         mc.add_weight(1, 2, 3.0);
 
         {
-            let cut = HashMap::from([(0, false), (1, false), (2, false)]);
+            let cut = vec![false, false, false];
             assert_eq!(mc.calculate_cut_size(&cut), 0.0);
         }
         {
-            let cut = HashMap::from([(0, true), (1, false), (2, false)]);
+            let cut = vec![true, false, false];
             assert_eq!(mc.calculate_cut_size(&cut), 3.0);
         }
         {
-            let cut = HashMap::from([(0, true), (1, false), (2, true)]);
+            let cut = vec![true, false, true];
             assert_eq!(mc.calculate_cut_size(&cut), 4.0);
         }
         {
-            let cut = HashMap::from([(0, true), (1, true), (2, false)]);
+            let cut = vec![true, true, false];
             assert_eq!(mc.calculate_cut_size(&cut), 5.0);
         }
     }
@@ -343,7 +318,7 @@ mod tests {
         mc.add_weight(0, 2, 2.0);
         mc.add_weight(1, 2, 3.0);
 
-        let cut = HashMap::from([(0, false), (1, false), (2, false)]);
+        let cut = vec![false, false, false];
         assert_eq!(mc.calculate_gain(&cut, 0), 3.0);
         assert_eq!(mc.calculate_gain(&cut, 1), 4.0);
         assert_eq!(mc.calculate_gain(&cut, 2), 5.0);

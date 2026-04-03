@@ -12,19 +12,17 @@ use super::problem::{Qubo, QuboSolution, make_sub_problem_from};
 pub struct QuboUniformCrossover;
 
 impl Crossover<Qubo> for QuboUniformCrossover {
-    fn crossover(
-        &mut self,
-        prob: &Qubo,
-        sol1: &QuboSolution,
-        sol2: &QuboSolution,
-    ) -> QuboSolution {
+    fn crossover(&mut self, prob: &Qubo, sol1: &QuboSolution, sol2: &QuboSolution) -> QuboSolution {
         let mut rng = rand::rng();
         let mut sol = sol1.clone();
         for &i in prob.iter_on_variables() {
-            if sol.x[&i] != sol2.x[&i] && rng.random::<bool>() {
-                QuboFlipNeighbor { i, gain: sol.gain[&i] }
-                    .apply_to_solution(prob, &mut sol)
-                    .expect("flipping a variable should never fail");
+            if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
+                QuboFlipNeighbor {
+                    i,
+                    gain: sol.gain[i],
+                }
+                .apply_to_solution(prob, &mut sol)
+                .expect("flipping a variable should never fail");
             }
         }
         sol
@@ -36,11 +34,7 @@ impl SubProblemExtractable for Qubo {
     ///
     /// Fixed variable contributions are folded into the diagonal terms of the sub-QUBO,
     /// using the same approach as the internal `make_sub_problem_from` helper.
-    fn extract_sub_problem(
-        &self,
-        sol1: &QuboSolution,
-        sol2: &QuboSolution,
-    ) -> Qubo {
+    fn extract_sub_problem(&self, sol1: &QuboSolution, sol2: &QuboSolution) -> Qubo {
         make_sub_problem_from(self, &[sol1, sol2])
     }
 
@@ -55,13 +49,16 @@ impl SubProblemExtractable for Qubo {
         sub_solution: &QuboSolution,
     ) -> QuboSolution {
         let mut sol = sol1.clone();
-        for (&i, &val) in &sub_solution.x {
-            if sol.x[&i] == val {
+        for i in sub_solution.iter_on_variables() {
+            if sol.x[i] == sub_solution.x[i] {
                 continue;
             }
-            QuboFlipNeighbor { i, gain: sol.gain[&i] }
-                .apply_to_solution(self, &mut sol)
-                .expect("flipping should never fail");
+            QuboFlipNeighbor {
+                i,
+                gain: sol.gain[i],
+            }
+            .apply_to_solution(self, &mut sol)
+            .expect("flipping should never fail");
         }
         sol
     }
@@ -69,8 +66,6 @@ impl SubProblemExtractable for Qubo {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     use crate::problem::qubo::{Qubo, QuboSolution};
     use crate::search_state::{Crossover, SubProblemExtractable};
 
@@ -85,8 +80,20 @@ mod tests {
     }
 
     fn make_sol(qubo: &Qubo, assignments: &[(usize, bool)]) -> QuboSolution {
-        let x: HashMap<usize, bool> = assignments.iter().copied().collect();
-        let gain = qubo.iter_on_variables().map(|&i| (i, qubo.calculate_gain(&x, i))).collect();
+        let n = qubo
+            .iter_on_variables()
+            .copied()
+            .max()
+            .map(|m| m + 1)
+            .unwrap_or(0);
+        let mut x = vec![false; n];
+        for &(i, v) in assignments {
+            x[i] = v;
+        }
+        let mut gain = vec![0; n];
+        for &i in qubo.iter_on_variables() {
+            gain[i] = qubo.calculate_gain(&x, i);
+        }
         let objective = qubo.calculate_energy(&x);
         QuboSolution { x, gain, objective }
     }
@@ -108,9 +115,10 @@ mod tests {
         let b = make_sol(&qubo, &[(0, true), (1, false), (2, true)]);
         let mut cx = QuboUniformCrossover;
         let offspring = cx.crossover(&qubo, &a, &b);
-        for (&i, &g) in &offspring.gain {
+        for &i in qubo.iter_on_variables() {
+            let g = offspring.gain[i];
             let mut flipped = offspring.x.clone();
-            flipped.insert(i, !flipped[&i]);
+            flipped[i] = !flipped[i];
             let expected = qubo.calculate_energy(&flipped) - offspring.objective;
             assert_eq!(g, expected, "gain[{i}] mismatch");
         }
@@ -121,12 +129,20 @@ mod tests {
         let qubo = make_qubo();
         let s = make_sol(&qubo, &[(0, false), (1, true), (2, false)]);
         let sub_same = qubo.extract_sub_problem(&s, &s);
-        assert_eq!(sub_same.num_of_variables(), 0, "identical parents → 0 free variables");
+        assert_eq!(
+            sub_same.num_of_variables(),
+            0,
+            "identical parents → 0 free variables"
+        );
 
         let all_f = make_sol(&qubo, &[(0, false), (1, false), (2, false)]);
         let all_t = make_sol(&qubo, &[(0, true), (1, true), (2, true)]);
         let sub_diff = qubo.extract_sub_problem(&all_f, &all_t);
-        assert_eq!(sub_diff.num_of_variables(), 3, "all-different parents → 3 free variables");
+        assert_eq!(
+            sub_diff.num_of_variables(),
+            3,
+            "all-different parents → 3 free variables"
+        );
     }
 
     #[test]
@@ -141,13 +157,23 @@ mod tests {
         let sub_sol = make_sol(&sub, &[(0, true), (1, false)]);
         let lifted = qubo.lift_solution(&parent_a, &parent_b, &sub_sol);
 
-        assert_eq!(lifted.x[&2], parent_a.x[&2], "fixed var 2 inherits from parent_a");
-        assert_eq!(lifted.x[&0], sub_sol.x[&0], "free var 0 comes from sub_solution");
-        assert_eq!(lifted.x[&1], sub_sol.x[&1], "free var 1 comes from sub_solution");
+        assert_eq!(
+            lifted.x[2], parent_a.x[2],
+            "fixed var 2 inherits from parent_a"
+        );
+        assert_eq!(
+            lifted.x[0], sub_sol.x[0],
+            "free var 0 comes from sub_solution"
+        );
+        assert_eq!(
+            lifted.x[1], sub_sol.x[1],
+            "free var 1 comes from sub_solution"
+        );
 
-        for (&i, &g) in &lifted.gain {
+        for &i in qubo.iter_on_variables() {
+            let g = lifted.gain[i];
             let mut flipped = lifted.x.clone();
-            flipped.insert(i, !flipped[&i]);
+            flipped[i] = !flipped[i];
             let expected = qubo.calculate_energy(&flipped) - lifted.objective;
             assert_eq!(g, expected, "lifted gain[{i}] mismatch");
         }

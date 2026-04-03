@@ -1,10 +1,9 @@
 use std::collections::HashSet;
-use std::sync::Arc;
 
 use super::problem::{Sat, SatSolution};
 use crate::{
     error::OptError,
-    search_state::{EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 
 /// A flip move that toggles a single variable `i`.
@@ -52,15 +51,17 @@ impl Evaluate for SatFlipNeighbor {
 impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
         // Collect variables that share a clause with i (their gain may change after the flip)
-        let mut affected: HashSet<usize> = HashSet::new();
+        let mut affected: Vec<usize> = Vec::new();
         for clause in prob.clauses_of_var(self.i) {
             for &lit in clause {
                 let j = lit.unsigned_abs() as usize - 1;
                 if j != self.i {
-                    affected.insert(j);
+                    affected.push(j);
                 }
             }
         }
+        affected.sort_unstable();
+        affected.dedup();
 
         // Flip x[i]
         sol.x[self.i] = !sol.x[self.i];
@@ -163,9 +164,6 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
     }
 
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
-        let x = Arc::new(sol.x.clone());
-        let gain = Arc::new(sol.gain.clone());
-
         // Enumerate clause-sharing pairs (i, j) without duplicates
         let mut seen: HashSet<(usize, usize)> = HashSet::new();
         let mut items: Vec<SatSwapNeighbor> = Vec::new();
@@ -182,8 +180,8 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
                     let (i, j) = pair;
 
                     // gain_swap = gain_i + gain_j_after_flip_i
-                    let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&x, i, j);
-                    let swap_gain = gain[i] + gain_j_after_flip_i;
+                    let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&sol.x, i, j);
+                    let swap_gain = sol.gain[i] + gain_j_after_flip_i;
 
                     items.push(SatSwapNeighbor {
                         i,

@@ -11,21 +11,23 @@ pub trait Rankable {
 ///
 /// If `iter` is empty, returns an empty `Vec`.
 pub fn filter_best<R: Rankable, T: Iterator<Item = R>>(iter: T) -> Vec<R> {
-    let mut best_list = vec![];
+    const RESERVE_CAPACITY: usize = 16;
+    let mut best_list: Vec<R> = Vec::with_capacity(RESERVE_CAPACITY);
     for r in iter {
         if best_list.is_empty() {
-            best_list = vec![r];
+            best_list.push(r);
         } else {
             let sample = &best_list[0];
             if r.is_better_than(sample) {
-                best_list = vec![r];
+                best_list.clear();
+                best_list.push(r);
             } else if !sample.is_better_than(&r) {
                 best_list.push(r);
             }
         }
     }
 
-    return best_list;
+    best_list
 }
 
 /// Is a combinatorial optimization problem.
@@ -176,11 +178,7 @@ pub trait SubProblemExtractable: ProblemTrait + Sized {
     ///
     /// Fixed variables' contributions (edges to free variables) must be incorporated
     /// into the sub-problem objective so the sub-problem remains self-contained.
-    fn extract_sub_problem(
-        &self,
-        sol1: &Self::Solution,
-        sol2: &Self::Solution,
-    ) -> Self;
+    fn extract_sub_problem(&self, sol1: &Self::Solution, sol2: &Self::Solution) -> Self;
 
     /// Reconstructs a full solution from a sub-problem solution.
     ///
