@@ -56,4 +56,9 @@ pub use crate::problem::{
     TspTour,
     TspTwoOptNeighbor,
     TspWithCoordinates,
+    // Vertex Cover
+    VertexCover,
+    VertexCoverFlipNeighbor,
+    VertexCoverSolution,
+    VertexCoverSwapNeighbor,
 };

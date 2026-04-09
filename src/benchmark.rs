@@ -12,6 +12,7 @@ use crate::{
     },
     problem::{
         MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, QuboFlipNeighbor, QuboSwapNeighbor,
+        VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
         max_cut::MaxCut,
         qubo::{Qubo, QuboSolution},
         sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
@@ -111,6 +112,27 @@ impl BenchmarkSolution for TspSolution {
     }
 }
 
+impl BenchmarkProblem for VertexCover {
+    fn load_instance(path: &str) -> Result<Self, OptError> {
+        VertexCover::load_from_file(path)
+    }
+}
+
+impl BenchmarkSolution for VertexCoverSolution {
+    fn best_objective_f64(&self) -> f64 {
+        // Report the human-meaningful cover size, not the penalty-augmented objective.
+        self.cover_size as f64
+    }
+    fn encode_as_indices(&self) -> Vec<usize> {
+        self.cover
+            .iter()
+            .enumerate()
+            .filter(|&(_, &v)| v)
+            .map(|(i, _)| i)
+            .collect()
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Config types (Deserialize + Serialize) — used as input from a TOML file
 // ---------------------------------------------------------------------------
@@ -122,6 +144,7 @@ pub enum ProblemKind {
     Qubo,
     Sat,
     Tsp,
+    VertexCover,
 }
 
 /// Stop condition as expressed in a config file (duration in seconds instead of `Duration`).
@@ -471,6 +494,64 @@ impl BenchmarkableProblem for TspWithCoordinates {
     }
 }
 
+impl BenchmarkableProblem for VertexCover {
+    fn build_base_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, String> {
+        match config.kind.as_str() {
+            "LocalSearch" => match config.req_neighbor("VertexCover")? {
+                NeighborKind::Flip => {
+                    Ok(Box::new(LocalSearch::<VertexCoverFlipNeighbor>::new(cond)))
+                }
+                NeighborKind::Swap => {
+                    Ok(Box::new(LocalSearch::<VertexCoverSwapNeighbor>::new(cond)))
+                }
+                n => Err(format!(
+                    "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
+                    n
+                )),
+            },
+            "TabuSearch" => {
+                let tenure = config.req_tabu("VertexCover")?;
+                match config.req_neighbor("VertexCover")? {
+                    NeighborKind::Flip => Ok(Box::new(
+                        TabuSearch::<VertexCoverFlipNeighbor>::new(cond, tenure, None),
+                    )),
+                    NeighborKind::Swap => Ok(Box::new(
+                        TabuSearch::<VertexCoverSwapNeighbor>::new(cond, tenure, None),
+                    )),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
+                        n
+                    )),
+                }
+            }
+            "SimulatedAnnealing" => {
+                let temp = config.req_temp("VertexCover")?;
+                let cooling = config.req_cooling("VertexCover")?;
+                match config.req_neighbor("VertexCover")? {
+                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<
+                        VertexCoverFlipNeighbor,
+                    >::new(
+                        cond, temp, cooling
+                    ))),
+                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<
+                        VertexCoverSwapNeighbor,
+                    >::new(
+                        cond, temp, cooling
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
+                        n
+                    )),
+                }
+            }
+            k => Err(format!("Unknown kind '{}' for VertexCover", k)),
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Generic heuristic builder
 // ---------------------------------------------------------------------------
@@ -594,6 +675,7 @@ fn run_for_problem_kind(
         ProblemKind::Qubo => run_typed::<Qubo>(instance_path, config),
         ProblemKind::Sat => run_typed::<Sat>(instance_path, config),
         ProblemKind::Tsp => run_typed::<TspWithCoordinates>(instance_path, config),
+        ProblemKind::VertexCover => run_typed::<VertexCover>(instance_path, config),
     }
 }
 
@@ -816,7 +898,10 @@ impl Benchmark {
                     runs.push(to_single_run_result(run_index, metrics));
                 }
 
-                let minimize = matches!(problem_kind, ProblemKind::Qubo | ProblemKind::Tsp);
+                let minimize = matches!(
+                    problem_kind,
+                    ProblemKind::Qubo | ProblemKind::Tsp | ProblemKind::VertexCover
+                );
                 let summary = compute_summary(&runs, minimize);
                 tracing::info!(
                     instance = %instance_path,
