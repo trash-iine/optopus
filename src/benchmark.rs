@@ -4,6 +4,8 @@
 //! Each result captures the configuration, best objective value, time-to-best, and solution.
 //! Results can be serialized to TOML (or any serde format) for offline analysis.
 
+use rayon::prelude::*;
+
 use crate::{
     error::OptError,
     heuristic::{
@@ -784,37 +786,35 @@ impl Benchmark {
 
         for (instance_path, problem_kind) in &instance_paths {
             for heuristic_cfg in &config.heuristics {
-                let mut runs: Vec<SingleRunResult> = Vec::new();
+                tracing::info!(
+                    instance = %instance_path,
+                    heuristic = %heuristic_cfg.kind,
+                    num_runs = config.num_runs,
+                    max_iteration = ?heuristic_cfg.stop_condition.max_iteration,
+                    max_duration_secs = ?heuristic_cfg.stop_condition.max_duration_secs,
+                    max_failed_update = ?heuristic_cfg.stop_condition.max_failed_update,
+                    "Starting benchmark"
+                );
 
-                for run_index in 0..config.num_runs {
-                    tracing::info!(
-                        run = run_index + 1,
-                        total = config.num_runs,
-                        instance = %instance_path,
-                        heuristic = %heuristic_cfg.kind,
-                        max_iteration = ?heuristic_cfg.stop_condition.max_iteration,
-                        max_duration_secs = ?heuristic_cfg.stop_condition.max_duration_secs,
-                        max_failed_update = ?heuristic_cfg.stop_condition.max_failed_update,
-                        "Starting run"
-                    );
+                let mut runs: Vec<SingleRunResult> = (0..config.num_runs)
+                    .into_par_iter()
+                    .map(|run_index| {
+                        let metrics =
+                            run_for_problem_kind(problem_kind, heuristic_cfg, instance_path);
 
-                    let metrics =
-                        run_for_problem_kind(problem_kind, heuristic_cfg, instance_path);
+                        tracing::info!(
+                            run = run_index + 1,
+                            objective = metrics.best_objective,
+                            best_iteration = metrics.best_iteration,
+                            time_to_best_secs = metrics.time_to_best_secs,
+                            total_time_secs = metrics.total_time_secs,
+                            "Run completed"
+                        );
 
-                    tracing::info!(
-                        run = run_index + 1,
-                        total = config.num_runs,
-                        instance = %instance_path,
-                        heuristic = %heuristic_cfg.kind,
-                        objective = metrics.best_objective,
-                        best_iteration = metrics.best_iteration,
-                        time_to_best_secs = metrics.time_to_best_secs,
-                        total_time_secs = metrics.total_time_secs,
-                        "Run completed"
-                    );
-
-                    runs.push(to_single_run_result(run_index, metrics));
-                }
+                        to_single_run_result(run_index, metrics)
+                    })
+                    .collect();
+                runs.sort_by_key(|r| r.run_index);
 
                 let minimize = matches!(problem_kind, ProblemKind::Qubo | ProblemKind::Tsp);
                 let summary = compute_summary(&runs, minimize);
