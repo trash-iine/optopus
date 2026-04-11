@@ -121,11 +121,7 @@ mod tests {
                 g
             });
         let objective = mc.calculate_cut_size(&cut);
-        MaxCutSolution {
-            cut,
-            gain,
-            objective,
-        }
+        MaxCutSolution::new(cut, gain, objective)
     }
 
     #[test]

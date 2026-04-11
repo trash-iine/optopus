@@ -1,14 +1,12 @@
-use std::collections::HashMap;
-
-use rand::seq::IteratorRandom;
-
-use super::super::{Heuristic, StopCondition, TabuSearch};
+use super::super::{Heuristic, StopCondition};
 use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
-use crate::search_state::{
-    EnabledTabu, MoveToNeighbor, ProblemTrait, Rankable, SearchState, filter_best,
-};
+use crate::search_state::{MoveToNeighbor, SearchState};
+
+// The positive-gain index attached to `MaxCutSolution` lets the local-search
+// phase skip the O(n) neighborhood scan: any improving flip must be a vertex
+// with strictly positive gain, so we only need to iterate `positive_gain`.
 
 /// Perturbation type used inside Breakout Local Search.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -19,13 +17,6 @@ enum PerturbationType {
     WeakFlip,
     /// Weak swap perturbation: apply `l` swap moves guided by the tabu map.
     WeakSwap,
-}
-
-fn is_same_solution(
-    prev_solution: &<MaxCut as ProblemTrait>::Solution,
-    current_solution: &<MaxCut as ProblemTrait>::Solution,
-) -> bool {
-    prev_solution.cut == current_solution.cut
 }
 
 /// Breakout Local Search (BLS) for the MaxCut problem.
@@ -59,8 +50,11 @@ pub struct BreakoutLocalSearch {
     omega: u64,
     l: u64,
     prev_best_objective: Option<f32>,
-    prev_solution: Option<<MaxCut as ProblemTrait>::Solution>,
-    tabu_map: HashMap<usize, u64>,
+    /// Objective value of the previous solution, used for cheap change detection
+    /// instead of cloning the entire solution.
+    prev_solution_objective: Option<f32>,
+    /// Vec-based tabu map indexed by vertex ID. Value = expiry iteration (0 = not tabu).
+    tabu_vec: Vec<u64>,
 }
 
 impl BreakoutLocalSearch {
@@ -82,39 +76,63 @@ impl BreakoutLocalSearch {
             omega: 0,
             l: l0,
             prev_best_objective: None,
-            prev_solution: None,
-            tabu_map: HashMap::new(),
+            prev_solution_objective: None,
+            tabu_vec: Vec::new(),
+        }
+    }
+
+    /// Ensures `tabu_vec` is large enough for the given problem instance.
+    fn ensure_tabu_vec(&mut self, n: usize) {
+        if self.tabu_vec.len() < n {
+            self.tabu_vec.resize(n, 0);
+        }
+    }
+
+    /// Checks if a vertex move is enabled (not tabu).
+    #[inline]
+    fn is_vertex_enabled(&self, vertex: usize, iteration: u64) -> bool {
+        self.tabu_vec
+            .get(vertex)
+            .map_or(true, |&exp| iteration > exp)
+    }
+
+    /// Adds a vertex to the tabu vec with a random tenure.
+    #[inline]
+    fn add_vertex_to_tabu(&mut self, vertex: usize, iteration: u64) {
+        let tabu_duration = rand::random_range(self.tabu_tenure.0..=self.tabu_tenure.1);
+        if vertex < self.tabu_vec.len() {
+            self.tabu_vec[vertex] = iteration + tabu_duration;
         }
     }
 
     /// Runs greedy local search until no improving flip move exists,
-    /// recording each applied move in the tabu map.
+    /// recording each applied move in the tabu vec.
+    ///
+    /// Instead of scanning all `n` flip neighbors, this iterates only over
+    /// vertices currently in `solution.positive_gain` — every improving flip
+    /// must have strictly positive gain, so this set is a superset of the
+    /// improving moves. On G-set instances the set shrinks rapidly as the
+    /// search approaches a local optimum, turning the inner loop from O(n)
+    /// into effectively O(improving_moves).
     fn local_search_with_updating_tabu(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
+        state.solution.enable_positive_gain_index();
         loop {
             let mut best_move_option: Option<MaxCutFlipNeighbor> = None;
-            for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
-                if !state.is_neighbor_better_than_current(&neighbor) {
-                    continue;
+            for &v in &state.solution.positive_gain {
+                let g = state.solution.gain[v];
+                if let Some(best) = best_move_option {
+                    if best.gain >= g {
+                        continue;
+                    }
                 }
-
-                if let Some(best_move) = best_move_option
-                    && best_move.is_better_than(&neighbor)
-                {
-                    best_move_option = Some(best_move);
-                } else {
-                    best_move_option = Some(neighbor);
-                }
+                best_move_option = Some(MaxCutFlipNeighbor { i: v, gain: g });
             }
 
             if let Some(best_move) = best_move_option {
-                best_move.add_to_tabu_map(
-                    &mut self.tabu_map,
-                    state.iteration,
-                    self.tabu_tenure,
-                );
+                self.add_vertex_to_tabu(best_move.i, state.iteration);
                 state.apply(&best_move)?;
             } else {
                 return Ok(());
@@ -140,16 +158,17 @@ impl BreakoutLocalSearch {
     }
 
     /// Updates the perturbation length `l` based on whether the solution changed.
+    /// Uses objective comparison instead of full solution clone for O(1) check.
     fn update_l(&mut self, state: &SearchState<'_, MaxCut>) {
-        if let Some(ref prev_solution) = self.prev_solution
-            && is_same_solution(prev_solution, &state.solution)
+        if let Some(prev_obj) = self.prev_solution_objective
+            && prev_obj == state.solution.objective
         {
             self.l += 1;
         } else {
             self.l = self.l0;
         }
 
-        self.prev_solution = Some(state.solution.clone());
+        self.prev_solution_objective = Some(state.solution.objective);
     }
 
     /// Determines the perturbation type for the current iteration.
@@ -157,7 +176,7 @@ impl BreakoutLocalSearch {
         if self.omega == 0 {
             PerturbationType::Strong
         } else {
-            let p = (std::f64::consts::E.powf(-(self.omega as f64 / self.t as f64))).max(self.p0);
+            let p = (-(self.omega as f64 / self.t as f64)).exp().max(self.p0);
 
             let prob: f64 = rand::random_range(0.0..=1.0);
             if prob <= p * self.q {
@@ -171,163 +190,147 @@ impl BreakoutLocalSearch {
     }
 
     /// Applies the strong perturbation: `l` random flip moves.
+    /// Skips `update_best` per move; caller updates best after the phase.
     fn apply_strong_perturbation(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
         for _ in 0..self.l {
-            let neighbor = MaxCutFlipNeighbor::iter(&state.instance, &state.solution)
-                .choose(&mut rand::rng())
-                .ok_or_else(|| OptError::InvalidState("No neighbor found".to_string()))?;
+            let neighbor = MaxCutFlipNeighbor::random_neighbor(&state.instance, &state.solution);
 
-            neighbor.add_to_tabu_map(
-                &mut self.tabu_map,
-                state.iteration,
-                self.tabu_tenure,
-            );
-            state.apply(&neighbor)?;
+            self.add_vertex_to_tabu(neighbor.i, state.iteration);
+            state.apply_move_only(&neighbor)?;
         }
         Ok(())
     }
 
-    /// Applies the weak flip perturbation: run tabu search for `l` iterations.
+    /// Applies the weak flip perturbation: inline tabu search for `l` iterations.
+    ///
+    /// Uses the BLS tabu map directly and scalar best tracking to avoid the
+    /// overhead of constructing a `TabuSearch` object and its per-iteration
+    /// `filter_best` Vec allocation.
     fn apply_weak_flip_perturbation(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
-        let sc = StopCondition::new(Some(self.l + state.iteration), None, None);
-        let tabu_map = std::mem::take(&mut self.tabu_map);
-        let mut perturb =
-            TabuSearch::<MaxCutFlipNeighbor>::new(sc, self.tabu_tenure, Some(tabu_map));
-        perturb.run(state)?;
-        self.tabu_map = perturb.take_tabu_map();
+        let end_iter = state.iteration + self.l;
+        while state.iteration < end_iter {
+            let mut best: Option<MaxCutFlipNeighbor> = None;
+            for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
+                let enabled = self.is_vertex_enabled(neighbor.i, state.iteration);
+                // Aspiration: accept a tabu move if it improves the global best.
+                if !enabled
+                    && !(neighbor.gain + state.solution.objective > state.best_solution.objective)
+                {
+                    continue;
+                }
+                if let Some(ref b) = best {
+                    if b.gain >= neighbor.gain {
+                        continue;
+                    }
+                }
+                best = Some(neighbor);
+            }
+            if let Some(best_move) = best {
+                self.add_vertex_to_tabu(best_move.i, state.iteration);
+                state.apply_move_only(&best_move)?;
+            } else {
+                state.progress_iteration();
+            }
+        }
         Ok(())
     }
 
     /// Applies the weak swap perturbation: `l` swap moves guided by the tabu map.
+    ///
+    /// Uses scalar best tracking per partition side instead of collecting
+    /// tied-best lists into Vecs. Also tracks the oldest-tabu vertex per side
+    /// during the same scan for the fallback path.
     fn apply_weak_swap_perturbation(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
         for _ in 0..self.l {
-            let mut v0_best = Vec::new();
-            let mut v1_best = Vec::new();
-            let mut v0_tabu = Vec::new();
-            let mut v1_tabu = Vec::new();
+            // Best vertex per partition side (by flip gain).
+            let mut best_v0: Option<MaxCutFlipNeighbor> = None;
+            let mut best_v1: Option<MaxCutFlipNeighbor> = None;
+            // Oldest-tabu vertex per side for the fallback path (vertex, tabu_expiry).
+            let mut oldest_tabu_v0: Option<(usize, u64)> = None;
+            let mut oldest_tabu_v1: Option<(usize, u64)> = None;
+
             for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
-                if state.solution.cut[neighbor.i] {
-                    if let Some(sample) = v0_best.first() {
-                        if neighbor.is_better_than(sample) {
-                            v0_best = vec![neighbor];
-                        } else if !sample.is_better_than(&neighbor) {
-                            v0_best.push(neighbor);
-                        }
-                    } else {
-                        v0_best.push(neighbor);
-                    }
-                } else {
-                    if let Some(sample) = v1_best.first() {
-                        if neighbor.is_better_than(sample) {
-                            v1_best = vec![neighbor];
-                        } else if !sample.is_better_than(&neighbor) {
-                            v1_best.push(neighbor);
-                        }
-                    } else {
-                        v1_best.push(neighbor);
-                    }
+                let on_side0 = state.solution.cut[neighbor.i];
+
+                // Track best vertex per side (regardless of tabu status).
+                let best_ref = if on_side0 { &mut best_v0 } else { &mut best_v1 };
+                if best_ref.as_ref().map_or(true, |b| neighbor.gain > b.gain) {
+                    *best_ref = Some(neighbor);
                 }
 
-                if !neighbor.is_move_enabled(&self.tabu_map, state.iteration) {
-                    continue;
-                }
-
-                if state.solution.cut[neighbor.i] {
-                    if let Some(sample) = v0_tabu.first() {
-                        if neighbor.is_better_than(sample) {
-                            v0_tabu = vec![neighbor];
-                        } else if !sample.is_better_than(&neighbor) {
-                            v0_tabu.push(neighbor);
-                        }
+                // Track oldest-tabu (smallest expiry) vertex per side for fallback.
+                if !self.is_vertex_enabled(neighbor.i, state.iteration) {
+                    let expiry = self.tabu_vec[neighbor.i];
+                    let oldest_ref = if on_side0 {
+                        &mut oldest_tabu_v0
                     } else {
-                        v0_tabu.push(neighbor);
-                    }
-                } else {
-                    if let Some(sample) = v1_tabu.first() {
-                        if neighbor.is_better_than(sample) {
-                            v1_tabu = vec![neighbor];
-                        } else if !sample.is_better_than(&neighbor) {
-                            v1_tabu.push(neighbor);
-                        }
-                    } else {
-                        v1_tabu.push(neighbor);
+                        &mut oldest_tabu_v1
+                    };
+                    if oldest_ref.as_ref().map_or(true, |&(_, e)| expiry < e) {
+                        *oldest_ref = Some((neighbor.i, expiry));
                     }
                 }
             }
 
-            let mut best_list = filter_best(v0_best.iter().flat_map(|v0| {
-                v1_best.iter().map(|v1| MaxCutSwapNeighbor {
+            // Build the swap from the best vertex on each side.
+            let (v0, v1) = match (best_v0, best_v1) {
+                (Some(b0), Some(b1)) => (b0, b1),
+                _ => {
+                    // One side is empty — skip this swap iteration.
+                    state.progress_iteration();
+                    state.progress_iteration();
+                    continue;
+                }
+            };
+
+            let swap_gain = state.solution.gain[v0.i]
+                + state.solution.gain[v1.i]
+                + 2.0 * state.instance.get_weight(v0.i, v1.i);
+
+            // Aspiration: accept the best swap if it improves the global best.
+            if swap_gain + state.solution.objective > state.best_solution.objective {
+                let swap = MaxCutSwapNeighbor {
                     i: v0.i,
                     j: v1.i,
-                    gain: state.solution.gain[v0.i]
-                        + state.solution.gain[v1.i]
-                        + if state.instance.has_edge(v0.i, v1.i) {
-                            2.0 * state.instance.get_weight(v0.i, v1.i)
-                        } else {
-                            0.0
-                        },
-                })
-            }));
-            if let Some(best_move) = best_list.pop()
-                && best_move.move_to_be_better_than(
-                    &state.instance,
-                    &state.solution,
-                    &state.best_solution,
-                )
-            {
-                best_move.add_to_tabu_map(
-                    &mut self.tabu_map,
-                    state.iteration,
-                    self.tabu_tenure,
-                );
-                state.apply(&best_move)?;
-            } else {
-                let i = v0_tabu
-                    .iter()
-                    .min_by(|a, b| {
-                        self.tabu_map
-                            .get(&a.i)
-                            .unwrap_or(&0)
-                            .cmp(&self.tabu_map.get(&b.i).unwrap_or(&0))
-                    })
-                    .ok_or_else(|| OptError::InvalidState("No tabu v0".to_string()))?
-                    .i;
-                let j = v1_tabu
-                    .iter()
-                    .min_by(|a, b| {
-                        self.tabu_map
-                            .get(&a.i)
-                            .unwrap_or(&0)
-                            .cmp(&self.tabu_map.get(&b.i).unwrap_or(&0))
-                    })
-                    .ok_or_else(|| OptError::InvalidState("No tabu v1".to_string()))?
-                    .i;
-                let neighbor = MaxCutSwapNeighbor {
-                    i: i,
-                    j: j,
-                    gain: state.solution.gain[i]
-                        + state.solution.gain[j]
-                        + if state.instance.has_edge(i, j) {
-                            2.0 * state.instance.get_weight(i, j)
-                        } else {
-                            0.0
-                        },
+                    gain: swap_gain,
                 };
-                neighbor.add_to_tabu_map(
-                    &mut self.tabu_map,
-                    state.iteration,
-                    self.tabu_tenure,
-                );
-                state.apply(&neighbor)?;
+                self.add_vertex_to_tabu(v0.i, state.iteration);
+                self.add_vertex_to_tabu(v1.i, state.iteration);
+                state.apply_move_only(&swap)?;
+            } else {
+                // Fallback: swap the oldest-tabu vertices (one per side).
+                let i = match oldest_tabu_v0 {
+                    Some((v, _)) => v,
+                    None => {
+                        return Err(OptError::InvalidState("No tabu v0".to_string()));
+                    }
+                };
+                let j = match oldest_tabu_v1 {
+                    Some((v, _)) => v,
+                    None => {
+                        return Err(OptError::InvalidState("No tabu v1".to_string()));
+                    }
+                };
+                let fallback_gain = state.solution.gain[i]
+                    + state.solution.gain[j]
+                    + 2.0 * state.instance.get_weight(i, j);
+                let swap = MaxCutSwapNeighbor {
+                    i,
+                    j,
+                    gain: fallback_gain,
+                };
+                self.add_vertex_to_tabu(i, state.iteration);
+                self.add_vertex_to_tabu(j, state.iteration);
+                state.apply_move_only(&swap)?;
             }
         }
         Ok(())
@@ -339,14 +342,13 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
         self.omega = 0;
         self.l = self.l0;
         self.prev_best_objective = None;
-        self.prev_solution = None;
-        self.tabu_map = HashMap::new();
+        self.prev_solution_objective = None;
+        self.tabu_vec.fill(0);
     }
 
-    fn run_once<'a>(
-        &mut self,
-        state: &mut SearchState<'a, MaxCut>,
-    ) -> Result<(), OptError> {
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
+        self.ensure_tabu_vec(state.instance.len());
+
         tracing::debug!(
             iteration = state.iteration,
             omega = self.omega,
@@ -379,6 +381,9 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
                 self.apply_weak_swap_perturbation(state)?;
             }
         }
+
+        // Update best once after the perturbation phase completes.
+        state.update_best();
 
         Ok(())
     }

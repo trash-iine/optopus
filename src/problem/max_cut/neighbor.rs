@@ -4,7 +4,7 @@ use super::MaxCut;
 use crate::{
     error::OptError,
     problem::max_cut::problem::MaxCutSolution,
-    search_state::{EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 
 /// A flip move that transfers vertex `i` to the opposite partition side.
@@ -58,15 +58,21 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         // Flip
         solution.cut[self.i] = !bi;
 
-        // Update the gain for the flipped vertex
-        solution.gain[self.i] = -self.gain;
+        // Update the gain for the flipped vertex (its sign always inverts).
+        let new_gain_i = -self.gain;
+        solution.update_positive_gain_membership(self.i, new_gain_i);
+        solution.gain[self.i] = new_gain_i;
+
+        // Update neighbour gains. After `self.cut[self.i]` has been flipped,
+        // `bi` still holds the pre-flip side, so `bi ^ bj` reflects whether the
+        // edge was crossing before the flip (and is now not crossing, hence
+        // `+2w`), and vice versa.
         for &(j, w) in prob.iter_on_adjacency(self.i) {
             let bj = solution.cut[j];
-            if bi ^ bj {
-                solution.gain[j] += w * 2.0;
-            } else {
-                solution.gain[j] -= w * 2.0;
-            }
+            let delta = if bi ^ bj { w * 2.0 } else { -w * 2.0 };
+            let new_g = solution.gain[j] + delta;
+            solution.update_positive_gain_membership(j, new_g);
+            solution.gain[j] = new_g;
         }
 
         // Update the objective value
@@ -95,6 +101,17 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
 impl Evaluate for MaxCutFlipNeighbor {
     fn evaluate(&self) -> Evaluable<f64> {
         Evaluable::Maximize(self.gain as f64)
+    }
+}
+
+impl MaxCutFlipNeighbor {
+    /// Generates a random flip neighbor by randomly selecting a vertex `i` and using its current gain.
+    pub fn random_neighbor(prob: &MaxCut, sol: &MaxCutSolution) -> Self {
+        let i = prob.vertices[rand::random_range(0..prob.vertices.len())];
+        Self {
+            i,
+            gain: sol.gain[i],
+        }
     }
 }
 
