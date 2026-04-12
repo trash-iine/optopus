@@ -9,8 +9,8 @@ use rayon::prelude::*;
 use crate::{
     error::OptError,
     heuristic::{
-        BreakoutLocalSearchForMaxCut, Heuristic, Iterated, LocalSearch, Restart, Sequential,
-        SimulatedAnnealing, StopCondition, TabuSearch,
+        BreakoutLocalSearchForMaxCut, Heuristic, Iterated, LinKernighanHelsgottForTsp, LocalSearch,
+        Restart, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
     },
     problem::{
         MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, QuboFlipNeighbor, QuboSwapNeighbor,
@@ -186,6 +186,10 @@ pub struct HeuristicConfig {
     pub p0: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub q: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_neighbors: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_depth: Option<usize>,
     #[serde(default)]
     pub stop_condition: StopConditionConfig,
     /// Sub-heuristics for `"Sequential"`, `"Iterated"`, and `"Restart"`.
@@ -342,32 +346,59 @@ impl BenchmarkableProblem for MaxCut {
             "LocalSearch" => match config.req_neighbor("MaxCut")? {
                 NeighborKind::Flip => Ok(Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(cond))),
                 NeighborKind::Swap => Ok(Box::new(LocalSearch::<MaxCutSwapNeighbor>::new(cond))),
-                n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
+                n => Err(format!(
+                    "Invalid neighbor {:?} for MaxCut (use Flip or Swap)",
+                    n
+                )),
             },
             "TabuSearch" => {
                 let tenure = config.req_tabu("MaxCut")?;
                 match config.req_neighbor("MaxCut")? {
-                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(cond, tenure, None))),
-                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<MaxCutSwapNeighbor>::new(cond, tenure, None))),
-                    n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
+                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<MaxCutSwapNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for MaxCut (use Flip or Swap)",
+                        n
+                    )),
                 }
             }
             "SimulatedAnnealing" => {
                 let temp = config.req_temp("MaxCut")?;
                 let cooling = config.req_cooling("MaxCut")?;
                 match config.req_neighbor("MaxCut")? {
-                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<MaxCutFlipNeighbor>::new(cond, temp, cooling))),
-                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<MaxCutSwapNeighbor>::new(cond, temp, cooling))),
-                    n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
+                    NeighborKind::Flip => Ok(Box::new(
+                        SimulatedAnnealing::<MaxCutFlipNeighbor>::new(cond, temp, cooling),
+                    )),
+                    NeighborKind::Swap => Ok(Box::new(
+                        SimulatedAnnealing::<MaxCutSwapNeighbor>::new(cond, temp, cooling),
+                    )),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for MaxCut (use Flip or Swap)",
+                        n
+                    )),
                 }
             }
             "BreakoutLocalSearch" => {
                 let tenure = config.req_tabu("MaxCut")?;
-                let t = config.t.ok_or("'t' required for MaxCut BreakoutLocalSearch")?;
-                let l0 = config.l0.ok_or("'l0' required for MaxCut BreakoutLocalSearch")?;
-                let p0 = config.p0.ok_or("'p0' required for MaxCut BreakoutLocalSearch")?;
-                let q = config.q.ok_or("'q' required for MaxCut BreakoutLocalSearch")?;
-                Ok(Box::new(BreakoutLocalSearchForMaxCut::new(tenure, cond, t, l0, p0, q)))
+                let t = config
+                    .t
+                    .ok_or("'t' required for MaxCut BreakoutLocalSearch")?;
+                let l0 = config
+                    .l0
+                    .ok_or("'l0' required for MaxCut BreakoutLocalSearch")?;
+                let p0 = config
+                    .p0
+                    .ok_or("'p0' required for MaxCut BreakoutLocalSearch")?;
+                let q = config
+                    .q
+                    .ok_or("'q' required for MaxCut BreakoutLocalSearch")?;
+                Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
+                    tenure, cond, t, l0, p0, q,
+                )))
             }
             k => Err(format!("Unknown kind '{}' for MaxCut", k)),
         }
@@ -383,23 +414,40 @@ impl BenchmarkableProblem for Qubo {
             "LocalSearch" => match config.req_neighbor("Qubo")? {
                 NeighborKind::Flip => Ok(Box::new(LocalSearch::<QuboFlipNeighbor>::new(cond))),
                 NeighborKind::Swap => Ok(Box::new(LocalSearch::<QuboSwapNeighbor>::new(cond))),
-                n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
+                n => Err(format!(
+                    "Invalid neighbor {:?} for Qubo (use Flip or Swap)",
+                    n
+                )),
             },
             "TabuSearch" => {
                 let tenure = config.req_tabu("Qubo")?;
                 match config.req_neighbor("Qubo")? {
-                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<QuboFlipNeighbor>::new(cond, tenure, None))),
-                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<QuboSwapNeighbor>::new(cond, tenure, None))),
-                    n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
+                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<QuboFlipNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<QuboSwapNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for Qubo (use Flip or Swap)",
+                        n
+                    )),
                 }
             }
             "SimulatedAnnealing" => {
                 let temp = config.req_temp("Qubo")?;
                 let cooling = config.req_cooling("Qubo")?;
                 match config.req_neighbor("Qubo")? {
-                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<QuboFlipNeighbor>::new(cond, temp, cooling))),
-                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<QuboSwapNeighbor>::new(cond, temp, cooling))),
-                    n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
+                    NeighborKind::Flip => Ok(Box::new(
+                        SimulatedAnnealing::<QuboFlipNeighbor>::new(cond, temp, cooling),
+                    )),
+                    NeighborKind::Swap => Ok(Box::new(
+                        SimulatedAnnealing::<QuboSwapNeighbor>::new(cond, temp, cooling),
+                    )),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for Qubo (use Flip or Swap)",
+                        n
+                    )),
                 }
             }
             k => Err(format!("Unknown kind '{}' for Qubo", k)),
@@ -416,23 +464,40 @@ impl BenchmarkableProblem for Sat {
             "LocalSearch" => match config.req_neighbor("Sat")? {
                 NeighborKind::Flip => Ok(Box::new(LocalSearch::<SatFlipNeighbor>::new(cond))),
                 NeighborKind::Swap => Ok(Box::new(LocalSearch::<SatSwapNeighbor>::new(cond))),
-                n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
+                n => Err(format!(
+                    "Invalid neighbor {:?} for Sat (use Flip or Swap)",
+                    n
+                )),
             },
             "TabuSearch" => {
                 let tenure = config.req_tabu("Sat")?;
                 match config.req_neighbor("Sat")? {
-                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<SatFlipNeighbor>::new(cond, tenure, None))),
-                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<SatSwapNeighbor>::new(cond, tenure, None))),
-                    n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
+                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<SatFlipNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<SatSwapNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for Sat (use Flip or Swap)",
+                        n
+                    )),
                 }
             }
             "SimulatedAnnealing" => {
                 let temp = config.req_temp("Sat")?;
                 let cooling = config.req_cooling("Sat")?;
                 match config.req_neighbor("Sat")? {
-                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<SatFlipNeighbor>::new(cond, temp, cooling))),
-                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<SatSwapNeighbor>::new(cond, temp, cooling))),
-                    n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
+                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<SatFlipNeighbor>::new(
+                        cond, temp, cooling,
+                    ))),
+                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<SatSwapNeighbor>::new(
+                        cond, temp, cooling,
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for Sat (use Flip or Swap)",
+                        n
+                    )),
                 }
             }
             k => Err(format!("Unknown kind '{}' for Sat", k)),
@@ -448,25 +513,53 @@ impl BenchmarkableProblem for TspWithCoordinates {
         match config.kind.as_str() {
             "LocalSearch" => match config.req_neighbor("Tsp")? {
                 NeighborKind::TwoOpt => Ok(Box::new(LocalSearch::<TspTwoOptNeighbor>::new(cond))),
-                NeighborKind::Relocate => Ok(Box::new(LocalSearch::<TspRelocateNeighbor>::new(cond))),
-                n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
+                NeighborKind::Relocate => {
+                    Ok(Box::new(LocalSearch::<TspRelocateNeighbor>::new(cond)))
+                }
+                n => Err(format!(
+                    "Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)",
+                    n
+                )),
             },
             "TabuSearch" => {
                 let tenure = config.req_tabu("Tsp")?;
                 match config.req_neighbor("Tsp")? {
-                    NeighborKind::TwoOpt => Ok(Box::new(TabuSearch::<TspTwoOptNeighbor>::new(cond, tenure, None))),
-                    NeighborKind::Relocate => Ok(Box::new(TabuSearch::<TspRelocateNeighbor>::new(cond, tenure, None))),
-                    n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
+                    NeighborKind::TwoOpt => Ok(Box::new(TabuSearch::<TspTwoOptNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    NeighborKind::Relocate => Ok(Box::new(TabuSearch::<TspRelocateNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)",
+                        n
+                    )),
                 }
             }
             "SimulatedAnnealing" => {
                 let temp = config.req_temp("Tsp")?;
                 let cooling = config.req_cooling("Tsp")?;
                 match config.req_neighbor("Tsp")? {
-                    NeighborKind::TwoOpt => Ok(Box::new(SimulatedAnnealing::<TspTwoOptNeighbor>::new(cond, temp, cooling))),
-                    NeighborKind::Relocate => Ok(Box::new(SimulatedAnnealing::<TspRelocateNeighbor>::new(cond, temp, cooling))),
-                    n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
+                    NeighborKind::TwoOpt => Ok(Box::new(
+                        SimulatedAnnealing::<TspTwoOptNeighbor>::new(cond, temp, cooling),
+                    )),
+                    NeighborKind::Relocate => Ok(Box::new(
+                        SimulatedAnnealing::<TspRelocateNeighbor>::new(cond, temp, cooling),
+                    )),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)",
+                        n
+                    )),
                 }
+            }
+            "LinKernighanHelsgott" => {
+                let num_neighbors = config.num_neighbors.unwrap_or(5);
+                let max_depth = config.max_depth.unwrap_or(5);
+                Ok(Box::new(LinKernighanHelsgottForTsp::new(
+                    cond,
+                    num_neighbors,
+                    max_depth,
+                )))
             }
             k => Err(format!("Unknown kind '{}' for Tsp", k)),
         }
@@ -599,7 +692,10 @@ fn run_for_problem_kind(
     }
 }
 
-fn run_typed<P: BenchmarkableProblem + 'static>(instance_path: &str, config: &HeuristicConfig) -> RunMetrics
+fn run_typed<P: BenchmarkableProblem + 'static>(
+    instance_path: &str,
+    config: &HeuristicConfig,
+) -> RunMetrics
 where
     P::Solution: BenchmarkSolution,
 {
@@ -793,7 +889,7 @@ impl Benchmark {
                     max_iteration = ?heuristic_cfg.stop_condition.max_iteration,
                     max_duration_secs = ?heuristic_cfg.stop_condition.max_duration_secs,
                     max_failed_update = ?heuristic_cfg.stop_condition.max_failed_update,
-                    "Starting benchmark"
+                    "Start:"
                 );
 
                 let mut runs: Vec<SingleRunResult> = (0..config.num_runs)
@@ -808,7 +904,7 @@ impl Benchmark {
                             best_iteration = metrics.best_iteration,
                             time_to_best_secs = metrics.time_to_best_secs,
                             total_time_secs = metrics.total_time_secs,
-                            "Run completed"
+                            "Completed:"
                         );
 
                         to_single_run_result(run_index, metrics)
@@ -828,7 +924,7 @@ impl Benchmark {
                     std = summary.std_objective,
                     avg_time_to_best_secs = summary.avg_time_to_best_secs,
                     avg_total_time_secs = summary.avg_total_time_secs,
-                    "=== Summary ==="
+                    "Summary:"
                 );
                 results.push(InstanceHeuristicResult {
                     instance_path: instance_path.clone(),

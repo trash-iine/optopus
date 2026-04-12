@@ -4,5 +4,7 @@
 //! and cannot be expressed generically through the [`Heuristic`] trait alone.
 
 mod bls_for_max_cut;
+mod lkh_for_tsp;
 
 pub use bls_for_max_cut::BreakoutLocalSearch as BreakoutLocalSearchForMaxCut;
+pub use lkh_for_tsp::LinKernighanHelsgott as LinKernighanHelsgottForTsp;

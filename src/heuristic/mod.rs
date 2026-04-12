@@ -20,6 +20,7 @@ pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
 pub use specific::BreakoutLocalSearchForMaxCut;
+pub use specific::LinKernighanHelsgottForTsp;
 pub use tabu_search::TabuSearch;
 
 use crate::error::OptError;
