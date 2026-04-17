@@ -220,6 +220,21 @@ where
         Ok(())
     }
 
+    /// Applies a neighborhood move and updates the iteration counter, but does
+    /// **not** refresh the best solution.
+    ///
+    /// Use this in perturbation phases where moves intentionally diversify and
+    /// a best-solution update is deferred until the phase completes. Call
+    /// [`update_best`](Self::update_best) once after the phase ends.
+    pub fn apply_move_only<Move>(&mut self, neighbor: &Move) -> Result<(), crate::error::OptError>
+    where
+        Move: MoveToNeighbor<Problem>,
+    {
+        self.iteration = neighbor.apply_to_iteration(self.iteration);
+        neighbor.apply_to_solution(&self.instance, &mut self.solution)?;
+        Ok(())
+    }
+
     /// Increments the iteration counter by one without applying any move.
     pub fn progress_iteration(&mut self) {
         self.iteration += 1;

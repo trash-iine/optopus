@@ -38,6 +38,7 @@ pub use crate::problem::{
     FormulaSwapNeighbor,
     // MaxCut
     MaxCut,
+    MaxCutSolution,
     MaxCutFlipNeighbor,
     MaxCutSwapNeighbor,
     OptDirection,
