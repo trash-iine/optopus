@@ -1,9 +1,34 @@
 use crate::search_state::{ProblemTrait, Rankable};
 
-/// The MaxCut problem.
+/// Shared zero constant returned by `Index` for non-existent edges.
+static ZERO_WEIGHT: f32 = 0.0;
+
+/// The MaxCut problem instance — an undirected weighted graph.
 ///
-/// Given an undirected weighted graph, MaxCut seeks a partition of the vertices into
-/// two sets that maximizes the total weight of edges crossing the partition.
+/// MaxCut seeks a partition of vertices into two sets that maximizes the total
+/// weight of edges crossing the partition.
+///
+/// # Graph construction
+///
+/// ```
+/// use optopus::problem::MaxCut;
+///
+/// // From edge list
+/// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
+///
+/// // Incremental
+/// let mut mc = MaxCut::new();
+/// mc.set_weight(0, 1, 1.0);
+///
+/// // Read weight via Index
+/// assert_eq!(mc[(0, 1)], 1.0);
+/// assert_eq!(mc[(8, 9)], 0.0);  // non-existent → 0.0
+/// ```
+///
+/// # Optimization direction
+///
+/// Maximization: A solution with a higher `objective` is better.
+#[derive(Debug, Clone)]
 pub struct MaxCut {
     /// `adj[i]` = list of `(j, weight)` for all neighbours of vertex `i`.
     adj: Vec<Vec<(usize, f32)>>,
@@ -13,8 +38,19 @@ pub struct MaxCut {
 
 /// A solution for the MaxCut problem.
 ///
-/// `Clone` preserves the full `positive_gain` index state: a cloned solution
-/// with the index enabled does not need a rebuild.
+/// ```
+/// use optopus::prelude::*;
+///
+/// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
+/// let mut state = SearchState::new(&mc);
+/// LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000))
+///     .run(&mut state).unwrap();
+///
+/// let sol = &state.best_solution;
+/// // sol.objective — the cut weight
+/// // sol.cut[i]   — which side vertex i is on
+/// // sol.gain[i]  — how much flipping vertex i would change the objective
+/// ```
 #[derive(Debug, Clone)]
 pub struct MaxCutSolution {
     /// The cut assignment for each vertex: `cut[i]` is the side of vertex `i`.
@@ -44,7 +80,19 @@ impl Rankable for MaxCutSolution {
 }
 
 impl MaxCutSolution {
-    /// Iterates over all vertices in the solution.
+    /// Returns an iterator over all vertex indices `0..cut.len()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
+    /// let state = SearchState::new(&mc);
+    /// for v in state.solution.iter_on_vertices() {
+    ///     println!("vertex {v}: side={}", state.solution.cut[v]);
+    /// }
+    /// ```
     pub fn iter_on_vertices(&self) -> impl Iterator<Item = usize> + '_ {
         0..self.cut.len()
     }
@@ -53,7 +101,24 @@ impl MaxCutSolution {
     ///
     /// The `positive_gain` index is **not** initialised; call
     /// [`enable_positive_gain_index`](Self::enable_positive_gain_index) to activate it.
-    pub fn new(cut: Vec<bool>, gain: Vec<f32>, objective: f32) -> Self {
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
+    /// let cut = vec![true, false, false];
+    /// let gain = vec![
+    ///     mc.calculate_gain(&cut, 0),
+    ///     mc.calculate_gain(&cut, 1),
+    ///     mc.calculate_gain(&cut, 2),
+    /// ];
+    /// let objective = mc.calculate_cut_size(&cut);
+    /// let sol = MaxCutSolution::new_from_parts(cut, gain, objective);
+    /// assert_eq!(sol.objective, 4.0);  // edges (0,1)=1.0 + (0,2)=3.0
+    /// ```
+    pub fn new_from_parts(cut: Vec<bool>, gain: Vec<f32>, objective: f32) -> Self {
         Self {
             cut,
             gain,
@@ -64,9 +129,46 @@ impl MaxCutSolution {
         }
     }
 
+    /// Creates a [`MaxCutSolution`] from a cut assignment, computing gain and objective automatically.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
+    /// let sol = MaxCutSolution::new_from_cut(&mc, vec![true, false, false]);
+    /// assert_eq!(sol.objective, 3.0);  // edges (0,1)=1.0 + (0,2)=2.0
+    /// ```
+    pub fn new_from_cut(mc: &MaxCut, cut: Vec<bool>) -> Self {
+        let n = mc.len();
+        let mut gain = vec![0.0; n];
+        for &i in mc.iter_on_vertices() {
+            gain[i] = mc.calculate_gain(&cut, i);
+        }
+        let objective = mc.calculate_cut_size(&cut);
+        Self::new_from_parts(cut, gain, objective)
+    }
+
     /// Enables the `positive_gain` index, building it from the current `gain` vector.
     ///
+    /// Once enabled, the index is maintained incrementally by
+    /// [`MaxCutFlipNeighbor::apply_to_solution`](super::MaxCutFlipNeighbor). This
+    /// allows [`LocalSearch`](crate::heuristic::LocalSearch) to enumerate only improving
+    /// moves, reducing iteration cost on sparse improvements.
+    ///
     /// If already enabled, this is a no-op. O(n).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]);
+    /// let mut state = SearchState::new(&mc);
+    /// state.solution.enable_positive_gain_index();
+    /// // Now positive_gain tracks vertices with gain > 0
+    /// ```
     pub fn enable_positive_gain_index(&mut self) {
         if self.positive_gain_enabled {
             return;
@@ -128,7 +230,34 @@ impl MaxCut {
         }
     }
 
-    /// Returns the number of vertices in the graph (`max_vertex_id + 1`).
+    /// Creates a [`MaxCut`] from an iterator of `(i, j, weight)` edges.
+    ///
+    /// Duplicate edges are overwritten (last occurrence wins).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([
+    ///     (0, 1, 1.0),
+    ///     (0, 2, 2.0),
+    ///     (1, 2, 3.0),
+    /// ]);
+    /// assert_eq!(mc[(0, 1)], 1.0);
+    /// assert_eq!(mc.num_edges(), 3);
+    /// ```
+    pub fn from_edges(edges: impl IntoIterator<Item = (usize, usize, f32)>) -> Self {
+        let mut mc = Self::new();
+        for (i, j, w) in edges {
+            mc.set_weight(i, j, w);
+        }
+        mc
+    }
+
+    /// Returns the internal dimension of the graph (`max_vertex_id + 1`).
+    ///
+    /// This may be larger than the number of vertices with edges.
+    /// For the count of vertices that participate in edges, use
+    /// [`num_vertices`](Self::num_vertices).
     ///
     /// # Examples
     ///
@@ -142,6 +271,42 @@ impl MaxCut {
     /// ```
     pub fn len(&self) -> usize {
         self.adj.len()
+    }
+
+    /// Returns the number of vertices that have at least one edge.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0)]);
+    /// assert_eq!(mc.num_vertices(), 3);
+    /// ```
+    pub fn num_vertices(&self) -> usize {
+        self.vertices.len()
+    }
+
+    /// Returns the number of undirected edges in the graph.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+    /// assert_eq!(mc.num_edges(), 3);
+    /// ```
+    pub fn num_edges(&self) -> usize {
+        self.adj.iter().map(|a| a.len()).sum::<usize>() / 2
+    }
+
+    /// Returns `true` if the graph has no edges.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::new();
+    /// assert!(mc.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.vertices.is_empty()
     }
 
     /// Returns an iterator visiting all vertices that have at least one edge.
@@ -182,7 +347,62 @@ impl MaxCut {
         }
     }
 
+    /// Returns an iterator over `(neighbour_id, weight)` pairs for vertex `i`.
+    ///
+    /// This is an alias for [`iter_on_adjacency`](Self::iter_on_adjacency).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 1.0), (0, 2, 2.0)]);
+    /// let weights: Vec<f32> = mc.neighbors(0).map(|&(_, w)| w).collect();
+    /// assert_eq!(weights, vec![1.0, 2.0]);
+    /// ```
+    pub fn neighbors(&self, i: usize) -> std::slice::Iter<'_, (usize, f32)> {
+        self.iter_on_adjacency(i)
+    }
+
+    /// Returns the degree (number of adjacent edges) of vertex `i`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+    /// assert_eq!(mc.degree(0), 2);
+    /// assert_eq!(mc.degree(1), 2);
+    /// ```
+    pub fn degree(&self, i: usize) -> usize {
+        if i < self.adj.len() {
+            self.adj[i].len()
+        } else {
+            0
+        }
+    }
+
+    /// Returns an iterator over all edges as `(i, j, weight)` with `i < j`.
+    ///
+    /// Each undirected edge appears exactly once.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 1.0), (0, 2, 2.0)]);
+    /// let edges: Vec<_> = mc.edges().collect();
+    /// assert_eq!(edges.len(), 2);
+    /// ```
+    pub fn edges(&self) -> impl Iterator<Item = (usize, usize, f32)> + '_ {
+        self.adj.iter().enumerate().flat_map(|(i, neighbors)| {
+            neighbors
+                .iter()
+                .filter(move |&&(j, _)| j > i)
+                .map(move |&(j, w)| (i, j, w))
+        })
+    }
+
     /// Adds (or accumulates) the weight `w` on edge `(i, j)`.
+    ///
+    /// If the edge already exists, `w` is **added** to the current weight.
+    /// To overwrite instead, use [`set_weight`](Self::set_weight).
     ///
     /// # Examples
     ///
@@ -191,19 +411,48 @@ impl MaxCut {
     /// mc.add_weight(0, 1, 1.0);
     /// mc.add_weight(0, 2, 1.0);
     /// mc.add_weight(0, 1, 2.0);
+    /// assert_eq!(mc[(0, 1)], 3.0); // 1.0 + 2.0
     /// ```
     pub fn add_weight(&mut self, i: usize, j: usize, w: f32) {
-        let n = i.max(j) + 1;
+        self.ensure_capacity(i.max(j) + 1);
+        self.add_directed(i, j, w);
+        self.add_directed(j, i, w);
+        self.ensure_vertex(i);
+        self.ensure_vertex(j);
+    }
+
+    /// Sets (overwrites) the weight of edge `(i, j)` to `w`.
+    ///
+    /// Unlike [`add_weight`](Self::add_weight), this replaces the existing weight
+    /// rather than accumulating.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut mc = optopus::problem::MaxCut::new();
+    /// mc.set_weight(0, 1, 5.0);
+    /// mc.set_weight(0, 1, 3.0);
+    /// assert_eq!(mc[(0, 1)], 3.0); // overwritten, not 8.0
+    /// ```
+    pub fn set_weight(&mut self, i: usize, j: usize, w: f32) {
+        self.ensure_capacity(i.max(j) + 1);
+        self.set_directed(i, j, w);
+        if i != j {
+            self.set_directed(j, i, w);
+        }
+        self.ensure_vertex(i);
+        self.ensure_vertex(j);
+    }
+
+    fn ensure_capacity(&mut self, n: usize) {
         if self.adj.len() < n {
             self.adj.resize_with(n, Vec::new);
         }
-        self.add_directed(i, j, w);
-        self.add_directed(j, i, w);
-        // Update the sorted vertex list for any newly seen vertices.
-        for &v in &[i, j] {
-            if let Err(pos) = self.vertices.binary_search(&v) {
-                self.vertices.insert(pos, v);
-            }
+    }
+
+    fn ensure_vertex(&mut self, v: usize) {
+        if let Err(pos) = self.vertices.binary_search(&v) {
+            self.vertices.insert(pos, v);
         }
     }
 
@@ -215,18 +464,29 @@ impl MaxCut {
         }
     }
 
+    fn set_directed(&mut self, from: usize, to: usize, w: f32) {
+        if let Some(entry) = self.adj[from].iter_mut().find(|(v, _)| *v == to) {
+            entry.1 = w;
+        } else {
+            self.adj[from].push((to, w));
+        }
+    }
+
     /// Gets the weight of edge `(i, j)`, returning `0.0` if no such edge exists.
+    ///
+    /// You can also use the [`Index`](std::ops::Index) syntax: `mc[(i, j)]`.
     ///
     /// # Examples
     ///
     /// ```
     /// let mut mc = optopus::problem::MaxCut::new();
-    /// mc.add_weight(0, 1, 1.0);
-    /// mc.add_weight(0, 2, 1.0);
+    /// mc.set_weight(0, 1, 1.0);
+    /// mc.set_weight(0, 2, 1.0);
     ///
     /// assert_eq!(mc.get_weight(0, 1), 1.0);
+    /// assert_eq!(mc[(0, 1)], 1.0);   // equivalent
     ///
-    /// mc.add_weight(0, 1, 2.0); // allows to add weight to existing edge
+    /// mc.add_weight(0, 1, 2.0); // accumulates onto existing edge
     /// assert_eq!(mc.get_weight(0, 1), 3.0);
     /// ```
     pub fn get_weight(&self, i: usize, j: usize) -> f32 {
@@ -241,21 +501,37 @@ impl MaxCut {
         }
     }
 
-    /// Returns `true` if there is a non-zero-weight edge between `i` and `j`.
+    /// Returns `true` if an edge between `i` and `j` exists in the graph.
+    ///
+    /// Note: this checks for the presence of the entry in the adjacency list,
+    /// regardless of whether the weight is zero.
     ///
     /// # Examples
     ///
     /// ```
-    /// let mut mc = optopus::problem::MaxCut::new();
-    /// mc.add_weight(0, 1, 1.0);
+    /// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 1.0)]);
     /// assert!(mc.has_edge(0, 1));
+    /// assert!(mc.has_edge(1, 0));  // symmetric
     /// assert!(!mc.has_edge(0, 2));
     /// ```
     pub fn has_edge(&self, i: usize, j: usize) -> bool {
         i < self.adj.len() && self.adj[i].iter().any(|(v, _)| *v == j)
     }
 
-    /// Calculates the cut size of the given assignment slice (indexed by vertex ID).
+    /// Calculates the total weight of edges crossing the partition defined by `cut`.
+    ///
+    /// `cut[i]` is the side of vertex `i`. An edge `(i, j)` is crossing when
+    /// `cut[i] != cut[j]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([
+    ///     (0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0),
+    /// ]);
+    /// let cut = vec![true, false, false];     // vertex 0 on one side, 1 and 2 on the other
+    /// assert_eq!(mc.calculate_cut_size(&cut), 3.0);  // edges (0,1)=1.0 + (0,2)=2.0
+    /// ```
     pub fn calculate_cut_size(&self, cut: &[bool]) -> f32 {
         let mut ret = 0.0;
         for &i in &self.vertices {
@@ -270,12 +546,30 @@ impl MaxCut {
     }
 
     /// Loads a MaxCut problem instance from a file.
-    /// The file format should be as follows:
-    /// ```skip
+    ///
+    /// # File format
+    ///
+    /// The expected format is one header line followed by edge lines (**1-indexed** vertices):
+    ///
+    /// ```text
     /// N M
     /// i j w
     /// i j w
     /// ...
+    /// ```
+    ///
+    /// - `N` — number of vertices, `M` — number of edges
+    /// - Each edge line: vertex `i`, vertex `j`, weight `w` (space-separated)
+    /// - Vertices are 1-indexed in the file and automatically converted to 0-indexed internally
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use optopus::problem::MaxCut;
+    ///
+    /// let mc = MaxCut::load_from_file("data/max_cut/G1").unwrap();
+    /// println!("{mc}");
+    /// ```
     pub fn load_from_file(filename: &str) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
         use std::io::BufRead;
@@ -318,7 +612,7 @@ impl MaxCut {
 
         let mut mc = MaxCut {
             adj: vec![vec![]; n],
-            vertices: (0..n).collect(),
+            vertices: Vec::new(),
         };
         let mut line_num = 1;
         while let Some(result) = line_iter.next() {
@@ -377,16 +671,80 @@ impl MaxCut {
             mc.adj[j].push((i, w));
         }
 
+        mc.vertices = (0..n).filter(|&i| !mc.adj[i].is_empty()).collect();
         Ok(mc)
     }
 
-    /// Calculates the gain of flipping vertex `i` given the current cut assignment slice.
+    /// Calculates the gain of flipping vertex `i` given the current cut assignment.
+    ///
+    /// A positive return value means flipping vertex `i` would **improve** the cut.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([
+    ///     (0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0),
+    /// ]);
+    /// let cut = vec![false, false, false];  // all on the same side
+    /// assert_eq!(mc.calculate_gain(&cut, 0), 3.0);  // flipping 0 crosses edges (0,1)+(0,2)
+    /// assert_eq!(mc.calculate_gain(&cut, 1), 4.0);  // flipping 1 crosses edges (0,1)+(1,2)
+    /// assert_eq!(mc.calculate_gain(&cut, 2), 5.0);  // flipping 2 crosses edges (0,2)+(1,2)
+    /// ```
     pub fn calculate_gain(&self, cut: &[bool], i: usize) -> f32 {
         let bi = cut[i];
         self.adj[i]
             .iter()
             .map(|&(j, w)| if bi ^ cut[j] { -w } else { w })
             .sum()
+    }
+}
+
+impl std::ops::Index<(usize, usize)> for MaxCut {
+    type Output = f32;
+
+    /// Returns the weight of edge `(i, j)`, or `&0.0` if no such edge exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 3.0)]);
+    /// assert_eq!(mc[(0, 1)], 3.0);
+    /// assert_eq!(mc[(1, 0)], 3.0); // symmetric
+    /// assert_eq!(mc[(0, 2)], 0.0); // non-existent edge
+    /// ```
+    fn index(&self, (i, j): (usize, usize)) -> &f32 {
+        if i < self.adj.len()
+            && let Some((_, w)) = self.adj[i].iter().find(|(v, _)| *v == j)
+        {
+            return w;
+        }
+        &ZERO_WEIGHT
+    }
+}
+
+/// Displays a summary of the graph: `MaxCut(vertices: N, edges: M)` or `MaxCut(empty)`.
+///
+/// # Examples
+///
+/// ```
+/// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
+/// assert_eq!(format!("{mc}"), "MaxCut(vertices: 3, edges: 2)");
+///
+/// let empty = optopus::problem::MaxCut::new();
+/// assert_eq!(format!("{empty}"), "MaxCut(empty)");
+/// ```
+impl std::fmt::Display for MaxCut {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.vertices.is_empty() {
+            write!(f, "MaxCut(empty)")
+        } else {
+            write!(
+                f,
+                "MaxCut(vertices: {}, edges: {})",
+                self.num_vertices(),
+                self.num_edges(),
+            )
+        }
     }
 }
 
@@ -398,12 +756,7 @@ impl ProblemTrait for MaxCut {
         for &i in &self.vertices {
             cut[i] = rng.random_bool(0.5);
         }
-        let mut gain = vec![0.0; n];
-        for &i in &self.vertices {
-            gain[i] = self.calculate_gain(&cut, i);
-        }
-        let objective = self.calculate_cut_size(&cut);
-        MaxCutSolution::new(cut, gain, objective)
+        MaxCutSolution::new_from_cut(self, cut)
     }
 }
 
@@ -415,6 +768,7 @@ mod tests {
     fn test_blank_graph() {
         let mc = MaxCut::new();
         assert_eq!(mc.len(), 0);
+        assert!(mc.is_empty());
     }
 
     #[test]
@@ -481,7 +835,7 @@ mod tests {
         let cut = vec![false; n];
         let gain: Vec<f32> = (0..n).map(|v| mc.calculate_gain(&cut, v)).collect();
         let objective = mc.calculate_cut_size(&cut);
-        let sol = MaxCutSolution::new(cut, gain, objective);
+        let sol = MaxCutSolution::new_from_parts(cut, gain, objective);
         (mc, sol)
     }
 
@@ -552,7 +906,7 @@ mod tests {
         let cut = vec![true, false, false];
         let gain: Vec<f32> = (0..n).map(|v| mc.calculate_gain(&cut, v)).collect();
         let objective = mc.calculate_cut_size(&cut);
-        let mut sol = MaxCutSolution::new(cut, gain, objective);
+        let mut sol = MaxCutSolution::new_from_parts(cut, gain, objective);
 
         sol.enable_positive_gain_index();
 
@@ -739,5 +1093,102 @@ mod tests {
         );
         assert!(cloned.positive_gain.is_empty());
         assert!(cloned.positive_gain_pos.is_empty());
+    }
+
+    #[test]
+    fn test_set_weight_overwrites() {
+        let mut mc = MaxCut::new();
+        mc.set_weight(0, 1, 5.0);
+        assert_eq!(mc[(0, 1)], 5.0);
+
+        mc.set_weight(0, 1, 3.0);
+        assert_eq!(mc[(0, 1)], 3.0); // overwritten, not 8.0
+        assert_eq!(mc[(1, 0)], 3.0); // symmetric
+    }
+
+    #[test]
+    fn test_set_weight_and_add_weight_interaction() {
+        let mut mc = MaxCut::new();
+        mc.set_weight(0, 1, 5.0);
+        mc.add_weight(0, 1, 2.0);
+        assert_eq!(mc[(0, 1)], 7.0); // 5.0 + 2.0
+
+        mc.set_weight(0, 1, 1.0); // overwrite back
+        assert_eq!(mc[(0, 1)], 1.0);
+    }
+
+    #[test]
+    fn test_index_existing_edge() {
+        let mc = MaxCut::from_edges([(0, 1, 3.0), (1, 2, 7.0)]);
+        assert_eq!(mc[(0, 1)], 3.0);
+        assert_eq!(mc[(1, 0)], 3.0);
+        assert_eq!(mc[(1, 2)], 7.0);
+    }
+
+    #[test]
+    fn test_index_missing_edge() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0)]);
+        assert_eq!(mc[(0, 2)], 0.0);
+        assert_eq!(mc[(5, 6)], 0.0); // out of bounds
+    }
+
+    #[test]
+    fn test_num_vertices_and_edges() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+        assert_eq!(mc.num_vertices(), 3);
+        assert_eq!(mc.num_edges(), 3);
+    }
+
+    #[test]
+    fn test_is_empty() {
+        let mc = MaxCut::new();
+        assert!(mc.is_empty());
+
+        let mc = MaxCut::from_edges([(0, 1, 1.0)]);
+        assert!(!mc.is_empty());
+    }
+
+    #[test]
+    fn test_from_edges() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
+        assert_eq!(mc[(0, 1)], 1.0);
+        assert_eq!(mc[(0, 2)], 2.0);
+        assert_eq!(mc[(1, 2)], 3.0);
+        assert_eq!(mc.num_edges(), 3);
+    }
+
+    #[test]
+    fn test_from_edges_duplicate_last_wins() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 1, 5.0)]);
+        assert_eq!(mc[(0, 1)], 5.0);
+    }
+
+    #[test]
+    fn test_edges_iterator() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
+        let mut edges: Vec<_> = mc.edges().collect();
+        edges.sort_by_key(|&(i, j, _)| (i, j));
+        assert_eq!(edges, vec![(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
+    }
+
+    #[test]
+    fn test_degree() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+        assert_eq!(mc.degree(0), 2);
+        assert_eq!(mc.degree(1), 2);
+        assert_eq!(mc.degree(2), 2);
+        assert_eq!(mc.degree(99), 0); // out of bounds
+    }
+
+    #[test]
+    fn test_display_empty() {
+        let mc = MaxCut::new();
+        assert_eq!(format!("{mc}"), "MaxCut(empty)");
+    }
+
+    #[test]
+    fn test_display_nonempty() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+        assert_eq!(format!("{mc}"), "MaxCut(vertices: 3, edges: 3)");
     }
 }

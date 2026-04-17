@@ -9,11 +9,41 @@ use super::problem::{MaxCut, MaxCutSolution};
 
 /// Uniform crossover for MaxCut.
 ///
-/// For each vertex, the side assignment is taken from `sol1` or `sol2`
-/// with equal probability.
+/// For each vertex whose side differs between the two parents, the offspring
+/// inherits the side from `sol1` or `sol2` with equal probability.
+/// Vertices with the same side in both parents are inherited unchanged.
+///
+/// # Usage
+///
+/// ```
+/// use optopus::prelude::*;
+/// use optopus::problem::MaxCutUniformCrossover;
+///
+/// let mc = MaxCut::from_edges([
+///     (0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0),
+///     (2, 3, 1.0), (3, 4, 1.0),
+/// ]);
+///
+/// let mut ga = GeneticAlgorithm::new(
+///     StopCondition::iterations(10_000),
+///     20,  // population size
+///     MaxCutUniformCrossover,
+///     Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+///         StopCondition::failed_updates(100),
+///     )),
+/// );
+/// let mut state = SearchState::new(&mc);
+/// ga.run(&mut state).unwrap();
+/// ```
 pub struct MaxCutUniformCrossover;
 
 impl Crossover<MaxCut> for MaxCutUniformCrossover {
+    /// Produces an offspring by cloning `sol1` and then, for each vertex where
+    /// `sol1` and `sol2` disagree, randomly choosing one parent's assignment
+    /// with 50/50 probability.
+    ///
+    /// The resulting solution has correct `gain` and `objective` values
+    /// (maintained incrementally via flip moves).
     fn crossover(
         &mut self,
         prob: &MaxCut,
@@ -42,10 +72,32 @@ impl SubProblemExtractable for MaxCut {
     /// Creates a sub-MaxCut containing only vertices whose side assignment
     /// differs between the two parent solutions.
     ///
-    /// Only edges *between* free vertices are included in the sub-problem.
+    /// Only edges *between* free (disagreeing) vertices are included.
     /// Vertices that are isolated in the sub-problem (no edges to other free vertices)
     /// do not appear in the sub-solution and will inherit `sol1`'s assignment
     /// in [`Self::lift_solution`].
+    ///
+    /// This is the key building block for [`SubProblemBasedCrossover`](crate::heuristic::SubProblemBasedCrossover),
+    /// which solves the sub-problem with a local heuristic before lifting.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
+    ///
+    /// // Parent A: all false, Parent B: all true → all vertices disagree
+    /// let sol_a = MaxCutSolution::new_from_cut(&mc,vec![false; 3]);
+    /// let sol_b = MaxCutSolution::new_from_cut(&mc,vec![true; 3]);
+    /// let sub = mc.extract_sub_problem(&sol_a, &sol_b);
+    /// assert_eq!(sub.num_vertices(), 3);  // all vertices are free
+    /// assert_eq!(sub.num_edges(), 3);
+    ///
+    /// // Same parents → no disagreement → empty sub-problem
+    /// let sub_same = mc.extract_sub_problem(&sol_a, &sol_a);
+    /// assert!(sub_same.is_empty());
+    /// ```
     fn extract_sub_problem(&self, sol1: &MaxCutSolution, sol2: &MaxCutSolution) -> MaxCut {
         let free: HashSet<usize> = self
             .iter_on_vertices()
@@ -64,10 +116,34 @@ impl SubProblemExtractable for MaxCut {
         sub
     }
 
-    /// Lifts the sub-problem solution back to the full solution space.
+    /// Lifts the sub-problem solution back into the full solution space.
     ///
-    /// - Fixed vertices (same side in both parents): inherit from `sol1`.
-    /// - Free vertices (different side): take from `sub_solution`.
+    /// - **Fixed vertices** (same side in both parents): inherit from `sol1`.
+    /// - **Free vertices** (different side): take from `sub_solution`.
+    ///
+    /// The returned solution has correct `gain` and `objective` values.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
+    ///
+    /// // Vertex 0 agrees (false), vertices 1 and 2 disagree
+    /// let sol_a = MaxCutSolution::new_from_cut(&mc,vec![false, false, false]);
+    /// let sol_b = MaxCutSolution::new_from_cut(&mc,vec![false, true, true]);
+    ///
+    /// let sub = mc.extract_sub_problem(&sol_a, &sol_b);
+    ///
+    /// // Solve sub-problem: assign vertex 1=true, 2=false
+    /// let sub_sol = MaxCutSolution::new_from_cut(&sub,vec![false, true, false]);
+    ///
+    /// let lifted = mc.lift_solution(&sol_a, &sol_b, &sub_sol);
+    /// assert_eq!(lifted.cut[0], false);  // fixed from sol_a
+    /// assert_eq!(lifted.cut[1], true);   // from sub_solution
+    /// assert_eq!(lifted.cut[2], false);  // from sub_solution
+    /// ```
     fn lift_solution(
         &self,
         sol1: &MaxCutSolution,
@@ -108,20 +184,11 @@ mod tests {
     }
 
     fn make_sol(mc: &MaxCut, assignments: &[(usize, bool)]) -> MaxCutSolution {
-        let n = mc.len();
-        let mut cut = vec![false; n];
+        let mut cut = vec![false; mc.len()];
         for &(v, side) in assignments {
             cut[v] = side;
         }
-        let gain = mc
-            .iter_on_vertices()
-            .map(|&v| (v, mc.calculate_gain(&cut, v)))
-            .fold(vec![0.0f32; n], |mut g, (v, gv)| {
-                g[v] = gv;
-                g
-            });
-        let objective = mc.calculate_cut_size(&cut);
-        MaxCutSolution::new(cut, gain, objective)
+        MaxCutSolution::new_from_cut(mc, cut)
     }
 
     #[test]
