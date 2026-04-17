@@ -334,8 +334,12 @@ impl HeuristicConfig {
             .ok_or_else(|| format!("'cooling_rate' required for {} {}", problem, self.kind))
     }
     fn req_history_length(&self, problem: &str) -> Result<usize, String> {
-        self.history_length
-            .ok_or_else(|| format!("'history_length' required for {} {}", problem, self.kind))
+        let len = self.history_length
+            .ok_or_else(|| format!("'history_length' required for {} {}", problem, self.kind))?;
+        if len == 0 {
+            return Err(format!("'history_length' must be at least 1 for {} {}", problem, self.kind));
+        }
+        Ok(len)
     }
 }
 

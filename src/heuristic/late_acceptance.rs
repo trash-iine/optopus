@@ -37,7 +37,11 @@ impl<N> LateAcceptanceHillClimbing<N> {
     /// - Small values (e.g., 1) behave like hill climbing.
     /// - Large values (e.g., 50000) allow more diversification.
     /// - A robust default across many problem types is 5000.
+    /// # Panics
+    ///
+    /// Panics if `history_length` is 0.
     pub fn new(stop_condition: StopCondition, history_length: usize) -> Self {
+        assert!(history_length > 0, "history_length must be at least 1");
         Self {
             stop_condition,
             history_length,
@@ -179,6 +183,15 @@ mod tests {
         assert!(lahc.history.is_empty());
         assert_eq!(lahc.history_index, 0);
         assert!(!lahc.initialized);
+    }
+
+    #[test]
+    #[should_panic(expected = "history_length must be at least 1")]
+    fn lahc_history_length_zero_panics() {
+        LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
+            StopCondition::iterations(100),
+            0,
+        );
     }
 
     #[test]
