@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use rand::Rng;
 
+use crate::common::Graph;
 use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
 
 use super::neighbor::MaxCutFlipNeighbor;
@@ -52,7 +53,7 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
     ) -> MaxCutSolution {
         let mut rng = rand::rng();
         let mut sol = sol1.clone();
-        for &i in prob.iter_on_vertices() {
+        for &i in prob.graph.iter_on_vertices() {
             if sol.cut[i] != sol2.cut[i] && rng.random::<bool>() {
                 let neighbor = MaxCutFlipNeighbor {
                     i,
@@ -91,29 +92,29 @@ impl SubProblemExtractable for MaxCut {
     /// let sol_a = MaxCutSolution::new_from_cut(&mc,vec![false; 3]);
     /// let sol_b = MaxCutSolution::new_from_cut(&mc,vec![true; 3]);
     /// let sub = mc.extract_sub_problem(&sol_a, &sol_b);
-    /// assert_eq!(sub.num_vertices(), 3);  // all vertices are free
-    /// assert_eq!(sub.num_edges(), 3);
+    /// assert_eq!(sub.graph.num_vertices(), 3);  // all vertices are free
+    /// assert_eq!(sub.graph.num_edges(), 3);
     ///
     /// // Same parents → no disagreement → empty sub-problem
     /// let sub_same = mc.extract_sub_problem(&sol_a, &sol_a);
-    /// assert!(sub_same.is_empty());
+    /// assert!(sub_same.graph.is_empty());
     /// ```
     fn extract_sub_problem(&self, sol1: &MaxCutSolution, sol2: &MaxCutSolution) -> MaxCut {
         let free: HashSet<usize> = self
-            .iter_on_vertices()
+            .graph.iter_on_vertices()
             .filter(|&&v| sol1.cut[v] != sol2.cut[v])
             .copied()
             .collect();
 
-        let mut sub = MaxCut::new();
+        let mut sub_graph = Graph::new();
         for &u in &free {
-            for &(v, w) in self.iter_on_adjacency(u) {
+            for &(v, w) in self.graph.iter_on_adjacency(u) {
                 if free.contains(&v) && u < v {
-                    sub.add_weight(u, v, w);
+                    sub_graph.add_weight(u, v, w);
                 }
             }
         }
-        sub
+        MaxCut::new(sub_graph)
     }
 
     /// Lifts the sub-problem solution back into the full solution space.
@@ -176,15 +177,11 @@ mod tests {
     use super::MaxCutUniformCrossover;
 
     fn make_mc() -> MaxCut {
-        let mut mc = MaxCut::new();
-        mc.add_weight(0, 1, 1.0);
-        mc.add_weight(1, 2, 2.0);
-        mc.add_weight(0, 2, 3.0);
-        mc
+        MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)])
     }
 
     fn make_sol(mc: &MaxCut, assignments: &[(usize, bool)]) -> MaxCutSolution {
-        let mut cut = vec![false; mc.len()];
+        let mut cut = vec![false; mc.graph.len()];
         for &(v, side) in assignments {
             cut[v] = side;
         }
@@ -208,7 +205,7 @@ mod tests {
         let b = make_sol(&mc, &[(0, true), (1, false), (2, true)]);
         let mut cx = MaxCutUniformCrossover;
         let offspring = cx.crossover(&mc, &a, &b);
-        for &v in mc.iter_on_vertices() {
+        for &v in mc.graph.iter_on_vertices() {
             let g = offspring.gain[v];
             let mut flipped = offspring.cut.clone();
             flipped[v] = !flipped[v];
@@ -225,12 +222,12 @@ mod tests {
         let mc = make_mc();
         let s = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
         let sub_same = mc.extract_sub_problem(&s, &s);
-        assert_eq!(sub_same.len(), 0, "identical parents → 0 free vertices");
+        assert_eq!(sub_same.graph.len(), 0, "identical parents → 0 free vertices");
 
         let all_f = make_sol(&mc, &[(0, false), (1, false), (2, false)]);
         let all_t = make_sol(&mc, &[(0, true), (1, true), (2, true)]);
         let sub_diff = mc.extract_sub_problem(&all_f, &all_t);
-        assert_eq!(sub_diff.len(), 3, "all-different parents → 3 free vertices");
+        assert_eq!(sub_diff.graph.len(), 3, "all-different parents → 3 free vertices");
     }
 
     #[test]
@@ -258,7 +255,7 @@ mod tests {
             "free vertex 2 comes from sub_solution"
         );
 
-        for &v in mc.iter_on_vertices() {
+        for &v in mc.graph.iter_on_vertices() {
             let g = lifted.gain[v];
             let mut flipped = lifted.cut.clone();
             flipped[v] = !flipped[v];

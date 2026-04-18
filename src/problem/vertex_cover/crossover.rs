@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use rand::Rng;
 
+use crate::common::Graph;
 use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
 
 use super::neighbor::VertexCoverFlipNeighbor;
@@ -22,7 +23,7 @@ impl Crossover<VertexCover> for VertexCoverUniformCrossover {
     ) -> VertexCoverSolution {
         let mut rng = rand::rng();
         let mut sol = sol1.clone();
-        for &i in prob.iter_on_vertices() {
+        for &i in prob.graph.iter_on_vertices() {
             if sol.cover[i] != sol2.cover[i] && rng.random::<bool>() {
                 let neighbor = VertexCoverFlipNeighbor {
                     i,
@@ -46,20 +47,20 @@ impl SubProblemExtractable for VertexCover {
         sol2: &VertexCoverSolution,
     ) -> VertexCover {
         let free: HashSet<usize> = self
-            .iter_on_vertices()
+            .graph.iter_on_vertices()
             .filter(|&&v| sol1.cover[v] != sol2.cover[v])
             .copied()
             .collect();
 
-        let mut sub = VertexCover::new();
+        let mut sub_graph = Graph::new();
         for &u in &free {
-            for &(v, _w) in self.iter_on_adjacency(u) {
+            for &(v, _w) in self.graph.iter_on_adjacency(u) {
                 if free.contains(&v) && u < v {
-                    sub.add_edge(u, v);
+                    sub_graph.add_edge(u, v);
                 }
             }
         }
-        sub
+        VertexCover::new(sub_graph)
     }
 
     /// Lifts the sub-solution back into the full solution space.
@@ -94,11 +95,11 @@ mod tests {
     use super::*;
 
     fn make_vc() -> VertexCover {
-        let mut vc = VertexCover::new();
-        vc.add_edge(0, 1);
-        vc.add_edge(1, 2);
-        vc.add_edge(0, 2);
-        vc
+        let mut g = Graph::new();
+        g.add_edge(0, 1);
+        g.add_edge(1, 2);
+        g.add_edge(0, 2);
+        VertexCover::new(g)
     }
 
     #[test]
@@ -131,12 +132,12 @@ mod tests {
         let vc = make_vc();
         let s = vc.solution_from_assignment(&[true, false, true]);
         let sub_same = vc.extract_sub_problem(&s, &s);
-        assert_eq!(sub_same.len(), 0);
+        assert_eq!(sub_same.graph.len(), 0);
 
         let all_f = vc.solution_from_assignment(&[false, false, false]);
         let all_t = vc.solution_from_assignment(&[true, true, true]);
         let sub_diff = vc.extract_sub_problem(&all_f, &all_t);
-        assert_eq!(sub_diff.len(), 3);
+        assert_eq!(sub_diff.graph.len(), 3);
     }
 
     #[test]

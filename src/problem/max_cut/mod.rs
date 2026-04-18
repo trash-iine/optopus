@@ -32,13 +32,14 @@
 //! // Option 1: from_edges (set semantics — duplicate edges are overwritten)
 //! let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
 //!
-//! // Option 2: incremental construction
-//! let mut mc = MaxCut::new();
-//! mc.set_weight(0, 1, 1.0);   // set (overwrite)
-//! mc.add_weight(0, 1, 0.5);   // accumulate → 1.5
+//! // Option 2: from a Graph
+//! let mut g = Graph::new();
+//! g.set_weight(0, 1, 1.0);   // set (overwrite)
+//! g.add_weight(0, 1, 0.5);   // accumulate → 1.5
+//! let mc = MaxCut::new(g);
 //!
 //! // Option 3: load from file (format: "N M\n i j w\n ..." with 1-indexed vertices)
-//! // let mc = MaxCut::load_from_file("data/max_cut/G1").unwrap();
+//! // let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G1").unwrap());
 //! ```
 //!
 //! # Reading graph structure
@@ -48,23 +49,23 @@
 //!
 //! let mc = MaxCut::from_edges([(0, 1, 3.0), (0, 2, 1.0), (1, 2, 2.0)]);
 //!
-//! // Edge weight via Index
-//! assert_eq!(mc[(0, 1)], 3.0);
-//! assert_eq!(mc[(0, 2)], 1.0);
-//! assert_eq!(mc[(3, 4)], 0.0);  // non-existent → 0.0
+//! // Edge weight via Graph's Index
+//! assert_eq!(mc.graph[(0, 1)], 3.0);
+//! assert_eq!(mc.graph[(0, 2)], 1.0);
+//! assert_eq!(mc.graph[(3, 4)], 0.0);  // non-existent → 0.0
 //!
 //! // Graph stats
-//! assert_eq!(mc.num_vertices(), 3);
-//! assert_eq!(mc.num_edges(), 3);
-//! assert_eq!(mc.degree(0), 2);
+//! assert_eq!(mc.graph.num_vertices(), 3);
+//! assert_eq!(mc.graph.num_edges(), 3);
+//! assert_eq!(mc.graph.degree(0), 2);
 //!
 //! // Iterate over edges (each edge appears once, with i < j)
-//! for (i, j, w) in mc.edges() {
+//! for (i, j, w) in mc.graph.edges() {
 //!     println!("{i} -- {j} [w={w}]");
 //! }
 //!
 //! // Iterate over neighbors of a vertex
-//! for &(j, w) in mc.neighbors(0) {
+//! for &(j, w) in mc.graph.neighbors(0) {
 //!     println!("0 -- {j} [w={w}]");
 //! }
 //! ```

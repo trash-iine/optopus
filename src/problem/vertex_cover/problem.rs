@@ -1,3 +1,4 @@
+use crate::common::Graph;
 use crate::search_state::{ProblemTrait, Rankable};
 
 /// The Minimum Vertex Cover problem.
@@ -9,14 +10,8 @@ use crate::search_state::{ProblemTrait, Rankable};
 /// `|cover| + penalty_weight * uncovered_edges`, with `penalty_weight = n + 1`
 /// so any optimum is feasible.
 pub struct VertexCover {
-    /// `adj[i]` = list of `(j, weight)` for all neighbours of vertex `i`.
-    /// Edge weights are unused (Vertex Cover treats the graph as unweighted),
-    /// but stored to share the parser format with [`crate::problem::MaxCut`].
-    adj: Vec<Vec<(usize, f32)>>,
-    /// Sorted list of vertex IDs (used by `iter_on_vertices`).
-    vertices: Vec<usize>,
-    /// Penalty weight on uncovered edges. Set to `n + 1` so the optimum is feasible.
-    penalty_weight: i32,
+    /// The underlying graph.
+    pub graph: Graph,
 }
 
 /// A solution for the Vertex Cover problem.
@@ -40,215 +35,49 @@ impl Rankable for VertexCoverSolution {
     }
 }
 
-impl Default for VertexCover {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl VertexCover {
-    /// Creates a new empty [`VertexCover`].
-    pub fn new() -> Self {
-        Self {
-            adj: vec![],
-            vertices: vec![],
-            penalty_weight: 1,
-        }
+    /// Creates a [`VertexCover`] from a [`Graph`].
+    pub fn new(graph: Graph) -> Self {
+        Self { graph }
     }
 
-    /// Returns the number of vertices (`max_vertex_id + 1`).
-    pub fn len(&self) -> usize {
-        self.adj.len()
-    }
-
-    /// Returns `true` if the graph has no vertices.
-    pub fn is_empty(&self) -> bool {
-        self.adj.is_empty()
-    }
-
-    /// Returns the penalty weight applied to each uncovered edge.
+    /// Returns the penalty weight applied to each uncovered edge (`graph.len() + 1`).
     pub fn penalty_weight(&self) -> i32 {
-        self.penalty_weight
-    }
-
-    /// Iterator over all vertex IDs that have at least one edge.
-    pub fn iter_on_vertices(&self) -> impl Iterator<Item = &usize> {
-        self.vertices.iter()
-    }
-
-    /// Iterator over `(neighbor_id, weight)` pairs for vertex `i`.
-    pub fn iter_on_adjacency(&self, i: usize) -> std::slice::Iter<'_, (usize, f32)> {
-        if i < self.adj.len() {
-            self.adj[i].iter()
-        } else {
-            [].iter()
-        }
-    }
-
-    /// Adds an undirected edge `(i, j)` to the graph and refreshes `penalty_weight`.
-    pub fn add_edge(&mut self, i: usize, j: usize) {
-        let n = i.max(j) + 1;
-        if self.adj.len() < n {
-            self.adj.resize_with(n, Vec::new);
-        }
-        self.add_directed(i, j);
-        self.add_directed(j, i);
-        for &v in &[i, j] {
-            if let Err(pos) = self.vertices.binary_search(&v) {
-                self.vertices.insert(pos, v);
-            }
-        }
-        self.penalty_weight = (self.adj.len() as i32) + 1;
-    }
-
-    fn add_directed(&mut self, from: usize, to: usize) {
-        match self.adj[from].binary_search_by_key(&to, |&(v, _)| v) {
-            Ok(_) => {} // already present; weights ignored
-            Err(idx) => self.adj[from].insert(idx, (to, 1.0)),
-        }
-    }
-
-    /// Returns `true` if there is an edge between `i` and `j`.
-    pub fn has_edge(&self, i: usize, j: usize) -> bool {
-        i < self.adj.len() && self.adj[i].binary_search_by_key(&j, |&(v, _)| v).is_ok()
-    }
-
-    /// Loads a Vertex Cover instance from a file.
-    ///
-    /// The file format mirrors MaxCut: a header line `N M` followed by edge lines
-    /// `i j w` (1-indexed vertices, weight ignored).
-    pub fn load_from_file(filename: &str) -> Result<Self, crate::error::OptError> {
-        use crate::error::OptError;
-        use std::io::BufRead;
-
-        let err = |line: usize, detail: String| OptError::FileLoad {
-            path: filename.to_string(),
-            line,
-            detail,
-        };
-
-        let file = std::fs::File::open(filename)
-            .map_err(|e| err(0, format!("failed to open file: {e}")))?;
-        let reader = std::io::BufReader::new(file);
-        let mut line_iter = reader.lines();
-
-        let n = {
-            let line = line_iter
-                .next()
-                .ok_or_else(|| err(1, "file is empty, expected header 'N M'".into()))?
-                .map_err(|e| err(1, format!("failed to read header line: {e}")))?;
-            let mut iter = line.split_whitespace();
-            let n = iter
-                .next()
-                .ok_or_else(|| err(1, "expected header 'N M', but line is empty".into()))?
-                .parse::<usize>()
-                .map_err(|e| err(1, format!("failed to parse vertex count N: {e}")))?;
-            let _m = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        1,
-                        "expected header 'N M', but edge count M is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(1, format!("failed to parse edge count M: {e}")))?;
-            n
-        };
-
-        let mut vc = VertexCover {
-            adj: vec![vec![]; n],
-            vertices: (0..n).collect(),
-            penalty_weight: (n as i32) + 1,
-        };
-        let mut line_num = 1;
-        for result in line_iter {
-            line_num += 1;
-            let line = result.map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
-            if line.trim().is_empty() {
-                continue;
-            }
-            let mut iter = line.split_whitespace();
-            let i = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        "expected edge 'i j [w]', but vertex i is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(line_num, format!("failed to parse vertex i: {e}")))?;
-            if i == 0 {
-                return Err(err(
-                    line_num,
-                    "vertex index i must be >= 1 (1-indexed)".into(),
-                ));
-            }
-            let i = i - 1;
-            let j = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        "expected edge 'i j [w]', but vertex j is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(line_num, format!("failed to parse vertex j: {e}")))?;
-            if j == 0 {
-                return Err(err(
-                    line_num,
-                    "vertex index j must be >= 1 (1-indexed)".into(),
-                ));
-            }
-            let j = j - 1;
-            // weight (if present) is consumed but ignored
-            let _ = iter.next();
-            // File-loaded instances never have duplicate edges, so push directly.
-            vc.adj[i].push((j, 1.0));
-            vc.adj[j].push((i, 1.0));
-        }
-
-        for neighbors in &mut vc.adj {
-            neighbors.sort_by_key(|&(v, _)| v);
-        }
-
-        Ok(vc)
+        (self.graph.len() as i32) + 1
     }
 
     /// Recomputes `(gain, objective, cover_size, uncovered_edges)` from scratch
     /// for the given assignment slice.
     pub(crate) fn calculate_state(&self, cover: &[bool]) -> (Vec<i32>, i32, usize, usize) {
-        let n = self.adj.len();
-        let pw = self.penalty_weight;
+        let n = self.graph.len();
+        let pw = self.penalty_weight();
         let mut gain = vec![0i32; n];
         let mut cover_size: usize = 0;
         let mut uncovered_edges: usize = 0;
 
-        for &v in &self.vertices {
+        for &v in self.graph.iter_on_vertices() {
             if cover[v] {
                 cover_size += 1;
             }
         }
 
         // Count uncovered edges (each edge counted once via i < j).
-        for &i in &self.vertices {
-            for &(j, _w) in &self.adj[i] {
+        for &i in self.graph.iter_on_vertices() {
+            for &(j, _w) in self.graph.iter_on_adjacency(i) {
                 if i < j && !cover[i] && !cover[j] {
                     uncovered_edges += 1;
                 }
             }
         }
 
-        for &i in &self.vertices {
+        for &i in self.graph.iter_on_vertices() {
             // gain[i] = Δobjective if `i` is flipped.
             //   ΔcoverSize = +1 (insertion) or -1 (removal)
             //   For each neighbor j with !cover[j]: edge (i,j) flips between
             //     covered ↔ uncovered, contributing ±penalty_weight.
             let bi = cover[i];
             let mut neigh_uncovered_now: i32 = 0;
-            for &(j, _w) in &self.adj[i] {
+            for &(j, _w) in self.graph.iter_on_adjacency(i) {
                 if !cover[j] {
                     neigh_uncovered_now += 1;
                 }
@@ -270,7 +99,7 @@ impl VertexCover {
 
     /// Builds a [`VertexCoverSolution`] from a boolean assignment (same length as `len()`).
     pub fn solution_from_assignment(&self, assignment: &[bool]) -> VertexCoverSolution {
-        let n = self.adj.len();
+        let n = self.graph.len();
         let cover = if assignment.len() >= n {
             assignment[..n].to_vec()
         } else {
@@ -292,9 +121,9 @@ impl VertexCover {
 impl ProblemTrait for VertexCover {
     type Solution = VertexCoverSolution;
     fn new_solution(&self, rng: &mut impl rand::Rng) -> Self::Solution {
-        let n = self.adj.len();
+        let n = self.graph.len();
         let mut cover = vec![false; n];
-        for &i in &self.vertices {
+        for &i in self.graph.iter_on_vertices() {
             cover[i] = rng.random_bool(0.5);
         }
         let (gain, objective, cover_size, uncovered_edges) = self.calculate_state(&cover);
@@ -318,36 +147,36 @@ mod tests {
 
     /// Triangle graph: vertices 0,1,2 with edges (0,1), (0,2), (1,2). Min VC = 2.
     fn make_triangle() -> VertexCover {
-        let mut vc = VertexCover::new();
-        vc.add_edge(0, 1);
-        vc.add_edge(0, 2);
-        vc.add_edge(1, 2);
+        let mut vc = VertexCover::new(Graph::new());
+        vc.graph.add_edge(0, 1);
+        vc.graph.add_edge(0, 2);
+        vc.graph.add_edge(1, 2);
         vc
     }
 
     /// Path P4: 0-1-2-3 with edges (0,1), (1,2), (2,3). Min VC = 2 (e.g. {1, 2}).
     fn make_path4() -> VertexCover {
-        let mut vc = VertexCover::new();
-        vc.add_edge(0, 1);
-        vc.add_edge(1, 2);
-        vc.add_edge(2, 3);
+        let mut vc = VertexCover::new(Graph::new());
+        vc.graph.add_edge(0, 1);
+        vc.graph.add_edge(1, 2);
+        vc.graph.add_edge(2, 3);
         vc
     }
 
     #[test]
     fn test_blank_graph() {
-        let vc = VertexCover::new();
-        assert_eq!(vc.len(), 0);
+        let vc = VertexCover::new(Graph::new());
+        assert_eq!(vc.graph.len(), 0);
     }
 
     #[test]
     fn test_add_edge_and_has_edge() {
         let vc = make_triangle();
-        assert_eq!(vc.len(), 3);
-        assert!(vc.has_edge(0, 1));
-        assert!(vc.has_edge(1, 2));
-        assert!(vc.has_edge(0, 2));
-        assert!(!vc.has_edge(0, 0));
+        assert_eq!(vc.graph.len(), 3);
+        assert!(vc.graph.has_edge(0, 1));
+        assert!(vc.graph.has_edge(1, 2));
+        assert!(vc.graph.has_edge(0, 2));
+        assert!(!vc.graph.has_edge(0, 0));
     }
 
     #[test]
@@ -393,7 +222,7 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(42);
         let mut sol = vc.new_solution(&mut rng);
         for _ in 0..200 {
-            let i = rand::Rng::random_range(&mut rng, 0..vc.len());
+            let i = rand::Rng::random_range(&mut rng, 0..vc.graph.len());
             let neighbor = VertexCoverFlipNeighbor { i, gain: sol.gain[i] };
             neighbor.apply_to_solution(&vc, &mut sol).unwrap();
 

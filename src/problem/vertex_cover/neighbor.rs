@@ -79,7 +79,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
         // For each neighbour `j`:
         //   - If !cover[j]: edge (i, j) flips between covered ↔ uncovered.
         //   - gain[j] shifts by ±pw depending on (cover[j], was_in).
-        for &(j, _w) in prob.iter_on_adjacency(self.i) {
+        for &(j, _w) in prob.graph.iter_on_adjacency(self.i) {
             let cj = sol.cover[j];
             if !cj {
                 if was_in {
@@ -108,7 +108,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
     }
 
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
-        prob.iter_on_vertices().map(|&i| VertexCoverFlipNeighbor {
+        prob.graph.iter_on_vertices().map(|&i| VertexCoverFlipNeighbor {
             i,
             gain: sol.gain[i],
         })
@@ -202,14 +202,14 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
 
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
         let pw = prob.penalty_weight();
-        prob.iter_on_vertices().flat_map(move |&i| {
-            prob.iter_on_vertices()
+        prob.graph.iter_on_vertices().flat_map(move |&i| {
+            prob.graph.iter_on_vertices()
                 .filter(move |&&j| j < i && (sol.cover[i] != sol.cover[j]))
                 .map(move |&j| {
                     // Combined Δobjective for flipping i then j (cover_size unchanged):
                     //   gain[i] + gain[j] - pw if (i, j) is an edge, else gain[i] + gain[j].
                     // The -pw term cancels the double-counted toggle of edge (i, j).
-                    let edge_correction = if prob.has_edge(i, j) { pw } else { 0 };
+                    let edge_correction = if prob.graph.has_edge(i, j) { pw } else { 0 };
                     Self {
                         i,
                         j,
@@ -235,11 +235,11 @@ mod tests {
     use crate::search_state::SearchState;
 
     fn make_triangle() -> VertexCover {
-        let mut vc = VertexCover::new();
-        vc.add_edge(0, 1);
-        vc.add_edge(0, 2);
-        vc.add_edge(1, 2);
-        vc
+        let mut g = crate::common::Graph::new();
+        g.add_edge(0, 1);
+        g.add_edge(0, 2);
+        g.add_edge(1, 2);
+        VertexCover::new(g)
     }
 
     #[test]

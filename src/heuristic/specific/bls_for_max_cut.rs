@@ -300,7 +300,7 @@ impl BreakoutLocalSearch {
 
             let swap_gain = state.solution.gain[v0.i]
                 + state.solution.gain[v1.i]
-                + 2.0 * state.instance.get_weight(v0.i, v1.i);
+                + 2.0 * state.instance.graph.get_weight(v0.i, v1.i);
 
             // Aspiration: accept the best swap if it improves the global best.
             if swap_gain + state.solution.objective > state.best_solution.objective {
@@ -328,7 +328,7 @@ impl BreakoutLocalSearch {
                 };
                 let fallback_gain = state.solution.gain[i]
                     + state.solution.gain[j]
-                    + 2.0 * state.instance.get_weight(i, j);
+                    + 2.0 * state.instance.graph.get_weight(i, j);
                 let swap = MaxCutSwapNeighbor {
                     i,
                     j,
@@ -353,7 +353,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        self.ensure_tabu_vec(state.instance.len());
+        self.ensure_tabu_vec(state.instance.graph.len());
 
         tracing::debug!(
             iteration = state.iteration,

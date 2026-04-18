@@ -6,6 +6,9 @@
 //! use optopus::prelude::*;
 //! ```
 
+// Common types
+pub use crate::common::Graph;
+
 // Error type
 pub use crate::error::OptError;
 
