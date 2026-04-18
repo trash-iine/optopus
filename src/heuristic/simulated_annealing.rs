@@ -24,6 +24,15 @@ pub fn boltzmann_accept(delta: Evaluable<f64>, temperature: f64) -> bool {
 ///
 /// Requires the neighbor type to implement [`Evaluable<f64>`], where the evaluation
 /// value represents the **worsening** amount (positive = worse move).
+///
+/// # References
+///
+/// - Kirkpatrick, S., Gelatt, C. D., and Vecchi, M. P. "Optimization by Simulated Annealing."
+///   *Science*, 220(4598), 671-680, 1983.
+///   [DOI](https://doi.org/10.1126/science.220.4598.671)
+/// - Cerny, V. "Thermodynamical Approach to the Traveling Salesman Problem: An Efficient
+///   Simulation Algorithm." *Journal of Optimization Theory and Applications*, 45(1), 41-51, 1985.
+///   [DOI](https://doi.org/10.1007/BF00940812)
 pub struct SimulatedAnnealing<N> {
     pub stop_condition: StopCondition,
     pub initial_temperature: f64,

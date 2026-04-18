@@ -33,6 +33,12 @@ enum PerturbationType {
 /// The perturbation length `l` increases by 1 each time the solution does not change,
 /// resetting to `l0` whenever the solution changes.
 ///
+/// # References
+///
+/// - Benlic, U. and Hao, J.-K. "Breakout Local Search for the Max-Cut problem." *Engineering
+///   Applications of Artificial Intelligence*, 26(3), 1162-1173, 2013.
+///   [DOI](https://doi.org/10.1016/j.engappai.2012.09.001)
+///
 /// # Parameters
 ///
 /// - `tabu_tenure` — tabu tenure range `(min, max)` in iterations
@@ -294,7 +300,7 @@ impl BreakoutLocalSearch {
 
             let swap_gain = state.solution.gain[v0.i]
                 + state.solution.gain[v1.i]
-                + 2.0 * state.instance.get_weight(v0.i, v1.i);
+                + 2.0 * state.instance.graph.get_weight(v0.i, v1.i);
 
             // Aspiration: accept the best swap if it improves the global best.
             if swap_gain + state.solution.objective > state.best_solution.objective {
@@ -322,7 +328,7 @@ impl BreakoutLocalSearch {
                 };
                 let fallback_gain = state.solution.gain[i]
                     + state.solution.gain[j]
-                    + 2.0 * state.instance.get_weight(i, j);
+                    + 2.0 * state.instance.graph.get_weight(i, j);
                 let swap = MaxCutSwapNeighbor {
                     i,
                     j,
@@ -347,7 +353,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        self.ensure_tabu_vec(state.instance.len());
+        self.ensure_tabu_vec(state.instance.graph.len());
 
         tracing::debug!(
             iteration = state.iteration,

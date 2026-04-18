@@ -7,13 +7,15 @@
 use rayon::prelude::*;
 
 use crate::{
+    common::Graph,
     error::OptError,
     heuristic::{
-        BreakoutLocalSearchForMaxCut, Heuristic, Iterated, LocalSearch, RLSearch, Restart,
-        RewardShaping, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
+        BreakoutLocalSearchForMaxCut, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
+        RLSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
     },
     problem::{
         MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, QuboFlipNeighbor, QuboSwapNeighbor,
+        VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
         max_cut::MaxCut,
         qubo::{Qubo, QuboSolution},
         sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
@@ -40,7 +42,7 @@ pub trait BenchmarkSolution: Clone {
 
 impl BenchmarkProblem for MaxCut {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        MaxCut::load_from_file(path)
+        Graph::load_from_file(path).map(MaxCut::new)
     }
 }
 
@@ -113,6 +115,27 @@ impl BenchmarkSolution for TspSolution {
     }
 }
 
+impl BenchmarkProblem for VertexCover {
+    fn load_instance(path: &str) -> Result<Self, OptError> {
+        Graph::load_from_file(path).map(VertexCover::new)
+    }
+}
+
+impl BenchmarkSolution for VertexCoverSolution {
+    fn best_objective_f64(&self) -> f64 {
+        // Use penalty-augmented objective so infeasible solutions are correctly penalized.
+        self.objective as f64
+    }
+    fn encode_as_indices(&self) -> Vec<usize> {
+        self.cover
+            .iter()
+            .enumerate()
+            .filter(|&(_, &v)| v)
+            .map(|(i, _)| i)
+            .collect()
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Config types (Deserialize + Serialize) — used as input from a TOML file
 // ---------------------------------------------------------------------------
@@ -124,6 +147,7 @@ pub enum ProblemKind {
     Qubo,
     Sat,
     Tsp,
+    VertexCover,
 }
 
 /// Stop condition as expressed in a config file (duration in seconds instead of `Duration`).
@@ -159,7 +183,7 @@ pub enum NeighborKind {
 /// Uses a flat struct with optional fields; the `kind` string selects the algorithm.
 ///
 /// Valid `kind` values:
-/// - `"LocalSearch"`, `"TabuSearch"`, `"SimulatedAnnealing"`, `"BreakoutLocalSearch"` (MaxCut only)
+/// - `"LocalSearch"`, `"TabuSearch"`, `"SimulatedAnnealing"`, `"LateAcceptanceHillClimbing"`, `"BreakoutLocalSearch"` (MaxCut only)
 /// - `"RLSearch"` — reinforcement learning move selection with REINFORCE policy gradient
 /// - `"Sequential"` — repeats its `steps` cycle until `stop_condition` is met
 /// - `"Iterated"` — `steps\[0\]` = search phase, `steps\[1\]` = perturbation phase (ILS)
@@ -187,6 +211,8 @@ pub struct HeuristicConfig {
     pub p0: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub q: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub history_length: Option<usize>,
     #[serde(default)]
     pub stop_condition: StopConditionConfig,
     /// Sub-heuristics for `"Sequential"`, `"Iterated"`, and `"Restart"`.
@@ -350,6 +376,14 @@ impl HeuristicConfig {
         self.cooling_rate
             .ok_or_else(|| format!("'cooling_rate' required for {} {}", problem, self.kind))
     }
+    fn req_history_length(&self, problem: &str) -> Result<usize, String> {
+        let len = self.history_length
+            .ok_or_else(|| format!("'history_length' required for {} {}", problem, self.kind))?;
+        if len == 0 {
+            return Err(format!("'history_length' must be at least 1 for {} {}", problem, self.kind));
+        }
+        Ok(len)
+    }
     fn parse_reward_shaping(&self) -> Result<RewardShaping, String> {
         match self.reward_shaping.as_deref().unwrap_or("Normalized") {
             "Raw" => Ok(RewardShaping::Raw),
@@ -435,6 +469,14 @@ impl BenchmarkableProblem for MaxCut {
                     n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
                 }
             }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("MaxCut")?;
+                match config.req_neighbor("MaxCut")? {
+                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(cond, history_length))),
+                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<MaxCutSwapNeighbor>::new(cond, history_length))),
+                    n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
+                }
+            }
             "BreakoutLocalSearch" => {
                 let tenure = config.req_tabu("MaxCut")?;
                 let t = config.t.ok_or("'t' required for MaxCut BreakoutLocalSearch")?;
@@ -481,6 +523,14 @@ impl BenchmarkableProblem for Qubo {
                     n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
                 }
             }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("Qubo")?;
+                match config.req_neighbor("Qubo")? {
+                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<QuboFlipNeighbor>::new(cond, history_length))),
+                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<QuboSwapNeighbor>::new(cond, history_length))),
+                    n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
+                }
+            }
             "RLSearch" => match config.req_neighbor("Qubo")? {
                 NeighborKind::Flip => build_rl_search_from_config::<Qubo, QuboFlipNeighbor>(config, cond),
                 NeighborKind::Swap => build_rl_search_from_config::<Qubo, QuboSwapNeighbor>(config, cond),
@@ -516,6 +566,14 @@ impl BenchmarkableProblem for Sat {
                 match config.req_neighbor("Sat")? {
                     NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<SatFlipNeighbor>::new(cond, temp, cooling))),
                     NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<SatSwapNeighbor>::new(cond, temp, cooling))),
+                    n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
+                }
+            }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("Sat")?;
+                match config.req_neighbor("Sat")? {
+                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<SatFlipNeighbor>::new(cond, history_length))),
+                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<SatSwapNeighbor>::new(cond, history_length))),
                     n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
                 }
             }
@@ -557,12 +615,78 @@ impl BenchmarkableProblem for TspWithCoordinates {
                     n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
                 }
             }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("Tsp")?;
+                match config.req_neighbor("Tsp")? {
+                    NeighborKind::TwoOpt => Ok(Box::new(LateAcceptanceHillClimbing::<TspTwoOptNeighbor>::new(cond, history_length))),
+                    NeighborKind::Relocate => Ok(Box::new(LateAcceptanceHillClimbing::<TspRelocateNeighbor>::new(cond, history_length))),
+                    n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
+                }
+            }
             "RLSearch" => match config.req_neighbor("Tsp")? {
                 NeighborKind::TwoOpt => build_rl_search_from_config::<TspWithCoordinates, TspTwoOptNeighbor>(config, cond),
                 NeighborKind::Relocate => build_rl_search_from_config::<TspWithCoordinates, TspRelocateNeighbor>(config, cond),
                 n => Err(format!("Invalid neighbor {:?} for Tsp RLSearch (use TwoOpt or Relocate)", n)),
             },
             k => Err(format!("Unknown kind '{}' for Tsp", k)),
+        }
+    }
+}
+
+impl BenchmarkableProblem for VertexCover {
+    fn build_base_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, String> {
+        match config.kind.as_str() {
+            "LocalSearch" => match config.req_neighbor("VertexCover")? {
+                NeighborKind::Flip => {
+                    Ok(Box::new(LocalSearch::<VertexCoverFlipNeighbor>::new(cond)))
+                }
+                NeighborKind::Swap => {
+                    Ok(Box::new(LocalSearch::<VertexCoverSwapNeighbor>::new(cond)))
+                }
+                n => Err(format!(
+                    "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
+                    n
+                )),
+            },
+            "TabuSearch" => {
+                let tenure = config.req_tabu("VertexCover")?;
+                match config.req_neighbor("VertexCover")? {
+                    NeighborKind::Flip => Ok(Box::new(
+                        TabuSearch::<VertexCoverFlipNeighbor>::new(cond, tenure, None),
+                    )),
+                    NeighborKind::Swap => Ok(Box::new(
+                        TabuSearch::<VertexCoverSwapNeighbor>::new(cond, tenure, None),
+                    )),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
+                        n
+                    )),
+                }
+            }
+            "SimulatedAnnealing" => {
+                let temp = config.req_temp("VertexCover")?;
+                let cooling = config.req_cooling("VertexCover")?;
+                match config.req_neighbor("VertexCover")? {
+                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<
+                        VertexCoverFlipNeighbor,
+                    >::new(
+                        cond, temp, cooling
+                    ))),
+                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<
+                        VertexCoverSwapNeighbor,
+                    >::new(
+                        cond, temp, cooling
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
+                        n
+                    )),
+                }
+            }
+            k => Err(format!("Unknown kind '{}' for VertexCover", k)),
         }
     }
 }
@@ -690,6 +814,7 @@ fn run_for_problem_kind(
         ProblemKind::Qubo => run_typed::<Qubo>(instance_path, config),
         ProblemKind::Sat => run_typed::<Sat>(instance_path, config),
         ProblemKind::Tsp => run_typed::<TspWithCoordinates>(instance_path, config),
+        ProblemKind::VertexCover => run_typed::<VertexCover>(instance_path, config),
     }
 }
 
@@ -910,7 +1035,10 @@ impl Benchmark {
                     .collect();
                 runs.sort_by_key(|r| r.run_index);
 
-                let minimize = matches!(problem_kind, ProblemKind::Qubo | ProblemKind::Tsp);
+                let minimize = matches!(
+                    problem_kind,
+                    ProblemKind::Qubo | ProblemKind::Tsp | ProblemKind::VertexCover
+                );
                 let summary = compute_summary(&runs, minimize);
                 tracing::info!(
                     instance = %instance_path,

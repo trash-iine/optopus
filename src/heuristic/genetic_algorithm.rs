@@ -15,6 +15,12 @@ use crate::search_state::{Crossover, ProblemTrait, Rankable, SearchState, Search
 ///
 /// The global best solution is tracked in `SearchState::best_solution`.
 ///
+/// # References
+///
+/// - Holland, J. H. *Adaptation in Natural and Artificial Systems*. University of Michigan Press, 1975.
+/// - Goldberg, D. E. *Genetic Algorithms in Search, Optimization, and Machine Learning*.
+///   Addison-Wesley, 1989.
+///
 /// # Type parameters
 ///
 /// - `P` — the problem type; must implement [`ProblemTrait`].
@@ -243,11 +249,7 @@ mod tests {
 
     #[test]
     fn genetic_algorithm_initializes_best_idx_before_first_replacement() {
-        let mut mc = MaxCut::new();
-        mc.add_weight(0, 1, 1.0);
-        mc.add_weight(0, 2, 1.0);
-        mc.add_weight(1, 2, 1.0);
-
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
         let mut state = SearchState::new(&mc);
         let mut ga = GeneticAlgorithm::new(
             StopCondition::iterations(1),

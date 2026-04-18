@@ -3,6 +3,7 @@
 mod beam_search;
 mod crossover;
 mod genetic_algorithm;
+mod late_acceptance;
 mod local_search;
 mod random_walk;
 pub mod reinforcement_learning;
@@ -15,6 +16,7 @@ mod tabu_search;
 pub use beam_search::BeamSearch;
 pub use crossover::SubProblemBasedCrossover;
 pub use genetic_algorithm::GeneticAlgorithm;
+pub use late_acceptance::LateAcceptanceHillClimbing;
 pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;
 pub use restart::Restart;
