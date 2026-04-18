@@ -90,12 +90,7 @@ mod tests {
         for &(i, v) in assignments {
             x[i] = v;
         }
-        let mut gain = vec![0; n];
-        for &i in qubo.iter_on_variables() {
-            gain[i] = qubo.calculate_gain(&x, i);
-        }
-        let objective = qubo.calculate_energy(&x);
-        QuboSolution { x, gain, objective }
+        QuboSolution::new_from_assignment(qubo, x)
     }
 
     #[test]
