@@ -14,6 +14,14 @@ use crate::search_state::{
 /// uniformly from the range `tabu_tenure = (min, max)`.
 ///
 /// To use this heuristic, the neighbor type must implement [`EnabledTabu`] which defines how to manage the tabu map and tenure.
+///
+/// # References
+///
+/// - Glover, F. "Future Paths for Integer Programming and Links to Artificial Intelligence."
+///   *Computers & Operations Research*, 13(5), 533-549, 1986.
+///   [DOI](https://doi.org/10.1016/0305-0548(86)90048-1)
+/// - Glover, F. "Tabu Search — Part I." *ORSA Journal on Computing*, 1(3), 190-206, 1989.
+///   [DOI](https://doi.org/10.1287/ijoc.1.3.190)
 pub struct TabuSearch<N>
 where
     N: Clone + EnabledTabu,

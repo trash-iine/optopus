@@ -4,11 +4,13 @@
 //! Each result captures the configuration, best objective value, time-to-best, and solution.
 //! Results can be serialized to TOML (or any serde format) for offline analysis.
 
+use rayon::prelude::*;
+
 use crate::{
     error::OptError,
     heuristic::{
-        BreakoutLocalSearchForMaxCut, Heuristic, Iterated, LocalSearch, Restart, Sequential,
-        SimulatedAnnealing, StopCondition, TabuSearch,
+        BreakoutLocalSearchForMaxCut, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
+        Restart, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
     },
     problem::{
         MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, QuboFlipNeighbor, QuboSwapNeighbor,
@@ -180,7 +182,7 @@ pub enum NeighborKind {
 /// Uses a flat struct with optional fields; the `kind` string selects the algorithm.
 ///
 /// Valid `kind` values:
-/// - `"LocalSearch"`, `"TabuSearch"`, `"SimulatedAnnealing"`, `"BreakoutLocalSearch"` (MaxCut only)
+/// - `"LocalSearch"`, `"TabuSearch"`, `"SimulatedAnnealing"`, `"LateAcceptanceHillClimbing"`, `"BreakoutLocalSearch"` (MaxCut only)
 /// - `"Sequential"` — repeats its `steps` cycle until `stop_condition` is met
 /// - `"Iterated"` — `steps\[0\]` = search phase, `steps\[1\]` = perturbation phase (ILS)
 /// - `"Restart"` — runs `steps\[0\]` then resets to a new random solution when `restart_condition` is met
@@ -207,6 +209,8 @@ pub struct HeuristicConfig {
     pub p0: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub q: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub history_length: Option<usize>,
     #[serde(default)]
     pub stop_condition: StopConditionConfig,
     /// Sub-heuristics for `"Sequential"`, `"Iterated"`, and `"Restart"`.
@@ -352,6 +356,14 @@ impl HeuristicConfig {
         self.cooling_rate
             .ok_or_else(|| format!("'cooling_rate' required for {} {}", problem, self.kind))
     }
+    fn req_history_length(&self, problem: &str) -> Result<usize, String> {
+        let len = self.history_length
+            .ok_or_else(|| format!("'history_length' required for {} {}", problem, self.kind))?;
+        if len == 0 {
+            return Err(format!("'history_length' must be at least 1 for {} {}", problem, self.kind));
+        }
+        Ok(len)
+    }
 }
 
 impl BenchmarkableProblem for MaxCut {
@@ -379,6 +391,14 @@ impl BenchmarkableProblem for MaxCut {
                 match config.req_neighbor("MaxCut")? {
                     NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<MaxCutFlipNeighbor>::new(cond, temp, cooling))),
                     NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<MaxCutSwapNeighbor>::new(cond, temp, cooling))),
+                    n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
+                }
+            }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("MaxCut")?;
+                match config.req_neighbor("MaxCut")? {
+                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(cond, history_length))),
+                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<MaxCutSwapNeighbor>::new(cond, history_length))),
                     n => Err(format!("Invalid neighbor {:?} for MaxCut (use Flip or Swap)", n)),
                 }
             }
@@ -423,6 +443,14 @@ impl BenchmarkableProblem for Qubo {
                     n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
                 }
             }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("Qubo")?;
+                match config.req_neighbor("Qubo")? {
+                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<QuboFlipNeighbor>::new(cond, history_length))),
+                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<QuboSwapNeighbor>::new(cond, history_length))),
+                    n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
+                }
+            }
             k => Err(format!("Unknown kind '{}' for Qubo", k)),
         }
     }
@@ -456,6 +484,14 @@ impl BenchmarkableProblem for Sat {
                     n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
                 }
             }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("Sat")?;
+                match config.req_neighbor("Sat")? {
+                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<SatFlipNeighbor>::new(cond, history_length))),
+                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<SatSwapNeighbor>::new(cond, history_length))),
+                    n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
+                }
+            }
             k => Err(format!("Unknown kind '{}' for Sat", k)),
         }
     }
@@ -486,6 +522,14 @@ impl BenchmarkableProblem for TspWithCoordinates {
                 match config.req_neighbor("Tsp")? {
                     NeighborKind::TwoOpt => Ok(Box::new(SimulatedAnnealing::<TspTwoOptNeighbor>::new(cond, temp, cooling))),
                     NeighborKind::Relocate => Ok(Box::new(SimulatedAnnealing::<TspRelocateNeighbor>::new(cond, temp, cooling))),
+                    n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
+                }
+            }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("Tsp")?;
+                match config.req_neighbor("Tsp")? {
+                    NeighborKind::TwoOpt => Ok(Box::new(LateAcceptanceHillClimbing::<TspTwoOptNeighbor>::new(cond, history_length))),
+                    NeighborKind::Relocate => Ok(Box::new(LateAcceptanceHillClimbing::<TspRelocateNeighbor>::new(cond, history_length))),
                     n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
                 }
             }
@@ -866,37 +910,35 @@ impl Benchmark {
 
         for (instance_path, problem_kind) in &instance_paths {
             for heuristic_cfg in &config.heuristics {
-                let mut runs: Vec<SingleRunResult> = Vec::new();
+                tracing::info!(
+                    instance = %instance_path,
+                    heuristic = %heuristic_cfg.kind,
+                    num_runs = config.num_runs,
+                    max_iteration = ?heuristic_cfg.stop_condition.max_iteration,
+                    max_duration_secs = ?heuristic_cfg.stop_condition.max_duration_secs,
+                    max_failed_update = ?heuristic_cfg.stop_condition.max_failed_update,
+                    "Starting benchmark"
+                );
 
-                for run_index in 0..config.num_runs {
-                    tracing::info!(
-                        run = run_index + 1,
-                        total = config.num_runs,
-                        instance = %instance_path,
-                        heuristic = %heuristic_cfg.kind,
-                        max_iteration = ?heuristic_cfg.stop_condition.max_iteration,
-                        max_duration_secs = ?heuristic_cfg.stop_condition.max_duration_secs,
-                        max_failed_update = ?heuristic_cfg.stop_condition.max_failed_update,
-                        "Starting run"
-                    );
+                let mut runs: Vec<SingleRunResult> = (0..config.num_runs)
+                    .into_par_iter()
+                    .map(|run_index| {
+                        let metrics =
+                            run_for_problem_kind(problem_kind, heuristic_cfg, instance_path);
 
-                    let metrics =
-                        run_for_problem_kind(problem_kind, heuristic_cfg, instance_path);
+                        tracing::info!(
+                            run = run_index + 1,
+                            objective = metrics.best_objective,
+                            best_iteration = metrics.best_iteration,
+                            time_to_best_secs = metrics.time_to_best_secs,
+                            total_time_secs = metrics.total_time_secs,
+                            "Run completed"
+                        );
 
-                    tracing::info!(
-                        run = run_index + 1,
-                        total = config.num_runs,
-                        instance = %instance_path,
-                        heuristic = %heuristic_cfg.kind,
-                        objective = metrics.best_objective,
-                        best_iteration = metrics.best_iteration,
-                        time_to_best_secs = metrics.time_to_best_secs,
-                        total_time_secs = metrics.total_time_secs,
-                        "Run completed"
-                    );
-
-                    runs.push(to_single_run_result(run_index, metrics));
-                }
+                        to_single_run_result(run_index, metrics)
+                    })
+                    .collect();
+                runs.sort_by_key(|r| r.run_index);
 
                 let minimize = matches!(
                     problem_kind,
