@@ -15,6 +15,12 @@ use crate::search_state::{Crossover, ProblemTrait, Rankable, SearchState, Search
 ///
 /// The global best solution is tracked in `SearchState::best_solution`.
 ///
+/// # References
+///
+/// - Holland, J. H. *Adaptation in Natural and Artificial Systems*. University of Michigan Press, 1975.
+/// - Goldberg, D. E. *Genetic Algorithms in Search, Optimization, and Machine Learning*.
+///   Addison-Wesley, 1989.
+///
 /// # Type parameters
 ///
 /// - `P` — the problem type; must implement [`ProblemTrait`].

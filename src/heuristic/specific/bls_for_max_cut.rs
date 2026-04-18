@@ -33,6 +33,12 @@ enum PerturbationType {
 /// The perturbation length `l` increases by 1 each time the solution does not change,
 /// resetting to `l0` whenever the solution changes.
 ///
+/// # References
+///
+/// - Benlic, U. and Hao, J.-K. "Breakout Local Search for the Max-Cut problem." *Engineering
+///   Applications of Artificial Intelligence*, 26(3), 1162-1173, 2013.
+///   [DOI](https://doi.org/10.1016/j.engappai.2012.09.001)
+///
 /// # Parameters
 ///
 /// - `tabu_tenure` — tabu tenure range `(min, max)` in iterations

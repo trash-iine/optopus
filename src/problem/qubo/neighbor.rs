@@ -1,3 +1,20 @@
+//! Neighborhood move types for the [`Qubo`] problem.
+//!
+//! Two move types are provided:
+//!
+//! - [`QuboFlipNeighbor`] — flip a single variable (O(degree) update)
+//! - [`QuboSwapNeighbor`] — swap two variables with different values (two sequential flips)
+//!
+//! Both implement [`MoveToNeighbor`], [`Evaluate`], and [`EnabledTabu`], so they
+//! work with all heuristics ([`LocalSearch`], [`TabuSearch`], [`SimulatedAnnealing`], etc.).
+//!
+//! [`LocalSearch`]: crate::heuristic::LocalSearch
+//! [`TabuSearch`]: crate::heuristic::TabuSearch
+//! [`SimulatedAnnealing`]: crate::heuristic::SimulatedAnnealing
+//! [`MoveToNeighbor`]: crate::search_state::MoveToNeighbor
+//! [`Evaluate`]: crate::search_state::Evaluate
+//! [`EnabledTabu`]: crate::search_state::EnabledTabu
+
 use super::problem::{Coefficient, Qubo};
 use crate::{
     error::OptError,
@@ -8,6 +25,19 @@ use crate::{
 /// A flip move that toggles a single variable `i`.
 ///
 /// `gain` is the change in energy after the flip (negative = improvement, since QUBO is minimized).
+///
+/// # Usage
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 1)]);
+/// let mut state = SearchState::new(&qubo);
+///
+/// // Use with any heuristic:
+/// LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(1000))
+///     .run(&mut state).unwrap();
+/// ```
 #[derive(Debug, Clone)]
 pub struct QuboFlipNeighbor {
     /// Index of the variable to flip.
@@ -28,7 +58,7 @@ impl EnabledTabu for QuboFlipNeighbor {
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         tabu_map
             .get(&self.i)
-            .map_or(true, |&tabu_tenure| iteration > tabu_tenure)
+            .is_none_or(|&tabu_tenure| iteration > tabu_tenure)
     }
 
     fn add_to_tabu_map(
@@ -56,6 +86,15 @@ impl Evaluate<Coefficient> for QuboFlipNeighbor {
 }
 
 impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
+    /// Applies the flip move: toggles variable `self.i`.
+    ///
+    /// Updates the solution in-place in O(degree(i)):
+    /// 1. Flips `solution.x[i]`
+    /// 2. Inverts `solution.gain[i]`
+    /// 3. Updates `gain[j]` for each neighbor `j` of `i`
+    /// 4. Adds `self.gain` to `solution.objective`
+    ///
+    /// If the `negative_gain` index is enabled, it is maintained incrementally.
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
         let bi = sol.x[self.i];
 
@@ -63,7 +102,9 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
         sol.x[self.i] = !bi;
 
         // Update gain for flipped variable
-        sol.gain[self.i] = -self.gain;
+        let new_gain_i = -self.gain;
+        sol.update_negative_gain_membership(self.i, new_gain_i);
+        sol.gain[self.i] = new_gain_i;
 
         for &(j, q) in prob.iter_on_adjacency(self.i) {
             if j == self.i {
@@ -71,7 +112,9 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
             }
             let bj = sol.x[j];
             let delta = if bi == bj { q } else { -q };
-            sol.gain[j] += delta;
+            let new_g = sol.gain[j] + delta;
+            sol.update_negative_gain_membership(j, new_g);
+            sol.gain[j] = new_g;
         }
 
         // Update objective
@@ -80,6 +123,7 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
         Ok(())
     }
 
+    /// Returns a lazy iterator over all possible flip moves (one per variable).
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
         prob.iter_on_variables().map(move |&i| QuboFlipNeighbor {
             i,
@@ -92,9 +136,51 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
     }
 }
 
+impl QuboFlipNeighbor {
+    /// Generates a random flip neighbor by uniformly selecting a variable from the problem.
+    ///
+    /// Useful as a perturbation step (e.g., in [`RandomWalk`](crate::heuristic::RandomWalk)).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 1)]);
+    /// let state = SearchState::new(&qubo);
+    /// let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution);
+    /// println!("random flip: variable {}, gain {}", flip.i, flip.gain);
+    /// ```
+    pub fn random_neighbor(prob: &Qubo, sol: &QuboSolution) -> Self {
+        let i = prob.variables[rand::random_range(0..prob.variables.len())];
+        Self {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+}
+
 /// A swap move that simultaneously flips variables `i` and `j`.
 ///
+/// Only pairs where `i` and `j` have different values are generated.
+/// Each swap counts as **2 iterations** (see [`apply_to_iteration`](MoveToNeighbor::apply_to_iteration)).
+///
 /// `gain` is the combined change in energy (negative = improvement).
+///
+/// # Usage
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 1), (0, 2, 1)]);
+/// let mut state = SearchState::new(&qubo);
+///
+/// TabuSearch::<QuboSwapNeighbor>::new(
+///     StopCondition::iterations(10_000),
+///     (5, 10),
+///     None,
+/// ).run(&mut state).unwrap();
+/// ```
 #[derive(Debug, Clone)]
 pub struct QuboSwapNeighbor {
     /// Index of the first variable to flip.
@@ -121,8 +207,8 @@ impl EnabledTabu for QuboSwapNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let enabled_i = tabu_map.get(&self.i).map_or(true, |&t| iteration > t);
-        let enabled_j = tabu_map.get(&self.j).map_or(true, |&t| iteration > t);
+        let enabled_i = tabu_map.get(&self.i).is_none_or(|&t| iteration > t);
+        let enabled_j = tabu_map.get(&self.j).is_none_or(|&t| iteration > t);
         enabled_i && enabled_j
     }
 
@@ -140,10 +226,12 @@ impl EnabledTabu for QuboSwapNeighbor {
 }
 
 impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
+    /// A swap counts as 2 iterations (one for each variable flip).
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }
 
+    /// Applies the swap by performing two sequential flips: first `i`, then `j`.
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
         let flip_i = QuboFlipNeighbor {
             i: self.i,
@@ -160,6 +248,8 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
         Ok(())
     }
 
+    /// Returns a lazy iterator over all valid swap pairs `(i, j)` where
+    /// `i` and `j` have different values.
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
         prob.iter_on_variables().flat_map(move |&i| {
             prob.iter_on_variables()
@@ -167,8 +257,7 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
                 .map(move |&j| Self {
                     i,
                     j,
-                    gain: sol.gain[i] + sol.gain[j]
-                        - if let Some(q) = prob.get_q(i, j) { q } else { 0 },
+                    gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
                 })
         })
     }
@@ -199,12 +288,7 @@ mod tests {
         for &(i, v) in assignments {
             x[i] = v;
         }
-        let mut gain = vec![0; n];
-        for &i in qubo.iter_on_variables() {
-            gain[i] = qubo.calculate_gain(&x, i);
-        }
-        let objective = qubo.calculate_energy(&x);
-        QuboSolution { x, gain, objective }
+        QuboSolution::new_from_assignment(qubo, x)
     }
 
     #[test]
@@ -293,5 +377,16 @@ mod tests {
     fn test_search_state_new() {
         let qubo = make_qubo();
         let _state = SearchState::new(&qubo);
+    }
+
+    #[test]
+    fn test_random_neighbor() {
+        let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
+        let state = SearchState::new(&qubo);
+        for _ in 0..20 {
+            let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution);
+            assert!(flip.i < qubo.len(), "random neighbor index out of bounds");
+            assert_eq!(flip.gain, state.solution.gain[flip.i]);
+        }
     }
 }
