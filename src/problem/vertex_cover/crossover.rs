@@ -70,11 +70,15 @@ impl SubProblemExtractable for VertexCover {
     fn lift_solution(
         &self,
         sol1: &VertexCoverSolution,
-        _sol2: &VertexCoverSolution,
+        sol2: &VertexCoverSolution,
         sub_solution: &VertexCoverSolution,
     ) -> VertexCoverSolution {
         let mut sol = sol1.clone();
         for v in 0..sub_solution.cover.len() {
+            // Skip fixed vertices (same membership in both parents).
+            if sol1.cover[v] == sol2.cover[v] {
+                continue;
+            }
             if sol.cover[v] == sub_solution.cover[v] {
                 continue;
             }

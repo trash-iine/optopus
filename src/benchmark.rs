@@ -123,8 +123,8 @@ impl BenchmarkProblem for VertexCover {
 
 impl BenchmarkSolution for VertexCoverSolution {
     fn best_objective_f64(&self) -> f64 {
-        // Report the human-meaningful cover size, not the penalty-augmented objective.
-        self.cover_size as f64
+        // Use penalty-augmented objective so infeasible solutions are correctly penalized.
+        self.objective as f64
     }
     fn encode_as_indices(&self) -> Vec<usize> {
         self.cover

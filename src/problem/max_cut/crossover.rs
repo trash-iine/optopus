@@ -148,11 +148,15 @@ impl SubProblemExtractable for MaxCut {
     fn lift_solution(
         &self,
         sol1: &MaxCutSolution,
-        _sol2: &MaxCutSolution,
+        sol2: &MaxCutSolution,
         sub_solution: &MaxCutSolution,
     ) -> MaxCutSolution {
         let mut sol = sol1.clone();
         for v in sub_solution.iter_on_vertices() {
+            // Skip fixed vertices (same side in both parents).
+            if sol1.cut[v] == sol2.cut[v] {
+                continue;
+            }
             if sol.cut[v] == sub_solution.cut[v] {
                 continue;
             }
