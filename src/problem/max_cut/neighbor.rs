@@ -106,7 +106,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         // `bi` still holds the pre-flip side, so `bi ^ bj` reflects whether the
         // edge was crossing before the flip (and is now not crossing, hence
         // `+2w`), and vice versa.
-        for &(j, w) in prob.iter_on_adjacency(self.i) {
+        for &(j, w) in prob.graph.iter_on_adjacency(self.i) {
             let bj = solution.cut[j];
             let delta = if bi ^ bj { w * 2.0 } else { -w * 2.0 };
             let new_g = solution.gain[j] + delta;
@@ -124,7 +124,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
     ///
     /// The iterator yields `n` moves where `n` is the number of vertices with edges.
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
-        prob.iter_on_vertices().map(|&i| MaxCutFlipNeighbor {
+        prob.graph.iter_on_vertices().map(|&i| MaxCutFlipNeighbor {
             i,
             gain: sol.gain[i],
         })
@@ -169,7 +169,7 @@ impl MaxCutFlipNeighbor {
     /// println!("random flip: vertex {}, gain {}", flip.i, flip.gain);
     /// ```
     pub fn random_neighbor(prob: &MaxCut, sol: &MaxCutSolution) -> Self {
-        let i = prob.vertices[rand::random_range(0..prob.vertices.len())];
+        let i = prob.graph.vertices[rand::random_range(0..prob.graph.vertices.len())];
         Self {
             i,
             gain: sol.gain[i],
@@ -284,16 +284,16 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     /// The gain is computed as `gain[i] + gain[j] + 2*w(i,j)` to account for
     /// the interaction when both vertices are flipped simultaneously.
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
-        prob.iter_on_vertices().flat_map(move |&i| {
-            prob.iter_on_vertices()
+        prob.graph.iter_on_vertices().flat_map(move |&i| {
+            prob.graph.iter_on_vertices()
                 .filter(move |&&j| j < i && (sol.cut[i] ^ sol.cut[j]))
                 .map(move |&j| Self {
                     i,
                     j,
                     gain: sol.gain[i]
                         + sol.gain[j]
-                        + if prob.has_edge(i, j) {
-                            2.0 * prob.get_weight(i, j)
+                        + if prob.graph.has_edge(i, j) {
+                            2.0 * prob.graph.get_weight(i, j)
                         } else {
                             0.0
                         },
@@ -321,20 +321,13 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let mut mc = MaxCut::new();
-        mc.add_weight(0, 1, 1.0);
-        mc.add_weight(0, 2, 1.0);
-        mc.add_weight(1, 2, 1.0);
-
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
         let _ = SearchState::new(&mc);
     }
 
     #[test]
     fn test_flip_neighbor() {
-        let mut mc = MaxCut::new();
-        mc.add_weight(0, 1, 1.0);
-        mc.add_weight(0, 2, 1.0);
-        mc.add_weight(1, 2, 1.0);
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
 
         let mut state = SearchState::new(&mc);
         state.solution.cut[0] = true;

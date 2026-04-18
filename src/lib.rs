@@ -11,6 +11,7 @@
 //! - [`error`] — unified error type
 
 pub mod benchmark;
+pub mod common;
 pub mod error;
 pub mod heuristic;
 pub mod prelude;

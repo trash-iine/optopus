@@ -6,6 +6,9 @@
 //! use optopus::prelude::*;
 //! ```
 
+// Common types
+pub use crate::common::Graph;
+
 // Error type
 pub use crate::error::OptError;
 
@@ -58,4 +61,9 @@ pub use crate::problem::{
     TspTour,
     TspTwoOptNeighbor,
     TspWithCoordinates,
+    // Vertex Cover
+    VertexCover,
+    VertexCoverFlipNeighbor,
+    VertexCoverSolution,
+    VertexCoverSwapNeighbor,
 };
