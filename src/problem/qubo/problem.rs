@@ -12,9 +12,23 @@ static ZERO_COEFF: Coefficient = 0;
 
 /// A solution to the QUBO problem.
 ///
-/// - `x` — variable assignment (`x[i] = true` means variable `i` is set to 1)
-/// - `gain` — incremental energy change for each variable flip (`gain[i] < 0` means flipping `i` improves the objective)
-/// - `objective` — current energy value (minimized)
+/// # Core fields
+///
+/// - [`x`](Self::x) — variable assignment (`x[i] = true` means variable `i` is set to 1)
+/// - [`gain`](Self::gain) — incremental energy change for each variable flip (`gain[i] < 0` means flipping `i` improves the objective)
+/// - [`objective`](Self::objective) — current energy value (minimized)
+///
+/// These three fields are all you need to inspect results and build custom logic.
+///
+/// # Advanced: negative-gain index
+///
+/// An optional index tracks which variables currently have negative gain (i.e. improving
+/// moves). Call [`enable_negative_gain_index`](Self::enable_negative_gain_index) to activate it.
+/// Standard heuristics ([`LocalSearch`](crate::heuristic::LocalSearch),
+/// [`TabuSearch`](crate::heuristic::TabuSearch),
+/// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing), etc.)
+/// do **not** require this index — it is a performance optimization for problem-specific
+/// algorithms.
 ///
 /// # Examples
 ///
@@ -35,15 +49,16 @@ pub struct QuboSolution {
     pub x: Vec<bool>,
     pub gain: Vec<Coefficient>,
     pub objective: Coefficient,
-    /// Whether the `negative_gain` index is enabled.
+    /// Advanced: whether the `negative_gain` index is enabled.
     /// When `false`, `update_negative_gain_membership` is a no-op.
+    /// See [`enable_negative_gain_index`](Self::enable_negative_gain_index).
     pub(crate) negative_gain_enabled: bool,
-    /// Unordered list of variables `v` with `gain[v] < 0`. Only maintained when
-    /// `negative_gain_enabled` is `true`. Call [`enable_negative_gain_index`](Self::enable_negative_gain_index)
-    /// to activate.
+    /// Advanced: unordered list of variables `v` with `gain[v] < 0`.
+    /// Only maintained when `negative_gain_enabled` is `true`.
+    /// Not needed for standard heuristic use.
     pub(crate) negative_gain: Vec<usize>,
-    /// Inverse index: `negative_gain_pos[v]` = position of `v` in `negative_gain`,
-    /// or `-1` if `v` is not currently in the list.
+    /// Advanced: inverse index for O(1) membership updates.
+    /// `negative_gain_pos[v]` = position of `v` in `negative_gain`, or `-1` if absent.
     pub(crate) negative_gain_pos: Vec<i32>,
 }
 
@@ -61,25 +76,13 @@ impl QuboSolution {
 
     /// Builds a [`QuboSolution`] from pre-computed components.
     ///
-    /// The `negative_gain` index is **not** initialised; call
-    /// [`enable_negative_gain_index`](Self::enable_negative_gain_index) to activate it.
+    /// The resulting solution is fully functional for all standard heuristics.
+    /// The advanced `negative_gain` index is not initialised; see
+    /// [`enable_negative_gain_index`](Self::enable_negative_gain_index) if you need it.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// use optopus::prelude::*;
-    ///
-    /// let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
-    /// let x = vec![true, false, true];
-    /// let gain = vec![
-    ///     qubo.calculate_gain(&x, 0),
-    ///     qubo.calculate_gain(&x, 1),
-    ///     qubo.calculate_gain(&x, 2),
-    /// ];
-    /// let objective = qubo.calculate_energy(&x);
-    /// let sol = QuboSolution::new_from_parts(x, gain, objective);
-    /// ```
-    pub fn new_from_parts(x: Vec<bool>, gain: Vec<Coefficient>, objective: Coefficient) -> Self {
+    /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions
+    /// from a variable assignment — it computes `gain` and `objective` automatically.
+    pub(crate) fn new_from_parts(x: Vec<bool>, gain: Vec<Coefficient>, objective: Coefficient) -> Self {
         Self {
             x,
             gain,
@@ -111,12 +114,21 @@ impl QuboSolution {
         Self::new_from_parts(x, gain, objective)
     }
 
-    /// Enables the `negative_gain` index, building it from the current `gain` vector.
+    /// **Advanced.** Enables the `negative_gain` index, building it from the current
+    /// `gain` vector.
+    ///
+    /// Most users do **not** need to call this method. Standard heuristics
+    /// ([`LocalSearch`](crate::heuristic::LocalSearch),
+    /// [`TabuSearch`](crate::heuristic::TabuSearch),
+    /// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing), etc.)
+    /// work correctly without it.
+    ///
+    /// This index is useful for problem-specific algorithms that need to iterate
+    /// only over variables with negative gain, reducing the inner-loop cost from
+    /// O(n) to O(|improving moves|).
     ///
     /// Once enabled, the index is maintained incrementally by
-    /// [`QuboFlipNeighbor::apply_to_solution`](super::QuboFlipNeighbor). This
-    /// allows enumeration of only improving moves (variables with `gain < 0`),
-    /// reducing iteration cost on sparse improvements.
+    /// [`QuboFlipNeighbor::apply_to_solution`](super::QuboFlipNeighbor).
     ///
     /// If already enabled, this is a no-op. O(n).
     ///

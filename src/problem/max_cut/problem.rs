@@ -38,6 +38,26 @@ pub struct MaxCut {
 
 /// A solution for the MaxCut problem.
 ///
+/// # Core fields
+///
+/// - [`cut`](Self::cut) — partition assignment (`cut[i]` is the side of vertex `i`)
+/// - [`gain`](Self::gain) — per-vertex flip gain (`gain[i]` = change in cut weight when `i` is flipped; positive = improvement)
+/// - [`objective`](Self::objective) — total weight of edges crossing the cut
+///
+/// These three fields are all you need to inspect results and build custom logic.
+///
+/// # Advanced: positive-gain index
+///
+/// An optional index tracks which vertices currently have positive gain (i.e. improving
+/// moves). Call [`enable_positive_gain_index`](Self::enable_positive_gain_index) to activate it.
+/// Standard heuristics ([`LocalSearch`](crate::heuristic::LocalSearch),
+/// [`TabuSearch`](crate::heuristic::TabuSearch),
+/// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing), etc.)
+/// do **not** require this index — it is a performance optimization for problem-specific
+/// algorithms such as [`BreakoutLocalSearchForMaxCut`](crate::heuristic::BreakoutLocalSearchForMaxCut).
+///
+/// # Examples
+///
 /// ```
 /// use optopus::prelude::*;
 ///
@@ -61,15 +81,16 @@ pub struct MaxCutSolution {
     pub gain: Vec<f32>,
     /// The total weight of edges crossing the cut.
     pub objective: f32,
-    /// Whether the `positive_gain` index is enabled.
+    /// Advanced: whether the `positive_gain` index is enabled.
     /// When `false`, `update_positive_gain_membership` is a no-op.
+    /// See [`enable_positive_gain_index`](Self::enable_positive_gain_index).
     pub(crate) positive_gain_enabled: bool,
-    /// Unordered list of vertices `v` with `gain[v] > 0`. Only maintained when
-    /// `positive_gain_enabled` is `true`. Call [`enable_positive_gain_index`](Self::enable_positive_gain_index)
-    /// to activate.
+    /// Advanced: unordered list of vertices `v` with `gain[v] > 0`.
+    /// Only maintained when `positive_gain_enabled` is `true`.
+    /// Not needed for standard heuristic use.
     pub(crate) positive_gain: Vec<usize>,
-    /// Inverse index: `positive_gain_pos[v]` = position of `v` in `positive_gain`,
-    /// or `-1` if `v` is not currently in the list.
+    /// Advanced: inverse index for O(1) membership updates.
+    /// `positive_gain_pos[v]` = position of `v` in `positive_gain`, or `-1` if absent.
     pub(crate) positive_gain_pos: Vec<i32>,
 }
 
@@ -99,26 +120,13 @@ impl MaxCutSolution {
 
     /// Builds a [`MaxCutSolution`] from pre-computed components.
     ///
-    /// The `positive_gain` index is **not** initialised; call
-    /// [`enable_positive_gain_index`](Self::enable_positive_gain_index) to activate it.
+    /// The resulting solution is fully functional for all standard heuristics.
+    /// The advanced `positive_gain` index is not initialised; see
+    /// [`enable_positive_gain_index`](Self::enable_positive_gain_index) if you need it.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// use optopus::prelude::*;
-    ///
-    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
-    /// let cut = vec![true, false, false];
-    /// let gain = vec![
-    ///     mc.calculate_gain(&cut, 0),
-    ///     mc.calculate_gain(&cut, 1),
-    ///     mc.calculate_gain(&cut, 2),
-    /// ];
-    /// let objective = mc.calculate_cut_size(&cut);
-    /// let sol = MaxCutSolution::new_from_parts(cut, gain, objective);
-    /// assert_eq!(sol.objective, 4.0);  // edges (0,1)=1.0 + (0,2)=3.0
-    /// ```
-    pub fn new_from_parts(cut: Vec<bool>, gain: Vec<f32>, objective: f32) -> Self {
+    /// Prefer [`new_from_cut`](Self::new_from_cut) for constructing solutions from
+    /// a cut assignment — it computes `gain` and `objective` automatically.
+    pub(crate) fn new_from_parts(cut: Vec<bool>, gain: Vec<f32>, objective: f32) -> Self {
         Self {
             cut,
             gain,
@@ -150,12 +158,22 @@ impl MaxCutSolution {
         Self::new_from_parts(cut, gain, objective)
     }
 
-    /// Enables the `positive_gain` index, building it from the current `gain` vector.
+    /// **Advanced.** Enables the `positive_gain` index, building it from the current
+    /// `gain` vector.
+    ///
+    /// Most users do **not** need to call this method. Standard heuristics
+    /// ([`LocalSearch`](crate::heuristic::LocalSearch),
+    /// [`TabuSearch`](crate::heuristic::TabuSearch),
+    /// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing), etc.)
+    /// work correctly without it.
+    ///
+    /// This index is useful for problem-specific algorithms (such as
+    /// [`BreakoutLocalSearchForMaxCut`](crate::heuristic::BreakoutLocalSearchForMaxCut))
+    /// that need to iterate only over vertices with positive gain, reducing the
+    /// inner-loop cost from O(n) to O(|improving moves|).
     ///
     /// Once enabled, the index is maintained incrementally by
-    /// [`MaxCutFlipNeighbor::apply_to_solution`](super::MaxCutFlipNeighbor). This
-    /// allows [`LocalSearch`](crate::heuristic::LocalSearch) to enumerate only improving
-    /// moves, reducing iteration cost on sparse improvements.
+    /// [`MaxCutFlipNeighbor::apply_to_solution`](super::MaxCutFlipNeighbor).
     ///
     /// If already enabled, this is a no-op. O(n).
     ///

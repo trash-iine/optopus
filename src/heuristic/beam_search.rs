@@ -9,6 +9,12 @@ use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
 /// `beam_width` solutions (by [`Rankable`] order) are kept as the next beam.
 /// The best solution across all beam members is tracked in `SearchState::best_solution`.
 ///
+/// # References
+///
+/// - Ow, P. S. and Morton, T. E. "Filtered Beam Search in Scheduling." *International Journal
+///   of Production Research*, 26(1), 35-62, 1988.
+///   [DOI](https://doi.org/10.1080/00207548808947840)
+///
 /// # Example
 ///
 /// ```

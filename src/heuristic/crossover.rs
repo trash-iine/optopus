@@ -8,6 +8,13 @@ use crate::search_state::{Crossover, SearchState, SubProblemExtractable};
 /// 2. Solves the sub-problem with `sub_heuristic`.
 /// 3. Lifts the sub-solution back to the full solution space.
 ///
+/// # References
+///
+/// - Whitley, D., Hains, D., and Howe, A. "A Hybrid Genetic Algorithm for the Traveling Salesman
+///   Problem Using Generalized Partition Crossover." In *Parallel Problem Solving from Nature
+///   (PPSN XI)*, pp. 566-575. Springer, 2010.
+///   [DOI](https://doi.org/10.1007/978-3-642-15844-5_57)
+///
 /// # MaxCut example
 ///
 /// - Vertices with the same side in both parents are fixed; their edges become bias terms.
