@@ -11,7 +11,7 @@ use crate::{
     error::OptError,
     heuristic::{
         BreakoutLocalSearchForMaxCut, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
-        Restart, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
+        RLSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
     },
     problem::{
         MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, QuboFlipNeighbor, QuboSwapNeighbor,
@@ -21,7 +21,7 @@ use crate::{
         sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
         tsp_2d::{TspRelocateNeighbor, TspSolution, TspTwoOptNeighbor, TspWithCoordinates},
     },
-    search_state::{ProblemTrait, SearchState},
+    search_state::{MoveToNeighbor, ProblemTrait, SearchState},
 };
 use serde::{Deserialize, Serialize};
 
@@ -184,6 +184,7 @@ pub enum NeighborKind {
 ///
 /// Valid `kind` values:
 /// - `"LocalSearch"`, `"TabuSearch"`, `"SimulatedAnnealing"`, `"LateAcceptanceHillClimbing"`, `"BreakoutLocalSearch"` (MaxCut only)
+/// - `"RLSearch"` — reinforcement learning move selection with REINFORCE policy gradient
 /// - `"Sequential"` — repeats its `steps` cycle until `stop_condition` is met
 /// - `"Iterated"` — `steps\[0\]` = search phase, `steps\[1\]` = perturbation phase (ILS)
 /// - `"Restart"` — runs `steps\[0\]` then resets to a new random solution when `restart_condition` is met
@@ -220,6 +221,24 @@ pub struct HeuristicConfig {
     /// Restart trigger for `kind = "Restart"`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub restart_condition: Option<StopConditionConfig>,
+    /// Learning rate for `kind = "RLSearch"` (0.0 = evaluation mode). Default: 0.01.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub learning_rate: Option<f64>,
+    /// Discount factor γ for `kind = "RLSearch"`. Default: 0.99.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub discount: Option<f64>,
+    /// Softmax temperature for `kind = "RLSearch"`. Default: 1.0.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub softmax_temperature: Option<f64>,
+    /// Reward shaping strategy for `kind = "RLSearch"`: "Raw", "Normalized", "BestImprovement".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reward_shaping: Option<String>,
+    /// Pre-trained policy weights for `kind = "RLSearch"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub policy_weights: Option<Vec<f64>>,
+    /// Max candidate moves to evaluate per step for `kind = "RLSearch"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_candidates: Option<usize>,
 }
 
 /// A single instance entry in the config file.
@@ -365,6 +384,61 @@ impl HeuristicConfig {
         }
         Ok(len)
     }
+    fn parse_reward_shaping(&self) -> Result<RewardShaping, String> {
+        match self.reward_shaping.as_deref().unwrap_or("Normalized") {
+            "Raw" => Ok(RewardShaping::Raw),
+            "Normalized" => Ok(RewardShaping::Normalized),
+            "BestImprovement" => Ok(RewardShaping::BestImprovement),
+            other => Err(format!(
+                "Unknown reward_shaping '{}' (expected Raw, Normalized, or BestImprovement)",
+                other
+            )),
+        }
+    }
+    fn parse_policy_weights(
+        &self,
+    ) -> Result<Option<[f64; crate::heuristic::reinforcement_learning::feature::NUM_FEATURES]>, String>
+    {
+        use crate::heuristic::reinforcement_learning::feature::NUM_FEATURES;
+        match &self.policy_weights {
+            None => Ok(None),
+            Some(v) => {
+                if v.len() != NUM_FEATURES {
+                    return Err(format!(
+                        "policy_weights must have exactly {} elements, got {}",
+                        NUM_FEATURES,
+                        v.len()
+                    ));
+                }
+                let mut arr = [0.0; NUM_FEATURES];
+                arr.copy_from_slice(v);
+                Ok(Some(arr))
+            }
+        }
+    }
+}
+
+fn build_rl_search_from_config<P, N>(
+    config: &HeuristicConfig,
+    cond: StopCondition,
+) -> Result<Box<dyn Heuristic<P>>, String>
+where
+    P: ProblemTrait + 'static,
+    N: MoveToNeighbor<P> + crate::search_state::Evaluate + Clone + 'static,
+{
+    let reward = config.parse_reward_shaping()?;
+    let mut rl = RLSearch::<N>::new(
+        cond,
+        config.learning_rate.unwrap_or(0.01),
+        config.discount.unwrap_or(0.99),
+        config.softmax_temperature.unwrap_or(1.0),
+        reward,
+        config.max_candidates,
+    );
+    if let Some(w) = config.parse_policy_weights()? {
+        rl = rl.with_policy_weights(w);
+    }
+    Ok(Box::new(rl))
 }
 
 impl BenchmarkableProblem for MaxCut {
@@ -411,6 +485,11 @@ impl BenchmarkableProblem for MaxCut {
                 let q = config.q.ok_or("'q' required for MaxCut BreakoutLocalSearch")?;
                 Ok(Box::new(BreakoutLocalSearchForMaxCut::new(tenure, cond, t, l0, p0, q)))
             }
+            "RLSearch" => match config.req_neighbor("MaxCut")? {
+                NeighborKind::Flip => build_rl_search_from_config::<MaxCut, MaxCutFlipNeighbor>(config, cond),
+                NeighborKind::Swap => build_rl_search_from_config::<MaxCut, MaxCutSwapNeighbor>(config, cond),
+                n => Err(format!("Invalid neighbor {:?} for MaxCut RLSearch (use Flip or Swap)", n)),
+            },
             k => Err(format!("Unknown kind '{}' for MaxCut", k)),
         }
     }
@@ -452,6 +531,11 @@ impl BenchmarkableProblem for Qubo {
                     n => Err(format!("Invalid neighbor {:?} for Qubo (use Flip or Swap)", n)),
                 }
             }
+            "RLSearch" => match config.req_neighbor("Qubo")? {
+                NeighborKind::Flip => build_rl_search_from_config::<Qubo, QuboFlipNeighbor>(config, cond),
+                NeighborKind::Swap => build_rl_search_from_config::<Qubo, QuboSwapNeighbor>(config, cond),
+                n => Err(format!("Invalid neighbor {:?} for Qubo RLSearch (use Flip or Swap)", n)),
+            },
             k => Err(format!("Unknown kind '{}' for Qubo", k)),
         }
     }
@@ -493,6 +577,11 @@ impl BenchmarkableProblem for Sat {
                     n => Err(format!("Invalid neighbor {:?} for Sat (use Flip or Swap)", n)),
                 }
             }
+            "RLSearch" => match config.req_neighbor("Sat")? {
+                NeighborKind::Flip => build_rl_search_from_config::<Sat, SatFlipNeighbor>(config, cond),
+                NeighborKind::Swap => build_rl_search_from_config::<Sat, SatSwapNeighbor>(config, cond),
+                n => Err(format!("Invalid neighbor {:?} for Sat RLSearch (use Flip or Swap)", n)),
+            },
             k => Err(format!("Unknown kind '{}' for Sat", k)),
         }
     }
@@ -534,6 +623,11 @@ impl BenchmarkableProblem for TspWithCoordinates {
                     n => Err(format!("Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)", n)),
                 }
             }
+            "RLSearch" => match config.req_neighbor("Tsp")? {
+                NeighborKind::TwoOpt => build_rl_search_from_config::<TspWithCoordinates, TspTwoOptNeighbor>(config, cond),
+                NeighborKind::Relocate => build_rl_search_from_config::<TspWithCoordinates, TspRelocateNeighbor>(config, cond),
+                n => Err(format!("Invalid neighbor {:?} for Tsp RLSearch (use TwoOpt or Relocate)", n)),
+            },
             k => Err(format!("Unknown kind '{}' for Tsp", k)),
         }
     }

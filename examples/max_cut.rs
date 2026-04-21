@@ -11,16 +11,17 @@ use optopus::prelude::*;
 
 fn main() {
     // 小さな手動グラフを作成（ファイル不要）
-    let mut mc = MaxCut::new();
-    mc.add_weight(0, 1, 1.0);
-    mc.add_weight(0, 2, 1.0);
-    mc.add_weight(0, 3, 1.0);
-    mc.add_weight(1, 2, 1.0);
-    mc.add_weight(1, 4, 1.0);
-    mc.add_weight(2, 5, 1.0);
-    mc.add_weight(3, 4, 1.0);
-    mc.add_weight(3, 5, 1.0);
-    mc.add_weight(4, 5, 1.0);
+    let mc = MaxCut::new(Graph::from_edges([
+        (0, 1, 1.0),
+        (0, 2, 1.0),
+        (0, 3, 1.0),
+        (1, 2, 1.0),
+        (1, 4, 1.0),
+        (2, 5, 1.0),
+        (3, 4, 1.0),
+        (3, 5, 1.0),
+        (4, 5, 1.0),
+    ]));
 
     // --- Local Search ---
     let mut state = SearchState::new(&mc);

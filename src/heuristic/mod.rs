@@ -6,6 +6,7 @@ mod genetic_algorithm;
 mod late_acceptance;
 mod local_search;
 mod random_walk;
+pub mod reinforcement_learning;
 mod restart;
 mod sequential;
 mod simulated_annealing;
@@ -21,6 +22,7 @@ pub use random_walk::RandomWalk;
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
+pub use reinforcement_learning::{RLSearch, RewardShaping};
 pub use specific::BreakoutLocalSearchForMaxCut;
 pub use tabu_search::TabuSearch;
 
