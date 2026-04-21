@@ -28,7 +28,7 @@
 pub mod feature;
 pub mod policy;
 
-use feature::{NUM_FEATURES, compute_step_context, extract_features};
+use feature::{NUM_FEATURES, StepStatsAccumulator, extract_features};
 use policy::LinearPolicy;
 
 use super::{Heuristic, StopCondition};
@@ -47,21 +47,16 @@ pub enum RewardShaping {
     BestImprovement,
 }
 
-struct TrajectoryEntry {
-    features: [f64; NUM_FEATURES],
-    reward: f64,
-}
-
 /// Reinforcement learning heuristic that learns a move selection policy online.
 ///
 /// At each step, all (or a subsample of) neighborhood moves are scored by a linear
 /// policy over hand-crafted features. A move is sampled from the resulting softmax
-/// distribution and applied. At the end of each episode ([`Heuristic::run`] call),
-/// the policy weights are updated via REINFORCE with baseline subtraction.
+/// distribution and applied. The policy is updated immediately via single-step
+/// REINFORCE with baseline subtraction.
 ///
-/// **Key property**: `clear()` resets the trajectory but preserves the learned weights,
-/// so the policy improves across episodes when used inside [`super::Restart`] or
-/// [`super::Iterated`].
+/// **Key property**: `clear()` resets per-episode state but preserves the learned
+/// weights, so the policy improves across episodes when used inside
+/// [`super::Restart`] or [`super::Iterated`].
 pub struct RLSearch<N> {
     pub stop_condition: StopCondition,
     pub policy: LinearPolicy,
@@ -71,10 +66,12 @@ pub struct RLSearch<N> {
     pub reward_shaping: RewardShaping,
     pub max_candidates: Option<usize>,
     phantom_neighbor: std::marker::PhantomData<N>,
-    trajectory: Vec<TrajectoryEntry>,
     baseline: f64,
     baseline_count: u64,
     initial_worsening_total: Option<f64>,
+    // Pre-allocated buffers (reused across iterations)
+    buf_moves: Vec<(N, f64)>,
+    buf_scores: Vec<f64>,
 }
 
 impl<N> RLSearch<N> {
@@ -95,10 +92,11 @@ impl<N> RLSearch<N> {
             reward_shaping,
             max_candidates,
             phantom_neighbor: std::marker::PhantomData,
-            trajectory: Vec::new(),
             baseline: 0.0,
             baseline_count: 0,
             initial_worsening_total: None,
+            buf_moves: Vec::new(),
+            buf_scores: Vec::new(),
         }
     }
 
@@ -108,35 +106,7 @@ impl<N> RLSearch<N> {
     }
 
     fn max_iteration_budget(&self) -> f64 {
-        self.stop_condition
-            .max_iteration
-            .unwrap_or(1_000_000) as f64
-    }
-
-    /// REINFORCE policy update at the end of an episode.
-    fn update_policy(&mut self) {
-        let n = self.trajectory.len();
-        if n == 0 {
-            return;
-        }
-
-        // Compute discounted returns G_t = Σ_{k=t}^{T-1} γ^{k-t} · r_k
-        let mut returns = vec![0.0; n];
-        returns[n - 1] = self.trajectory[n - 1].reward;
-        for t in (0..n - 1).rev() {
-            returns[t] = self.trajectory[t].reward + self.discount * returns[t + 1];
-        }
-
-        // Update baseline (running average of mean return)
-        let mean_return = returns.iter().sum::<f64>() / n as f64;
-        self.baseline_count += 1;
-        self.baseline += (mean_return - self.baseline) / self.baseline_count as f64;
-
-        // REINFORCE gradient: w += lr · (G_t - baseline) · φ_t
-        for (t, entry) in self.trajectory.iter().enumerate() {
-            let advantage = returns[t] - self.baseline;
-            self.policy.update(&entry.features, advantage, self.learning_rate);
-        }
+        self.stop_condition.max_iteration.unwrap_or(1_000_000) as f64
     }
 }
 
@@ -153,32 +123,17 @@ fn sample_categorical(probs: &[f64], rng: &mut impl Rng) -> usize {
     probs.len() - 1
 }
 
-/// Compute softmax probabilities with numerical stability (log-sum-exp trick).
-fn softmax(scores: &[f64]) -> Vec<f64> {
+/// Compute softmax probabilities in-place with numerical stability (log-sum-exp trick).
+fn softmax_in_place(scores: &mut [f64]) {
     let max_score = scores.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-    let exp_scores: Vec<f64> = scores.iter().map(|s| (s - max_score).exp()).collect();
-    let sum_exp: f64 = exp_scores.iter().sum();
-    exp_scores.iter().map(|e| e / sum_exp).collect()
-}
-
-/// Compute rank ratios from worsening values.
-/// Lower worsening (= more improvement) gets rank_ratio closer to 0.0.
-fn compute_rank_ratios(worsenings: &[f64]) -> Vec<f64> {
-    let n = worsenings.len();
-    if n <= 1 {
-        return vec![0.0; n];
+    let mut sum_exp = 0.0;
+    for s in scores.iter_mut() {
+        *s = (*s - max_score).exp();
+        sum_exp += *s;
     }
-
-    // Create index-worsening pairs and sort by worsening (ascending = best first)
-    let mut indexed: Vec<(usize, f64)> = worsenings.iter().copied().enumerate().collect();
-    indexed.sort_unstable_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
-
-    let mut ranks = vec![0.0; n];
-    let denom = (n - 1) as f64;
-    for (rank, &(orig_idx, _)) in indexed.iter().enumerate() {
-        ranks[orig_idx] = rank as f64 / denom;
+    for s in scores.iter_mut() {
+        *s /= sum_exp;
     }
-    ranks
 }
 
 impl<P, N> Heuristic<P> for RLSearch<N>
@@ -187,7 +142,6 @@ where
     N: MoveToNeighbor<P> + Evaluate + Clone,
 {
     fn clear(&mut self) {
-        self.trajectory.clear();
         self.initial_worsening_total = None;
         // Policy weights and baseline are intentionally preserved across episodes.
     }
@@ -199,75 +153,82 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let mut rng = rand::rng();
 
-        // 1. Enumerate moves and compute worsening values
-        let mut moves_with_worsening: Vec<(N, f64)> = N::iter(state.instance, &state.solution)
-            .map(|m| {
-                let w = m.evaluate().worsening_amount();
-                (m, w)
-            })
-            .collect();
+        // 1. Enumerate moves, compute worsenings, and accumulate step context stats in one pass
+        self.buf_moves.clear();
+        let mut acc = StepStatsAccumulator::new();
+        for m in N::iter(state.instance, &state.solution) {
+            let w = m.evaluate().worsening_amount();
+            acc.push(w);
+            self.buf_moves.push((m, w));
+        }
 
-        if moves_with_worsening.is_empty() {
+        if self.buf_moves.is_empty() {
             state.progress_iteration();
             return Ok(());
         }
 
         // Subsample if max_candidates is set
         if let Some(max_cand) = self.max_candidates {
-            if moves_with_worsening.len() > max_cand {
-                // Fisher-Yates partial shuffle to pick max_cand elements
-                let n = moves_with_worsening.len();
+            if self.buf_moves.len() > max_cand {
+                let n = self.buf_moves.len();
                 for i in 0..max_cand.min(n) {
                     let j = rng.random_range(i..n);
-                    moves_with_worsening.swap(i, j);
+                    self.buf_moves.swap(i, j);
                 }
-                moves_with_worsening.truncate(max_cand);
+                self.buf_moves.truncate(max_cand);
             }
         }
 
-        // 2. Compute features
-        let worsenings: Vec<f64> = moves_with_worsening.iter().map(|(_, w)| *w).collect();
-        let rank_ratios = compute_rank_ratios(&worsenings);
-
-        // Use 0.0 as initial worsening if not yet set (first step of episode)
         if self.initial_worsening_total.is_none() {
             self.initial_worsening_total = Some(0.0);
         }
 
-        let ctx = compute_step_context(
-            &worsenings,
+        let initial_wt = self.initial_worsening_total.unwrap();
+        let ctx = acc.finalize(
             state.iteration,
             state.start_iteration,
             state.best_iteration,
             self.max_iteration_budget(),
-            self.initial_worsening_total.unwrap(),
-            0.0, // current relative to initial is tracked via state
+            initial_wt,
+            0.0,
         );
 
-        let features_vec: Vec<[f64; NUM_FEATURES]> = worsenings
-            .iter()
-            .zip(rank_ratios.iter())
-            .map(|(&w, &rr)| extract_features(w, rr, &ctx))
-            .collect();
+        // 2. Score moves with approximate rank (O(n) instead of O(n log n) sort)
+        let inv_temp = 1.0 / self.softmax_temperature;
+        let range = ctx.max_worsening - ctx.min_worsening;
+        let inv_range = if range > 1e-10 { 1.0 / range } else { 0.0 };
+        let min_w = ctx.min_worsening;
 
-        // 3. Policy scoring + softmax sampling
-        let scores: Vec<f64> = features_vec
-            .iter()
-            .map(|f| self.policy.score(f) / self.softmax_temperature)
-            .collect();
-        let probs = softmax(&scores);
-        let selected_idx = sample_categorical(&probs, &mut rng);
+        self.buf_scores.clear();
+        self.buf_scores.extend(self.buf_moves.iter().map(|&(_, w)| {
+            let approx_rank = if inv_range > 0.0 {
+                (w - min_w) * inv_range
+            } else {
+                0.5
+            };
+            let f = extract_features(w, approx_rank, &ctx);
+            self.policy.score(&f) * inv_temp
+        }));
+        softmax_in_place(&mut self.buf_scores);
+        let selected_idx = sample_categorical(&self.buf_scores, &mut rng);
 
-        // 4. Apply the selected move
-        let selected_worsening = moves_with_worsening[selected_idx].1;
-        state.apply(&moves_with_worsening[selected_idx].0)?;
+        // Recompute features only for the selected move
+        let sel_w = self.buf_moves[selected_idx].1;
+        let sel_rank = if inv_range > 0.0 {
+            (sel_w - min_w) * inv_range
+        } else {
+            0.5
+        };
+        let selected_features = extract_features(sel_w, sel_rank, &ctx);
 
-        // 5. Compute reward and record trajectory
+        // 3. Apply the selected move
+        let selected_worsening = self.buf_moves[selected_idx].1;
+        state.apply(&self.buf_moves[selected_idx].0)?;
+
+        // 4. Compute reward and update policy online (single-step REINFORCE)
         let reward = match self.reward_shaping {
             RewardShaping::Raw => -selected_worsening,
-            RewardShaping::Normalized => {
-                -selected_worsening / ctx.max_abs_worsening.max(1e-10)
-            }
+            RewardShaping::Normalized => -selected_worsening / ctx.max_abs_worsening.max(1e-10),
             RewardShaping::BestImprovement => {
                 if state.best_iteration == state.iteration {
                     1.0
@@ -277,10 +238,13 @@ where
             }
         };
 
-        self.trajectory.push(TrajectoryEntry {
-            features: features_vec[selected_idx],
-            reward,
-        });
+        let advantage = reward - self.baseline;
+        self.baseline_count += 1;
+        self.baseline += (reward - self.baseline) / self.baseline_count as f64;
+        if self.learning_rate > 0.0 {
+            self.policy
+                .update(&selected_features, advantage, self.learning_rate);
+        }
 
         Ok(())
     }
@@ -291,11 +255,6 @@ where
 
         while !self.is_done(state) {
             self.run_once(state)?;
-        }
-
-        // End-of-episode policy update
-        if self.learning_rate > 0.0 {
-            self.update_policy();
         }
 
         tracing::debug!(
@@ -313,32 +272,61 @@ where
 mod tests {
     use super::*;
 
+    fn compute_rank_ratios_into(
+        worsenings: &[f64],
+        indexed: &mut Vec<(usize, f64)>,
+        ranks: &mut Vec<f64>,
+    ) {
+        let n = worsenings.len();
+        indexed.clear();
+        indexed.extend(worsenings.iter().copied().enumerate());
+        ranks.clear();
+        ranks.resize(n, 0.0);
+
+        if n <= 1 {
+            return;
+        }
+
+        indexed.sort_unstable_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        let denom = (n - 1) as f64;
+        for (rank, &(orig_idx, _)) in indexed.iter().enumerate() {
+            ranks[orig_idx] = rank as f64 / denom;
+        }
+    }
+
     #[test]
     fn softmax_uniform_for_equal_scores() {
-        let probs = softmax(&[1.0, 1.0, 1.0]);
-        assert_eq!(probs.len(), 3);
-        for p in &probs {
+        let mut scores = vec![1.0, 1.0, 1.0];
+        softmax_in_place(&mut scores);
+        assert_eq!(scores.len(), 3);
+        for p in &scores {
             assert!((p - 1.0 / 3.0).abs() < 1e-10);
         }
     }
 
     #[test]
     fn softmax_concentrates_on_max() {
-        let probs = softmax(&[0.0, 0.0, 100.0]);
-        assert!(probs[2] > 0.99);
+        let mut scores = vec![0.0, 0.0, 100.0];
+        softmax_in_place(&mut scores);
+        assert!(scores[2] > 0.99);
     }
 
     #[test]
     fn softmax_numerical_stability() {
         // Large values should not cause overflow
-        let probs = softmax(&[1000.0, 1001.0, 999.0]);
-        let sum: f64 = probs.iter().sum();
+        let mut scores = vec![1000.0, 1001.0, 999.0];
+        softmax_in_place(&mut scores);
+        let sum: f64 = scores.iter().sum();
         assert!((sum - 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn rank_ratios_basic() {
-        let ranks = compute_rank_ratios(&[-3.0, 0.0, 2.0, -1.0]);
+        let worsenings = [-3.0, 0.0, 2.0, -1.0];
+        let mut indexed = Vec::new();
+        let mut ranks = Vec::new();
+        compute_rank_ratios_into(&worsenings, &mut indexed, &mut ranks);
         // sorted: -3.0 (best), -1.0, 0.0, 2.0 (worst)
         assert!((ranks[0] - 0.0).abs() < 1e-10); // -3.0 → rank 0
         assert!((ranks[3] - 1.0 / 3.0).abs() < 1e-10); // -1.0 → rank 1
@@ -357,21 +345,7 @@ mod tests {
     }
 
     #[test]
-    fn update_policy_with_empty_trajectory() {
-        let mut rl = RLSearch::<()>::new(
-            StopCondition::iterations(100),
-            0.01,
-            0.99,
-            1.0,
-            RewardShaping::Raw,
-            None,
-        );
-        // Should not panic
-        rl.update_policy();
-    }
-
-    #[test]
-    fn update_policy_moves_weights() {
+    fn online_update_moves_weights() {
         let mut rl = RLSearch::<()>::new(
             StopCondition::iterations(100),
             0.1,
@@ -381,20 +355,25 @@ mod tests {
             None,
         );
 
-        // Simulate trajectory: good move with feature[0] = 1.0
-        rl.trajectory.push(TrajectoryEntry {
-            features: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            reward: 1.0,
-        });
-        rl.trajectory.push(TrajectoryEntry {
-            features: [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            reward: -1.0,
-        });
+        // Simulate online update: positive reward with feature[0] = 1.0
+        let features_good = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let reward_good = 1.0;
+        let advantage = reward_good - rl.baseline;
+        rl.baseline_count += 1;
+        rl.baseline += (reward_good - rl.baseline) / rl.baseline_count as f64;
+        rl.policy
+            .update(&features_good, advantage, rl.learning_rate);
 
-        rl.update_policy();
+        // Simulate online update: negative reward with feature[1] = 1.0
+        let features_bad = [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let reward_bad = -1.0;
+        let advantage = reward_bad - rl.baseline;
+        rl.baseline_count += 1;
+        rl.baseline += (reward_bad - rl.baseline) / rl.baseline_count as f64;
+        rl.policy.update(&features_bad, advantage, rl.learning_rate);
 
-        // Weight for feature 0 should increase (positive reward),
-        // weight for feature 1 should decrease (negative reward)
+        // Weight for feature 0 should be positive (positive reward),
+        // weight for feature 1 should be negative (negative reward)
         assert!(rl.policy.weights[0] > 0.0);
         assert!(rl.policy.weights[1] < 0.0);
     }

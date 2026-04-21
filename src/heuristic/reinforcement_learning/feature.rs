@@ -4,10 +4,13 @@
 /// - 3 state-level: progress, stagnation, improvement_ratio
 /// - 3 neighborhood-level: fraction_improving, mean_gain_normalized, std_gain_normalized
 pub const NUM_FEATURES: usize = 9;
+const EPSILON: f64 = 1e-10; 
 
 /// Per-step context computed once from the full neighborhood, reused for every move's features.
 pub struct StepContext {
     pub max_abs_worsening: f64,
+    pub min_worsening: f64,
+    pub max_worsening: f64,
     pub fraction_improving: f64,
     pub mean_worsening_normalized: f64,
     pub std_worsening_normalized: f64,
@@ -16,13 +19,106 @@ pub struct StepContext {
     pub improvement_ratio: f64,
 }
 
+/// Streaming accumulator for the per-step worsening statistics consumed by
+/// [`StepContext`]. Allows callers (such as `RLSearch::run_once`) to feed
+/// values one at a time during move enumeration without materializing a slice.
+pub struct StepStatsAccumulator {
+    count: usize,
+    max_abs: f64,
+    min_w: f64,
+    max_w: f64,
+    n_improving: usize,
+    mean: f64,
+    m2: f64,
+}
+
+impl StepStatsAccumulator {
+    pub fn new() -> Self {
+        Self {
+            count: 0,
+            max_abs: 0.0,
+            min_w: f64::INFINITY,
+            max_w: f64::NEG_INFINITY,
+            n_improving: 0,
+            mean: 0.0,
+            m2: 0.0,
+        }
+    }
+
+    pub fn count(&self) -> usize {
+        self.count
+    }
+
+    /// Add one worsening value to the accumulator (Welford's online algorithm).
+    pub fn push(&mut self, w: f64) {
+        self.count += 1;
+        self.max_abs = self.max_abs.max(w.abs());
+        self.min_w = self.min_w.min(w);
+        self.max_w = self.max_w.max(w);
+        if w < 0.0 {
+            self.n_improving += 1;
+        }
+        let delta = w - self.mean;
+        self.mean += delta / self.count as f64;
+        let delta2 = w - self.mean;
+        self.m2 += delta * delta2;
+    }
+
+    /// Finalize the accumulated stats into a [`StepContext`].
+    ///
+    /// - `iteration`, `start_iteration`, `best_iteration`: from SearchState.
+    /// - `max_iteration_budget`: the configured max iterations (for normalization).
+    /// - `initial_worsening_total`: worsening measure of the initial solution
+    ///   (for `improvement_ratio`).
+    /// - `current_worsening_total`: worsening measure of the current solution.
+    pub fn finalize(
+        &self,
+        iteration: u64,
+        start_iteration: u64,
+        best_iteration: u64,
+        max_iteration_budget: f64,
+        initial_worsening_total: f64,
+        current_worsening_total: f64,
+    ) -> StepContext {
+        debug_assert!(self.count > 0);
+
+        let n = self.count as f64;
+        let max_abs = self.max_abs.max(EPSILON);
+        let fraction_improving = self.n_improving as f64 / n;
+        let mean_normalized = self.mean / max_abs;
+        let std_normalized = (self.m2 / n).sqrt() / max_abs;
+
+        let budget = max_iteration_budget.max(1.0);
+        let elapsed = (iteration - start_iteration) as f64;
+        let progress = (elapsed / budget).min(1.0);
+        let stagnation = ((iteration - best_iteration) as f64 / budget).min(1.0);
+
+        let denom = initial_worsening_total.abs().max(EPSILON);
+        let improvement_ratio = (current_worsening_total - initial_worsening_total) / denom;
+
+        StepContext {
+            max_abs_worsening: max_abs,
+            min_worsening: self.min_w,
+            max_worsening: self.max_w,
+            fraction_improving,
+            mean_worsening_normalized: mean_normalized,
+            std_worsening_normalized: std_normalized,
+            progress,
+            stagnation,
+            improvement_ratio,
+        }
+    }
+}
+
+impl Default for StepStatsAccumulator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Compute the step context from worsening values of all candidate moves.
 ///
-/// `worsenings`: per-move worsening amounts (positive = worse, negative = improving).
-/// `iteration`, `start_iteration`, `best_iteration`: from SearchState.
-/// `max_iteration_budget`: the configured max iterations (for normalization).
-/// `initial_worsening_total`: worsening measure of the initial solution (for improvement_ratio).
-/// `current_worsening_total`: worsening measure of the current solution.
+/// Convenience wrapper around [`StepStatsAccumulator`] for slice-based callers.
 pub fn compute_step_context(
     worsenings: &[f64],
     iteration: u64,
@@ -32,49 +128,25 @@ pub fn compute_step_context(
     initial_worsening_total: f64,
     current_worsening_total: f64,
 ) -> StepContext {
-    let n = worsenings.len() as f64;
-    debug_assert!(n > 0.0);
-
-    let max_abs = worsenings
-        .iter()
-        .map(|w| w.abs())
-        .fold(0.0_f64, f64::max)
-        .max(1e-10);
-
-    let n_improving = worsenings.iter().filter(|&&w| w < 0.0).count() as f64;
-    let fraction_improving = n_improving / n;
-
-    let sum: f64 = worsenings.iter().sum();
-    let mean = sum / n;
-    let mean_normalized = mean / max_abs;
-
-    let variance = worsenings.iter().map(|w| (w - mean).powi(2)).sum::<f64>() / n;
-    let std_normalized = variance.sqrt() / max_abs;
-
-    let budget = max_iteration_budget.max(1.0);
-    let elapsed = (iteration - start_iteration) as f64;
-    let progress = (elapsed / budget).min(1.0);
-    let stagnation = ((iteration - best_iteration) as f64 / budget).min(1.0);
-
-    let denom = initial_worsening_total.abs().max(1e-10);
-    let improvement_ratio = (current_worsening_total - initial_worsening_total) / denom;
-
-    StepContext {
-        max_abs_worsening: max_abs,
-        fraction_improving,
-        mean_worsening_normalized: mean_normalized,
-        std_worsening_normalized: std_normalized,
-        progress,
-        stagnation,
-        improvement_ratio,
+    let mut acc = StepStatsAccumulator::new();
+    for &w in worsenings {
+        acc.push(w);
     }
+    acc.finalize(
+        iteration,
+        start_iteration,
+        best_iteration,
+        max_iteration_budget,
+        initial_worsening_total,
+        current_worsening_total,
+    )
 }
 
 /// Build the feature vector for a single move.
 ///
-/// `worsening`: this move's worsening amount (positive = worse).
-/// `rank_ratio`: this move's rank among all candidates (0.0 = best, 1.0 = worst).
-/// `ctx`: the step context shared across all moves.
+/// - `worsening`: this move's worsening amount (positive = worse).
+/// - `rank_ratio`: this move's rank among all candidates (0.0 = best, 1.0 = worst).
+/// - `ctx`: the step context shared across all moves.
 pub fn extract_features(worsening: f64, rank_ratio: f64, ctx: &StepContext) -> [f64; NUM_FEATURES] {
     let normalized_gain = -worsening / ctx.max_abs_worsening;
     let is_improving = if worsening < 0.0 { 1.0 } else { 0.0 };
@@ -115,6 +187,8 @@ mod tests {
     fn extract_features_improving_move() {
         let ctx = StepContext {
             max_abs_worsening: 4.0,
+            min_worsening: -4.0,
+            max_worsening: 4.0,
             fraction_improving: 0.5,
             mean_worsening_normalized: -0.1,
             std_worsening_normalized: 0.3,
@@ -134,6 +208,8 @@ mod tests {
     fn extract_features_worsening_move() {
         let ctx = StepContext {
             max_abs_worsening: 4.0,
+            min_worsening: -4.0,
+            max_worsening: 4.0,
             fraction_improving: 0.5,
             mean_worsening_normalized: 0.0,
             std_worsening_normalized: 0.5,
