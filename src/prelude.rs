@@ -6,6 +6,9 @@
 //! use optopus::prelude::*;
 //! ```
 
+// Common types
+pub use crate::common::Graph;
+
 // Error type
 pub use crate::error::OptError;
 
@@ -15,9 +18,9 @@ pub use crate::search_state::{SearchState, SearchStateCloneType};
 // Heuristics
 pub use crate::heuristic::{
     BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, GeneticAlgorithm,
-    Heuristic, Iterated, LinKernighanHelsgottForTsp, LocalSearch, ParallelHeuristic, RandomWalk,
-    Restart, Sequential, SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch,
-    boltzmann_accept,
+    Heuristic, Iterated, LateAcceptanceHillClimbing, LinKernighanHelsgottForTsp, LocalSearch,
+    ParallelHeuristic, RLSearch, RandomWalk, Restart, RewardShaping, Sequential,
+    SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch, boltzmann_accept,
 };
 
 // Traits
@@ -39,6 +42,7 @@ pub use crate::problem::{
     // MaxCut
     MaxCut,
     MaxCutFlipNeighbor,
+    MaxCutSolution,
     MaxCutSwapNeighbor,
     OptDirection,
     // QUBO
@@ -57,4 +61,9 @@ pub use crate::problem::{
     TspTour,
     TspTwoOptNeighbor,
     TspWithCoordinates,
+    // Vertex Cover
+    VertexCover,
+    VertexCoverFlipNeighbor,
+    VertexCoverSolution,
+    VertexCoverSwapNeighbor,
 };

@@ -12,10 +12,7 @@ use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
 /// use optopus::search_state::SearchState;
 /// use optopus::problem::{MaxCut, MaxCutFlipNeighbor};
 ///
-/// let mut mc = MaxCut::new();
-/// mc.add_weight(0, 1, 1.0);
-/// mc.add_weight(0, 2, 1.0);
-/// mc.add_weight(1, 2, 1.0);
+/// let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
 ///
 /// let mut state = SearchState::new(&mc);
 /// let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000));

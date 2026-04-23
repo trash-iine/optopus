@@ -1,20 +1,50 @@
 //! Neighborhood move types for the [`MaxCut`] problem.
+//!
+//! Two move types are provided:
+//!
+//! - [`MaxCutFlipNeighbor`] — flip a single vertex (O(degree) update)
+//! - [`MaxCutSwapNeighbor`] — swap two vertices on opposite sides (two sequential flips)
+//!
+//! Both implement [`MoveToNeighbor`], [`Evaluate`], and [`EnabledTabu`], so they
+//! work with all heuristics ([`LocalSearch`], [`TabuSearch`], [`SimulatedAnnealing`], etc.).
+//!
+//! [`LocalSearch`]: crate::heuristic::LocalSearch
+//! [`TabuSearch`]: crate::heuristic::TabuSearch
+//! [`SimulatedAnnealing`]: crate::heuristic::SimulatedAnnealing
+//! [`MoveToNeighbor`]: crate::search_state::MoveToNeighbor
+//! [`Evaluate`]: crate::search_state::Evaluate
+//! [`EnabledTabu`]: crate::search_state::EnabledTabu
 
-use super::MaxCut;
+use super::{MaxCut, MaxCutSolution};
 use crate::{
     error::OptError,
-    problem::max_cut::problem::MaxCutSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 
 /// A flip move that transfers vertex `i` to the opposite partition side.
 ///
+/// This is the most common move type for MaxCut. The neighborhood size is O(n)
+/// and each move application takes O(degree(i)) time.
+///
 /// `gain` holds the change in cut weight after the flip (positive = improvement).
+///
+/// # Usage
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
+/// let mut state = SearchState::new(&mc);
+///
+/// // Use with any heuristic:
+/// LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000))
+///     .run(&mut state).unwrap();
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub struct MaxCutFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
-    /// Change in cut weight after the flip.
+    /// Change in cut weight after the flip (positive = improvement).
     pub gain: f32,
 }
 impl Rankable for MaxCutFlipNeighbor {
@@ -48,6 +78,15 @@ impl EnabledTabu for MaxCutFlipNeighbor {
 }
 
 impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
+    /// Applies the flip move: transfers vertex `self.i` to the opposite partition side.
+    ///
+    /// Updates the solution in-place in O(degree(i)):
+    /// 1. Flips `solution.cut[i]`
+    /// 2. Inverts `solution.gain[i]`
+    /// 3. Updates `gain[j]` for each neighbor `j` of `i`
+    /// 4. Adds `self.gain` to `solution.objective`
+    ///
+    /// If the `positive_gain` index is enabled, it is maintained incrementally.
     fn apply_to_solution(
         &self,
         prob: &MaxCut,
@@ -67,7 +106,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         // `bi` still holds the pre-flip side, so `bi ^ bj` reflects whether the
         // edge was crossing before the flip (and is now not crossing, hence
         // `+2w`), and vice versa.
-        for &(j, w) in prob.iter_on_adjacency(self.i) {
+        for &(j, w) in prob.graph.iter_on_adjacency(self.i) {
             let bj = solution.cut[j];
             let delta = if bi ^ bj { w * 2.0 } else { -w * 2.0 };
             let new_g = solution.gain[j] + delta;
@@ -81,13 +120,18 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         Ok(())
     }
 
+    /// Returns a lazy iterator over all possible flip moves (one per vertex).
+    ///
+    /// The iterator yields `n` moves where `n` is the number of vertices with edges.
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
-        prob.iter_on_vertices().map(|&i| MaxCutFlipNeighbor {
+        prob.graph.iter_on_vertices().map(|&i| MaxCutFlipNeighbor {
             i,
             gain: sol.gain[i],
         })
     }
 
+    /// Returns `true` if applying this move to `src` would produce a solution
+    /// better than `other`.
     fn move_to_be_better_than(
         &self,
         _: &MaxCut,
@@ -99,15 +143,33 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
 }
 
 impl Evaluate for MaxCutFlipNeighbor {
+    /// Returns the gain as `Evaluable::Maximize`, since MaxCut is a maximization problem.
+    ///
+    /// This is used by [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing) and
+    /// [`LateAcceptanceHillClimbing`](crate::heuristic::LateAcceptanceHillClimbing)
+    /// for acceptance decisions.
     fn evaluate(&self) -> Evaluable<f64> {
         Evaluable::Maximize(self.gain as f64)
     }
 }
 
 impl MaxCutFlipNeighbor {
-    /// Generates a random flip neighbor by randomly selecting a vertex `i` and using its current gain.
+    /// Generates a random flip neighbor by uniformly selecting a vertex from the graph.
+    ///
+    /// Useful as a perturbation step (e.g., in [`RandomWalk`](crate::heuristic::RandomWalk)).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
+    /// let state = SearchState::new(&mc);
+    /// let flip = MaxCutFlipNeighbor::random_neighbor(&mc, &state.solution);
+    /// println!("random flip: vertex {}, gain {}", flip.i, flip.gain);
+    /// ```
     pub fn random_neighbor(prob: &MaxCut, sol: &MaxCutSolution) -> Self {
-        let i = prob.vertices[rand::random_range(0..prob.vertices.len())];
+        let i = prob.graph.vertices[rand::random_range(0..prob.graph.vertices.len())];
         Self {
             i,
             gain: sol.gain[i],
@@ -118,11 +180,33 @@ impl MaxCutFlipNeighbor {
 /// A swap move that simultaneously flips vertices `i` and `j` to opposite sides.
 ///
 /// Only pairs where `i` and `j` are currently on different sides are generated.
+/// Each swap counts as **2 iterations** (see [`apply_to_iteration`](MoveToNeighbor::apply_to_iteration)).
+/// The neighborhood size is O(n^2), so it is slower per iteration than [`MaxCutFlipNeighbor`]
+/// but can escape local optima that flips cannot.
+///
 /// `gain` is the combined change in cut weight (positive = improvement).
+///
+/// # Usage
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]);
+/// let mut state = SearchState::new(&mc);
+///
+/// TabuSearch::<MaxCutSwapNeighbor>::new(
+///     StopCondition::iterations(10_000),
+///     (5, 10),
+///     None,
+/// ).run(&mut state).unwrap();
+/// ```
 #[derive(Debug, Clone)]
 pub struct MaxCutSwapNeighbor {
+    /// First vertex to swap (currently on one side).
     pub i: usize,
+    /// Second vertex to swap (currently on the opposite side from `i`).
     pub j: usize,
+    /// Combined change in cut weight (positive = improvement).
     pub gain: f32,
 }
 
@@ -133,6 +217,7 @@ impl Rankable for MaxCutSwapNeighbor {
 }
 
 impl Evaluate for MaxCutSwapNeighbor {
+    /// Returns the combined gain as `Evaluable::Maximize`.
     fn evaluate(&self) -> Evaluable<f64> {
         Evaluable::Maximize(self.gain as f64)
     }
@@ -153,6 +238,8 @@ impl EnabledTabu for MaxCutSwapNeighbor {
         enabled_i && enabled_j
     }
 
+    /// Adds both vertices `i` and `j` to the tabu map, each with an independently
+    /// randomised tenure from `tabu_tenure`.
     fn add_to_tabu_map(
         &self,
         tabu_map: &mut Self::TabuMap,
@@ -168,10 +255,15 @@ impl EnabledTabu for MaxCutSwapNeighbor {
 }
 
 impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
+    /// A swap counts as 2 iterations (one for each vertex flip).
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }
 
+    /// Applies the swap by performing two sequential flips: first `i`, then `j`.
+    ///
+    /// The second flip uses the updated gain after the first flip, so the combined
+    /// effect accounts for the interaction between the two vertices.
     fn apply_to_solution(&self, prob: &MaxCut, sol: &mut MaxCutSolution) -> Result<(), OptError> {
         let flip_i = MaxCutFlipNeighbor {
             i: self.i,
@@ -186,17 +278,22 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
         Ok(())
     }
 
+    /// Returns a lazy iterator over all valid swap pairs `(i, j)` where
+    /// `i` and `j` are on different sides.
+    ///
+    /// The gain is computed as `gain[i] + gain[j] + 2*w(i,j)` to account for
+    /// the interaction when both vertices are flipped simultaneously.
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
-        prob.iter_on_vertices().flat_map(move |&i| {
-            prob.iter_on_vertices()
+        prob.graph.iter_on_vertices().flat_map(move |&i| {
+            prob.graph.iter_on_vertices()
                 .filter(move |&&j| j < i && (sol.cut[i] ^ sol.cut[j]))
                 .map(move |&j| Self {
                     i,
                     j,
                     gain: sol.gain[i]
                         + sol.gain[j]
-                        + if prob.has_edge(i, j) {
-                            2.0 * prob.get_weight(i, j)
+                        + if prob.graph.has_edge(i, j) {
+                            2.0 * prob.graph.get_weight(i, j)
                         } else {
                             0.0
                         },
@@ -204,6 +301,8 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
         })
     }
 
+    /// Returns `true` if applying this swap to `src` would produce a solution
+    /// better than `other`.
     fn move_to_be_better_than(
         &self,
         _: &MaxCut,
@@ -222,20 +321,13 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let mut mc = MaxCut::new();
-        mc.add_weight(0, 1, 1.0);
-        mc.add_weight(0, 2, 1.0);
-        mc.add_weight(1, 2, 1.0);
-
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
         let _ = SearchState::new(&mc);
     }
 
     #[test]
     fn test_flip_neighbor() {
-        let mut mc = MaxCut::new();
-        mc.add_weight(0, 1, 1.0);
-        mc.add_weight(0, 2, 1.0);
-        mc.add_weight(1, 2, 1.0);
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
 
         let mut state = SearchState::new(&mc);
         state.solution.cut[0] = true;
