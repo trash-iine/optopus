@@ -1,9 +1,9 @@
-//! 独自ヒューリスティック実装の最小サンプル。
+//! Minimal example of implementing a custom heuristic.
 //!
-//! `Heuristic` trait を実装して、各反復で「最初に見つかった改善手」を採用する
-//! シンプルな first-improving hill climber を定義します。
+//! Implements the `Heuristic` trait to define a simple first-improving
+//! hill climber that accepts the first improving move it finds each iteration.
 //!
-//! 実行方法:
+//! How to run:
 //! ```
 //! cargo run --example custom_heuristic
 //! ```
