@@ -1,14 +1,14 @@
 # Profiling workflow
 
-`samply` を使って `examples/prof_*.rs` を実行し、パフォーマンス解析用の
-トレースを取得するためのディレクトリ。
+Directory for capturing performance traces by running `examples/prof_*.rs`
+under `samply`.
 
-各 `prof_*.rs` は 5 秒前後で完了するよう `StopCondition::duration` または
-`Restart` でラップされており、サンプル密度が十分取れる構成になっている。
+Each `prof_*.rs` is wrapped with `StopCondition::duration` or `Restart` so
+that it finishes in roughly 5 seconds, ensuring sufficient sample density.
 
-## ベースライン取得
+## Capturing the baseline
 
-初回および最適化前の基準点として、9 本すべてを一括キャプチャする:
+For the initial / pre-optimization reference, capture all nine examples in a single batch:
 
 ```sh
 cargo build --profile profiling --examples
@@ -23,9 +23,9 @@ for ex in prof_ls_maxcut_flip prof_ts_maxcut_flip prof_sa_maxcut \
 done
 ```
 
-## 差分取得（最適化後）
+## Capturing a diff (post-optimization)
 
-最適化検証用トレースは `profiles/current/` に出力する:
+Write traces used for verifying optimizations to `profiles/current/`:
 
 ```sh
 mkdir -p profiles/current
@@ -34,15 +34,15 @@ samply record --save-only \
   ./target/profiling/examples/<example>
 ```
 
-## 閲覧
+## Viewing
 
 ```sh
 samply load profiles/baseline/<example>.profile.json.gz
 ```
 
-## 対応表
+## Mapping
 
-| 例                       | 対象                                         |
+| Example                  | Target                                       |
 |--------------------------|----------------------------------------------|
 | `prof_ls_maxcut_flip`    | LocalSearch × MaxCutFlip  (G22)              |
 | `prof_ts_maxcut_flip`    | TabuSearch  × MaxCutFlip  (G22)              |
@@ -54,10 +54,10 @@ samply load profiles/baseline/<example>.profile.json.gz
 | `prof_ls_formula`        | LS × FormulaProblem Flip + Swap (n=60)       |
 | `prof_ga_maxcut`         | GeneticAlgorithm × MaxCut (G22)              |
 
-## 備考
+## Notes
 
-- `profiles/baseline/` および `profiles/current/` は `.gitignore` で除外。
-  トレース自体はローカル成果物としてのみ扱う。
-- `cargo build --profile profiling` は `Cargo.toml` の
-  `[profile.profiling]` (release + `debug = "line-tables-only"`) で
-  シンボル解決に必要な行情報のみを含むバイナリを生成する。
+- `profiles/baseline/` and `profiles/current/` are excluded via `.gitignore`.
+  Trace files are local artifacts only.
+- `cargo build --profile profiling` uses the `[profile.profiling]` setting in
+  `Cargo.toml` (release + `debug = "line-tables-only"`), producing a binary
+  with only the line information needed for symbol resolution.

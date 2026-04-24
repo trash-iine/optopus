@@ -1,16 +1,17 @@
-//! プロファイリング: Lin-Kernighan (Helsgaun) × TSP (Tier 1, LKH ベースライン)
+//! Profiling: Lin-Kernighan (Helsgaun) × TSP (Tier 1, LKH baseline)
 //!
-//! ホットパス:
-//!   - ensure_candidates(): 初回のみ O(n²) の全ペア距離計算 + sort (候補リスト構築)
-//!   - find_lk_move(): depth-bounded DFS — tour 上で succ/pred を辿りながら
-//!     improving なエッジ交換シーケンスを探索
-//!   - prob.distance(): f64::sqrt (座標から毎回再計算)
-//!   - apply_to_solution(): tour の部分反転 + gain HashMap の差分更新
+//! Hot paths:
+//!   - ensure_candidates(): one-time O(n²) all-pairs distance computation +
+//!     sort (candidate-list construction)
+//!   - find_lk_move(): depth-bounded DFS — walks succ/pred along the tour
+//!     to search for improving edge-exchange sequences
+//!   - prob.distance(): f64::sqrt (recomputed from coordinates each call)
+//!   - apply_to_solution(): partial tour reversal + incremental update of the gain HashMap
 //!
-//! LKH は局所最適で `no_improvement = true` になり自己終了するため、
-//! Restart でラップして固定時間走らせる (berlin52 は非常に速く収束するため必要)。
+//! LKH self-terminates with `no_improvement = true` at a local optimum,
+//! so wrap in Restart to run for a fixed time (berlin52 converges very fast).
 //!
-//! 実行方法:
+//! How to run:
 //! ```
 //! cargo build --profile profiling --example prof_lkh_tsp
 //! samply record ./target/profiling/examples/prof_lkh_tsp

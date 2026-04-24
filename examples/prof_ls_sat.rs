@@ -1,17 +1,17 @@
-//! プロファイリング: LocalSearch × SAT × Flip + Swap (Tier 2)
+//! Profiling: LocalSearch × SAT × Flip + Swap (Tier 2)
 //!
-//! ホットパス (Flip):
-//!   - apply_to_solution: Vec<usize> (affected 変数) alloc + sort_unstable + dedup
-//!   - calc_gain() を affected 変数ごとに呼び出し (節走査)
+//! Hot paths (Flip):
+//!   - apply_to_solution: Vec<usize> (affected vars) alloc + sort_unstable + dedup
+//!   - calc_gain() called per affected variable (clause scan)
 //!
-//! ホットパス (Swap):
-//!   - iter() 全体を Vec<SatSwapNeighbor> に eager collect
-//!   - HashSet<(usize,usize)> (seen ペア去重) を毎回 alloc
-//!   - calc_gain_with_virtual_flip を節ペアごとに呼び出し
+//! Hot paths (Swap):
+//!   - iter() eagerly collects every Vec<SatSwapNeighbor>
+//!   - HashSet<(usize, usize)> (seen-pair dedup) reallocated each call
+//!   - calc_gain_with_virtual_flip called per clause pair
 //!
-//! LocalSearch は局所最適で停止するため Restart で固定時間走らせる。
+//! LocalSearch halts at a local optimum, so wrap in Restart to run for a fixed time.
 //!
-//! 実行方法:
+//! How to run:
 //! ```
 //! cargo build --profile profiling --example prof_ls_sat
 //! samply record ./target/profiling/examples/prof_ls_sat
@@ -22,8 +22,8 @@ use std::time::Duration;
 use optopus::prelude::*;
 
 fn main() {
-    // 3-SAT インスタンスを構築: n=500 変数, ~2000 節 (密度 ~4.0)
-    // clause_ratio ~4.0 は位相遷移付近で gain 更新が頻繁に発生する
+    // Build a 3-SAT instance: n=500 vars, ~2000 clauses (density ~4.0).
+    // clause_ratio ~4.0 sits near the phase transition where gain updates fire frequently.
     let n_vars = 500usize;
     let n_clauses = 2000usize;
     let mut sat = Sat::new(n_vars);

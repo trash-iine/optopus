@@ -1,12 +1,12 @@
-//! プロファイリング: GeneticAlgorithm × MaxCut (Tier 2)
+//! Profiling: GeneticAlgorithm × MaxCut (Tier 2)
 //!
-//! ホットパス:
-//!   - mutation.run(): LocalSearch sub-run (inner heuristic の全コスト)
+//! Hot paths:
+//!   - mutation.run(): LocalSearch sub-run (full cost of the inner heuristic)
 //!   - insert_into_population(): O(population_size) worst-member scan
-//!   - clone_for_new_run() + update_state(): SearchState clone コスト
-//!   - tournament_select(): 4 回の random index アクセス
+//!   - clone_for_new_run() + update_state(): SearchState clone cost
+//!   - tournament_select(): 4 random index accesses
 //!
-//! 実行方法:
+//! How to run:
 //! ```
 //! cargo build --profile profiling --example prof_ga_maxcut
 //! samply record ./target/profiling/examples/prof_ga_maxcut

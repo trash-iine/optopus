@@ -1,17 +1,17 @@
-//! プロファイリング: BeamSearch × MaxCut × Flip (Tier 1)
+//! Profiling: BeamSearch × MaxCut × Flip (Tier 1)
 //!
-//! ホットパス:
-//!   - beam_width × n 回の MaxCutSolution::clone()
-//!     (Vec<bool> cut + Vec<f32> gain の memcpy — n に線形)
-//!   - 各 candidate に対する apply_to_solution (O(degree))
-//!   - select_nth_unstable_by による beam 絞り込み
+//! Hot paths:
+//!   - beam_width × n MaxCutSolution::clone() calls per iteration
+//!     (memcpy of Vec<bool> cut + Vec<f32> gain — linear in n)
+//!   - apply_to_solution per candidate (O(degree))
+//!   - beam pruning via select_nth_unstable_by
 //!
-//! アロケーション解析には cargo-instruments が有効:
+//! For allocation analysis, cargo-instruments works well:
 //! ```
 //! cargo instruments --profile profiling --example prof_beam_maxcut -t Allocations
 //! ```
 //!
-//! 実行方法 (samply):
+//! How to run (samply):
 //! ```
 //! cargo build --profile profiling --example prof_beam_maxcut
 //! samply record ./target/profiling/examples/prof_beam_maxcut
@@ -22,7 +22,7 @@ use std::time::Duration;
 use optopus::prelude::*;
 
 fn main() {
-    // G22: n=2000 — beam_width × n = 5 × 2000 clones/iter でアロケーション圧を最大化
+    // G22: n=2000 — beam_width × n = 5 × 2000 clones/iter maximizes allocation pressure
     let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G22").unwrap());
     let mut state = SearchState::new(&mc);
     BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(

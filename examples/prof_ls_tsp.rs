@@ -1,18 +1,18 @@
-//! プロファイリング: LocalSearch × TSP × TwoOpt + Relocate (Tier 1)
+//! Profiling: LocalSearch × TSP × TwoOpt + Relocate (Tier 1)
 //!
-//! ホットパス (TwoOpt):
-//!   - O(n²) iter: normalize_edge_pair ((Edge,Edge)) をキーにした
-//!     `sol.gain: HashMap<(Edge,Edge), f64>` の lookup
-//!   - apply_to_solution: update_gains_for_removed/added_edge が
-//!     セグメント長 (j - i + 1) に線形
+//! Hot paths (TwoOpt):
+//!   - O(n²) iter: lookup into `sol.gain: HashMap<(Edge, Edge), f64>`
+//!     keyed by normalize_edge_pair ((Edge, Edge))
+//!   - apply_to_solution: update_gains_for_removed/added_edge is
+//!     linear in segment length (j - i + 1)
 //!
-//! ホットパス (Relocate):
-//!   - iter() は O(n²) 列挙を Vec に eager collect (Arc は不使用)
-//!   - 各 (pos, ins) ペアで prob.distance() = f64::sqrt × 6 回
+//! Hot paths (Relocate):
+//!   - iter() eagerly collects the O(n²) enumeration into a Vec (no Arc)
+//!   - For each (pos, ins) pair, prob.distance() invokes f64::sqrt 6 times
 //!
-//! LocalSearch は局所最適で停止するため Restart で固定時間走らせる。
+//! LocalSearch halts at a local optimum, so wrap in Restart to run for a fixed time.
 //!
-//! 実行方法:
+//! How to run:
 //! ```
 //! cargo build --profile profiling --example prof_ls_tsp
 //! samply record ./target/profiling/examples/prof_ls_tsp

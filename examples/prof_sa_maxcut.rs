@@ -1,15 +1,15 @@
-//! プロファイリング: SimulatedAnnealing × MaxCut × Flip + Swap (Tier 1)
+//! Profiling: SimulatedAnnealing × MaxCut × Flip + Swap (Tier 1)
 //!
-//! ホットパス (Flip):
-//!   - iter().choose() が reservoir sampling で O(n) 全消費
-//!   - boltzmann_accept: f64::exp + rng.random() (悪化時のみ)
-//!   - MaxCutSolution.gain: Vec<f32> インデックスアクセス
+//! Hot paths (Flip):
+//!   - iter().choose() consumes O(n) via reservoir sampling
+//!   - boltzmann_accept: f64::exp + rng.random() (only on worsening moves)
+//!   - MaxCutSolution.gain: indexed access into Vec<f32>
 //!
-//! ホットパス (Swap):
-//!   - iter() が全 (i,j) ペアを Vec として collect → O(n²) alloc
-//!   - その後 choose() が O(n²) 全消費 — Flip と比較してスケーリングを確認
+//! Hot paths (Swap):
+//!   - iter() collects all (i, j) pairs into a Vec → O(n²) alloc
+//!   - choose() then consumes O(n²) — compare scaling against Flip
 //!
-//! 実行方法:
+//! How to run:
 //! ```
 //! cargo build --profile profiling --example prof_sa_maxcut
 //! samply record ./target/profiling/examples/prof_sa_maxcut

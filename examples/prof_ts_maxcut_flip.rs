@@ -1,12 +1,12 @@
-//! プロファイリング: TabuSearch × MaxCut × Flip (Tier 1)
+//! Profiling: TabuSearch × MaxCut × Flip (Tier 1)
 //!
-//! ホットパス:
-//!   - filter_best() が vec![r] で毎回 Vec 再確保
-//!   - is_move_enabled() が TabuMap (HashMap<usize, u64>)::get × n
-//!   - add_to_tabu_map() の HashMap::insert
-//!   - MaxCutSolution.gain: Vec<f32> を全頂点走査
+//! Hot paths:
+//!   - filter_best() reallocates Vec via vec![r] every call
+//!   - is_move_enabled() does TabuMap (HashMap<usize, u64>)::get × n
+//!   - add_to_tabu_map() HashMap::insert
+//!   - MaxCutSolution.gain: full scan over Vec<f32> for all vertices
 //!
-//! 実行方法:
+//! How to run:
 //! ```
 //! cargo build --profile profiling --example prof_ts_maxcut_flip
 //! samply record ./target/profiling/examples/prof_ts_maxcut_flip
