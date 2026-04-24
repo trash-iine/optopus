@@ -31,6 +31,15 @@ struct LkMove {
 /// - **Positive gain criterion**: partial gain must remain positive at each step
 /// - **Maximum depth**: search stops after `max_depth` levels (k in k-opt)
 ///
+/// # References
+///
+/// - Lin, S. and Kernighan, B. W. "An Effective Heuristic Algorithm for the
+///   Traveling-Salesman Problem." *Operations Research*, 21(2), 498-516, 1973.
+///   [DOI](https://doi.org/10.1287/opre.21.2.498)
+/// - Helsgaun, K. "An Effective Implementation of the Lin-Kernighan Traveling
+///   Salesman Heuristic." *European Journal of Operational Research*, 126(1),
+///   106-130, 2000. [DOI](https://doi.org/10.1016/S0377-2217(99)00284-2)
+///
 /// # Parameters
 ///
 /// - `stop_condition` — overall stopping criterion
