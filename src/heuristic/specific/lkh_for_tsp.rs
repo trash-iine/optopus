@@ -49,7 +49,6 @@ pub struct LinKernighanHelsgott {
     stop_condition: StopCondition,
     num_neighbors: usize,
     max_depth: usize,
-    // --- internal state ---
     candidates: Vec<Vec<usize>>,
     position: Vec<usize>,
     no_improvement: bool,
@@ -66,8 +65,6 @@ impl LinKernighanHelsgott {
             no_improvement: false,
         }
     }
-
-    // -- helpers ----------------------------------------------------------
 
     fn ensure_candidates(&mut self, prob: &TspWithCoordinates) {
         if !self.candidates.is_empty() {
@@ -623,7 +620,7 @@ mod tests {
 
     #[test]
     fn test_lkh_on_larger_instance() {
-        let prob = TspWithCoordinates::load_file("data/tsp/test_data.txt").unwrap();
+        let prob = TspWithCoordinates::load_file("data/tsplib/eil51.tsp").unwrap();
         let mut state = SearchState::new(&prob);
         let initial_obj = state.solution.objective;
 

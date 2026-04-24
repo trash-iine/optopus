@@ -1,0 +1,37 @@
+num_runs = 3
+
+# --- EUC_2D instances ---
+[[instances]]
+path = "data/tsplib/berlin52.tsp"
+problem = "Tsp"
+[[instances]]
+path = "data/tsplib/eil101.tsp"
+problem = "Tsp"
+[[instances]]
+path = "data/tsplib/ch150.tsp"
+problem = "Tsp"
+
+# --- ATT instance ---
+[[instances]]
+path = "data/tsplib/att48.tsp"
+problem = "Tsp"
+
+# --- GEO instance ---
+[[instances]]
+path = "data/tsplib/burma14.tsp"
+problem = "Tsp"
+
+# --- LKH ---
+[[heuristics]]
+kind = "LinKernighanHelsgott"
+num_neighbors = 5
+max_depth = 5
+[heuristics.stop_condition]
+max_duration_secs = 5.0
+
+# --- Baseline: LocalSearch + TwoOpt ---
+[[heuristics]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+[heuristics.stop_condition]
+max_duration_secs = 5.0

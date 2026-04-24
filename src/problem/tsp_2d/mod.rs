@@ -9,4 +9,4 @@ mod problem;
 
 pub use crossover::TspOrderCrossover;
 pub use neighbor::{TspRelocateNeighbor, TspTwoOptNeighbor};
-pub use problem::{TspSolution, TspTour, TspWithCoordinates};
+pub use problem::{EdgeWeightType, TspSolution, TspTour, TspWithCoordinates};
