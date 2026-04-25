@@ -105,12 +105,7 @@ impl LinKernighanHelsgott {
     // -- LK search -------------------------------------------------------
 
     /// Tries to find an improving LK move starting from city `t1`.
-    fn find_lk_move(
-        &self,
-        prob: &TspWithCoordinates,
-        tour: &[usize],
-        t1: usize,
-    ) -> Option<LkMove> {
+    fn find_lk_move(&self, prob: &TspWithCoordinates, tour: &[usize], t1: usize) -> Option<LkMove> {
         let n = tour.len();
         let t2_options = [self.succ(tour, t1), self.pred(tour, t1)];
 
@@ -620,7 +615,7 @@ mod tests {
 
     #[test]
     fn test_lkh_on_larger_instance() {
-        let prob = TspWithCoordinates::load_file("data/tsplib/eil51.tsp").unwrap();
+        let prob = TspWithCoordinates::load_file("data/tsp/eil51.tsp").unwrap();
         let mut state = SearchState::new(&prob);
         let initial_obj = state.solution.objective;
 

@@ -2,23 +2,23 @@ num_runs = 3
 
 # --- EUC_2D instances ---
 [[instances]]
-path = "data/tsplib/berlin52.tsp"
+path = "data/tsp/berlin52.tsp"
 problem = "Tsp"
 [[instances]]
-path = "data/tsplib/eil101.tsp"
+path = "data/tsp/eil101.tsp"
 problem = "Tsp"
 [[instances]]
-path = "data/tsplib/ch150.tsp"
+path = "data/tsp/ch150.tsp"
 problem = "Tsp"
 
 # --- ATT instance ---
 [[instances]]
-path = "data/tsplib/att48.tsp"
+path = "data/tsp/att48.tsp"
 problem = "Tsp"
 
 # --- GEO instance ---
 [[instances]]
-path = "data/tsplib/burma14.tsp"
+path = "data/tsp/burma14.tsp"
 problem = "Tsp"
 
 # --- LKH ---

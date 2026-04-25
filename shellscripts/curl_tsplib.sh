@@ -2,7 +2,7 @@
 set -u
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DATA_DIR=$SCRIPT_DIR/../data/tsplib
+DATA_DIR=$SCRIPT_DIR/../data/tsp
 mkdir -p $DATA_DIR
 
 FILES=(
@@ -11,6 +11,8 @@ FILES=(
 	ch150.tsp
 	att48.tsp
 	burma14.tsp
+	eil51.tsp
+	dsj1000.tsp
 )
 
 for f in ${FILES[@]}; do

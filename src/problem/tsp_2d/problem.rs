@@ -194,10 +194,14 @@ impl TspWithCoordinates {
             }
         }
 
-        let n = dimension
-            .ok_or_else(|| err(line_num, "'DIMENSION: N' not found in header".into()))?;
-        let ewt_raw = edge_weight_type
-            .ok_or_else(|| err(line_num, "'EDGE_WEIGHT_TYPE: ...' not found in header".into()))?;
+        let n =
+            dimension.ok_or_else(|| err(line_num, "'DIMENSION: N' not found in header".into()))?;
+        let ewt_raw = edge_weight_type.ok_or_else(|| {
+            err(
+                line_num,
+                "'EDGE_WEIGHT_TYPE: ...' not found in header".into(),
+            )
+        })?;
         let ewt = match ewt_raw.to_ascii_uppercase().as_str() {
             "EUC_2D" => EdgeWeightType::Euc2d,
             "CEIL_2D" => EdgeWeightType::Ceil2d,
@@ -569,21 +573,21 @@ EOF
 
     #[test]
     fn test_load_file_att() {
-        let tsp = TspWithCoordinates::load_file("data/tsplib/att48.tsp").unwrap();
+        let tsp = TspWithCoordinates::load_file("data/tsp/att48.tsp").unwrap();
         assert_eq!(tsp.coordinates.len(), 48);
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Att);
     }
 
     #[test]
     fn test_load_file_geo() {
-        let tsp = TspWithCoordinates::load_file("data/tsplib/burma14.tsp").unwrap();
+        let tsp = TspWithCoordinates::load_file("data/tsp/burma14.tsp").unwrap();
         assert_eq!(tsp.coordinates.len(), 14);
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Geo);
     }
 
     #[test]
     fn test_load_file_ceil_2d() {
-        let tsp = TspWithCoordinates::load_file("data/tsplib/dsj1000.tsp").unwrap();
+        let tsp = TspWithCoordinates::load_file("data/tsp/dsj1000.tsp").unwrap();
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Ceil2d);
         // dsj1000 is CEIL_2D; ceil(sqrt(...)) should be >= nint(sqrt(...)).
         let d = tsp.distance(0, 1);
