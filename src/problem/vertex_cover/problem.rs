@@ -191,7 +191,7 @@ mod tests {
         for &g in &gain {
             assert_eq!(g, 1 - 4 * 2);
         }
-        assert_eq!(obj, 0 + 4 * 3);
+        assert_eq!(obj, (4 * 3));
     }
 
     #[test]

@@ -37,7 +37,7 @@ impl EnabledTabu for TspTwoOptNeighbor {
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         let key = (self.i.min(self.j), self.i.max(self.j));
-        tabu_map.get(&key).map_or(true, |&t| iteration > t)
+        tabu_map.get(&key).is_none_or(|&t| iteration > t)
     }
 
     fn add_to_tabu_map(
@@ -137,7 +137,7 @@ impl EnabledTabu for TspRelocateNeighbor {
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         tabu_map
             .get(&(self.pos, self.ins))
-            .map_or(true, |&t| iteration > t)
+            .is_none_or(|&t| iteration > t)
     }
 
     fn add_to_tabu_map(

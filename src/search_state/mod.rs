@@ -122,7 +122,7 @@ where
             );
         }
 
-        return ret;
+        ret
     }
 
     /// Creates a copy of this state prepared for a new sub-run.
@@ -215,7 +215,7 @@ where
         Move: MoveToNeighbor<Problem>,
     {
         self.iteration = neighbor.apply_to_iteration(self.iteration);
-        neighbor.apply_to_solution(&self.instance, &mut self.solution)?;
+        neighbor.apply_to_solution(self.instance, &mut self.solution)?;
         self.update_best();
         Ok(())
     }
@@ -231,7 +231,7 @@ where
         Move: MoveToNeighbor<Problem>,
     {
         self.iteration = neighbor.apply_to_iteration(self.iteration);
-        neighbor.apply_to_solution(&self.instance, &mut self.solution)?;
+        neighbor.apply_to_solution(self.instance, &mut self.solution)?;
         Ok(())
     }
 
@@ -246,7 +246,7 @@ where
     where
         Move: MoveToNeighbor<Problem>,
     {
-        m.move_to_be_better_than(&self.instance, &self.solution, &self.solution)
+        m.move_to_be_better_than(self.instance, &self.solution, &self.solution)
     }
 
     /// Returns `true` if applying `m` to the current solution yields a solution
@@ -255,7 +255,7 @@ where
     where
         Move: MoveToNeighbor<Problem>,
     {
-        m.move_to_be_better_than(&self.instance, &self.solution, &self.best_solution)
+        m.move_to_be_better_than(self.instance, &self.solution, &self.best_solution)
     }
 
     /// Returns the best move from `move_list` using parallel chunk-based evaluation.
@@ -274,7 +274,7 @@ where
             .par_chunks(chunk_size)
             .map(|chunk| {
                 chunk
-                    .into_iter()
+                    .iter()
                     .max_by(|first, second| {
                         if first.is_better_than(second) {
                             std::cmp::Ordering::Greater

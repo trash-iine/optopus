@@ -60,7 +60,7 @@ impl EnabledTabu for MaxCutFlipNeighbor {
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         tabu_map
             .get(&self.i)
-            .map_or(true, |&tabu_tenure| iteration > tabu_tenure)
+            .is_none_or(|&tabu_tenure| iteration > tabu_tenure)
     }
 
     /// When a flip move is applied,
@@ -231,10 +231,10 @@ impl EnabledTabu for MaxCutSwapNeighbor {
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         let enabled_i = tabu_map
             .get(&self.i)
-            .map_or(true, |&tabu_tenure| iteration > tabu_tenure);
+            .is_none_or(|&tabu_tenure| iteration > tabu_tenure);
         let enabled_j = tabu_map
             .get(&self.j)
-            .map_or(true, |&tabu_tenure| iteration > tabu_tenure);
+            .is_none_or(|&tabu_tenure| iteration > tabu_tenure);
         enabled_i && enabled_j
     }
 
@@ -337,6 +337,6 @@ mod tests {
         let neighbor = MaxCutFlipNeighbor { i: 1, gain: -2.0 };
         state.apply(&neighbor).unwrap();
 
-        assert_eq!(state.solution.cut[1], true);
+        assert!(state.solution.cut[1]);
     }
 }

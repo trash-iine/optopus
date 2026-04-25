@@ -8,6 +8,12 @@ pub struct LinearPolicy {
     pub weights: [f64; NUM_FEATURES],
 }
 
+impl Default for LinearPolicy {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LinearPolicy {
     /// Create a new policy with zero weights (uniform random under softmax).
     pub fn new() -> Self {

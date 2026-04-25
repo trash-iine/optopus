@@ -33,7 +33,7 @@ impl EnabledTabu for FormulaFlipNeighbor {
     type TabuMap = HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.get(&self.i).map_or(true, |&t| iteration > t)
+        tabu_map.get(&self.i).is_none_or(|&t| iteration > t)
     }
 
     fn add_to_tabu_map(
@@ -117,8 +117,8 @@ impl EnabledTabu for FormulaSwapNeighbor {
     type TabuMap = HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let ok_i = tabu_map.get(&self.i).map_or(true, |&t| iteration > t);
-        let ok_j = tabu_map.get(&self.j).map_or(true, |&t| iteration > t);
+        let ok_i = tabu_map.get(&self.i).is_none_or(|&t| iteration > t);
+        let ok_j = tabu_map.get(&self.j).is_none_or(|&t| iteration > t);
         ok_i && ok_j
     }
 

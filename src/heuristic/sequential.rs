@@ -13,7 +13,7 @@ pub struct Sequential<Problem: ProblemTrait> {
     pub heuristics: Vec<Box<dyn Heuristic<Problem>>>,
 }
 
-impl<'a, Problem: ProblemTrait> Sequential<Problem> {
+impl<Problem: ProblemTrait> Sequential<Problem> {
     /// Create a new [`Sequential`] heuristic with the given stopping condition and list of heuristics.
     pub fn new(
         stop_condition: super::StopCondition,

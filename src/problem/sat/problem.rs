@@ -187,10 +187,9 @@ impl Sat {
 
         let mut n_clauses = 0usize;
         let mut sat = None::<Self>;
-        let mut line_num = 0usize;
 
-        for result in reader.lines() {
-            line_num += 1;
+        for (idx, result) in reader.lines().enumerate() {
+            let line_num = idx + 1;
             let line = result
                 .map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
             let trimmed = line.trim();

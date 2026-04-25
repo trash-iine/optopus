@@ -56,7 +56,7 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         // max_by avoids the Vec allocation that filter_best() + pop() would incur;
         // tie-breaking is arbitrary, which is fine for hill-climbing.
-        let best_move = N::iter(&state.instance, &state.solution)
+        let best_move = N::iter(state.instance, &state.solution)
             .filter(|n| state.is_neighbor_better_than_current(n))
             .max_by(|a, b| {
                 if a.is_better_than(b) {

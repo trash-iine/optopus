@@ -65,7 +65,7 @@ pub trait Heuristic<Problem: ProblemTrait> {
             elapsed_secs = state.duration().as_secs_f64(),
             "Heuristic run completed"
         );
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -79,7 +79,7 @@ pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
             self.run_once_par(state)?;
         }
 
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -179,21 +179,18 @@ impl StopCondition {
 
     /// Check if any of the stopping conditions are met based on the current search state.
     pub fn is_done<'a, Problem: ProblemTrait>(&self, state: &SearchState<'a, Problem>) -> bool {
-        if let Some(max_iter) = self.max_iteration {
-            if state.iteration - state.start_iteration >= max_iter {
+        if let Some(max_iter) = self.max_iteration
+            && state.iteration - state.start_iteration >= max_iter {
                 return true;
             }
-        }
-        if let Some(max_duration) = self.max_duration {
-            if state.duration() >= max_duration {
+        if let Some(max_duration) = self.max_duration
+            && state.duration() >= max_duration {
                 return true;
             }
-        }
-        if let Some(max_failed_update) = self.max_failed_update {
-            if state.iteration - state.best_iteration >= max_failed_update {
+        if let Some(max_failed_update) = self.max_failed_update
+            && state.iteration - state.best_iteration >= max_failed_update {
                 return true;
             }
-        }
-        return false;
+        false
     }
 }
