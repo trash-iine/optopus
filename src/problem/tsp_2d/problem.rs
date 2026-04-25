@@ -50,13 +50,36 @@ impl ProblemTrait for TspWithCoordinates {
     }
 }
 
+/// TSPLIB `EDGE_WEIGHT_TYPE` variants supported by [`TspWithCoordinates`].
+///
+/// Each variant selects the distance formula used by [`TspWithCoordinates::distance`].
+/// `Continuous` is the default for programmatically constructed instances and
+/// preserves the library's historical plain-Euclidean behavior; the remaining
+/// variants match the integer-rounded formulas specified by TSPLIB so objective
+/// values are comparable to published optima.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EdgeWeightType {
+    /// Plain Euclidean distance (no rounding). Default for [`TspWithCoordinates::new`].
+    Continuous,
+    /// `nint(sqrt(dx^2 + dy^2))` — TSPLIB `EUC_2D`.
+    Euc2d,
+    /// `ceil(sqrt(dx^2 + dy^2))` — TSPLIB `CEIL_2D`.
+    Ceil2d,
+    /// TSPLIB pseudo-Euclidean distance (`ATT`): `r = sqrt((dx^2+dy^2)/10); t = nint(r); d = if t<r {t+1} else {t}`.
+    Att,
+    /// TSPLIB geographical distance (`GEO`). Coordinates are `DDD.MM` → radians;
+    /// great-circle distance with Earth radius 6378.388 km, truncated.
+    Geo,
+}
+
 /// TSP problem instance storing city coordinates.
 ///
-/// Distances are computed as Euclidean distances between 2D coordinate pairs.
+/// Distances are computed via the formula selected by `edge_weight_type`.
 #[derive(Debug, Clone)]
 pub struct TspWithCoordinates {
     pub name: String,
     pub coordinates: Vec<(f64, f64)>,
+    pub edge_weight_type: EdgeWeightType,
 }
 
 /// Returns the normalized edge-pair key for two directed edges `(a→b)` and `(c→d)`,
@@ -65,9 +88,35 @@ pub(super) fn normalize_edge_pair(e1: TspEdge, e2: TspEdge) -> (TspEdge, TspEdge
     if e1 <= e2 { (e1, e2) } else { (e2, e1) }
 }
 
+/// Converts a `DDD.MM` TSPLIB coordinate to radians (GEO distance helper).
+#[inline]
+fn geo_ddmm_to_rad(xy: f64) -> f64 {
+    let deg = xy.trunc();
+    let min = xy - deg;
+    std::f64::consts::PI * (deg + 5.0 * min / 3.0) / 180.0
+}
+
 impl TspWithCoordinates {
+    /// Creates a new instance with [`EdgeWeightType::Continuous`] distances.
     pub fn new(name: String, coordinates: Vec<(f64, f64)>) -> Self {
-        Self { name, coordinates }
+        Self {
+            name,
+            coordinates,
+            edge_weight_type: EdgeWeightType::Continuous,
+        }
+    }
+
+    /// Creates a new instance with an explicit TSPLIB edge-weight type.
+    pub fn with_edge_weight_type(
+        name: String,
+        coordinates: Vec<(f64, f64)>,
+        edge_weight_type: EdgeWeightType,
+    ) -> Self {
+        Self {
+            name,
+            coordinates,
+            edge_weight_type,
+        }
     }
 
     /// Loads a TSP instance from a TSPLIB-format file.
@@ -103,42 +152,77 @@ impl TspWithCoordinates {
                 .map_err(|e| err(*line_num, format!("failed to read line: {e}")))
         };
 
-        // NAME line
-        let name_line = next_line(&mut lines, &mut line_num, "'NAME: ...'")?;
-        let name = name_line
-            .split_whitespace()
-            .last()
-            .ok_or_else(|| {
-                err(
+        // Parse TSPLIB header lines until NODE_COORD_SECTION.
+        // Accepts any key order, skips unknown keys (TYPE, COMMENT, DISPLAY_DATA_TYPE, ...),
+        // and tolerates multi-line COMMENT fields.
+        let mut name: Option<String> = None;
+        let mut dimension: Option<usize> = None;
+        let mut edge_weight_type: Option<String> = None;
+        loop {
+            let line = next_line(
+                &mut lines,
+                &mut line_num,
+                "header line or 'NODE_COORD_SECTION'",
+            )?;
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            // Section terminator — everything before it was header.
+            let key_upper = trimmed
+                .split(|c: char| c == ':' || c.is_whitespace())
+                .next()
+                .unwrap_or("")
+                .to_ascii_uppercase();
+            if key_upper == "NODE_COORD_SECTION" {
+                break;
+            }
+            let value = trimmed
+                .split_once(':')
+                .map(|(_, v)| v.trim().to_string())
+                .unwrap_or_default();
+            match key_upper.as_str() {
+                "NAME" => name = Some(value),
+                "DIMENSION" => {
+                    dimension = Some(value.parse::<usize>().map_err(|e| {
+                        err(line_num, format!("failed to parse DIMENSION value: {e}"))
+                    })?);
+                }
+                "EDGE_WEIGHT_TYPE" => edge_weight_type = Some(value),
+                // TYPE / COMMENT / EDGE_WEIGHT_FORMAT / DISPLAY_DATA_TYPE / ... — skip
+                _ => {}
+            }
+        }
+
+        let n =
+            dimension.ok_or_else(|| err(line_num, "'DIMENSION: N' not found in header".into()))?;
+        let ewt_raw = edge_weight_type.ok_or_else(|| {
+            err(
+                line_num,
+                "'EDGE_WEIGHT_TYPE: ...' not found in header".into(),
+            )
+        })?;
+        let ewt = match ewt_raw.to_ascii_uppercase().as_str() {
+            "EUC_2D" => EdgeWeightType::Euc2d,
+            "CEIL_2D" => EdgeWeightType::Ceil2d,
+            "ATT" => EdgeWeightType::Att,
+            "GEO" => EdgeWeightType::Geo,
+            other => {
+                return Err(err(
                     line_num,
-                    "expected 'NAME: <name>', but line is empty".into(),
-                )
-            })?
-            .to_string();
-
-        // TYPE line (skip)
-        next_line(&mut lines, &mut line_num, "'TYPE: ...'")?;
-        // COMMENT line (skip)
-        next_line(&mut lines, &mut line_num, "'COMMENT: ...'")?;
-
-        // DIMENSION line
-        let dim_line = next_line(&mut lines, &mut line_num, "'DIMENSION: N'")?;
-        let n = dim_line
-            .split_whitespace()
-            .last()
-            .ok_or_else(|| {
-                err(
-                    line_num,
-                    "expected 'DIMENSION: N', but line is empty".into(),
-                )
-            })?
-            .parse::<usize>()
-            .map_err(|e| err(line_num, format!("failed to parse DIMENSION value: {e}")))?;
-
-        // EDGE_WEIGHT_TYPE line (skip)
-        next_line(&mut lines, &mut line_num, "'EDGE_WEIGHT_TYPE: ...'")?;
-        // NODE_COORD_SECTION line (skip)
-        next_line(&mut lines, &mut line_num, "'NODE_COORD_SECTION'")?;
+                    format!(
+                        "unsupported EDGE_WEIGHT_TYPE '{other}' (supported: EUC_2D, CEIL_2D, ATT, GEO)"
+                    ),
+                ));
+            }
+        };
+        let name = name.unwrap_or_else(|| {
+            std::path::Path::new(file_path)
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("tsp")
+                .to_string()
+        });
 
         let mut coord = vec![];
         for city_idx in 0..n {
@@ -198,7 +282,7 @@ impl TspWithCoordinates {
             coord.push((x, y));
         }
 
-        Ok(Self::new(name, coord))
+        Ok(Self::with_edge_weight_type(name, coord, ewt))
     }
 
     /// Returns the number of cities.
@@ -212,11 +296,48 @@ impl TspWithCoordinates {
         (tour[k], tour[(k + 1) % n])
     }
 
-    /// Returns the Euclidean distance between cities `i` and `j`.
+    /// Returns the distance between cities `i` and `j` using the formula selected
+    /// by `self.edge_weight_type`.
+    #[inline]
     pub fn distance(&self, i: usize, j: usize) -> f64 {
         let (x1, y1) = self.coordinates[i];
         let (x2, y2) = self.coordinates[j];
-        ((x1 - x2).powi(2) + (y1 - y2).powi(2)).sqrt()
+        match self.edge_weight_type {
+            EdgeWeightType::Continuous => {
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                (dx * dx + dy * dy).sqrt()
+            }
+            EdgeWeightType::Euc2d => {
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                (dx * dx + dy * dy).sqrt().round()
+            }
+            EdgeWeightType::Ceil2d => {
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                (dx * dx + dy * dy).sqrt().ceil()
+            }
+            EdgeWeightType::Att => {
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                let r = ((dx * dx + dy * dy) / 10.0).sqrt();
+                let t = r.round();
+                if t < r { t + 1.0 } else { t }
+            }
+            EdgeWeightType::Geo => {
+                // TSPLIB GEO: column 1 = latitude, column 2 = longitude, encoded DDD.MM.
+                let lat_i = geo_ddmm_to_rad(x1);
+                let long_i = geo_ddmm_to_rad(y1);
+                let lat_j = geo_ddmm_to_rad(x2);
+                let long_j = geo_ddmm_to_rad(y2);
+                const RRR: f64 = 6378.388;
+                let q1 = (long_i - long_j).cos();
+                let q2 = (lat_i - lat_j).cos();
+                let q3 = (lat_i + lat_j).cos();
+                (RRR * (0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3)).acos() + 1.0).trunc()
+            }
+        }
     }
 
     /// Adds a new city with the given coordinates to the TSP instance.
@@ -330,50 +451,215 @@ impl TspWithCoordinates {
 mod tsp_coord_tests {
     use super::*;
 
+    fn write_tmp(contents: &str) -> std::path::PathBuf {
+        use std::io::Write;
+        let mut path = std::env::temp_dir();
+        let unique = format!(
+            "optopus_tsp_{}_{}.tsp",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        path.push(unique);
+        let mut f = std::fs::File::create(&path).unwrap();
+        f.write_all(contents.as_bytes()).unwrap();
+        path
+    }
+
+    /// 4-city rectangular EUC_2D fixture: (0,0), (1,0), (1,2), (0,2).
+    /// distance(0,1)=1, distance(1,2)=2; tour [0,1,2,3] length = 6.
+    fn make_test_tsp_file() -> std::path::PathBuf {
+        write_tmp(
+            "NAME: test\n\
+             TYPE: TSP\n\
+             COMMENT: 4-city rectangle fixture\n\
+             DIMENSION: 4\n\
+             EDGE_WEIGHT_TYPE: EUC_2D\n\
+             NODE_COORD_SECTION\n\
+             1 0.0 0.0\n\
+             2 1.0 0.0\n\
+             3 1.0 2.0\n\
+             4 0.0 2.0\n\
+             EOF\n",
+        )
+    }
+
     #[test]
     fn test_load_file() {
-        let tsp_result = TspWithCoordinates::load_file("data/tsp/test_data.txt");
-        assert!(tsp_result.is_ok());
-        let tsp = tsp_result.unwrap();
+        let path = make_test_tsp_file();
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
         assert_eq!(tsp.name, "test");
         assert_eq!(tsp.coordinates.len(), 4);
+        assert_eq!(tsp.edge_weight_type, EdgeWeightType::Euc2d);
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
     fn test_distance() {
-        let tsp_result = TspWithCoordinates::load_file("data/tsp/test_data.txt");
-        assert!(tsp_result.is_ok());
-        let tsp = tsp_result.unwrap();
+        let path = make_test_tsp_file();
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
         assert_eq!(tsp.distance(0, 1), 1.0);
         assert_eq!(tsp.distance(1, 2), 2.0);
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
     fn test_not_match_size_tour() {
-        let tsp_result = TspWithCoordinates::load_file("data/tsp/test_data.txt");
-        assert!(tsp_result.is_ok());
-        let tsp = tsp_result.unwrap();
-        let invalid_tour = vec![0, 1];
-
-        assert!(tsp.calculate_tour_length(&invalid_tour).is_err());
+        let path = make_test_tsp_file();
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        assert!(tsp.calculate_tour_length(&vec![0, 1]).is_err());
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
     fn test_duplicated_tour() {
-        let tsp_result = TspWithCoordinates::load_file("data/tsp/test_data.txt");
-        assert!(tsp_result.is_ok());
-        let tsp = tsp_result.unwrap();
-        let invalid_tour = vec![0, 1, 0, 2];
-
-        assert!(tsp.calculate_tour_length(&invalid_tour).is_err());
+        let path = make_test_tsp_file();
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        assert!(tsp.calculate_tour_length(&vec![0, 1, 0, 2]).is_err());
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
     fn test_tour_length() {
-        let tsp_result = TspWithCoordinates::load_file("data/tsp/test_data.txt");
-        assert!(tsp_result.is_ok());
-        let tsp = tsp_result.unwrap();
-        let tour = vec![0, 1, 2, 3];
-        assert_eq!(tsp.calculate_tour_length(&tour).unwrap(), 6.0);
+        let path = make_test_tsp_file();
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.calculate_tour_length(&vec![0, 1, 2, 3]).unwrap(), 6.0);
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn test_load_file_multiline_comment() {
+        let contents = "\
+NAME: multi
+TYPE: TSP
+COMMENT: first line
+COMMENT: second line
+COMMENT: third line
+DIMENSION: 3
+EDGE_WEIGHT_TYPE: EUC_2D
+NODE_COORD_SECTION
+1 0.0 0.0
+2 1.0 0.0
+3 0.0 1.0
+EOF
+";
+        let path = write_tmp(contents);
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.name, "multi");
+        assert_eq!(tsp.coordinates.len(), 3);
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn test_load_file_unsupported_edge_weight_type() {
+        let contents = "\
+NAME: explicit
+TYPE: TSP
+COMMENT: explicit distance matrix
+DIMENSION: 2
+EDGE_WEIGHT_TYPE: EXPLICIT
+NODE_COORD_SECTION
+1 0.0 0.0
+2 1.0 1.0
+EOF
+";
+        let path = write_tmp(contents);
+        let result = TspWithCoordinates::load_file(path.to_str().unwrap());
+        assert!(result.is_err(), "EXPLICIT should be rejected");
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn test_load_file_att() {
+        let tsp = TspWithCoordinates::load_file("data/tsp/att48.tsp").unwrap();
+        assert_eq!(tsp.coordinates.len(), 48);
+        assert_eq!(tsp.edge_weight_type, EdgeWeightType::Att);
+    }
+
+    #[test]
+    fn test_load_file_geo() {
+        let tsp = TspWithCoordinates::load_file("data/tsp/burma14.tsp").unwrap();
+        assert_eq!(tsp.coordinates.len(), 14);
+        assert_eq!(tsp.edge_weight_type, EdgeWeightType::Geo);
+    }
+
+    #[test]
+    fn test_load_file_ceil_2d() {
+        let tsp = TspWithCoordinates::load_file("data/tsp/dsj1000.tsp").unwrap();
+        assert_eq!(tsp.edge_weight_type, EdgeWeightType::Ceil2d);
+        // dsj1000 is CEIL_2D; ceil(sqrt(...)) should be >= nint(sqrt(...)).
+        let d = tsp.distance(0, 1);
+        assert!(d >= 1.0);
+        assert_eq!(d, d.ceil(), "CEIL_2D distances must be integer-valued");
+    }
+
+    #[test]
+    fn test_distance_att_formula() {
+        // ATT formula: r = sqrt((dx^2 + dy^2) / 10); t = nint(r); d = if t<r {t+1} else {t}
+        let tsp = TspWithCoordinates::with_edge_weight_type(
+            "att".into(),
+            vec![(0.0, 0.0), (10.0, 0.0)],
+            EdgeWeightType::Att,
+        );
+        // r = sqrt(100 / 10) = sqrt(10) ≈ 3.162; t = 3; 3 < 3.162 → d = 4
+        assert_eq!(tsp.distance(0, 1), 4.0);
+    }
+
+    #[test]
+    fn test_distance_geo_formula() {
+        // Two cities at (0.0, 0.0) and (0.0, 0.0) → identical location → distance ≈ 1 (acos(1)=0, +1 truncated).
+        let tsp = TspWithCoordinates::with_edge_weight_type(
+            "geo".into(),
+            vec![(0.0, 0.0), (0.0, 0.0)],
+            EdgeWeightType::Geo,
+        );
+        assert_eq!(tsp.distance(0, 1), 1.0);
+
+        // Sanity: positive coordinates give a positive geodesic distance.
+        let tsp2 = TspWithCoordinates::with_edge_weight_type(
+            "geo2".into(),
+            vec![(0.0, 0.0), (10.0, 10.0)],
+            EdgeWeightType::Geo,
+        );
+        assert!(tsp2.distance(0, 1) > 1.0);
+    }
+
+    #[test]
+    fn test_load_file_missing_dimension() {
+        let contents = "\
+NAME: nodim
+TYPE: TSP
+COMMENT: missing dimension
+EDGE_WEIGHT_TYPE: EUC_2D
+NODE_COORD_SECTION
+1 0.0 0.0
+";
+        let path = write_tmp(contents);
+        let result = TspWithCoordinates::load_file(path.to_str().unwrap());
+        assert!(result.is_err(), "missing DIMENSION should error");
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn test_load_file_permuted_header_order() {
+        let contents = "\
+EDGE_WEIGHT_TYPE: EUC_2D
+COMMENT: arbitrary order
+DIMENSION: 2
+TYPE: TSP
+NAME: permuted
+NODE_COORD_SECTION
+1 0.0 0.0
+2 3.0 4.0
+EOF
+";
+        let path = write_tmp(contents);
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.name, "permuted");
+        assert_eq!(tsp.coordinates.len(), 2);
+        assert!((tsp.distance(0, 1) - 5.0).abs() < 1e-9);
+        let _ = std::fs::remove_file(&path);
     }
 }

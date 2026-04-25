@@ -18,9 +18,9 @@ pub use crate::search_state::{SearchState, SearchStateCloneType};
 // Heuristics
 pub use crate::heuristic::{
     BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, GeneticAlgorithm,
-    Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch, ParallelHeuristic, RLSearch,
-    RandomWalk, Restart, RewardShaping, Sequential, SimulatedAnnealing, StopCondition,
-    SubProblemBasedCrossover, TabuSearch, boltzmann_accept,
+    Heuristic, Iterated, LateAcceptanceHillClimbing, LinKernighanHelsgottForTsp, LocalSearch,
+    ParallelHeuristic, RLSearch, RandomWalk, Restart, RewardShaping, Sequential,
+    SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch, boltzmann_accept,
 };
 
 // Traits
@@ -41,8 +41,8 @@ pub use crate::problem::{
     FormulaSwapNeighbor,
     // MaxCut
     MaxCut,
-    MaxCutSolution,
     MaxCutFlipNeighbor,
+    MaxCutSolution,
     MaxCutSwapNeighbor,
     OptDirection,
     // QUBO
