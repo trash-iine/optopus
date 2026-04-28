@@ -4,7 +4,7 @@ pub mod specific_trait;
 
 use rayon::prelude::*;
 pub use specific_trait::{
-    Crossover, EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, ProblemTrait, Rankable,
+    Crossover, Distance, EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, ProblemTrait, Rankable,
     SubProblemExtractable, filter_best,
 };
 

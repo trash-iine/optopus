@@ -15,7 +15,7 @@ mod tabu_search;
 
 pub use beam_search::BeamSearch;
 pub use crossover::SubProblemBasedCrossover;
-pub use genetic_algorithm::GeneticAlgorithm;
+pub use genetic_algorithm::{GeneticAlgorithm, ParentSelection};
 pub use late_acceptance::LateAcceptanceHillClimbing;
 pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;

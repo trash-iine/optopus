@@ -19,13 +19,13 @@ pub use crate::search_state::{SearchState, SearchStateCloneType};
 pub use crate::heuristic::{
     BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, GeneticAlgorithm,
     Heuristic, Iterated, LateAcceptanceHillClimbing, LinKernighanHelsgottForTsp, LocalSearch,
-    ParallelHeuristic, RLSearch, RandomWalk, Restart, RewardShaping, Sequential,
+    ParallelHeuristic, ParentSelection, RLSearch, RandomWalk, Restart, RewardShaping, Sequential,
     SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch, boltzmann_accept,
 };
 
 // Traits
 pub use crate::search_state::{
-    Crossover, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
+    Crossover, Distance, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
     SubProblemExtractable,
 };
 

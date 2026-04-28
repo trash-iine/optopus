@@ -1,5 +1,5 @@
 use crate::common::Graph;
-use crate::search_state::{ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait, Rankable};
 
 /// The MaxCut problem instance — an undirected weighted graph.
 ///
@@ -95,6 +95,16 @@ pub struct MaxCutSolution {
 impl Rankable for MaxCutSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.objective > other.objective
+    }
+}
+
+impl Distance for MaxCutSolution {
+    fn distance(&self, other: &Self) -> usize {
+        self.cut
+            .iter()
+            .zip(other.cut.iter())
+            .filter(|(a, b)| a != b)
+            .count()
     }
 }
 

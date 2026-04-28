@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use crate::search_state::{ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait, Rankable};
 
 /// Integer coefficient type used in the Q matrix.
 pub type Coefficient = i32;
@@ -65,6 +65,12 @@ pub struct QuboSolution {
 impl Rankable for QuboSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.objective < other.objective
+    }
+}
+
+impl Distance for QuboSolution {
+    fn distance(&self, other: &Self) -> usize {
+        calc_xor_of_solutions(self, other)
     }
 }
 

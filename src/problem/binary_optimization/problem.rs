@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::search_state::{ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait, Rankable};
 
 /// Numeric value type used in formula expressions.
 pub type Value = f64;
@@ -401,6 +401,16 @@ pub struct FormulaSolution {
 impl Rankable for FormulaSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.score > other.score
+    }
+}
+
+impl Distance for FormulaSolution {
+    fn distance(&self, other: &Self) -> usize {
+        self.x
+            .iter()
+            .zip(other.x.iter())
+            .filter(|(a, b)| a != b)
+            .count()
     }
 }
 
