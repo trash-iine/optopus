@@ -1,0 +1,34 @@
+# MaxSAT × Sequential.
+
+num_runs = 1
+
+[[instances]]
+path = "data/sat/sample.cnf"
+problem = "Sat"
+
+[[heuristics]]
+kind = "Sequential"
+
+[heuristics.stop_condition]
+max_iteration = 1_000_000
+max_duration_secs = 10.0
+# max_failed_update = 100_000
+
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[heuristics.steps.stop_condition]
+max_failed_update = 1
+# max_iteration     = 1_000_000
+# max_duration_secs = 5.0
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [3, 10]
+
+[heuristics.steps.stop_condition]
+max_iteration = 50_000
+# max_duration_secs = 5.0
+# max_failed_update = 5_000

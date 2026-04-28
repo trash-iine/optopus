@@ -1,0 +1,37 @@
+# VertexCover × Iterated (ILS).
+
+num_runs = 1
+
+[[instances]]
+path = "data/max_cut/sample.txt"
+problem = "VertexCover"
+
+[[heuristics]]
+kind = "Iterated"
+
+[heuristics.stop_condition]
+max_iteration = 1_000_000
+max_duration_secs = 10.0
+# max_failed_update = 100_000
+
+# --- search phase -----------------------------------------------------------
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[heuristics.steps.stop_condition]
+max_failed_update = 1
+# max_iteration     = 1_000_000
+# max_duration_secs = 5.0
+
+# --- perturbation phase -----------------------------------------------------
+[[heuristics.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[heuristics.steps.stop_condition]
+max_iteration = 200
+# max_duration_secs = 1.0
+# max_failed_update = 100

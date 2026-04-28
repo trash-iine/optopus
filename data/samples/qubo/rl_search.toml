@@ -1,0 +1,26 @@
+# QUBO × RLSearch.
+
+num_runs = 1
+
+[[instances]]
+path = "data/max_cut/sample.txt"
+problem = "Qubo"
+
+[[heuristics]]
+kind = "RLSearch"
+neighbor = "Flip"
+# Step size for policy weight updates (0.0 ⇒ frozen weights / eval mode).
+learning_rate = 0.01
+# Discount factor γ for the return.
+discount = 0.99
+# Softmax temperature on candidate logits (higher ⇒ more exploration).
+softmax_temperature = 1.0
+# Reward shaping: "Raw" | "Normalized" | "BestImprovement".
+reward_shaping = "Normalized"
+# max_candidates = 1024
+# policy_weights = [0.0, 0.0, 0.0, 0.0]
+
+[heuristics.stop_condition]
+max_iteration = 100_000
+max_duration_secs = 5.0
+# max_failed_update = 20_000

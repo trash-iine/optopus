@@ -1,0 +1,39 @@
+# TSP × GeneticAlgorithm — Order Crossover (OX) + 2-opt mutation.
+
+num_runs = 1
+
+[[instances]]
+path = "data/tsp/sample.tsp"
+problem = "Tsp"
+
+[[heuristics]]
+kind = "GeneticAlgorithm"
+# Population size (must be ≥ 2).
+population_size = 10
+# TSP only accepts "Order" (Order Crossover, OX).
+crossover_kind = "Order"
+# "Tournament" (default) | "HammingTopK".
+parent_selection = "Tournament"
+# parent_top_k = 5  # required when parent_selection = "HammingTopK"
+
+[heuristics.stop_condition]
+max_iteration = 1_000_000
+max_duration_secs = 10.0
+# max_failed_update = 200_000
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 10]
+
+[heuristics.steps.stop_condition]
+max_failed_update = 100
+# max_iteration     = 1_000
+# max_duration_secs = 1.0
+
+# --- Optional steps[1]: init_improvement (HEA pattern). Uncomment to enable.
+# [[heuristics.steps]]
+# kind = "LocalSearch"
+# neighbor = "TwoOpt"
+# [heuristics.steps.stop_condition]
+# max_failed_update = 1
