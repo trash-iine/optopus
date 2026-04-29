@@ -36,8 +36,9 @@
 //! qubo.set_q(0, 1, 1);   // set (overwrite)
 //! qubo.add_q(0, 1, 1);   // accumulate → 2
 //!
-//! // Option 3: load from MaxCut file (format: "N M\n i j w\n ..." with 1-indexed vertices)
-//! // let qubo = Qubo::load_file_as_max_cut("data/max_cut/G1").unwrap();
+//! // Option 3: load from a sparse Q-matrix file
+//! //   (format: "N M\n i j v\n ..." with 1-indexed entries; i == j gives the diagonal coefficient)
+//! // let qubo = Qubo::load_file("data/qubo/sample.txt").unwrap();
 //! ```
 //!
 //! # Reading QUBO structure

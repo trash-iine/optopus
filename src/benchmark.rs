@@ -66,7 +66,7 @@ impl BenchmarkSolution for MaxCutSolution {
 
 impl BenchmarkProblem for Qubo {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        Qubo::load_file_as_max_cut(path)
+        Qubo::load_file(path)
     }
 }
 

@@ -3,7 +3,7 @@
 num_runs = 1
 
 [[instances]]
-path = "data/max_cut/sample.txt"
+path = "data/qubo/sample.txt"
 problem = "Qubo"
 
 [[heuristics]]
