@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use crate::search_state::{ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait, Rankable};
 
 /// A solution to the MaxSAT problem.
 ///
@@ -20,6 +20,16 @@ impl Rankable for SatSolution {
     // MaxSAT: more satisfied clauses is better
     fn is_better_than(&self, other: &Self) -> bool {
         self.n_satisfied > other.n_satisfied
+    }
+}
+
+impl Distance for SatSolution {
+    fn distance(&self, other: &Self) -> usize {
+        self.x
+            .iter()
+            .zip(other.x.iter())
+            .filter(|(a, b)| a != b)
+            .count()
     }
 }
 
@@ -187,10 +197,9 @@ impl Sat {
 
         let mut n_clauses = 0usize;
         let mut sat = None::<Self>;
-        let mut line_num = 0usize;
 
-        for result in reader.lines() {
-            line_num += 1;
+        for (idx, result) in reader.lines().enumerate() {
+            let line_num = idx + 1;
             let line = result
                 .map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
             let trimmed = line.trim();

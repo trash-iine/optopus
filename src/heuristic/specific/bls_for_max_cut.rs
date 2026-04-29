@@ -99,7 +99,7 @@ impl BreakoutLocalSearch {
     fn is_vertex_enabled(&self, vertex: usize, iteration: u64) -> bool {
         self.tabu_vec
             .get(vertex)
-            .map_or(true, |&exp| iteration > exp)
+            .is_none_or(|&exp| iteration > exp)
     }
 
     /// Adds a vertex to the tabu vec with a random tenure.
@@ -129,11 +129,10 @@ impl BreakoutLocalSearch {
             let mut best_move_option: Option<MaxCutFlipNeighbor> = None;
             for &v in &state.solution.positive_gain {
                 let g = state.solution.gain[v];
-                if let Some(best) = best_move_option {
-                    if best.gain >= g {
+                if let Some(best) = best_move_option
+                    && best.gain >= g {
                         continue;
                     }
-                }
                 best_move_option = Some(MaxCutFlipNeighbor { i: v, gain: g });
             }
 
@@ -202,7 +201,7 @@ impl BreakoutLocalSearch {
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
         for _ in 0..self.l {
-            let neighbor = MaxCutFlipNeighbor::random_neighbor(&state.instance, &state.solution);
+            let neighbor = MaxCutFlipNeighbor::random_neighbor(state.instance, &state.solution);
 
             self.add_vertex_to_tabu(neighbor.i, state.iteration);
             state.apply_move_only(&neighbor)?;
@@ -222,19 +221,18 @@ impl BreakoutLocalSearch {
         let end_iter = state.iteration + self.l;
         while state.iteration < end_iter {
             let mut best: Option<MaxCutFlipNeighbor> = None;
-            for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
+            for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
                 let enabled = self.is_vertex_enabled(neighbor.i, state.iteration);
                 // Aspiration: accept a tabu move if it improves the global best.
                 if !enabled
-                    && !(neighbor.gain + state.solution.objective > state.best_solution.objective)
+                    && neighbor.gain + state.solution.objective <= state.best_solution.objective
                 {
                     continue;
                 }
-                if let Some(ref b) = best {
-                    if b.gain >= neighbor.gain {
+                if let Some(ref b) = best
+                    && b.gain >= neighbor.gain {
                         continue;
                     }
-                }
                 best = Some(neighbor);
             }
             if let Some(best_move) = best {
@@ -264,12 +262,12 @@ impl BreakoutLocalSearch {
             let mut oldest_tabu_v0: Option<(usize, u64)> = None;
             let mut oldest_tabu_v1: Option<(usize, u64)> = None;
 
-            for neighbor in MaxCutFlipNeighbor::iter(&state.instance, &state.solution) {
+            for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
                 let on_side0 = state.solution.cut[neighbor.i];
 
                 // Track best vertex per side (regardless of tabu status).
                 let best_ref = if on_side0 { &mut best_v0 } else { &mut best_v1 };
-                if best_ref.as_ref().map_or(true, |b| neighbor.gain > b.gain) {
+                if best_ref.as_ref().is_none_or(|b| neighbor.gain > b.gain) {
                     *best_ref = Some(neighbor);
                 }
 
@@ -281,7 +279,7 @@ impl BreakoutLocalSearch {
                     } else {
                         &mut oldest_tabu_v1
                     };
-                    if oldest_ref.as_ref().map_or(true, |&(_, e)| expiry < e) {
+                    if oldest_ref.as_ref().is_none_or(|&(_, e)| expiry < e) {
                         *oldest_ref = Some((neighbor.i, expiry));
                     }
                 }

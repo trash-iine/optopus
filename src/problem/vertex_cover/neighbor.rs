@@ -38,7 +38,7 @@ impl EnabledTabu for VertexCoverFlipNeighbor {
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         tabu_map
             .get(self.i)
-            .map_or(true, |&tabu_tenure| iteration > tabu_tenure)
+            .is_none_or(|&tabu_tenure| iteration > tabu_tenure)
     }
 
     fn add_to_tabu_map(
@@ -153,10 +153,10 @@ impl EnabledTabu for VertexCoverSwapNeighbor {
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
         let enabled_i = tabu_map
             .get(self.i)
-            .map_or(true, |&tenure| iteration > tenure);
+            .is_none_or(|&tenure| iteration > tenure);
         let enabled_j = tabu_map
             .get(self.j)
-            .map_or(true, |&tenure| iteration > tenure);
+            .is_none_or(|&tenure| iteration > tenure);
         enabled_i && enabled_j
     }
 
@@ -257,7 +257,7 @@ mod tests {
         state.apply(&n).unwrap();
 
         // After inserting vertex 0: cover_size = 1, uncovered edges = 1 (only (1,2)).
-        assert_eq!(state.solution.cover[0], true);
+        assert!(state.solution.cover[0]);
         assert_eq!(state.solution.cover_size, 1);
         assert_eq!(state.solution.uncovered_edges, 1);
 

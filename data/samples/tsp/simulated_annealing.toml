@@ -1,0 +1,21 @@
+# TSP × SimulatedAnnealing (2-opt).
+
+num_runs = 1
+
+[[instances]]
+path = "data/tsp/sample.tsp"
+problem = "Tsp"
+
+[[heuristics]]
+kind = "SimulatedAnnealing"
+# TwoOpt | Relocate.
+neighbor = "TwoOpt"
+# Starting temperature T₀.
+initial_temperature = 50.0
+# Cooling factor α.
+cooling_rate = 0.999
+
+[heuristics.stop_condition]
+max_iteration = 100_000
+max_duration_secs = 5.0
+# max_failed_update = 20_000

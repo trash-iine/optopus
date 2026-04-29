@@ -35,9 +35,9 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
         let mut child = vec![usize::MAX; n];
         let mut in_segment = HashSet::with_capacity(end - start + 1);
 
-        for k in start..=end {
-            child[k] = sol1.tour[k];
-            in_segment.insert(sol1.tour[k]);
+        for (slot, &city) in child[start..=end].iter_mut().zip(&sol1.tour[start..=end]) {
+            *slot = city;
+            in_segment.insert(city);
         }
 
         // Fill remaining positions from sol2, preserving relative order

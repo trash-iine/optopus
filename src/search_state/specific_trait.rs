@@ -137,6 +137,18 @@ pub trait Evaluate<T = f64> {
     fn evaluate(&self) -> Evaluable<T>;
 }
 
+/// Hamming-style distance between two solutions.
+///
+/// Used by parent-selection strategies that promote population diversity
+/// (e.g. [`crate::heuristic::ParentSelection::HammingTopK`]).
+///
+/// For bit-vector solutions this is the standard Hamming distance — the
+/// number of variables that differ. For other encodings any application-
+/// meaningful integer dissimilarity measure works.
+pub trait Distance {
+    fn distance(&self, other: &Self) -> usize;
+}
+
 /// Combines parent solutions into a single offspring solution.
 ///
 /// Implement this for each crossover operator you want to use.
@@ -153,6 +165,19 @@ pub trait Crossover<Problem: ProblemTrait> {
         sol1: &Problem::Solution,
         sol2: &Problem::Solution,
     ) -> Problem::Solution;
+}
+
+/// Forwards [`Crossover`] through a boxed trait object so [`GeneticAlgorithm`]
+/// can use a runtime-selected operator (needed by the benchmark TOML config).
+impl<P: ProblemTrait> Crossover<P> for Box<dyn Crossover<P>> {
+    fn crossover(
+        &mut self,
+        prob: &P,
+        sol1: &P::Solution,
+        sol2: &P::Solution,
+    ) -> P::Solution {
+        (**self).crossover(prob, sol1, sol2)
+    }
 }
 
 /// Enables a problem to create a sub-problem from multiple parent solutions and lift the result back.

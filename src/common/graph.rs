@@ -32,6 +32,12 @@ pub struct Graph {
     pub vertices: Vec<usize>,
 }
 
+impl Default for Graph {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Graph {
     /// Creates a new empty graph.
     ///
@@ -383,7 +389,7 @@ impl Graph {
             vertices: Vec::new(),
         };
         let mut line_num = 1;
-        while let Some(result) = line_iter.next() {
+        for result in line_iter {
             line_num += 1;
             let line = result.map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
             if line.trim().is_empty() {
@@ -490,11 +496,10 @@ impl std::ops::Index<(usize, usize)> for Graph {
     /// assert_eq!(g[(0, 2)], 0.0); // non-existent edge
     /// ```
     fn index(&self, (i, j): (usize, usize)) -> &f32 {
-        if i < self.adj.len() {
-            if let Ok(idx) = self.adj[i].binary_search_by_key(&j, |&(v, _)| v) {
+        if i < self.adj.len()
+            && let Ok(idx) = self.adj[i].binary_search_by_key(&j, |&(v, _)| v) {
                 return &self.adj[i][idx].1;
             }
-        }
         &ZERO_WEIGHT
     }
 }

@@ -89,7 +89,7 @@ where
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let mut best_list = filter_best(N::iter(&state.instance, &state.solution).filter(|n| {
+        let mut best_list = filter_best(N::iter(state.instance, &state.solution).filter(|n| {
             // Accept a tabu move if it satisfies the aspiration criterion
             n.is_move_enabled(&self.tabu_map, state.iteration)
                 || state.is_neighbor_better_than_best(n)

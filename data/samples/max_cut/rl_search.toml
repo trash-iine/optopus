@@ -1,0 +1,28 @@
+# MaxCut × RLSearch — REINFORCE policy gradient picking the next neighbor.
+
+num_runs = 1
+
+[[instances]]
+path = "data/max_cut/sample.txt"
+problem = "MaxCut"
+
+[[heuristics]]
+kind = "RLSearch"
+neighbor = "Flip"
+# Step size for the policy weight update. Set to 0.0 to freeze weights (eval mode).
+learning_rate = 0.01
+# Discount factor γ for the return.
+discount = 0.99
+# Softmax temperature on the candidate logits (higher ⇒ more exploration).
+softmax_temperature = 1.0
+# How rewards are computed: "Raw" | "Normalized" | "BestImprovement".
+reward_shaping = "Normalized"
+# Optional: cap how many candidate moves are scored per step.
+# max_candidates = 1024
+# Optional: pre-trained policy weights (length must equal NUM_FEATURES).
+# policy_weights = [0.0, 0.0, 0.0, 0.0]
+
+[heuristics.stop_condition]
+max_iteration = 100_000
+max_duration_secs = 5.0
+# max_failed_update = 20_000

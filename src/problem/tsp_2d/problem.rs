@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use crate::error::OptError;
-use crate::search_state::{ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait, Rankable};
 
 /// A sequence of city indices representing a Hamiltonian tour (0-indexed).
 pub type TspTour = Vec<usize>;
@@ -29,6 +29,19 @@ pub struct TspSolution {
 impl Rankable for TspSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.objective < other.objective
+    }
+}
+
+impl Distance for TspSolution {
+    /// Position-based dissimilarity: number of cities whose tour position differs.
+    /// Not a metric in the strict sense, but a useful diversity proxy for GA
+    /// parent selection.
+    fn distance(&self, other: &Self) -> usize {
+        self.tour
+            .iter()
+            .zip(other.tour.iter())
+            .filter(|(a, b)| a != b)
+            .count()
     }
 }
 

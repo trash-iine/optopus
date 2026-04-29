@@ -1,5 +1,5 @@
 use crate::common::Graph;
-use crate::search_state::{ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait, Rankable};
 
 /// The Minimum Vertex Cover problem.
 ///
@@ -32,6 +32,16 @@ pub struct VertexCoverSolution {
 impl Rankable for VertexCoverSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.objective < other.objective
+    }
+}
+
+impl Distance for VertexCoverSolution {
+    fn distance(&self, other: &Self) -> usize {
+        self.cover
+            .iter()
+            .zip(other.cover.iter())
+            .filter(|(a, b)| a != b)
+            .count()
     }
 }
 
@@ -191,7 +201,7 @@ mod tests {
         for &g in &gain {
             assert_eq!(g, 1 - 4 * 2);
         }
-        assert_eq!(obj, 0 + 4 * 3);
+        assert_eq!(obj, (4 * 3));
     }
 
     #[test]

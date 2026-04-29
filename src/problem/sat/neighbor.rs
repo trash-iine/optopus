@@ -28,7 +28,7 @@ impl EnabledTabu for SatFlipNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.get(&self.i).map_or(true, |&t| iteration > t)
+        tabu_map.get(&self.i).is_none_or(|&t| iteration > t)
     }
 
     fn add_to_tabu_map(
@@ -117,8 +117,8 @@ impl EnabledTabu for SatSwapNeighbor {
     type TabuMap = std::collections::HashMap<usize, u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let enabled_i = tabu_map.get(&self.i).map_or(true, |&t| iteration > t);
-        let enabled_j = tabu_map.get(&self.j).map_or(true, |&t| iteration > t);
+        let enabled_i = tabu_map.get(&self.i).is_none_or(|&t| iteration > t);
+        let enabled_j = tabu_map.get(&self.j).is_none_or(|&t| iteration > t);
         enabled_i && enabled_j
     }
 

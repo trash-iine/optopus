@@ -1,0 +1,19 @@
+# QUBO × LocalSearch — minimization. Loads a MaxCut-format graph via
+# `Qubo::load_file_as_max_cut`.
+
+num_runs = 1
+
+[[instances]]
+path = "data/max_cut/sample.txt"
+problem = "Qubo"
+
+[[heuristics]]
+kind = "LocalSearch"
+# Flip (single-bit) | Swap (exchange two bits).
+neighbor = "Flip"
+
+[heuristics.stop_condition]
+# Halt at the first local optimum.
+max_failed_update = 1
+# max_iteration     = 1_000_000
+# max_duration_secs = 5.0

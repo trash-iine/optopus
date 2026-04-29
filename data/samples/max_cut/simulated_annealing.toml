@@ -1,0 +1,22 @@
+# MaxCut × SimulatedAnnealing — Boltzmann acceptance, multiplicative cooling.
+
+num_runs = 1
+
+[[instances]]
+path = "data/max_cut/sample.txt"
+problem = "MaxCut"
+
+[[heuristics]]
+kind = "SimulatedAnnealing"
+# Flip (single-bit) | Swap (exchange two bits).
+neighbor = "Flip"
+# Starting temperature T₀ (controls how willingly worse moves are accepted).
+initial_temperature = 100.0
+# Per-iteration cooling factor α: T ← α · T  (0 < α < 1; closer to 1 = slower cooling).
+cooling_rate = 0.9995
+
+[heuristics.stop_condition]
+max_iteration = 200_000
+max_duration_secs = 5.0
+# Stop after this many consecutive iterations without a global-best update.
+# max_failed_update = 50_000

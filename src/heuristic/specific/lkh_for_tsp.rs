@@ -190,6 +190,7 @@ impl LinKernighanHelsgott {
     /// * `broken`     – tour edges broken so far
     /// * `added_so_far` – non-closing edges added so far
     /// * `in_chain`   – cities already part of the chain (for cycle avoidance)
+    #[allow(clippy::too_many_arguments)]
     fn extend_search(
         &self,
         prob: &TspWithCoordinates,
@@ -418,8 +419,8 @@ fn is_valid_move(
     }
 
     // Every vertex must have degree 2
-    for i in 0..n {
-        if adj[i][0] == usize::MAX || adj[i][1] == usize::MAX {
+    for entry in adj.iter().take(n) {
+        if entry[0] == usize::MAX || entry[1] == usize::MAX {
             return false;
         }
     }

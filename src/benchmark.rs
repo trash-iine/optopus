@@ -10,19 +10,22 @@ use crate::{
     common::Graph,
     error::OptError,
     heuristic::{
-        BreakoutLocalSearchForMaxCut, Heuristic, Iterated, LateAcceptanceHillClimbing,
-        LinKernighanHelsgottForTsp, LocalSearch, RLSearch, Restart, RewardShaping, Sequential,
-        SimulatedAnnealing, StopCondition, TabuSearch,
+        BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic, Iterated,
+        LateAcceptanceHillClimbing, LinKernighanHelsgottForTsp, LocalSearch, ParentSelection,
+        RLSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing, StopCondition,
+        TabuSearch,
     },
     problem::{
-        MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, QuboFlipNeighbor, QuboSwapNeighbor,
-        VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
+        MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, MaxCutUniformCrossover,
+        QuboFlipNeighbor, QuboSwapNeighbor, QuboUniformCrossover, SatUniformCrossover,
+        TspOrderCrossover, VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution,
+        VertexCoverSwapNeighbor, VertexCoverUniformCrossover,
         max_cut::MaxCut,
         qubo::{Qubo, QuboSolution},
         sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
         tsp_2d::{TspRelocateNeighbor, TspSolution, TspTwoOptNeighbor, TspWithCoordinates},
     },
-    search_state::{MoveToNeighbor, ProblemTrait, SearchState},
+    search_state::{Crossover, Distance, MoveToNeighbor, ProblemTrait, SearchState},
 };
 use serde::{Deserialize, Serialize};
 
@@ -189,6 +192,10 @@ pub enum NeighborKind {
 /// - `"Sequential"` — repeats its `steps` cycle until `stop_condition` is met
 /// - `"Iterated"` — `steps\[0\]` = search phase, `steps\[1\]` = perturbation phase (ILS)
 /// - `"Restart"` — runs `steps\[0\]` then resets to a new random solution when `restart_condition` is met
+/// - `"GeneticAlgorithm"` — `steps\[0\]` = mutation, optional `steps\[1\]` = init_improvement (HEA pattern).
+///   Requires `population_size`. Optional fields: `crossover_kind` (default `"Uniform"`,
+///   TSP defaults to `"Order"`), `parent_selection` (`"Tournament"` default or `"HammingTopK"`),
+///   `parent_top_k` (required when `parent_selection = "HammingTopK"`).
 ///
 /// The problem type is inferred from the instance being benchmarked and does not need
 /// to be specified here.
@@ -244,6 +251,22 @@ pub struct HeuristicConfig {
     /// Max candidate moves to evaluate per step for `kind = "RLSearch"`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_candidates: Option<usize>,
+    // ----- GeneticAlgorithm fields -----
+    /// Population size for `kind = "GeneticAlgorithm"`. Required, must be >= 2.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub population_size: Option<usize>,
+    /// Crossover operator for `kind = "GeneticAlgorithm"`. Currently `"Uniform"`
+    /// is supported for every problem; TSP additionally accepts `"Order"`.
+    /// Defaults to `"Uniform"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub crossover_kind: Option<String>,
+    /// Parent selection strategy for `kind = "GeneticAlgorithm"`:
+    /// `"Tournament"` (default) or `"HammingTopK"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_selection: Option<String>,
+    /// `top_k` for `parent_selection = "HammingTopK"` (must be >= 1).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_top_k: Option<usize>,
 }
 
 /// A single instance entry in the config file.
@@ -351,12 +374,18 @@ pub struct BenchmarkResult {
 /// Restart) are handled generically by [`build_heuristic`].
 trait BenchmarkableProblem: BenchmarkProblem
 where
-    Self::Solution: BenchmarkSolution,
+    Self::Solution: BenchmarkSolution + Distance,
 {
     fn build_base_heuristic(
         config: &HeuristicConfig,
         cond: StopCondition,
     ) -> Result<Box<dyn Heuristic<Self>>, String>;
+
+    /// Builds the crossover operator selected by `config.crossover_kind`.
+    ///
+    /// Default: returns the problem's uniform crossover. Override to add
+    /// problem-specific operators (e.g. TSP order crossover).
+    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String>;
 }
 
 impl HeuristicConfig {
@@ -549,6 +578,15 @@ impl BenchmarkableProblem for MaxCut {
             k => Err(format!("Unknown kind '{}' for MaxCut", k)),
         }
     }
+
+    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
+        match config.crossover_kind.as_deref().unwrap_or("Uniform") {
+            "Uniform" => Ok(Box::new(MaxCutUniformCrossover)),
+            other => Err(format!(
+                "Unknown crossover_kind '{other}' for MaxCut (expected 'Uniform')"
+            )),
+        }
+    }
 }
 
 impl BenchmarkableProblem for Qubo {
@@ -630,6 +668,15 @@ impl BenchmarkableProblem for Qubo {
             k => Err(format!("Unknown kind '{}' for Qubo", k)),
         }
     }
+
+    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
+        match config.crossover_kind.as_deref().unwrap_or("Uniform") {
+            "Uniform" => Ok(Box::new(QuboUniformCrossover)),
+            other => Err(format!(
+                "Unknown crossover_kind '{other}' for Qubo (expected 'Uniform')"
+            )),
+        }
+    }
 }
 
 impl BenchmarkableProblem for Sat {
@@ -705,6 +752,15 @@ impl BenchmarkableProblem for Sat {
                 )),
             },
             k => Err(format!("Unknown kind '{}' for Sat", k)),
+        }
+    }
+
+    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
+        match config.crossover_kind.as_deref().unwrap_or("Uniform") {
+            "Uniform" => Ok(Box::new(SatUniformCrossover)),
+            other => Err(format!(
+                "Unknown crossover_kind '{other}' for Sat (expected 'Uniform')"
+            )),
         }
     }
 }
@@ -801,6 +857,15 @@ impl BenchmarkableProblem for TspWithCoordinates {
             k => Err(format!("Unknown kind '{}' for Tsp", k)),
         }
     }
+
+    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
+        match config.crossover_kind.as_deref().unwrap_or("Order") {
+            "Order" => Ok(Box::new(TspOrderCrossover)),
+            other => Err(format!(
+                "Unknown crossover_kind '{other}' for Tsp (expected 'Order')"
+            )),
+        }
+    }
 }
 
 impl BenchmarkableProblem for VertexCover {
@@ -855,6 +920,15 @@ impl BenchmarkableProblem for VertexCover {
             k => Err(format!("Unknown kind '{}' for VertexCover", k)),
         }
     }
+
+    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
+        match config.crossover_kind.as_deref().unwrap_or("Uniform") {
+            "Uniform" => Ok(Box::new(VertexCoverUniformCrossover)),
+            other => Err(format!(
+                "Unknown crossover_kind '{other}' for VertexCover (expected 'Uniform')"
+            )),
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -869,7 +943,7 @@ fn build_heuristic<P: BenchmarkableProblem + 'static>(
     config: &HeuristicConfig,
 ) -> Result<Box<dyn Heuristic<P>>, String>
 where
-    P::Solution: BenchmarkSolution,
+    P::Solution: BenchmarkSolution + Distance,
 {
     let cond = config.stop_condition.to_stop_condition();
     match config.kind.as_str() {
@@ -915,6 +989,56 @@ where
                 .ok_or("'restart_condition' required for Restart")?;
             Ok(Box::new(Restart::new(cond, inner, rc.to_stop_condition())))
         }
+        "GeneticAlgorithm" => {
+            let population_size = config
+                .population_size
+                .ok_or("'population_size' required for GeneticAlgorithm")?;
+            let steps = config
+                .steps
+                .as_ref()
+                .ok_or("'steps' required for GeneticAlgorithm (steps[0] = mutation, optional steps[1] = init_improvement)")?;
+            if steps.is_empty() || steps.len() > 2 {
+                return Err(format!(
+                    "GeneticAlgorithm requires 1 or 2 steps (steps[0] = mutation, optional steps[1] = init_improvement), but got {}",
+                    steps.len()
+                ));
+            }
+            let mutation = build_heuristic::<P>(&steps[0])?;
+            let init_improvement = match steps.get(1) {
+                Some(c) => Some(build_heuristic::<P>(c)?),
+                None => None,
+            };
+            let crossover = P::build_crossover(config)?;
+
+            let parent_selection = match config.parent_selection.as_deref().unwrap_or("Tournament")
+            {
+                "Tournament" => ParentSelection::Tournament,
+                "HammingTopK" => {
+                    let top_k = config.parent_top_k.ok_or(
+                        "'parent_top_k' required for parent_selection = 'HammingTopK'",
+                    )?;
+                    if top_k == 0 {
+                        return Err("'parent_top_k' must be >= 1".to_string());
+                    }
+                    ParentSelection::HammingTopK { top_k }
+                }
+                other => {
+                    return Err(format!(
+                        "Unknown parent_selection '{other}' (expected 'Tournament' or 'HammingTopK')"
+                    ));
+                }
+            };
+
+            let ga = GeneticAlgorithm::new_with_init(
+                cond,
+                population_size,
+                crossover,
+                mutation,
+                init_improvement,
+            )
+            .with_parent_selection(parent_selection);
+            Ok(Box::new(ga))
+        }
         _ => P::build_base_heuristic(config, cond),
     }
 }
@@ -926,6 +1050,12 @@ where
 /// Accumulates benchmark results from multiple runs.
 pub struct Benchmark {
     pub results: Vec<BenchmarkResult>,
+}
+
+impl Default for Benchmark {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Benchmark {
@@ -989,7 +1119,7 @@ fn run_typed<P: BenchmarkableProblem + 'static>(
     config: &HeuristicConfig,
 ) -> RunMetrics
 where
-    P::Solution: BenchmarkSolution,
+    P::Solution: BenchmarkSolution + Distance,
 {
     let heuristic = match build_heuristic::<P>(config) {
         Ok(h) => h,

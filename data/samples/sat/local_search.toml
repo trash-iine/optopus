@@ -1,0 +1,18 @@
+# MaxSAT × LocalSearch — maximizes the number of satisfied clauses.
+
+num_runs = 1
+
+[[instances]]
+# DIMACS CNF file.
+path = "data/sat/sample.cnf"
+problem = "Sat"
+
+[[heuristics]]
+kind = "LocalSearch"
+# Flip (single-literal flip) | Swap (exchange truth values of two variables).
+neighbor = "Flip"
+
+[heuristics.stop_condition]
+max_failed_update = 1
+# max_iteration     = 1_000_000
+# max_duration_secs = 5.0

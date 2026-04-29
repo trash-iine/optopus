@@ -78,7 +78,7 @@ where
             self.initialized = true;
         }
 
-        let neighbor = N::iter(&state.instance, &state.solution)
+        let neighbor = N::iter(state.instance, &state.solution)
             .choose(&mut rand::rng())
             .ok_or_else(|| {
                 OptError::InvalidState(

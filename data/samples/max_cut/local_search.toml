@@ -1,0 +1,24 @@
+# MaxCut × LocalSearch — greedy best-improvement until a local optimum.
+
+# Number of independent runs the benchmark runner aggregates (best/avg/worst…).
+num_runs = 1
+
+[[instances]]
+# Instance file. MaxCut text format: "N M\n i j w\n…" (1-indexed).
+path = "data/max_cut/sample.txt"
+# Problem dispatch tag: MaxCut | Qubo | Sat | Tsp | VertexCover.
+problem = "MaxCut"
+
+[[heuristics]]
+# Pure greedy: every step picks the single best-improving neighbor.
+kind = "LocalSearch"
+# Neighborhood operator: Flip (single-bit) | Swap (exchange two bits).
+neighbor = "Flip"
+
+[heuristics.stop_condition]
+# Halt after this many *consecutive* iterations without improving the global best.
+# For LocalSearch, 1 = stop the moment a local optimum is reached.
+max_failed_update = 1
+# Other stop conditions (uncomment to enable; whichever fires first wins):
+# max_iteration     = 1_000_000  # hard upper bound on the iteration counter
+# max_duration_secs = 5.0        # wall-clock budget in seconds
