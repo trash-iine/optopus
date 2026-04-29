@@ -1,10 +1,10 @@
-# QUBO × LocalSearch — minimization. Loads a MaxCut-format graph via
-# `Qubo::load_file_as_max_cut`.
+# QUBO × LocalSearch — minimization. Loads a sparse Q-matrix file via
+# `Qubo::load_file` (header `N M`, then `i j v` 1-indexed).
 
 num_runs = 1
 
 [[instances]]
-path = "data/max_cut/sample.txt"
+path = "data/qubo/sample.txt"
 problem = "Qubo"
 
 [[heuristics]]

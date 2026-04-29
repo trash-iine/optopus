@@ -506,22 +506,23 @@ impl Qubo {
         self.variables.len()
     }
 
-    /// Loads a QUBO problem from a MaxCut-format file, applying the MaxCut→QUBO
-    /// transformation.
+    /// Loads a QUBO problem from a sparse Q-matrix file.
     ///
     /// # File format
     ///
-    /// The expected format is one header line followed by edge lines (**1-indexed** vertices):
+    /// One header line followed by Q-matrix entries (**1-indexed**):
     ///
     /// ```text
     /// N M
-    /// i j w
-    /// i j w
+    /// i j v
+    /// i j v
     /// ...
     /// ```
     ///
-    /// Each edge `(i, j, w)` contributes: `Q[i][j] += 2w`, `Q[i][i] -= w`, `Q[j][j] -= w`.
-    pub fn load_file_as_max_cut(filename: &str) -> Result<Self, crate::error::OptError> {
+    /// Each entry sets `Q[i][j] = Q[j][i] = v`. When `i == j`, `v` is the linear
+    /// (diagonal) coefficient. Duplicate entries follow [`set_q`](Self::set_q)
+    /// semantics: the last write wins.
+    pub fn load_file(filename: &str) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
 
         let err = |line: usize, detail: String| OptError::FileLoad {
@@ -536,13 +537,7 @@ impl Qubo {
         let (n, _) = {
             let line = line_iter
                 .next()
-                .ok_or_else(|| {
-                    err(
-                        1,
-                        "file is empty, expected header 'N M' (MaxCut format for QUBO conversion)"
-                            .into(),
-                    )
-                })?
+                .ok_or_else(|| err(1, "file is empty, expected header 'N M'".into()))?
                 .map_err(|e| err(1, format!("failed to read header line: {e}")))?;
             let mut iter = line.split_whitespace();
             let n = iter
@@ -615,12 +610,7 @@ impl Qubo {
                 .parse::<i32>()
                 .map_err(|e| err(line_num, format!("failed to parse coefficient v: {e}")))?;
 
-            // MaxCut → QUBO transformation:
-            // edge (i,j,w) contributes: Q[i][j] += 2w, Q[i][i] -= w, Q[j][j] -= w
-            qubo.add_directed(i, j, 2 * v);
-            qubo.add_directed(j, i, 2 * v);
-            qubo.add_directed(i, i, -v);
-            qubo.add_directed(j, j, -v);
+            qubo.set_q(i, j, v);
         }
 
         Ok(qubo)
@@ -777,15 +767,14 @@ mod qubo_tests {
     }
 
     #[test]
-    fn test_load_file_as_max_cut() {
-        let qubo_result = Qubo::load_file_as_max_cut("data/max_cut/test_data.txt");
-        assert!(qubo_result.is_ok());
-        let qubo = qubo_result.unwrap();
+    fn test_load_file() {
+        let qubo = Qubo::load_file("data/qubo/test_data.txt").unwrap();
         assert_eq!(qubo.get_q(0, 1), 2);
         assert_eq!(qubo.get_q(1, 2), -6);
         assert_eq!(qubo.get_q(0, 0), -1);
-        assert_eq!(qubo.get_q(1, 1), 2);
+        assert_eq!(qubo.get_q(1, 1), 0);
         assert_eq!(qubo.get_q(2, 2), 3);
+        assert_eq!(qubo.get_q(2, 1), -6); // symmetric
         assert_eq!(qubo.num_of_variables(), 3);
     }
 
