@@ -14,9 +14,11 @@
 //! | [`sat`] | Maximum Satisfiability (MaxSAT) | Maximize satisfied clauses |
 //! | [`tsp_2d`] | Travelling Salesman Problem | Minimize tour length |
 //! | [`vertex_cover`] | Minimum Vertex Cover | Minimize cover size |
+//! | [`job_shop_scheduling`] | Job Shop Scheduling | Minimize makespan |
 //! | [`binary_optimization`] | Formula-based binary optimization | Configurable |
 
 pub mod binary_optimization;
+pub mod job_shop_scheduling;
 pub mod max_cut;
 pub mod qubo;
 pub mod sat;
@@ -26,6 +28,10 @@ pub mod vertex_cover;
 pub use binary_optimization::{
     Constraint, ConstraintRel, Expr, FormulaFlipNeighbor, FormulaProblem, FormulaSolution,
     FormulaSwapNeighbor, FormulaUniformCrossover, OptDirection,
+};
+pub use job_shop_scheduling::{
+    JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
+    JobShopSwapNeighbor,
 };
 pub use max_cut::{
     MaxCut, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, MaxCutUniformCrossover,

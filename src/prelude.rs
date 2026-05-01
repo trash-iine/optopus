@@ -39,6 +39,12 @@ pub use crate::problem::{
     FormulaProblem,
     FormulaSolution,
     FormulaSwapNeighbor,
+    // Job Shop Scheduling
+    JobShopPpxCrossover,
+    JobShopRelocateNeighbor,
+    JobShopScheduling,
+    JobShopSolution,
+    JobShopSwapNeighbor,
     // MaxCut
     MaxCut,
     MaxCutFlipNeighbor,

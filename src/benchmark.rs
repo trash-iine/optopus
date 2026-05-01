@@ -16,10 +16,11 @@ use crate::{
         TabuSearch,
     },
     problem::{
-        MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, MaxCutUniformCrossover,
-        QuboFlipNeighbor, QuboSwapNeighbor, QuboUniformCrossover, SatUniformCrossover,
-        TspOrderCrossover, VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution,
-        VertexCoverSwapNeighbor, VertexCoverUniformCrossover,
+        JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
+        JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
+        MaxCutUniformCrossover, QuboFlipNeighbor, QuboSwapNeighbor, QuboUniformCrossover,
+        SatUniformCrossover, TspOrderCrossover, VertexCover, VertexCoverFlipNeighbor,
+        VertexCoverSolution, VertexCoverSwapNeighbor, VertexCoverUniformCrossover,
         max_cut::MaxCut,
         qubo::{Qubo, QuboSolution},
         sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
@@ -140,6 +141,21 @@ impl BenchmarkSolution for VertexCoverSolution {
     }
 }
 
+impl BenchmarkProblem for JobShopScheduling {
+    fn load_instance(path: &str) -> Result<Self, OptError> {
+        JobShopScheduling::load_file(path)
+    }
+}
+
+impl BenchmarkSolution for JobShopSolution {
+    fn best_objective_f64(&self) -> f64 {
+        self.objective as f64
+    }
+    fn encode_as_indices(&self) -> Vec<usize> {
+        self.operations.clone()
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Config types (Deserialize + Serialize) — used as input from a TOML file
 // ---------------------------------------------------------------------------
@@ -152,6 +168,7 @@ pub enum ProblemKind {
     Sat,
     Tsp,
     VertexCover,
+    JobShop,
 }
 
 /// Stop condition as expressed in a config file (duration in seconds instead of `Duration`).
@@ -360,6 +377,7 @@ pub struct BenchmarkResult {
     /// - QUBO: variable indices set to 1
     /// - SAT: variable indices set to `true`
     /// - TSP: city visit order
+    /// - JobShop: operation sequence (job indices, each repeated `n_machines` times)
     pub solution: Vec<usize>,
 }
 
@@ -931,6 +949,100 @@ impl BenchmarkableProblem for VertexCover {
     }
 }
 
+impl BenchmarkableProblem for JobShopScheduling {
+    fn build_base_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, String> {
+        match config.kind.as_str() {
+            "LocalSearch" => match config.req_neighbor("JobShop")? {
+                NeighborKind::Swap => Ok(Box::new(LocalSearch::<JobShopSwapNeighbor>::new(cond))),
+                NeighborKind::Relocate => {
+                    Ok(Box::new(LocalSearch::<JobShopRelocateNeighbor>::new(cond)))
+                }
+                n => Err(format!(
+                    "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
+                    n
+                )),
+            },
+            "TabuSearch" => {
+                let tenure = config.req_tabu("JobShop")?;
+                match config.req_neighbor("JobShop")? {
+                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<JobShopSwapNeighbor>::new(
+                        cond, tenure, None,
+                    ))),
+                    NeighborKind::Relocate => Ok(Box::new(
+                        TabuSearch::<JobShopRelocateNeighbor>::new(cond, tenure, None),
+                    )),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
+                        n
+                    )),
+                }
+            }
+            "SimulatedAnnealing" => {
+                let temp = config.req_temp("JobShop")?;
+                let cooling = config.req_cooling("JobShop")?;
+                match config.req_neighbor("JobShop")? {
+                    NeighborKind::Swap => Ok(Box::new(
+                        SimulatedAnnealing::<JobShopSwapNeighbor>::new(cond, temp, cooling),
+                    )),
+                    NeighborKind::Relocate => Ok(Box::new(
+                        SimulatedAnnealing::<JobShopRelocateNeighbor>::new(cond, temp, cooling),
+                    )),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
+                        n
+                    )),
+                }
+            }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("JobShop")?;
+                match config.req_neighbor("JobShop")? {
+                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<
+                        JobShopSwapNeighbor,
+                    >::new(
+                        cond, history_length
+                    ))),
+                    NeighborKind::Relocate => Ok(Box::new(LateAcceptanceHillClimbing::<
+                        JobShopRelocateNeighbor,
+                    >::new(
+                        cond, history_length
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
+                        n
+                    )),
+                }
+            }
+            "RLSearch" => match config.req_neighbor("JobShop")? {
+                NeighborKind::Swap => build_rl_search_from_config::<
+                    JobShopScheduling,
+                    JobShopSwapNeighbor,
+                >(config, cond),
+                NeighborKind::Relocate => build_rl_search_from_config::<
+                    JobShopScheduling,
+                    JobShopRelocateNeighbor,
+                >(config, cond),
+                n => Err(format!(
+                    "Invalid neighbor {:?} for JobShop RLSearch (use Swap or Relocate)",
+                    n
+                )),
+            },
+            k => Err(format!("Unknown kind '{}' for JobShop", k)),
+        }
+    }
+
+    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
+        match config.crossover_kind.as_deref().unwrap_or("Ppx") {
+            "Ppx" => Ok(Box::new(JobShopPpxCrossover)),
+            other => Err(format!(
+                "Unknown crossover_kind '{other}' for JobShop (expected 'Ppx')"
+            )),
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Generic heuristic builder
 // ---------------------------------------------------------------------------
@@ -1111,6 +1223,7 @@ fn run_for_problem_kind(
         ProblemKind::Sat => run_typed::<Sat>(instance_path, config),
         ProblemKind::Tsp => run_typed::<TspWithCoordinates>(instance_path, config),
         ProblemKind::VertexCover => run_typed::<VertexCover>(instance_path, config),
+        ProblemKind::JobShop => run_typed::<JobShopScheduling>(instance_path, config),
     }
 }
 
