@@ -1,0 +1,20 @@
+num_runs = 3
+
+[[instances]]
+path = "data/jssp/ft06.txt"
+problem = "JobShop"
+
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [5, 15]
+[heuristics.stop_condition]
+max_iteration = 2000
+
+[[heuristics]]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 5.0
+cooling_rate = 0.999
+[heuristics.stop_condition]
+max_iteration = 2000
