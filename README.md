@@ -14,12 +14,13 @@ cargo run --example max_cut
 ```rust
 use optopus::prelude::*;
 
-// 1. Create a problem instance
-let mut mc = MaxCut::new();
-mc.add_weight(0, 1, 1.0);
-mc.add_weight(0, 2, 1.0);
-mc.add_weight(1, 2, 1.0);
-// or load from file: let mc = MaxCut::load_from_file("data/max_cut/G1")?;
+// 1. Create a problem instance (in-memory graph)
+let mc = MaxCut::new(Graph::from_edges([
+    (0, 1, 1.0),
+    (0, 2, 1.0),
+    (1, 2, 1.0),
+]));
+// Or load from file: let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G1")?);
 
 // 2. Initialize search state
 let mut state = SearchState::new(&mc);
@@ -34,6 +35,9 @@ ls.run(&mut state).unwrap();
 println!("best cut = {}", state.best_solution.objective);
 ```
 
+QUBO instances can be loaded from a sparse Q-matrix file via `Qubo::load_file("path/to/file.qubo")?`
+(format: header `N M`, then `i j v` lines with 1-indexed variables).
+
 ## Supported Problems
 
 | Problem | Type | Neighbors |
@@ -41,7 +45,9 @@ println!("best cut = {}", state.best_solution.objective);
 | Max Cut | `MaxCut` | `MaxCutFlipNeighbor`, `MaxCutSwapNeighbor` |
 | MaxSAT | `Sat` | `SatFlipNeighbor`, `SatSwapNeighbor` |
 | TSP | `TspWithCoordinates` | `TspTwoOptNeighbor`, `TspRelocateNeighbor` |
-| QUBO | `Qubo` | `QuboFlipNeighbor` / `QuboFlipNeighbour`, `QuboSwapNeighbor` / `QuboSwapNeighbour` |
+| QUBO | `Qubo` | `QuboFlipNeighbor`, `QuboSwapNeighbor` |
+| Vertex Cover | `VertexCover` | `VertexCoverFlipNeighbor`, `VertexCoverSwapNeighbor` |
+| Job Shop Scheduling | `JobShopScheduling` | `JobShopSwapNeighbor`, `JobShopRelocateNeighbor` |
 | Formula | `FormulaProblem` | `FormulaFlipNeighbor`, `FormulaSwapNeighbor` |
 
 ## Available Heuristics
@@ -51,14 +57,17 @@ println!("best cut = {}", state.best_solution.objective);
 | Local Search | `LocalSearch<N>` | Greedy best-improving |
 | Simulated Annealing | `SimulatedAnnealing<N>` | Exponential cooling |
 | Bang-Bang SA | `BangBangSimulatedAnnealing<N>` | Two-temperature schedule |
+| Late Acceptance Hill Climbing | `LateAcceptanceHillClimbing<N>` | Accept if no worse than score `history_length` steps ago |
 | Tabu Search | `TabuSearch<N>` | Randomized tenure |
 | Random Walk | `RandomWalk<N>` | Uniform random moves |
 | Beam Search | `BeamSearch<P, N>` | Keeps top-k candidates |
+| RL Search | `RLSearch<P, N>` | REINFORCE policy gradient over candidate moves |
 | Sequential | `Sequential<P>` | Chains multiple heuristics |
 | Iterated | `Iterated<P>` | Iterated Local Search (search + perturbation) |
 | Restart | `Restart<P>` | Multi-start: restart from random when condition triggers |
-| Genetic Algorithm | `GeneticAlgorithm<P, C>` | Population-based with crossover |
+| Genetic Algorithm | `GeneticAlgorithm<P, C>` | Population-based with crossover; optional `init_improvement` phase (HEA pattern) |
 | Breakout Local Search | `BreakoutLocalSearchForMaxCut` | MaxCut-specific BLS |
+| Lin-Kernighan-Helsgaun | `LinKernighanHelsgottForTsp` | TSP-specific LKH |
 
 ## Stop Conditions
 
@@ -95,9 +104,10 @@ The minimum contract for a new problem is:
 
 Additional traits are required only for some heuristics:
 
-- `Evaluate`: required by `SimulatedAnnealing`
+- `Evaluate<T>` (returns `Evaluable<T>`): required by `SimulatedAnnealing` and `LateAcceptanceHillClimbing`
 - `EnabledTabu`: required by `TabuSearch`
-- `Crossover` / `SubProblemExtractable`: required by `GeneticAlgorithm`
+- `Crossover`: required by `GeneticAlgorithm`
+- `SubProblemExtractable`: required by `SubProblemBasedCrossover`
 
 Implement these traits to plug a problem into every heuristic:
 
@@ -200,11 +210,11 @@ num_runs = 3
 
 [[instances]]
 path = "data/max_cut/G[1-2]"
-problem = "MaxCut"
+problem = "MaxCut"   # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop
 
 [[heuristics]]
 kind = "LocalSearch"
-neighbor = "Flip"
+neighbor = "Flip"    # Flip | Swap | TwoOpt | Relocate
 [heuristics.stop_condition]
 max_iteration = 100000
 
@@ -217,12 +227,30 @@ cooling_rate = 0.999
 max_duration_secs = 30.0
 ```
 
+Supported `kind` values: `LocalSearch`, `TabuSearch`, `SimulatedAnnealing`,
+`LateAcceptanceHillClimbing`, `RLSearch`, `BeamSearch`, `BreakoutLocalSearch`
+(MaxCut only), `GeneticAlgorithm`, and the meta-heuristics `Sequential` /
+`Iterated` / `Restart` (which take a nested `steps` array). `GeneticAlgorithm`
+requires `population_size` and accepts optional `crossover_kind` (`"Uniform"`
+default; TSP defaults to `"Order"`), `parent_selection` (`"Tournament"` default
+or `"HammingTopK"`), and `parent_top_k`.
+
 ```bash
 cargo run -- data/my_benchmark.toml
 ```
 
 Results are written to `result/` as a timestamped TOML file with `best`, `avg`, `worst`, `std`, and timing statistics per heuristic-instance pair.
-If a glob matches no files, or a heuristic is missing required fields, the CLI now exits with a configuration error instead of silently producing an empty report.
+If a glob matches no files, or a heuristic is missing required fields, the CLI exits with a configuration error instead of silently producing an empty report.
+
+See [`data/sample_setting.toml`](data/sample_setting.toml) for a multi-heuristic MaxCut comparison,
+[`data/sample_ga_maxcut.toml`](data/sample_ga_maxcut.toml) for a `GeneticAlgorithm` setup,
+and [`data/sample_jssp.toml`](data/sample_jssp.toml) for Job Shop Scheduling.
+
+Per-heuristic performance summaries on standard instance sets are published under [`docs/benchmarks/`](docs/benchmarks/):
+
+- [BreakoutLocalSearch on MaxCut (Gset)](docs/benchmarks/breakout_local_search.md)
+
+Curated source TOMLs live in `docs/benchmarks/data/` and the Markdown is regenerated with `python3 docs/benchmarks/render.py`.
 
 ## Error Handling
 
