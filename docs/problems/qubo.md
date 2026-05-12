@@ -78,7 +78,6 @@ i j v
 ## Optional traits
 
 - `Distance` — Hamming distance on `x`.
-- `CdclEncodable` — QUBO admits a CNF encoding for the CDCL solver.
 - `Evaluate<i32>` (in addition to `Evaluate<f64>`) for integer-precision SA /
   LAHC / RL Search.
 

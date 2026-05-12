@@ -74,7 +74,6 @@ i j w
 ## Optional traits
 
 - `Distance` — Hamming distance on the cut vector (used by `ParentSelection::HammingTopK`).
-- `CdclEncodable` — MaxCut can also be solved by the CDCL engine via a CNF encoding.
 
 ## Notes
 

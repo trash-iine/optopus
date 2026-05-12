@@ -73,7 +73,6 @@ comparison.
 | `EnabledTabu` (move) | `TabuSearch` | Same. |
 | `Distance` (solution) | `GeneticAlgorithm` (any selection), `ParentSelection::HammingTopK` | GA won't compile. |
 | `SubProblemExtractable` (problem) | `SubProblemBasedCrossover` | Use the problem's uniform crossover instead. |
-| `CdclEncodable` (problem) | `CdclSolver` | Skip CDCL. |
 
 `LocalSearch`, `RandomWalk`, `BeamSearch`, `Sequential`, `Iterated`, `Restart`,
 and `GeneticAlgorithm` (with a problem-specific crossover that doesn't need

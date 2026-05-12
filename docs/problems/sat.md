@@ -66,5 +66,3 @@ p cnf N M
 ## Optional traits
 
 - `Distance` — Hamming distance on `x`.
-- `CdclEncodable` — natively solvable by the built-in CDCL engine via the
-  identity encoding.

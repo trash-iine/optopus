@@ -40,4 +40,3 @@ Used by `GeneticAlgorithm`:
 |---|---|---|
 | [BreakoutLocalSearchForMaxCut](breakout_local_search.md) | MaxCut | Greedy LS + adaptive perturbation. |
 | [LinKernighanHelsgottForTsp](lkh.md) | TSP 2D | Variable-depth k-opt with candidate lists. |
-| `CdclSolver<P>` | any `P: CdclEncodable` | CDCL with VSIDS + Luby restarts. |
