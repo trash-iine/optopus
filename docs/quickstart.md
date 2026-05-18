@@ -72,8 +72,8 @@ Each loader's file format is documented on the corresponding problem page.
 
 ## What to read next
 
-- [Concepts](concepts.md) — the design philosophy and the small set of traits
-  every problem and heuristic relies on.
+- [Concepts](concepts.md) — the design philosophy, three use cases, and key
+  patterns.
 - [Problems](problems/README.md) — what each built-in problem offers.
 - [Heuristics](heuristics/README.md) — picking an algorithm.
 - [Composing heuristics](guide/composing.md) — `Sequential`, `Iterated` (ILS),

@@ -5,7 +5,9 @@ Start here, then dive into the section that matches your task.
 ## Getting started
 
 - [Quickstart](quickstart.md) — minimal end-to-end example, file loaders.
-- [Concepts](concepts.md) — design philosophy, `SearchState`, and core traits.
+- [Concepts](concepts.md) — design philosophy, the three use cases, and key patterns.
+- [SearchState API](search_state.md) — fields, methods, sub-run clone variants.
+- [Core traits](traits.md) — minimum traits + per-heuristic extras.
 
 ## Reference
 

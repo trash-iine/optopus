@@ -101,5 +101,5 @@ Once it implements `Heuristic<P>`, your algorithm can be:
 
 ## Next reading
 
-- [Concepts → SearchState API](../concepts.md#searchstate)
+- [SearchState API](../search_state.md)
 - [Composing heuristics](composing.md)

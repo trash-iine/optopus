@@ -63,7 +63,9 @@ file-based loading.
 ## Documentation
 
 - [`docs/quickstart.md`](docs/quickstart.md) — getting started, file loaders
-- [`docs/concepts.md`](docs/concepts.md) — design philosophy, `SearchState`, core traits
+- [`docs/concepts.md`](docs/concepts.md) — design philosophy and key patterns
+- [`docs/search_state.md`](docs/search_state.md) — `SearchState` API reference
+- [`docs/traits.md`](docs/traits.md) — core traits reference
 - [`docs/problems/`](docs/problems/) — supported problems
 - [`docs/heuristics/`](docs/heuristics/) — available algorithms
 - [`docs/guide/`](docs/guide/) — composing heuristics, stop conditions, benchmarking, custom problem/heuristic, error handling

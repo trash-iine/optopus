@@ -87,5 +87,5 @@ inspects cached per-variable gains — see `MaxCutFlipNeighbor` or
 
 ## Next reading
 
-- [Concepts → Core traits table](../concepts.md#core-trait-reference)
+- [Core traits reference](../traits.md#core-trait-reference)
 - [Custom heuristic](custom_heuristic.md)
