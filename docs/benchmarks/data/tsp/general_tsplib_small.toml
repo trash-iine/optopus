@@ -1,0 +1,5022 @@
+timestamp = "20260517_110145"
+config_file = "data/benchmarks/tsp/general_small.toml"
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3356.7
+worst_objective = 3461.0
+std_objective = 50.945166600964214
+best_time_to_best_secs = 0.000056333
+avg_time_to_best_secs = 0.00012075410000000001
+avg_total_time_secs = 0.0001220292
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3336.0
+best_iteration = 8
+time_to_best_secs = 0.000190834
+total_time_secs = 0.000192083
+solution = [1, 13, 2, 3, 4, 5, 11, 6, 12, 10, 8, 9, 7, 0]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 10
+time_to_best_secs = 0.000162167
+total_time_secs = 0.000163375
+solution = [8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3336.0
+best_iteration = 9
+time_to_best_secs = 0.000108875
+total_time_secs = 0.000109875
+solution = [9, 8, 10, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 7]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 11
+time_to_best_secs = 0.00010075
+total_time_secs = 0.000102
+solution = [11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3461.0
+best_iteration = 10
+time_to_best_secs = 0.00010975
+total_time_secs = 0.000111
+solution = [1, 0, 7, 9, 8, 10, 12, 6, 13, 11, 5, 4, 3, 2]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000099958
+total_time_secs = 0.000101583
+solution = [2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 12
+time_to_best_secs = 0.00022625
+total_time_secs = 0.000227459
+solution = [8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3371.0
+best_iteration = 7
+time_to_best_secs = 0.000056333
+total_time_secs = 0.000057625
+solution = [8, 9, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 0, 10]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3448.0
+best_iteration = 8
+time_to_best_secs = 0.000059083
+total_time_secs = 0.000060417
+solution = [6, 13, 11, 5, 4, 3, 2, 1, 0, 9, 8, 10, 7, 12]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 9
+time_to_best_secs = 0.000093541
+total_time_secs = 0.000094875
+solution = [4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3366.1
+worst_objective = 3754.0
+std_objective = 129.29999999999998
+best_time_to_best_secs = 0.000164584
+avg_time_to_best_secs = 0.00030522070000000006
+avg_total_time_secs = 0.0003187332
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 12
+time_to_best_secs = 0.00042825
+total_time_secs = 0.000441541
+solution = [5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000304416
+total_time_secs = 0.00031775
+solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000292208
+total_time_secs = 0.000305625
+solution = [8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 11
+time_to_best_secs = 0.0004175
+total_time_secs = 0.000431375
+solution = [8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3754.0
+best_iteration = 6
+time_to_best_secs = 0.000196625
+total_time_secs = 0.000210708
+solution = [8, 10, 12, 5, 11, 13, 2, 3, 4, 6, 7, 0, 1, 9]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 9
+time_to_best_secs = 0.000230666
+total_time_secs = 0.000244167
+solution = [4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 13
+time_to_best_secs = 0.000380958
+total_time_secs = 0.000394208
+solution = [5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000164584
+total_time_secs = 0.000178083
+solution = [11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 12
+time_to_best_secs = 0.000382708
+total_time_secs = 0.000395875
+solution = [12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000254292
+total_time_secs = 0.000268
+solution = [7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000104625
+avg_time_to_best_secs = 0.0002641874
+avg_total_time_secs = 30.000014870999998
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 28
+time_to_best_secs = 0.000203917
+total_time_secs = 30.000003458
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 20
+time_to_best_secs = 0.000167667
+total_time_secs = 30.000008667
+solution = [7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 15
+time_to_best_secs = 0.000445
+total_time_secs = 30.000011916
+solution = [11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 15
+time_to_best_secs = 0.000140458
+total_time_secs = 30.000001167
+solution = [4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 13
+time_to_best_secs = 0.000323333
+total_time_secs = 30.000003959
+solution = [4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 16
+time_to_best_secs = 0.000340333
+total_time_secs = 30.000002084
+solution = [8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000215916
+total_time_secs = 30.000040792
+solution = [8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 17
+time_to_best_secs = 0.000438125
+total_time_secs = 30.000027209
+solution = [8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 11
+time_to_best_secs = 0.000104625
+total_time_secs = 30.00000025
+solution = [4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 13
+time_to_best_secs = 0.0002625
+total_time_secs = 30.000049208
+solution = [7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [3, 30]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000142875
+avg_time_to_best_secs = 0.0005127375
+avg_total_time_secs = 30.000022591599997
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000465
+total_time_secs = 30.000027541
+solution = [13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 14
+time_to_best_secs = 0.00029925
+total_time_secs = 30.000004167
+solution = [13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 16
+time_to_best_secs = 0.000340417
+total_time_secs = 30.000012833
+solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000461917
+total_time_secs = 30.000005
+solution = [1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 9
+time_to_best_secs = 0.000184125
+total_time_secs = 30.00003325
+solution = [12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 7
+time_to_best_secs = 0.000142875
+total_time_secs = 30.00001175
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 10
+time_to_best_secs = 0.000212208
+total_time_secs = 30.000048542
+solution = [9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 14
+time_to_best_secs = 0.001423958
+total_time_secs = 30.000037625
+solution = [9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 9
+time_to_best_secs = 0.00019275
+total_time_secs = 30.000042583
+solution = [5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 18
+time_to_best_secs = 0.001404875
+total_time_secs = 30.000002625
+solution = [9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "TwoOpt"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3324.3
+worst_objective = 3336.0
+std_objective = 3.9000000000000004
+best_time_to_best_secs = 0.008952958
+avg_time_to_best_secs = 0.016889762600000004
+avg_total_time_secs = 30.0000079541
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 3977
+time_to_best_secs = 0.017303
+total_time_secs = 30.000000125
+solution = [8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 2786
+time_to_best_secs = 0.018235
+total_time_secs = 30.000002041
+solution = [1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 2981
+time_to_best_secs = 0.014946834
+total_time_secs = 30.000002875
+solution = [5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 2873
+time_to_best_secs = 0.017206375
+total_time_secs = 30.000001042
+solution = [4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 3064
+time_to_best_secs = 0.015438167
+total_time_secs = 30.000000167
+solution = [4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3336.0
+best_iteration = 3113
+time_to_best_secs = 0.020775084
+total_time_secs = 30.00000025
+solution = [1, 0, 7, 9, 8, 10, 12, 6, 11, 5, 4, 3, 2, 13]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 2642
+time_to_best_secs = 0.020240375
+total_time_secs = 30.000002708
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 2882
+time_to_best_secs = 0.013554958
+total_time_secs = 30.000002375
+solution = [0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 2944
+time_to_best_secs = 0.022244875
+total_time_secs = 30.000067833
+solution = [1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 2570
+time_to_best_secs = 0.008952958
+total_time_secs = 30.000000125
+solution = [8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.07492075
+avg_time_to_best_secs = 0.0979938583
+avg_total_time_secs = 30.000016529099998
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 4108
+time_to_best_secs = 0.093933541
+total_time_secs = 30.000007625
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 2786
+time_to_best_secs = 0.07492075
+total_time_secs = 30.000038
+solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 3500
+time_to_best_secs = 0.091581167
+total_time_secs = 30.000006708
+solution = [8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 2853
+time_to_best_secs = 0.083228
+total_time_secs = 30.000001792
+solution = [2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 4324
+time_to_best_secs = 0.121290833
+total_time_secs = 30.000037125
+solution = [0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 4114
+time_to_best_secs = 0.12240275
+total_time_secs = 30.000001625
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 2654
+time_to_best_secs = 0.080117917
+total_time_secs = 30.000010042
+solution = [10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 3722
+time_to_best_secs = 0.11211375
+total_time_secs = 30.000033333
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 3833
+time_to_best_secs = 0.09489275
+total_time_secs = 30.000027375
+solution = [1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 3869
+time_to_best_secs = 0.105457125
+total_time_secs = 30.000001666
+solution = [3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.035767584
+avg_time_to_best_secs = 0.0433889084
+avg_total_time_secs = 23.5959778625
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 6739
+time_to_best_secs = 0.055922375
+total_time_secs = 23.355026583
+solution = [11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 4777
+time_to_best_secs = 0.038502125
+total_time_secs = 23.068170917
+solution = [12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 5683
+time_to_best_secs = 0.045592084
+total_time_secs = 23.81873125
+solution = [4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 5588
+time_to_best_secs = 0.040736625
+total_time_secs = 23.883572459
+solution = [3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 5109
+time_to_best_secs = 0.045885541
+total_time_secs = 23.736021459
+solution = [12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 4960
+time_to_best_secs = 0.037817667
+total_time_secs = 23.061666666
+solution = [0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 4726
+time_to_best_secs = 0.045242916
+total_time_secs = 23.741151125000002
+solution = [11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 5684
+time_to_best_secs = 0.0420305
+total_time_secs = 24.092677666
+solution = [9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 4743
+time_to_best_secs = 0.035767584
+total_time_secs = 23.745091667
+solution = [8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 7343
+time_to_best_secs = 0.046391667
+total_time_secs = 23.457668833
+solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.124016958
+avg_time_to_best_secs = 0.1630991002
+avg_total_time_secs = 30.000013733500005
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 5520
+time_to_best_secs = 0.136256
+total_time_secs = 30.000012334
+solution = [4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 6607
+time_to_best_secs = 0.171769709
+total_time_secs = 30.000000167
+solution = [12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 5514
+time_to_best_secs = 0.143507584
+total_time_secs = 30.000039125
+solution = [12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 5111
+time_to_best_secs = 0.124016958
+total_time_secs = 30.0000185
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 7252
+time_to_best_secs = 0.179147875
+total_time_secs = 30.000002625
+solution = [12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 7171
+time_to_best_secs = 0.194359834
+total_time_secs = 30.000018292
+solution = [13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 6513
+time_to_best_secs = 0.207311
+total_time_secs = 30.000011708
+solution = [7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 6101
+time_to_best_secs = 0.164653708
+total_time_secs = 30.000011042
+solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 5918
+time_to_best_secs = 0.163904209
+total_time_secs = 30.000012375
+solution = [3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 4540
+time_to_best_secs = 0.146064125
+total_time_secs = 30.000011167
+solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Order"
+parent_selection = "Tournament"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000650583
+avg_time_to_best_secs = 0.0013335960000000003
+avg_total_time_secs = 30.001580374999996
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 11
+time_to_best_secs = 0.001531584
+total_time_secs = 30.000455625
+solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 10
+time_to_best_secs = 0.000650583
+total_time_secs = 30.001972
+solution = [2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 61
+time_to_best_secs = 0.00132675
+total_time_secs = 30.002227917
+solution = [12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 24
+time_to_best_secs = 0.000739875
+total_time_secs = 30.001657
+solution = [6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 17
+time_to_best_secs = 0.001712917
+total_time_secs = 30.000737458
+solution = [13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 9
+time_to_best_secs = 0.001173834
+total_time_secs = 30.0014305
+solution = [12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 17
+time_to_best_secs = 0.001705042
+total_time_secs = 30.00172175
+solution = [2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 15
+time_to_best_secs = 0.000694833
+total_time_secs = 30.003012542
+solution = [4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 35
+time_to_best_secs = 0.002098667
+total_time_secs = 30.000599458
+solution = [7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 13
+time_to_best_secs = 0.001701875
+total_time_secs = 30.0019895
+solution = [13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3336.8
+worst_objective = 3461.0
+std_objective = 41.4
+best_time_to_best_secs = 0.000040625
+avg_time_to_best_secs = 3.9743629125999993
+avg_total_time_secs = 30.000186558399996
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 9
+time_to_best_secs = 0.000071375
+total_time_secs = 30.000146833
+solution = [12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 7254837
+time_to_best_secs = 16.560605125
+total_time_secs = 30.000081709
+solution = [9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 3522539
+time_to_best_secs = 8.33670575
+total_time_secs = 30.000239708
+solution = [6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 10
+time_to_best_secs = 0.000210167
+total_time_secs = 30.000268458
+solution = [9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 7
+time_to_best_secs = 0.000155
+total_time_secs = 30.000260084
+solution = [11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 6168351
+time_to_best_secs = 14.845291042
+total_time_secs = 30.00002225
+solution = [12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 9
+time_to_best_secs = 0.00018125
+total_time_secs = 30.000073
+solution = [12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 9
+time_to_best_secs = 0.000181458
+total_time_secs = 30.00038025
+solution = [6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 8
+time_to_best_secs = 0.000187334
+total_time_secs = 30.00011175
+solution = [1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3461.0
+best_iteration = 6
+time_to_best_secs = 0.000040625
+total_time_secs = 30.000281542
+solution = [8, 10, 12, 6, 13, 11, 5, 4, 3, 2, 1, 0, 7, 9]
+
+[[results]]
+instance_path = "data/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "Restart"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000087167
+avg_time_to_best_secs = 0.0001964333
+avg_total_time_secs = 30.209767658199997
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 3323.0
+best_iteration = 13
+time_to_best_secs = 0.000105042
+total_time_secs = 30.352140333
+solution = [2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 3323.0
+best_iteration = 12
+time_to_best_secs = 0.000271208
+total_time_secs = 30.383360582999998
+solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 3323.0
+best_iteration = 14
+time_to_best_secs = 0.0003205
+total_time_secs = 30.136590541
+solution = [12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 3323.0
+best_iteration = 15
+time_to_best_secs = 0.000248458
+total_time_secs = 30.413853334
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 3323.0
+best_iteration = 15
+time_to_best_secs = 0.000139375
+total_time_secs = 30.138964166
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 3323.0
+best_iteration = 12
+time_to_best_secs = 0.000112333
+total_time_secs = 30.0592095
+solution = [5, 4, 3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 3323.0
+best_iteration = 10
+time_to_best_secs = 0.000087167
+total_time_secs = 30.34584825
+solution = [7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 3323.0
+best_iteration = 11
+time_to_best_secs = 0.0002385
+total_time_secs = 30.10724575
+solution = [3, 4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 3323.0
+best_iteration = 13
+time_to_best_secs = 0.000114917
+total_time_secs = 30.044275375
+solution = [4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 3323.0
+best_iteration = 14
+time_to_best_secs = 0.000326833
+total_time_secs = 30.11618875
+solution = [0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 438.0
+avg_objective = 455.3
+worst_objective = 477.0
+std_objective = 10.854031509075325
+best_time_to_best_secs = 0.002174875
+avg_time_to_best_secs = 0.003346346
+avg_total_time_secs = 0.0033661584000000003
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 477.0
+best_iteration = 44
+time_to_best_secs = 0.003017542
+total_time_secs = 0.003037875
+solution = [10, 31, 4, 36, 16, 14, 32, 44, 43, 41, 39, 18, 40, 12, 17, 3, 46, 11, 45, 50, 26, 0, 47, 22, 5, 13, 24, 23, 42, 6, 25, 7, 30, 27, 2, 21, 1, 19, 35, 34, 28, 15, 49, 20, 33, 29, 38, 9, 48, 8, 37]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 449.0
+best_iteration = 40
+time_to_best_secs = 0.004025208
+total_time_secs = 0.004044416
+solution = [3, 46, 17, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 29, 9, 48, 8, 33, 20, 49, 15, 37, 10, 1, 28, 19, 34, 35, 2, 27, 30, 25, 6, 42, 23, 22, 5, 47, 7, 21, 0, 31, 26, 50, 45, 11, 4, 36, 16]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 438.0
+best_iteration = 40
+time_to_best_secs = 0.003439417
+total_time_secs = 0.003459042
+solution = [3, 46, 11, 45, 50, 26, 47, 7, 25, 30, 27, 21, 0, 31, 10, 37, 4, 48, 8, 49, 15, 1, 2, 35, 34, 19, 28, 20, 33, 29, 9, 38, 32, 44, 14, 36, 16, 43, 41, 18, 39, 40, 12, 24, 23, 42, 6, 22, 5, 13, 17]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 450.0
+best_iteration = 41
+time_to_best_secs = 0.003481042
+total_time_secs = 0.003500417
+solution = [8, 49, 33, 29, 38, 32, 9, 48, 4, 11, 45, 50, 46, 3, 16, 36, 14, 44, 43, 41, 18, 39, 40, 12, 17, 24, 13, 5, 23, 42, 6, 22, 47, 26, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 28, 20, 15, 1, 31, 10, 37]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 447.0
+best_iteration = 45
+time_to_best_secs = 0.004248542
+total_time_secs = 0.004267166
+solution = [1, 0, 21, 30, 27, 2, 35, 34, 19, 28, 20, 49, 33, 29, 8, 15, 37, 4, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 17, 46, 3, 16, 36, 11, 45, 50, 5, 23, 42, 22, 6, 25, 7, 47, 26, 31, 10]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 453.0
+best_iteration = 47
+time_to_best_secs = 0.004197625
+total_time_secs = 0.004219834
+solution = [31, 0, 26, 50, 45, 4, 37, 48, 8, 29, 9, 38, 32, 44, 14, 36, 16, 43, 41, 39, 18, 40, 12, 3, 11, 46, 17, 24, 13, 23, 42, 6, 22, 5, 47, 7, 25, 30, 27, 35, 34, 19, 2, 21, 1, 28, 20, 33, 49, 15, 10]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 471.0
+best_iteration = 41
+time_to_best_secs = 0.002759
+total_time_secs = 0.002778875
+solution = [28, 19, 34, 35, 2, 1, 10, 11, 45, 50, 26, 31, 0, 21, 27, 30, 7, 25, 42, 23, 22, 6, 47, 5, 13, 24, 12, 40, 18, 39, 41, 3, 17, 46, 16, 43, 14, 36, 4, 37, 8, 48, 9, 44, 32, 38, 29, 33, 49, 15, 20]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 453.0
+best_iteration = 45
+time_to_best_secs = 0.002519292
+total_time_secs = 0.002539
+solution = [38, 32, 44, 14, 36, 43, 41, 18, 39, 40, 12, 3, 16, 11, 46, 17, 24, 13, 23, 42, 22, 6, 25, 30, 27, 2, 35, 34, 19, 1, 21, 0, 7, 47, 5, 26, 50, 45, 31, 10, 4, 37, 15, 28, 20, 33, 49, 8, 48, 29, 9]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 456.0
+best_iteration = 40
+time_to_best_secs = 0.003600917
+total_time_secs = 0.003620625
+solution = [32, 38, 9, 29, 48, 37, 8, 49, 33, 20, 28, 15, 1, 21, 19, 34, 35, 2, 27, 30, 7, 25, 6, 42, 23, 22, 47, 0, 31, 10, 4, 11, 46, 50, 45, 26, 5, 13, 24, 17, 12, 40, 39, 18, 41, 3, 16, 36, 43, 14, 44]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 459.0
+best_iteration = 38
+time_to_best_secs = 0.002174875
+total_time_secs = 0.002194334
+solution = [14, 36, 43, 41, 18, 39, 40, 12, 3, 16, 46, 11, 4, 37, 10, 45, 50, 17, 24, 13, 23, 42, 22, 6, 25, 30, 27, 7, 47, 5, 26, 31, 0, 21, 2, 35, 34, 19, 28, 1, 15, 8, 49, 20, 33, 29, 48, 9, 38, 32, 44]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 464.0
+avg_objective = 484.2
+worst_objective = 527.0
+std_objective = 20.1037309970065
+best_time_to_best_secs = 0.001914666
+avg_time_to_best_secs = 0.0031492916999999996
+avg_total_time_secs = 0.0031866375
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 464.0
+best_iteration = 49
+time_to_best_secs = 0.002794834
+total_time_secs = 0.002851333
+solution = [0, 21, 30, 27, 2, 35, 34, 19, 28, 20, 49, 33, 29, 9, 38, 32, 44, 14, 16, 3, 17, 5, 47, 7, 25, 6, 22, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 36, 4, 48, 8, 37, 11, 46, 50, 45, 26, 31, 1, 15, 10]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 497.0
+best_iteration = 55
+time_to_best_secs = 0.003572792
+total_time_secs = 0.003603584
+solution = [2, 35, 34, 19, 1, 4, 36, 43, 41, 39, 18, 40, 12, 3, 46, 11, 37, 15, 28, 20, 49, 33, 29, 8, 10, 31, 0, 26, 5, 22, 6, 42, 23, 13, 24, 17, 16, 14, 44, 32, 38, 9, 48, 45, 50, 47, 7, 25, 30, 27, 21]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 482.0
+best_iteration = 60
+time_to_best_secs = 0.004208792
+total_time_secs = 0.004238875
+solution = [34, 35, 2, 27, 30, 7, 25, 6, 5, 13, 24, 12, 40, 39, 18, 41, 43, 14, 36, 16, 31, 0, 21, 1, 15, 49, 33, 29, 38, 32, 44, 9, 48, 4, 11, 46, 3, 17, 23, 42, 22, 47, 26, 50, 45, 10, 37, 8, 20, 28, 19]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 466.0
+best_iteration = 47
+time_to_best_secs = 0.003899
+total_time_secs = 0.003929792
+solution = [1, 15, 49, 33, 29, 38, 9, 48, 4, 37, 8, 20, 28, 19, 34, 35, 2, 27, 30, 7, 25, 6, 42, 23, 22, 47, 5, 26, 50, 45, 11, 36, 14, 32, 44, 43, 16, 17, 13, 24, 12, 40, 39, 18, 41, 3, 46, 10, 31, 0, 21]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 527.0
+best_iteration = 44
+time_to_best_secs = 0.003157708
+total_time_secs = 0.0031885
+solution = [0, 45, 50, 46, 11, 10, 1, 35, 34, 19, 31, 26, 5, 13, 24, 3, 16, 36, 4, 37, 48, 8, 20, 28, 2, 27, 30, 21, 15, 49, 33, 29, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 17, 47, 22, 23, 42, 6, 25, 7]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 466.0
+best_iteration = 47
+time_to_best_secs = 0.002987833
+total_time_secs = 0.003018875
+solution = [27, 30, 7, 25, 6, 5, 17, 46, 3, 16, 36, 4, 37, 1, 21, 0, 31, 10, 15, 49, 33, 29, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 22, 47, 26, 50, 45, 11, 48, 8, 20, 28, 19, 34, 35, 2]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 473.0
+best_iteration = 41
+time_to_best_secs = 0.003109042
+total_time_secs = 0.003154
+solution = [36, 16, 3, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 29, 33, 20, 28, 10, 45, 50, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35, 34, 19, 1, 15, 49, 8, 48, 11, 46, 17, 24, 13, 5, 26, 0, 21, 31, 37, 4]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 495.0
+best_iteration = 49
+time_to_best_secs = 0.003155375
+total_time_secs = 0.003186167
+solution = [47, 26, 31, 10, 37, 4, 36, 14, 43, 3, 17, 46, 50, 45, 0, 21, 19, 34, 35, 28, 20, 8, 48, 9, 44, 32, 38, 29, 33, 49, 15, 1, 2, 27, 30, 7, 25, 6, 22, 42, 23, 13, 24, 12, 40, 39, 18, 41, 16, 11, 5]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 467.0
+best_iteration = 55
+time_to_best_secs = 0.002692875
+total_time_secs = 0.002724333
+solution = [45, 50, 31, 0, 30, 27, 2, 35, 34, 19, 28, 20, 33, 29, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 17, 46, 11, 36, 16, 3, 24, 13, 5, 26, 7, 25, 6, 42, 23, 22, 47, 21, 1, 15, 49, 8, 48, 4, 37, 10]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 505.0
+best_iteration = 37
+time_to_best_secs = 0.001914666
+total_time_secs = 0.001970916
+solution = [0, 21, 19, 34, 35, 2, 27, 30, 7, 25, 22, 13, 24, 17, 46, 31, 1, 28, 20, 15, 10, 45, 50, 5, 23, 42, 6, 47, 26, 37, 4, 48, 8, 49, 33, 29, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 3, 16, 36, 11]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.1
+worst_objective = 427.0
+std_objective = 0.30000000000000004
+best_time_to_best_secs = 0.0238575
+avg_time_to_best_secs = 1.8096074583
+avg_total_time_secs = 30.0000596666
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 426.0
+best_iteration = 613
+time_to_best_secs = 0.051541917
+total_time_secs = 30.000037166
+solution = [19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 427.0
+best_iteration = 273
+time_to_best_secs = 0.0238575
+total_time_secs = 30.000033
+solution = [49, 15, 1, 21, 0, 31, 10, 37, 4, 48, 9, 38, 32, 44, 14, 36, 16, 43, 41, 18, 39, 40, 12, 24, 13, 17, 3, 46, 11, 45, 50, 26, 5, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35, 34, 19, 28, 20, 33, 29, 8]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 426.0
+best_iteration = 2685
+time_to_best_secs = 0.233767625
+total_time_secs = 30.000093875
+solution = [19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 426.0
+best_iteration = 13531
+time_to_best_secs = 1.138572125
+total_time_secs = 30.000088417
+solution = [9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 426.0
+best_iteration = 1495
+time_to_best_secs = 0.124446333
+total_time_secs = 30.0000395
+solution = [22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 426.0
+best_iteration = 87016
+time_to_best_secs = 6.99797075
+total_time_secs = 30.000081667
+solution = [12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 426.0
+best_iteration = 63546
+time_to_best_secs = 6.339520875
+total_time_secs = 30.000005084
+solution = [31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 426.0
+best_iteration = 25781
+time_to_best_secs = 2.48139725
+total_time_secs = 30.000041333
+solution = [50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 426.0
+best_iteration = 6627
+time_to_best_secs = 0.626782292
+total_time_secs = 30.000044833
+solution = [35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 426.0
+best_iteration = 863
+time_to_best_secs = 0.078217916
+total_time_secs = 30.000131791
+solution = [20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [3, 30]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 438.0
+avg_objective = 458.4
+worst_objective = 487.0
+std_objective = 16.457217261736567
+best_time_to_best_secs = 0.006399666
+avg_time_to_best_secs = 4.546243833299999
+avg_total_time_secs = 30.0000544915
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 450.0
+best_iteration = 163976
+time_to_best_secs = 18.795240625
+total_time_secs = 30.000062292
+solution = [48, 8, 37, 10, 31, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 36, 45, 50, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 9, 38, 32, 44, 14, 16, 3, 17, 46, 11, 4]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 461.0
+best_iteration = 24374
+time_to_best_secs = 2.953448708
+total_time_secs = 30.000093916
+solution = [40, 12, 17, 46, 4, 48, 8, 20, 28, 1, 19, 34, 35, 2, 27, 30, 21, 0, 31, 10, 37, 15, 49, 33, 29, 9, 38, 32, 44, 14, 16, 3, 24, 13, 23, 42, 22, 6, 25, 7, 47, 5, 26, 50, 45, 11, 36, 43, 41, 18, 39]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 486.0
+best_iteration = 84
+time_to_best_secs = 0.009473125
+total_time_secs = 30.000015166
+solution = [37, 48, 9, 38, 32, 44, 14, 16, 3, 17, 24, 13, 23, 42, 6, 22, 47, 5, 26, 1, 28, 20, 15, 49, 33, 29, 8, 4, 11, 46, 12, 40, 18, 39, 41, 43, 36, 45, 50, 0, 21, 19, 34, 35, 2, 27, 30, 25, 7, 31, 10]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 451.0
+best_iteration = 63
+time_to_best_secs = 0.006399666
+total_time_secs = 30.000106334
+solution = [28, 20, 8, 48, 37, 4, 36, 16, 17, 24, 13, 23, 42, 6, 22, 47, 5, 26, 31, 10, 1, 15, 49, 33, 29, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 3, 46, 11, 45, 50, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 447.0
+best_iteration = 100
+time_to_best_secs = 0.012957167
+total_time_secs = 30.000083666
+solution = [48, 9, 38, 29, 33, 49, 15, 1, 21, 0, 26, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35, 34, 19, 28, 20, 8, 4, 11, 46, 17, 3, 16, 36, 14, 32, 44, 43, 41, 39, 18, 40, 12, 24, 13, 5, 50, 45, 31, 10, 37]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 487.0
+best_iteration = 138
+time_to_best_secs = 0.017726042
+total_time_secs = 30.000018833
+solution = [7, 26, 45, 11, 4, 48, 9, 38, 29, 33, 49, 15, 1, 31, 5, 13, 24, 12, 40, 39, 18, 41, 43, 44, 32, 14, 36, 16, 3, 17, 46, 50, 0, 21, 30, 27, 2, 35, 34, 19, 28, 20, 8, 37, 10, 47, 22, 23, 42, 6, 25]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 439.0
+best_iteration = 5989
+time_to_best_secs = 0.781181084
+total_time_secs = 30.000090625
+solution = [17, 13, 24, 12, 40, 18, 39, 41, 43, 16, 36, 14, 44, 32, 38, 9, 29, 33, 20, 28, 19, 34, 35, 2, 1, 15, 49, 8, 48, 4, 37, 10, 31, 26, 5, 47, 22, 23, 42, 6, 25, 7, 30, 27, 21, 0, 50, 45, 11, 46, 3]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 458.0
+best_iteration = 167293
+time_to_best_secs = 18.853367375
+total_time_secs = 30.000050542
+solution = [29, 9, 38, 32, 44, 14, 36, 16, 3, 17, 23, 42, 22, 6, 25, 7, 30, 27, 21, 0, 50, 45, 11, 46, 43, 41, 18, 39, 40, 12, 24, 13, 5, 47, 26, 31, 10, 37, 4, 48, 8, 49, 15, 1, 2, 35, 34, 19, 28, 20, 33]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 467.0
+best_iteration = 32562
+time_to_best_secs = 3.745448708
+total_time_secs = 30.000017166
+solution = [1, 15, 37, 10, 31, 45, 50, 46, 3, 16, 36, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 5, 47, 7, 25, 30, 27, 2, 35, 34, 19, 28, 20, 49, 33, 29, 8, 48, 4, 11, 17, 23, 42, 6, 22, 26, 0, 21]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 438.0
+best_iteration = 2266
+time_to_best_secs = 0.287195833
+total_time_secs = 30.000006375
+solution = [34, 19, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 5, 26, 0, 21, 1, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "TwoOpt"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 437.0
+avg_objective = 442.8
+worst_objective = 449.0
+std_objective = 3.3406586176980126
+best_time_to_best_secs = 1.172839375
+avg_time_to_best_secs = 1.4836112291
+avg_total_time_secs = 30.0000203709
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 444.0
+best_iteration = 30077
+time_to_best_secs = 1.405089416
+total_time_secs = 30.000027125
+solution = [7, 25, 30, 27, 2, 35, 34, 19, 21, 0, 31, 26, 5, 50, 45, 11, 4, 37, 10, 15, 1, 28, 20, 33, 29, 49, 8, 48, 9, 38, 32, 44, 14, 43, 36, 16, 41, 39, 18, 40, 12, 3, 46, 17, 24, 13, 23, 42, 6, 22, 47]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 449.0
+best_iteration = 36089
+time_to_best_secs = 1.491966125
+total_time_secs = 30.00002075
+solution = [42, 6, 25, 7, 30, 27, 2, 35, 34, 19, 28, 20, 49, 33, 29, 8, 15, 1, 10, 37, 4, 48, 9, 38, 32, 44, 14, 36, 11, 46, 3, 16, 43, 41, 18, 39, 40, 12, 17, 24, 13, 5, 26, 50, 45, 31, 0, 21, 47, 22, 23]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 444.0
+best_iteration = 33271
+time_to_best_secs = 1.405271
+total_time_secs = 30.000004125
+solution = [35, 2, 27, 30, 21, 7, 25, 6, 42, 23, 22, 47, 5, 26, 50, 45, 11, 46, 17, 13, 24, 12, 40, 39, 18, 41, 43, 3, 16, 36, 14, 44, 32, 38, 9, 48, 4, 37, 10, 31, 0, 1, 15, 8, 29, 33, 49, 20, 28, 19, 34]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 443.0
+best_iteration = 32234
+time_to_best_secs = 1.3086546669999999
+total_time_secs = 30.000014041
+solution = [49, 15, 37, 4, 48, 8, 29, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 47, 26, 5, 17, 3, 16, 36, 11, 46, 50, 45, 31, 10, 1, 21, 0, 7, 25, 30, 27, 2, 35, 34, 19, 28, 20, 33]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 441.0
+best_iteration = 34002
+time_to_best_secs = 1.380252708
+total_time_secs = 30.00002775
+solution = [19, 1, 28, 20, 33, 49, 15, 8, 48, 9, 29, 38, 32, 44, 14, 36, 43, 41, 39, 18, 40, 12, 3, 16, 11, 46, 17, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 445.0
+best_iteration = 46089
+time_to_best_secs = 1.880971583
+total_time_secs = 30.000016292
+solution = [6, 22, 47, 7, 25, 30, 27, 21, 2, 35, 34, 19, 28, 20, 33, 29, 48, 9, 38, 32, 44, 14, 36, 4, 10, 37, 8, 49, 15, 1, 31, 0, 26, 5, 50, 45, 11, 46, 17, 3, 16, 43, 41, 39, 18, 40, 12, 24, 13, 23, 42]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 442.0
+best_iteration = 30905
+time_to_best_secs = 1.172839375
+total_time_secs = 30.000042167
+solution = [1, 15, 49, 8, 48, 37, 10, 31, 45, 50, 26, 0, 21, 27, 30, 7, 25, 6, 42, 23, 22, 47, 5, 13, 24, 12, 40, 18, 39, 41, 43, 36, 16, 3, 17, 46, 11, 4, 14, 44, 32, 38, 9, 29, 33, 20, 28, 19, 34, 35, 2]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 445.0
+best_iteration = 42108
+time_to_best_secs = 1.82602825
+total_time_secs = 30.000039959
+solution = [39, 40, 12, 17, 24, 13, 5, 22, 23, 42, 6, 47, 7, 25, 30, 27, 2, 35, 34, 19, 1, 21, 0, 31, 26, 50, 45, 10, 37, 4, 48, 8, 49, 15, 28, 20, 33, 29, 9, 38, 32, 44, 14, 43, 36, 11, 46, 3, 16, 41, 18]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 438.0
+best_iteration = 37843
+time_to_best_secs = 1.658821583
+total_time_secs = 30.000006583
+solution = [20, 33, 49, 15, 8, 48, 29, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 5, 23, 42, 6, 22, 47, 26, 45, 50, 46, 17, 3, 16, 36, 11, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 437.0
+best_iteration = 30718
+time_to_best_secs = 1.306217584
+total_time_secs = 30.000004917
+solution = [24, 12, 40, 39, 18, 41, 43, 44, 32, 14, 36, 16, 3, 17, 46, 11, 45, 50, 5, 26, 0, 21, 31, 10, 37, 4, 48, 9, 38, 29, 8, 49, 33, 20, 28, 15, 1, 19, 34, 35, 2, 27, 30, 25, 7, 47, 22, 6, 42, 23, 13]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 431.0
+avg_objective = 453.7
+worst_objective = 480.0
+std_objective = 15.179262169156972
+best_time_to_best_secs = 1.49383775
+avg_time_to_best_secs = 2.1111960875999998
+avg_total_time_secs = 30.000013775000003
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 440.0
+best_iteration = 43048
+time_to_best_secs = 2.070221875
+total_time_secs = 30.00000975
+solution = [35, 2, 27, 30, 25, 7, 47, 26, 31, 10, 37, 4, 48, 8, 49, 33, 29, 9, 38, 32, 44, 14, 36, 16, 43, 41, 39, 18, 40, 12, 24, 13, 23, 42, 6, 22, 5, 17, 3, 46, 11, 45, 50, 0, 21, 1, 15, 20, 28, 19, 34]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 454.0
+best_iteration = 32062
+time_to_best_secs = 1.49383775
+total_time_secs = 30.000002209
+solution = [41, 39, 18, 40, 12, 3, 16, 11, 46, 17, 24, 13, 23, 42, 22, 6, 25, 7, 30, 27, 2, 35, 34, 19, 1, 21, 0, 26, 47, 5, 50, 45, 31, 10, 37, 15, 28, 20, 33, 49, 8, 29, 38, 9, 48, 4, 36, 14, 32, 44, 43]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 480.0
+best_iteration = 67834
+time_to_best_secs = 3.227235542
+total_time_secs = 30.000017708
+solution = [5, 47, 26, 0, 21, 27, 30, 7, 25, 6, 22, 42, 23, 13, 24, 17, 46, 11, 4, 37, 8, 29, 33, 49, 20, 28, 2, 35, 34, 19, 1, 15, 10, 31, 45, 50, 3, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 36, 16]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 454.0
+best_iteration = 42815
+time_to_best_secs = 2.003595667
+total_time_secs = 30.00000325
+solution = [44, 32, 38, 9, 48, 4, 37, 10, 31, 50, 45, 11, 46, 3, 17, 23, 42, 22, 6, 25, 7, 21, 1, 15, 49, 8, 29, 33, 20, 28, 19, 34, 35, 2, 27, 30, 0, 26, 47, 5, 13, 24, 12, 40, 39, 18, 41, 43, 16, 36, 14]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 433.0
+best_iteration = 34516
+time_to_best_secs = 1.573428209
+total_time_secs = 30.000058
+solution = [12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 451.0
+best_iteration = 46983
+time_to_best_secs = 2.220456125
+total_time_secs = 30.000021458
+solution = [2, 35, 34, 19, 28, 20, 8, 48, 4, 37, 10, 31, 45, 46, 17, 3, 41, 18, 39, 40, 12, 24, 13, 5, 50, 11, 16, 36, 43, 14, 44, 32, 38, 9, 29, 33, 49, 15, 1, 21, 0, 26, 47, 22, 23, 42, 6, 25, 7, 30, 27]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 465.0
+best_iteration = 38733
+time_to_best_secs = 1.8220069589999999
+total_time_secs = 30.000010083
+solution = [10, 37, 4, 48, 8, 29, 9, 38, 32, 44, 14, 36, 3, 17, 13, 24, 12, 40, 39, 18, 41, 43, 16, 46, 11, 45, 50, 0, 21, 30, 27, 2, 35, 34, 19, 28, 20, 33, 49, 15, 1, 26, 5, 47, 22, 23, 42, 6, 25, 7, 31]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 472.0
+best_iteration = 45693
+time_to_best_secs = 2.101978708
+total_time_secs = 30.000003875
+solution = [25, 30, 27, 2, 35, 34, 19, 28, 20, 33, 49, 15, 37, 10, 31, 1, 21, 0, 26, 50, 45, 11, 36, 14, 44, 32, 38, 9, 29, 8, 48, 4, 46, 5, 22, 6, 42, 23, 17, 3, 16, 43, 41, 18, 39, 40, 12, 24, 13, 47, 7]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 457.0
+best_iteration = 42075
+time_to_best_secs = 1.9686110829999999
+total_time_secs = 30.000002667
+solution = [41, 43, 36, 4, 37, 10, 31, 0, 21, 19, 34, 35, 2, 27, 30, 25, 7, 47, 22, 6, 42, 23, 24, 13, 5, 26, 1, 28, 20, 33, 49, 15, 8, 48, 29, 9, 38, 32, 44, 14, 16, 11, 45, 50, 46, 3, 17, 12, 40, 39, 18]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 431.0
+best_iteration = 56984
+time_to_best_secs = 2.630588958
+total_time_secs = 30.00000875
+solution = [38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 5, 47, 7, 25, 30, 27, 2, 35, 34, 19, 1, 21, 0, 31, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 15, 28, 20, 49, 33, 29, 8, 48, 9]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 440.0
+avg_objective = 448.7
+worst_objective = 463.0
+std_objective = 6.679071791798619
+best_time_to_best_secs = 0.985922125
+avg_time_to_best_secs = 1.1592376000000002
+avg_total_time_secs = 30.0000197875
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 446.0
+best_iteration = 16857
+time_to_best_secs = 1.120850584
+total_time_secs = 30.000047333
+solution = [32, 14, 36, 16, 46, 11, 4, 37, 10, 1, 15, 49, 8, 48, 9, 38, 29, 33, 20, 28, 19, 34, 35, 2, 27, 30, 25, 6, 42, 23, 22, 47, 7, 21, 0, 31, 45, 50, 26, 5, 13, 24, 17, 3, 12, 40, 18, 39, 41, 43, 44]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 453.0
+best_iteration = 27795
+time_to_best_secs = 1.458973458
+total_time_secs = 30.000031416
+solution = [21, 7, 22, 23, 42, 6, 25, 30, 27, 2, 35, 34, 19, 28, 1, 15, 49, 20, 33, 29, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 17, 3, 16, 36, 11, 46, 5, 47, 26, 50, 45, 4, 48, 8, 37, 10, 31, 0]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 443.0
+best_iteration = 17610
+time_to_best_secs = 1.221379625
+total_time_secs = 30.000009458
+solution = [47, 5, 13, 24, 17, 3, 12, 40, 39, 18, 41, 16, 36, 43, 14, 44, 32, 38, 9, 29, 33, 49, 8, 48, 4, 37, 10, 11, 46, 50, 45, 26, 31, 0, 21, 1, 15, 20, 28, 19, 34, 35, 2, 27, 30, 7, 25, 6, 42, 23, 22]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 463.0
+best_iteration = 19836
+time_to_best_secs = 1.154952625
+total_time_secs = 30.00003625
+solution = [2, 35, 34, 19, 28, 15, 49, 20, 33, 29, 38, 9, 48, 8, 37, 4, 36, 14, 32, 44, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 22, 6, 25, 30, 7, 0, 26, 47, 5, 17, 3, 16, 46, 11, 50, 45, 31, 10, 1, 21, 27]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 440.0
+best_iteration = 14454
+time_to_best_secs = 0.985922125
+total_time_secs = 30.000019167
+solution = [48, 4, 11, 46, 3, 17, 50, 45, 26, 31, 0, 21, 1, 10, 37, 8, 29, 33, 49, 15, 20, 28, 19, 34, 35, 2, 27, 30, 25, 7, 47, 5, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 16, 36, 14, 44, 32, 38, 9]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 445.0
+best_iteration = 27405
+time_to_best_secs = 1.432825041
+total_time_secs = 30.000002584
+solution = [44, 14, 43, 36, 16, 46, 17, 3, 41, 39, 18, 40, 12, 24, 13, 5, 22, 23, 42, 6, 47, 26, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 37, 10, 31, 45, 50, 11, 4, 48, 8, 49, 33, 29, 9, 38, 32]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 445.0
+best_iteration = 16528
+time_to_best_secs = 1.096951583
+total_time_secs = 30.000001208
+solution = [23, 42, 6, 22, 47, 5, 26, 50, 45, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 9, 48, 8, 37, 4, 11, 46, 17, 3, 16, 36, 14, 38, 32, 44, 43, 41, 39, 18, 40, 12, 24, 13]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 444.0
+best_iteration = 15323
+time_to_best_secs = 1.047629917
+total_time_secs = 30.000009667
+solution = [32, 44, 14, 43, 41, 18, 39, 40, 12, 17, 24, 13, 5, 22, 23, 42, 6, 25, 7, 47, 0, 21, 30, 27, 2, 35, 34, 19, 28, 20, 15, 1, 10, 31, 26, 50, 45, 11, 46, 3, 16, 36, 4, 37, 48, 8, 49, 33, 29, 9, 38]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 453.0
+best_iteration = 17918
+time_to_best_secs = 1.08662975
+total_time_secs = 30.000039417
+solution = [31, 0, 50, 26, 47, 5, 13, 24, 23, 42, 22, 6, 25, 7, 30, 27, 21, 2, 35, 34, 19, 28, 1, 15, 49, 20, 33, 29, 9, 38, 32, 44, 14, 36, 16, 43, 41, 39, 18, 40, 12, 17, 3, 46, 11, 45, 4, 48, 8, 37, 10]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 455.0
+best_iteration = 14503
+time_to_best_secs = 0.986261292
+total_time_secs = 30.000001375
+solution = [24, 13, 5, 23, 42, 22, 6, 25, 30, 27, 7, 47, 26, 0, 21, 2, 35, 34, 19, 28, 1, 31, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 15, 49, 20, 33, 8, 48, 29, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 441.0
+avg_objective = 461.9
+worst_objective = 504.0
+std_objective = 17.739503938949365
+best_time_to_best_secs = 0.991227333
+avg_time_to_best_secs = 1.4621549416000001
+avg_total_time_secs = 30.0000346709
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 451.0
+best_iteration = 35988
+time_to_best_secs = 1.794199208
+total_time_secs = 30.000109416
+solution = [41, 18, 39, 40, 12, 24, 13, 23, 42, 22, 6, 25, 30, 27, 2, 35, 34, 19, 21, 7, 47, 5, 26, 0, 31, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 36, 16, 11, 4, 37, 10, 45, 50, 46, 17, 3]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 455.0
+best_iteration = 20795
+time_to_best_secs = 0.991227333
+total_time_secs = 30.000000667
+solution = [26, 5, 13, 24, 17, 46, 3, 12, 40, 39, 18, 41, 43, 16, 36, 14, 44, 32, 38, 9, 29, 33, 49, 15, 20, 28, 19, 34, 35, 2, 27, 30, 21, 1, 10, 37, 8, 48, 4, 11, 45, 50, 47, 22, 23, 42, 6, 25, 7, 0, 31]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 463.0
+best_iteration = 22686
+time_to_best_secs = 1.116507083
+total_time_secs = 30.00000825
+solution = [22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 16, 36, 14, 44, 32, 38, 9, 29, 8, 37, 10, 45, 50, 31, 1, 2, 35, 34, 19, 28, 20, 33, 49, 15, 48, 4, 11, 46, 3, 17, 5, 47, 7, 25, 30, 27, 21, 0, 26]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 447.0
+best_iteration = 27144
+time_to_best_secs = 1.38802475
+total_time_secs = 30.000036375
+solution = [41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 5, 26, 47, 7, 25, 30, 27, 2, 35, 34, 19, 28, 20, 8, 29, 33, 49, 15, 1, 21, 0, 31, 10, 37, 14, 44, 32, 38, 9, 48, 4, 11, 45, 50, 46, 17, 3, 16, 36, 43]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 473.0
+best_iteration = 28978
+time_to_best_secs = 1.39910625
+total_time_secs = 30.000005084
+solution = [44, 32, 14, 36, 11, 46, 50, 45, 0, 21, 19, 34, 35, 2, 27, 30, 7, 25, 6, 42, 23, 22, 47, 5, 26, 31, 10, 1, 28, 20, 8, 48, 9, 38, 29, 33, 49, 15, 37, 4, 16, 41, 18, 39, 40, 12, 24, 13, 17, 3, 43]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 504.0
+best_iteration = 49158
+time_to_best_secs = 2.219846667
+total_time_secs = 30.000066917
+solution = [19, 34, 35, 2, 27, 30, 21, 0, 50, 16, 36, 43, 14, 44, 32, 38, 9, 48, 4, 45, 47, 22, 23, 42, 6, 25, 7, 31, 10, 8, 29, 33, 49, 20, 28, 15, 37, 11, 46, 17, 3, 41, 39, 18, 40, 12, 24, 13, 5, 26, 1]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 445.0
+best_iteration = 33685
+time_to_best_secs = 1.6750720829999999
+total_time_secs = 30.000055375
+solution = [10, 37, 15, 49, 33, 29, 9, 38, 32, 44, 14, 16, 3, 17, 46, 11, 45, 50, 26, 0, 21, 19, 34, 35, 2, 27, 30, 25, 7, 47, 5, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 36, 4, 48, 8, 20, 28, 1, 31]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 441.0
+best_iteration = 28789
+time_to_best_secs = 1.347402709
+total_time_secs = 30.00002175
+solution = [17, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 29, 33, 49, 8, 48, 4, 37, 1, 21, 0, 26, 5, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35, 34, 19, 28, 20, 15, 10, 31, 45, 50, 46, 11, 36, 16, 3]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 468.0
+best_iteration = 31492
+time_to_best_secs = 1.496624166
+total_time_secs = 30.000020875
+solution = [23, 42, 6, 22, 5, 46, 11, 10, 31, 0, 21, 2, 35, 34, 19, 1, 15, 49, 8, 29, 33, 20, 28, 27, 30, 25, 7, 47, 26, 50, 45, 4, 37, 48, 9, 38, 32, 44, 14, 36, 16, 43, 41, 18, 39, 40, 12, 3, 17, 24, 13]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 472.0
+best_iteration = 21425
+time_to_best_secs = 1.193539167
+total_time_secs = 30.000022
+solution = [22, 6, 42, 23, 24, 13, 5, 47, 7, 25, 30, 27, 1, 15, 37, 4, 11, 46, 3, 17, 12, 40, 18, 39, 41, 43, 44, 32, 14, 36, 16, 50, 45, 31, 10, 8, 48, 9, 38, 29, 33, 49, 20, 28, 19, 34, 35, 2, 21, 0, 26]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Order"
+parent_selection = "Tournament"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.0
+worst_objective = 426.0
+std_objective = 0.0
+best_time_to_best_secs = 0.115673417
+avg_time_to_best_secs = 0.36310864989999997
+avg_total_time_secs = 30.007707150099996
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 426.0
+best_iteration = 10205
+time_to_best_secs = 0.937457708
+total_time_secs = 30.006906
+solution = [2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 426.0
+best_iteration = 3259
+time_to_best_secs = 0.352112875
+total_time_secs = 30.011082292
+solution = [18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 426.0
+best_iteration = 1269
+time_to_best_secs = 0.119286875
+total_time_secs = 30.0064015
+solution = [47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 426.0
+best_iteration = 3617
+time_to_best_secs = 0.328149291
+total_time_secs = 30.009360417
+solution = [24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 426.0
+best_iteration = 1943
+time_to_best_secs = 0.176265208
+total_time_secs = 30.00617925
+solution = [29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 426.0
+best_iteration = 8853
+time_to_best_secs = 0.793084792
+total_time_secs = 30.0127675
+solution = [40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 426.0
+best_iteration = 1220
+time_to_best_secs = 0.115673417
+total_time_secs = 30.001079667
+solution = [32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 426.0
+best_iteration = 3564
+time_to_best_secs = 0.293799958
+total_time_secs = 30.008828125
+solution = [28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 426.0
+best_iteration = 3050
+time_to_best_secs = 0.30767725
+total_time_secs = 30.007488167
+solution = [38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 426.0
+best_iteration = 2175
+time_to_best_secs = 0.207579125
+total_time_secs = 30.006978583
+solution = [11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.3
+worst_objective = 427.0
+std_objective = 0.45825756949558394
+best_time_to_best_secs = 0.398793625
+avg_time_to_best_secs = 9.247267904200001
+avg_total_time_secs = 30.0031313083
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 426.0
+best_iteration = 51549
+time_to_best_secs = 1.818679875
+total_time_secs = 30.001106792
+solution = [24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 426.0
+best_iteration = 614092
+time_to_best_secs = 21.102072667
+total_time_secs = 30.002688458
+solution = [37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 426.0
+best_iteration = 100854
+time_to_best_secs = 3.545169167
+total_time_secs = 30.003403
+solution = [21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 427.0
+best_iteration = 94769
+time_to_best_secs = 3.191349125
+total_time_secs = 30.003171792
+solution = [46, 3, 17, 13, 24, 12, 40, 39, 18, 41, 43, 16, 36, 14, 44, 32, 38, 9, 29, 33, 49, 8, 48, 4, 37, 10, 31, 0, 21, 1, 15, 20, 28, 19, 34, 35, 2, 27, 30, 7, 25, 6, 42, 23, 22, 47, 5, 26, 50, 45, 11]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 426.0
+best_iteration = 663200
+time_to_best_secs = 23.316801167
+total_time_secs = 30.002806958
+solution = [39, 18, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 426.0
+best_iteration = 825927
+time_to_best_secs = 28.242844208
+total_time_secs = 30.000883083
+solution = [35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 426.0
+best_iteration = 238791
+time_to_best_secs = 7.899488833
+total_time_secs = 30.005809
+solution = [37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 426.0
+best_iteration = 20052
+time_to_best_secs = 0.783551833
+total_time_secs = 30.003409583
+solution = [7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 427.0
+best_iteration = 60663
+time_to_best_secs = 2.173928542
+total_time_secs = 30.003696542
+solution = [18, 40, 12, 24, 13, 17, 3, 46, 11, 45, 50, 26, 5, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35, 34, 19, 28, 20, 33, 49, 15, 1, 21, 0, 31, 10, 37, 4, 48, 8, 29, 9, 38, 32, 44, 14, 36, 16, 43, 41, 39]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 427.0
+best_iteration = 10559
+time_to_best_secs = 0.398793625
+total_time_secs = 30.004337875
+solution = [46, 11, 45, 50, 26, 5, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35, 34, 19, 28, 20, 15, 1, 21, 0, 31, 10, 37, 4, 48, 8, 49, 33, 29, 9, 38, 32, 44, 14, 36, 16, 43, 41, 18, 39, 40, 12, 24, 13, 17, 3]
+
+[[results]]
+instance_path = "data/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "Restart"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.0
+worst_objective = 426.0
+std_objective = 0.0
+best_time_to_best_secs = 0.040750541
+avg_time_to_best_secs = 4.760695650000001
+avg_total_time_secs = 31.016604866899996
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 426.0
+best_iteration = 7801
+time_to_best_secs = 0.795312833
+total_time_secs = 31.240161
+solution = [10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 426.0
+best_iteration = 853
+time_to_best_secs = 0.102514125
+total_time_secs = 30.782971834
+solution = [42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 23]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 426.0
+best_iteration = 250790
+time_to_best_secs = 21.304895875
+total_time_secs = 30.40357225
+solution = [2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 426.0
+best_iteration = 8419
+time_to_best_secs = 0.759225875
+total_time_secs = 32.01692875
+solution = [0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 426.0
+best_iteration = 105159
+time_to_best_secs = 8.560369417
+total_time_secs = 30.629606167
+solution = [23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 426.0
+best_iteration = 52733
+time_to_best_secs = 4.199936375
+total_time_secs = 30.5520905
+solution = [3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 426.0
+best_iteration = 426
+time_to_best_secs = 0.040750541
+total_time_secs = 31.275629459
+solution = [7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 426.0
+best_iteration = 951
+time_to_best_secs = 0.086278375
+total_time_secs = 31.192068875
+solution = [43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25, 30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 426.0
+best_iteration = 88762
+time_to_best_secs = 7.701252125
+total_time_secs = 30.896449334
+solution = [30, 27, 2, 35, 34, 19, 1, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 23, 42, 6, 22, 47, 5, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 31, 0, 21, 7, 25]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 426.0
+best_iteration = 52064
+time_to_best_secs = 4.056420959
+total_time_secs = 31.1765705
+solution = [50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10653.0
+avg_objective = 10952.0
+worst_objective = 11129.0
+std_objective = 152.86726268236768
+best_time_to_best_secs = 0.0024575
+avg_time_to_best_secs = 0.0037853207000000007
+avg_total_time_secs = 0.003802446
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 11039.0
+best_iteration = 41
+time_to_best_secs = 0.004030666
+total_time_secs = 0.004047917
+solution = [20, 12, 24, 38, 31, 47, 4, 28, 41, 23, 9, 44, 34, 3, 25, 1, 40, 15, 21, 2, 33, 13, 22, 10, 11, 14, 39, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 10761.0
+best_iteration = 46
+time_to_best_secs = 0.003035209
+total_time_secs = 0.003052542
+solution = [15, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 10, 22, 12, 24, 13, 33, 2, 39, 14, 11, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 21]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 11035.0
+best_iteration = 41
+time_to_best_secs = 0.002767958
+total_time_secs = 0.002785125
+solution = [30, 37, 7, 15, 21, 0, 8, 39, 14, 11, 10, 22, 2, 40, 33, 13, 12, 24, 47, 4, 28, 1, 41, 9, 25, 3, 34, 44, 23, 31, 38, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 11127.0
+best_iteration = 39
+time_to_best_secs = 0.003789291
+total_time_secs = 0.003806583
+solution = [39, 10, 46, 12, 22, 13, 24, 20, 38, 31, 23, 9, 44, 34, 3, 25, 1, 41, 47, 4, 28, 40, 33, 2, 21, 15, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 11, 14]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 10876.0
+best_iteration = 45
+time_to_best_secs = 0.004450084
+total_time_secs = 0.004467084
+solution = [45, 32, 19, 11, 14, 39, 10, 22, 13, 24, 12, 46, 20, 31, 38, 47, 4, 23, 9, 44, 34, 3, 25, 41, 1, 28, 40, 33, 2, 21, 15, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 10851.0
+best_iteration = 42
+time_to_best_secs = 0.0024575
+total_time_secs = 0.002474542
+solution = [19, 46, 20, 38, 31, 23, 9, 44, 34, 3, 25, 41, 1, 28, 4, 47, 24, 13, 33, 40, 15, 21, 2, 22, 12, 10, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 14, 11]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 10975.0
+best_iteration = 42
+time_to_best_secs = 0.004815708
+total_time_secs = 0.004832542
+solution = [5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 14, 39, 2, 22, 13, 24, 12, 10, 11, 19, 46, 20, 31, 38, 47, 4, 23, 44, 34, 3, 25, 9, 41, 1, 28, 33, 40, 15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 10653.0
+best_iteration = 44
+time_to_best_secs = 0.00434425
+total_time_secs = 0.0043615
+solution = [17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 12, 13, 24, 38, 31, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 22, 10, 11, 14, 39, 8, 0, 7, 37, 30, 43]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 11129.0
+best_iteration = 47
+time_to_best_secs = 0.003704416
+total_time_secs = 0.003721708
+solution = [36, 5, 27, 35, 6, 17, 43, 30, 45, 32, 14, 39, 8, 37, 7, 0, 15, 21, 2, 33, 40, 28, 4, 47, 41, 1, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 12, 24, 13, 22, 10, 11, 19, 29, 42, 16, 26, 18]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 11074.0
+best_iteration = 44
+time_to_best_secs = 0.004458125
+total_time_secs = 0.004474917
+solution = [30, 37, 8, 7, 0, 15, 21, 39, 11, 10, 12, 24, 13, 22, 2, 33, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 32, 14, 45, 17, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 43]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 11256.0
+avg_objective = 12144.7
+worst_objective = 12871.0
+std_objective = 552.9765004048545
+best_time_to_best_secs = 0.003076834
+avg_time_to_best_secs = 0.0044306
+avg_total_time_secs = 0.0044778002
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 11274.0
+best_iteration = 51
+time_to_best_secs = 0.004904583
+total_time_secs = 0.004948583
+solution = [43, 30, 37, 7, 15, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 47, 4, 33, 2, 21, 0, 8, 39, 14, 11, 10, 22, 12, 13, 24, 38, 31, 20, 46, 19, 32, 45, 35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 11899.0
+best_iteration = 49
+time_to_best_secs = 0.003125125
+total_time_secs = 0.003202625
+solution = [43, 30, 37, 7, 21, 2, 13, 24, 38, 31, 23, 9, 44, 34, 3, 25, 41, 1, 28, 4, 47, 12, 20, 46, 19, 17, 6, 27, 29, 42, 16, 26, 18, 36, 5, 35, 32, 11, 10, 22, 33, 40, 15, 0, 8, 39, 14, 45]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 12871.0
+best_iteration = 51
+time_to_best_secs = 0.005136792
+total_time_secs = 0.005181875
+solution = [21, 39, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 12, 38, 47, 41, 25, 3, 1, 28, 40, 33, 22, 10, 11, 19, 46, 20, 31, 23, 44, 34, 9, 4, 24, 13, 2, 15]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 12174.0
+best_iteration = 53
+time_to_best_secs = 0.004998166
+total_time_secs = 0.005040084
+solution = [0, 7, 8, 37, 30, 19, 46, 20, 31, 38, 24, 13, 33, 40, 1, 28, 4, 23, 9, 44, 34, 3, 25, 41, 47, 12, 22, 10, 11, 32, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 45, 14, 39, 2, 21, 15]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 11256.0
+best_iteration = 48
+time_to_best_secs = 0.003136875
+total_time_secs = 0.003178042
+solution = [36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 19, 46, 20, 38, 31, 23, 9, 44, 34, 3, 25, 41, 1, 28, 40, 15, 21, 2, 33, 4, 47, 24, 13, 12, 22, 10, 11, 32, 45, 35, 29, 42, 16, 26, 18]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 11886.0
+best_iteration = 52
+time_to_best_secs = 0.004919417
+total_time_secs = 0.004962208
+solution = [43, 30, 37, 8, 7, 0, 21, 15, 40, 1, 28, 33, 13, 24, 38, 31, 23, 9, 44, 34, 3, 25, 41, 4, 47, 12, 20, 46, 19, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 35, 32, 11, 10, 22, 2, 39, 14, 45]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 12132.0
+best_iteration = 48
+time_to_best_secs = 0.003076834
+total_time_secs = 0.003121042
+solution = [1, 40, 15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 11, 10, 22, 12, 13, 24, 47, 41, 25, 3, 34, 44, 9, 23, 33, 2, 39, 14, 19, 46, 20, 31, 38, 4, 28]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 12754.0
+best_iteration = 47
+time_to_best_secs = 0.004670583
+total_time_secs = 0.004714375
+solution = [15, 40, 4, 41, 25, 3, 1, 28, 33, 2, 22, 11, 32, 35, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 19, 46, 20, 38, 31, 23, 44, 34, 9, 47, 24, 13, 12, 10, 39, 14, 45, 43, 30, 37, 8, 7, 0, 21]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 12784.0
+best_iteration = 42
+time_to_best_secs = 0.004920042
+total_time_secs = 0.004968209
+solution = [45, 7, 0, 8, 37, 30, 43, 17, 6, 27, 29, 42, 16, 26, 18, 36, 5, 35, 19, 46, 20, 31, 41, 25, 3, 1, 28, 40, 33, 13, 24, 38, 23, 44, 34, 9, 47, 4, 12, 10, 22, 2, 15, 21, 39, 14, 11, 32]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 12417.0
+best_iteration = 44
+time_to_best_secs = 0.005417583
+total_time_secs = 0.005460959
+solution = [13, 12, 24, 47, 41, 23, 9, 44, 34, 3, 25, 1, 28, 4, 38, 31, 20, 46, 11, 32, 42, 16, 26, 29, 19, 10, 22, 33, 40, 15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27, 36, 18, 5, 35, 45, 14, 39, 2]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10648.0
+avg_objective = 10797.0
+worst_objective = 10962.0
+std_objective = 95.9353949280452
+best_time_to_best_secs = 0.006530625
+avg_time_to_best_secs = 0.2717595169
+avg_total_time_secs = 30.0000461664
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 10815.0
+best_iteration = 299
+time_to_best_secs = 0.024760042
+total_time_secs = 30.000060708
+solution = [3, 34, 44, 9, 23, 31, 38, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 11, 10, 12, 24, 13, 22, 2, 21, 15, 40, 33, 28, 4, 47, 41, 1, 25]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 10738.0
+best_iteration = 397
+time_to_best_secs = 0.064159334
+total_time_secs = 30.000134208
+solution = [16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 21, 15, 40, 33, 2, 39, 14, 11, 10, 22, 12, 13, 24, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 19, 32, 45, 35, 29, 42]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 10830.0
+best_iteration = 1817
+time_to_best_secs = 0.176319834
+total_time_secs = 30.000040583
+solution = [17, 43, 30, 37, 7, 0, 8, 39, 2, 21, 15, 40, 33, 13, 24, 38, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 20, 12, 22, 10, 46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 10770.0
+best_iteration = 16899
+time_to_best_secs = 1.4368661249999999
+total_time_secs = 30.000048375
+solution = [34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 11, 39, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21, 2, 22, 10, 12, 24, 13, 33, 40, 28, 1, 25, 3]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 10860.0
+best_iteration = 49
+time_to_best_secs = 0.006534084
+total_time_secs = 30.000050041
+solution = [8, 7, 0, 21, 15, 40, 2, 39, 14, 11, 10, 22, 13, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 31, 38, 24, 12, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 10648.0
+best_iteration = 229
+time_to_best_secs = 0.017093917
+total_time_secs = 30.000021791
+solution = [46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 12, 24, 13, 22, 10]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 10798.0
+best_iteration = 68
+time_to_best_secs = 0.006530625
+total_time_secs = 30.000040125
+solution = [28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 24, 13, 12, 20, 46, 10, 22, 2, 39, 14, 11, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 21, 15, 40, 33, 47, 4]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 10648.0
+best_iteration = 2061
+time_to_best_secs = 0.155250708
+total_time_secs = 30.00001
+solution = [28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 12, 24, 13, 22, 10, 46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 2, 21, 15, 40, 33]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 10962.0
+best_iteration = 10597
+time_to_best_secs = 0.797852708
+total_time_secs = 30.000026333
+solution = [33, 2, 22, 10, 12, 20, 46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 21, 15, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 31, 38, 24, 13]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 10901.0
+best_iteration = 383
+time_to_best_secs = 0.032227792
+total_time_secs = 30.0000295
+solution = [2, 40, 33, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 24, 13, 22, 12, 20, 46, 10, 39, 14, 11, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [3, 30]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 11151.0
+avg_objective = 12051.0
+worst_objective = 12714.0
+std_objective = 454.44361586449867
+best_time_to_best_secs = 0.009077583
+avg_time_to_best_secs = 4.0491187751
+avg_total_time_secs = 30.000062154200002
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 12018.0
+best_iteration = 344
+time_to_best_secs = 0.0343835
+total_time_secs = 30.000048333
+solution = [2, 21, 15, 40, 28, 1, 3, 25, 41, 47, 24, 13, 12, 22, 10, 11, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 19, 46, 20, 38, 31, 23, 44, 34, 9, 4, 33]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 12270.0
+best_iteration = 1195
+time_to_best_secs = 0.132620459
+total_time_secs = 30.000015458
+solution = [36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 2, 33, 4, 9, 34, 44, 23, 31, 38, 20, 46, 19, 14, 39, 21, 15, 40, 28, 1, 3, 25, 41, 47, 24, 13, 12, 22, 10, 11, 32, 45, 35, 29, 42, 16, 26, 18]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 12714.0
+best_iteration = 769
+time_to_best_secs = 0.110788167
+total_time_secs = 30.000015875
+solution = [15, 40, 33, 4, 9, 34, 44, 23, 31, 38, 24, 13, 22, 2, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 28, 1, 3, 25, 41, 47, 12, 10, 11, 14, 39, 21]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 11405.0
+best_iteration = 177
+time_to_best_secs = 0.020742292
+total_time_secs = 30.000166667
+solution = [22, 12, 13, 24, 47, 4, 33, 2, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 14, 39, 21, 15, 40, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 19, 11, 10]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 12108.0
+best_iteration = 121
+time_to_best_secs = 0.014853291
+total_time_secs = 30.000068959
+solution = [7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 12, 47, 41, 25, 3, 1, 28, 33, 2, 21, 15, 40, 4, 9, 34, 44, 23, 31, 38, 24, 13, 22, 10, 11, 14, 39, 8, 0]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 12614.0
+best_iteration = 60
+time_to_best_secs = 0.009077583
+total_time_secs = 30.000121417
+solution = [33, 2, 39, 45, 35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17, 43, 30, 37, 14, 11, 10, 22, 12, 13, 24, 47, 41, 25, 3, 1, 28, 40, 15, 21, 0, 7, 8, 32, 19, 46, 20, 38, 31, 23, 44, 34, 9, 4]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 11974.0
+best_iteration = 3098
+time_to_best_secs = 0.342767
+total_time_secs = 30.0000525
+solution = [45, 32, 19, 46, 20, 12, 47, 41, 25, 3, 1, 28, 40, 15, 21, 2, 33, 4, 9, 34, 44, 23, 31, 38, 24, 13, 22, 10, 11, 14, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 12203.0
+best_iteration = 132673
+time_to_best_secs = 15.969471500000001
+total_time_secs = 30.000043541
+solution = [15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 12, 47, 41, 25, 3, 1, 28, 33, 2, 39, 14, 11, 10, 22, 13, 24, 38, 31, 23, 44, 34, 9, 4, 40]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 11151.0
+best_iteration = 195315
+time_to_best_secs = 23.830346
+total_time_secs = 30.000068792
+solution = [43, 30, 37, 8, 7, 0, 2, 22, 10, 46, 20, 31, 38, 12, 13, 24, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 39, 14, 11, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 12053.0
+best_iteration = 251
+time_to_best_secs = 0.026137959
+total_time_secs = 30.00002
+solution = [2, 21, 15, 40, 28, 1, 3, 25, 41, 47, 24, 13, 12, 22, 10, 11, 32, 45, 35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 19, 46, 20, 38, 31, 23, 44, 34, 9, 4, 33]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "TwoOpt"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10663.0
+avg_objective = 10946.5
+worst_objective = 11305.0
+std_objective = 208.06453325831387
+best_time_to_best_secs = 0.939793208
+avg_time_to_best_secs = 1.1248882166
+avg_total_time_secs = 30.000020495700007
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 11190.0
+best_iteration = 26936
+time_to_best_secs = 1.19309875
+total_time_secs = 30.000000333
+solution = [13, 22, 33, 2, 21, 15, 40, 28, 1, 41, 25, 3, 34, 44, 9, 23, 4, 47, 38, 31, 20, 46, 19, 42, 16, 26, 18, 36, 5, 29, 27, 35, 6, 17, 43, 30, 37, 8, 7, 0, 39, 14, 45, 32, 11, 10, 12, 24]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 11127.0
+best_iteration = 26108
+time_to_best_secs = 1.045104167
+total_time_secs = 30.000017458
+solution = [3, 25, 1, 28, 40, 15, 21, 0, 7, 37, 8, 39, 14, 45, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 32, 19, 11, 10, 46, 20, 12, 22, 2, 33, 13, 24, 38, 31, 47, 4, 41, 23, 9, 44, 34]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 10963.0
+best_iteration = 26332
+time_to_best_secs = 1.087817625
+total_time_secs = 30.000018
+solution = [30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 11, 14, 39, 10, 22, 13, 24, 12, 20, 38, 31, 23, 9, 44, 34, 3, 25, 41, 47, 4, 28, 1, 40, 33, 2, 21, 15, 0, 7, 8, 37]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 10795.0
+best_iteration = 22816
+time_to_best_secs = 0.978477709
+total_time_secs = 30.000041541
+solution = [14, 32, 45, 35, 29, 26, 42, 16, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21, 2, 40, 33, 28, 1, 25, 3, 34, 44, 23, 9, 41, 4, 47, 38, 31, 20, 12, 24, 13, 22, 10, 46, 19, 11, 39]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 10663.0
+best_iteration = 32343
+time_to_best_secs = 1.264923166
+total_time_secs = 30.000013208
+solution = [21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 31, 38, 24, 13, 12, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 39, 14, 11, 10, 22, 2]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 10663.0
+best_iteration = 30585
+time_to_best_secs = 1.290701041
+total_time_secs = 30.000023125
+solution = [38, 24, 13, 12, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 39, 14, 11, 10, 22, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 31]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 10796.0
+best_iteration = 28313
+time_to_best_secs = 1.095979417
+total_time_secs = 30.000011042
+solution = [27, 6, 17, 43, 30, 37, 8, 7, 0, 21, 15, 40, 33, 2, 39, 14, 11, 10, 22, 12, 13, 24, 47, 4, 28, 1, 25, 3, 34, 44, 9, 41, 23, 31, 38, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 10940.0
+best_iteration = 31614
+time_to_best_secs = 1.322925958
+total_time_secs = 30.000011875
+solution = [36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 14, 11, 39, 2, 21, 15, 40, 33, 13, 24, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 12, 22, 10, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 11023.0
+best_iteration = 22974
+time_to_best_secs = 1.030061125
+total_time_secs = 30.000039958
+solution = [24, 13, 22, 10, 46, 19, 32, 11, 14, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 39, 8, 7, 0, 15, 21, 2, 33, 40, 1, 28, 4, 47, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 12]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 11305.0
+best_iteration = 21528
+time_to_best_secs = 0.939793208
+total_time_secs = 30.000028417
+solution = [8, 39, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 14, 11, 10, 46, 20, 12, 24, 38, 31, 47, 4, 23, 44, 34, 3, 25, 9, 41, 1, 28, 40, 33, 13, 22, 2, 21, 15, 7, 0]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10690.0
+avg_objective = 11157.6
+worst_objective = 11481.0
+std_objective = 221.83606559799966
+best_time_to_best_secs = 1.651390375
+avg_time_to_best_secs = 1.9488345124000002
+avg_total_time_secs = 30.000024954099995
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 11457.0
+best_iteration = 27571
+time_to_best_secs = 1.651390375
+total_time_secs = 30.00003
+solution = [41, 25, 3, 34, 44, 9, 23, 47, 4, 28, 1, 40, 33, 2, 22, 10, 11, 32, 45, 35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21, 39, 14, 19, 46, 20, 12, 13, 24, 38, 31]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 11169.0
+best_iteration = 36771
+time_to_best_secs = 2.186271708
+total_time_secs = 30.000009625
+solution = [47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 10, 22, 33, 40, 15, 21, 39, 14, 11, 19, 32, 45, 35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17, 43, 30, 37, 8, 7, 0, 2, 13, 12, 24]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 11093.0
+best_iteration = 32607
+time_to_best_secs = 1.8090816250000001
+total_time_secs = 30.000028833
+solution = [1, 28, 33, 40, 15, 21, 0, 7, 8, 37, 30, 43, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 45, 32, 11, 10, 22, 2, 39, 14, 19, 46, 20, 12, 13, 24, 4, 47, 38, 31, 23, 9, 44, 34, 3, 25, 41]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 10690.0
+best_iteration = 37725
+time_to_best_secs = 2.230109708
+total_time_secs = 30.000070583
+solution = [1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 24, 13, 12, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 11, 10, 22, 2, 21, 15, 40, 33, 47, 4, 28]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 11481.0
+best_iteration = 28691
+time_to_best_secs = 1.845828333
+total_time_secs = 30.000011
+solution = [7, 0, 21, 15, 40, 33, 2, 10, 11, 32, 45, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 43, 30, 37, 39, 22, 12, 13, 24, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 19, 14, 8]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 11050.0
+best_iteration = 33076
+time_to_best_secs = 1.927157292
+total_time_secs = 30.000027792
+solution = [44, 9, 23, 31, 38, 20, 46, 12, 13, 33, 40, 2, 21, 15, 0, 7, 8, 37, 30, 43, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 45, 32, 19, 11, 14, 39, 10, 22, 24, 47, 4, 28, 1, 41, 25, 3, 34]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 11230.0
+best_iteration = 29406
+time_to_best_secs = 1.783686916
+total_time_secs = 30.000008125
+solution = [44, 34, 3, 25, 1, 28, 40, 33, 13, 24, 12, 46, 19, 32, 11, 14, 39, 37, 30, 43, 17, 6, 27, 29, 42, 16, 26, 18, 36, 5, 35, 45, 8, 7, 0, 15, 21, 2, 22, 10, 20, 31, 38, 47, 4, 41, 23, 9]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 11025.0
+best_iteration = 30312
+time_to_best_secs = 1.856470958
+total_time_secs = 30.000029875
+solution = [39, 14, 11, 19, 32, 45, 35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21, 2, 40, 33, 13, 24, 47, 4, 28, 1, 3, 25, 41, 9, 34, 44, 23, 31, 38, 20, 46, 12, 22, 10]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 11329.0
+best_iteration = 32897
+time_to_best_secs = 1.937012292
+total_time_secs = 30.0000295
+solution = [46, 20, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 24, 22, 10, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 11, 14, 2, 21, 15, 40, 33, 13, 12]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 11052.0
+best_iteration = 37105
+time_to_best_secs = 2.261335917
+total_time_secs = 30.000004208
+solution = [31, 20, 12, 24, 33, 40, 15, 21, 2, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 29, 42, 16, 26, 18, 36, 5, 35, 45, 32, 14, 11, 19, 46, 10, 22, 13, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10661.0
+avg_objective = 11068.7
+worst_objective = 11342.0
+std_objective = 207.0251434005058
+best_time_to_best_secs = 0.40186975
+avg_time_to_best_secs = 0.4884306251
+avg_total_time_secs = 30.000029387799998
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 11266.0
+best_iteration = 13929
+time_to_best_secs = 0.492550333
+total_time_secs = 30.000037542
+solution = [25, 3, 34, 44, 9, 23, 31, 38, 20, 12, 46, 19, 32, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 45, 14, 11, 10, 22, 39, 0, 7, 15, 21, 2, 40, 33, 13, 24, 47, 4, 28, 1, 41]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 11151.0
+best_iteration = 11050
+time_to_best_secs = 0.4384885
+total_time_secs = 30.000013292
+solution = [26, 16, 42, 29, 35, 45, 32, 19, 14, 11, 10, 22, 12, 46, 20, 31, 38, 47, 41, 23, 9, 44, 34, 3, 25, 1, 28, 4, 24, 13, 33, 40, 2, 21, 15, 7, 0, 39, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 11132.0
+best_iteration = 22889
+time_to_best_secs = 0.802410959
+total_time_secs = 30.000040542
+solution = [30, 37, 45, 14, 39, 8, 7, 0, 15, 21, 2, 22, 12, 24, 13, 33, 40, 1, 28, 4, 47, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 10, 11, 19, 32, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 10661.0
+best_iteration = 10758
+time_to_best_secs = 0.431240667
+total_time_secs = 30.000021667
+solution = [37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 31, 38, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 13, 24, 12, 22, 10, 11, 14, 39, 8, 0, 7]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 10840.0
+best_iteration = 13193
+time_to_best_secs = 0.542232
+total_time_secs = 30.000025459
+solution = [16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 11, 10, 22, 2, 21, 15, 40, 33, 47, 4, 28, 1, 3, 25, 41, 9, 34, 44, 23, 31, 38, 24, 13, 12, 20, 46, 19, 32, 45, 35, 29, 42]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 11342.0
+best_iteration = 11604
+time_to_best_secs = 0.458267375
+total_time_secs = 30.000015584
+solution = [20, 31, 23, 9, 44, 34, 3, 25, 1, 28, 41, 4, 47, 38, 24, 13, 22, 33, 40, 2, 21, 15, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 11, 14, 39, 10, 12]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 11178.0
+best_iteration = 9847
+time_to_best_secs = 0.459203459
+total_time_secs = 30.000090208
+solution = [26, 16, 42, 29, 35, 45, 32, 19, 11, 10, 46, 20, 12, 22, 2, 13, 24, 38, 31, 23, 9, 44, 34, 3, 25, 1, 41, 47, 4, 28, 33, 40, 15, 21, 0, 7, 8, 39, 14, 37, 30, 43, 17, 6, 27, 5, 36, 18]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 11036.0
+best_iteration = 9974
+time_to_best_secs = 0.40186975
+total_time_secs = 30.00002725
+solution = [7, 0, 15, 21, 2, 33, 40, 28, 1, 25, 3, 34, 44, 9, 41, 23, 31, 38, 47, 4, 24, 13, 12, 20, 46, 10, 22, 39, 14, 11, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 11229.0
+best_iteration = 9448
+time_to_best_secs = 0.417086458
+total_time_secs = 30.000009292
+solution = [1, 41, 9, 25, 3, 34, 44, 23, 31, 38, 20, 46, 10, 11, 19, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 45, 32, 14, 39, 8, 37, 7, 0, 21, 15, 40, 2, 22, 12, 24, 13, 33, 47, 4, 28]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 10852.0
+best_iteration = 12400
+time_to_best_secs = 0.44095675
+total_time_secs = 30.000013042
+solution = [13, 24, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 19, 11, 10, 39, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 21, 15, 40, 33, 2, 22, 12]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10965.0
+avg_objective = 11534.6
+worst_objective = 12678.0
+std_objective = 472.99771669639165
+best_time_to_best_secs = 0.639033041
+avg_time_to_best_secs = 0.9388973624000002
+avg_total_time_secs = 30.000027745900002
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 11195.0
+best_iteration = 20070
+time_to_best_secs = 1.276628042
+total_time_secs = 30.000026667
+solution = [46, 20, 31, 38, 47, 4, 28, 1, 25, 3, 34, 44, 9, 23, 41, 2, 21, 15, 40, 33, 13, 24, 12, 22, 10, 11, 14, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 29, 42, 16, 26, 18, 36, 5, 35, 45, 32, 19]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 11433.0
+best_iteration = 15316
+time_to_best_secs = 0.879611542
+total_time_secs = 30.000027833
+solution = [45, 32, 19, 46, 22, 13, 4, 47, 41, 23, 9, 44, 34, 3, 25, 1, 28, 40, 33, 24, 38, 31, 20, 12, 10, 11, 14, 39, 2, 21, 15, 0, 7, 8, 37, 30, 43, 17, 6, 27, 29, 42, 16, 26, 18, 36, 5, 35]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 11555.0
+best_iteration = 12533
+time_to_best_secs = 0.751703458
+total_time_secs = 30.000082209
+solution = [36, 18, 26, 16, 42, 29, 27, 6, 17, 45, 32, 19, 11, 14, 39, 21, 15, 40, 33, 22, 10, 46, 20, 12, 47, 4, 28, 1, 41, 9, 44, 34, 3, 25, 23, 31, 38, 24, 13, 2, 0, 7, 8, 37, 30, 43, 35, 5]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 10965.0
+best_iteration = 19403
+time_to_best_secs = 1.084007458
+total_time_secs = 30.000005417
+solution = [19, 32, 45, 35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21, 2, 13, 24, 12, 46, 20, 31, 38, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 40, 33, 22, 10, 39, 14, 11]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 10975.0
+best_iteration = 15984
+time_to_best_secs = 0.902312458
+total_time_secs = 30.000039625
+solution = [15, 40, 33, 13, 24, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 12, 22, 2, 39, 14, 19, 46, 10, 11, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 21]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 11914.0
+best_iteration = 12331
+time_to_best_secs = 0.79310475
+total_time_secs = 30.00000725
+solution = [35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17, 43, 30, 37, 8, 7, 0, 21, 15, 33, 28, 1, 40, 2, 22, 13, 24, 38, 31, 23, 9, 44, 34, 3, 25, 41, 4, 47, 12, 20, 46, 19, 14, 39, 10, 11, 32, 45]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 11439.0
+best_iteration = 11194
+time_to_best_secs = 0.639033041
+total_time_secs = 30.000008084
+solution = [39, 2, 33, 28, 1, 41, 9, 44, 34, 3, 25, 23, 31, 38, 47, 4, 40, 15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27, 29, 42, 16, 26, 18, 36, 5, 35, 45, 32, 11, 10, 22, 13, 24, 12, 20, 46, 19, 14]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 11543.0
+best_iteration = 16168
+time_to_best_secs = 0.891826
+total_time_secs = 30.000008916
+solution = [0, 7, 8, 39, 22, 12, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 40, 33, 13, 24, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 14, 11, 10, 2, 21, 15]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 12678.0
+best_iteration = 19340
+time_to_best_secs = 1.059998083
+total_time_secs = 30.000059083
+solution = [19, 46, 20, 38, 47, 4, 24, 13, 39, 14, 45, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 32, 11, 10, 22, 33, 40, 28, 1, 3, 25, 41, 9, 34, 44, 23, 31, 12, 2, 21, 15, 0, 7, 8, 37, 30]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 11649.0
+best_iteration = 17301
+time_to_best_secs = 1.110748792
+total_time_secs = 30.000012375
+solution = [0, 7, 8, 37, 30, 43, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 45, 32, 11, 22, 13, 24, 12, 46, 19, 14, 39, 21, 15, 2, 33, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 10]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Order"
+parent_selection = "Tournament"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10628.0
+avg_objective = 10633.6
+worst_objective = 10684.0
+std_objective = 16.800000000000004
+best_time_to_best_secs = 0.012309833
+avg_time_to_best_secs = 2.5890506417
+avg_total_time_secs = 30.0079726584
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 10628.0
+best_iteration = 62257
+time_to_best_secs = 5.363483458
+total_time_secs = 30.005711833
+solution = [8, 39, 14, 11, 10, 12, 24, 13, 22, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 10628.0
+best_iteration = 47615
+time_to_best_secs = 4.083448209
+total_time_secs = 30.003683792
+solution = [15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 11, 10, 12, 24, 13, 22, 2, 21]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 10628.0
+best_iteration = 18453
+time_to_best_secs = 1.716419375
+total_time_secs = 30.010052917
+solution = [37, 7, 0, 8, 39, 14, 11, 10, 12, 24, 13, 22, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 10684.0
+best_iteration = 22584
+time_to_best_secs = 2.18596975
+total_time_secs = 30.008618375
+solution = [21, 15, 40, 33, 13, 12, 24, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 11, 10, 22, 2]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 10628.0
+best_iteration = 43
+time_to_best_secs = 0.012309833
+total_time_secs = 30.01033325
+solution = [0, 8, 39, 14, 11, 10, 12, 24, 13, 22, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 10628.0
+best_iteration = 37319
+time_to_best_secs = 3.906803709
+total_time_secs = 30.011874792
+solution = [16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 11, 10, 12, 24, 13, 22, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 10628.0
+best_iteration = 780
+time_to_best_secs = 0.070121208
+total_time_secs = 30.01031025
+solution = [4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 22, 13, 24, 12, 10, 11, 14, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 31, 38, 47]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 10628.0
+best_iteration = 4729
+time_to_best_secs = 0.485598709
+total_time_secs = 30.004365875
+solution = [47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 22, 13, 24, 12, 10, 11, 14, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 31, 38]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 10628.0
+best_iteration = 58627
+time_to_best_secs = 4.981348583
+total_time_secs = 30.010918917
+solution = [33, 40, 15, 21, 2, 22, 13, 24, 12, 10, 11, 14, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 31, 38, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 10628.0
+best_iteration = 38245
+time_to_best_secs = 3.0850035829999998
+total_time_secs = 30.003856583
+solution = [47, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 11, 10, 12, 24, 13, 22, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10931.0
+avg_objective = 11084.5
+worst_objective = 11255.0
+std_objective = 93.02929646084614
+best_time_to_best_secs = 0.002593042
+avg_time_to_best_secs = 0.28770978750000004
+avg_total_time_secs = 30.0018105542
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 11255.0
+best_iteration = 44
+time_to_best_secs = 0.004256583
+total_time_secs = 30.001757167
+solution = [20, 12, 24, 13, 22, 10, 46, 19, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 45, 32, 11, 14, 39, 2, 21, 15, 40, 33, 4, 28, 1, 41, 9, 25, 3, 34, 44, 23, 47, 38, 31]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 11157.0
+best_iteration = 41
+time_to_best_secs = 0.004618667
+total_time_secs = 30.001607042
+solution = [45, 32, 19, 29, 42, 16, 26, 18, 36, 5, 27, 35, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21, 2, 40, 33, 22, 13, 24, 47, 4, 28, 1, 41, 9, 25, 3, 34, 44, 23, 31, 38, 20, 12, 46, 10, 11, 39, 14]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 11128.0
+best_iteration = 764
+time_to_best_secs = 0.017054583
+total_time_secs = 30.000482209
+solution = [2, 21, 15, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 11, 14, 39, 10, 46, 20, 12, 22, 13, 24, 38, 31, 47, 4, 28, 41, 23, 9, 44, 34, 3, 25, 1, 40, 33]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 11063.0
+best_iteration = 94525
+time_to_best_secs = 2.765803375
+total_time_secs = 30.004233542
+solution = [25, 3, 34, 44, 9, 23, 4, 47, 38, 31, 20, 46, 10, 11, 19, 32, 14, 39, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21, 2, 22, 12, 24, 13, 33, 40, 28, 1, 41]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 10931.0
+best_iteration = 42
+time_to_best_secs = 0.002593042
+total_time_secs = 30.0016435
+solution = [2, 33, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 31, 38, 24, 13, 22, 10, 12, 20, 46, 19, 32, 11, 14, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 21, 15]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 11068.0
+best_iteration = 40
+time_to_best_secs = 0.00466025
+total_time_secs = 30.000130667
+solution = [4, 28, 1, 40, 15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 39, 14, 32, 19, 11, 10, 22, 2, 33, 13, 24, 12, 46, 20, 38, 31, 23, 9, 44, 34, 3, 25, 41, 47]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 10991.0
+best_iteration = 50
+time_to_best_secs = 0.014763125
+total_time_secs = 30.001597416
+solution = [47, 4, 23, 44, 34, 3, 25, 9, 41, 1, 28, 33, 40, 15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 11, 14, 39, 2, 10, 22, 13, 24, 12, 46, 20, 31, 38]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 11038.0
+best_iteration = 445
+time_to_best_secs = 0.041869583
+total_time_secs = 30.001343458
+solution = [6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 14, 11, 10, 19, 46, 20, 31, 23, 9, 44, 34, 3, 25, 41, 1, 28, 4, 47, 38, 24, 13, 12, 22, 2, 33, 40, 15, 21, 39, 8, 0, 7, 37, 30, 43, 17]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 11191.0
+best_iteration = 241
+time_to_best_secs = 0.016261125
+total_time_secs = 30.002683958
+solution = [16, 42, 29, 35, 45, 32, 14, 11, 10, 19, 46, 20, 12, 24, 38, 31, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 13, 22, 2, 33, 40, 15, 21, 39, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 11023.0
+best_iteration = 38
+time_to_best_secs = 0.005217542
+total_time_secs = 30.002626583
+solution = [21, 15, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 11, 14, 39, 10, 46, 20, 12, 24, 4, 47, 38, 31, 23, 9, 44, 34, 3, 25, 41, 1, 28, 40, 33, 13, 22, 2]
+
+[[results]]
+instance_path = "data/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "Restart"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10628.0
+avg_objective = 10656.0
+worst_objective = 10738.0
+std_objective = 28.124722220850465
+best_time_to_best_secs = 0.416051334
+avg_time_to_best_secs = 9.3546256292
+avg_total_time_secs = 33.1144017958
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 10648.0
+best_iteration = 101865
+time_to_best_secs = 9.484597916
+total_time_secs = 34.302297166
+solution = [26, 16, 42, 29, 35, 45, 32, 14, 11, 19, 46, 10, 22, 13, 24, 12, 20, 31, 38, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 10738.0
+best_iteration = 96362
+time_to_best_secs = 11.661507417
+total_time_secs = 30.05213
+solution = [16, 42, 29, 35, 45, 32, 19, 46, 20, 38, 31, 23, 9, 44, 34, 3, 25, 41, 1, 28, 4, 47, 24, 13, 12, 22, 10, 11, 14, 39, 2, 33, 40, 15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 10648.0
+best_iteration = 200227
+time_to_best_secs = 21.007424459
+total_time_secs = 32.943624
+solution = [20, 12, 24, 13, 22, 10, 46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 10648.0
+best_iteration = 5547
+time_to_best_secs = 0.437818375
+total_time_secs = 33.145624041
+solution = [31, 20, 12, 24, 13, 22, 10, 46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 10653.0
+best_iteration = 50670
+time_to_best_secs = 4.512927916
+total_time_secs = 33.599672167
+solution = [34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 22, 10, 11, 14, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 12, 13, 24, 38, 31, 47, 4, 41, 23, 9, 44]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 10648.0
+best_iteration = 193990
+time_to_best_secs = 19.595637458
+total_time_secs = 32.74493025
+solution = [13, 22, 10, 46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 12, 24]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 10648.0
+best_iteration = 102430
+time_to_best_secs = 8.37036675
+total_time_secs = 32.981224084
+solution = [13, 22, 10, 46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 12, 24]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 10648.0
+best_iteration = 30717
+time_to_best_secs = 2.368782125
+total_time_secs = 32.034593042
+solution = [15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 12, 24, 13, 22, 10, 46, 19, 11, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 2, 21]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 10653.0
+best_iteration = 153715
+time_to_best_secs = 15.691142542
+total_time_secs = 33.95682025
+solution = [14, 11, 10, 22, 12, 24, 13, 33, 2, 21, 15, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 10628.0
+best_iteration = 4914
+time_to_best_secs = 0.416051334
+total_time_secs = 35.383102958
+solution = [10, 11, 14, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 31, 38, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 22, 13, 24, 12]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7862.0
+avg_objective = 8264.5
+worst_objective = 8631.0
+std_objective = 203.29940973844464
+best_time_to_best_secs = 0.002533958
+avg_time_to_best_secs = 0.0035784250000000005
+avg_total_time_secs = 0.0035988955999999997
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 8368.0
+best_iteration = 42
+time_to_best_secs = 0.003690333
+total_time_secs = 0.003710459
+solution = [3, 50, 10, 11, 27, 25, 26, 12, 51, 13, 46, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 31, 44, 18, 40, 7, 8, 9, 32, 42, 14, 5, 4, 23, 47, 37, 36, 39, 38, 35, 48, 34, 33, 43, 15, 45, 24]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 8194.0
+best_iteration = 43
+time_to_best_secs = 0.003293125
+total_time_secs = 0.00331325
+solution = [25, 46, 12, 13, 51, 10, 50, 11, 3, 5, 4, 14, 42, 32, 9, 8, 7, 40, 18, 44, 17, 2, 16, 6, 1, 41, 20, 30, 21, 0, 31, 48, 35, 38, 39, 37, 23, 47, 36, 34, 33, 43, 49, 19, 22, 29, 28, 15, 45, 24, 27, 26]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 8361.0
+best_iteration = 47
+time_to_best_secs = 0.004372708
+total_time_secs = 0.004395791
+solution = [18, 44, 42, 32, 50, 10, 51, 13, 12, 26, 46, 25, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 48, 34, 33, 43, 45, 15, 49, 0, 31, 21, 17, 30, 22, 19, 28, 29, 1, 6, 41, 20, 16, 2, 40, 7, 8, 9]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 7862.0
+best_iteration = 46
+time_to_best_secs = 0.002533958
+total_time_secs = 0.002554417
+solution = [40, 18, 44, 31, 48, 38, 35, 34, 33, 43, 0, 21, 30, 20, 17, 2, 16, 6, 1, 41, 29, 22, 19, 49, 28, 15, 45, 47, 23, 36, 39, 37, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 8351.0
+best_iteration = 42
+time_to_best_secs = 0.002720042
+total_time_secs = 0.002739916
+solution = [16, 2, 17, 44, 18, 40, 7, 8, 9, 32, 50, 11, 10, 51, 13, 12, 26, 46, 25, 27, 24, 3, 42, 14, 5, 4, 23, 47, 37, 39, 38, 36, 45, 15, 43, 33, 34, 35, 48, 31, 0, 21, 30, 20, 22, 19, 49, 28, 29, 41, 1, 6]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 8041.0
+best_iteration = 53
+time_to_best_secs = 0.005098709
+total_time_secs = 0.0051185
+solution = [25, 26, 27, 11, 24, 3, 5, 23, 47, 45, 43, 0, 21, 17, 30, 22, 19, 49, 15, 28, 29, 1, 6, 41, 20, 16, 2, 40, 8, 9, 7, 18, 44, 31, 48, 35, 34, 33, 38, 39, 36, 37, 4, 14, 42, 32, 50, 10, 51, 13, 12, 46]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 8386.0
+best_iteration = 45
+time_to_best_secs = 0.002753667
+total_time_secs = 0.002773833
+solution = [51, 13, 46, 25, 45, 47, 23, 37, 36, 39, 38, 35, 34, 33, 43, 15, 28, 49, 19, 29, 41, 1, 6, 16, 20, 22, 30, 21, 0, 48, 31, 17, 2, 44, 18, 40, 7, 8, 9, 32, 42, 14, 4, 5, 3, 24, 11, 50, 10, 27, 26, 12]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 8631.0
+best_iteration = 43
+time_to_best_secs = 0.003920333
+total_time_secs = 0.003940416
+solution = [37, 14, 42, 9, 8, 32, 50, 11, 10, 51, 13, 12, 46, 25, 26, 27, 24, 3, 5, 4, 23, 47, 36, 45, 43, 15, 28, 49, 19, 21, 22, 29, 1, 6, 41, 20, 30, 17, 16, 2, 40, 7, 18, 44, 31, 48, 0, 33, 34, 35, 38, 39]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8134.0
+best_iteration = 49
+time_to_best_secs = 0.004681958
+total_time_secs = 0.004702208
+solution = [21, 30, 20, 16, 6, 1, 41, 29, 22, 19, 49, 28, 15, 43, 45, 46, 25, 27, 26, 12, 13, 51, 10, 50, 11, 24, 23, 47, 36, 33, 34, 35, 38, 39, 37, 4, 14, 5, 3, 42, 32, 9, 8, 7, 40, 18, 44, 2, 17, 31, 48, 0]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 8317.0
+best_iteration = 49
+time_to_best_secs = 0.002719417
+total_time_secs = 0.002740166
+solution = [11, 50, 32, 9, 8, 7, 40, 18, 44, 2, 16, 6, 1, 41, 29, 28, 15, 49, 19, 22, 20, 30, 17, 21, 31, 48, 0, 43, 45, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 42, 3, 5, 24, 27, 26, 25, 46, 12, 13, 51, 10]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8473.0
+avg_objective = 8988.0
+worst_objective = 9377.0
+std_objective = 288.02673487021997
+best_time_to_best_secs = 0.00256175
+avg_time_to_best_secs = 0.003754516699999999
+avg_total_time_secs = 0.003792404299999999
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 9342.0
+best_iteration = 46
+time_to_best_secs = 0.003071667
+total_time_secs = 0.003132
+solution = [19, 49, 45, 27, 26, 10, 51, 13, 12, 46, 25, 24, 5, 14, 9, 8, 7, 40, 18, 44, 2, 16, 17, 31, 48, 34, 35, 38, 39, 37, 42, 32, 50, 11, 3, 4, 23, 47, 36, 33, 43, 15, 28, 29, 1, 6, 41, 20, 30, 21, 0, 22]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 8720.0
+best_iteration = 50
+time_to_best_secs = 0.004212875
+total_time_secs = 0.004244917
+solution = [42, 32, 9, 8, 7, 40, 18, 44, 2, 16, 17, 31, 48, 35, 34, 33, 38, 39, 36, 37, 47, 23, 4, 14, 5, 11, 50, 10, 51, 13, 12, 26, 27, 45, 43, 0, 21, 30, 20, 41, 6, 1, 29, 22, 19, 49, 15, 28, 46, 25, 24, 3]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 9169.0
+best_iteration = 57
+time_to_best_secs = 0.0040455
+total_time_secs = 0.004078042
+solution = [42, 44, 18, 40, 7, 8, 9, 32, 50, 10, 11, 24, 23, 47, 36, 43, 19, 49, 28, 15, 27, 26, 12, 51, 13, 46, 25, 45, 33, 34, 48, 31, 17, 2, 16, 20, 41, 6, 1, 29, 22, 30, 21, 0, 35, 38, 39, 37, 4, 14, 5, 3]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 8774.0
+best_iteration = 56
+time_to_best_secs = 0.004702667
+total_time_secs = 0.004734667
+solution = [3, 50, 10, 51, 13, 12, 26, 27, 11, 32, 42, 9, 8, 7, 40, 18, 44, 31, 30, 16, 2, 17, 21, 0, 48, 35, 36, 47, 23, 24, 25, 46, 28, 29, 1, 6, 41, 20, 22, 19, 49, 15, 45, 43, 33, 34, 38, 39, 37, 4, 14, 5]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 9377.0
+best_iteration = 63
+time_to_best_secs = 0.004429
+total_time_secs = 0.004461333
+solution = [0, 21, 17, 30, 22, 29, 1, 6, 41, 20, 16, 2, 40, 7, 8, 9, 18, 44, 31, 48, 35, 38, 39, 37, 47, 24, 11, 50, 10, 51, 13, 12, 46, 28, 19, 49, 15, 43, 36, 23, 5, 3, 32, 42, 14, 4, 25, 26, 27, 45, 33, 34]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 8473.0
+best_iteration = 54
+time_to_best_secs = 0.004968542
+total_time_secs = 0.004999917
+solution = [43, 33, 34, 48, 31, 44, 18, 9, 8, 7, 40, 2, 16, 6, 1, 41, 20, 30, 17, 21, 0, 35, 38, 39, 36, 37, 4, 5, 3, 24, 11, 10, 51, 13, 12, 46, 25, 26, 27, 50, 32, 42, 14, 23, 47, 45, 49, 19, 22, 29, 28, 15]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 8967.0
+best_iteration = 49
+time_to_best_secs = 0.00256175
+total_time_secs = 0.002594083
+solution = [34, 43, 15, 28, 46, 25, 11, 50, 10, 51, 13, 12, 26, 27, 24, 3, 5, 14, 4, 36, 33, 22, 19, 49, 45, 47, 23, 37, 39, 38, 44, 18, 40, 7, 8, 9, 32, 42, 31, 17, 2, 16, 6, 1, 41, 29, 20, 30, 21, 0, 48, 35]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 9318.0
+best_iteration = 58
+time_to_best_secs = 0.003882875
+total_time_secs = 0.0039155
+solution = [38, 39, 37, 14, 42, 32, 9, 8, 7, 40, 18, 44, 17, 20, 41, 6, 1, 29, 28, 46, 13, 51, 12, 26, 27, 25, 15, 49, 19, 22, 43, 45, 24, 11, 10, 50, 3, 5, 4, 23, 47, 36, 33, 34, 48, 31, 2, 16, 30, 21, 0, 35]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8861.0
+best_iteration = 52
+time_to_best_secs = 0.0026825
+total_time_secs = 0.002715459
+solution = [8, 9, 32, 42, 48, 0, 21, 30, 20, 41, 6, 1, 29, 28, 15, 43, 47, 23, 37, 39, 38, 31, 17, 2, 16, 22, 19, 49, 45, 24, 11, 50, 10, 51, 13, 12, 46, 25, 26, 27, 3, 5, 14, 4, 36, 33, 34, 35, 44, 18, 40, 7]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 8879.0
+best_iteration = 50
+time_to_best_secs = 0.002987791
+total_time_secs = 0.003048125
+solution = [34, 33, 43, 26, 12, 13, 51, 10, 50, 11, 27, 25, 46, 28, 19, 22, 0, 31, 42, 32, 9, 8, 7, 40, 18, 44, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 45, 15, 49, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 48, 35]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7843.7
+worst_objective = 8253.0
+std_objective = 232.37342791291778
+best_time_to_best_secs = 0.004346708
+avg_time_to_best_secs = 1.6791288375
+avg_total_time_secs = 30.000051041699997
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 7918.0
+best_iteration = 68
+time_to_best_secs = 0.004346708
+total_time_secs = 30.000049666
+solution = [43, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 11, 27, 10, 51, 13, 12, 26, 25, 46, 28, 15, 45, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 7542.0
+best_iteration = 339
+time_to_best_secs = 0.033320958
+total_time_secs = 30.000068334
+solution = [16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 7792.0
+best_iteration = 189890
+time_to_best_secs = 15.770710792
+total_time_secs = 30.000034333
+solution = [9, 32, 42, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 15, 45, 24, 11, 50, 10, 51, 13, 12, 26, 27, 25, 46, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 8253.0
+best_iteration = 61
+time_to_best_secs = 0.009392791
+total_time_secs = 30.000026959
+solution = [8, 9, 18, 44, 31, 48, 0, 21, 22, 19, 49, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 24, 3, 42, 32, 50, 11, 27, 10, 51, 13, 12, 26, 25, 46, 28, 29, 1, 6, 41, 20, 30, 17, 16, 2, 40, 7]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 7542.0
+best_iteration = 961
+time_to_best_secs = 0.082146375
+total_time_secs = 30.000086083
+solution = [45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 7808.0
+best_iteration = 231
+time_to_best_secs = 0.027347834
+total_time_secs = 30.000039792
+solution = [37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 2, 16, 17, 30, 20, 41, 6, 1, 29, 28, 49, 19, 22, 21, 0, 31, 48, 35, 34, 33, 43, 15, 45, 36, 38, 39]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 7967.0
+best_iteration = 54
+time_to_best_secs = 0.0057735
+total_time_secs = 30.000019667
+solution = [50, 10, 51, 13, 12, 26, 11, 27, 25, 46, 28, 29, 1, 6, 41, 20, 16, 2, 17, 30, 22, 19, 49, 15, 43, 45, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 33, 34, 35, 48, 0, 21, 31, 44, 18, 40, 7, 8, 9, 42, 32]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 8050.0
+best_iteration = 62
+time_to_best_secs = 0.010169125
+total_time_secs = 30.000009333
+solution = [5, 3, 24, 45, 15, 43, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 46, 13, 51, 12, 26, 25, 27, 11, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 35, 34, 33, 38, 39, 36, 37, 47, 23, 4, 14]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8023.0
+best_iteration = 45
+time_to_best_secs = 0.00881525
+total_time_secs = 30.000145709
+solution = [38, 33, 34, 35, 48, 31, 0, 21, 17, 30, 22, 19, 49, 29, 1, 6, 41, 20, 16, 2, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 26, 11, 27, 25, 46, 28, 15, 43, 45, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 7542.0
+best_iteration = 8656
+time_to_best_secs = 0.839265042
+total_time_secs = 30.000030541
+solution = [6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [3, 30]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7965.0
+avg_objective = 8476.7
+worst_objective = 9187.0
+std_objective = 388.1973853595617
+best_time_to_best_secs = 0.007013
+avg_time_to_best_secs = 0.7384983124
+avg_total_time_secs = 30.0000625251
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 8399.0
+best_iteration = 5871
+time_to_best_secs = 0.665496542
+total_time_secs = 30.000002584
+solution = [38, 33, 34, 35, 48, 31, 0, 21, 17, 30, 22, 19, 49, 15, 43, 45, 27, 25, 26, 12, 51, 13, 46, 28, 29, 1, 6, 41, 20, 16, 2, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 8812.0
+best_iteration = 57
+time_to_best_secs = 0.007013
+total_time_secs = 30.00003875
+solution = [28, 19, 22, 17, 16, 2, 40, 7, 8, 9, 18, 44, 31, 48, 34, 33, 36, 5, 3, 32, 42, 14, 4, 47, 45, 43, 15, 49, 29, 1, 6, 41, 20, 30, 21, 0, 35, 38, 39, 37, 23, 24, 11, 50, 10, 51, 13, 12, 26, 27, 25, 46]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 7965.0
+best_iteration = 89
+time_to_best_secs = 0.0085985
+total_time_secs = 30.00008775
+solution = [8, 9, 42, 32, 50, 27, 26, 25, 46, 12, 13, 51, 10, 11, 24, 3, 5, 14, 4, 23, 47, 45, 43, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 34, 33, 36, 37, 39, 38, 35, 48, 31, 44, 18, 40, 7]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 9187.0
+best_iteration = 76
+time_to_best_secs = 0.012228667
+total_time_secs = 30.000064625
+solution = [15, 28, 46, 25, 27, 11, 24, 3, 5, 4, 37, 39, 38, 35, 34, 48, 21, 30, 20, 41, 6, 1, 29, 22, 0, 31, 44, 18, 9, 8, 7, 40, 2, 16, 17, 19, 49, 45, 26, 12, 13, 51, 10, 50, 32, 42, 14, 23, 47, 36, 33, 43]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 8270.0
+best_iteration = 156
+time_to_best_secs = 0.020282416
+total_time_secs = 30.00007175
+solution = [11, 25, 46, 28, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 48, 35, 34, 33, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 42, 32, 9, 8, 7, 40, 18, 44, 31, 0, 22, 19, 49, 15, 43, 45, 24, 27, 26, 12, 13, 51, 10, 50]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 8306.0
+best_iteration = 2172
+time_to_best_secs = 0.256315292
+total_time_secs = 30.00010125
+solution = [0, 21, 17, 30, 22, 19, 49, 15, 45, 43, 33, 34, 48, 31, 44, 18, 9, 8, 7, 40, 2, 16, 20, 41, 6, 1, 29, 28, 46, 25, 27, 26, 12, 13, 51, 10, 50, 11, 24, 3, 32, 42, 14, 5, 4, 23, 47, 37, 36, 39, 38, 35]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 8948.0
+best_iteration = 259
+time_to_best_secs = 0.045866833
+total_time_secs = 30.000087792
+solution = [47, 23, 14, 42, 32, 11, 27, 26, 12, 13, 51, 10, 50, 24, 3, 5, 4, 37, 36, 39, 38, 35, 34, 33, 43, 21, 17, 30, 20, 29, 41, 1, 6, 16, 2, 40, 7, 8, 9, 18, 44, 31, 48, 0, 22, 19, 49, 15, 28, 46, 25, 45]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 8130.0
+best_iteration = 746
+time_to_best_secs = 0.078146666
+total_time_secs = 30.000067792
+solution = [5, 3, 24, 11, 10, 51, 13, 12, 46, 25, 26, 27, 50, 32, 42, 9, 8, 7, 40, 18, 44, 17, 30, 20, 29, 41, 1, 6, 16, 2, 31, 48, 0, 21, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8681.0
+best_iteration = 9326
+time_to_best_secs = 1.169895375
+total_time_secs = 30.000046833
+solution = [42, 32, 50, 10, 51, 13, 12, 26, 27, 11, 24, 3, 5, 4, 37, 39, 38, 35, 48, 31, 44, 18, 9, 8, 7, 40, 2, 16, 6, 1, 41, 20, 30, 17, 21, 0, 34, 33, 45, 25, 46, 28, 29, 22, 19, 49, 15, 43, 36, 47, 23, 14]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 8069.0
+best_iteration = 46144
+time_to_best_secs = 5.121139833
+total_time_secs = 30.000056125
+solution = [45, 15, 28, 49, 19, 22, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 33, 34, 35, 48, 21, 30, 20, 29, 41, 1, 6, 16, 2, 17, 0, 43]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "TwoOpt"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7897.2
+worst_objective = 8277.0
+std_objective = 216.92708452380953
+best_time_to_best_secs = 1.327218834
+avg_time_to_best_secs = 1.4845405542
+avg_total_time_secs = 30.000017399999997
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 7746.0
+best_iteration = 35908
+time_to_best_secs = 1.680017958
+total_time_secs = 30.000020125
+solution = [14, 5, 3, 24, 11, 27, 25, 46, 26, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 48, 35, 38, 39, 36, 37, 47, 23, 4]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 8020.0
+best_iteration = 35369
+time_to_best_secs = 1.613990833
+total_time_secs = 30.000013917
+solution = [39, 37, 47, 23, 4, 14, 5, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 3, 42, 32, 9, 8, 7, 40, 18, 44, 2, 16, 20, 41, 6, 1, 29, 28, 15, 49, 19, 22, 30, 17, 21, 0, 31, 48, 35, 34, 33, 43, 45, 36, 38]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 7716.0
+best_iteration = 35929
+time_to_best_secs = 1.4600920419999999
+total_time_secs = 30.000025708
+solution = [34, 33, 43, 45, 15, 28, 29, 49, 19, 22, 30, 20, 41, 1, 6, 16, 2, 17, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 7877.0
+best_iteration = 31378
+time_to_best_secs = 1.359695125
+total_time_secs = 30.000021708
+solution = [12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 35, 34, 33, 0, 21, 22, 30, 17, 2, 16, 20, 41, 6, 1, 29, 28, 19, 49, 15, 43, 45, 47, 36, 38, 39, 37, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 7667.0
+best_iteration = 34001
+time_to_best_secs = 1.5434944590000002
+total_time_secs = 30.000016292
+solution = [35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 17, 2, 16, 30, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 7542.0
+best_iteration = 30765
+time_to_best_secs = 1.431381042
+total_time_secs = 30.000050625
+solution = [37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 8060.0
+best_iteration = 31647
+time_to_best_secs = 1.435225625
+total_time_secs = 30.000000041
+solution = [15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 30, 17, 16, 2, 40, 8, 9, 7, 18, 44, 31, 21, 0, 48, 35, 34, 33, 38, 39, 37, 4, 14, 5, 3, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 23, 47, 36, 45, 43]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 8277.0
+best_iteration = 28479
+time_to_best_secs = 1.327218834
+total_time_secs = 30.000006583
+solution = [29, 1, 6, 41, 20, 16, 2, 18, 40, 7, 8, 9, 44, 17, 30, 21, 0, 31, 48, 35, 34, 33, 38, 39, 37, 4, 23, 47, 36, 43, 45, 24, 3, 5, 14, 42, 32, 50, 11, 10, 51, 13, 12, 26, 27, 25, 46, 28, 15, 49, 19, 22]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8112.0
+best_iteration = 31934
+time_to_best_secs = 1.419582041
+total_time_secs = 30.000002167
+solution = [28, 46, 25, 26, 12, 13, 51, 10, 50, 11, 27, 24, 3, 42, 32, 9, 8, 7, 40, 18, 44, 2, 16, 17, 30, 21, 0, 31, 48, 35, 34, 33, 38, 39, 36, 37, 4, 14, 5, 23, 47, 45, 43, 15, 49, 19, 22, 20, 41, 6, 1, 29]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 7955.0
+best_iteration = 33099
+time_to_best_secs = 1.574707583
+total_time_secs = 30.000016834
+solution = [19, 49, 15, 28, 29, 1, 6, 41, 20, 16, 2, 17, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 26, 46, 25, 27, 11, 24, 45, 47, 23, 4, 5, 3, 14, 37, 36, 39, 38, 35, 34, 33, 43, 48, 31, 0, 21, 30, 22]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 8043.7
+worst_objective = 8530.0
+std_objective = 291.1872421655866
+best_time_to_best_secs = 1.562059542
+avg_time_to_best_secs = 1.9368205916
+avg_total_time_secs = 30.000026158400004
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 8187.0
+best_iteration = 31372
+time_to_best_secs = 1.562059542
+total_time_secs = 30.000033708
+solution = [25, 46, 12, 13, 51, 10, 50, 11, 24, 3, 42, 32, 9, 8, 7, 40, 18, 44, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 43, 36, 47, 23, 4, 5, 14, 37, 39, 38, 35, 0, 21, 30, 17, 31, 48, 34, 33, 45, 27, 26]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 8530.0
+best_iteration = 33794
+time_to_best_secs = 1.634333542
+total_time_secs = 30.000016375
+solution = [51, 13, 12, 26, 27, 25, 46, 28, 19, 49, 15, 45, 24, 3, 5, 4, 37, 39, 38, 35, 34, 48, 31, 44, 18, 9, 8, 7, 40, 2, 17, 30, 22, 29, 41, 1, 6, 16, 20, 21, 0, 43, 33, 36, 47, 23, 14, 42, 32, 50, 11, 10]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 7673.0
+best_iteration = 35362
+time_to_best_secs = 1.714842416
+total_time_secs = 30.000012834
+solution = [1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 7542.0
+best_iteration = 41214
+time_to_best_secs = 1.905990583
+total_time_secs = 30.000005291
+solution = [15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 7716.0
+best_iteration = 42075
+time_to_best_secs = 2.024728416
+total_time_secs = 30.000047375
+solution = [10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 35, 38, 39, 36, 37, 14, 4, 23, 47, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 8173.0
+best_iteration = 37552
+time_to_best_secs = 1.7536145410000001
+total_time_secs = 30.000011209
+solution = [32, 42, 14, 23, 47, 36, 33, 43, 45, 15, 28, 49, 19, 29, 1, 6, 41, 20, 22, 0, 21, 30, 17, 16, 2, 40, 7, 8, 9, 18, 44, 31, 48, 34, 35, 38, 39, 37, 4, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 8136.0
+best_iteration = 38809
+time_to_best_secs = 1.890382125
+total_time_secs = 30.000021042
+solution = [42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 4, 37, 36, 39, 38, 35, 48, 31, 44, 18, 9, 8, 7, 40, 2, 16, 17, 30, 20, 41, 6, 1, 29, 28, 15, 49, 19, 22, 21, 0, 34, 33, 43, 45, 47, 23, 14]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 8132.0
+best_iteration = 41644
+time_to_best_secs = 2.0236605
+total_time_secs = 30.000058458
+solution = [0, 21, 17, 30, 22, 19, 49, 45, 47, 23, 36, 38, 39, 37, 4, 14, 5, 3, 24, 11, 10, 51, 13, 12, 46, 25, 26, 27, 50, 32, 42, 9, 8, 7, 40, 18, 44, 2, 16, 20, 41, 6, 1, 29, 28, 15, 43, 33, 34, 35, 48, 31]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8291.0
+best_iteration = 54248
+time_to_best_secs = 2.631774042
+total_time_secs = 30.000020334
+solution = [19, 22, 0, 31, 44, 18, 40, 7, 8, 9, 32, 42, 14, 23, 47, 36, 33, 43, 15, 28, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 48, 34, 35, 38, 39, 37, 4, 5, 3, 24, 11, 50, 10, 51, 13, 12, 46, 25, 26, 27, 45, 49]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 8057.0
+best_iteration = 45552
+time_to_best_secs = 2.226820209
+total_time_secs = 30.000034958
+solution = [49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 45, 43, 33, 34, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 11, 27, 25, 26, 12, 51, 13, 46, 28, 15]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7708.0
+avg_objective = 8140.9
+worst_objective = 8495.0
+std_objective = 267.11737120599247
+best_time_to_best_secs = 0.526226875
+avg_time_to_best_secs = 0.6300636043000001
+avg_total_time_secs = 30.000011979299995
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 8457.0
+best_iteration = 13852
+time_to_best_secs = 0.662497417
+total_time_secs = 30.000006167
+solution = [39, 36, 35, 34, 33, 43, 45, 15, 49, 28, 46, 13, 51, 12, 26, 25, 27, 10, 50, 11, 24, 47, 23, 37, 4, 14, 5, 3, 42, 32, 9, 8, 7, 40, 18, 44, 2, 16, 6, 1, 41, 29, 19, 22, 20, 30, 17, 21, 0, 31, 48, 38]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 8495.0
+best_iteration = 13463
+time_to_best_secs = 0.686639792
+total_time_secs = 30.000019375
+solution = [25, 26, 27, 45, 15, 28, 49, 43, 33, 34, 0, 21, 17, 30, 20, 22, 19, 29, 41, 1, 6, 16, 2, 40, 8, 9, 7, 18, 44, 31, 48, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 24, 3, 42, 32, 50, 11, 10, 51, 13, 12, 46]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 7708.0
+best_iteration = 12578
+time_to_best_secs = 0.621880083
+total_time_secs = 30.000024167
+solution = [42, 9, 8, 7, 40, 18, 44, 31, 48, 35, 34, 33, 43, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 47, 23, 36, 38, 39, 37, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 8469.0
+best_iteration = 10821
+time_to_best_secs = 0.575824416
+total_time_secs = 30.000003792
+solution = [47, 23, 4, 14, 5, 3, 24, 11, 42, 32, 50, 10, 51, 13, 12, 26, 27, 25, 46, 28, 15, 45, 36, 33, 43, 0, 21, 17, 30, 22, 19, 49, 29, 1, 6, 41, 20, 16, 2, 40, 8, 9, 7, 18, 44, 31, 48, 34, 35, 38, 39, 37]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 8102.0
+best_iteration = 12128
+time_to_best_secs = 0.575672792
+total_time_secs = 30.000013625
+solution = [14, 3, 5, 4, 23, 47, 45, 24, 11, 27, 25, 46, 13, 51, 12, 26, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 43, 0, 21, 30, 17, 31, 48, 35, 34, 33, 38, 39, 36, 37]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 7758.0
+best_iteration = 14443
+time_to_best_secs = 0.713757417
+total_time_secs = 30.000002
+solution = [33, 43, 15, 45, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 2, 16, 20, 41, 6, 1, 29, 28, 49, 19, 22, 30, 17, 21, 0, 31, 48, 34, 35, 38, 39, 37, 36]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 8216.0
+best_iteration = 13208
+time_to_best_secs = 0.657925334
+total_time_secs = 30.000008375
+solution = [51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 23, 47, 45, 15, 28, 49, 19, 22, 43, 0, 21, 17, 30, 20, 29, 1, 6, 41, 16, 2, 18, 40, 7, 8, 9, 44, 31, 48, 35, 34, 33, 38, 39, 36, 37, 4, 14, 42, 32, 50, 10]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 8003.0
+best_iteration = 12246
+time_to_best_secs = 0.640396917
+total_time_secs = 30.000020209
+solution = [36, 45, 47, 23, 4, 14, 5, 3, 24, 25, 46, 13, 51, 10, 12, 26, 27, 11, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 43, 33, 34, 35, 38, 39, 37]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8008.0
+best_iteration = 11158
+time_to_best_secs = 0.526226875
+total_time_secs = 30.000004458
+solution = [25, 46, 26, 12, 13, 51, 10, 11, 50, 32, 42, 9, 8, 7, 40, 18, 44, 2, 17, 31, 48, 0, 21, 30, 20, 16, 6, 1, 41, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 27]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 8193.0
+best_iteration = 13896
+time_to_best_secs = 0.639815
+total_time_secs = 30.000017625
+solution = [19, 49, 15, 43, 33, 36, 23, 47, 45, 24, 3, 5, 14, 4, 37, 39, 38, 35, 34, 48, 31, 0, 21, 30, 22, 29, 1, 6, 41, 20, 16, 2, 17, 44, 18, 40, 7, 8, 9, 42, 32, 50, 11, 27, 10, 51, 13, 12, 26, 25, 46, 28]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7944.0
+avg_objective = 8479.1
+worst_objective = 9072.0
+std_objective = 361.0447202217476
+best_time_to_best_secs = 0.714627583
+avg_time_to_best_secs = 1.0750031959
+avg_total_time_secs = 30.000015166699995
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 8574.0
+best_iteration = 22127
+time_to_best_secs = 1.077316792
+total_time_secs = 30.000022917
+solution = [3, 5, 4, 14, 44, 18, 40, 7, 8, 9, 32, 42, 39, 38, 34, 33, 43, 22, 19, 49, 15, 28, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 31, 48, 35, 36, 37, 23, 47, 45, 25, 46, 13, 51, 12, 26, 27, 10, 50, 11, 24]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 8186.0
+best_iteration = 14179
+time_to_best_secs = 0.714627583
+total_time_secs = 30.000001459
+solution = [10, 51, 13, 12, 46, 25, 26, 27, 3, 42, 32, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 49, 19, 22, 30, 17, 2, 16, 20, 41, 6, 1, 29, 28, 15, 43, 36, 47, 23, 4, 5, 14, 37, 39, 38, 35, 34, 33, 45, 24, 11, 50]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 7944.0
+best_iteration = 23125
+time_to_best_secs = 1.092179709
+total_time_secs = 30.000031708
+solution = [44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 37, 39, 38, 35, 0, 21, 30, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 43, 45, 47, 23, 36, 33, 34, 48, 31, 17, 16, 2]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 8631.0
+best_iteration = 15073
+time_to_best_secs = 0.740456
+total_time_secs = 30.00004025
+solution = [26, 12, 13, 51, 10, 11, 50, 32, 42, 14, 37, 39, 38, 35, 0, 21, 44, 9, 8, 7, 40, 18, 17, 30, 22, 29, 1, 6, 41, 20, 16, 2, 31, 48, 34, 33, 36, 47, 23, 4, 5, 3, 24, 45, 43, 15, 49, 19, 28, 46, 25, 27]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 8141.0
+best_iteration = 23929
+time_to_best_secs = 1.099524375
+total_time_secs = 30.00000175
+solution = [9, 32, 42, 3, 27, 26, 25, 46, 12, 13, 51, 10, 50, 11, 24, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 29, 22, 19, 49, 0, 48, 31, 21, 17, 30, 20, 41, 1, 6, 16, 2, 44, 18, 40, 7, 8]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 9012.0
+best_iteration = 22829
+time_to_best_secs = 1.18798875
+total_time_secs = 30.000015958
+solution = [46, 28, 15, 49, 19, 22, 30, 17, 44, 18, 7, 40, 2, 16, 6, 1, 41, 29, 20, 21, 0, 31, 48, 43, 45, 25, 26, 27, 11, 24, 3, 5, 4, 37, 39, 38, 35, 34, 33, 36, 47, 23, 14, 42, 9, 8, 32, 50, 10, 51, 13, 12]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 8151.0
+best_iteration = 26150
+time_to_best_secs = 1.226899792
+total_time_secs = 30.000020958
+solution = [46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 39, 38, 0, 21, 30, 22, 29, 1, 6, 41, 20, 16, 2, 17, 31, 48, 35, 36, 45, 15, 28, 19, 49, 43, 33, 34, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 8671.0
+best_iteration = 21290
+time_to_best_secs = 1.003559583
+total_time_secs = 30.000008875
+solution = [43, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 40, 7, 18, 44, 31, 48, 34, 33, 36, 47, 23, 4, 14, 5, 3, 42, 9, 8, 32, 50, 27, 26, 25, 46, 12, 13, 51, 10, 11, 24, 45, 37, 39, 38, 35, 0, 21, 17, 30]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8409.0
+best_iteration = 25858
+time_to_best_secs = 1.264712209
+total_time_secs = 30.0000075
+solution = [32, 42, 9, 8, 7, 40, 18, 44, 2, 17, 30, 20, 16, 6, 1, 41, 29, 22, 19, 49, 15, 28, 46, 25, 24, 3, 5, 47, 23, 4, 14, 37, 36, 39, 38, 33, 34, 35, 48, 31, 21, 0, 43, 45, 11, 27, 26, 12, 13, 51, 10, 50]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 9072.0
+best_iteration = 27893
+time_to_best_secs = 1.342767166
+total_time_secs = 30.000000292
+solution = [1, 6, 41, 20, 22, 19, 49, 15, 27, 10, 50, 11, 24, 3, 5, 4, 23, 47, 36, 38, 39, 37, 14, 42, 32, 9, 8, 7, 40, 18, 44, 2, 16, 17, 30, 21, 0, 31, 48, 35, 34, 33, 43, 45, 46, 13, 51, 12, 26, 25, 28, 29]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Order"
+parent_selection = "Tournament"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7542.0
+worst_objective = 7542.0
+std_objective = 0.0
+best_time_to_best_secs = 0.083531667
+avg_time_to_best_secs = 0.40639989590000003
+avg_total_time_secs = 30.00642493739999
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 7542.0
+best_iteration = 839
+time_to_best_secs = 0.083531667
+total_time_secs = 30.0031705
+solution = [37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 7542.0
+best_iteration = 6628
+time_to_best_secs = 0.606558625
+total_time_secs = 30.010309541
+solution = [38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 7542.0
+best_iteration = 8745
+time_to_best_secs = 0.882148292
+total_time_secs = 30.006311125
+solution = [45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 7542.0
+best_iteration = 2385
+time_to_best_secs = 0.2343505
+total_time_secs = 30.00809675
+solution = [49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 7542.0
+best_iteration = 2934
+time_to_best_secs = 0.295885958
+total_time_secs = 30.000570792
+solution = [24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 7542.0
+best_iteration = 4632
+time_to_best_secs = 0.429874125
+total_time_secs = 30.011676583
+solution = [43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 7542.0
+best_iteration = 3008
+time_to_best_secs = 0.28059825
+total_time_secs = 30.003292
+solution = [19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 7542.0
+best_iteration = 2690
+time_to_best_secs = 0.249344834
+total_time_secs = 30.009627875
+solution = [22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 7542.0
+best_iteration = 10217
+time_to_best_secs = 0.893965083
+total_time_secs = 30.008716125
+solution = [10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 7542.0
+best_iteration = 998
+time_to_best_secs = 0.107741625
+total_time_secs = 30.002478083
+solution = [16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7902.0
+avg_objective = 8222.1
+worst_objective = 8411.0
+std_objective = 152.24943349648302
+best_time_to_best_secs = 0.003794334
+avg_time_to_best_secs = 6.6069309917
+avg_total_time_secs = 30.0023824375
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 8333.0
+best_iteration = 222791
+time_to_best_secs = 7.8570773339999995
+total_time_secs = 30.002930833
+solution = [34, 35, 38, 39, 37, 4, 14, 5, 3, 24, 23, 47, 36, 33, 43, 49, 19, 22, 20, 30, 17, 2, 16, 6, 1, 41, 29, 28, 15, 45, 25, 46, 13, 51, 10, 12, 26, 27, 11, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 21, 0, 48]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 7902.0
+best_iteration = 104370
+time_to_best_secs = 3.784024333
+total_time_secs = 30.005051875
+solution = [3, 5, 14, 4, 23, 47, 37, 39, 38, 36, 45, 15, 28, 29, 19, 49, 43, 33, 34, 35, 48, 31, 0, 21, 17, 30, 22, 20, 41, 1, 6, 16, 2, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 8306.0
+best_iteration = 508869
+time_to_best_secs = 18.281224833
+total_time_secs = 30.0037385
+solution = [29, 19, 49, 28, 15, 43, 45, 27, 26, 25, 46, 12, 13, 51, 10, 50, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 33, 34, 35, 48, 0, 21, 31, 44, 18, 42, 32, 9, 8, 7, 40, 2, 16, 6, 1, 41, 20, 17, 30, 22]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 8079.0
+best_iteration = 49
+time_to_best_secs = 0.006061375
+total_time_secs = 30.000038459
+solution = [33, 34, 35, 48, 0, 21, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 11, 10, 51, 13, 12, 46, 25, 26, 27, 24, 3, 5, 14, 4, 23, 47, 37, 39, 38, 36, 45, 15, 28, 49, 19, 29, 41, 1, 6, 16, 2, 17, 30, 20, 22, 43]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 8082.0
+best_iteration = 260502
+time_to_best_secs = 8.969188333
+total_time_secs = 30.000286375
+solution = [4, 23, 47, 37, 39, 38, 36, 45, 15, 28, 29, 1, 6, 41, 20, 22, 19, 49, 43, 33, 34, 35, 48, 31, 0, 21, 30, 17, 16, 2, 44, 18, 40, 7, 8, 9, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 42, 14, 5]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 8411.0
+best_iteration = 48691
+time_to_best_secs = 1.7690195420000001
+total_time_secs = 30.00368275
+solution = [43, 33, 36, 37, 39, 38, 35, 34, 48, 31, 44, 42, 32, 9, 8, 7, 40, 18, 2, 17, 30, 21, 0, 49, 19, 22, 20, 16, 6, 1, 41, 29, 28, 46, 25, 26, 12, 13, 51, 10, 50, 11, 27, 24, 3, 5, 14, 4, 23, 47, 45, 15]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 8217.0
+best_iteration = 46
+time_to_best_secs = 0.003794334
+total_time_secs = 30.001433291
+solution = [44, 2, 16, 17, 30, 20, 41, 6, 1, 29, 28, 15, 45, 49, 19, 22, 21, 0, 31, 48, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 24, 27, 26, 25, 46, 12, 13, 51, 10, 50, 11, 3, 42, 32, 9, 8, 7, 40, 18]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 8387.0
+best_iteration = 29201
+time_to_best_secs = 1.084806666
+total_time_secs = 30.001825334
+solution = [18, 9, 8, 7, 40, 2, 17, 30, 20, 16, 6, 1, 41, 29, 22, 19, 49, 15, 28, 46, 25, 12, 13, 51, 10, 26, 27, 11, 50, 32, 42, 14, 4, 5, 3, 24, 47, 23, 37, 39, 38, 36, 45, 43, 33, 34, 35, 48, 0, 21, 31, 44]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 8201.0
+best_iteration = 44
+time_to_best_secs = 0.005003042
+total_time_secs = 30.00176575
+solution = [14, 5, 3, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 45, 36, 33, 43, 15, 28, 29, 1, 6, 41, 20, 16, 2, 40, 7, 8, 9, 18, 44, 31, 21, 17, 30, 22, 19, 49, 0, 48, 34, 35, 38, 39, 37, 47, 23, 4]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 8303.0
+best_iteration = 689441
+time_to_best_secs = 24.309110125
+total_time_secs = 30.003071208
+solution = [44, 9, 8, 7, 40, 18, 2, 16, 6, 1, 41, 20, 30, 17, 21, 0, 22, 29, 19, 49, 28, 15, 43, 45, 47, 23, 4, 5, 3, 24, 27, 26, 25, 46, 12, 13, 51, 10, 11, 50, 32, 42, 14, 37, 36, 39, 38, 33, 34, 35, 48, 31]
+
+[[results]]
+instance_path = "data/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "Restart"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [3, 30]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7557.7
+worst_objective = 7699.0
+std_objective = 47.1
+best_time_to_best_secs = 0.011848625
+avg_time_to_best_secs = 10.8944193084
+avg_total_time_secs = 31.1474066587
+
+[[results.runs]]
+run_index = 0
+status = "success"
+best_objective = 7542.0
+best_iteration = 200160
+time_to_best_secs = 18.371075334
+total_time_secs = 30.183360959
+solution = [51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10]
+
+[[results.runs]]
+run_index = 1
+status = "success"
+best_objective = 7542.0
+best_iteration = 125
+time_to_best_secs = 0.011848625
+total_time_secs = 31.355299208
+solution = [29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1]
+
+[[results.runs]]
+run_index = 2
+status = "success"
+best_objective = 7542.0
+best_iteration = 53487
+time_to_best_secs = 5.181558167
+total_time_secs = 31.859749834
+solution = [5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3]
+
+[[results.runs]]
+run_index = 3
+status = "success"
+best_objective = 7542.0
+best_iteration = 274335
+time_to_best_secs = 24.545989209
+total_time_secs = 30.527235042
+solution = [10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51]
+
+[[results.runs]]
+run_index = 4
+status = "success"
+best_objective = 7542.0
+best_iteration = 100056
+time_to_best_secs = 7.672244
+total_time_secs = 30.640222084
+solution = [6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1]
+
+[[results.runs]]
+run_index = 5
+status = "success"
+best_objective = 7542.0
+best_iteration = 100107
+time_to_best_secs = 8.200034791
+total_time_secs = 32.855101584
+solution = [29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1]
+
+[[results.runs]]
+run_index = 6
+status = "success"
+best_objective = 7542.0
+best_iteration = 203225
+time_to_best_secs = 17.885645375
+total_time_secs = 32.640230542
+solution = [46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25]
+
+[[results.runs]]
+run_index = 7
+status = "success"
+best_objective = 7699.0
+best_iteration = 253962
+time_to_best_secs = 21.888134625
+total_time_secs = 30.51654925
+solution = [21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 30, 20, 29, 41, 1, 6, 16, 2, 17]
+
+[[results.runs]]
+run_index = 8
+status = "success"
+best_objective = 7542.0
+best_iteration = 50799
+time_to_best_secs = 4.212970292
+total_time_secs = 30.108644125
+solution = [47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37]
+
+[[results.runs]]
+run_index = 9
+status = "success"
+best_objective = 7542.0
+best_iteration = 11976
+time_to_best_secs = 0.974692666
+total_time_secs = 30.787673959
+solution = [40, 18, 44, 31, 48, 0, 21, 30, 17, 2, 16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7]

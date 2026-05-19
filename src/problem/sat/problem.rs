@@ -203,8 +203,8 @@ impl Sat {
             let line = result
                 .map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
             let trimmed = line.trim();
-            if trimmed.is_empty() || trimmed.starts_with('c') {
-                continue; // skip comment lines
+            if trimmed.is_empty() || trimmed.starts_with('c') || trimmed.starts_with('%') {
+                continue; // skip comments and SATLIB '%' terminator
             }
             if trimmed.starts_with('p') {
                 // "p cnf <n_vars> <n_clauses>"
