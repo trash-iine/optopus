@@ -11,6 +11,7 @@ Run from anywhere:
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 import tomllib
@@ -20,6 +21,16 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR = HERE / "data"
+VIEWER_PATH = HERE / "viewer.html"
+
+PROBLEM_DIRECTION = {
+    "MaxCut": "max",
+    "SAT": "max",
+    "QUBO": "min",
+    "TSP": "min",
+    "JobShopScheduling": "min",
+    "VertexCover": "min",
+}
 
 
 @dataclass
@@ -248,6 +259,65 @@ def render_kind(kind: str, problems: dict[str, list[Row]]) -> str:
     return "\n".join(lines)
 
 
+def derive_band(source: str) -> str | None:
+    for band in ("small", "medium", "large"):
+        if source.endswith(f"_{band}"):
+            return band
+    return None
+
+
+def build_viewer_payload(items: list[tuple[str, Path, dict, dict]]) -> dict:
+    rows: list[dict] = []
+    for source, toml_path, heuristic, r in items:
+        instance_path = r["instance_path"]
+        problem = detect_problem(toml_path, instance_path)
+        rows.append({
+            "problem": problem,
+            "instance": instance_short(instance_path),
+            "instance_path": instance_path,
+            "heuristic_kind": heuristic["kind"],
+            "neighbor": heuristic.get("neighbor"),
+            "source": source,
+            "band": derive_band(source),
+            "summary": r["summary"],
+            "hyperparams": fmt_hyperparams(heuristic),
+        })
+    return {
+        "problem_direction": PROBLEM_DIRECTION,
+        "rows": rows,
+    }
+
+
+DATA_MARKER_BEGIN = "/* DATA_BEGIN */"
+DATA_MARKER_END = "/* DATA_END */"
+
+
+def build_viewer(items: list[tuple[str, Path, dict, dict]]) -> None:
+    if not VIEWER_PATH.is_file():
+        sys.exit(f"viewer template not found: {VIEWER_PATH}")
+    html = VIEWER_PATH.read_text()
+    start = html.find(DATA_MARKER_BEGIN)
+    end = html.find(DATA_MARKER_END)
+    if start < 0 or end < 0 or end < start:
+        sys.exit(
+            f"viewer markers not found in {VIEWER_PATH}: "
+            f"need {DATA_MARKER_BEGIN} ... {DATA_MARKER_END}"
+        )
+    payload = build_viewer_payload(items)
+    body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    new_html = (
+        html[: start + len(DATA_MARKER_BEGIN)]
+        + body
+        + html[end:]
+    )
+    VIEWER_PATH.write_text(new_html)
+    size_kb = len(new_html.encode()) / 1024
+    print(
+        f"wrote {VIEWER_PATH.relative_to(HERE.parent.parent)} "
+        f"({len(payload['rows'])} rows, {size_kb:.1f} KB)"
+    )
+
+
 def main() -> None:
     items = load_data()
     if not items:
@@ -257,6 +327,7 @@ def main() -> None:
         out_path = HERE / f"{snake_case(kind)}.md"
         out_path.write_text(render_kind(kind, problems))
         print(f"wrote {out_path.relative_to(HERE.parent.parent)}")
+    build_viewer(items)
 
 
 if __name__ == "__main__":

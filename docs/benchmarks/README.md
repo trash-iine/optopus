@@ -18,6 +18,16 @@ is planned but not yet executed.
 | JSSP (OR-Library) | 10 / 34 | Swap, Relocate | LS, TS, LAHC, SA, GA, Iterated, Restart |
 | VertexCover (GSET) | 30 / 24 | Flip, Swap | LS, TS, LAHC, SA, GA, Iterated, Restart |
 
+## Browse interactively
+
+Open [`viewer.html`](viewer.html) in any browser (no server needed) for a
+filterable, sortable cross-heuristic comparison. Switch between
+**Comparison** (problem × instance rows × heuristic columns, best cell
+highlighted per row) and **Flat** views. Filters: problem, heuristic,
+neighbor, size band, instance substring; metric selector covers best /
+avg / worst / std / time-to-best / total time. Filter state is encoded
+in the URL hash so a view can be shared by copying the URL.
+
 ## Per-heuristic results
 
 | Heuristic | Report |
