@@ -935,6 +935,25 @@ impl BenchmarkableProblem for VertexCover {
                     )),
                 }
             }
+            "LateAcceptanceHillClimbing" => {
+                let history_length = config.req_history_length("VertexCover")?;
+                match config.req_neighbor("VertexCover")? {
+                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<
+                        VertexCoverFlipNeighbor,
+                    >::new(
+                        cond, history_length
+                    ))),
+                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<
+                        VertexCoverSwapNeighbor,
+                    >::new(
+                        cond, history_length
+                    ))),
+                    n => Err(format!(
+                        "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
+                        n
+                    )),
+                }
+            }
             k => Err(format!("Unknown kind '{}' for VertexCover", k)),
         }
     }

@@ -11,6 +11,7 @@ Run from anywhere:
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 import tomllib
@@ -20,6 +21,16 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR = HERE / "data"
+VIEWER_PATH = HERE / "viewer.html"
+
+PROBLEM_DIRECTION = {
+    "MaxCut": "max",
+    "SAT": "max",
+    "QUBO": "min",
+    "TSP": "min",
+    "JobShopScheduling": "min",
+    "VertexCover": "min",
+}
 
 
 @dataclass
@@ -36,7 +47,26 @@ def snake_case(name: str) -> str:
     return s.lower()
 
 
-def detect_problem(instance_path: str) -> str:
+PROBLEM_DIRS = {
+    "maxcut": "MaxCut",
+    "qubo": "QUBO",
+    "sat": "SAT",
+    "tsp": "TSP",
+    "jssp": "JobShopScheduling",
+    "vertex_cover": "VertexCover",
+}
+
+
+def detect_problem(toml_path: Path, instance_path: str) -> str:
+    """Resolve the problem type from the curated file's parent directory.
+
+    Some problems share the same instance file (e.g. VertexCover uses MaxCut GSET
+    graphs), so the result TOML alone is ambiguous; the parent directory under
+    `docs/benchmarks/data/<problem>/` disambiguates.
+    """
+    rel_parts = toml_path.relative_to(DATA_DIR).parts
+    if len(rel_parts) >= 2:
+        return PROBLEM_DIRS.get(rel_parts[0], rel_parts[0])
     parts = Path(instance_path).parts
     if "max_cut" in parts:
         return "MaxCut"
@@ -59,6 +89,21 @@ def instance_sort_key(name: str) -> tuple[int, str]:
     m = re.match(r"^G(\d+)$", name)
     if m:
         return (int(m.group(1)), name)
+    m = re.match(r"^bqp(\d+)_(\d+)$", name)
+    if m:
+        return (int(m.group(1)) * 1000 + int(m.group(2)), name)
+    m = re.match(r"^uf(\d+)-(\d+)$", name)
+    if m:
+        return (int(m.group(1)) * 10000 + int(m.group(2)), name)
+    m = re.match(r"^la(\d+)$", name)
+    if m:
+        return (int(m.group(1)), name)
+    m = re.match(r"^abz(\d+)$", name)
+    if m:
+        return (100 + int(m.group(1)), name)
+    m = re.match(r"^orb(\d+)$", name)
+    if m:
+        return (200 + int(m.group(1)), name)
     return (10**9, name)
 
 
@@ -93,41 +138,43 @@ def fmt_hyperparams(h: dict) -> str:
     return ", ".join(parts)
 
 
-def load_data() -> list[tuple[str, dict, dict]]:
-    """Return a flat list of (source_stem, heuristic, result_block)."""
+def load_data() -> list[tuple[str, Path, dict, dict]]:
+    """Return a flat list of (source_stem, toml_path, heuristic, result_block)."""
     if not DATA_DIR.is_dir():
         sys.exit(f"data directory not found: {DATA_DIR}")
-    items: list[tuple[str, dict, dict]] = []
-    for toml_path in sorted(DATA_DIR.glob("*.toml")):
+    items: list[tuple[str, Path, dict, dict]] = []
+    for toml_path in sorted(DATA_DIR.rglob("*.toml")):
         with toml_path.open("rb") as f:
             doc = tomllib.load(f)
         source = toml_path.stem
         for r in doc.get("results", []):
-            items.append((source, r["heuristic"], r))
+            items.append((source, toml_path, r["heuristic"], r))
     return items
 
 
 def group_by_kind(
-    items: list[tuple[str, dict, dict]],
+    items: list[tuple[str, Path, dict, dict]],
 ) -> dict[str, dict[str, list[Row]]]:
     """kind -> problem -> rows. Later sources overwrite same (kind, instance)."""
     by_kind_problem: dict[str, dict[str, dict[str, Row]]] = defaultdict(
         lambda: defaultdict(dict)
     )
     seen_sources_per_kind: dict[str, set[str]] = defaultdict(set)
-    for source, heuristic, r in items:
+    for source, toml_path, heuristic, r in items:
         kind = heuristic["kind"]
         instance_path = r["instance_path"]
-        problem = detect_problem(instance_path)
+        problem = detect_problem(toml_path, instance_path)
         instance = instance_short(instance_path)
         bucket = by_kind_problem[kind][problem]
-        if instance in bucket:
+        neighbor = heuristic.get("neighbor")
+        row_key = (instance, neighbor) if neighbor else (instance, None)
+        if row_key in bucket:
             print(
-                f"warning: duplicate ({kind}, {instance}); "
-                f"using {source} over {bucket[instance].source}",
+                f"warning: duplicate ({kind}, {problem}, {row_key}); "
+                f"using {source} over {bucket[row_key].source}",
                 file=sys.stderr,
             )
-        bucket[instance] = Row(
+        bucket[row_key] = Row(
             instance=instance,
             summary=r["summary"],
             source=source,
@@ -137,10 +184,13 @@ def group_by_kind(
     out: dict[str, dict[str, list[Row]]] = {}
     for kind, problems in by_kind_problem.items():
         out[kind] = {}
-        for problem, rows_by_inst in problems.items():
+        for problem, rows_by_key in problems.items():
             out[kind][problem] = sorted(
-                rows_by_inst.values(),
-                key=lambda row: instance_sort_key(row.instance),
+                rows_by_key.values(),
+                key=lambda row: (
+                    instance_sort_key(row.instance),
+                    row.heuristic.get("neighbor") or "",
+                ),
             )
     return out
 
@@ -167,32 +217,38 @@ def render_kind(kind: str, problems: dict[str, list[Row]]) -> str:
         )
         lines.append(f"{len(rows)} instance(s), {runs_label}.")
         lines.append("")
-        lines.append(
-            "| Instance | Best | Avg | Worst | Std | "
-            "Best time-to-best [s] | Avg time-to-best [s] | "
-            "Avg total [s] | Runs | Source |"
-        )
-        lines.append("|---|---|---|---|---|---|---|---|---|---|")
+        has_neighbor = any(row.heuristic.get("neighbor") for row in rows)
+        if has_neighbor:
+            lines.append(
+                "| Instance | Neighbor | Best | Avg | Worst | Std | "
+                "Best time-to-best [s] | Avg time-to-best [s] | "
+                "Avg total [s] | Runs | Source |"
+            )
+            lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
+        else:
+            lines.append(
+                "| Instance | Best | Avg | Worst | Std | "
+                "Best time-to-best [s] | Avg time-to-best [s] | "
+                "Avg total [s] | Runs | Source |"
+            )
+            lines.append("|---|---|---|---|---|---|---|---|---|---|")
         for row in rows:
             s = row.summary
-            lines.append(
-                "| "
-                + " | ".join(
-                    [
-                        row.instance,
-                        fmt_int_objective(s["best_objective"]),
-                        fmt_num(s["avg_objective"]),
-                        fmt_int_objective(s["worst_objective"]),
-                        fmt_num(s["std_objective"]),
-                        fmt_num(s["best_time_to_best_secs"]),
-                        fmt_num(s["avg_time_to_best_secs"]),
-                        fmt_num(s["avg_total_time_secs"]),
-                        str(s["num_successful_runs"]),
-                        f"`{row.source}`",
-                    ]
-                )
-                + " |"
-            )
+            cols = [row.instance]
+            if has_neighbor:
+                cols.append(row.heuristic.get("neighbor") or "-")
+            cols += [
+                fmt_int_objective(s["best_objective"]),
+                fmt_num(s["avg_objective"]),
+                fmt_int_objective(s["worst_objective"]),
+                fmt_num(s["std_objective"]),
+                fmt_num(s["best_time_to_best_secs"]),
+                fmt_num(s["avg_time_to_best_secs"]),
+                fmt_num(s["avg_total_time_secs"]),
+                str(s["num_successful_runs"]),
+                f"`{row.source}`",
+            ]
+            lines.append("| " + " | ".join(cols) + " |")
             sources_seen.setdefault(row.source, row.heuristic)
         lines.append("")
     lines.append("## Hyperparameters per source")
@@ -201,6 +257,65 @@ def render_kind(kind: str, problems: dict[str, list[Row]]) -> str:
         lines.append(f"- `{source}`: {fmt_hyperparams(sources_seen[source])}")
     lines.append("")
     return "\n".join(lines)
+
+
+def derive_band(source: str) -> str | None:
+    for band in ("small", "medium", "large"):
+        if source.endswith(f"_{band}"):
+            return band
+    return None
+
+
+def build_viewer_payload(items: list[tuple[str, Path, dict, dict]]) -> dict:
+    rows: list[dict] = []
+    for source, toml_path, heuristic, r in items:
+        instance_path = r["instance_path"]
+        problem = detect_problem(toml_path, instance_path)
+        rows.append({
+            "problem": problem,
+            "instance": instance_short(instance_path),
+            "instance_path": instance_path,
+            "heuristic_kind": heuristic["kind"],
+            "neighbor": heuristic.get("neighbor"),
+            "source": source,
+            "band": derive_band(source),
+            "summary": r["summary"],
+            "hyperparams": fmt_hyperparams(heuristic),
+        })
+    return {
+        "problem_direction": PROBLEM_DIRECTION,
+        "rows": rows,
+    }
+
+
+DATA_MARKER_BEGIN = "/* DATA_BEGIN */"
+DATA_MARKER_END = "/* DATA_END */"
+
+
+def build_viewer(items: list[tuple[str, Path, dict, dict]]) -> None:
+    if not VIEWER_PATH.is_file():
+        sys.exit(f"viewer template not found: {VIEWER_PATH}")
+    html = VIEWER_PATH.read_text()
+    start = html.find(DATA_MARKER_BEGIN)
+    end = html.find(DATA_MARKER_END)
+    if start < 0 or end < 0 or end < start:
+        sys.exit(
+            f"viewer markers not found in {VIEWER_PATH}: "
+            f"need {DATA_MARKER_BEGIN} ... {DATA_MARKER_END}"
+        )
+    payload = build_viewer_payload(items)
+    body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    new_html = (
+        html[: start + len(DATA_MARKER_BEGIN)]
+        + body
+        + html[end:]
+    )
+    VIEWER_PATH.write_text(new_html)
+    size_kb = len(new_html.encode()) / 1024
+    print(
+        f"wrote {VIEWER_PATH.relative_to(HERE.parent.parent)} "
+        f"({len(payload['rows'])} rows, {size_kb:.1f} KB)"
+    )
 
 
 def main() -> None:
@@ -212,6 +327,7 @@ def main() -> None:
         out_path = HERE / f"{snake_case(kind)}.md"
         out_path.write_text(render_kind(kind, problems))
         print(f"wrote {out_path.relative_to(HERE.parent.parent)}")
+    build_viewer(items)
 
 
 if __name__ == "__main__":

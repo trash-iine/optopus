@@ -1,0 +1,27 @@
+# Auto-generated. Profile: Tsp / small (LinKernighanHelsgott).
+# See docs/benchmarks/profiles.md
+
+num_runs = 10
+
+[[instances]]
+path = "data/tsp/burma14.tsp"
+problem = "Tsp"
+
+[[instances]]
+path = "data/tsp/eil51.tsp"
+problem = "Tsp"
+
+[[instances]]
+path = "data/tsp/att48.tsp"
+problem = "Tsp"
+
+[[instances]]
+path = "data/tsp/berlin52.tsp"
+problem = "Tsp"
+
+[[heuristics]]
+kind = "LinKernighanHelsgott"
+num_neighbors = 5
+max_depth = 5
+[heuristics.stop_condition]
+max_duration_secs = 30.0
