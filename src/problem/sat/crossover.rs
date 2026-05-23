@@ -17,8 +17,8 @@ impl Crossover<Sat> for SatUniformCrossover {
         prob: &Sat,
         sol1: &SatSolution,
         sol2: &SatSolution,
+        rng: &mut rand::rngs::SmallRng,
     ) -> SatSolution {
-        let mut rng = rand::rng();
         let mut sol = sol1.clone();
         for i in 0..prob.n_vars() {
             if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
@@ -116,6 +116,7 @@ impl SubProblemExtractable for Sat {
 mod tests {
     use crate::problem::sat::{Sat, SatSolution};
     use crate::search_state::{Crossover, SubProblemExtractable};
+    use rand::SeedableRng;
 
     use super::SatUniformCrossover;
 
@@ -139,7 +140,8 @@ mod tests {
         let sat = make_sat();
         let s = make_sol(&sat, vec![true, false, true]);
         let mut cx = SatUniformCrossover;
-        let offspring = cx.crossover(&sat, &s, &s);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&sat, &s, &s, &mut rng);
         assert_eq!(offspring.x, s.x);
         assert_eq!(offspring.n_satisfied, s.n_satisfied);
     }
@@ -150,7 +152,8 @@ mod tests {
         let a = make_sol(&sat, vec![true, false, true]);
         let b = make_sol(&sat, vec![false, true, false]);
         let mut cx = SatUniformCrossover;
-        let offspring = cx.crossover(&sat, &a, &b);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&sat, &a, &b, &mut rng);
         let n_sat = offspring.n_satisfied as i64;
         for i in 0..sat.n_vars() {
             let mut flipped = offspring.x.clone();

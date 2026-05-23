@@ -79,7 +79,7 @@ where
         }
 
         let neighbor = N::iter(state.instance, &state.solution)
-            .choose(&mut rand::rng())
+            .choose(&mut state.rng)
             .ok_or_else(|| {
                 OptError::InvalidState(
                     "LateAcceptanceHillClimbing: neighborhood is empty, no move can be selected"

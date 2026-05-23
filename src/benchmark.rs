@@ -300,6 +300,12 @@ pub struct BenchmarkConfig {
     pub num_runs: usize,
     pub instances: Vec<InstanceConfig>,
     pub heuristics: Vec<HeuristicConfig>,
+    /// Optional master seed. When set, each `(instance, heuristic, run_index)`
+    /// triple is run with a deterministic per-run seed derived from this master,
+    /// so re-running the same config produces bit-identical TOML output.
+    /// When `None`, every run is entropy-seeded (the original behavior).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<u64>,
 }
 
 // ---------------------------------------------------------------------------
@@ -315,6 +321,26 @@ pub struct SingleRunResult {
     pub best_iteration: u64,
     pub time_to_best_secs: f64,
     pub total_time_secs: f64,
+    /// Objective value of the random initial solution; absent on failed runs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub initial_objective: Option<f64>,
+    /// `best_objective - initial_objective`, sign-corrected so that positive
+    /// values always mean improvement (regardless of optimization direction).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub improvement: Option<f64>,
+    /// Number of moves the heuristic accepted during the run.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub n_accepted: Option<u64>,
+    /// Number of iterations the heuristic advanced without applying a move.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub n_rejected: Option<u64>,
+    /// Number of times the best solution was strictly improved.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub n_best_updates: Option<u64>,
+    /// Per-run seed actually used. Set only when the benchmark config provided a master `seed`.
+    /// `SearchState::new_with_seed(instance, seed)` reproduces this single run exactly.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<u64>,
     pub solution: Vec<usize>,
 }
 
@@ -333,6 +359,22 @@ pub struct Summary {
     pub best_time_to_best_secs: f64,
     pub avg_time_to_best_secs: f64,
     pub avg_total_time_secs: f64,
+    /// Average objective value of the random initial solution.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avg_initial_objective: Option<f64>,
+    /// Average improvement (sign-corrected) from initial to best across runs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avg_improvement: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avg_n_accepted: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avg_n_rejected: Option<f64>,
+    /// Average acceptance rate across runs:
+    /// `n_accepted / (n_accepted + n_rejected)`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avg_acceptance_rate: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avg_n_best_updates: Option<f64>,
 }
 
 /// All runs for one (instance, heuristic) combination.
@@ -1203,7 +1245,7 @@ impl Benchmark {
         problem: &ProblemKind,
         heuristic_config: &HeuristicConfig,
     ) {
-        let metrics = run_for_problem_kind(problem, heuristic_config, instance_path);
+        let metrics = run_for_problem_kind(problem, heuristic_config, instance_path, None);
         self.results.push(BenchmarkResult {
             instance_path: instance_path.to_string(),
             problem: problem.clone(),
@@ -1228,75 +1270,130 @@ struct RunMetrics {
     best_iteration: u64,
     time_to_best_secs: f64,
     total_time_secs: f64,
+    initial_objective: Option<f64>,
+    improvement: Option<f64>,
+    n_accepted: Option<u64>,
+    n_rejected: Option<u64>,
+    n_best_updates: Option<u64>,
+    seed: Option<u64>,
     solution: Vec<usize>,
+}
+
+fn empty_metrics(status: String, seed: Option<u64>) -> RunMetrics {
+    RunMetrics {
+        status,
+        best_objective: 0.0,
+        best_iteration: 0,
+        time_to_best_secs: 0.0,
+        total_time_secs: 0.0,
+        initial_objective: None,
+        improvement: None,
+        n_accepted: None,
+        n_rejected: None,
+        n_best_updates: None,
+        seed,
+        solution: Vec::new(),
+    }
+}
+
+/// Derives a per-run u64 seed from the master seed and the run coordinates.
+/// Using a hash keeps the seed deterministic and well-mixed even when the master
+/// is small (e.g. `seed = 0`).
+fn derive_run_seed(
+    master: u64,
+    instance_path: &str,
+    heuristic_idx: usize,
+    run_index: usize,
+) -> u64 {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    let mut h = DefaultHasher::new();
+    master.hash(&mut h);
+    instance_path.hash(&mut h);
+    (heuristic_idx as u64).hash(&mut h);
+    (run_index as u64).hash(&mut h);
+    // Clear the top bit so the seed fits in TOML's signed i64 range when
+    // serialized into the benchmark report.
+    h.finish() & 0x7FFF_FFFF_FFFF_FFFF
 }
 
 fn run_for_problem_kind(
     problem_kind: &ProblemKind,
     config: &HeuristicConfig,
     instance_path: &str,
+    seed: Option<u64>,
 ) -> RunMetrics {
+    let minimize = matches!(
+        problem_kind,
+        ProblemKind::Qubo | ProblemKind::Tsp | ProblemKind::VertexCover
+    );
     match problem_kind {
-        ProblemKind::MaxCut => run_typed::<MaxCut>(instance_path, config),
-        ProblemKind::Qubo => run_typed::<Qubo>(instance_path, config),
-        ProblemKind::Sat => run_typed::<Sat>(instance_path, config),
-        ProblemKind::Tsp => run_typed::<TspWithCoordinates>(instance_path, config),
-        ProblemKind::VertexCover => run_typed::<VertexCover>(instance_path, config),
-        ProblemKind::JobShop => run_typed::<JobShopScheduling>(instance_path, config),
+        ProblemKind::MaxCut => run_typed::<MaxCut>(instance_path, config, minimize, seed),
+        ProblemKind::Qubo => run_typed::<Qubo>(instance_path, config, minimize, seed),
+        ProblemKind::Sat => run_typed::<Sat>(instance_path, config, minimize, seed),
+        ProblemKind::Tsp => run_typed::<TspWithCoordinates>(instance_path, config, minimize, seed),
+        ProblemKind::VertexCover => {
+            run_typed::<VertexCover>(instance_path, config, minimize, seed)
+        }
+        ProblemKind::JobShop => {
+            run_typed::<JobShopScheduling>(instance_path, config, minimize, seed)
+        }
     }
 }
 
 fn run_typed<P: BenchmarkableProblem + 'static>(
     instance_path: &str,
     config: &HeuristicConfig,
+    minimize: bool,
+    seed: Option<u64>,
 ) -> RunMetrics
 where
     P::Solution: BenchmarkSolution + Distance,
 {
     let heuristic = match build_heuristic::<P>(config) {
         Ok(h) => h,
-        Err(e) => {
-            return RunMetrics {
-                status: format!("config error: {}", e),
-                best_objective: 0.0,
-                best_iteration: 0,
-                time_to_best_secs: 0.0,
-                total_time_secs: 0.0,
-                solution: Vec::new(),
-            };
-        }
+        Err(e) => return empty_metrics(format!("config error: {}", e), seed),
     };
-    run_problem::<P>(instance_path, heuristic)
+    run_problem::<P>(instance_path, heuristic, minimize, seed)
 }
 
-fn run_problem<P>(instance_path: &str, mut heuristic: Box<dyn Heuristic<P>>) -> RunMetrics
+fn run_problem<P>(
+    instance_path: &str,
+    mut heuristic: Box<dyn Heuristic<P>>,
+    minimize: bool,
+    seed: Option<u64>,
+) -> RunMetrics
 where
     P: BenchmarkProblem,
     P::Solution: BenchmarkSolution,
 {
     let instance = match P::load_instance(instance_path) {
         Ok(v) => v,
-        Err(e) => {
-            return RunMetrics {
-                status: format!("error loading instance: {}", e),
-                best_objective: 0.0,
-                best_iteration: 0,
-                time_to_best_secs: 0.0,
-                total_time_secs: 0.0,
-                solution: Vec::new(),
-            };
-        }
+        Err(e) => return empty_metrics(format!("error loading instance: {}", e), seed),
     };
-    let mut state = SearchState::new(&instance);
+    let mut state = match seed {
+        Some(s) => SearchState::new_with_seed(&instance, s),
+        None => SearchState::new(&instance),
+    };
+    let initial_objective = state.initial_solution.best_objective_f64();
     let start = std::time::Instant::now();
     let status = heuristic.run(&mut state);
     let total_time = start.elapsed();
+    let best_objective = state.best_solution.best_objective_f64();
+    let raw_diff = best_objective - initial_objective;
+    let improvement = if minimize { -raw_diff } else { raw_diff };
     RunMetrics {
         status: status_str(status),
-        best_objective: state.best_solution.best_objective_f64(),
+        best_objective,
         best_iteration: state.best_iteration,
         time_to_best_secs: (state.best_time - state.start_time).as_secs_f64(),
         total_time_secs: total_time.as_secs_f64(),
+        initial_objective: Some(initial_objective),
+        improvement: Some(improvement),
+        n_accepted: Some(state.n_accepted),
+        n_rejected: Some(state.n_rejected),
+        n_best_updates: Some(state.n_best_updates),
+        seed,
         solution: state.best_solution.encode_as_indices(),
     }
 }
@@ -1321,6 +1418,12 @@ fn compute_summary(runs: &[SingleRunResult], minimize: bool) -> Summary {
             best_time_to_best_secs: f64::NAN,
             avg_time_to_best_secs: f64::NAN,
             avg_total_time_secs: f64::NAN,
+            avg_initial_objective: None,
+            avg_improvement: None,
+            avg_n_accepted: None,
+            avg_n_rejected: None,
+            avg_acceptance_rate: None,
+            avg_n_best_updates: None,
         };
     }
     let objectives: Vec<f64> = successful.iter().map(|r| r.best_objective).collect();
@@ -1343,6 +1446,57 @@ fn compute_summary(runs: &[SingleRunResult], minimize: bool) -> Summary {
     let avg_ttb = times_to_best.iter().sum::<f64>() / n as f64;
     let avg_total = successful.iter().map(|r| r.total_time_secs).sum::<f64>() / n as f64;
 
+    let avg_opt = |xs: Vec<f64>| -> Option<f64> {
+        if xs.len() == n {
+            Some(xs.iter().sum::<f64>() / n as f64)
+        } else {
+            None
+        }
+    };
+
+    let avg_initial_objective = avg_opt(
+        successful
+            .iter()
+            .filter_map(|r| r.initial_objective)
+            .collect(),
+    );
+    let avg_improvement = avg_opt(successful.iter().filter_map(|r| r.improvement).collect());
+    let accepted_vals: Vec<u64> = successful.iter().filter_map(|r| r.n_accepted).collect();
+    let rejected_vals: Vec<u64> = successful.iter().filter_map(|r| r.n_rejected).collect();
+    let best_vals: Vec<u64> = successful.iter().filter_map(|r| r.n_best_updates).collect();
+    let avg_n_accepted = if accepted_vals.len() == n {
+        Some(accepted_vals.iter().map(|&v| v as f64).sum::<f64>() / n as f64)
+    } else {
+        None
+    };
+    let avg_n_rejected = if rejected_vals.len() == n {
+        Some(rejected_vals.iter().map(|&v| v as f64).sum::<f64>() / n as f64)
+    } else {
+        None
+    };
+    let avg_acceptance_rate = if accepted_vals.len() == n && rejected_vals.len() == n {
+        let rates: Vec<f64> = accepted_vals
+            .iter()
+            .zip(rejected_vals.iter())
+            .map(|(&a, &r)| {
+                let total = a + r;
+                if total == 0 {
+                    0.0
+                } else {
+                    a as f64 / total as f64
+                }
+            })
+            .collect();
+        Some(rates.iter().sum::<f64>() / n as f64)
+    } else {
+        None
+    };
+    let avg_n_best_updates = if best_vals.len() == n {
+        Some(best_vals.iter().map(|&v| v as f64).sum::<f64>() / n as f64)
+    } else {
+        None
+    };
+
     Summary {
         num_successful_runs: n,
         best_objective: best,
@@ -1352,6 +1506,12 @@ fn compute_summary(runs: &[SingleRunResult], minimize: bool) -> Summary {
         best_time_to_best_secs: best_ttb,
         avg_time_to_best_secs: avg_ttb,
         avg_total_time_secs: avg_total,
+        avg_initial_objective,
+        avg_improvement,
+        avg_n_accepted,
+        avg_n_rejected,
+        avg_acceptance_rate,
+        avg_n_best_updates,
     }
 }
 
@@ -1363,6 +1523,12 @@ fn to_single_run_result(run_index: usize, m: RunMetrics) -> SingleRunResult {
         best_iteration: m.best_iteration,
         time_to_best_secs: m.time_to_best_secs,
         total_time_secs: m.total_time_secs,
+        initial_objective: m.initial_objective,
+        improvement: m.improvement,
+        n_accepted: m.n_accepted,
+        n_rejected: m.n_rejected,
+        n_best_updates: m.n_best_updates,
+        seed: m.seed,
         solution: m.solution,
     }
 }
@@ -1435,7 +1601,7 @@ impl Benchmark {
         let instance_paths = expand_instance_paths(&config)?;
 
         for (instance_path, problem_kind) in &instance_paths {
-            for heuristic_cfg in &config.heuristics {
+            for (heuristic_idx, heuristic_cfg) in config.heuristics.iter().enumerate() {
                 tracing::info!(
                     instance = %instance_path,
                     heuristic = %heuristic_cfg.kind,
@@ -1443,14 +1609,22 @@ impl Benchmark {
                     max_iteration = ?heuristic_cfg.stop_condition.max_iteration,
                     max_duration_secs = ?heuristic_cfg.stop_condition.max_duration_secs,
                     max_failed_update = ?heuristic_cfg.stop_condition.max_failed_update,
+                    seed = ?config.seed,
                     "Start:"
                 );
 
+                let master_seed = config.seed;
                 let mut runs: Vec<SingleRunResult> = (0..config.num_runs)
                     .into_par_iter()
                     .map(|run_index| {
-                        let metrics =
-                            run_for_problem_kind(problem_kind, heuristic_cfg, instance_path);
+                        let run_seed = master_seed
+                            .map(|m| derive_run_seed(m, instance_path, heuristic_idx, run_index));
+                        let metrics = run_for_problem_kind(
+                            problem_kind,
+                            heuristic_cfg,
+                            instance_path,
+                            run_seed,
+                        );
 
                         tracing::info!(
                             run = run_index + 1,

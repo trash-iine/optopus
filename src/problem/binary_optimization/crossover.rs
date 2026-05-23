@@ -17,8 +17,8 @@ impl Crossover<FormulaProblem> for FormulaUniformCrossover {
         prob: &FormulaProblem,
         sol1: &FormulaSolution,
         sol2: &FormulaSolution,
+        rng: &mut rand::rngs::SmallRng,
     ) -> FormulaSolution {
-        let mut rng = rand::rng();
         let mut sol = sol1.clone();
         for i in 0..prob.n_vars {
             if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
@@ -145,6 +145,7 @@ impl SubProblemExtractable for FormulaProblem {
 mod tests {
     use crate::problem::binary_optimization::problem::{Expr, FormulaProblem, FormulaSolution, OptDirection, Value};
     use crate::search_state::{Crossover, SubProblemExtractable};
+    use rand::SeedableRng;
 
     use super::FormulaUniformCrossover;
 
@@ -168,7 +169,8 @@ mod tests {
         let prob = make_prob();
         let s = make_sol(&prob, vec![true, false, true]);
         let mut cx = FormulaUniformCrossover;
-        let offspring = cx.crossover(&prob, &s, &s);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&prob, &s, &s, &mut rng);
         assert_eq!(offspring.x, s.x);
         assert!((offspring.score - s.score).abs() < 1e-9);
     }
@@ -179,7 +181,8 @@ mod tests {
         let a = make_sol(&prob, vec![true, false, true]);
         let b = make_sol(&prob, vec![false, true, false]);
         let mut cx = FormulaUniformCrossover;
-        let offspring = cx.crossover(&prob, &a, &b);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&prob, &a, &b, &mut rng);
         for i in 0..prob.n_vars {
             let mut flipped = offspring.x.clone();
             flipped[i] = !flipped[i];

@@ -164,10 +164,11 @@ pub trait Crossover<Problem: ProblemTrait> {
         prob: &Problem,
         sol1: &Problem::Solution,
         sol2: &Problem::Solution,
+        rng: &mut rand::rngs::SmallRng,
     ) -> Problem::Solution;
 }
 
-/// Forwards [`Crossover`] through a boxed trait object so [`GeneticAlgorithm`]
+/// Forwards [`Crossover`] through a boxed trait object so `GeneticAlgorithm`
 /// can use a runtime-selected operator (needed by the benchmark TOML config).
 impl<P: ProblemTrait> Crossover<P> for Box<dyn Crossover<P>> {
     fn crossover(
@@ -175,8 +176,9 @@ impl<P: ProblemTrait> Crossover<P> for Box<dyn Crossover<P>> {
         prob: &P,
         sol1: &P::Solution,
         sol2: &P::Solution,
+        rng: &mut rand::rngs::SmallRng,
     ) -> P::Solution {
-        (**self).crossover(prob, sol1, sol2)
+        (**self).crossover(prob, sol1, sol2, rng)
     }
 }
 

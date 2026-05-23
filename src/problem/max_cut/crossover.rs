@@ -50,8 +50,8 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
         prob: &MaxCut,
         sol1: &MaxCutSolution,
         sol2: &MaxCutSolution,
+        rng: &mut rand::rngs::SmallRng,
     ) -> MaxCutSolution {
-        let mut rng = rand::rng();
         let mut sol = sol1.clone();
         for &i in prob.graph.iter_on_vertices() {
             if sol.cut[i] != sol2.cut[i] && rng.random::<bool>() {
@@ -177,6 +177,7 @@ impl SubProblemExtractable for MaxCut {
 mod tests {
     use crate::problem::max_cut::{MaxCut, MaxCutSolution};
     use crate::search_state::{Crossover, SubProblemExtractable};
+    use rand::SeedableRng;
 
     use super::MaxCutUniformCrossover;
 
@@ -197,7 +198,8 @@ mod tests {
         let mc = make_mc();
         let s = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
         let mut cx = MaxCutUniformCrossover;
-        let offspring = cx.crossover(&mc, &s, &s);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&mc, &s, &s, &mut rng);
         assert_eq!(offspring.cut, s.cut);
         assert_eq!(offspring.objective, s.objective);
     }
@@ -208,7 +210,8 @@ mod tests {
         let a = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
         let b = make_sol(&mc, &[(0, true), (1, false), (2, true)]);
         let mut cx = MaxCutUniformCrossover;
-        let offspring = cx.crossover(&mc, &a, &b);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&mc, &a, &b, &mut rng);
         for &v in mc.graph.iter_on_vertices() {
             let g = offspring.gain[v];
             let mut flipped = offspring.cut.clone();

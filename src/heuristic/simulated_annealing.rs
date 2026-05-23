@@ -10,9 +10,15 @@ use std::ops::{DivAssign, MulAssign};
 /// Accepts an [`Evaluable<f64>`] value that encodes both the optimization direction and
 /// the objective change. Improving moves are always accepted; worsening moves are
 /// accepted with probability `exp(-worsening / T)`.
-pub fn boltzmann_accept(delta: Evaluable<f64>, temperature: f64) -> bool {
+///
+/// The `rng` argument lets callers thread `SearchState.rng` through for reproducible runs.
+pub fn boltzmann_accept(
+    delta: Evaluable<f64>,
+    temperature: f64,
+    rng: &mut rand::rngs::SmallRng,
+) -> bool {
     let worsening = delta.worsening_amount();
-    worsening < 0.0 || rand::rng().random::<f64>() < (-worsening / temperature).exp()
+    worsening < 0.0 || rng.random::<f64>() < (-worsening / temperature).exp()
 }
 
 /// Simulated annealing heuristic.
@@ -70,9 +76,9 @@ where
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let neighbor = N::iter(state.instance, &state.solution)
-            .choose(&mut rand::rng())
+            .choose(&mut state.rng)
             .ok_or_else(|| OptError::InvalidState("SimulatedAnnealing: neighborhood is empty, no move can be selected".to_string()))?;
-        if boltzmann_accept(neighbor.evaluate(), self.current_temperature) {
+        if boltzmann_accept(neighbor.evaluate(), self.current_temperature, &mut state.rng) {
             state.apply(&neighbor)?;
         } else {
             state.progress_iteration();
@@ -142,10 +148,10 @@ where
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let neighbor = N::iter(state.instance, &state.solution)
-            .choose(&mut rand::rng())
+            .choose(&mut state.rng)
             .ok_or_else(|| OptError::InvalidState("SimulatedAnnealing (bang-bang): neighborhood is empty, no move can be selected".to_string()))?;
 
-        if boltzmann_accept(neighbor.evaluate(), self.current_temperature) {
+        if boltzmann_accept(neighbor.evaluate(), self.current_temperature, &mut state.rng) {
             state.apply(&neighbor)?;
         }
 

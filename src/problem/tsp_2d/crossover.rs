@@ -19,8 +19,8 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
         prob: &TspWithCoordinates,
         sol1: &TspSolution,
         sol2: &TspSolution,
+        rng: &mut rand::rngs::SmallRng,
     ) -> TspSolution {
-        let mut rng = rand::rng();
         let n = prob.get_n();
 
         if n == 0 {
@@ -161,6 +161,7 @@ mod tests {
 
     use crate::problem::tsp_2d::{TspSolution, TspWithCoordinates};
     use crate::search_state::{Crossover, SubProblemExtractable};
+    use rand::SeedableRng;
 
     use super::TspOrderCrossover;
 
@@ -184,7 +185,8 @@ mod tests {
         let a = make_sol(&tsp, vec![0, 1, 2, 3]);
         let b = make_sol(&tsp, vec![2, 0, 3, 1]);
         let mut cx = TspOrderCrossover;
-        let offspring = cx.crossover(&tsp, &a, &b);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&tsp, &a, &b, &mut rng);
         let cities: HashSet<usize> = offspring.tour.iter().copied().collect();
         assert_eq!(offspring.tour.len(), 4);
         assert_eq!(cities, (0..4).collect::<HashSet<usize>>(), "offspring must visit all 4 cities exactly once");
@@ -195,7 +197,8 @@ mod tests {
         let tsp = make_tsp();
         let s = make_sol(&tsp, vec![0, 1, 2, 3]);
         let mut cx = TspOrderCrossover;
-        let offspring = cx.crossover(&tsp, &s, &s);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&tsp, &s, &s, &mut rng);
         assert_eq!(offspring.tour, s.tour);
     }
 

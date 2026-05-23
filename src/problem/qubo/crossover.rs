@@ -12,8 +12,13 @@ use super::problem::{Qubo, QuboSolution, make_sub_problem_from};
 pub struct QuboUniformCrossover;
 
 impl Crossover<Qubo> for QuboUniformCrossover {
-    fn crossover(&mut self, prob: &Qubo, sol1: &QuboSolution, sol2: &QuboSolution) -> QuboSolution {
-        let mut rng = rand::rng();
+    fn crossover(
+        &mut self,
+        prob: &Qubo,
+        sol1: &QuboSolution,
+        sol2: &QuboSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> QuboSolution {
         let mut sol = sol1.clone();
         for &i in prob.iter_on_variables() {
             if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
@@ -68,6 +73,7 @@ impl SubProblemExtractable for Qubo {
 mod tests {
     use crate::problem::qubo::{Qubo, QuboSolution};
     use crate::search_state::{Crossover, SubProblemExtractable};
+    use rand::SeedableRng;
 
     use super::QuboUniformCrossover;
 
@@ -98,7 +104,8 @@ mod tests {
         let qubo = make_qubo();
         let s = make_sol(&qubo, &[(0, false), (1, true), (2, false)]);
         let mut cx = QuboUniformCrossover;
-        let offspring = cx.crossover(&qubo, &s, &s);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&qubo, &s, &s, &mut rng);
         assert_eq!(offspring.x, s.x);
         assert_eq!(offspring.objective, s.objective);
     }
@@ -109,7 +116,8 @@ mod tests {
         let a = make_sol(&qubo, &[(0, false), (1, true), (2, false)]);
         let b = make_sol(&qubo, &[(0, true), (1, false), (2, true)]);
         let mut cx = QuboUniformCrossover;
-        let offspring = cx.crossover(&qubo, &a, &b);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&qubo, &a, &b, &mut rng);
         for &i in qubo.iter_on_variables() {
             let g = offspring.gain[i];
             let mut flipped = offspring.x.clone();

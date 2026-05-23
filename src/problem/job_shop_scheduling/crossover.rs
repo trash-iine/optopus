@@ -19,9 +19,9 @@ impl Crossover<JobShopScheduling> for JobShopPpxCrossover {
         prob: &JobShopScheduling,
         sol1: &JobShopSolution,
         sol2: &JobShopSolution,
+        rng: &mut rand::rngs::SmallRng,
     ) -> JobShopSolution {
         let n = sol1.operations.len();
-        let mut rng = rand::rng();
         let mut a = sol1.operations.clone();
         let mut b = sol2.operations.clone();
         let mut child = Vec::with_capacity(n);
@@ -53,6 +53,7 @@ impl Crossover<JobShopScheduling> for JobShopPpxCrossover {
 mod tests {
     use super::*;
     use crate::search_state::ProblemTrait;
+    use rand::SeedableRng;
 
     fn make_inst() -> JobShopScheduling {
         JobShopScheduling::new(
@@ -81,8 +82,9 @@ mod tests {
         let a = make_sol(&inst, vec![0, 1, 2, 0, 1, 2, 0, 1, 2]);
         let b = make_sol(&inst, vec![2, 1, 0, 2, 0, 1, 1, 2, 0]);
         let mut cx = JobShopPpxCrossover;
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         for _ in 0..20 {
-            let child = cx.crossover(&inst, &a, &b);
+            let child = cx.crossover(&inst, &a, &b, &mut rng);
             assert_eq!(child.operations.len(), 9);
             let mut counts = vec![0usize; inst.n_jobs];
             for &j in &child.operations {
@@ -97,18 +99,19 @@ mod tests {
         let inst = make_inst();
         let a = make_sol(&inst, vec![0, 1, 2, 0, 1, 2, 0, 1, 2]);
         let mut cx = JobShopPpxCrossover;
-        let child = cx.crossover(&inst, &a, &a);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let child = cx.crossover(&inst, &a, &a, &mut rng);
         assert_eq!(child.operations, a.operations);
     }
 
     #[test]
     fn test_ppx_random_parents_random_inst() {
         let inst = make_inst();
-        let mut rng = rand::rng();
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         let a = inst.new_solution(&mut rng);
         let b = inst.new_solution(&mut rng);
         let mut cx = JobShopPpxCrossover;
-        let child = cx.crossover(&inst, &a, &b);
+        let child = cx.crossover(&inst, &a, &b, &mut rng).unwrap();
         assert_eq!(child.operations.len(), inst.n_jobs * inst.n_machines);
     }
 }

@@ -154,10 +154,10 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
     fn initialize_population<'a>(
         &mut self,
         state: &mut SearchState<'a, P>,
-        rng: &mut impl rand::Rng,
     ) -> Result<(), OptError> {
         while self.population.len() < self.population_size {
-            let seed = state.instance.new_solution(rng);
+            let instance = state.instance;
+            let seed = instance.new_solution(&mut state.rng);
             let member = match self.init_improvement.as_mut() {
                 Some(op) => Self::improve_via_sub_run(state, seed, op.as_mut())?,
                 None => seed,
@@ -312,20 +312,20 @@ where
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let mut rng = rand::rng();
-
         // --- Initialise population on first call ---
         if self.population.len() < self.population_size {
-            self.initialize_population(state, &mut rng)?;
+            self.initialize_population(state)?;
         }
 
         // --- Selection ---
-        let (i_a, i_b) = self.select_parent_indices(&mut rng);
+        let (i_a, i_b) = self.select_parent_indices(&mut state.rng);
         let parent_a = self.population[i_a].clone();
         let parent_b = self.population[i_b].clone();
 
         // --- Crossover ---
-        let offspring = self.crossover.crossover(state.instance, &parent_a, &parent_b);
+        let offspring =
+            self.crossover
+                .crossover(state.instance, &parent_a, &parent_b, &mut state.rng);
 
         // --- Mutation (sub-run clone/merge pattern from Iterated) ---
         let mutated = Self::improve_via_sub_run(state, offspring, self.mutation.as_mut())?;
@@ -356,6 +356,7 @@ mod tests {
             _prob: &MaxCut,
             sol1: &MaxCutSolution,
             _sol2: &MaxCutSolution,
+            _rng: &mut rand::rngs::SmallRng,
         ) -> MaxCutSolution {
             sol1.clone()
         }
