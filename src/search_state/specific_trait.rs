@@ -66,7 +66,6 @@ pub trait ProblemTrait {
 pub trait MoveToNeighbor<Problem>
 where
     Problem: ProblemTrait,
-    Problem::Solution: Rankable,
 {
     /// Returns the new iteration count after applying this move (default: `iter + 1`).
     fn apply_to_iteration(&self, iter: u64) -> u64 {
@@ -159,13 +158,19 @@ pub trait Distance {
 /// can call an inner heuristic's `run` method during crossover.
 /// Stateless operators (e.g. uniform crossover) simply do not mutate `self`.
 pub trait Crossover<Problem: ProblemTrait> {
+    /// Combines two parent solutions into a single offspring.
+    ///
+    /// Returns `Err` only when the operator genuinely cannot produce an
+    /// offspring (e.g. an inner sub-heuristic failed). Stateless operators
+    /// such as the per-problem uniform crossovers never fail and simply
+    /// return `Ok(...)`.
     fn crossover(
         &mut self,
         prob: &Problem,
         sol1: &Problem::Solution,
         sol2: &Problem::Solution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> Problem::Solution;
+    ) -> Result<Problem::Solution, crate::error::OptError>;
 }
 
 /// Forwards [`Crossover`] through a boxed trait object so `GeneticAlgorithm`
@@ -177,7 +182,7 @@ impl<P: ProblemTrait> Crossover<P> for Box<dyn Crossover<P>> {
         sol1: &P::Solution,
         sol2: &P::Solution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> P::Solution {
+    ) -> Result<P::Solution, crate::error::OptError> {
         (**self).crossover(prob, sol1, sol2, rng)
     }
 }

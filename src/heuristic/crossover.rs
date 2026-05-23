@@ -1,4 +1,5 @@
 use super::Heuristic;
+use crate::error::OptError;
 use crate::search_state::{Crossover, SearchState, SubProblemExtractable};
 use rand::RngCore;
 
@@ -33,15 +34,13 @@ impl<P: SubProblemExtractable> Crossover<P> for SubProblemBasedCrossover<P> {
         sol1: &P::Solution,
         sol2: &P::Solution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> P::Solution {
+    ) -> Result<P::Solution, OptError> {
         let sub_prob = prob.extract_sub_problem(sol1, sol2);
         // Fork a deterministic seed from the parent RNG so the sub-search
         // stays reproducible while remaining independent of the outer stream.
         let sub_seed = rng.next_u64();
         let mut sub_state = SearchState::new_with_seed(&sub_prob, sub_seed);
-        self.sub_heuristic
-            .run(&mut sub_state)
-            .expect("sub_heuristic failed inside SubProblemBasedCrossover");
-        prob.lift_solution(sol1, sol2, &sub_state.best_solution)
+        self.sub_heuristic.run(&mut sub_state)?;
+        Ok(prob.lift_solution(sol1, sol2, &sub_state.best_solution))
     }
 }

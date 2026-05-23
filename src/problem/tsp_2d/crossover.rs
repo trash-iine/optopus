@@ -20,11 +20,11 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
         sol1: &TspSolution,
         sol2: &TspSolution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> TspSolution {
+    ) -> Result<TspSolution, crate::error::OptError> {
         let n = prob.get_n();
 
         if n == 0 {
-            return sol1.clone();
+            return Ok(sol1.clone());
         }
 
         // Choose a random contiguous segment from sol1
@@ -59,7 +59,7 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
         let objective =
             prob.calculate_tour_length(&child).expect("OX crossover should produce a valid tour");
         let gain = prob.compute_all_gains(&child);
-        TspSolution { tour: child, objective, gain }
+        Ok(TspSolution { tour: child, objective, gain })
     }
 }
 
@@ -186,7 +186,7 @@ mod tests {
         let b = make_sol(&tsp, vec![2, 0, 3, 1]);
         let mut cx = TspOrderCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&tsp, &a, &b, &mut rng);
+        let offspring = cx.crossover(&tsp, &a, &b, &mut rng).unwrap();
         let cities: HashSet<usize> = offspring.tour.iter().copied().collect();
         assert_eq!(offspring.tour.len(), 4);
         assert_eq!(cities, (0..4).collect::<HashSet<usize>>(), "offspring must visit all 4 cities exactly once");
@@ -198,7 +198,7 @@ mod tests {
         let s = make_sol(&tsp, vec![0, 1, 2, 3]);
         let mut cx = TspOrderCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&tsp, &s, &s, &mut rng);
+        let offspring = cx.crossover(&tsp, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.tour, s.tour);
     }
 

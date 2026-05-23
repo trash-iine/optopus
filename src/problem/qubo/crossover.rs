@@ -18,7 +18,7 @@ impl Crossover<Qubo> for QuboUniformCrossover {
         sol1: &QuboSolution,
         sol2: &QuboSolution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> QuboSolution {
+    ) -> Result<QuboSolution, crate::error::OptError> {
         let mut sol = sol1.clone();
         for &i in prob.iter_on_variables() {
             if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
@@ -26,11 +26,10 @@ impl Crossover<Qubo> for QuboUniformCrossover {
                     i,
                     gain: sol.gain[i],
                 }
-                .apply_to_solution(prob, &mut sol)
-                .expect("flipping a variable should never fail");
+                .apply_to_solution(prob, &mut sol)?;
             }
         }
-        sol
+        Ok(sol)
     }
 }
 
@@ -105,7 +104,7 @@ mod tests {
         let s = make_sol(&qubo, &[(0, false), (1, true), (2, false)]);
         let mut cx = QuboUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&qubo, &s, &s, &mut rng);
+        let offspring = cx.crossover(&qubo, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.x, s.x);
         assert_eq!(offspring.objective, s.objective);
     }
@@ -117,7 +116,7 @@ mod tests {
         let b = make_sol(&qubo, &[(0, true), (1, false), (2, true)]);
         let mut cx = QuboUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&qubo, &a, &b, &mut rng);
+        let offspring = cx.crossover(&qubo, &a, &b, &mut rng).unwrap();
         for &i in qubo.iter_on_variables() {
             let g = offspring.gain[i];
             let mut flipped = offspring.x.clone();

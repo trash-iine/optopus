@@ -17,6 +17,19 @@ pub enum OptError {
     #[error("Parse error: {0}")]
     Parse(String),
 
+    /// A TOML deserialization error.
+    ///
+    /// The underlying `toml::de::Error` carries line / column context, so
+    /// most callers can simply `?`-propagate without wrapping. When a file
+    /// path is meaningful, wrap with [`OptError::Config`] (or build a richer
+    /// variant) at the call site.
+    #[error("TOML parse error: {0}")]
+    TomlDe(#[from] toml::de::Error),
+
+    /// A TOML serialization error.
+    #[error("TOML serialize error: {0}")]
+    TomlSer(#[from] toml::ser::Error),
+
     /// A file loading/parsing error with structured context.
     /// `line == 0` means the error is not specific to a line (e.g., file-level validation).
     #[error("{}", display_file_load(.path, .line, .detail))]

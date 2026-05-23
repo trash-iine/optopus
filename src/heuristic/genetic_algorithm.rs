@@ -325,7 +325,7 @@ where
         // --- Crossover ---
         let offspring =
             self.crossover
-                .crossover(state.instance, &parent_a, &parent_b, &mut state.rng);
+                .crossover(state.instance, &parent_a, &parent_b, &mut state.rng)?;
 
         // --- Mutation (sub-run clone/merge pattern from Iterated) ---
         let mutated = Self::improve_via_sub_run(state, offspring, self.mutation.as_mut())?;
@@ -357,8 +357,8 @@ mod tests {
             sol1: &MaxCutSolution,
             _sol2: &MaxCutSolution,
             _rng: &mut rand::rngs::SmallRng,
-        ) -> MaxCutSolution {
-            sol1.clone()
+        ) -> Result<MaxCutSolution, OptError> {
+            Ok(sol1.clone())
         }
     }
 

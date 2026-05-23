@@ -51,7 +51,7 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
         sol1: &MaxCutSolution,
         sol2: &MaxCutSolution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> MaxCutSolution {
+    ) -> Result<MaxCutSolution, crate::error::OptError> {
         let mut sol = sol1.clone();
         for &i in prob.graph.iter_on_vertices() {
             if sol.cut[i] != sol2.cut[i] && rng.random::<bool>() {
@@ -59,13 +59,11 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
                     i,
                     gain: sol.gain[i],
                 };
-                neighbor
-                    .apply_to_solution(prob, &mut sol)
-                    .expect("flipping a vertex should never fail");
+                neighbor.apply_to_solution(prob, &mut sol)?;
             }
         }
 
-        sol
+        Ok(sol)
     }
 }
 
@@ -199,7 +197,7 @@ mod tests {
         let s = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
         let mut cx = MaxCutUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&mc, &s, &s, &mut rng);
+        let offspring = cx.crossover(&mc, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.cut, s.cut);
         assert_eq!(offspring.objective, s.objective);
     }
@@ -211,7 +209,7 @@ mod tests {
         let b = make_sol(&mc, &[(0, true), (1, false), (2, true)]);
         let mut cx = MaxCutUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&mc, &a, &b, &mut rng);
+        let offspring = cx.crossover(&mc, &a, &b, &mut rng).unwrap();
         for &v in mc.graph.iter_on_vertices() {
             let g = offspring.gain[v];
             let mut flipped = offspring.cut.clone();

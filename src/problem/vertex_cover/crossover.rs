@@ -21,7 +21,7 @@ impl Crossover<VertexCover> for VertexCoverUniformCrossover {
         sol1: &VertexCoverSolution,
         sol2: &VertexCoverSolution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> VertexCoverSolution {
+    ) -> Result<VertexCoverSolution, crate::error::OptError> {
         let mut sol = sol1.clone();
         for &i in prob.graph.iter_on_vertices() {
             if sol.cover[i] != sol2.cover[i] && rng.random::<bool>() {
@@ -29,12 +29,10 @@ impl Crossover<VertexCover> for VertexCoverUniformCrossover {
                     i,
                     gain: sol.gain[i],
                 };
-                neighbor
-                    .apply_to_solution(prob, &mut sol)
-                    .expect("flipping a vertex should never fail");
+                neighbor.apply_to_solution(prob, &mut sol)?;
             }
         }
-        sol
+        Ok(sol)
     }
 }
 
@@ -113,7 +111,7 @@ mod tests {
         let s = vc.solution_from_assignment(&[true, false, true]);
         let mut cx = VertexCoverUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&vc, &s, &s, &mut rng);
+        let offspring = cx.crossover(&vc, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.cover, s.cover);
         assert_eq!(offspring.objective, s.objective);
     }
@@ -125,7 +123,7 @@ mod tests {
         let b = vc.solution_from_assignment(&[false, true, false]);
         let mut cx = VertexCoverUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&vc, &a, &b, &mut rng);
+        let offspring = cx.crossover(&vc, &a, &b, &mut rng).unwrap();
 
         let (gain, obj, cs, ue) = vc.calculate_state(&offspring.cover);
         assert_eq!(offspring.gain, gain);

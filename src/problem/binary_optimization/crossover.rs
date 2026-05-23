@@ -18,16 +18,15 @@ impl Crossover<FormulaProblem> for FormulaUniformCrossover {
         sol1: &FormulaSolution,
         sol2: &FormulaSolution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> FormulaSolution {
+    ) -> Result<FormulaSolution, crate::error::OptError> {
         let mut sol = sol1.clone();
         for i in 0..prob.n_vars {
             if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
                 FormulaFlipNeighbor { i, gain: sol.gain[i] }
-                    .apply_to_solution(prob, &mut sol)
-                    .expect("flipping a variable should never fail");
+                    .apply_to_solution(prob, &mut sol)?;
             }
         }
-        sol
+        Ok(sol)
     }
 }
 
@@ -170,7 +169,7 @@ mod tests {
         let s = make_sol(&prob, vec![true, false, true]);
         let mut cx = FormulaUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&prob, &s, &s, &mut rng);
+        let offspring = cx.crossover(&prob, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.x, s.x);
         assert!((offspring.score - s.score).abs() < 1e-9);
     }
@@ -182,7 +181,7 @@ mod tests {
         let b = make_sol(&prob, vec![false, true, false]);
         let mut cx = FormulaUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&prob, &a, &b, &mut rng);
+        let offspring = cx.crossover(&prob, &a, &b, &mut rng).unwrap();
         for i in 0..prob.n_vars {
             let mut flipped = offspring.x.clone();
             flipped[i] = !flipped[i];

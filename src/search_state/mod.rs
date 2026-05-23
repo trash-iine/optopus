@@ -39,6 +39,30 @@ pub enum SearchStateCloneType {
 ///
 /// Contains the problem instance (by reference), the current solution,
 /// the best solution found so far, and iteration / timing metadata.
+///
+/// # Field visibility policy
+///
+/// The fields below are split deliberately:
+///
+/// - **`pub` fields** are the live search state that heuristics (both built-in
+///   and user-implemented) legitimately read **and write** during a run:
+///   `solution`, `best_solution`, `iteration`, `best_iteration`, `best_time`,
+///   `initial_solution`, `n_accepted`, `n_rejected`, `n_best_updates`, `rng`,
+///   and the problem reference `instance`. Direct field access is intentional
+///   — wrapping every one of these in a setter would only add noise without
+///   strengthening any invariant, since heuristics need to mutate them
+///   anyway.
+///
+/// - **`pub(crate)` fields** (`start_iteration`, `start_time`,
+///   `start_n_accepted`, `start_n_rejected`, `start_n_best_updates`) are the
+///   sub-run anchors used **only** by [`Self::clone_for_new_run`] and
+///   [`Self::update_state`] to compute deltas when merging a sub-run's
+///   progress back into its parent. They must never be touched from outside
+///   this crate; an external write would silently corrupt the delta-merge
+///   accounting.
+///
+/// In short: pub = "live state heuristics drive", pub(crate) = "internal
+/// merge bookkeeping — hands off".
 #[derive(Clone)]
 pub struct SearchState<'a, Problem>
 where

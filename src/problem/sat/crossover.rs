@@ -18,16 +18,15 @@ impl Crossover<Sat> for SatUniformCrossover {
         sol1: &SatSolution,
         sol2: &SatSolution,
         rng: &mut rand::rngs::SmallRng,
-    ) -> SatSolution {
+    ) -> Result<SatSolution, crate::error::OptError> {
         let mut sol = sol1.clone();
         for i in 0..prob.n_vars() {
             if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
                 SatFlipNeighbor { i, gain: sol.gain[i] }
-                    .apply_to_solution(prob, &mut sol)
-                    .expect("flipping a variable should never fail");
+                    .apply_to_solution(prob, &mut sol)?;
             }
         }
-        sol
+        Ok(sol)
     }
 }
 
@@ -141,7 +140,7 @@ mod tests {
         let s = make_sol(&sat, vec![true, false, true]);
         let mut cx = SatUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&sat, &s, &s, &mut rng);
+        let offspring = cx.crossover(&sat, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.x, s.x);
         assert_eq!(offspring.n_satisfied, s.n_satisfied);
     }
@@ -153,7 +152,7 @@ mod tests {
         let b = make_sol(&sat, vec![false, true, false]);
         let mut cx = SatUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&sat, &a, &b, &mut rng);
+        let offspring = cx.crossover(&sat, &a, &b, &mut rng).unwrap();
         let n_sat = offspring.n_satisfied as i64;
         for i in 0..sat.n_vars() {
             let mut flipped = offspring.x.clone();

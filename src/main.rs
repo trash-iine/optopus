@@ -37,13 +37,11 @@ fn run() -> Result<(), OptError> {
     let config_str = std::fs::read_to_string(&config_file)
         .map_err(|e| OptError::Config(format!("failed to read config file '{}': {}", config_file, e)))?;
 
-    let config: BenchmarkConfig = toml::from_str(&config_str)
-        .map_err(|e| OptError::Config(format!("failed to parse config file '{}': {}", config_file, e)))?;
+    let config: BenchmarkConfig = toml::from_str(&config_str)?;
 
     let report = Benchmark::run_from_config(config, &config_file)?;
 
-    let toml_str = toml::to_string(&report)
-        .map_err(|e| OptError::Config(format!("failed to serialize benchmark report: {}", e)))?;
+    let toml_str = toml::to_string(&report)?;
 
     let output_dir = std::path::Path::new("result");
     std::fs::create_dir_all(output_dir).map_err(|e| OptError::FileLoad {
