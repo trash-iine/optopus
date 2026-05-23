@@ -1532,6 +1532,50 @@ fn to_single_run_result(run_index: usize, m: RunMetrics) -> SingleRunResult {
     }
 }
 
+/// Returns the neighborhood-move kinds supported by `problem`.
+///
+/// Used by [`validate_config`] to reject `(problem, neighbor)` combinations
+/// at config-parse time, before any instance file is opened. The set is the
+/// same set the per-problem `BenchmarkableProblem::build_base_heuristic`
+/// dispatches on.
+fn valid_neighbors_for(problem: &ProblemKind) -> &'static [NeighborKind] {
+    use NeighborKind::*;
+    match problem {
+        ProblemKind::MaxCut
+        | ProblemKind::Qubo
+        | ProblemKind::Sat
+        | ProblemKind::VertexCover => &[Flip, Swap],
+        ProblemKind::Tsp => &[TwoOpt, Relocate],
+        ProblemKind::JobShop => &[Swap, Relocate],
+    }
+}
+
+/// Recursively validates that every `neighbor` field in `h` (including in
+/// nested `steps` from Sequential / Iterated / Restart / GeneticAlgorithm)
+/// is supported by `problem`.
+fn validate_heuristic_neighbors(
+    h: &HeuristicConfig,
+    problem: &ProblemKind,
+    instance_path: &str,
+) -> Result<(), OptError> {
+    if let Some(n) = &h.neighbor {
+        let valid = valid_neighbors_for(problem);
+        if !valid.contains(n) {
+            return Err(OptError::Config(format!(
+                "instance '{}' ({:?}) does not support neighbor {:?} for heuristic '{}'. \
+                 Valid neighbors: {:?}",
+                instance_path, problem, n, h.kind, valid,
+            )));
+        }
+    }
+    if let Some(steps) = &h.steps {
+        for step in steps {
+            validate_heuristic_neighbors(step, problem, instance_path)?;
+        }
+    }
+    Ok(())
+}
+
 fn validate_config(config: &BenchmarkConfig) -> Result<(), OptError> {
     if config.num_runs == 0 {
         return Err(OptError::Config(
@@ -1547,6 +1591,13 @@ fn validate_config(config: &BenchmarkConfig) -> Result<(), OptError> {
         return Err(OptError::Config(
             "at least one [[heuristics]] entry is required".to_string(),
         ));
+    }
+    // Reject (problem, neighbor) mismatches early — before opening any file —
+    // so a typo in a long benchmark TOML fails at startup, not mid-run.
+    for inst in &config.instances {
+        for h in &config.heuristics {
+            validate_heuristic_neighbors(h, &inst.problem, &inst.path)?;
+        }
     }
     Ok(())
 }
@@ -1673,3 +1724,104 @@ impl Benchmark {
     }
 }
 
+#[cfg(test)]
+mod validate_tests {
+    use super::*;
+
+    fn instance(problem: ProblemKind) -> InstanceConfig {
+        InstanceConfig {
+            path: "dummy".to_string(),
+            problem,
+        }
+    }
+
+    fn heuristic_with_neighbor(kind: &str, neighbor: NeighborKind) -> HeuristicConfig {
+        HeuristicConfig {
+            kind: kind.to_string(),
+            neighbor: Some(neighbor),
+            tabu_tenure: None,
+            initial_temperature: None,
+            cooling_rate: None,
+            t: None,
+            l0: None,
+            p0: None,
+            q: None,
+            num_neighbors: None,
+            max_depth: None,
+            history_length: None,
+            stop_condition: StopConditionConfig::default(),
+            steps: None,
+            restart_condition: None,
+            learning_rate: None,
+            discount: None,
+            softmax_temperature: None,
+            reward_shaping: None,
+            policy_weights: None,
+            max_candidates: None,
+            population_size: None,
+            crossover_kind: None,
+            parent_selection: None,
+            parent_top_k: None,
+        }
+    }
+
+    fn cfg(instances: Vec<InstanceConfig>, heuristics: Vec<HeuristicConfig>) -> BenchmarkConfig {
+        BenchmarkConfig {
+            num_runs: 1,
+            instances,
+            heuristics,
+            seed: None,
+        }
+    }
+
+    #[test]
+    fn validate_accepts_compatible_problem_and_neighbor() {
+        let c = cfg(
+            vec![instance(ProblemKind::MaxCut)],
+            vec![heuristic_with_neighbor("LocalSearch", NeighborKind::Flip)],
+        );
+        validate_config(&c).expect("MaxCut x Flip is valid");
+    }
+
+    #[test]
+    fn validate_rejects_tsp_with_flip() {
+        let c = cfg(
+            vec![instance(ProblemKind::Tsp)],
+            vec![heuristic_with_neighbor("LocalSearch", NeighborKind::Flip)],
+        );
+        let err = validate_config(&c).expect_err("Tsp x Flip must fail");
+        let msg = format!("{err}");
+        assert!(msg.contains("Tsp"), "error mentions Tsp: {msg}");
+        assert!(msg.contains("Flip"), "error mentions Flip: {msg}");
+        assert!(
+            msg.contains("TwoOpt"),
+            "error suggests valid neighbors: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_rejects_jobshop_with_flip() {
+        let c = cfg(
+            vec![instance(ProblemKind::JobShop)],
+            vec![heuristic_with_neighbor("LocalSearch", NeighborKind::Flip)],
+        );
+        validate_config(&c).expect_err("JobShop x Flip must fail");
+    }
+
+    #[test]
+    fn validate_recurses_into_nested_steps() {
+        // Iterated whose search step has an invalid neighbor for the problem.
+        let mut outer = heuristic_with_neighbor("Iterated", NeighborKind::Flip);
+        // The outer Iterated does not itself use a neighbor; make the validator
+        // reach the inner LocalSearch by nesting steps.
+        outer.neighbor = None;
+        outer.steps = Some(vec![heuristic_with_neighbor(
+            "LocalSearch",
+            NeighborKind::Flip,
+        )]);
+        let c = cfg(vec![instance(ProblemKind::Tsp)], vec![outer]);
+        let err = validate_config(&c).expect_err("nested invalid neighbor must fail");
+        let msg = format!("{err}");
+        assert!(msg.contains("Flip"), "error mentions Flip: {msg}");
+    }
+}
