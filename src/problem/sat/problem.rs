@@ -43,7 +43,15 @@ pub struct Sat {
     n_vars: usize,
     /// All clauses (literals are signed integers, variables are 1-indexed).
     clauses: Vec<Vec<i64>>,
-    /// `clauses_per_var[i]` = indices of clauses containing variable `i+1` (0-indexed).
+    /// Inverted index: `clauses_per_var[i]` lists every clause index that
+    /// references variable `i` (0-indexed, sign-agnostic).
+    ///
+    /// **Invariant** (maintained only by [`Sat::add_clause`]): if
+    /// `clauses_per_var[i]` contains `c`, then `clauses[c]` contains some
+    /// literal `lit` with `lit.unsigned_abs() as usize - 1 == i`.
+    /// Mutating `clauses` directly without updating this index breaks the
+    /// invariant and triggers an `unreachable!()` in [`Sat::calc_gain`] /
+    /// [`Sat::calc_gain_with_virtual_flip`].
     clauses_per_var: Vec<Vec<usize>>,
 }
 
@@ -125,10 +133,17 @@ impl Sat {
         for &clause_idx in &self.clauses_per_var[i] {
             let clause = &self.clauses[clause_idx];
 
-            let i_lit = *clause
+            let i_lit = match clause
                 .iter()
                 .find(|&&lit| lit.unsigned_abs() as usize - 1 == i)
-                .expect("clauses_per_var is inconsistent");
+            {
+                Some(&lit) => lit,
+                None => unreachable!(
+                    "Sat::clauses_per_var invariant broken: variable {i} listed \
+                     as in clause {clause_idx} but no literal there references \
+                     it. This is a library bug — please report."
+                ),
+            };
             let i_lit_sat = x[i] == (i_lit > 0);
 
             // check if any literal other than i satisfies the clause
@@ -157,10 +172,17 @@ impl Sat {
         for &clause_idx in &self.clauses_per_var[j] {
             let clause = &self.clauses[clause_idx];
 
-            let j_lit = *clause
+            let j_lit = match clause
                 .iter()
                 .find(|&&lit| lit.unsigned_abs() as usize - 1 == j)
-                .expect("clauses_per_var is inconsistent");
+            {
+                Some(&lit) => lit,
+                None => unreachable!(
+                    "Sat::clauses_per_var invariant broken: variable {j} listed \
+                     as in clause {clause_idx} but no literal there references \
+                     it. This is a library bug — please report."
+                ),
+            };
             let j_lit_sat = x[j] == (j_lit > 0);
 
             // use the virtually flipped value for the `flipped` variable
