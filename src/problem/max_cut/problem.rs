@@ -276,6 +276,24 @@ impl MaxCut {
         Self::new(Graph::from_edges(edges))
     }
 
+    /// Loads a [`MaxCut`] instance from a file in the `N M / i j w` format.
+    ///
+    /// Wraps [`Graph::load_from_file`] and constructs the problem with
+    /// [`MaxCut::new`].
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use optopus::problem::MaxCut;
+    ///
+    /// let mc = MaxCut::load_file("data/max_cut/G1").unwrap();
+    /// ```
+    pub fn load_file(
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<Self, crate::error::OptError> {
+        Graph::load_from_file(path).map(Self::new)
+    }
+
     /// Calculates the total weight of edges crossing the partition defined by `cut`.
     ///
     /// `cut[i]` is the side of vertex `i`. An edge `(i, j)` is crossing when
@@ -374,6 +392,32 @@ mod tests {
         let mc = MaxCut::new(Graph::new());
         assert_eq!(mc.graph.len(), 0);
         assert!(mc.graph.is_empty());
+    }
+
+    #[test]
+    fn test_load_file_roundtrip() {
+        use std::io::Write;
+        let mut path = std::env::temp_dir();
+        path.push(format!(
+            "optopus_maxcut_{}_{}.txt",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        {
+            let mut f = std::fs::File::create(&path).unwrap();
+            // 3-vertex triangle with unit weights, 1-indexed
+            writeln!(f, "3 3").unwrap();
+            writeln!(f, "1 2 1").unwrap();
+            writeln!(f, "1 3 1").unwrap();
+            writeln!(f, "2 3 1").unwrap();
+        }
+        let mc = MaxCut::load_file(&path).expect("load_file should succeed");
+        assert_eq!(mc.graph.num_vertices(), 3);
+        assert_eq!(mc.graph.num_edges(), 3);
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]

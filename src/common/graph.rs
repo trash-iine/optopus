@@ -344,17 +344,21 @@ impl Graph {
     /// let g = Graph::load_from_file("data/max_cut/G1").unwrap();
     /// println!("{g}");
     /// ```
-    pub fn load_from_file(filename: &str) -> Result<Self, crate::error::OptError> {
+    pub fn load_from_file(
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
         use std::io::BufRead;
 
+        let path = path.as_ref();
+        let path_display = path.display().to_string();
         let err = |line: usize, detail: String| OptError::FileLoad {
-            path: filename.to_string(),
+            path: path_display.clone(),
             line,
             detail,
         };
 
-        let file = std::fs::File::open(filename)
+        let file = std::fs::File::open(path)
             .map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = std::io::BufReader::new(file);
         let mut line_iter = reader.lines();

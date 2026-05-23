@@ -73,15 +73,17 @@ impl JobShopScheduling {
     /// ...
     /// ```
     /// Machine indices are 0-indexed. Empty lines and `#`-prefixed comment lines are ignored.
-    pub fn load_file(file_path: &str) -> Result<Self, OptError> {
+    pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, OptError> {
+        let path = path.as_ref();
+        let path_display = path.display().to_string();
         let err = |line: usize, detail: String| OptError::FileLoad {
-            path: file_path.to_string(),
+            path: path_display.clone(),
             line,
             detail,
         };
 
         let file =
-            File::open(file_path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
+            File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 
         let mut tokens: Vec<(usize, String)> = Vec::new();
@@ -138,7 +140,7 @@ impl JobShopScheduling {
             jobs.push(ops);
         }
 
-        let name = std::path::Path::new(file_path)
+        let name = path
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("jssp")

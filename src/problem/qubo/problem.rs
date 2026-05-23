@@ -522,16 +522,20 @@ impl Qubo {
     /// Each entry sets `Q[i][j] = Q[j][i] = v`. When `i == j`, `v` is the linear
     /// (diagonal) coefficient. Duplicate entries follow [`set_q`](Self::set_q)
     /// semantics: the last write wins.
-    pub fn load_file(filename: &str) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
 
+        let path = path.as_ref();
+        let path_display = path.display().to_string();
         let err = |line: usize, detail: String| OptError::FileLoad {
-            path: filename.to_string(),
+            path: path_display.clone(),
             line,
             detail,
         };
 
-        let file = File::open(filename).map_err(|e| err(0, format!("failed to open file: {e}")))?;
+        let file = File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
         let mut line_iter = reader.lines();
         let (n, _) = {

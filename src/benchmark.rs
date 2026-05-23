@@ -7,7 +7,6 @@
 use rayon::prelude::*;
 
 use crate::{
-    common::Graph,
     error::OptError,
     heuristic::{
         BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic, Iterated,
@@ -47,7 +46,7 @@ pub trait BenchmarkSolution: Clone {
 
 impl BenchmarkProblem for MaxCut {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        Graph::load_from_file(path).map(MaxCut::new)
+        MaxCut::load_file(path)
     }
 }
 
@@ -122,7 +121,7 @@ impl BenchmarkSolution for TspSolution {
 
 impl BenchmarkProblem for VertexCover {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        Graph::load_from_file(path).map(VertexCover::new)
+        VertexCover::load_file(path)
     }
 }
 
@@ -1673,3 +1672,4 @@ impl Benchmark {
         })
     }
 }
+

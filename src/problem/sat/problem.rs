@@ -204,16 +204,20 @@ impl Sat {
     }
 
     /// Loads a MaxSAT instance from a DIMACS CNF file.
-    pub fn load_file(filename: &str) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
 
+        let path = path.as_ref();
+        let path_display = path.display().to_string();
         let err = |line: usize, detail: String| OptError::FileLoad {
-            path: filename.to_string(),
+            path: path_display.clone(),
             line,
             detail,
         };
 
-        let file = File::open(filename)
+        let file = File::open(path)
             .map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 

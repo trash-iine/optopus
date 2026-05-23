@@ -133,17 +133,21 @@ impl TspWithCoordinates {
     }
 
     /// Loads a TSP instance from a TSPLIB-format file.
-    pub fn load_file(file_path: &str) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
 
+        let path = path.as_ref();
+        let path_display = path.display().to_string();
         let err = |line: usize, detail: String| OptError::FileLoad {
-            path: file_path.to_string(),
+            path: path_display.clone(),
             line,
             detail,
         };
 
         let file =
-            File::open(file_path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
+            File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
         let mut line_num = 0usize;
@@ -230,8 +234,7 @@ impl TspWithCoordinates {
             }
         };
         let name = name.unwrap_or_else(|| {
-            std::path::Path::new(file_path)
-                .file_stem()
+            path.file_stem()
                 .and_then(|s| s.to_str())
                 .unwrap_or("tsp")
                 .to_string()
