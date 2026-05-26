@@ -351,9 +351,8 @@ impl Graph {
         use std::io::BufRead;
 
         let path = path.as_ref();
-        let path_display = path.display().to_string();
         let err = |line: usize, detail: String| OptError::FileLoad {
-            path: path_display.clone(),
+            path: path.display().to_string(),
             line,
             detail,
         };
