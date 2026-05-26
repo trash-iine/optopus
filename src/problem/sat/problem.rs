@@ -3,6 +3,12 @@ use std::io::{BufRead, BufReader};
 
 use crate::search_state::{Distance, ProblemTrait, Rankable};
 
+fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
+    if let Err(pos) = v.binary_search(&x) {
+        v.insert(pos, x);
+    }
+}
+
 /// A solution to the MaxSAT problem.
 ///
 /// - `x` — variable assignment (`x[i]` is the truth value of variable `i+1`, 0-indexed)
@@ -53,6 +59,10 @@ pub struct Sat {
     /// invariant and triggers an `unreachable!()` in [`Sat::calc_gain`] /
     /// [`Sat::calc_gain_with_virtual_flip`].
     clauses_per_var: Vec<Vec<usize>>,
+    /// For each variable `i`, the sorted, deduplicated set of other variables
+    /// that share at least one clause with `i`. Used in flip-move incremental
+    /// updates to avoid recomputing this set on every iteration.
+    var_neighbors: Vec<Vec<usize>>,
 }
 
 impl Sat {
@@ -61,6 +71,7 @@ impl Sat {
             n_vars,
             clauses: Vec::new(),
             clauses_per_var: vec![vec![]; n_vars],
+            var_neighbors: vec![vec![]; n_vars],
         }
     }
 
@@ -77,10 +88,25 @@ impl Sat {
         let clause_idx = self.clauses.len();
         let clause: Vec<i64> = literals.into_iter().collect();
 
-        for &lit in &clause {
-            let var_idx = lit.unsigned_abs() as usize - 1;
-            if var_idx < self.n_vars {
-                self.clauses_per_var[var_idx].push(clause_idx);
+        // Collect the in-clause variable indices once to set up both
+        // `clauses_per_var` and the pairwise `var_neighbors` entries.
+        let mut vars: Vec<usize> = clause
+            .iter()
+            .filter_map(|&lit| {
+                let v = lit.unsigned_abs() as usize - 1;
+                (v < self.n_vars).then_some(v)
+            })
+            .collect();
+        vars.sort_unstable();
+        vars.dedup();
+
+        for &v in &vars {
+            self.clauses_per_var[v].push(clause_idx);
+        }
+        for (a_idx, &a) in vars.iter().enumerate() {
+            for &b in &vars[a_idx + 1..] {
+                insert_unique_sorted(&mut self.var_neighbors[a], b);
+                insert_unique_sorted(&mut self.var_neighbors[b], a);
             }
         }
         self.clauses.push(clause);
@@ -106,6 +132,15 @@ impl Sat {
         self.clauses_per_var[i]
             .iter()
             .map(|&idx| self.clauses[idx].as_slice())
+    }
+
+    /// Returns the sorted, deduplicated set of variables that share at least
+    /// one clause with variable `i` (0-indexed), excluding `i` itself.
+    ///
+    /// This is the precomputed set of variables whose gain may change when
+    /// variable `i` is flipped, used by [`super::neighbor::SatFlipNeighbor`].
+    pub fn var_neighbors(&self, i: usize) -> &[usize] {
+        &self.var_neighbors[i]
     }
 
     /// Returns `true` if the given clause is satisfied under assignment `x`.
@@ -337,5 +372,33 @@ mod tests {
         let sat = make_sat();
         assert_eq!(sat.n_clauses(), 3);
         assert_eq!(sat.n_vars(), 3);
+    }
+
+    #[test]
+    fn test_var_neighbors_construction() {
+        // (x1 ∨ x2): pairs (0,1)
+        // (¬x1 ∨ x3): pairs (0,2)
+        // (¬x2 ∨ ¬x3): pairs (1,2)
+        let sat = make_sat();
+        assert_eq!(sat.var_neighbors(0), &[1, 2]);
+        assert_eq!(sat.var_neighbors(1), &[0, 2]);
+        assert_eq!(sat.var_neighbors(2), &[0, 1]);
+
+        // Variables appearing together in multiple clauses are not duplicated.
+        let mut sat2 = Sat::new(3);
+        sat2.add_clause([1, 2]);
+        sat2.add_clause([1, 2, 3]);
+        sat2.add_clause([-1, -2]);
+        assert_eq!(sat2.var_neighbors(0), &[1, 2]);
+        assert_eq!(sat2.var_neighbors(1), &[0, 2]);
+        assert_eq!(sat2.var_neighbors(2), &[0, 1]);
+
+        // A variable not co-occurring with anything has an empty neighbor list.
+        let mut sat3 = Sat::new(3);
+        sat3.add_clause([1]);
+        sat3.add_clause([-2, 3]);
+        assert_eq!(sat3.var_neighbors(0), &[] as &[usize]);
+        assert_eq!(sat3.var_neighbors(1), &[2]);
+        assert_eq!(sat3.var_neighbors(2), &[1]);
     }
 }
