@@ -239,9 +239,7 @@ impl Sat {
     }
 
     /// Loads a MaxSAT instance from a DIMACS CNF file.
-    pub fn load_file(
-        path: impl AsRef<std::path::Path>,
-    ) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
 
         let path = path.as_ref();
@@ -252,8 +250,7 @@ impl Sat {
             detail,
         };
 
-        let file = File::open(path)
-            .map_err(|e| err(0, format!("failed to open file: {e}")))?;
+        let file = File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 
         let mut n_clauses = 0usize;
@@ -261,8 +258,7 @@ impl Sat {
 
         for (idx, result) in reader.lines().enumerate() {
             let line_num = idx + 1;
-            let line = result
-                .map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
+            let line = result.map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
             let trimmed = line.trim();
             if trimmed.is_empty() || trimmed.starts_with('c') || trimmed.starts_with('%') {
                 continue; // skip comments and SATLIB '%' terminator
@@ -274,9 +270,22 @@ impl Sat {
                 iter.next(); // "cnf"
                 let n_vars: usize = iter
                     .next()
-                    .ok_or_else(|| err(line_num, "expected header 'p cnf <n_vars> <n_clauses>', but n_vars is missing".into()))?
+                    .ok_or_else(|| {
+                        err(
+                            line_num,
+                            "expected header 'p cnf <n_vars> <n_clauses>', but n_vars is missing"
+                                .into(),
+                        )
+                    })?
                     .parse()
-                    .map_err(|e| err(line_num, format!("failed to parse n_vars in header 'p cnf <n_vars> <n_clauses>': {e}")))?;
+                    .map_err(|e| {
+                        err(
+                            line_num,
+                            format!(
+                                "failed to parse n_vars in header 'p cnf <n_vars> <n_clauses>': {e}"
+                            ),
+                        )
+                    })?;
                 n_clauses = iter
                     .next()
                     .ok_or_else(|| err(line_num, "expected header 'p cnf <n_vars> <n_clauses>', but n_clauses is missing".into()))?
@@ -286,7 +295,10 @@ impl Sat {
                 continue;
             }
             let s = sat.as_mut().ok_or_else(|| {
-                err(line_num, "clause data found before header 'p cnf <n_vars> <n_clauses>'".into())
+                err(
+                    line_num,
+                    "clause data found before header 'p cnf <n_vars> <n_clauses>'".into(),
+                )
             })?;
             // clause line: space-separated literals terminated by 0
             let literals: Vec<i64> = trimmed
@@ -301,7 +313,10 @@ impl Sat {
         }
 
         let s = sat.ok_or_else(|| {
-            err(0, "file is empty or contains no header 'p cnf <n_vars> <n_clauses>'".into())
+            err(
+                0,
+                "file is empty or contains no header 'p cnf <n_vars> <n_clauses>'".into(),
+            )
         })?;
         if s.n_clauses() != n_clauses {
             return Err(err(

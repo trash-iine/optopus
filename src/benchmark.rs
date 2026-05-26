@@ -1047,9 +1047,11 @@ impl BenchmarkableProblem for JobShopScheduling {
                     NeighborKind::Swap => Ok(Box::new(
                         SimulatedAnnealing::<JobShopSwapNeighbor>::new(cond, temp, cooling),
                     )),
-                    NeighborKind::Relocate => Ok(Box::new(
-                        SimulatedAnnealing::<JobShopRelocateNeighbor>::new(cond, temp, cooling),
-                    )),
+                    NeighborKind::Relocate => {
+                        Ok(Box::new(
+                            SimulatedAnnealing::<JobShopRelocateNeighbor>::new(cond, temp, cooling),
+                        ))
+                    }
                     n => Err(format!(
                         "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
                         n
@@ -1186,9 +1188,9 @@ where
             {
                 "Tournament" => ParentSelection::Tournament,
                 "HammingTopK" => {
-                    let top_k = config.parent_top_k.ok_or(
-                        "'parent_top_k' required for parent_selection = 'HammingTopK'",
-                    )?;
+                    let top_k = config
+                        .parent_top_k
+                        .ok_or("'parent_top_k' required for parent_selection = 'HammingTopK'")?;
                     if top_k == 0 {
                         return Err("'parent_top_k' must be >= 1".to_string());
                     }
@@ -1331,9 +1333,7 @@ fn run_for_problem_kind(
         ProblemKind::Qubo => run_typed::<Qubo>(instance_path, config, minimize, seed),
         ProblemKind::Sat => run_typed::<Sat>(instance_path, config, minimize, seed),
         ProblemKind::Tsp => run_typed::<TspWithCoordinates>(instance_path, config, minimize, seed),
-        ProblemKind::VertexCover => {
-            run_typed::<VertexCover>(instance_path, config, minimize, seed)
-        }
+        ProblemKind::VertexCover => run_typed::<VertexCover>(instance_path, config, minimize, seed),
         ProblemKind::JobShop => {
             run_typed::<JobShopScheduling>(instance_path, config, minimize, seed)
         }
@@ -1541,10 +1541,9 @@ fn to_single_run_result(run_index: usize, m: RunMetrics) -> SingleRunResult {
 fn valid_neighbors_for(problem: &ProblemKind) -> &'static [NeighborKind] {
     use NeighborKind::*;
     match problem {
-        ProblemKind::MaxCut
-        | ProblemKind::Qubo
-        | ProblemKind::Sat
-        | ProblemKind::VertexCover => &[Flip, Swap],
+        ProblemKind::MaxCut | ProblemKind::Qubo | ProblemKind::Sat | ProblemKind::VertexCover => {
+            &[Flip, Swap]
+        }
         ProblemKind::Tsp => &[TwoOpt, Relocate],
         ProblemKind::JobShop => &[Swap, Relocate],
     }

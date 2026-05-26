@@ -45,7 +45,8 @@ impl SubProblemExtractable for VertexCover {
         sol2: &VertexCoverSolution,
     ) -> VertexCover {
         let free: HashSet<usize> = self
-            .graph.iter_on_vertices()
+            .graph
+            .iter_on_vertices()
             .filter(|&&v| sol1.cover[v] != sol2.cover[v])
             .copied()
             .collect();

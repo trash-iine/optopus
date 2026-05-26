@@ -312,10 +312,7 @@ impl Graph {
     /// assert!(!g.has_edge(0, 2));
     /// ```
     pub fn has_edge(&self, i: usize, j: usize) -> bool {
-        i < self.adj.len()
-            && self.adj[i]
-                .binary_search_by_key(&j, |&(v, _)| v)
-                .is_ok()
+        i < self.adj.len() && self.adj[i].binary_search_by_key(&j, |&(v, _)| v).is_ok()
     }
 
     /// Loads a graph from a file.
@@ -357,8 +354,8 @@ impl Graph {
             detail,
         };
 
-        let file = std::fs::File::open(path)
-            .map_err(|e| err(0, format!("failed to open file: {e}")))?;
+        let file =
+            std::fs::File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = std::io::BufReader::new(file);
         let mut line_iter = reader.lines();
 
@@ -500,9 +497,10 @@ impl std::ops::Index<(usize, usize)> for Graph {
     /// ```
     fn index(&self, (i, j): (usize, usize)) -> &f32 {
         if i < self.adj.len()
-            && let Ok(idx) = self.adj[i].binary_search_by_key(&j, |&(v, _)| v) {
-                return &self.adj[i][idx].1;
-            }
+            && let Ok(idx) = self.adj[i].binary_search_by_key(&j, |&(v, _)| v)
+        {
+            return &self.adj[i][idx].1;
+        }
         &ZERO_WEIGHT
     }
 }

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::problem::{FormulaProblem, FormulaSolution, Value};
 use crate::{
     error::OptError,
-    search_state::{EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 
 /// A flip move that toggles a single variable `i`.
@@ -76,7 +76,10 @@ impl MoveToNeighbor<FormulaProblem> for FormulaFlipNeighbor {
 
     fn iter(prob: &FormulaProblem, sol: &FormulaSolution) -> impl Iterator<Item = Self> + Send {
         let n = prob.n_vars;
-        (0..n).map(move |i| FormulaFlipNeighbor { i, gain: sol.gain[i] })
+        (0..n).map(move |i| FormulaFlipNeighbor {
+            i,
+            gain: sol.gain[i],
+        })
     }
 
     fn move_to_be_better_than(

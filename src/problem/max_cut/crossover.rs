@@ -99,7 +99,8 @@ impl SubProblemExtractable for MaxCut {
     /// ```
     fn extract_sub_problem(&self, sol1: &MaxCutSolution, sol2: &MaxCutSolution) -> MaxCut {
         let free: HashSet<usize> = self
-            .graph.iter_on_vertices()
+            .graph
+            .iter_on_vertices()
             .filter(|&&v| sol1.cut[v] != sol2.cut[v])
             .copied()
             .collect();
@@ -227,12 +228,20 @@ mod tests {
         let mc = make_mc();
         let s = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
         let sub_same = mc.extract_sub_problem(&s, &s);
-        assert_eq!(sub_same.graph.len(), 0, "identical parents → 0 free vertices");
+        assert_eq!(
+            sub_same.graph.len(),
+            0,
+            "identical parents → 0 free vertices"
+        );
 
         let all_f = make_sol(&mc, &[(0, false), (1, false), (2, false)]);
         let all_t = make_sol(&mc, &[(0, true), (1, true), (2, true)]);
         let sub_diff = mc.extract_sub_problem(&all_f, &all_t);
-        assert_eq!(sub_diff.graph.len(), 3, "all-different parents → 3 free vertices");
+        assert_eq!(
+            sub_diff.graph.len(),
+            3,
+            "all-different parents → 3 free vertices"
+        );
     }
 
     #[test]

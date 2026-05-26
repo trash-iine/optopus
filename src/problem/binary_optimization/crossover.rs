@@ -22,8 +22,11 @@ impl Crossover<FormulaProblem> for FormulaUniformCrossover {
         let mut sol = sol1.clone();
         for i in 0..prob.n_vars {
             if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
-                FormulaFlipNeighbor { i, gain: sol.gain[i] }
-                    .apply_to_solution(prob, &mut sol)?;
+                FormulaFlipNeighbor {
+                    i,
+                    gain: sol.gain[i],
+                }
+                .apply_to_solution(prob, &mut sol)?;
             }
         }
         Ok(sol)
@@ -34,11 +37,7 @@ impl Crossover<FormulaProblem> for FormulaUniformCrossover {
 ///
 /// - `fixed[i] = Some(val)`: variable `i` is fixed; replace `Var(i)` with `Const(val as f64)`.
 /// - `fixed[i] = None`: variable `i` is free; remap using `remap[i]`.
-fn substitute_and_remap(
-    expr: &Expr,
-    fixed: &[Option<bool>],
-    remap: &[Option<usize>],
-) -> Expr {
+fn substitute_and_remap(expr: &Expr, fixed: &[Option<bool>], remap: &[Option<usize>]) -> Expr {
     match expr {
         Expr::Const(c) => Expr::Const(*c),
         Expr::Var(i) => {
@@ -49,12 +48,16 @@ fn substitute_and_remap(
             }
         }
         Expr::Neg(e) => -substitute_and_remap(e, fixed, remap),
-        Expr::Add(es) => {
-            Expr::Add(es.iter().map(|e| substitute_and_remap(e, fixed, remap)).collect())
-        }
-        Expr::Mul(es) => {
-            Expr::Mul(es.iter().map(|e| substitute_and_remap(e, fixed, remap)).collect())
-        }
+        Expr::Add(es) => Expr::Add(
+            es.iter()
+                .map(|e| substitute_and_remap(e, fixed, remap))
+                .collect(),
+        ),
+        Expr::Mul(es) => Expr::Mul(
+            es.iter()
+                .map(|e| substitute_and_remap(e, fixed, remap))
+                .collect(),
+        ),
     }
 }
 
@@ -64,13 +67,23 @@ fn substitute_constraint(
     remap: &[Option<usize>],
 ) -> Constraint {
     match c {
-        Constraint::Comparison { lhs, rel, rhs, penalty_weight } => Constraint::Comparison {
+        Constraint::Comparison {
+            lhs,
+            rel,
+            rhs,
+            penalty_weight,
+        } => Constraint::Comparison {
             lhs: substitute_and_remap(lhs, fixed, remap),
             rel: rel.clone(),
             rhs: substitute_and_remap(rhs, fixed, remap),
             penalty_weight: *penalty_weight,
         },
-        Constraint::Clamp { expr, lo, hi, penalty_weight } => Constraint::Clamp {
+        Constraint::Clamp {
+            expr,
+            lo,
+            hi,
+            penalty_weight,
+        } => Constraint::Clamp {
             expr: substitute_and_remap(expr, fixed, remap),
             lo: *lo,
             hi: *hi,
@@ -89,8 +102,9 @@ impl SubProblemExtractable for FormulaProblem {
         sol1: &FormulaSolution,
         sol2: &FormulaSolution,
     ) -> FormulaProblem {
-        let free_vars: Vec<usize> =
-            (0..self.n_vars).filter(|&i| sol1.x[i] != sol2.x[i]).collect();
+        let free_vars: Vec<usize> = (0..self.n_vars)
+            .filter(|&i| sol1.x[i] != sol2.x[i])
+            .collect();
         let n_free = free_vars.len();
 
         let mut fixed = vec![None::<bool>; self.n_vars];
@@ -124,17 +138,21 @@ impl SubProblemExtractable for FormulaProblem {
         sol2: &FormulaSolution,
         sub_solution: &FormulaSolution,
     ) -> FormulaSolution {
-        let free_vars: Vec<usize> =
-            (0..self.n_vars).filter(|&i| sol1.x[i] != sol2.x[i]).collect();
+        let free_vars: Vec<usize> = (0..self.n_vars)
+            .filter(|&i| sol1.x[i] != sol2.x[i])
+            .collect();
 
         let mut sol = sol1.clone();
         for (sub_idx, &orig_idx) in free_vars.iter().enumerate() {
             if sol.x[orig_idx] == sub_solution.x[sub_idx] {
                 continue;
             }
-            FormulaFlipNeighbor { i: orig_idx, gain: sol.gain[orig_idx] }
-                .apply_to_solution(self, &mut sol)
-                .expect("flipping should never fail");
+            FormulaFlipNeighbor {
+                i: orig_idx,
+                gain: sol.gain[orig_idx],
+            }
+            .apply_to_solution(self, &mut sol)
+            .expect("flipping should never fail");
         }
         sol
     }
@@ -142,7 +160,9 @@ impl SubProblemExtractable for FormulaProblem {
 
 #[cfg(test)]
 mod tests {
-    use crate::problem::binary_optimization::problem::{Expr, FormulaProblem, FormulaSolution, OptDirection, Value};
+    use crate::problem::binary_optimization::problem::{
+        Expr, FormulaProblem, FormulaSolution, OptDirection, Value,
+    };
     use crate::search_state::{Crossover, SubProblemExtractable};
     use rand::SeedableRng;
 
@@ -160,7 +180,12 @@ mod tests {
         let gain: Vec<Value> = (0..prob.n_vars)
             .map(|i| prob.calc_gain_fast(&x, &constraint_vals, i))
             .collect();
-        FormulaSolution { x, gain, score, constraint_vals }
+        FormulaSolution {
+            x,
+            gain,
+            score,
+            constraint_vals,
+        }
     }
 
     #[test]
@@ -186,7 +211,10 @@ mod tests {
             let mut flipped = offspring.x.clone();
             flipped[i] = !flipped[i];
             let expected = prob.eval_score(&flipped) - offspring.score;
-            assert!((offspring.gain[i] - expected).abs() < 1e-9, "gain[{i}] mismatch");
+            assert!(
+                (offspring.gain[i] - expected).abs() < 1e-9,
+                "gain[{i}] mismatch"
+            );
         }
     }
 
@@ -200,7 +228,10 @@ mod tests {
         let all_f = make_sol(&prob, vec![false, false, false]);
         let all_t = make_sol(&prob, vec![true, true, true]);
         let sub_diff = prob.extract_sub_problem(&all_f, &all_t);
-        assert_eq!(sub_diff.n_vars, 3, "all-different parents → 3 free variables");
+        assert_eq!(
+            sub_diff.n_vars, 3,
+            "all-different parents → 3 free variables"
+        );
     }
 
     #[test]
@@ -215,17 +246,32 @@ mod tests {
         let sub_sol = make_sol(&sub, vec![true, false]);
         let lifted = prob.lift_solution(&parent_a, &parent_b, &sub_sol);
 
-        assert_eq!(lifted.x[0], parent_a.x[0], "fixed var 0 inherits from parent_a");
-        assert_eq!(lifted.x[1], sub_sol.x[0], "free var 1 (sub idx 0) from sub_solution");
-        assert_eq!(lifted.x[2], sub_sol.x[1], "free var 2 (sub idx 1) from sub_solution");
+        assert_eq!(
+            lifted.x[0], parent_a.x[0],
+            "fixed var 0 inherits from parent_a"
+        );
+        assert_eq!(
+            lifted.x[1], sub_sol.x[0],
+            "free var 1 (sub idx 0) from sub_solution"
+        );
+        assert_eq!(
+            lifted.x[2], sub_sol.x[1],
+            "free var 2 (sub idx 1) from sub_solution"
+        );
 
         let expected_score = prob.eval_score(&lifted.x);
-        assert!((lifted.score - expected_score).abs() < 1e-9, "lifted score mismatch");
+        assert!(
+            (lifted.score - expected_score).abs() < 1e-9,
+            "lifted score mismatch"
+        );
         for i in 0..prob.n_vars {
             let mut flipped = lifted.x.clone();
             flipped[i] = !flipped[i];
             let expected_gain = prob.eval_score(&flipped) - lifted.score;
-            assert!((lifted.gain[i] - expected_gain).abs() < 1e-9, "lifted gain[{i}] mismatch");
+            assert!(
+                (lifted.gain[i] - expected_gain).abs() < 1e-9,
+                "lifted gain[{i}] mismatch"
+            );
         }
     }
 }

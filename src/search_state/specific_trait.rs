@@ -385,7 +385,10 @@ mod default_move_warning_tests {
         );
         // Warning should fire only once for this Move type.
         let count = logs.matches("default clone+apply").count();
-        assert_eq!(count, 1, "expected exactly one warning, got {count}: {logs}");
+        assert_eq!(
+            count, 1,
+            "expected exactly one warning, got {count}: {logs}"
+        );
     }
 
     #[test]

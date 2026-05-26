@@ -97,9 +97,7 @@ impl BreakoutLocalSearch {
     /// Checks if a vertex move is enabled (not tabu).
     #[inline]
     fn is_vertex_enabled(&self, vertex: usize, iteration: u64) -> bool {
-        self.tabu_vec
-            .get(vertex)
-            .is_none_or(|&exp| iteration > exp)
+        self.tabu_vec.get(vertex).is_none_or(|&exp| iteration > exp)
     }
 
     /// Adds a vertex to the tabu vec with a random tenure.
@@ -130,9 +128,10 @@ impl BreakoutLocalSearch {
             for &v in &state.solution.positive_gain {
                 let g = state.solution.gain[v];
                 if let Some(best) = best_move_option
-                    && best.gain >= g {
-                        continue;
-                    }
+                    && best.gain >= g
+                {
+                    continue;
+                }
                 best_move_option = Some(MaxCutFlipNeighbor { i: v, gain: g });
             }
 
@@ -230,9 +229,10 @@ impl BreakoutLocalSearch {
                     continue;
                 }
                 if let Some(ref b) = best
-                    && b.gain >= neighbor.gain {
-                        continue;
-                    }
+                    && b.gain >= neighbor.gain
+                {
+                    continue;
+                }
                 best = Some(neighbor);
             }
             if let Some(best_move) = best {

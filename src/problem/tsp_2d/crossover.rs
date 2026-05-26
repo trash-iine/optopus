@@ -56,10 +56,15 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
             b_idx = (b_idx + 1) % n;
         }
 
-        let objective =
-            prob.calculate_tour_length(&child).expect("OX crossover should produce a valid tour");
+        let objective = prob
+            .calculate_tour_length(&child)
+            .expect("OX crossover should produce a valid tour");
         let gain = prob.compute_all_gains(&child);
-        Ok(TspSolution { tour: child, objective, gain })
+        Ok(TspSolution {
+            tour: child,
+            objective,
+            gain,
+        })
     }
 }
 
@@ -69,11 +74,7 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
 /// is not common to both parent tours (considering edges as undirected).
 /// "Fixed" cities have both incident edges shared across both parents and inherit
 /// `sol1`'s position in [`TspWithCoordinates::lift_solution`].
-fn free_cities(
-    prob: &TspWithCoordinates,
-    sol1: &TspSolution,
-    sol2: &TspSolution,
-) -> Vec<usize> {
+fn free_cities(prob: &TspWithCoordinates, sol1: &TspSolution, sol2: &TspSolution) -> Vec<usize> {
     let n = prob.get_n();
 
     let make_edge_set = |tour: &TspTour| -> HashSet<(usize, usize)> {
@@ -92,8 +93,7 @@ fn free_cities(
     let common: HashSet<(usize, usize)> = edges1.intersection(&edges2).copied().collect();
 
     // position lookup for sol1
-    let pos_a: HashMap<usize, usize> =
-        sol1.tour.iter().enumerate().map(|(k, &c)| (c, k)).collect();
+    let pos_a: HashMap<usize, usize> = sol1.tour.iter().enumerate().map(|(k, &c)| (c, k)).collect();
 
     (0..n)
         .filter(|&c| {
@@ -112,11 +112,7 @@ impl SubProblemExtractable for TspWithCoordinates {
     /// edges differ between the two parent tours.
     ///
     /// Sub-problem city `i` corresponds to `free_cities(...)[i]` in the original problem.
-    fn extract_sub_problem(
-        &self,
-        sol1: &TspSolution,
-        sol2: &TspSolution,
-    ) -> TspWithCoordinates {
+    fn extract_sub_problem(&self, sol1: &TspSolution, sol2: &TspSolution) -> TspWithCoordinates {
         let free = free_cities(self, sol1, sol2);
         let sub_coords: Vec<(f64, f64)> = free.iter().map(|&c| self.coordinates[c]).collect();
         TspWithCoordinates::new(format!("{}_sub", self.name), sub_coords)
@@ -148,10 +144,15 @@ impl SubProblemExtractable for TspWithCoordinates {
             tour[pos] = city;
         }
 
-        let objective =
-            self.calculate_tour_length(&tour).expect("lifted TSP tour should be valid");
+        let objective = self
+            .calculate_tour_length(&tour)
+            .expect("lifted TSP tour should be valid");
         let gain = self.compute_all_gains(&tour);
-        TspSolution { tour, objective, gain }
+        TspSolution {
+            tour,
+            objective,
+            gain,
+        }
     }
 }
 
@@ -176,7 +177,11 @@ mod tests {
     fn make_sol(tsp: &TspWithCoordinates, tour: Vec<usize>) -> TspSolution {
         let objective = tsp.calculate_tour_length(&tour).unwrap();
         let gain = tsp.compute_all_gains(&tour);
-        TspSolution { tour, objective, gain }
+        TspSolution {
+            tour,
+            objective,
+            gain,
+        }
     }
 
     #[test]
@@ -189,7 +194,11 @@ mod tests {
         let offspring = cx.crossover(&tsp, &a, &b, &mut rng).unwrap();
         let cities: HashSet<usize> = offspring.tour.iter().copied().collect();
         assert_eq!(offspring.tour.len(), 4);
-        assert_eq!(cities, (0..4).collect::<HashSet<usize>>(), "offspring must visit all 4 cities exactly once");
+        assert_eq!(
+            cities,
+            (0..4).collect::<HashSet<usize>>(),
+            "offspring must visit all 4 cities exactly once"
+        );
     }
 
     #[test]
@@ -224,6 +233,10 @@ mod tests {
 
         let cities: HashSet<usize> = lifted.tour.iter().copied().collect();
         assert_eq!(lifted.tour.len(), 4, "lifted tour must have 4 cities");
-        assert_eq!(cities, (0..4).collect::<HashSet<usize>>(), "lifted tour must visit all cities");
+        assert_eq!(
+            cities,
+            (0..4).collect::<HashSet<usize>>(),
+            "lifted tour must visit all cities"
+        );
     }
 }

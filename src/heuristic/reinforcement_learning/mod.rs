@@ -167,14 +167,15 @@ where
 
         // Subsample if max_candidates is set
         if let Some(max_cand) = self.max_candidates
-            && self.buf_moves.len() > max_cand {
-                let n = self.buf_moves.len();
-                for i in 0..max_cand.min(n) {
-                    let j = state.rng.random_range(i..n);
-                    self.buf_moves.swap(i, j);
-                }
-                self.buf_moves.truncate(max_cand);
+            && self.buf_moves.len() > max_cand
+        {
+            let n = self.buf_moves.len();
+            for i in 0..max_cand.min(n) {
+                let j = state.rng.random_range(i..n);
+                self.buf_moves.swap(i, j);
             }
+            self.buf_moves.truncate(max_cand);
+        }
 
         if self.initial_worsening_total.is_none() {
             self.initial_worsening_total = Some(0.0);

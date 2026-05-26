@@ -88,7 +88,11 @@ impl QuboSolution {
     ///
     /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions
     /// from a variable assignment — it computes `gain` and `objective` automatically.
-    pub(crate) fn new_from_parts(x: Vec<bool>, gain: Vec<Coefficient>, objective: Coefficient) -> Self {
+    pub(crate) fn new_from_parts(
+        x: Vec<bool>,
+        gain: Vec<Coefficient>,
+        objective: Coefficient,
+    ) -> Self {
         Self {
             x,
             gain,
@@ -258,9 +262,7 @@ impl Qubo {
     /// assert_eq!(qubo[(0, 1)], 1);
     /// assert_eq!(qubo.num_entries(), 3);
     /// ```
-    pub fn from_entries(
-        entries: impl IntoIterator<Item = (usize, usize, Coefficient)>,
-    ) -> Self {
+    pub fn from_entries(entries: impl IntoIterator<Item = (usize, usize, Coefficient)>) -> Self {
         let mut qubo = Self::new();
         for (i, j, v) in entries {
             qubo.set_q(i, j, v);
@@ -522,9 +524,7 @@ impl Qubo {
     /// Each entry sets `Q[i][j] = Q[j][i] = v`. When `i == j`, `v` is the linear
     /// (diagonal) coefficient. Duplicate entries follow [`set_q`](Self::set_q)
     /// semantics: the last write wins.
-    pub fn load_file(
-        path: impl AsRef<std::path::Path>,
-    ) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
 
         let path = path.as_ref();
@@ -1036,7 +1036,10 @@ mod qubo_tests {
         assert!(sol.negative_gain_enabled);
         // All-false assignment on all-positive Q: gains are non-negative → no negative gains
         for &v in &sol.negative_gain {
-            assert!(sol.gain[v] < 0, "all entries in negative_gain must have gain < 0");
+            assert!(
+                sol.gain[v] < 0,
+                "all entries in negative_gain must have gain < 0"
+            );
         }
     }
 

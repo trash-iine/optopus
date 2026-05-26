@@ -283,7 +283,12 @@ mod tests {
     }
 
     fn make_solution(qubo: &Qubo, assignments: &[(usize, bool)]) -> QuboSolution {
-        let n = qubo.iter_on_variables().copied().max().map(|m| m + 1).unwrap_or(0);
+        let n = qubo
+            .iter_on_variables()
+            .copied()
+            .max()
+            .map(|m| m + 1)
+            .unwrap_or(0);
         let mut x = vec![false; n];
         for &(i, v) in assignments {
             x[i] = v;

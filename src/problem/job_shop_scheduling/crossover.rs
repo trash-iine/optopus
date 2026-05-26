@@ -32,9 +32,15 @@ impl Crossover<JobShopScheduling> for JobShopPpxCrossover {
             // Remove the leftmost occurrence of `job` from each parent so
             // the head always exposes the next-eligible operation, preserving
             // each parent's relative ordering of remaining operations.
-            let pa = a.iter().position(|&x| x == job).expect("parent must contain job");
+            let pa = a
+                .iter()
+                .position(|&x| x == job)
+                .expect("parent must contain job");
             a.remove(pa);
-            let pb = b.iter().position(|&x| x == job).expect("parent must contain job");
+            let pb = b
+                .iter()
+                .position(|&x| x == job)
+                .expect("parent must contain job");
             b.remove(pb);
         }
 

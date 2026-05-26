@@ -1,6 +1,6 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{Evaluate, Evaluable, MoveToNeighbor, ProblemTrait, SearchState};
+use crate::search_state::{Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, SearchState};
 use rand::Rng;
 use rand::seq::IteratorRandom;
 use std::ops::{DivAssign, MulAssign};
@@ -77,8 +77,17 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let neighbor = N::iter(state.instance, &state.solution)
             .choose(&mut state.rng)
-            .ok_or_else(|| OptError::InvalidState("SimulatedAnnealing: neighborhood is empty, no move can be selected".to_string()))?;
-        if boltzmann_accept(neighbor.evaluate(), self.current_temperature, &mut state.rng) {
+            .ok_or_else(|| {
+                OptError::InvalidState(
+                    "SimulatedAnnealing: neighborhood is empty, no move can be selected"
+                        .to_string(),
+                )
+            })?;
+        if boltzmann_accept(
+            neighbor.evaluate(),
+            self.current_temperature,
+            &mut state.rng,
+        ) {
             state.apply(&neighbor)?;
         } else {
             state.progress_iteration();
@@ -151,7 +160,11 @@ where
             .choose(&mut state.rng)
             .ok_or_else(|| OptError::InvalidState("SimulatedAnnealing (bang-bang): neighborhood is empty, no move can be selected".to_string()))?;
 
-        if boltzmann_accept(neighbor.evaluate(), self.current_temperature, &mut state.rng) {
+        if boltzmann_accept(
+            neighbor.evaluate(),
+            self.current_temperature,
+            &mut state.rng,
+        ) {
             state.apply(&neighbor)?;
         }
 

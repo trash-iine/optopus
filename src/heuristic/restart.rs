@@ -24,7 +24,11 @@ impl<Problem: ProblemTrait> Restart<Problem> {
         heuristic: Box<dyn Heuristic<Problem>>,
         restart_condition: StopCondition,
     ) -> Self {
-        Self { stop_condition, heuristic, restart_condition }
+        Self {
+            stop_condition,
+            heuristic,
+            restart_condition,
+        }
     }
 }
 

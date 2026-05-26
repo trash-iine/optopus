@@ -6,7 +6,6 @@ use crate::{
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 
-
 /// A flip move that toggles a single variable `i`.
 ///
 /// `gain` is the change in the number of satisfied clauses after the flip

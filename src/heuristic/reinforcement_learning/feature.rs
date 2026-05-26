@@ -4,7 +4,7 @@
 /// - 3 state-level: progress, stagnation, improvement_ratio
 /// - 3 neighborhood-level: fraction_improving, mean_gain_normalized, std_gain_normalized
 pub const NUM_FEATURES: usize = 9;
-const EPSILON: f64 = 1e-10; 
+const EPSILON: f64 = 1e-10;
 
 /// Per-step context computed once from the full neighborhood, reused for every move's features.
 pub struct StepContext {

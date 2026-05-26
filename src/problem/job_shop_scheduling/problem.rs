@@ -82,8 +82,7 @@ impl JobShopScheduling {
             detail,
         };
 
-        let file =
-            File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
+        let file = File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 
         let mut tokens: Vec<(usize, String)> = Vec::new();
@@ -100,14 +99,14 @@ impl JobShopScheduling {
 
         let mut iter = tokens.into_iter();
         let parse_usize = |entry: Option<(usize, String)>, what: &str| -> Result<usize, OptError> {
-            let (line_num, tok) = entry
-                .ok_or_else(|| err(0, format!("unexpected end of file, expected {what}")))?;
+            let (line_num, tok) =
+                entry.ok_or_else(|| err(0, format!("unexpected end of file, expected {what}")))?;
             tok.parse::<usize>()
                 .map_err(|e| err(line_num, format!("failed to parse {what} '{tok}': {e}")))
         };
         let parse_u32 = |entry: Option<(usize, String)>, what: &str| -> Result<u32, OptError> {
-            let (line_num, tok) = entry
-                .ok_or_else(|| err(0, format!("unexpected end of file, expected {what}")))?;
+            let (line_num, tok) =
+                entry.ok_or_else(|| err(0, format!("unexpected end of file, expected {what}")))?;
             tok.parse::<u32>()
                 .map_err(|e| err(line_num, format!("failed to parse {what} '{tok}': {e}")))
         };
@@ -119,14 +118,10 @@ impl JobShopScheduling {
         for j in 0..n_jobs {
             let mut ops = Vec::with_capacity(n_machines);
             for k in 0..n_machines {
-                let machine = parse_usize(
-                    iter.next(),
-                    &format!("machine for job {j} operation {k}"),
-                )?;
-                let duration = parse_u32(
-                    iter.next(),
-                    &format!("duration for job {j} operation {k}"),
-                )?;
+                let machine =
+                    parse_usize(iter.next(), &format!("machine for job {j} operation {k}"))?;
+                let duration =
+                    parse_u32(iter.next(), &format!("duration for job {j} operation {k}"))?;
                 if machine >= n_machines {
                     return Err(err(
                         0,

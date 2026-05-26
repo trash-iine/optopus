@@ -19,10 +19,10 @@ pub use genetic_algorithm::{GeneticAlgorithm, ParentSelection};
 pub use late_acceptance::LateAcceptanceHillClimbing;
 pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;
+pub use reinforcement_learning::{RLSearch, RewardShaping};
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
-pub use reinforcement_learning::{RLSearch, RewardShaping};
 pub use specific::BreakoutLocalSearchForMaxCut;
 pub use specific::LinKernighanHelsgottForTsp;
 pub use tabu_search::TabuSearch;
@@ -180,17 +180,20 @@ impl StopCondition {
     /// Check if any of the stopping conditions are met based on the current search state.
     pub fn is_done<'a, Problem: ProblemTrait>(&self, state: &SearchState<'a, Problem>) -> bool {
         if let Some(max_iter) = self.max_iteration
-            && state.iteration - state.start_iteration >= max_iter {
-                return true;
-            }
+            && state.iteration - state.start_iteration >= max_iter
+        {
+            return true;
+        }
         if let Some(max_duration) = self.max_duration
-            && state.duration() >= max_duration {
-                return true;
-            }
+            && state.duration() >= max_duration
+        {
+            return true;
+        }
         if let Some(max_failed_update) = self.max_failed_update
-            && state.iteration - state.best_iteration >= max_failed_update {
-                return true;
-            }
+            && state.iteration - state.best_iteration >= max_failed_update
+        {
+            return true;
+        }
         false
     }
 }

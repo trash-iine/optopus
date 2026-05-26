@@ -1,7 +1,7 @@
 use super::problem::{TspSolution, TspWithCoordinates, normalize_edge_pair};
 use crate::{
     error::OptError,
-    search_state::{EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 
 /// A 2-opt move that removes edges `(tour[i], tour[i+1])` and `(tour[j], tour[(j+1)%n])`,

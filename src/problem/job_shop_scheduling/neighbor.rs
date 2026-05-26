@@ -61,10 +61,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
         Ok(())
     }
 
-    fn iter(
-        prob: &JobShopScheduling,
-        sol: &JobShopSolution,
-    ) -> impl Iterator<Item = Self> + Send {
+    fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.operations.len();
         let base = sol.objective as f64;
         let mut items = Vec::with_capacity(n.saturating_sub(1));
@@ -165,10 +162,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
         Ok(())
     }
 
-    fn iter(
-        prob: &JobShopScheduling,
-        sol: &JobShopSolution,
-    ) -> impl Iterator<Item = Self> + Send {
+    fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.operations.len();
         let base = sol.objective as f64;
         let mut items = Vec::with_capacity(n * n.saturating_sub(1));

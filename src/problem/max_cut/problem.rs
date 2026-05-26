@@ -288,9 +288,7 @@ impl MaxCut {
     ///
     /// let mc = MaxCut::load_file("data/max_cut/G1").unwrap();
     /// ```
-    pub fn load_file(
-        path: impl AsRef<std::path::Path>,
-    ) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
         Graph::load_from_file(path).map(Self::new)
     }
 

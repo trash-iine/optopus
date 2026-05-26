@@ -34,8 +34,12 @@ fn run() -> Result<(), OptError> {
         }
     };
 
-    let config_str = std::fs::read_to_string(&config_file)
-        .map_err(|e| OptError::Config(format!("failed to read config file '{}': {}", config_file, e)))?;
+    let config_str = std::fs::read_to_string(&config_file).map_err(|e| {
+        OptError::Config(format!(
+            "failed to read config file '{}': {}",
+            config_file, e
+        ))
+    })?;
 
     let config: BenchmarkConfig = toml::from_str(&config_str)?;
 

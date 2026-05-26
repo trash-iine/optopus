@@ -57,9 +57,7 @@ impl VertexCover {
     /// [`VertexCover::new`]. Edge weights in the file are loaded into the
     /// graph but ignored by the vertex-cover objective (which counts
     /// uncovered edges, not their weights).
-    pub fn load_file(
-        path: impl AsRef<std::path::Path>,
-    ) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
         Graph::load_from_file(path).map(Self::new)
     }
 
@@ -270,7 +268,10 @@ mod tests {
         let mut sol = vc.new_solution(&mut rng);
         for _ in 0..200 {
             let i = rand::Rng::random_range(&mut rng, 0..vc.graph.len());
-            let neighbor = VertexCoverFlipNeighbor { i, gain: sol.gain[i] };
+            let neighbor = VertexCoverFlipNeighbor {
+                i,
+                gain: sol.gain[i],
+            };
             neighbor.apply_to_solution(&vc, &mut sol).unwrap();
 
             let (gain, obj, cs, ue) = vc.calculate_state(&sol.cover);

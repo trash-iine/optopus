@@ -34,7 +34,11 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let neighbor = N::iter(state.instance, &state.solution)
             .choose(&mut state.rng)
-            .ok_or_else(|| OptError::InvalidState("RandomWalk: neighborhood is empty, no move can be selected".to_string()))?;
+            .ok_or_else(|| {
+                OptError::InvalidState(
+                    "RandomWalk: neighborhood is empty, no move can be selected".to_string(),
+                )
+            })?;
 
         state.apply(&neighbor)?;
 

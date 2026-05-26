@@ -6,7 +6,7 @@ use rand::SeedableRng;
 use rand::rngs::SmallRng;
 use rayon::prelude::*;
 pub use specific_trait::{
-    Crossover, Distance, EnabledTabu, Evaluate, Evaluable, MoveToNeighbor, ProblemTrait, Rankable,
+    Crossover, Distance, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
     SubProblemExtractable, filter_best,
 };
 
