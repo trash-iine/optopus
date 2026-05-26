@@ -206,6 +206,65 @@ impl JobShopScheduling {
 
         Ok((makespan, completion_times))
     }
+
+    /// Computes the makespan of an operation sequence without allocating a
+    /// per-operation `completion_times` vector.
+    ///
+    /// Functionally equivalent to `decode(operations).map(|(m, _)| m)` but
+    /// avoids one Vec allocation — useful in neighbor evaluation loops
+    /// (e.g. `MoveToNeighbor::move_to_be_better_than`) where only the final
+    /// objective is needed.
+    pub(crate) fn compute_makespan(&self, operations: &[usize]) -> Result<u32, OptError> {
+        let expected_len = self.n_jobs * self.n_machines;
+        if operations.len() != expected_len {
+            return Err(OptError::InvalidState(format!(
+                "operations length {} does not match n_jobs * n_machines = {}",
+                operations.len(),
+                expected_len
+            )));
+        }
+
+        let mut machine_release = vec![0u32; self.n_machines];
+        let mut job_release = vec![0u32; self.n_jobs];
+        let mut job_op_idx = vec![0usize; self.n_jobs];
+        let mut makespan = 0u32;
+
+        for (i, &j) in operations.iter().enumerate() {
+            if j >= self.n_jobs {
+                return Err(OptError::InvalidState(format!(
+                    "operations[{i}] = {j} is out of range (n_jobs = {})",
+                    self.n_jobs
+                )));
+            }
+            let k = job_op_idx[j];
+            if k >= self.n_machines {
+                return Err(OptError::InvalidState(format!(
+                    "job {j} appears more than {} times in operations",
+                    self.n_machines
+                )));
+            }
+            let (machine, duration) = self.jobs[j][k];
+            let start = machine_release[machine].max(job_release[j]);
+            let finish = start + duration;
+            machine_release[machine] = finish;
+            job_release[j] = finish;
+            job_op_idx[j] = k + 1;
+            if finish > makespan {
+                makespan = finish;
+            }
+        }
+
+        for (j, &count) in job_op_idx.iter().enumerate() {
+            if count != self.n_machines {
+                return Err(OptError::InvalidState(format!(
+                    "job {j} appears {count} times in operations, expected {}",
+                    self.n_machines
+                )));
+            }
+        }
+
+        Ok(makespan)
+    }
 }
 
 impl ProblemTrait for JobShopScheduling {
