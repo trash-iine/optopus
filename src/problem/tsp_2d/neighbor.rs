@@ -185,38 +185,33 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
 
     fn iter(prob: &TspWithCoordinates, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
         let n = prob.get_n();
-        // Eager collection: no Arc needed since all items are built before returning.
-        let mut items: Vec<TspRelocateNeighbor> = Vec::with_capacity(n * n.saturating_sub(2));
-
-        for pos in 0..n {
+        (0..n).flat_map(move |pos| {
             let prev = (pos + n - 1) % n;
             let next = (pos + 1) % n;
+            // Cost saved by removing city pos from prev-pos-next
+            let removal_gain = prob.distance(sol.tour[prev], sol.tour[pos])
+                + prob.distance(sol.tour[pos], sol.tour[next])
+                - prob.distance(sol.tour[prev], sol.tour[next]);
 
-            for ins in 0..n {
+            (0..n).filter_map(move |ins| {
                 // Inserting after pos itself or after its predecessor (prev) would
                 // leave the tour unchanged, so skip these cases
                 if ins == pos || ins == prev {
-                    continue;
+                    return None;
                 }
 
                 let ins_next = (ins + 1) % n;
-
-                // Cost saved by removing city pos from prev-pos-next
-                let removal_gain = prob.distance(sol.tour[prev], sol.tour[pos])
-                    + prob.distance(sol.tour[pos], sol.tour[next])
-                    - prob.distance(sol.tour[prev], sol.tour[next]);
-
-                // Additional cost of inserting city pos between ins and ins_next
                 let insertion_cost = prob.distance(sol.tour[ins], sol.tour[pos])
                     + prob.distance(sol.tour[pos], sol.tour[ins_next])
                     - prob.distance(sol.tour[ins], sol.tour[ins_next]);
 
-                let gain = insertion_cost - removal_gain;
-                items.push(TspRelocateNeighbor { pos, ins, gain });
-            }
-        }
-
-        items.into_iter()
+                Some(TspRelocateNeighbor {
+                    pos,
+                    ins,
+                    gain: insertion_cost - removal_gain,
+                })
+            })
+        })
     }
 
     fn move_to_be_better_than(
