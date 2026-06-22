@@ -10,8 +10,6 @@ use std::ops::{DivAssign, MulAssign};
 /// Accepts an [`Evaluable<f64>`] value that encodes both the optimization direction and
 /// the objective change. Improving moves are always accepted; worsening moves are
 /// accepted with probability `exp(-worsening / T)`.
-///
-/// The `rng` argument lets callers thread `SearchState.rng` through for reproducible runs.
 pub fn boltzmann_accept(
     delta: Evaluable<f64>,
     temperature: f64,
