@@ -22,7 +22,7 @@ pub enum ParentSelection {
     ///
     /// Promotes exploration by avoiding crossover between near-identical
     /// individuals. Requires `P::Solution: Distance`.
-    HammingTopK { top_k: usize },
+    DistantTopK { top_k: usize },
 }
 
 /// Genetic algorithm meta-heuristic.
@@ -30,11 +30,11 @@ pub enum ParentSelection {
 /// Maintains a population of `population_size` candidate solutions.
 /// On the first `run_once` call the population is seeded with random solutions
 /// (optionally refined by `init_improvement`). Each subsequent call:
-/// 1. **Selection**: picks two parents by tournament selection.
-/// 2. **Crossover**: combines them with operator `C` to produce an offspring.
-/// 3. **Mutation**: applies the inner `mutation` heuristic to the offspring
+/// 1. Selection: picks two parents by tournament selection.
+/// 2. Crossover: combines them with operator `C` to produce an offspring.
+/// 3. Mutation: applies the inner `mutation` heuristic to the offspring
 ///    using the sub-run clone/merge pattern (same as [`crate::heuristic::Iterated`]).
-/// 4. **Replacement**: inserts the (possibly improved) offspring into the population,
+/// 4. Replacement: inserts the (possibly improved) offspring into the population,
 ///    evicting the worst member when at capacity.
 ///
 /// When `init_improvement` is `Some`, each random initial individual is also passed
@@ -156,8 +156,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
         state: &mut SearchState<'a, P>,
     ) -> Result<(), OptError> {
         while self.population.len() < self.population_size {
-            let instance = state.instance;
-            let seed = instance.new_solution(&mut state.rng);
+            let seed = state.instance.new_solution(&mut state.rng);
             let member = match self.init_improvement.as_mut() {
                 Some(op) => Self::improve_via_sub_run(state, seed, op.as_mut())?,
                 None => seed,
@@ -190,7 +189,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
     {
         match self.parent_selection {
             ParentSelection::Tournament => self.tournament_indices(rng),
-            ParentSelection::HammingTopK { top_k } => self.hamming_top_k_indices(rng, top_k),
+            ParentSelection::DistantTopK { top_k } => self.distant_top_k_indices(rng, top_k),
         }
     }
 
@@ -208,7 +207,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
         }
     }
 
-    fn hamming_top_k_indices(&self, rng: &mut impl rand::Rng, top_k: usize) -> (usize, usize)
+    fn distant_top_k_indices(&self, rng: &mut impl rand::Rng, top_k: usize) -> (usize, usize)
     where
         P::Solution: Distance,
     {
@@ -312,28 +311,22 @@ where
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        // --- Initialise population on first call ---
         if self.population.len() < self.population_size {
             self.initialize_population(state)?;
         }
 
-        // --- Selection ---
         let (i_a, i_b) = self.select_parent_indices(&mut state.rng);
         let parent_a = self.population[i_a].clone();
         let parent_b = self.population[i_b].clone();
 
-        // --- Crossover ---
         let offspring =
             self.crossover
                 .crossover(state.instance, &parent_a, &parent_b, &mut state.rng)?;
 
-        // --- Mutation (sub-run clone/merge pattern from Iterated) ---
         let mutated = Self::improve_via_sub_run(state, offspring, self.mutation.as_mut())?;
 
-        // --- Population replacement ---
         self.insert_into_population(mutated);
 
-        // Keep state.solution pointing at the current population best (O(1) via best_idx).
         state.solution = self.population[self.best_idx.unwrap()].clone();
         state.update_best();
 
@@ -416,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    fn genetic_algorithm_hamming_top_k_runs_and_keeps_population_invariant() {
+    fn genetic_algorithm_distant_top_k_runs_and_keeps_population_invariant() {
         let mc = MaxCut::new(Graph::from_edges([
             (0, 1, 1.0),
             (0, 2, 1.0),
@@ -435,7 +428,7 @@ mod tests {
                 StopCondition::failed_updates(1),
             )),
         )
-        .with_parent_selection(ParentSelection::HammingTopK { top_k: 2 });
+        .with_parent_selection(ParentSelection::DistantTopK { top_k: 2 });
 
         ga.run(&mut state).unwrap();
 
