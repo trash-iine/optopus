@@ -81,12 +81,6 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
     }
 
     /// Apply the swap to a temporary buffer and compare makespans directly.
-    ///
-    /// Avoids the default's `Solution::clone()` (which would also clone
-    /// `completion_times`) plus the second `completion_times` allocation
-    /// inside `decode`. Falls back to `false` (non-improving) on the
-    /// extremely unlikely path where the swapped sequence fails decode —
-    /// adjacent swaps of a valid sequence always stay valid.
     fn move_to_be_better_than(
         &self,
         prob: &JobShopScheduling,
@@ -184,9 +178,6 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
     }
 
     /// Apply the relocate to a temporary buffer and compare makespans.
-    /// Avoids the default's full-Solution clone and second `decode`
-    /// allocation. See [`JobShopSwapNeighbor::move_to_be_better_than`] for
-    /// the same rationale.
     fn move_to_be_better_than(
         &self,
         prob: &JobShopScheduling,
