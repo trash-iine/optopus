@@ -60,9 +60,8 @@ fn main() {
     ]));
 
     let mut state = SearchState::new(&mc);
-    let mut heuristic = FirstImprovingSearch::<MaxCutFlipNeighbor>::new(
-        StopCondition::iterations(100),
-    );
+    let mut heuristic =
+        FirstImprovingSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100));
     heuristic.run(&mut state).unwrap();
 
     println!(
