@@ -84,24 +84,22 @@ where
 
     /// Returns `true` if applying this move to `src` yields a solution better than `other`.
     ///
-    /// <div class="warning">
+    /// # Warning
+    ///
     /// The default implementation clones the solution and applies the move to it, which may be inefficient.
     /// Override this method with a more efficient implementation if possible.
     ///
     /// When this default is invoked at runtime, a one-shot
-    /// <code>tracing::warn!</code> is emitted per concrete Move type (via
-    /// <code>OnceLock</code>). Providing an override bypasses the default
+    /// `tracing::warn!` is emitted per concrete Move type (via
+    /// `OnceLock`). Providing an override bypasses the default
     /// body entirely, so the warning never fires — no opt-in flag required.
-    /// </div>
     fn move_to_be_better_than(
         &self,
         prob: &Problem,
         src: &Problem::Solution,
         other: &Problem::Solution,
     ) -> bool {
-        // Monomorphization gives every concrete (Problem, Self) pair its own
-        // copy of this static, so the warning fires once per Move type per
-        // process — not once total, and not once per call site.
+        // warn at once
         static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
         WARNED.get_or_init(|| {
             tracing::warn!(
@@ -156,7 +154,7 @@ pub trait Evaluate<T = f64> {
 /// Hamming-style distance between two solutions.
 ///
 /// Used by parent-selection strategies that promote population diversity
-/// (e.g. [`crate::heuristic::ParentSelection::HammingTopK`]).
+/// (e.g. [`crate::heuristic::ParentSelection::DistantTopK`]).
 ///
 /// For bit-vector solutions this is the standard Hamming distance — the
 /// number of variables that differ. For other encodings any application-

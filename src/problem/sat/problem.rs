@@ -52,9 +52,12 @@ pub struct Sat {
     /// Inverted index: `clauses_per_var[i]` lists every clause index that
     /// references variable `i` (0-indexed, sign-agnostic).
     ///
-    /// **Invariant** (maintained only by [`Sat::add_clause`]): if
-    /// `clauses_per_var[i]` contains `c`, then `clauses[c]` contains some
+    /// # Note
+    ///
+    /// This field is maintained only by [`Sat::add_clause`].
+    /// If `clauses_per_var[i]` contains `c`, then `clauses[c]` contains some
     /// literal `lit` with `lit.unsigned_abs() as usize - 1 == i`.
+    ///
     /// Mutating `clauses` directly without updating this index breaks the
     /// invariant and triggers an `unreachable!()` in [`Sat::calc_gain`] /
     /// [`Sat::calc_gain_with_virtual_flip`].

@@ -210,8 +210,8 @@ pub enum NeighborKind {
 /// - `"Restart"` — runs `steps\[0\]` then resets to a new random solution when `restart_condition` is met
 /// - `"GeneticAlgorithm"` — `steps\[0\]` = mutation, optional `steps\[1\]` = init_improvement (HEA pattern).
 ///   Requires `population_size`. Optional fields: `crossover_kind` (default `"Uniform"`,
-///   TSP defaults to `"Order"`), `parent_selection` (`"Tournament"` default or `"HammingTopK"`),
-///   `parent_top_k` (required when `parent_selection = "HammingTopK"`).
+///   TSP defaults to `"Order"`), `parent_selection` (`"Tournament"` default or `"DistantTopK"`),
+///   `parent_top_k` (required when `parent_selection = "DistantTopK"`).
 ///
 /// The problem type is inferred from the instance being benchmarked and does not need
 /// to be specified here.
@@ -277,10 +277,10 @@ pub struct HeuristicConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub crossover_kind: Option<String>,
     /// Parent selection strategy for `kind = "GeneticAlgorithm"`:
-    /// `"Tournament"` (default) or `"HammingTopK"`.
+    /// `"Tournament"` (default) or `"DistantTopK"`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_selection: Option<String>,
-    /// `top_k` for `parent_selection = "HammingTopK"` (must be >= 1).
+    /// `top_k` for `parent_selection = "DistantTopK"` (must be >= 1).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_top_k: Option<usize>,
 }
@@ -1187,18 +1187,18 @@ where
             let parent_selection = match config.parent_selection.as_deref().unwrap_or("Tournament")
             {
                 "Tournament" => ParentSelection::Tournament,
-                "HammingTopK" => {
+                "DistantTopK" => {
                     let top_k = config
                         .parent_top_k
-                        .ok_or("'parent_top_k' required for parent_selection = 'HammingTopK'")?;
+                        .ok_or("'parent_top_k' required for parent_selection = 'DistantTopK'")?;
                     if top_k == 0 {
                         return Err("'parent_top_k' must be >= 1".to_string());
                     }
-                    ParentSelection::HammingTopK { top_k }
+                    ParentSelection::DistantTopK { top_k }
                 }
                 other => {
                     return Err(format!(
-                        "Unknown parent_selection '{other}' (expected 'Tournament' or 'HammingTopK')"
+                        "Unknown parent_selection '{other}' (expected 'Tournament' or 'DistantTopK')"
                     ));
                 }
             };
