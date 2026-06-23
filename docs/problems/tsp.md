@@ -26,7 +26,7 @@ are swapped (negative = improving).
 | `TspRelocateNeighbor` | Remove a city and reinsert it at another position. | `iter + 1` |
 
 `Distance` (position-based dissimilarity) is implemented for use with
-`ParentSelection::HammingTopK`.
+`ParentSelection::DistantTopK`.
 
 ## Crossover
 

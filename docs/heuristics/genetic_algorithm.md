@@ -45,11 +45,11 @@ Builder method `with_parent_selection(strategy)` switches between:
 ```rust
 pub enum ParentSelection {
     Tournament,                          // default — two binary tournaments
-    HammingTopK { top_k: usize },        // pick A randomly, B from top-k by distance
+    DistantTopK { top_k: usize },        // pick A randomly, B from top-k by distance
 }
 ```
 
-`HammingTopK` requires `P::Solution: Distance` and promotes diversity by
+`DistantTopK` requires `P::Solution: Distance` and promotes diversity by
 preferring distant parents.
 
 ## Replacement

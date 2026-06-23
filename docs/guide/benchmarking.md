@@ -46,7 +46,7 @@ takes the Cartesian product.
 | `Sequential` | all | `steps` | — |
 | `Iterated` | all | `steps` (`[0]` = search, `[1]` = perturbation) | — |
 | `Restart` | all | `steps` (single inner), `restart_condition` | — |
-| `GeneticAlgorithm` | all | `population_size` (≥ 2), `steps` (`[0]` = mutation, optional `[1]` = init_improvement) | `crossover_kind` (`Uniform` default; TSP also accepts `Order`), `parent_selection` (`Tournament` default \| `HammingTopK`), `parent_top_k` (required when `HammingTopK`) |
+| `GeneticAlgorithm` | all | `population_size` (≥ 2), `steps` (`[0]` = mutation, optional `[1]` = init_improvement) | `crossover_kind` (`Uniform` default; TSP also accepts `Order`), `parent_selection` (`Tournament` default \| `DistantTopK`), `parent_top_k` (required when `DistantTopK`) |
 
 `tabu_tenure` is a `(min, max)` pair, e.g. `tabu_tenure = [5, 10]`.
 `stop_condition` accepts any subset of `max_iteration`, `max_duration_secs`,

@@ -20,7 +20,7 @@ the rest unlock specific algorithms.
 | `EnabledTabu` | `TabuSearch` | `type TabuMap: Default;`<br>`fn is_move_enabled(&self, map, iter) -> bool;`<br>`fn add_to_tabu_map(&self, map, iter, tenure: (u64, u64))` |
 | `Crossover<P>` | `GeneticAlgorithm` | `fn crossover(&mut self, prob, sol1, sol2) -> P::Solution` (`&mut self` lets stateful operators run a sub-heuristic) |
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
-| `Distance` (on `Solution`) | `GeneticAlgorithm::ParentSelection::HammingTopK` | `fn distance(&self, other: &Self) -> usize` |
+| `Distance` (on `Solution`) | `GeneticAlgorithm::ParentSelection::DistantTopK` | `fn distance(&self, other: &Self) -> usize` |
 
 For QUBO, gain values are integers, so the relevant evaluators are
 `Evaluate<i32>` (and `Evaluable<i32>`).
