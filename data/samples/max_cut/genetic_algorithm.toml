@@ -13,9 +13,9 @@ kind = "GeneticAlgorithm"
 population_size = 10
 # Crossover operator. MaxCut accepts only "Uniform" (per-bit random parent).
 crossover_kind = "Uniform"
-# Parent selection strategy: "Tournament" (random pair, keep the better) | "HammingTopK".
+# Parent selection strategy: "Tournament" (random pair, keep the better) | "DistantTopK".
 parent_selection = "Tournament"
-# Required when parent_selection = "HammingTopK": picks B from the top-K Hamming-
+# Required when parent_selection = "DistantTopK": picks B from the top-K most
 # distant individuals from A (encourages diverse parent pairs).
 # parent_top_k = 5
 

@@ -24,7 +24,11 @@ impl<Problem: ProblemTrait> Restart<Problem> {
         heuristic: Box<dyn Heuristic<Problem>>,
         restart_condition: StopCondition,
     ) -> Self {
-        Self { stop_condition, heuristic, restart_condition }
+        Self {
+            stop_condition,
+            heuristic,
+            restart_condition,
+        }
     }
 }
 
@@ -43,7 +47,8 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Restart<Problem> {
 
         if self.restart_condition.is_done(state) {
             tracing::debug!("Restart triggered at iteration {}", state.iteration);
-            state.solution = state.instance.new_solution(&mut rand::rng());
+            let instance = state.instance;
+            state.solution = instance.new_solution(&mut state.rng);
         }
 
         Ok(())

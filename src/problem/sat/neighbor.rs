@@ -50,19 +50,6 @@ impl Evaluate for SatFlipNeighbor {
 
 impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
-        // Collect variables that share a clause with i (their gain may change after the flip)
-        let mut affected: Vec<usize> = Vec::new();
-        for clause in prob.clauses_of_var(self.i) {
-            for &lit in clause {
-                let j = lit.unsigned_abs() as usize - 1;
-                if j != self.i {
-                    affected.push(j);
-                }
-            }
-        }
-        affected.sort_unstable();
-        affected.dedup();
-
         // Flip x[i]
         sol.x[self.i] = !sol.x[self.i];
 
@@ -72,8 +59,9 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
         // Update gain[i]: flipping again reverts to the original (sign flip)
         sol.gain[self.i] = -self.gain;
 
-        // Recompute gain for variables sharing a clause with i
-        for j in affected {
+        // Recompute gain for variables sharing a clause with i.
+        // `prob.var_neighbors(i)` is precomputed at problem-construction time.
+        for &j in prob.var_neighbors(self.i) {
             sol.gain[j] = prob.calc_gain(&sol.x, j);
         }
         Ok(())

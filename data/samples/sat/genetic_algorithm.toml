@@ -12,9 +12,9 @@ kind = "GeneticAlgorithm"
 population_size = 10
 # SAT accepts only "Uniform".
 crossover_kind = "Uniform"
-# "Tournament" (default) | "HammingTopK".
+# "Tournament" (default) | "DistantTopK".
 parent_selection = "Tournament"
-# parent_top_k = 5  # required when parent_selection = "HammingTopK"
+# parent_top_k = 5  # required when parent_selection = "DistantTopK"
 
 [heuristics.stop_condition]
 max_iteration = 1_000_000

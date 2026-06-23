@@ -61,10 +61,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
         Ok(())
     }
 
-    fn iter(
-        prob: &JobShopScheduling,
-        sol: &JobShopSolution,
-    ) -> impl Iterator<Item = Self> + Send {
+    fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.operations.len();
         let base = sol.objective as f64;
         let mut items = Vec::with_capacity(n.saturating_sub(1));
@@ -81,6 +78,21 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
             items.push(JobShopSwapNeighbor { i, gain });
         }
         items.into_iter()
+    }
+
+    /// Apply the swap to a temporary buffer and compare makespans directly.
+    fn move_to_be_better_than(
+        &self,
+        prob: &JobShopScheduling,
+        src: &JobShopSolution,
+        other: &JobShopSolution,
+    ) -> bool {
+        let mut ops = src.operations.clone();
+        ops.swap(self.i, self.i + 1);
+        match prob.compute_makespan(&ops) {
+            Ok(makespan) => makespan < other.objective,
+            Err(_) => false,
+        }
     }
 }
 
@@ -144,10 +156,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
         Ok(())
     }
 
-    fn iter(
-        prob: &JobShopScheduling,
-        sol: &JobShopSolution,
-    ) -> impl Iterator<Item = Self> + Send {
+    fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.operations.len();
         let base = sol.objective as f64;
         let mut items = Vec::with_capacity(n * n.saturating_sub(1));
@@ -166,6 +175,21 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
             }
         }
         items.into_iter()
+    }
+
+    /// Apply the relocate to a temporary buffer and compare makespans.
+    fn move_to_be_better_than(
+        &self,
+        prob: &JobShopScheduling,
+        src: &JobShopSolution,
+        other: &JobShopSolution,
+    ) -> bool {
+        let mut ops = src.operations.clone();
+        relocate_in_place(&mut ops, self.from, self.to);
+        match prob.compute_makespan(&ops) {
+            Ok(makespan) => makespan < other.objective,
+            Err(_) => false,
+        }
     }
 }
 
@@ -261,5 +285,62 @@ mod tests {
             .map(|n| n.gain)
             .fold(f64::INFINITY, f64::min);
         assert!(best < 0.0);
+    }
+
+    /// Reference implementation of the default `move_to_be_better_than`
+    /// (clone + apply). Used to assert that the override agrees with it.
+    fn reference_move_to_be_better_than<M: MoveToNeighbor<JobShopScheduling>>(
+        m: &M,
+        prob: &JobShopScheduling,
+        src: &JobShopSolution,
+        other: &JobShopSolution,
+    ) -> bool {
+        let mut cloned = src.clone();
+        m.apply_to_solution(prob, &mut cloned).unwrap();
+        cloned.is_better_than(other)
+    }
+
+    #[test]
+    fn test_swap_move_to_be_better_than_matches_default() {
+        let inst = make_inst();
+        // Two starting solutions covering both serial and interleaved layouts.
+        for ops in [vec![0, 1, 1, 0], vec![0, 0, 1, 1], vec![1, 0, 0, 1]] {
+            let src = make_sol(&inst, ops);
+            // Compare against `src` itself ("is the neighbor strictly better
+            // than current?") and against an alternative `other` to exercise
+            // both improving and non-improving outcomes.
+            let other_alt = make_sol(&inst, vec![1, 1, 0, 0]);
+            for other in [src.clone(), other_alt.clone()] {
+                for n in JobShopSwapNeighbor::iter(&inst, &src) {
+                    let expected = reference_move_to_be_better_than(&n, &inst, &src, &other);
+                    let got = n.move_to_be_better_than(&inst, &src, &other);
+                    assert_eq!(
+                        got, expected,
+                        "swap i={} disagrees: src={:?} other.obj={} got={} expected={}",
+                        n.i, src.operations, other.objective, got, expected,
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_relocate_move_to_be_better_than_matches_default() {
+        let inst = make_inst();
+        for ops in [vec![0, 1, 0, 1], vec![0, 0, 1, 1], vec![1, 0, 1, 0]] {
+            let src = make_sol(&inst, ops);
+            let other_alt = make_sol(&inst, vec![1, 1, 0, 0]);
+            for other in [src.clone(), other_alt.clone()] {
+                for n in JobShopRelocateNeighbor::iter(&inst, &src) {
+                    let expected = reference_move_to_be_better_than(&n, &inst, &src, &other);
+                    let got = n.move_to_be_better_than(&inst, &src, &other);
+                    assert_eq!(
+                        got, expected,
+                        "relocate from={} to={} disagrees: src={:?} other.obj={} got={} expected={}",
+                        n.from, n.to, src.operations, other.objective, got, expected,
+                    );
+                }
+            }
+        }
     }
 }

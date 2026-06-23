@@ -73,7 +73,7 @@ i j w
 
 ## Optional traits
 
-- `Distance` — Hamming distance on the cut vector (used by `ParentSelection::HammingTopK`).
+- `Distance` — Hamming distance on the cut vector (used by `ParentSelection::DistantTopK`).
 
 ## Notes
 

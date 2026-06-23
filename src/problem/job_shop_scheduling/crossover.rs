@@ -19,9 +19,9 @@ impl Crossover<JobShopScheduling> for JobShopPpxCrossover {
         prob: &JobShopScheduling,
         sol1: &JobShopSolution,
         sol2: &JobShopSolution,
-    ) -> JobShopSolution {
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<JobShopSolution, crate::error::OptError> {
         let n = sol1.operations.len();
-        let mut rng = rand::rng();
         let mut a = sol1.operations.clone();
         let mut b = sol2.operations.clone();
         let mut child = Vec::with_capacity(n);
@@ -32,20 +32,24 @@ impl Crossover<JobShopScheduling> for JobShopPpxCrossover {
             // Remove the leftmost occurrence of `job` from each parent so
             // the head always exposes the next-eligible operation, preserving
             // each parent's relative ordering of remaining operations.
-            let pa = a.iter().position(|&x| x == job).expect("parent must contain job");
+            let pa = a
+                .iter()
+                .position(|&x| x == job)
+                .expect("parent must contain job");
             a.remove(pa);
-            let pb = b.iter().position(|&x| x == job).expect("parent must contain job");
+            let pb = b
+                .iter()
+                .position(|&x| x == job)
+                .expect("parent must contain job");
             b.remove(pb);
         }
 
-        let (objective, completion_times) = prob
-            .decode(&child)
-            .expect("PPX child should be a precedence-feasible operation sequence");
-        JobShopSolution {
+        let (objective, completion_times) = prob.decode(&child)?;
+        Ok(JobShopSolution {
             operations: child,
             objective,
             completion_times,
-        }
+        })
     }
 }
 
@@ -53,6 +57,7 @@ impl Crossover<JobShopScheduling> for JobShopPpxCrossover {
 mod tests {
     use super::*;
     use crate::search_state::ProblemTrait;
+    use rand::SeedableRng;
 
     fn make_inst() -> JobShopScheduling {
         JobShopScheduling::new(
@@ -81,8 +86,9 @@ mod tests {
         let a = make_sol(&inst, vec![0, 1, 2, 0, 1, 2, 0, 1, 2]);
         let b = make_sol(&inst, vec![2, 1, 0, 2, 0, 1, 1, 2, 0]);
         let mut cx = JobShopPpxCrossover;
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         for _ in 0..20 {
-            let child = cx.crossover(&inst, &a, &b);
+            let child = cx.crossover(&inst, &a, &b, &mut rng).unwrap();
             assert_eq!(child.operations.len(), 9);
             let mut counts = vec![0usize; inst.n_jobs];
             for &j in &child.operations {
@@ -97,18 +103,19 @@ mod tests {
         let inst = make_inst();
         let a = make_sol(&inst, vec![0, 1, 2, 0, 1, 2, 0, 1, 2]);
         let mut cx = JobShopPpxCrossover;
-        let child = cx.crossover(&inst, &a, &a);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let child = cx.crossover(&inst, &a, &a, &mut rng).unwrap();
         assert_eq!(child.operations, a.operations);
     }
 
     #[test]
     fn test_ppx_random_parents_random_inst() {
         let inst = make_inst();
-        let mut rng = rand::rng();
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         let a = inst.new_solution(&mut rng);
         let b = inst.new_solution(&mut rng);
         let mut cx = JobShopPpxCrossover;
-        let child = cx.crossover(&inst, &a, &b);
+        let child = cx.crossover(&inst, &a, &b, &mut rng).unwrap();
         assert_eq!(child.operations.len(), inst.n_jobs * inst.n_machines);
     }
 }

@@ -285,7 +285,8 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     /// the interaction when both vertices are flipped simultaneously.
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
         prob.graph.iter_on_vertices().flat_map(move |&i| {
-            prob.graph.iter_on_vertices()
+            prob.graph
+                .iter_on_vertices()
                 .filter(move |&&j| j < i && (sol.cut[i] ^ sol.cut[j]))
                 .map(move |&j| Self {
                     i,

@@ -71,7 +71,7 @@ comparison.
 | `Evaluate<f64>` (move) | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing`, `RLSearch` | Those heuristics won't compile for your move type. |
 | `Evaluate<i32>` (move) | Optional integer-valued objective deltas (used by QUBO). | Just don't impl. |
 | `EnabledTabu` (move) | `TabuSearch` | Same. |
-| `Distance` (solution) | `GeneticAlgorithm` (any selection), `ParentSelection::HammingTopK` | GA won't compile. |
+| `Distance` (solution) | `GeneticAlgorithm` (any selection), `ParentSelection::DistantTopK` | GA won't compile. |
 | `SubProblemExtractable` (problem) | `SubProblemBasedCrossover` | Use the problem's uniform crossover instead. |
 
 `LocalSearch`, `RandomWalk`, `BeamSearch`, `Sequential`, `Iterated`, `Restart`,

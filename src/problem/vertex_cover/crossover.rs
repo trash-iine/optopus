@@ -20,8 +20,8 @@ impl Crossover<VertexCover> for VertexCoverUniformCrossover {
         prob: &VertexCover,
         sol1: &VertexCoverSolution,
         sol2: &VertexCoverSolution,
-    ) -> VertexCoverSolution {
-        let mut rng = rand::rng();
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<VertexCoverSolution, crate::error::OptError> {
         let mut sol = sol1.clone();
         for &i in prob.graph.iter_on_vertices() {
             if sol.cover[i] != sol2.cover[i] && rng.random::<bool>() {
@@ -29,12 +29,10 @@ impl Crossover<VertexCover> for VertexCoverUniformCrossover {
                     i,
                     gain: sol.gain[i],
                 };
-                neighbor
-                    .apply_to_solution(prob, &mut sol)
-                    .expect("flipping a vertex should never fail");
+                neighbor.apply_to_solution(prob, &mut sol)?;
             }
         }
-        sol
+        Ok(sol)
     }
 }
 
@@ -47,7 +45,8 @@ impl SubProblemExtractable for VertexCover {
         sol2: &VertexCoverSolution,
     ) -> VertexCover {
         let free: HashSet<usize> = self
-            .graph.iter_on_vertices()
+            .graph
+            .iter_on_vertices()
             .filter(|&&v| sol1.cover[v] != sol2.cover[v])
             .copied()
             .collect();
@@ -97,6 +96,7 @@ impl SubProblemExtractable for VertexCover {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::SeedableRng;
 
     fn make_vc() -> VertexCover {
         let mut g = Graph::new();
@@ -111,7 +111,8 @@ mod tests {
         let vc = make_vc();
         let s = vc.solution_from_assignment(&[true, false, true]);
         let mut cx = VertexCoverUniformCrossover;
-        let offspring = cx.crossover(&vc, &s, &s);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&vc, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.cover, s.cover);
         assert_eq!(offspring.objective, s.objective);
     }
@@ -122,7 +123,8 @@ mod tests {
         let a = vc.solution_from_assignment(&[true, false, true]);
         let b = vc.solution_from_assignment(&[false, true, false]);
         let mut cx = VertexCoverUniformCrossover;
-        let offspring = cx.crossover(&vc, &a, &b);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&vc, &a, &b, &mut rng).unwrap();
 
         let (gain, obj, cs, ue) = vc.calculate_state(&offspring.cover);
         assert_eq!(offspring.gain, gain);

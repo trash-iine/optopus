@@ -79,7 +79,7 @@ where
         }
 
         let neighbor = N::iter(state.instance, &state.solution)
-            .choose(&mut rand::rng())
+            .choose(&mut state.rng)
             .ok_or_else(|| {
                 OptError::InvalidState(
                     "LateAcceptanceHillClimbing: neighborhood is empty, no move can be selected"
@@ -115,8 +115,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::problem::max_cut::MaxCut;
     use crate::problem::MaxCutFlipNeighbor;
+    use crate::problem::max_cut::MaxCut;
     use crate::search_state::SearchState;
 
     fn small_maxcut() -> MaxCut {
@@ -188,10 +188,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "history_length must be at least 1")]
     fn lahc_history_length_zero_panics() {
-        LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
-            StopCondition::iterations(100),
-            0,
-        );
+        LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100), 0);
     }
 
     #[test]

@@ -481,7 +481,8 @@ impl FormulaProblem {
             .iter()
             .map(|c| compile_constraint_expr(c, n_vars))
             .collect();
-        let interaction_neighbors = build_interaction_neighbors(&obj_poly, &constraint_polys, n_vars);
+        let interaction_neighbors =
+            build_interaction_neighbors(&obj_poly, &constraint_polys, n_vars);
         Self {
             n_vars,
             objective,

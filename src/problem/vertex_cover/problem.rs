@@ -51,6 +51,16 @@ impl VertexCover {
         Self { graph }
     }
 
+    /// Loads a [`VertexCover`] instance from a file in the `N M / i j w` format.
+    ///
+    /// Wraps [`Graph::load_from_file`] and constructs the problem with
+    /// [`VertexCover::new`]. Edge weights in the file are loaded into the
+    /// graph but ignored by the vertex-cover objective (which counts
+    /// uncovered edges, not their weights).
+    pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
+        Graph::load_from_file(path).map(Self::new)
+    }
+
     /// Returns the penalty weight applied to each uncovered edge (`graph.len() + 1`).
     pub fn penalty_weight(&self) -> i32 {
         (self.graph.len() as i32) + 1
@@ -174,6 +184,31 @@ mod tests {
     }
 
     #[test]
+    fn test_load_file_roundtrip() {
+        use std::io::Write;
+        let mut path = std::env::temp_dir();
+        path.push(format!(
+            "optopus_vc_{}_{}.txt",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        {
+            let mut f = std::fs::File::create(&path).unwrap();
+            writeln!(f, "3 3").unwrap();
+            writeln!(f, "1 2 1").unwrap();
+            writeln!(f, "1 3 1").unwrap();
+            writeln!(f, "2 3 1").unwrap();
+        }
+        let vc = VertexCover::load_file(&path).expect("load_file should succeed");
+        assert_eq!(vc.graph.num_vertices(), 3);
+        assert_eq!(vc.graph.num_edges(), 3);
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
     fn test_blank_graph() {
         let vc = VertexCover::new(Graph::new());
         assert_eq!(vc.graph.len(), 0);
@@ -233,7 +268,10 @@ mod tests {
         let mut sol = vc.new_solution(&mut rng);
         for _ in 0..200 {
             let i = rand::Rng::random_range(&mut rng, 0..vc.graph.len());
-            let neighbor = VertexCoverFlipNeighbor { i, gain: sol.gain[i] };
+            let neighbor = VertexCoverFlipNeighbor {
+                i,
+                gain: sol.gain[i],
+            };
             neighbor.apply_to_solution(&vc, &mut sol).unwrap();
 
             let (gain, obj, cs, ue) = vc.calculate_state(&sol.cover);

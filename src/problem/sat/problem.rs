@@ -3,6 +3,12 @@ use std::io::{BufRead, BufReader};
 
 use crate::search_state::{Distance, ProblemTrait, Rankable};
 
+fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
+    if let Err(pos) = v.binary_search(&x) {
+        v.insert(pos, x);
+    }
+}
+
 /// A solution to the MaxSAT problem.
 ///
 /// - `x` — variable assignment (`x[i]` is the truth value of variable `i+1`, 0-indexed)
@@ -43,8 +49,23 @@ pub struct Sat {
     n_vars: usize,
     /// All clauses (literals are signed integers, variables are 1-indexed).
     clauses: Vec<Vec<i64>>,
-    /// `clauses_per_var[i]` = indices of clauses containing variable `i+1` (0-indexed).
+    /// Inverted index: `clauses_per_var[i]` lists every clause index that
+    /// references variable `i` (0-indexed, sign-agnostic).
+    ///
+    /// # Note
+    ///
+    /// This field is maintained only by [`Sat::add_clause`].
+    /// If `clauses_per_var[i]` contains `c`, then `clauses[c]` contains some
+    /// literal `lit` with `lit.unsigned_abs() as usize - 1 == i`.
+    ///
+    /// Mutating `clauses` directly without updating this index breaks the
+    /// invariant and triggers an `unreachable!()` in [`Sat::calc_gain`] /
+    /// [`Sat::calc_gain_with_virtual_flip`].
     clauses_per_var: Vec<Vec<usize>>,
+    /// For each variable `i`, the sorted, deduplicated set of other variables
+    /// that share at least one clause with `i`. Used in flip-move incremental
+    /// updates to avoid recomputing this set on every iteration.
+    var_neighbors: Vec<Vec<usize>>,
 }
 
 impl Sat {
@@ -53,6 +74,7 @@ impl Sat {
             n_vars,
             clauses: Vec::new(),
             clauses_per_var: vec![vec![]; n_vars],
+            var_neighbors: vec![vec![]; n_vars],
         }
     }
 
@@ -69,10 +91,25 @@ impl Sat {
         let clause_idx = self.clauses.len();
         let clause: Vec<i64> = literals.into_iter().collect();
 
-        for &lit in &clause {
-            let var_idx = lit.unsigned_abs() as usize - 1;
-            if var_idx < self.n_vars {
-                self.clauses_per_var[var_idx].push(clause_idx);
+        // Collect the in-clause variable indices once to set up both
+        // `clauses_per_var` and the pairwise `var_neighbors` entries.
+        let mut vars: Vec<usize> = clause
+            .iter()
+            .filter_map(|&lit| {
+                let v = lit.unsigned_abs() as usize - 1;
+                (v < self.n_vars).then_some(v)
+            })
+            .collect();
+        vars.sort_unstable();
+        vars.dedup();
+
+        for &v in &vars {
+            self.clauses_per_var[v].push(clause_idx);
+        }
+        for (a_idx, &a) in vars.iter().enumerate() {
+            for &b in &vars[a_idx + 1..] {
+                insert_unique_sorted(&mut self.var_neighbors[a], b);
+                insert_unique_sorted(&mut self.var_neighbors[b], a);
             }
         }
         self.clauses.push(clause);
@@ -100,6 +137,15 @@ impl Sat {
             .map(|&idx| self.clauses[idx].as_slice())
     }
 
+    /// Returns the sorted, deduplicated set of variables that share at least
+    /// one clause with variable `i` (0-indexed), excluding `i` itself.
+    ///
+    /// This is the precomputed set of variables whose gain may change when
+    /// variable `i` is flipped, used by [`super::neighbor::SatFlipNeighbor`].
+    pub fn var_neighbors(&self, i: usize) -> &[usize] {
+        &self.var_neighbors[i]
+    }
+
     /// Returns `true` if the given clause is satisfied under assignment `x`.
     pub fn is_clause_satisfied(clause: &[i64], x: &[bool]) -> bool {
         clause.iter().any(|&lit| {
@@ -125,10 +171,17 @@ impl Sat {
         for &clause_idx in &self.clauses_per_var[i] {
             let clause = &self.clauses[clause_idx];
 
-            let i_lit = *clause
+            let i_lit = match clause
                 .iter()
                 .find(|&&lit| lit.unsigned_abs() as usize - 1 == i)
-                .expect("clauses_per_var is inconsistent");
+            {
+                Some(&lit) => lit,
+                None => unreachable!(
+                    "Sat::clauses_per_var invariant broken: variable {i} listed \
+                     as in clause {clause_idx} but no literal there references \
+                     it. This is a library bug — please report."
+                ),
+            };
             let i_lit_sat = x[i] == (i_lit > 0);
 
             // check if any literal other than i satisfies the clause
@@ -157,10 +210,17 @@ impl Sat {
         for &clause_idx in &self.clauses_per_var[j] {
             let clause = &self.clauses[clause_idx];
 
-            let j_lit = *clause
+            let j_lit = match clause
                 .iter()
                 .find(|&&lit| lit.unsigned_abs() as usize - 1 == j)
-                .expect("clauses_per_var is inconsistent");
+            {
+                Some(&lit) => lit,
+                None => unreachable!(
+                    "Sat::clauses_per_var invariant broken: variable {j} listed \
+                     as in clause {clause_idx} but no literal there references \
+                     it. This is a library bug — please report."
+                ),
+            };
             let j_lit_sat = x[j] == (j_lit > 0);
 
             // use the virtually flipped value for the `flipped` variable
@@ -182,17 +242,18 @@ impl Sat {
     }
 
     /// Loads a MaxSAT instance from a DIMACS CNF file.
-    pub fn load_file(filename: &str) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
         use crate::error::OptError;
 
+        let path = path.as_ref();
+        let path_display = path.display().to_string();
         let err = |line: usize, detail: String| OptError::FileLoad {
-            path: filename.to_string(),
+            path: path_display.clone(),
             line,
             detail,
         };
 
-        let file = File::open(filename)
-            .map_err(|e| err(0, format!("failed to open file: {e}")))?;
+        let file = File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 
         let mut n_clauses = 0usize;
@@ -200,8 +261,7 @@ impl Sat {
 
         for (idx, result) in reader.lines().enumerate() {
             let line_num = idx + 1;
-            let line = result
-                .map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
+            let line = result.map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
             let trimmed = line.trim();
             if trimmed.is_empty() || trimmed.starts_with('c') || trimmed.starts_with('%') {
                 continue; // skip comments and SATLIB '%' terminator
@@ -213,9 +273,22 @@ impl Sat {
                 iter.next(); // "cnf"
                 let n_vars: usize = iter
                     .next()
-                    .ok_or_else(|| err(line_num, "expected header 'p cnf <n_vars> <n_clauses>', but n_vars is missing".into()))?
+                    .ok_or_else(|| {
+                        err(
+                            line_num,
+                            "expected header 'p cnf <n_vars> <n_clauses>', but n_vars is missing"
+                                .into(),
+                        )
+                    })?
                     .parse()
-                    .map_err(|e| err(line_num, format!("failed to parse n_vars in header 'p cnf <n_vars> <n_clauses>': {e}")))?;
+                    .map_err(|e| {
+                        err(
+                            line_num,
+                            format!(
+                                "failed to parse n_vars in header 'p cnf <n_vars> <n_clauses>': {e}"
+                            ),
+                        )
+                    })?;
                 n_clauses = iter
                     .next()
                     .ok_or_else(|| err(line_num, "expected header 'p cnf <n_vars> <n_clauses>', but n_clauses is missing".into()))?
@@ -225,7 +298,10 @@ impl Sat {
                 continue;
             }
             let s = sat.as_mut().ok_or_else(|| {
-                err(line_num, "clause data found before header 'p cnf <n_vars> <n_clauses>'".into())
+                err(
+                    line_num,
+                    "clause data found before header 'p cnf <n_vars> <n_clauses>'".into(),
+                )
             })?;
             // clause line: space-separated literals terminated by 0
             let literals: Vec<i64> = trimmed
@@ -240,7 +316,10 @@ impl Sat {
         }
 
         let s = sat.ok_or_else(|| {
-            err(0, "file is empty or contains no header 'p cnf <n_vars> <n_clauses>'".into())
+            err(
+                0,
+                "file is empty or contains no header 'p cnf <n_vars> <n_clauses>'".into(),
+            )
         })?;
         if s.n_clauses() != n_clauses {
             return Err(err(
@@ -311,5 +390,33 @@ mod tests {
         let sat = make_sat();
         assert_eq!(sat.n_clauses(), 3);
         assert_eq!(sat.n_vars(), 3);
+    }
+
+    #[test]
+    fn test_var_neighbors_construction() {
+        // (x1 ∨ x2): pairs (0,1)
+        // (¬x1 ∨ x3): pairs (0,2)
+        // (¬x2 ∨ ¬x3): pairs (1,2)
+        let sat = make_sat();
+        assert_eq!(sat.var_neighbors(0), &[1, 2]);
+        assert_eq!(sat.var_neighbors(1), &[0, 2]);
+        assert_eq!(sat.var_neighbors(2), &[0, 1]);
+
+        // Variables appearing together in multiple clauses are not duplicated.
+        let mut sat2 = Sat::new(3);
+        sat2.add_clause([1, 2]);
+        sat2.add_clause([1, 2, 3]);
+        sat2.add_clause([-1, -2]);
+        assert_eq!(sat2.var_neighbors(0), &[1, 2]);
+        assert_eq!(sat2.var_neighbors(1), &[0, 2]);
+        assert_eq!(sat2.var_neighbors(2), &[0, 1]);
+
+        // A variable not co-occurring with anything has an empty neighbor list.
+        let mut sat3 = Sat::new(3);
+        sat3.add_clause([1]);
+        sat3.add_clause([-2, 3]);
+        assert_eq!(sat3.var_neighbors(0), &[] as &[usize]);
+        assert_eq!(sat3.var_neighbors(1), &[2]);
+        assert_eq!(sat3.var_neighbors(2), &[1]);
     }
 }

@@ -108,10 +108,12 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
     }
 
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
-        prob.graph.iter_on_vertices().map(|&i| VertexCoverFlipNeighbor {
-            i,
-            gain: sol.gain[i],
-        })
+        prob.graph
+            .iter_on_vertices()
+            .map(|&i| VertexCoverFlipNeighbor {
+                i,
+                gain: sol.gain[i],
+            })
     }
 
     fn move_to_be_better_than(
@@ -203,7 +205,8 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
         let pw = prob.penalty_weight();
         prob.graph.iter_on_vertices().flat_map(move |&i| {
-            prob.graph.iter_on_vertices()
+            prob.graph
+                .iter_on_vertices()
                 .filter(move |&&j| j < i && (sol.cover[i] != sol.cover[j]))
                 .map(move |&j| {
                     // Combined Δobjective for flipping i then j (cover_size unchanged):

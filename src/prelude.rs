@@ -39,6 +39,7 @@ pub use crate::problem::{
     FormulaProblem,
     FormulaSolution,
     FormulaSwapNeighbor,
+    FormulaUniformCrossover,
     // Job Shop Scheduling
     JobShopPpxCrossover,
     JobShopRelocateNeighbor,

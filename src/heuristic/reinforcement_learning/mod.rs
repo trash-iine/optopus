@@ -151,8 +151,6 @@ where
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let mut rng = rand::rng();
-
         // 1. Enumerate moves, compute worsenings, and accumulate step context stats in one pass
         self.buf_moves.clear();
         let mut acc = StepStatsAccumulator::new();
@@ -169,14 +167,15 @@ where
 
         // Subsample if max_candidates is set
         if let Some(max_cand) = self.max_candidates
-            && self.buf_moves.len() > max_cand {
-                let n = self.buf_moves.len();
-                for i in 0..max_cand.min(n) {
-                    let j = rng.random_range(i..n);
-                    self.buf_moves.swap(i, j);
-                }
-                self.buf_moves.truncate(max_cand);
+            && self.buf_moves.len() > max_cand
+        {
+            let n = self.buf_moves.len();
+            for i in 0..max_cand.min(n) {
+                let j = state.rng.random_range(i..n);
+                self.buf_moves.swap(i, j);
             }
+            self.buf_moves.truncate(max_cand);
+        }
 
         if self.initial_worsening_total.is_none() {
             self.initial_worsening_total = Some(0.0);
@@ -209,7 +208,7 @@ where
             self.policy.score(&f) * inv_temp
         }));
         softmax_in_place(&mut self.buf_scores);
-        let selected_idx = sample_categorical(&self.buf_scores, &mut rng);
+        let selected_idx = sample_categorical(&self.buf_scores, &mut state.rng);
 
         // Recompute features only for the selected move
         let sel_w = self.buf_moves[selected_idx].1;

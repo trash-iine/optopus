@@ -50,8 +50,8 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
         prob: &MaxCut,
         sol1: &MaxCutSolution,
         sol2: &MaxCutSolution,
-    ) -> MaxCutSolution {
-        let mut rng = rand::rng();
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<MaxCutSolution, crate::error::OptError> {
         let mut sol = sol1.clone();
         for &i in prob.graph.iter_on_vertices() {
             if sol.cut[i] != sol2.cut[i] && rng.random::<bool>() {
@@ -59,13 +59,11 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
                     i,
                     gain: sol.gain[i],
                 };
-                neighbor
-                    .apply_to_solution(prob, &mut sol)
-                    .expect("flipping a vertex should never fail");
+                neighbor.apply_to_solution(prob, &mut sol)?;
             }
         }
 
-        sol
+        Ok(sol)
     }
 }
 
@@ -101,7 +99,8 @@ impl SubProblemExtractable for MaxCut {
     /// ```
     fn extract_sub_problem(&self, sol1: &MaxCutSolution, sol2: &MaxCutSolution) -> MaxCut {
         let free: HashSet<usize> = self
-            .graph.iter_on_vertices()
+            .graph
+            .iter_on_vertices()
             .filter(|&&v| sol1.cut[v] != sol2.cut[v])
             .copied()
             .collect();
@@ -177,6 +176,7 @@ impl SubProblemExtractable for MaxCut {
 mod tests {
     use crate::problem::max_cut::{MaxCut, MaxCutSolution};
     use crate::search_state::{Crossover, SubProblemExtractable};
+    use rand::SeedableRng;
 
     use super::MaxCutUniformCrossover;
 
@@ -197,7 +197,8 @@ mod tests {
         let mc = make_mc();
         let s = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
         let mut cx = MaxCutUniformCrossover;
-        let offspring = cx.crossover(&mc, &s, &s);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&mc, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.cut, s.cut);
         assert_eq!(offspring.objective, s.objective);
     }
@@ -208,7 +209,8 @@ mod tests {
         let a = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
         let b = make_sol(&mc, &[(0, true), (1, false), (2, true)]);
         let mut cx = MaxCutUniformCrossover;
-        let offspring = cx.crossover(&mc, &a, &b);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&mc, &a, &b, &mut rng).unwrap();
         for &v in mc.graph.iter_on_vertices() {
             let g = offspring.gain[v];
             let mut flipped = offspring.cut.clone();
@@ -226,12 +228,20 @@ mod tests {
         let mc = make_mc();
         let s = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
         let sub_same = mc.extract_sub_problem(&s, &s);
-        assert_eq!(sub_same.graph.len(), 0, "identical parents → 0 free vertices");
+        assert_eq!(
+            sub_same.graph.len(),
+            0,
+            "identical parents → 0 free vertices"
+        );
 
         let all_f = make_sol(&mc, &[(0, false), (1, false), (2, false)]);
         let all_t = make_sol(&mc, &[(0, true), (1, true), (2, true)]);
         let sub_diff = mc.extract_sub_problem(&all_f, &all_t);
-        assert_eq!(sub_diff.graph.len(), 3, "all-different parents → 3 free vertices");
+        assert_eq!(
+            sub_diff.graph.len(),
+            3,
+            "all-different parents → 3 free vertices"
+        );
     }
 
     #[test]

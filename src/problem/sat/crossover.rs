@@ -17,17 +17,19 @@ impl Crossover<Sat> for SatUniformCrossover {
         prob: &Sat,
         sol1: &SatSolution,
         sol2: &SatSolution,
-    ) -> SatSolution {
-        let mut rng = rand::rng();
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<SatSolution, crate::error::OptError> {
         let mut sol = sol1.clone();
         for i in 0..prob.n_vars() {
             if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
-                SatFlipNeighbor { i, gain: sol.gain[i] }
-                    .apply_to_solution(prob, &mut sol)
-                    .expect("flipping a variable should never fail");
+                SatFlipNeighbor {
+                    i,
+                    gain: sol.gain[i],
+                }
+                .apply_to_solution(prob, &mut sol)?;
             }
         }
-        sol
+        Ok(sol)
     }
 }
 
@@ -37,13 +39,10 @@ impl SubProblemExtractable for Sat {
     ///
     /// - Clauses satisfied by a fixed literal are omitted entirely.
     /// - Remaining clauses include only free literals, remapped to 0-indexed sub-problem variables.
-    fn extract_sub_problem(
-        &self,
-        sol1: &SatSolution,
-        sol2: &SatSolution,
-    ) -> Sat {
-        let free_vars: Vec<usize> =
-            (0..self.n_vars()).filter(|&i| sol1.x[i] != sol2.x[i]).collect();
+    fn extract_sub_problem(&self, sol1: &SatSolution, sol2: &SatSolution) -> Sat {
+        let free_vars: Vec<usize> = (0..self.n_vars())
+            .filter(|&i| sol1.x[i] != sol2.x[i])
+            .collect();
         let n_free = free_vars.len();
 
         // remap[i] = Some(new_idx) for free vars, None for fixed vars
@@ -96,17 +95,21 @@ impl SubProblemExtractable for Sat {
         sol2: &SatSolution,
         sub_solution: &SatSolution,
     ) -> SatSolution {
-        let free_vars: Vec<usize> =
-            (0..self.n_vars()).filter(|&i| sol1.x[i] != sol2.x[i]).collect();
+        let free_vars: Vec<usize> = (0..self.n_vars())
+            .filter(|&i| sol1.x[i] != sol2.x[i])
+            .collect();
 
         let mut sol = sol1.clone();
         for (sub_idx, &orig_idx) in free_vars.iter().enumerate() {
             if sol.x[orig_idx] == sub_solution.x[sub_idx] {
                 continue;
             }
-            SatFlipNeighbor { i: orig_idx, gain: sol.gain[orig_idx] }
-                .apply_to_solution(self, &mut sol)
-                .expect("flipping should never fail");
+            SatFlipNeighbor {
+                i: orig_idx,
+                gain: sol.gain[orig_idx],
+            }
+            .apply_to_solution(self, &mut sol)
+            .expect("flipping should never fail");
         }
         sol
     }
@@ -116,6 +119,7 @@ impl SubProblemExtractable for Sat {
 mod tests {
     use crate::problem::sat::{Sat, SatSolution};
     use crate::search_state::{Crossover, SubProblemExtractable};
+    use rand::SeedableRng;
 
     use super::SatUniformCrossover;
 
@@ -131,7 +135,11 @@ mod tests {
     fn make_sol(sat: &Sat, x: Vec<bool>) -> SatSolution {
         let gain: Vec<i64> = (0..sat.n_vars()).map(|i| sat.calc_gain(&x, i)).collect();
         let n_satisfied = sat.calc_satisfied(&x);
-        SatSolution { x, gain, n_satisfied }
+        SatSolution {
+            x,
+            gain,
+            n_satisfied,
+        }
     }
 
     #[test]
@@ -139,7 +147,8 @@ mod tests {
         let sat = make_sat();
         let s = make_sol(&sat, vec![true, false, true]);
         let mut cx = SatUniformCrossover;
-        let offspring = cx.crossover(&sat, &s, &s);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&sat, &s, &s, &mut rng).unwrap();
         assert_eq!(offspring.x, s.x);
         assert_eq!(offspring.n_satisfied, s.n_satisfied);
     }
@@ -150,7 +159,8 @@ mod tests {
         let a = make_sol(&sat, vec![true, false, true]);
         let b = make_sol(&sat, vec![false, true, false]);
         let mut cx = SatUniformCrossover;
-        let offspring = cx.crossover(&sat, &a, &b);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let offspring = cx.crossover(&sat, &a, &b, &mut rng).unwrap();
         let n_sat = offspring.n_satisfied as i64;
         for i in 0..sat.n_vars() {
             let mut flipped = offspring.x.clone();
@@ -170,7 +180,11 @@ mod tests {
         let all_f = make_sol(&sat, vec![false, false, false]);
         let all_t = make_sol(&sat, vec![true, true, true]);
         let sub_diff = sat.extract_sub_problem(&all_f, &all_t);
-        assert_eq!(sub_diff.n_vars(), 3, "all-different parents → 3 free variables");
+        assert_eq!(
+            sub_diff.n_vars(),
+            3,
+            "all-different parents → 3 free variables"
+        );
     }
 
     #[test]
@@ -185,9 +199,18 @@ mod tests {
         let sub_sol = make_sol(&sub, vec![true, false]);
         let lifted = sat.lift_solution(&parent_a, &parent_b, &sub_sol);
 
-        assert_eq!(lifted.x[0], parent_a.x[0], "fixed var 0 inherits from parent_a");
-        assert_eq!(lifted.x[1], sub_sol.x[0], "free var 1 (sub idx 0) from sub_solution");
-        assert_eq!(lifted.x[2], sub_sol.x[1], "free var 2 (sub idx 1) from sub_solution");
+        assert_eq!(
+            lifted.x[0], parent_a.x[0],
+            "fixed var 0 inherits from parent_a"
+        );
+        assert_eq!(
+            lifted.x[1], sub_sol.x[0],
+            "free var 1 (sub idx 0) from sub_solution"
+        );
+        assert_eq!(
+            lifted.x[2], sub_sol.x[1],
+            "free var 2 (sub idx 1) from sub_solution"
+        );
         assert_eq!(lifted.n_satisfied, sat.calc_satisfied(&lifted.x));
     }
 }
