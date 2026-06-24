@@ -5,7 +5,8 @@
 //!
 //! - [`heuristic`] — heuristic algorithms (local search, simulated annealing, tabu search, beam search, etc.)
 //! - [`problem`] — problem definitions and neighborhood structures (MaxCut, QUBO, SAT, TSP, Formula)
-//! - [`search_state`] — search state management and core traits
+//! - [`search_state`] — search state management ([`SearchState`](search_state::SearchState))
+//! - [`trait_defs`] — core library traits shared across the Problem, Heuristic, and SearchState layers
 //! - [`benchmark`] — utilities for running and recording benchmark experiments
 //! - [`prelude`] — convenience re-exports of commonly used types and traits
 //! - [`error`] — unified error type
@@ -17,3 +18,4 @@ pub mod heuristic;
 pub mod prelude;
 pub mod problem;
 pub mod search_state;
+pub mod trait_defs;

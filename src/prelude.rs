@@ -24,7 +24,7 @@ pub use crate::heuristic::{
 };
 
 // Traits
-pub use crate::search_state::{
+pub use crate::trait_defs::{
     Crossover, Distance, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
     SubProblemExtractable,
 };

@@ -1,11 +1,13 @@
-//! Search state management and core traits for combinatorial optimization.
-
-pub mod specific_trait;
+//! Search state management for combinatorial optimization.
+//!
+//! The core traits live in [`crate::trait_defs`] and are re-exported here for
+//! backward compatibility, so `crate::search_state::ProblemTrait` and friends
+//! keep resolving.
 
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 use rayon::prelude::*;
-pub use specific_trait::{
+pub use crate::trait_defs::{
     Crossover, Distance, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
     SubProblemExtractable, filter_best,
 };
