@@ -4,9 +4,9 @@ Companion reference for [Concepts](concepts.md). This page lists the full
 signatures of every trait a problem or move type can implement, and which
 heuristic each one unlocks.
 
-All of these traits live in `optopus::search_state` (re-exported from the
-prelude). The first three are the minimum needed to support every heuristic;
-the rest unlock specific algorithms.
+All of these traits are defined in `optopus::trait_defs` and re-exported from
+`optopus::search_state` and the prelude. The first three are the minimum needed
+to support every heuristic; the rest unlock specific algorithms.
 
 ## Core trait reference
 
