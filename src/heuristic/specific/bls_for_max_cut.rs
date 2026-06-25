@@ -23,12 +23,19 @@ enum PerturbationType {
 ///
 /// BLS alternates between a greedy local search phase (with tabu updates) and a
 /// perturbation phase. The perturbation type is chosen probabilistically based on
-/// the `omega` counter (number of consecutive non-improving iterations):
+/// the `omega` counter (number of consecutive non-improving iterations). With
+/// `p = max(exp(−omega / t), p0)` the probability of a **weak** (directed)
+/// perturbation:
 ///
-/// - `omega == 0` (first call or after improvement): **strong** perturbation.
-/// - `omega > 0` (stuck): **weak** perturbation with probability `p * q` (flip) or
-///   `p * (1 − q)` (swap), and **strong** otherwise.
-///   `p = max(exp(−omega / t), p0)` decays as `omega` grows.
+/// - `omega == 0` (after an improvement, so `p = 1`): always a **weak**
+///   perturbation — `flip` with probability `q`, `swap` with probability `1 − q` —
+///   to gently exploit the freshly found region.
+/// - `0 < omega <= t` (stuck): **weak** perturbation with probability `p * q`
+///   (flip) or `p * (1 − q)` (swap), and **strong** (random) otherwise; `p`
+///   decays toward `p0` as `omega` grows, so strong perturbations become more
+///   likely.
+/// - `omega > t`: the strongest **random** perturbation is forced and `omega`
+///   is reset to 0.
 ///
 /// The perturbation length `l` increases by 1 each time the solution does not change,
 /// resetting to `l0` whenever the solution changes.
@@ -154,10 +161,6 @@ impl BreakoutLocalSearch {
             self.omega = 0;
         }
 
-        if self.omega > self.t {
-            self.omega = 0;
-        }
-
         self.prev_best_objective = Some(state.best_solution.objective);
     }
 
@@ -176,20 +179,29 @@ impl BreakoutLocalSearch {
     }
 
     /// Determines the perturbation type for the current iteration.
-    fn get_perturbation_type(&self) -> PerturbationType {
-        if self.omega == 0 {
-            PerturbationType::Strong
-        } else {
-            let p = (-(self.omega as f64 / self.t as f64)).exp().max(self.p0);
+    ///
+    /// Follows the adaptive scheme of Benlic & Hao: the probability of a
+    /// directed (weak) perturbation is `p = max(exp(−omega / t), p0)`, so when
+    /// the search just improved (`omega == 0`, hence `p = 1`) it always applies
+    /// a directed perturbation to gently exploit the freshly found region, and
+    /// as `omega` grows the random (strong) perturbation becomes more likely.
+    /// Only when `omega` exceeds the threshold `t` is the strongest random
+    /// perturbation forced (and `omega` reset).
+    fn get_perturbation_type(&mut self) -> PerturbationType {
+        if self.omega > self.t {
+            self.omega = 0;
+            return PerturbationType::Strong;
+        }
 
-            let prob: f64 = rand::random_range(0.0..=1.0);
-            if prob <= p * self.q {
-                PerturbationType::WeakFlip
-            } else if prob <= p {
-                PerturbationType::WeakSwap
-            } else {
-                PerturbationType::Strong
-            }
+        let p = (-(self.omega as f64 / self.t as f64)).exp().max(self.p0);
+
+        let prob: f64 = rand::random_range(0.0..=1.0);
+        if prob <= p * self.q {
+            PerturbationType::WeakFlip
+        } else if prob <= p {
+            PerturbationType::WeakSwap
+        } else {
+            PerturbationType::Strong
         }
     }
 
@@ -311,19 +323,13 @@ impl BreakoutLocalSearch {
                 self.add_vertex_to_tabu(v1.i, state.iteration);
                 state.apply_move_only(&swap)?;
             } else {
-                // Fallback: swap the oldest-tabu vertices (one per side).
-                let i = match oldest_tabu_v0 {
-                    Some((v, _)) => v,
-                    None => {
-                        return Err(OptError::InvalidState("No tabu v0".to_string()));
-                    }
-                };
-                let j = match oldest_tabu_v1 {
-                    Some((v, _)) => v,
-                    None => {
-                        return Err(OptError::InvalidState("No tabu v1".to_string()));
-                    }
-                };
+                // Fallback: swap the oldest-tabu vertex on each side to force a
+                // diversifying (breakout) move. If a side has no tabu vertex yet
+                // (common early in the search, when directed swaps run at
+                // `omega == 0`), fall back to its best vertex so the perturbation
+                // still makes progress instead of failing.
+                let i = oldest_tabu_v0.map_or(v0.i, |(v, _)| v);
+                let j = oldest_tabu_v1.map_or(v1.i, |(v, _)| v);
                 let fallback_gain = state.solution.gain[i]
                     + state.solution.gain[j]
                     + 2.0 * state.instance.graph.get_weight(i, j);
@@ -394,5 +400,54 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
 
     fn is_done<'a>(&self, state: &SearchState<'a, MaxCut>) -> bool {
         self.stop_condition.is_done(state)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::heuristic::Heuristic;
+    use crate::problem::MaxCut;
+    use crate::search_state::SearchState;
+
+    /// Builds a small toroidal-like graph (degree 4, unit weights) that has both
+    /// partition sides populated throughout the search.
+    fn small_instance() -> MaxCut {
+        let n = 30usize;
+        let mut edges = Vec::new();
+        for i in 0..n {
+            edges.push((i, (i + 1) % n, 1.0));
+            edges.push((i, (i + 2) % n, 1.0));
+        }
+        MaxCut::from_edges(edges)
+    }
+
+    /// Regression test: BLS must run to completion without erroring.
+    ///
+    /// The weak-swap perturbation previously returned `Err("No tabu v1")` when a
+    /// partition side had no tabu vertex yet — a path that is hit frequently now
+    /// that directed (weak) perturbations run at `omega == 0`. Running the full
+    /// loop many times exercises all three perturbation types and the swap
+    /// fallback; it must never error and must find a non-trivial cut.
+    #[test]
+    fn bls_runs_without_error_and_improves() {
+        let mc = small_instance();
+        for _ in 0..10 {
+            let mut state = SearchState::new(&mc);
+            let mut bls = BreakoutLocalSearch::new(
+                (3, 15),
+                StopCondition::iterations(5_000),
+                1_000,
+                5,
+                0.8,
+                0.5,
+            );
+            bls.run(&mut state).expect("BLS must not error");
+            assert!(
+                state.best_solution.objective > 0.0,
+                "BLS should find a positive cut, got {}",
+                state.best_solution.objective
+            );
+        }
     }
 }
