@@ -18,7 +18,7 @@ use optopus::prelude::*;
 use optopus::problem::MaxCutUniformCrossover;
 
 fn main() {
-    let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G22").unwrap());
+    let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G22").unwrap());
     let mut state = SearchState::new(&mc);
 
     GeneticAlgorithm::new(

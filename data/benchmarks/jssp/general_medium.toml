@@ -5,139 +5,139 @@
 num_runs = 10
 
 [[instances]]
-path = "data/jssp/orlib/la06.txt"
+path = "data/instances/jssp/orlib/la06.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la07.txt"
+path = "data/instances/jssp/orlib/la07.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la08.txt"
+path = "data/instances/jssp/orlib/la08.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la09.txt"
+path = "data/instances/jssp/orlib/la09.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la10.txt"
+path = "data/instances/jssp/orlib/la10.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la11.txt"
+path = "data/instances/jssp/orlib/la11.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la12.txt"
+path = "data/instances/jssp/orlib/la12.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la13.txt"
+path = "data/instances/jssp/orlib/la13.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la14.txt"
+path = "data/instances/jssp/orlib/la14.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la15.txt"
+path = "data/instances/jssp/orlib/la15.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la16.txt"
+path = "data/instances/jssp/orlib/la16.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la17.txt"
+path = "data/instances/jssp/orlib/la17.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la18.txt"
+path = "data/instances/jssp/orlib/la18.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la19.txt"
+path = "data/instances/jssp/orlib/la19.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la20.txt"
+path = "data/instances/jssp/orlib/la20.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la21.txt"
+path = "data/instances/jssp/orlib/la21.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la22.txt"
+path = "data/instances/jssp/orlib/la22.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la23.txt"
+path = "data/instances/jssp/orlib/la23.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la24.txt"
+path = "data/instances/jssp/orlib/la24.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la25.txt"
+path = "data/instances/jssp/orlib/la25.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/abz6.txt"
+path = "data/instances/jssp/orlib/abz6.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/abz7.txt"
+path = "data/instances/jssp/orlib/abz7.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/abz8.txt"
+path = "data/instances/jssp/orlib/abz8.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/abz9.txt"
+path = "data/instances/jssp/orlib/abz9.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb01.txt"
+path = "data/instances/jssp/orlib/orb01.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb02.txt"
+path = "data/instances/jssp/orlib/orb02.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb03.txt"
+path = "data/instances/jssp/orlib/orb03.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb04.txt"
+path = "data/instances/jssp/orlib/orb04.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb05.txt"
+path = "data/instances/jssp/orlib/orb05.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb06.txt"
+path = "data/instances/jssp/orlib/orb06.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb07.txt"
+path = "data/instances/jssp/orlib/orb07.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb08.txt"
+path = "data/instances/jssp/orlib/orb08.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb09.txt"
+path = "data/instances/jssp/orlib/orb09.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/orb10.txt"
+path = "data/instances/jssp/orlib/orb10.txt"
 problem = "JobShop"
 
 [[heuristics]]

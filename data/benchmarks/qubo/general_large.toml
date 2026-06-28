@@ -5,7 +5,7 @@
 num_runs = 10
 
 [[instances]]
-path = "data/qubo/bqp/bqp1000_*.txt"
+path = "data/instances/qubo/bqp/bqp1000_*.txt"
 problem = "Qubo"
 
 [[heuristics]]

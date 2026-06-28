@@ -5,7 +5,7 @@
 num_runs = 10
 
 [[instances]]
-path = "data/sat/satlib/uf200-860/*.cnf"
+path = "data/instances/sat/satlib/uf200-860/*.cnf"
 problem = "Sat"
 
 [[heuristics]]

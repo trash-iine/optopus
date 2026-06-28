@@ -17,7 +17,7 @@ use std::time::Duration;
 use optopus::prelude::*;
 
 fn main() {
-    let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G22").unwrap());
+    let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G22").unwrap());
     let mut state = SearchState::new(&mc);
     TabuSearch::<MaxCutFlipNeighbor>::new(
         StopCondition::duration(Duration::from_secs(5)),

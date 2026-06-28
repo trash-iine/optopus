@@ -5,11 +5,11 @@
 num_runs = 10
 
 [[instances]]
-path = "data/sat/satlib/uf50-218/*.cnf"
+path = "data/instances/sat/satlib/uf50-218/*.cnf"
 problem = "Sat"
 
 [[instances]]
-path = "data/sat/satlib/uf75-325/*.cnf"
+path = "data/instances/sat/satlib/uf75-325/*.cnf"
 problem = "Sat"
 
 [[heuristics]]

@@ -338,7 +338,7 @@ impl Graph {
     /// ```no_run
     /// use optopus::common::Graph;
     ///
-    /// let g = Graph::load_from_file("data/max_cut/G1").unwrap();
+    /// let g = Graph::load_from_file("data/instances/max_cut/G1").unwrap();
     /// println!("{g}");
     /// ```
     pub fn load_from_file(

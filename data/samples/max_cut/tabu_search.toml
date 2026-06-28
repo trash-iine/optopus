@@ -3,7 +3,7 @@
 num_runs = 1
 
 [[instances]]
-path = "data/max_cut/sample.txt"
+path = "data/instances/max_cut/sample.txt"
 problem = "MaxCut"
 
 [[heuristics]]

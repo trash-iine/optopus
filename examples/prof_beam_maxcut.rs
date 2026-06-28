@@ -23,7 +23,7 @@ use optopus::prelude::*;
 
 fn main() {
     // G22: n=2000 — beam_width × n = 5 × 2000 clones/iter maximizes allocation pressure
-    let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G22").unwrap());
+    let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G22").unwrap());
     let mut state = SearchState::new(&mc);
     BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
         StopCondition::duration(Duration::from_secs(5)),

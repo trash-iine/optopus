@@ -155,7 +155,7 @@ TOML config → `BenchmarkConfig` → run each heuristic on each instance N time
 ```toml
 num_runs = 10
 [[instances]]
-path = "data/max_cut/G*.txt"   # globs supported
+path = "data/instances/max_cut/G*.txt"   # globs supported
 problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp
 [[heuristics]]
 kind = "LocalSearch"           # see list below

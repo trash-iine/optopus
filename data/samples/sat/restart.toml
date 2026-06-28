@@ -3,7 +3,7 @@
 num_runs = 1
 
 [[instances]]
-path = "data/sat/sample.cnf"
+path = "data/instances/sat/sample.cnf"
 problem = "Sat"
 
 [[heuristics]]

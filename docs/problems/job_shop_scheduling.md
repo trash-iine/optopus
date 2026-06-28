@@ -56,7 +56,7 @@ let inst = JobShopScheduling::new(
 );
 
 // Load from file:
-let inst = JobShopScheduling::load_file("data/jssp/ft06.txt")?;
+let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 

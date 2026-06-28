@@ -5,71 +5,71 @@
 num_runs = 10
 
 [[instances]]
-path = "data/max_cut/G55"
+path = "data/instances/max_cut/G55"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G56"
+path = "data/instances/max_cut/G56"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G57"
+path = "data/instances/max_cut/G57"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G58"
+path = "data/instances/max_cut/G58"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G59"
+path = "data/instances/max_cut/G59"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G60"
+path = "data/instances/max_cut/G60"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G61"
+path = "data/instances/max_cut/G61"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G62"
+path = "data/instances/max_cut/G62"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G63"
+path = "data/instances/max_cut/G63"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G64"
+path = "data/instances/max_cut/G64"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G65"
+path = "data/instances/max_cut/G65"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G66"
+path = "data/instances/max_cut/G66"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G67"
+path = "data/instances/max_cut/G67"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G70"
+path = "data/instances/max_cut/G70"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G72"
+path = "data/instances/max_cut/G72"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G77"
+path = "data/instances/max_cut/G77"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/max_cut/G81"
+path = "data/instances/max_cut/G81"
 problem = "MaxCut"
 
 [[heuristics]]

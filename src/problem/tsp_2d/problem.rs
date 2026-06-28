@@ -586,21 +586,21 @@ EOF
 
     #[test]
     fn test_load_file_att() {
-        let tsp = TspWithCoordinates::load_file("data/tsp/att48.tsp").unwrap();
+        let tsp = TspWithCoordinates::load_file("data/instances/tsp/att48.tsp").unwrap();
         assert_eq!(tsp.coordinates.len(), 48);
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Att);
     }
 
     #[test]
     fn test_load_file_geo() {
-        let tsp = TspWithCoordinates::load_file("data/tsp/burma14.tsp").unwrap();
+        let tsp = TspWithCoordinates::load_file("data/instances/tsp/burma14.tsp").unwrap();
         assert_eq!(tsp.coordinates.len(), 14);
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Geo);
     }
 
     #[test]
     fn test_load_file_ceil_2d() {
-        let tsp = TspWithCoordinates::load_file("data/tsp/dsj1000.tsp").unwrap();
+        let tsp = TspWithCoordinates::load_file("data/instances/tsp/dsj1000.tsp").unwrap();
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Ceil2d);
         // dsj1000 is CEIL_2D; ceil(sqrt(...)) should be >= nint(sqrt(...)).
         let d = tsp.distance(0, 1);

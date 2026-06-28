@@ -39,7 +39,7 @@
 //! let mc = MaxCut::new(g);
 //!
 //! // Option 3: load from file (format: "N M\n i j w\n ..." with 1-indexed vertices)
-//! // let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G1").unwrap());
+//! // let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1").unwrap());
 //! ```
 //!
 //! # Reading graph structure

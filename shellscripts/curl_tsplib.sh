@@ -2,7 +2,7 @@
 set -u
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DATA_DIR=$SCRIPT_DIR/../data/tsp
+DATA_DIR=$SCRIPT_DIR/../data/instances/tsp
 mkdir -p $DATA_DIR
 
 FILES=(

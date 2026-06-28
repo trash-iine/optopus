@@ -38,7 +38,7 @@
 //!
 //! // Option 3: load from a sparse Q-matrix file
 //! //   (format: "N M\n i j v\n ..." with 1-indexed entries; i == j gives the diagonal coefficient)
-//! // let qubo = Qubo::load_file("data/qubo/sample.txt").unwrap();
+//! // let qubo = Qubo::load_file("data/instances/qubo/sample.txt").unwrap();
 //! ```
 //!
 //! # Reading QUBO structure

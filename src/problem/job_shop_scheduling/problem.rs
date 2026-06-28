@@ -404,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_load_ft06() {
-        let inst = JobShopScheduling::load_file("data/jssp/ft06.txt").unwrap();
+        let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt").unwrap();
         assert_eq!(inst.n_jobs, 6);
         assert_eq!(inst.n_machines, 6);
         // Sanity: the canonical optimal makespan for ft06 is 55.

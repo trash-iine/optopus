@@ -17,7 +17,7 @@ existing BreakoutLocalSearch reports.
 | SAT (uf*) | uf50, uf75 | uf100, uf150 | uf200 |
 | TSP (TSPLIB) | burma14, eil51, att48, berlin52 | eil101, ch150 | dsj1000 |
 | JSSP (OR-Library) | ft06, ft10, ft20, la01–la05, abz5 | la06–la25, abz6–abz9, orb01–orb10 | la26–la40, swv*, yn*, ta* |
-| VertexCover | data/max_cut/sample.txt + GSET small | GSET medium | GSET large |
+| VertexCover | data/instances/max_cut/sample.txt + GSET small | GSET medium | GSET large |
 
 ## Wall-clock budget per `(heuristic, band)`
 

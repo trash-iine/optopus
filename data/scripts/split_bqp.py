@@ -6,7 +6,7 @@ a header `n m` followed by `m` lines of `i j v` (1-indexed) — directly compati
 with this project's QUBO loader (`src/problem/qubo/problem.rs::Qubo::load_file`).
 
 Usage: python3 data/scripts/split_bqp.py
-Outputs: data/qubo/bqp/bqp{N}_{k}.txt for k = 1..n_instances
+Outputs: data/instances/qubo/bqp/bqp{N}_{k}.txt for k = 1..n_instances
 """
 from __future__ import annotations
 

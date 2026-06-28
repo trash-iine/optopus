@@ -2,7 +2,7 @@ timestamp = "20260517_110145"
 config_file = "data/benchmarks/tsp/general_small.toml"
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -112,7 +112,7 @@ total_time_secs = 0.000094875
 solution = [4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -222,7 +222,7 @@ total_time_secs = 0.000268
 solution = [7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -333,7 +333,7 @@ total_time_secs = 30.000049208
 solution = [7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9, 8, 10]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -444,7 +444,7 @@ total_time_secs = 30.000002625
 solution = [9, 0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -555,7 +555,7 @@ total_time_secs = 30.000000125
 solution = [8, 10, 7, 12, 6, 11, 5, 4, 3, 2, 13, 1, 0, 9]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -666,7 +666,7 @@ total_time_secs = 30.000001666
 solution = [3, 2, 13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -779,7 +779,7 @@ total_time_secs = 23.457668833
 solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -892,7 +892,7 @@ total_time_secs = 30.000011167
 solution = [6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3, 4, 5, 11]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -1012,7 +1012,7 @@ total_time_secs = 30.0019895
 solution = [13, 1, 0, 9, 8, 10, 7, 12, 6, 11, 5, 4, 3, 2]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "Iterated"
@@ -1137,7 +1137,7 @@ total_time_secs = 30.000281542
 solution = [8, 10, 12, 6, 13, 11, 5, 4, 3, 2, 1, 0, 7, 9]
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "Restart"
@@ -1257,7 +1257,7 @@ total_time_secs = 30.11618875
 solution = [0, 1, 13, 2, 3, 4, 5, 11, 6, 12, 7, 10, 8, 9]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -1367,7 +1367,7 @@ total_time_secs = 0.002194334
 solution = [14, 36, 43, 41, 18, 39, 40, 12, 3, 16, 46, 11, 4, 37, 10, 45, 50, 17, 24, 13, 23, 42, 22, 6, 25, 30, 27, 7, 47, 5, 26, 31, 0, 21, 2, 35, 34, 19, 28, 1, 15, 8, 49, 20, 33, 29, 48, 9, 38, 32, 44]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -1477,7 +1477,7 @@ total_time_secs = 0.001970916
 solution = [0, 21, 19, 34, 35, 2, 27, 30, 7, 25, 22, 13, 24, 17, 46, 31, 1, 28, 20, 15, 10, 45, 50, 5, 23, 42, 6, 47, 26, 37, 4, 48, 8, 49, 33, 29, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 3, 16, 36, 11]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -1588,7 +1588,7 @@ total_time_secs = 30.000131791
 solution = [20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -1699,7 +1699,7 @@ total_time_secs = 30.000006375
 solution = [34, 19, 28, 20, 15, 49, 33, 29, 8, 48, 9, 38, 32, 44, 14, 43, 41, 39, 18, 40, 12, 24, 13, 5, 26, 0, 21, 1, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45, 50, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -1810,7 +1810,7 @@ total_time_secs = 30.000004917
 solution = [24, 12, 40, 39, 18, 41, 43, 44, 32, 14, 36, 16, 3, 17, 46, 11, 45, 50, 5, 26, 0, 21, 31, 10, 37, 4, 48, 9, 38, 29, 8, 49, 33, 20, 28, 15, 1, 19, 34, 35, 2, 27, 30, 25, 7, 47, 22, 6, 42, 23, 13]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -1921,7 +1921,7 @@ total_time_secs = 30.00000875
 solution = [38, 32, 44, 14, 43, 41, 18, 39, 40, 12, 24, 13, 23, 42, 6, 22, 5, 47, 7, 25, 30, 27, 2, 35, 34, 19, 1, 21, 0, 31, 26, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 15, 28, 20, 49, 33, 29, 8, 48, 9]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -2034,7 +2034,7 @@ total_time_secs = 30.000001375
 solution = [24, 13, 5, 23, 42, 22, 6, 25, 30, 27, 7, 47, 26, 0, 21, 2, 35, 34, 19, 28, 1, 31, 50, 45, 11, 46, 17, 3, 16, 36, 4, 37, 10, 15, 49, 20, 33, 8, 48, 29, 9, 38, 32, 44, 14, 43, 41, 18, 39, 40, 12]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -2147,7 +2147,7 @@ total_time_secs = 30.000022
 solution = [22, 6, 42, 23, 24, 13, 5, 47, 7, 25, 30, 27, 1, 15, 37, 4, 11, 46, 3, 17, 12, 40, 18, 39, 41, 43, 44, 32, 14, 36, 16, 50, 45, 31, 10, 8, 48, 9, 38, 29, 33, 49, 20, 28, 19, 34, 35, 2, 21, 0, 26]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -2267,7 +2267,7 @@ total_time_secs = 30.006978583
 solution = [11, 45, 50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "Iterated"
@@ -2392,7 +2392,7 @@ total_time_secs = 30.004337875
 solution = [46, 11, 45, 50, 26, 5, 47, 22, 23, 42, 6, 25, 7, 30, 27, 2, 35, 34, 19, 28, 20, 15, 1, 21, 0, 31, 10, 37, 4, 48, 8, 49, 33, 29, 9, 38, 32, 44, 14, 36, 16, 43, 41, 18, 39, 40, 12, 24, 13, 17, 3]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "Restart"
@@ -2512,7 +2512,7 @@ total_time_secs = 31.1765705
 solution = [50, 26, 5, 47, 22, 6, 42, 23, 13, 24, 12, 40, 18, 39, 41, 43, 14, 44, 32, 38, 9, 48, 8, 29, 33, 49, 15, 20, 28, 1, 19, 34, 35, 2, 27, 30, 25, 7, 21, 0, 31, 10, 37, 4, 36, 16, 3, 17, 46, 11, 45]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -2622,7 +2622,7 @@ total_time_secs = 0.004474917
 solution = [30, 37, 8, 7, 0, 15, 21, 39, 11, 10, 12, 24, 13, 22, 2, 33, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 46, 19, 32, 14, 45, 17, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 43]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -2732,7 +2732,7 @@ total_time_secs = 0.005460959
 solution = [13, 12, 24, 47, 41, 23, 9, 44, 34, 3, 25, 1, 28, 4, 38, 31, 20, 46, 11, 32, 42, 16, 26, 29, 19, 10, 22, 33, 40, 15, 21, 0, 7, 8, 37, 30, 43, 17, 6, 27, 36, 18, 5, 35, 45, 14, 39, 2]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -2843,7 +2843,7 @@ total_time_secs = 30.0000295
 solution = [2, 40, 33, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 24, 13, 22, 12, 20, 46, 10, 39, 14, 11, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 15, 21]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -2954,7 +2954,7 @@ total_time_secs = 30.00002
 solution = [2, 21, 15, 40, 28, 1, 3, 25, 41, 47, 24, 13, 12, 22, 10, 11, 32, 45, 35, 5, 36, 18, 26, 16, 42, 29, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 19, 46, 20, 38, 31, 23, 44, 34, 9, 4, 33]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -3065,7 +3065,7 @@ total_time_secs = 30.000028417
 solution = [8, 39, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 14, 11, 10, 46, 20, 12, 24, 38, 31, 47, 4, 23, 44, 34, 3, 25, 9, 41, 1, 28, 40, 33, 13, 22, 2, 21, 15, 7, 0]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -3176,7 +3176,7 @@ total_time_secs = 30.000004208
 solution = [31, 20, 12, 24, 33, 40, 15, 21, 2, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 29, 42, 16, 26, 18, 36, 5, 35, 45, 32, 14, 11, 19, 46, 10, 22, 13, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -3289,7 +3289,7 @@ total_time_secs = 30.000013042
 solution = [13, 24, 47, 4, 28, 1, 41, 25, 3, 34, 44, 9, 23, 31, 38, 20, 46, 19, 11, 10, 39, 14, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 8, 7, 0, 21, 15, 40, 33, 2, 22, 12]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -3402,7 +3402,7 @@ total_time_secs = 30.000012375
 solution = [0, 7, 8, 37, 30, 43, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 45, 32, 11, 22, 13, 24, 12, 46, 19, 14, 39, 21, 15, 2, 33, 40, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4, 47, 38, 31, 20, 10]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -3522,7 +3522,7 @@ total_time_secs = 30.003856583
 solution = [47, 38, 31, 20, 46, 19, 32, 45, 35, 29, 42, 16, 26, 18, 36, 5, 27, 6, 17, 43, 30, 37, 7, 0, 8, 39, 14, 11, 10, 12, 24, 13, 22, 2, 21, 15, 40, 33, 28, 1, 25, 3, 34, 44, 9, 23, 41, 4]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "Iterated"
@@ -3647,7 +3647,7 @@ total_time_secs = 30.002626583
 solution = [21, 15, 0, 7, 8, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 11, 14, 39, 10, 46, 20, 12, 24, 4, 47, 38, 31, 23, 9, 44, 34, 3, 25, 41, 1, 28, 40, 33, 13, 22, 2]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "Restart"
@@ -3767,7 +3767,7 @@ total_time_secs = 35.383102958
 solution = [10, 11, 14, 39, 8, 0, 7, 37, 30, 43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 31, 38, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 22, 13, 24, 12]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -3877,7 +3877,7 @@ total_time_secs = 0.002740166
 solution = [11, 50, 32, 9, 8, 7, 40, 18, 44, 2, 16, 6, 1, 41, 29, 28, 15, 49, 19, 22, 20, 30, 17, 21, 31, 48, 0, 43, 45, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 42, 3, 5, 24, 27, 26, 25, 46, 12, 13, 51, 10]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -3987,7 +3987,7 @@ total_time_secs = 0.003048125
 solution = [34, 33, 43, 26, 12, 13, 51, 10, 50, 11, 27, 25, 46, 28, 19, 22, 0, 31, 42, 32, 9, 8, 7, 40, 18, 44, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 45, 15, 49, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 48, 35]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -4098,7 +4098,7 @@ total_time_secs = 30.000030541
 solution = [6, 41, 20, 16, 2, 17, 30, 21, 0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -4209,7 +4209,7 @@ total_time_secs = 30.000056125
 solution = [45, 15, 28, 49, 19, 22, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3, 5, 14, 4, 23, 47, 37, 36, 39, 38, 33, 34, 35, 48, 21, 30, 20, 29, 41, 1, 6, 16, 2, 17, 0, 43]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -4320,7 +4320,7 @@ total_time_secs = 30.000016834
 solution = [19, 49, 15, 28, 29, 1, 6, 41, 20, 16, 2, 17, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 26, 46, 25, 27, 11, 24, 45, 47, 23, 4, 5, 3, 14, 37, 36, 39, 38, 35, 34, 33, 43, 48, 31, 0, 21, 30, 22]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -4431,7 +4431,7 @@ total_time_secs = 30.000034958
 solution = [49, 19, 22, 29, 1, 6, 41, 20, 16, 2, 17, 30, 21, 0, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 45, 43, 33, 34, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 11, 27, 25, 26, 12, 51, 13, 46, 28, 15]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -4544,7 +4544,7 @@ total_time_secs = 30.000017625
 solution = [19, 49, 15, 43, 33, 36, 23, 47, 45, 24, 3, 5, 14, 4, 37, 39, 38, 35, 34, 48, 31, 0, 21, 30, 22, 29, 1, 6, 41, 20, 16, 2, 17, 44, 18, 40, 7, 8, 9, 42, 32, 50, 11, 27, 10, 51, 13, 12, 26, 25, 46, 28]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -4657,7 +4657,7 @@ total_time_secs = 30.000000292
 solution = [1, 6, 41, 20, 22, 19, 49, 15, 27, 10, 50, 11, 24, 3, 5, 4, 23, 47, 36, 38, 39, 37, 14, 42, 32, 9, 8, 7, 40, 18, 44, 2, 16, 17, 30, 21, 0, 31, 48, 35, 34, 33, 43, 45, 46, 13, 51, 12, 26, 25, 28, 29]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -4777,7 +4777,7 @@ total_time_secs = 30.002478083
 solution = [16, 20, 41, 6, 1, 29, 22, 19, 49, 28, 15, 45, 43, 33, 34, 35, 38, 39, 36, 37, 47, 23, 4, 14, 5, 3, 24, 11, 27, 26, 25, 46, 12, 13, 51, 10, 50, 32, 42, 9, 8, 7, 40, 18, 44, 31, 48, 0, 21, 30, 17, 2]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "Iterated"
@@ -4902,7 +4902,7 @@ total_time_secs = 30.003071208
 solution = [44, 9, 8, 7, 40, 18, 2, 16, 6, 1, 41, 20, 30, 17, 21, 0, 22, 29, 19, 49, 28, 15, 43, 45, 47, 23, 4, 5, 3, 24, 27, 26, 25, 46, 12, 13, 51, 10, 11, 50, 32, 42, 14, 37, 36, 39, 38, 33, 34, 35, 48, 31]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "Restart"

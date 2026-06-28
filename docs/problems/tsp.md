@@ -52,7 +52,7 @@ let tsp = TspWithCoordinates::with_edge_weight_type(
 );
 
 // Load from a TSPLIB file:
-let tsp = TspWithCoordinates::load_file("data/tsp/att48.tsp")?;
+let tsp = TspWithCoordinates::load_file("data/instances/tsp/att48.tsp")?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 

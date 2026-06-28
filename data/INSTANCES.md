@@ -5,7 +5,7 @@ optopus benchmark pipeline (`src/benchmark.rs`), with sources and redistribution
 notes. Instances are pure numerical descriptions of optimization problems
 (adjacency lists, processing times, CNF clauses, city coordinates).
 
-## QUBO — `data/qubo/`
+## QUBO — `data/instances/qubo/`
 
 | Set | Files | Size (n vars) | Source |
 |---|---|---|---|
@@ -17,7 +17,7 @@ Conversion: each `bqpN.txt` from OR-Library is a multi-instance text bundle
 `i j v`). Split into per-instance files by `data/scripts/split_bqp.py`. The
 per-instance format matches `Qubo::load_file` directly.
 
-## JSSP — `data/jssp/`
+## JSSP — `data/instances/jssp/`
 
 | Set | Files | Size (jobs × machines) | Source |
 |---|---|---|---|
@@ -29,7 +29,7 @@ extracts each block's `n m` dimensions + the following `n` operation rows.
 Output format matches `JobShopScheduling::load_file` (machines 0-indexed,
 operations as `(machine, time)` pairs per row).
 
-## SAT — `data/sat/`
+## SAT — `data/instances/sat/`
 
 | Set | Files | Variables × Clauses | Source |
 |---|---|---|---|
@@ -41,14 +41,14 @@ Conversion: tarballs from SATLIB extracted, the first 10 lexically-sorted
 `Sat::load_file`. The `uuf` (unsatisfiable) families are deliberately omitted —
 MaxSAT framing makes them equivalent to `uf` for this benchmark suite.
 
-## TSP — `data/tsp/`
+## TSP — `data/instances/tsp/`
 
 | Set | Files | Cities | Source |
 |---|---|---|---|
 | TSPLIB | `att48.tsp`, `berlin52.tsp`, `burma14.tsp`, `ch150.tsp`, `dsj1000.tsp`, `eil51.tsp`, `eil101.tsp` (7 files) | 14–1000 | [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/), G. Reinelt |
 | Ad-hoc | `sample.tsp`, `test_data.txt` | tiny | repo-local |
 
-## MaxCut & VertexCover — `data/max_cut/`
+## MaxCut & VertexCover — `data/instances/max_cut/`
 
 | Set | Files | Vertices | Source |
 |---|---|---|---|
@@ -94,7 +94,7 @@ for spec in uf50-218 uf75-325 uf100-430 uf150-645 uf200-860; do
   curl -L -o /tmp/satlib_${spec}.tar.gz \
     "https://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/RND3SAT/${spec}.tar.gz"
   mkdir -p /tmp/sat_extract/${spec} && tar -xzf /tmp/satlib_${spec}.tar.gz -C /tmp/sat_extract/${spec}
-  mkdir -p data/sat/satlib/${spec}
-  find /tmp/sat_extract/${spec} -name '*.cnf' | sort | head -10 | xargs -I{} cp {} data/sat/satlib/${spec}/
+  mkdir -p data/instances/sat/satlib/${spec}
+  find /tmp/sat_extract/${spec} -name '*.cnf' | sort | head -10 | xargs -I{} cp {} data/instances/sat/satlib/${spec}/
 done
 ```

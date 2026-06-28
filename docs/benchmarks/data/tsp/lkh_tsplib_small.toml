@@ -2,7 +2,7 @@ timestamp = "20260517_110145"
 config_file = "data/benchmarks/tsp/lkh_small.toml"
 
 [[results]]
-instance_path = "data/tsp/burma14.tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
 kind = "LinKernighanHelsgott"
@@ -113,7 +113,7 @@ total_time_secs = 0.006282167
 solution = [4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3]
 
 [[results]]
-instance_path = "data/tsp/eil51.tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
 kind = "LinKernighanHelsgott"
@@ -224,7 +224,7 @@ total_time_secs = 0.012994542
 solution = [34, 35, 2, 27, 30, 25, 7, 47, 5, 22, 6, 42, 23, 13, 24, 17, 46, 11, 36, 16, 3, 12, 40, 39, 18, 41, 43, 14, 44, 32, 38, 9, 29, 33, 49, 8, 48, 4, 37, 10, 31, 45, 50, 26, 0, 21, 1, 15, 20, 28, 19]
 
 [[results]]
-instance_path = "data/tsp/att48.tsp"
+instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
 kind = "LinKernighanHelsgott"
@@ -335,7 +335,7 @@ total_time_secs = 0.031592625
 solution = [43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 31, 38, 47, 4, 41, 23, 9, 44, 34, 3, 25, 1, 28, 33, 40, 15, 21, 2, 22, 13, 24, 12, 10, 11, 14, 39, 8, 0, 7, 37, 30]
 
 [[results]]
-instance_path = "data/tsp/berlin52.tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
 kind = "LinKernighanHelsgott"

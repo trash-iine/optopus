@@ -2,7 +2,7 @@ timestamp = "20260517_111950"
 config_file = "data/benchmarks/jssp/general_small.toml"
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -112,7 +112,7 @@ total_time_secs = 0.000227292
 solution = [5, 4, 0, 2, 5, 5, 3, 1, 3, 0, 1, 5, 3, 1, 2, 4, 5, 4, 3, 2, 1, 4, 3, 2, 2, 0, 4, 3, 0, 5, 1, 0, 1, 2, 0, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -222,7 +222,7 @@ total_time_secs = 0.005451459
 solution = [1, 5, 5, 3, 0, 1, 5, 4, 1, 4, 3, 0, 0, 1, 4, 4, 5, 1, 2, 5, 2, 5, 0, 0, 3, 2, 0, 3, 1, 3, 3, 4, 2, 4, 2, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -333,7 +333,7 @@ total_time_secs = 30.000000125
 solution = [0, 3, 5, 1, 3, 5, 4, 4, 0, 2, 2, 1, 4, 1, 5, 5, 5, 2, 2, 4, 3, 3, 3, 0, 0, 2, 4, 1, 5, 1, 0, 3, 2, 0, 4, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -444,7 +444,7 @@ total_time_secs = 30.000275125
 solution = [2, 0, 3, 5, 1, 2, 2, 3, 0, 4, 3, 2, 4, 0, 4, 4, 4, 5, 5, 0, 2, 5, 1, 1, 3, 3, 2, 5, 4, 1, 0, 3, 1, 0, 1, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -555,7 +555,7 @@ total_time_secs = 30.000000333
 solution = [1, 3, 5, 2, 2, 2, 1, 3, 4, 2, 5, 0, 3, 5, 1, 1, 4, 0, 4, 2, 2, 5, 3, 4, 0, 0, 1, 3, 5, 1, 0, 4, 0, 5, 3, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -666,7 +666,7 @@ total_time_secs = 30.000102875
 solution = [1, 3, 2, 2, 0, 5, 1, 2, 4, 5, 0, 0, 3, 3, 3, 1, 5, 2, 4, 2, 4, 3, 5, 1, 5, 0, 4, 0, 2, 1, 4, 0, 5, 1, 3, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -779,7 +779,7 @@ total_time_secs = 30.000000917
 solution = [1, 2, 3, 1, 4, 2, 3, 2, 2, 1, 5, 0, 4, 3, 5, 2, 0, 5, 1, 3, 5, 4, 0, 2, 0, 3, 4, 0, 1, 5, 3, 4, 1, 4, 0, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -892,7 +892,7 @@ total_time_secs = 30.000051375
 solution = [0, 2, 1, 2, 2, 3, 5, 1, 4, 0, 5, 5, 3, 0, 3, 1, 4, 4, 3, 2, 0, 1, 4, 5, 3, 1, 5, 2, 4, 2, 1, 0, 4, 3, 0, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -1012,7 +1012,7 @@ total_time_secs = 30.000450583
 solution = [1, 3, 2, 3, 2, 0, 1, 1, 4, 5, 4, 4, 5, 0, 2, 2, 3, 5, 5, 1, 4, 3, 0, 0, 3, 1, 1, 0, 3, 2, 4, 2, 5, 5, 0, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -1137,7 +1137,7 @@ total_time_secs = 30.000611208
 solution = [2, 1, 3, 2, 0, 0, 3, 2, 1, 4, 2, 5, 4, 0, 3, 5, 1, 5, 3, 5, 4, 0, 1, 2, 1, 3, 5, 5, 4, 1, 0, 2, 4, 4, 3, 0]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft06.txt"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
 kind = "Restart"
@@ -1257,7 +1257,7 @@ total_time_secs = 30.095031708
 solution = [2, 0, 0, 1, 5, 3, 2, 1, 4, 5, 0, 3, 2, 4, 5, 3, 1, 3, 4, 0, 1, 0, 3, 2, 2, 4, 5, 2, 5, 1, 5, 3, 4, 0, 1, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -1367,7 +1367,7 @@ total_time_secs = 0.001691042
 solution = [1, 2, 2, 3, 4, 3, 4, 7, 6, 4, 4, 6, 3, 9, 8, 0, 2, 3, 5, 7, 5, 0, 5, 8, 5, 1, 9, 9, 1, 6, 4, 1, 8, 1, 1, 0, 1, 2, 8, 1, 7, 9, 0, 0, 2, 3, 0, 6, 4, 2, 8, 3, 8, 4, 8, 0, 7, 8, 7, 7, 6, 4, 3, 0, 3, 5, 2, 9, 2, 5, 4, 2, 6, 7, 7, 8, 9, 0, 6, 6, 9, 7, 7, 9, 5, 6, 0, 9, 5, 6, 3, 5, 2, 1, 5, 3, 9, 8, 4, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -1477,7 +1477,7 @@ total_time_secs = 0.174863542
 solution = [8, 1, 3, 8, 7, 5, 3, 8, 1, 8, 8, 9, 7, 3, 8, 9, 2, 2, 6, 4, 9, 4, 6, 8, 5, 7, 9, 2, 3, 1, 9, 5, 1, 4, 9, 6, 2, 2, 0, 4, 7, 7, 6, 0, 6, 2, 3, 6, 4, 4, 5, 5, 4, 7, 8, 2, 5, 1, 8, 6, 3, 7, 9, 7, 0, 2, 5, 4, 4, 3, 1, 0, 0, 0, 0, 1, 9, 3, 7, 3, 8, 1, 3, 5, 4, 2, 0, 6, 9, 0, 9, 2, 7, 6, 0, 1, 5, 1, 6, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -1588,7 +1588,7 @@ total_time_secs = 30.000027542
 solution = [2, 8, 9, 6, 7, 0, 9, 3, 8, 7, 4, 9, 3, 6, 2, 6, 6, 0, 0, 3, 3, 5, 0, 6, 9, 4, 3, 5, 2, 7, 3, 8, 7, 8, 2, 2, 9, 2, 4, 1, 2, 1, 4, 8, 8, 4, 1, 8, 1, 5, 1, 8, 6, 7, 3, 9, 1, 4, 5, 5, 7, 1, 0, 2, 5, 0, 2, 5, 0, 9, 5, 9, 7, 4, 4, 3, 6, 8, 9, 1, 7, 8, 6, 9, 3, 2, 4, 0, 0, 4, 0, 7, 3, 6, 1, 1, 5, 6, 7, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -1699,7 +1699,7 @@ total_time_secs = 30.000468084
 solution = [6, 7, 5, 9, 1, 4, 5, 6, 7, 6, 4, 5, 6, 0, 6, 9, 1, 9, 2, 1, 8, 4, 7, 1, 7, 5, 1, 3, 8, 6, 1, 3, 2, 6, 7, 2, 4, 7, 8, 4, 0, 4, 8, 9, 0, 3, 3, 5, 5, 2, 6, 1, 3, 5, 9, 6, 8, 2, 3, 2, 2, 3, 5, 7, 8, 5, 5, 0, 3, 4, 2, 8, 9, 6, 9, 3, 0, 4, 9, 7, 1, 0, 4, 2, 8, 0, 9, 0, 7, 1, 0, 0, 7, 8, 2, 3, 4, 8, 9, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -1810,7 +1810,7 @@ total_time_secs = 30.000004959
 solution = [1, 7, 6, 7, 0, 3, 7, 5, 5, 7, 9, 6, 1, 5, 1, 8, 9, 3, 9, 1, 9, 2, 3, 0, 9, 7, 9, 7, 0, 9, 6, 4, 1, 5, 2, 7, 2, 8, 3, 3, 6, 0, 9, 3, 4, 6, 0, 9, 3, 1, 1, 8, 4, 2, 0, 2, 5, 0, 4, 7, 4, 3, 4, 6, 2, 6, 0, 8, 9, 5, 1, 4, 2, 5, 1, 8, 0, 1, 2, 3, 8, 4, 8, 6, 4, 5, 8, 2, 4, 7, 0, 8, 6, 5, 2, 5, 8, 6, 7, 3]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -1921,7 +1921,7 @@ total_time_secs = 30.001211042
 solution = [1, 8, 2, 0, 4, 5, 5, 5, 5, 6, 4, 1, 3, 3, 6, 4, 7, 6, 8, 9, 2, 3, 5, 4, 9, 9, 5, 8, 4, 2, 9, 3, 5, 8, 4, 7, 0, 7, 3, 0, 0, 3, 3, 5, 4, 7, 5, 8, 0, 1, 8, 0, 6, 8, 9, 2, 3, 6, 9, 4, 8, 1, 0, 2, 2, 1, 5, 7, 6, 1, 8, 9, 7, 2, 0, 3, 9, 6, 7, 9, 7, 7, 6, 1, 0, 7, 2, 4, 1, 2, 8, 6, 6, 0, 1, 2, 1, 3, 4, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -2034,7 +2034,7 @@ total_time_secs = 30.000005959
 solution = [2, 1, 4, 8, 2, 5, 1, 5, 3, 1, 5, 8, 2, 6, 1, 4, 8, 3, 0, 2, 3, 7, 1, 0, 3, 6, 8, 0, 2, 8, 4, 3, 3, 9, 0, 3, 8, 5, 5, 1, 4, 8, 7, 9, 0, 6, 4, 9, 6, 0, 3, 0, 2, 9, 6, 7, 7, 5, 6, 9, 7, 8, 9, 0, 5, 4, 8, 6, 1, 1, 4, 7, 2, 9, 7, 6, 4, 1, 9, 3, 5, 3, 2, 0, 1, 6, 5, 9, 7, 4, 2, 7, 5, 6, 7, 9, 4, 8, 2, 0]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -2147,7 +2147,7 @@ total_time_secs = 30.003109625
 solution = [3, 5, 0, 3, 7, 8, 0, 4, 5, 5, 1, 5, 3, 8, 7, 3, 1, 9, 8, 9, 5, 1, 9, 4, 6, 8, 6, 3, 6, 1, 9, 4, 6, 6, 2, 2, 4, 0, 7, 4, 7, 3, 9, 4, 6, 0, 3, 7, 8, 8, 1, 4, 9, 8, 7, 4, 6, 0, 2, 8, 0, 9, 3, 6, 5, 0, 0, 8, 2, 2, 7, 5, 0, 4, 3, 5, 7, 1, 1, 2, 1, 6, 9, 2, 5, 0, 5, 7, 8, 9, 2, 6, 1, 2, 4, 7, 1, 3, 9, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -2267,7 +2267,7 @@ total_time_secs = 30.004376167
 solution = [9, 5, 1, 4, 2, 8, 0, 9, 3, 7, 1, 5, 6, 2, 0, 4, 8, 9, 3, 4, 5, 7, 6, 1, 2, 2, 0, 7, 5, 6, 0, 3, 1, 8, 9, 3, 0, 5, 4, 2, 6, 1, 7, 8, 0, 8, 3, 5, 9, 4, 7, 3, 1, 2, 5, 6, 8, 4, 3, 4, 9, 6, 1, 0, 1, 7, 3, 8, 9, 6, 9, 2, 4, 1, 6, 0, 9, 7, 4, 2, 8, 7, 7, 5, 8, 1, 5, 6, 5, 2, 3, 4, 2, 0, 0, 9, 7, 3, 8, 6]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -2392,7 +2392,7 @@ total_time_secs = 30.005542833
 solution = [8, 2, 8, 7, 4, 5, 1, 1, 8, 2, 4, 5, 1, 6, 2, 2, 8, 4, 6, 0, 2, 4, 7, 3, 6, 4, 9, 9, 4, 5, 7, 6, 6, 3, 1, 6, 8, 6, 1, 4, 1, 7, 3, 0, 3, 8, 9, 1, 6, 2, 8, 1, 5, 9, 5, 4, 0, 7, 2, 0, 9, 6, 8, 0, 3, 5, 8, 6, 3, 1, 3, 9, 7, 7, 9, 7, 4, 0, 2, 9, 9, 5, 2, 0, 3, 7, 8, 3, 2, 5, 7, 3, 0, 1, 5, 9, 0, 5, 0, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft10.txt"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
 kind = "Restart"
@@ -2512,7 +2512,7 @@ total_time_secs = 31.324107709
 solution = [1, 9, 6, 4, 0, 1, 0, 1, 7, 4, 9, 8, 5, 1, 1, 6, 8, 7, 6, 4, 3, 7, 0, 4, 9, 5, 9, 5, 3, 8, 7, 6, 6, 0, 5, 3, 3, 2, 4, 4, 8, 3, 9, 5, 1, 8, 2, 9, 3, 8, 2, 5, 6, 2, 9, 3, 2, 3, 6, 0, 5, 0, 4, 0, 5, 9, 4, 1, 2, 1, 7, 8, 7, 0, 2, 8, 8, 1, 6, 9, 4, 2, 3, 7, 5, 7, 2, 4, 7, 6, 8, 0, 2, 3, 6, 1, 9, 0, 7, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -2622,7 +2622,7 @@ total_time_secs = 0.001077416
 solution = [2, 11, 5, 18, 15, 17, 7, 3, 15, 13, 12, 18, 15, 10, 7, 12, 2, 9, 0, 9, 3, 17, 2, 18, 7, 5, 18, 4, 16, 4, 16, 3, 12, 0, 14, 12, 6, 2, 7, 17, 0, 11, 16, 8, 14, 1, 1, 3, 10, 1, 10, 8, 6, 9, 6, 6, 8, 7, 14, 5, 14, 5, 1, 19, 13, 0, 0, 13, 12, 8, 19, 9, 9, 18, 2, 13, 6, 11, 11, 5, 4, 4, 11, 19, 1, 10, 16, 4, 19, 13, 10, 17, 17, 15, 16, 14, 3, 19, 15, 8]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -2732,7 +2732,7 @@ total_time_secs = 0.271977916
 solution = [17, 4, 11, 2, 8, 10, 1, 17, 0, 0, 18, 6, 10, 5, 11, 12, 0, 18, 19, 10, 8, 0, 17, 12, 18, 19, 4, 6, 4, 6, 2, 18, 4, 6, 13, 10, 9, 15, 15, 7, 0, 14, 9, 18, 6, 11, 12, 4, 9, 5, 5, 19, 1, 11, 14, 7, 12, 3, 1, 14, 16, 3, 9, 17, 9, 1, 2, 19, 8, 12, 16, 7, 3, 2, 1, 15, 3, 11, 15, 16, 17, 19, 7, 10, 14, 8, 5, 2, 13, 5, 16, 8, 16, 15, 13, 13, 14, 7, 13, 3]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -2843,7 +2843,7 @@ total_time_secs = 30.000005375
 solution = [8, 13, 13, 0, 18, 4, 3, 5, 5, 14, 2, 14, 12, 10, 19, 2, 6, 11, 8, 1, 9, 18, 15, 12, 7, 12, 15, 7, 8, 4, 19, 3, 1, 7, 10, 19, 5, 10, 10, 5, 7, 16, 2, 16, 3, 0, 8, 0, 17, 9, 16, 4, 6, 11, 6, 18, 19, 1, 3, 7, 17, 1, 13, 4, 14, 10, 15, 5, 18, 12, 8, 9, 13, 15, 0, 17, 16, 4, 11, 12, 6, 2, 9, 14, 17, 18, 15, 0, 19, 11, 17, 13, 6, 16, 9, 14, 2, 11, 1, 3]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -2954,7 +2954,7 @@ total_time_secs = 30.003169083
 solution = [0, 1, 18, 0, 11, 18, 12, 19, 0, 7, 14, 17, 0, 13, 9, 2, 9, 1, 6, 18, 1, 4, 2, 14, 8, 11, 0, 14, 17, 10, 12, 16, 1, 6, 4, 13, 16, 6, 19, 8, 18, 4, 5, 12, 3, 3, 10, 17, 6, 18, 6, 1, 17, 12, 11, 13, 12, 11, 4, 13, 5, 11, 9, 3, 9, 4, 8, 15, 10, 5, 10, 15, 15, 7, 17, 10, 7, 13, 15, 7, 14, 7, 16, 9, 14, 8, 2, 5, 2, 5, 19, 16, 19, 8, 2, 16, 3, 15, 19, 3]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -3065,7 +3065,7 @@ total_time_secs = 30.000024084
 solution = [0, 6, 11, 0, 0, 18, 0, 12, 18, 5, 0, 1, 12, 10, 18, 4, 17, 10, 1, 10, 18, 17, 10, 8, 15, 19, 6, 7, 4, 13, 18, 12, 1, 6, 17, 5, 15, 12, 19, 3, 16, 1, 2, 14, 12, 11, 2, 16, 5, 3, 8, 11, 16, 8, 1, 15, 6, 11, 14, 2, 9, 15, 4, 13, 19, 16, 9, 8, 6, 11, 2, 5, 15, 13, 9, 17, 7, 7, 14, 3, 8, 10, 2, 4, 19, 4, 16, 3, 13, 14, 13, 5, 19, 9, 17, 7, 9, 14, 7, 3]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -3176,7 +3176,7 @@ total_time_secs = 30.002184542
 solution = [16, 11, 14, 9, 4, 9, 16, 19, 10, 18, 1, 9, 15, 16, 10, 2, 8, 9, 16, 4, 15, 4, 18, 7, 19, 16, 5, 14, 17, 13, 18, 6, 0, 4, 19, 8, 17, 8, 0, 6, 10, 12, 7, 18, 9, 7, 14, 8, 1, 3, 13, 14, 0, 12, 13, 19, 18, 17, 8, 17, 15, 10, 1, 4, 1, 5, 7, 0, 3, 1, 6, 2, 10, 13, 5, 12, 2, 14, 11, 12, 3, 11, 11, 6, 19, 7, 5, 13, 0, 5, 2, 12, 15, 3, 2, 11, 3, 15, 6, 17]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -3289,7 +3289,7 @@ total_time_secs = 30.000073375
 solution = [10, 15, 2, 10, 11, 17, 11, 13, 8, 2, 4, 8, 17, 11, 11, 15, 17, 7, 15, 4, 2, 7, 4, 11, 5, 0, 2, 4, 7, 18, 18, 15, 0, 4, 18, 12, 7, 6, 2, 0, 6, 17, 1, 3, 7, 18, 19, 18, 12, 0, 10, 9, 6, 17, 9, 0, 5, 14, 16, 9, 8, 12, 13, 12, 16, 5, 6, 19, 19, 14, 10, 1, 14, 9, 3, 1, 14, 6, 13, 13, 8, 10, 16, 1, 9, 3, 12, 16, 5, 3, 1, 19, 13, 3, 15, 5, 16, 8, 19, 14]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -3402,7 +3402,7 @@ total_time_secs = 30.003624916
 solution = [15, 6, 16, 5, 16, 14, 4, 0, 12, 14, 17, 14, 16, 0, 3, 12, 3, 10, 18, 6, 4, 12, 16, 19, 5, 19, 7, 5, 4, 8, 14, 17, 11, 14, 10, 2, 13, 17, 5, 4, 3, 12, 12, 9, 6, 19, 0, 15, 5, 18, 9, 10, 11, 2, 9, 16, 2, 11, 8, 7, 19, 6, 15, 1, 6, 1, 3, 11, 18, 9, 13, 18, 7, 10, 15, 2, 4, 8, 17, 1, 8, 9, 1, 10, 0, 18, 13, 0, 19, 7, 1, 11, 15, 3, 8, 13, 17, 13, 7, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -3522,7 +3522,7 @@ total_time_secs = 30.009407083
 solution = [12, 19, 9, 15, 0, 10, 11, 18, 13, 2, 1, 16, 5, 8, 11, 6, 3, 17, 16, 7, 14, 4, 7, 18, 2, 10, 10, 8, 0, 17, 17, 6, 14, 2, 1, 12, 15, 5, 4, 6, 19, 15, 12, 7, 3, 0, 13, 9, 6, 16, 19, 14, 3, 6, 5, 13, 11, 10, 8, 7, 0, 1, 1, 9, 14, 18, 8, 4, 2, 12, 11, 16, 5, 17, 3, 19, 15, 4, 7, 14, 11, 1, 0, 13, 9, 15, 18, 16, 4, 3, 5, 8, 17, 12, 13, 10, 9, 2, 18, 19]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -3647,7 +3647,7 @@ total_time_secs = 30.001223291
 solution = [9, 4, 16, 1, 16, 16, 15, 5, 8, 16, 14, 15, 12, 1, 7, 1, 11, 14, 5, 0, 15, 10, 1, 0, 16, 9, 4, 12, 9, 6, 8, 10, 4, 14, 19, 8, 9, 10, 12, 5, 15, 11, 18, 12, 18, 6, 1, 10, 11, 0, 11, 0, 4, 9, 5, 14, 8, 8, 19, 14, 3, 19, 11, 19, 12, 17, 0, 17, 7, 18, 18, 7, 7, 15, 6, 13, 17, 19, 5, 3, 6, 3, 18, 2, 4, 17, 17, 7, 13, 6, 2, 3, 2, 13, 2, 3, 13, 10, 13, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/ft20.txt"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
 kind = "Restart"
@@ -3767,7 +3767,7 @@ total_time_secs = 31.908786542
 solution = [14, 3, 5, 1, 4, 5, 0, 2, 12, 11, 16, 12, 19, 7, 18, 12, 16, 6, 14, 0, 2, 8, 14, 19, 6, 15, 13, 9, 6, 11, 11, 15, 10, 8, 19, 17, 10, 9, 8, 7, 17, 9, 15, 18, 3, 19, 3, 9, 5, 5, 7, 17, 17, 16, 14, 16, 1, 12, 6, 7, 4, 18, 9, 1, 4, 10, 14, 0, 13, 17, 11, 3, 13, 15, 1, 0, 10, 2, 7, 13, 3, 12, 6, 8, 19, 4, 15, 8, 18, 5, 16, 2, 1, 0, 10, 11, 13, 4, 18, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -3877,7 +3877,7 @@ total_time_secs = 0.000809125
 solution = [7, 3, 1, 2, 9, 4, 6, 4, 8, 2, 9, 3, 9, 7, 0, 9, 6, 0, 1, 8, 0, 8, 5, 6, 0, 8, 0, 7, 5, 4, 6, 5, 5, 2, 7, 5, 3, 9, 4, 3, 1, 2, 7, 1, 8, 1, 2, 6, 3, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -3987,7 +3987,7 @@ total_time_secs = 0.011275416
 solution = [2, 6, 5, 9, 1, 3, 2, 7, 1, 2, 7, 5, 1, 2, 8, 0, 4, 6, 5, 0, 4, 2, 0, 1, 3, 5, 9, 4, 7, 6, 3, 4, 0, 5, 1, 6, 9, 6, 8, 9, 8, 4, 7, 8, 0, 3, 3, 9, 7, 8]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -4098,7 +4098,7 @@ total_time_secs = 30.00000625
 solution = [6, 8, 0, 3, 2, 7, 8, 3, 0, 1, 8, 5, 9, 5, 6, 2, 9, 5, 1, 7, 6, 9, 8, 4, 3, 5, 7, 2, 9, 0, 1, 8, 4, 4, 9, 5, 6, 3, 1, 7, 0, 0, 2, 3, 6, 4, 4, 1, 2, 7]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -4209,7 +4209,7 @@ total_time_secs = 30.000505375
 solution = [9, 0, 7, 1, 5, 4, 8, 2, 1, 2, 8, 3, 9, 5, 9, 0, 7, 8, 2, 0, 7, 6, 8, 2, 8, 4, 0, 6, 1, 5, 4, 1, 7, 2, 9, 6, 3, 9, 4, 3, 5, 6, 5, 6, 7, 3, 3, 1, 0, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -4320,7 +4320,7 @@ total_time_secs = 30.0000015
 solution = [9, 8, 2, 7, 8, 5, 1, 2, 4, 6, 3, 9, 7, 4, 5, 5, 8, 1, 0, 9, 3, 8, 7, 6, 3, 4, 2, 4, 7, 1, 0, 0, 9, 5, 2, 6, 8, 9, 3, 6, 2, 3, 0, 4, 1, 5, 6, 7, 0, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -4431,7 +4431,7 @@ total_time_secs = 30.000388875
 solution = [6, 9, 5, 0, 8, 8, 5, 6, 2, 7, 4, 4, 4, 8, 1, 3, 0, 6, 2, 7, 8, 5, 9, 1, 9, 2, 8, 3, 2, 5, 3, 7, 4, 0, 7, 6, 9, 5, 2, 1, 7, 4, 0, 3, 1, 1, 9, 3, 6, 0]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -4544,7 +4544,7 @@ total_time_secs = 30.000002792
 solution = [9, 7, 6, 0, 4, 1, 2, 9, 6, 3, 5, 0, 6, 3, 8, 2, 7, 3, 1, 9, 9, 6, 5, 2, 4, 2, 9, 6, 8, 0, 4, 7, 3, 1, 8, 5, 0, 7, 8, 4, 4, 7, 1, 5, 0, 1, 8, 3, 2, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -4657,7 +4657,7 @@ total_time_secs = 30.000048
 solution = [4, 6, 3, 9, 3, 7, 9, 6, 8, 0, 3, 5, 5, 6, 4, 8, 9, 0, 6, 2, 1, 4, 3, 5, 8, 1, 0, 0, 1, 4, 7, 1, 2, 7, 4, 7, 6, 8, 9, 5, 8, 9, 2, 2, 2, 7, 3, 1, 0, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -4777,7 +4777,7 @@ total_time_secs = 30.003876541
 solution = [7, 9, 3, 4, 2, 1, 6, 0, 2, 5, 7, 8, 4, 8, 1, 0, 5, 6, 2, 9, 5, 8, 6, 3, 3, 4, 7, 1, 2, 7, 9, 9, 4, 2, 5, 8, 6, 0, 4, 3, 5, 1, 8, 6, 7, 9, 3, 0, 0, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -4902,7 +4902,7 @@ total_time_secs = 30.002222666
 solution = [3, 2, 9, 0, 6, 4, 1, 2, 0, 5, 7, 5, 6, 7, 9, 2, 4, 1, 3, 7, 4, 7, 5, 6, 9, 9, 6, 8, 8, 0, 0, 1, 2, 3, 5, 8, 5, 6, 4, 4, 1, 0, 2, 1, 3, 8, 8, 3, 9, 7]
 
 [[results]]
-instance_path = "data/jssp/orlib/la01.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "Restart"
@@ -5022,7 +5022,7 @@ total_time_secs = 30.728450958
 solution = [9, 7, 2, 3, 8, 4, 1, 5, 4, 7, 5, 8, 6, 0, 9, 2, 8, 6, 2, 3, 6, 0, 8, 4, 1, 2, 5, 4, 3, 9, 0, 2, 9, 5, 8, 6, 5, 1, 4, 7, 9, 6, 7, 3, 0, 7, 3, 1, 0, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -5132,7 +5132,7 @@ total_time_secs = 0.000080292
 solution = [9, 6, 9, 2, 7, 5, 3, 4, 6, 7, 8, 2, 3, 4, 5, 6, 3, 9, 8, 0, 8, 4, 5, 2, 1, 2, 8, 5, 7, 9, 3, 1, 8, 6, 7, 1, 0, 2, 3, 0, 9, 0, 1, 6, 5, 4, 0, 4, 7, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -5242,7 +5242,7 @@ total_time_secs = 0.0065925
 solution = [8, 1, 5, 2, 6, 7, 3, 6, 8, 5, 9, 5, 7, 9, 6, 5, 8, 0, 9, 4, 8, 3, 7, 6, 6, 4, 1, 9, 0, 7, 8, 0, 1, 3, 3, 4, 3, 2, 5, 9, 4, 0, 0, 2, 2, 1, 2, 7, 1, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -5353,7 +5353,7 @@ total_time_secs = 30.000010375
 solution = [7, 7, 4, 2, 1, 9, 5, 4, 2, 8, 9, 3, 6, 5, 8, 7, 1, 8, 4, 0, 1, 6, 4, 9, 3, 6, 1, 5, 4, 3, 9, 2, 8, 5, 7, 0, 7, 1, 0, 0, 6, 6, 3, 0, 5, 8, 2, 9, 3, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -5464,7 +5464,7 @@ total_time_secs = 30.00052875
 solution = [8, 7, 2, 9, 0, 8, 0, 7, 9, 1, 4, 9, 5, 3, 4, 2, 6, 6, 9, 2, 4, 5, 8, 8, 3, 6, 7, 1, 8, 3, 4, 7, 2, 1, 0, 2, 0, 3, 6, 3, 5, 7, 4, 5, 0, 6, 1, 5, 1, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -5575,7 +5575,7 @@ total_time_secs = 30.000003459
 solution = [2, 8, 4, 1, 0, 9, 4, 3, 0, 1, 1, 3, 3, 1, 2, 7, 4, 8, 9, 7, 3, 1, 6, 9, 9, 6, 8, 5, 6, 5, 0, 7, 2, 2, 4, 5, 3, 4, 8, 7, 7, 0, 6, 5, 5, 2, 6, 8, 9, 0]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -5686,7 +5686,7 @@ total_time_secs = 30.00000275
 solution = [8, 0, 2, 3, 4, 4, 7, 8, 0, 9, 2, 9, 9, 2, 6, 2, 1, 1, 3, 8, 6, 4, 4, 5, 7, 8, 0, 5, 3, 1, 9, 7, 1, 2, 6, 8, 4, 7, 5, 6, 1, 0, 5, 6, 7, 0, 3, 3, 9, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -5799,7 +5799,7 @@ total_time_secs = 30.000027292
 solution = [4, 9, 3, 0, 4, 1, 7, 9, 2, 9, 1, 0, 6, 4, 7, 6, 1, 2, 5, 8, 8, 7, 4, 2, 5, 5, 1, 3, 8, 9, 8, 2, 6, 3, 1, 7, 4, 6, 3, 8, 5, 2, 6, 9, 5, 0, 0, 7, 3, 0]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -5912,7 +5912,7 @@ total_time_secs = 30.000608125
 solution = [4, 1, 7, 1, 0, 2, 9, 4, 1, 0, 6, 9, 1, 0, 7, 2, 4, 8, 3, 6, 7, 2, 9, 1, 5, 2, 8, 0, 8, 3, 9, 6, 5, 0, 8, 2, 6, 4, 3, 7, 5, 3, 4, 6, 8, 7, 5, 3, 9, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -6032,7 +6032,7 @@ total_time_secs = 30.002890541
 solution = [1, 9, 8, 5, 6, 0, 7, 3, 4, 5, 2, 0, 5, 6, 6, 9, 1, 1, 4, 3, 3, 7, 5, 8, 1, 0, 6, 7, 3, 4, 1, 8, 2, 4, 2, 9, 5, 9, 7, 0, 6, 0, 8, 8, 7, 2, 9, 4, 3, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -6157,7 +6157,7 @@ total_time_secs = 30.001582375
 solution = [5, 4, 9, 3, 0, 0, 7, 1, 4, 9, 6, 9, 5, 1, 4, 9, 1, 7, 5, 7, 3, 4, 6, 8, 1, 0, 2, 3, 5, 8, 8, 6, 3, 1, 7, 2, 3, 8, 4, 2, 5, 8, 7, 0, 6, 2, 6, 2, 0, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/la02.txt"
+instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
 kind = "Restart"
@@ -6277,7 +6277,7 @@ total_time_secs = 30.258591416
 solution = [8, 9, 1, 6, 0, 0, 9, 8, 5, 1, 2, 1, 6, 3, 0, 8, 4, 0, 4, 2, 5, 1, 9, 3, 2, 6, 7, 2, 1, 4, 9, 7, 4, 8, 5, 5, 8, 3, 0, 7, 3, 4, 2, 7, 7, 3, 5, 6, 6, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -6387,7 +6387,7 @@ total_time_secs = 0.000143167
 solution = [6, 5, 8, 4, 6, 9, 3, 5, 8, 2, 0, 8, 9, 1, 8, 7, 0, 7, 4, 9, 0, 7, 5, 3, 0, 2, 3, 6, 4, 2, 3, 7, 9, 2, 1, 1, 1, 6, 5, 9, 1, 5, 6, 4, 8, 2, 0, 3, 4, 7]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -6497,7 +6497,7 @@ total_time_secs = 0.017116583
 solution = [2, 2, 4, 7, 3, 2, 4, 2, 8, 9, 3, 0, 7, 1, 0, 3, 0, 8, 1, 4, 5, 9, 3, 7, 1, 5, 6, 4, 8, 6, 0, 7, 1, 0, 2, 4, 9, 6, 8, 3, 7, 1, 6, 9, 9, 5, 8, 6, 5, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -6608,7 +6608,7 @@ total_time_secs = 30.000031791
 solution = [2, 9, 6, 2, 1, 6, 9, 3, 8, 4, 3, 8, 4, 3, 9, 7, 2, 5, 8, 6, 0, 5, 7, 9, 7, 1, 1, 0, 0, 2, 3, 4, 3, 5, 1, 9, 4, 8, 7, 6, 5, 8, 6, 1, 2, 4, 5, 0, 7, 0]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -6719,7 +6719,7 @@ total_time_secs = 30.000638708
 solution = [1, 9, 9, 1, 0, 9, 1, 4, 8, 2, 7, 5, 7, 8, 4, 2, 0, 2, 3, 1, 8, 6, 1, 5, 6, 4, 5, 9, 8, 3, 6, 4, 6, 3, 8, 0, 7, 9, 3, 6, 5, 5, 3, 0, 4, 2, 7, 0, 2, 7]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -6830,7 +6830,7 @@ total_time_secs = 30.000004667
 solution = [1, 1, 7, 3, 5, 9, 2, 3, 4, 7, 0, 2, 2, 3, 1, 7, 5, 6, 0, 4, 7, 8, 3, 9, 8, 8, 0, 6, 8, 1, 4, 4, 5, 5, 8, 2, 6, 9, 7, 2, 9, 1, 0, 0, 6, 4, 3, 5, 6, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -6941,7 +6941,7 @@ total_time_secs = 30.000145292
 solution = [0, 3, 1, 3, 7, 2, 4, 5, 8, 1, 3, 9, 0, 1, 1, 2, 7, 4, 5, 8, 6, 2, 8, 6, 3, 8, 4, 5, 0, 9, 0, 5, 6, 1, 4, 7, 3, 6, 7, 5, 9, 9, 9, 0, 7, 4, 2, 8, 6, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -7054,7 +7054,7 @@ total_time_secs = 30.000000041
 solution = [7, 3, 4, 3, 1, 0, 2, 9, 8, 7, 7, 6, 4, 3, 1, 8, 0, 7, 8, 0, 2, 9, 8, 6, 5, 5, 0, 6, 4, 3, 2, 3, 8, 5, 1, 0, 4, 6, 1, 5, 1, 5, 7, 2, 9, 6, 9, 2, 9, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -7167,7 +7167,7 @@ total_time_secs = 30.000589375
 solution = [3, 3, 6, 0, 1, 0, 1, 6, 7, 0, 2, 9, 5, 8, 1, 7, 4, 3, 5, 9, 8, 4, 2, 2, 3, 1, 8, 3, 6, 1, 0, 5, 4, 4, 8, 6, 5, 8, 7, 2, 5, 7, 4, 0, 6, 7, 9, 9, 2, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -7287,7 +7287,7 @@ total_time_secs = 30.000018666
 solution = [0, 2, 4, 6, 7, 8, 7, 1, 9, 3, 6, 1, 5, 4, 6, 9, 0, 3, 2, 8, 7, 5, 1, 0, 4, 8, 3, 6, 1, 8, 6, 2, 4, 1, 9, 7, 7, 3, 5, 4, 8, 2, 2, 0, 3, 9, 5, 0, 9, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -7412,7 +7412,7 @@ total_time_secs = 30.000378875
 solution = [1, 4, 1, 7, 1, 4, 0, 7, 3, 9, 3, 5, 0, 8, 2, 7, 4, 6, 1, 2, 6, 5, 3, 4, 8, 9, 7, 8, 2, 6, 3, 5, 1, 7, 8, 0, 5, 6, 8, 3, 9, 0, 9, 6, 9, 2, 5, 0, 4, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
 kind = "Restart"
@@ -7532,7 +7532,7 @@ total_time_secs = 30.756212666
 solution = [0, 7, 7, 4, 5, 1, 8, 4, 1, 4, 0, 5, 8, 6, 7, 4, 2, 6, 6, 5, 2, 5, 9, 3, 8, 9, 3, 1, 6, 0, 1, 3, 7, 5, 2, 8, 6, 4, 3, 2, 1, 0, 7, 3, 0, 9, 2, 9, 9, 8]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -7642,7 +7642,7 @@ total_time_secs = 0.000141916
 solution = [5, 9, 0, 0, 8, 3, 5, 5, 1, 0, 0, 3, 3, 1, 7, 8, 4, 6, 9, 7, 6, 3, 8, 2, 4, 8, 5, 6, 9, 9, 3, 8, 0, 2, 4, 1, 2, 1, 2, 7, 4, 2, 9, 5, 7, 6, 1, 7, 6, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -7752,7 +7752,7 @@ total_time_secs = 0.014740209
 solution = [7, 0, 1, 6, 7, 1, 2, 0, 0, 8, 3, 1, 8, 0, 2, 6, 6, 3, 4, 6, 4, 5, 9, 5, 7, 9, 9, 5, 0, 8, 4, 8, 9, 7, 1, 4, 5, 6, 3, 3, 8, 3, 2, 1, 4, 2, 9, 7, 2, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -7863,7 +7863,7 @@ total_time_secs = 30.00000475
 solution = [2, 0, 4, 4, 1, 9, 6, 4, 0, 8, 9, 5, 8, 4, 1, 0, 0, 8, 5, 9, 1, 6, 5, 7, 2, 7, 7, 2, 3, 1, 6, 5, 0, 2, 3, 8, 5, 1, 2, 3, 7, 9, 9, 8, 3, 3, 4, 6, 6, 7]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -7974,7 +7974,7 @@ total_time_secs = 30.000061709
 solution = [0, 9, 6, 7, 4, 7, 7, 1, 6, 9, 5, 2, 7, 6, 0, 3, 0, 3, 2, 4, 8, 8, 6, 9, 0, 3, 1, 1, 9, 5, 4, 8, 9, 2, 3, 8, 0, 7, 1, 5, 1, 5, 2, 8, 4, 4, 3, 5, 6, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -8085,7 +8085,7 @@ total_time_secs = 30.000011958
 solution = [9, 4, 4, 5, 2, 6, 1, 2, 5, 3, 1, 0, 4, 7, 8, 9, 2, 1, 7, 2, 5, 6, 9, 3, 9, 4, 7, 6, 8, 0, 6, 0, 3, 5, 8, 1, 7, 1, 9, 4, 5, 7, 3, 8, 2, 8, 0, 3, 0, 6]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -8196,7 +8196,7 @@ total_time_secs = 30.000369125
 solution = [9, 4, 4, 0, 2, 2, 3, 5, 5, 4, 1, 7, 4, 6, 8, 3, 5, 0, 2, 1, 9, 6, 3, 7, 7, 2, 3, 9, 1, 8, 8, 1, 5, 8, 7, 0, 9, 6, 6, 4, 5, 8, 0, 1, 2, 6, 7, 9, 3, 0]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -8309,7 +8309,7 @@ total_time_secs = 30.00000025
 solution = [1, 1, 5, 0, 2, 8, 4, 4, 7, 2, 2, 1, 3, 8, 8, 8, 2, 3, 7, 5, 0, 4, 6, 3, 1, 7, 5, 9, 8, 7, 9, 0, 3, 9, 5, 6, 1, 4, 6, 7, 6, 2, 0, 3, 9, 9, 4, 5, 0, 6]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -8422,7 +8422,7 @@ total_time_secs = 30.00027
 solution = [4, 2, 1, 4, 2, 8, 8, 5, 7, 8, 3, 5, 4, 8, 1, 6, 7, 1, 2, 3, 2, 9, 9, 5, 0, 8, 0, 1, 6, 9, 4, 9, 3, 3, 7, 3, 2, 5, 6, 0, 7, 7, 5, 6, 9, 0, 1, 6, 0, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -8542,7 +8542,7 @@ total_time_secs = 30.00064625
 solution = [1, 7, 5, 2, 4, 3, 8, 9, 3, 6, 0, 8, 2, 1, 7, 9, 5, 0, 3, 2, 6, 1, 7, 4, 7, 8, 4, 3, 8, 5, 6, 0, 5, 3, 9, 9, 5, 7, 4, 6, 1, 2, 0, 6, 1, 0, 9, 4, 8, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -8667,7 +8667,7 @@ total_time_secs = 30.000978375
 solution = [0, 8, 8, 2, 6, 2, 1, 1, 5, 5, 1, 2, 4, 4, 3, 0, 7, 8, 5, 9, 7, 8, 2, 4, 5, 7, 8, 3, 6, 9, 5, 1, 6, 7, 0, 4, 0, 9, 4, 3, 1, 3, 2, 6, 6, 7, 9, 3, 9, 0]
 
 [[results]]
-instance_path = "data/jssp/orlib/la04.txt"
+instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
 kind = "Restart"
@@ -8787,7 +8787,7 @@ total_time_secs = 30.487651292
 solution = [8, 5, 8, 3, 9, 5, 2, 4, 6, 3, 8, 0, 2, 0, 3, 7, 9, 4, 1, 1, 7, 4, 9, 0, 5, 2, 1, 6, 3, 4, 5, 7, 4, 5, 7, 1, 2, 6, 1, 6, 8, 2, 9, 0, 3, 0, 8, 7, 6, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -8897,7 +8897,7 @@ total_time_secs = 0.000043625
 solution = [1, 1, 4, 3, 8, 1, 3, 2, 7, 5, 4, 1, 8, 8, 4, 1, 5, 2, 4, 9, 3, 9, 0, 6, 3, 2, 5, 5, 5, 2, 9, 6, 8, 7, 0, 6, 3, 0, 8, 9, 2, 7, 7, 7, 4, 0, 0, 6, 6, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -9007,7 +9007,7 @@ total_time_secs = 0.005358125
 solution = [2, 7, 4, 8, 5, 2, 2, 9, 6, 5, 2, 1, 7, 5, 1, 1, 0, 9, 9, 4, 3, 6, 4, 3, 4, 7, 9, 1, 2, 0, 6, 5, 8, 3, 5, 9, 0, 3, 8, 8, 4, 0, 7, 6, 7, 1, 0, 6, 3, 8]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -9118,7 +9118,7 @@ total_time_secs = 30.000015167
 solution = [8, 3, 5, 6, 0, 4, 9, 1, 7, 7, 5, 3, 6, 9, 8, 7, 5, 3, 2, 6, 2, 0, 3, 6, 9, 4, 0, 3, 2, 0, 2, 1, 4, 9, 8, 5, 7, 1, 6, 8, 0, 4, 9, 2, 5, 1, 7, 4, 1, 8]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -9229,7 +9229,7 @@ total_time_secs = 30.000408208
 solution = [5, 8, 9, 4, 8, 9, 0, 6, 3, 5, 1, 5, 7, 5, 1, 6, 9, 6, 1, 3, 2, 7, 2, 4, 3, 8, 1, 2, 0, 8, 6, 9, 7, 2, 0, 1, 7, 4, 8, 3, 7, 5, 0, 6, 4, 3, 0, 4, 9, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -9340,7 +9340,7 @@ total_time_secs = 30.000007958
 solution = [8, 6, 3, 4, 2, 4, 5, 6, 3, 2, 1, 9, 4, 3, 5, 1, 0, 9, 7, 0, 6, 2, 6, 8, 5, 3, 5, 4, 0, 7, 1, 8, 7, 7, 9, 0, 8, 1, 8, 9, 2, 4, 0, 1, 6, 9, 3, 7, 5, 2]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -9451,7 +9451,7 @@ total_time_secs = 30.00056175
 solution = [4, 9, 7, 5, 3, 7, 1, 6, 1, 1, 3, 6, 8, 9, 2, 0, 5, 6, 7, 3, 0, 6, 8, 3, 7, 5, 4, 9, 2, 7, 1, 6, 4, 2, 5, 0, 8, 1, 2, 9, 3, 0, 2, 9, 5, 8, 0, 4, 8, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -9564,7 +9564,7 @@ total_time_secs = 30.000001875
 solution = [2, 7, 1, 8, 5, 3, 9, 5, 1, 8, 7, 5, 4, 3, 2, 4, 7, 3, 0, 8, 3, 1, 0, 8, 6, 0, 6, 2, 5, 7, 2, 5, 9, 9, 4, 4, 4, 0, 2, 6, 1, 6, 3, 6, 1, 0, 9, 7, 9, 8]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -9677,7 +9677,7 @@ total_time_secs = 30.000321708
 solution = [3, 5, 9, 8, 7, 4, 3, 0, 5, 5, 7, 1, 4, 2, 1, 3, 6, 6, 6, 0, 5, 6, 9, 2, 1, 1, 9, 8, 0, 4, 6, 1, 2, 2, 7, 8, 0, 8, 3, 2, 4, 8, 4, 5, 0, 9, 3, 7, 7, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -9797,7 +9797,7 @@ total_time_secs = 30.002824541
 solution = [6, 0, 5, 6, 3, 6, 7, 2, 0, 1, 9, 8, 5, 4, 4, 8, 1, 5, 9, 7, 2, 0, 4, 3, 2, 7, 1, 5, 0, 6, 9, 2, 3, 4, 7, 7, 9, 8, 2, 3, 6, 9, 1, 8, 1, 0, 8, 4, 5, 3]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -9922,7 +9922,7 @@ total_time_secs = 30.000473916
 solution = [3, 9, 7, 4, 7, 9, 1, 2, 8, 5, 6, 4, 2, 3, 0, 6, 5, 0, 6, 7, 3, 2, 7, 8, 1, 9, 5, 0, 4, 0, 8, 5, 7, 3, 9, 1, 1, 6, 6, 0, 9, 2, 2, 4, 5, 8, 4, 3, 8, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
 kind = "Restart"
@@ -10042,7 +10042,7 @@ total_time_secs = 30.142173875
 solution = [4, 1, 7, 8, 2, 6, 0, 3, 5, 9, 8, 5, 0, 9, 7, 8, 2, 3, 0, 9, 7, 5, 4, 2, 1, 0, 7, 3, 1, 8, 6, 6, 5, 4, 1, 2, 4, 4, 6, 5, 3, 6, 9, 7, 3, 0, 8, 1, 2, 9]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -10152,7 +10152,7 @@ total_time_secs = 0.000469666
 solution = [9, 7, 2, 8, 4, 5, 3, 8, 7, 6, 8, 7, 5, 0, 3, 5, 8, 8, 5, 4, 5, 6, 0, 0, 9, 3, 6, 3, 6, 9, 0, 2, 7, 5, 9, 4, 1, 9, 3, 2, 1, 3, 8, 7, 7, 3, 7, 8, 4, 6, 6, 0, 5, 1, 3, 3, 5, 6, 4, 0, 2, 2, 5, 6, 4, 0, 2, 0, 9, 1, 8, 4, 9, 9, 2, 9, 1, 3, 7, 4, 6, 7, 1, 1, 6, 2, 1, 4, 5, 0, 4, 9, 2, 8, 0, 1, 8, 7, 2, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "LocalSearch"
@@ -10262,7 +10262,7 @@ total_time_secs = 0.096206625
 solution = [5, 9, 3, 3, 8, 8, 0, 5, 6, 5, 7, 6, 0, 4, 8, 1, 0, 7, 2, 3, 8, 1, 9, 4, 3, 0, 3, 9, 1, 5, 7, 2, 1, 4, 0, 2, 9, 2, 9, 1, 7, 5, 1, 2, 4, 2, 5, 1, 9, 6, 9, 6, 2, 5, 3, 6, 8, 4, 3, 5, 3, 0, 7, 1, 8, 2, 0, 6, 9, 6, 8, 4, 5, 1, 1, 0, 0, 7, 9, 8, 6, 7, 2, 0, 8, 4, 3, 8, 4, 9, 6, 7, 2, 7, 4, 3, 6, 7, 4, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -10373,7 +10373,7 @@ total_time_secs = 30.000028542
 solution = [7, 9, 0, 9, 9, 3, 7, 6, 0, 7, 7, 0, 2, 5, 0, 7, 9, 1, 0, 1, 0, 6, 5, 8, 9, 3, 8, 3, 3, 9, 4, 2, 8, 0, 7, 6, 7, 1, 4, 3, 5, 6, 2, 9, 2, 3, 9, 4, 6, 9, 2, 5, 9, 5, 4, 5, 5, 5, 3, 6, 3, 3, 1, 8, 5, 7, 4, 8, 1, 6, 4, 2, 1, 2, 4, 6, 0, 7, 2, 8, 4, 1, 3, 2, 8, 0, 0, 8, 7, 1, 1, 4, 8, 6, 2, 4, 6, 5, 1, 8]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "TabuSearch"
@@ -10484,7 +10484,7 @@ total_time_secs = 30.003058083
 solution = [6, 5, 8, 3, 7, 1, 8, 6, 3, 3, 4, 1, 7, 8, 4, 2, 4, 8, 7, 7, 6, 6, 2, 4, 0, 5, 5, 0, 2, 2, 1, 7, 2, 3, 4, 0, 9, 8, 1, 0, 9, 6, 4, 8, 9, 9, 6, 5, 9, 3, 8, 3, 5, 4, 1, 9, 7, 0, 3, 1, 0, 2, 0, 6, 3, 6, 7, 9, 0, 5, 6, 3, 7, 1, 1, 9, 7, 4, 6, 8, 9, 5, 9, 8, 2, 4, 1, 5, 7, 0, 2, 8, 4, 3, 0, 1, 2, 5, 2, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -10595,7 +10595,7 @@ total_time_secs = 30.000017542
 solution = [6, 9, 1, 6, 1, 4, 0, 8, 0, 2, 3, 3, 2, 6, 1, 6, 5, 3, 1, 9, 1, 2, 0, 8, 8, 6, 2, 1, 7, 0, 0, 9, 4, 2, 6, 1, 4, 5, 7, 0, 8, 9, 8, 4, 2, 5, 3, 0, 2, 9, 1, 7, 4, 6, 5, 9, 3, 7, 5, 8, 7, 2, 3, 6, 6, 7, 1, 3, 3, 8, 5, 4, 6, 8, 9, 7, 4, 4, 5, 8, 1, 7, 2, 3, 0, 2, 4, 7, 0, 5, 8, 5, 4, 9, 9, 9, 0, 3, 7, 5]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -10706,7 +10706,7 @@ total_time_secs = 30.001455834
 solution = [1, 8, 5, 7, 9, 8, 7, 5, 5, 1, 2, 4, 9, 6, 8, 3, 5, 0, 2, 6, 1, 8, 3, 0, 9, 3, 7, 6, 0, 2, 5, 0, 3, 7, 8, 7, 4, 6, 9, 1, 3, 5, 7, 6, 5, 8, 3, 0, 4, 9, 8, 1, 2, 9, 7, 2, 4, 0, 4, 3, 2, 0, 6, 3, 5, 8, 2, 5, 1, 8, 1, 7, 1, 0, 9, 3, 3, 4, 6, 2, 0, 6, 7, 1, 8, 4, 0, 2, 4, 6, 9, 6, 2, 4, 4, 9, 7, 9, 5, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -10819,7 +10819,7 @@ total_time_secs = 30.00002125
 solution = [7, 5, 0, 5, 1, 8, 9, 2, 6, 6, 6, 7, 9, 9, 5, 8, 1, 1, 5, 7, 2, 3, 4, 2, 0, 8, 2, 6, 8, 0, 3, 9, 7, 3, 1, 9, 4, 6, 1, 4, 2, 5, 5, 1, 8, 0, 8, 7, 0, 3, 2, 6, 3, 4, 8, 1, 4, 0, 9, 5, 3, 6, 5, 0, 1, 4, 2, 2, 3, 8, 3, 9, 9, 7, 5, 1, 6, 0, 7, 2, 4, 0, 4, 0, 1, 8, 3, 3, 8, 7, 7, 6, 9, 6, 9, 4, 2, 4, 5, 7]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "SimulatedAnnealing"
@@ -10932,7 +10932,7 @@ total_time_secs = 30.001176042
 solution = [5, 1, 7, 8, 0, 8, 6, 1, 9, 5, 0, 1, 8, 4, 9, 3, 6, 2, 1, 2, 9, 2, 3, 3, 1, 4, 8, 7, 5, 3, 5, 9, 7, 8, 6, 0, 5, 9, 2, 3, 4, 7, 1, 7, 0, 4, 1, 2, 2, 5, 7, 0, 8, 3, 5, 6, 1, 5, 3, 4, 5, 8, 9, 6, 2, 9, 7, 0, 6, 3, 1, 4, 0, 4, 8, 6, 4, 7, 8, 6, 0, 2, 9, 0, 3, 1, 8, 9, 7, 3, 2, 6, 5, 7, 6, 2, 9, 0, 4, 4]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "GeneticAlgorithm"
@@ -11052,7 +11052,7 @@ total_time_secs = 30.002763292
 solution = [9, 5, 7, 0, 6, 1, 2, 3, 6, 8, 4, 8, 3, 9, 7, 4, 5, 1, 2, 9, 0, 4, 3, 7, 6, 2, 1, 5, 7, 1, 4, 0, 2, 7, 0, 2, 7, 9, 8, 6, 4, 1, 3, 6, 5, 8, 0, 7, 0, 5, 9, 4, 3, 5, 2, 3, 0, 1, 0, 9, 4, 8, 6, 3, 7, 8, 8, 9, 2, 1, 6, 9, 3, 4, 8, 0, 5, 7, 1, 7, 1, 3, 5, 6, 9, 2, 0, 4, 6, 5, 4, 8, 2, 1, 5, 2, 9, 8, 6, 3]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "Iterated"
@@ -11177,7 +11177,7 @@ total_time_secs = 30.005280916
 solution = [0, 8, 2, 3, 9, 7, 0, 8, 5, 4, 6, 1, 2, 8, 4, 1, 0, 3, 5, 0, 6, 3, 7, 7, 5, 7, 2, 8, 6, 2, 1, 0, 5, 6, 9, 4, 0, 3, 4, 8, 5, 1, 0, 8, 9, 9, 7, 8, 6, 2, 2, 1, 7, 8, 9, 9, 4, 6, 3, 7, 3, 9, 1, 7, 5, 5, 6, 4, 0, 3, 6, 9, 1, 4, 9, 8, 6, 2, 9, 4, 1, 1, 7, 4, 4, 5, 8, 2, 7, 3, 2, 3, 6, 0, 5, 3, 5, 0, 2, 1]
 
 [[results]]
-instance_path = "data/jssp/orlib/abz5.txt"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
 kind = "Restart"

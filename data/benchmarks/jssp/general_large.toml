@@ -5,71 +5,71 @@
 num_runs = 10
 
 [[instances]]
-path = "data/jssp/orlib/la26.txt"
+path = "data/instances/jssp/orlib/la26.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la27.txt"
+path = "data/instances/jssp/orlib/la27.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la28.txt"
+path = "data/instances/jssp/orlib/la28.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la29.txt"
+path = "data/instances/jssp/orlib/la29.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la30.txt"
+path = "data/instances/jssp/orlib/la30.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la31.txt"
+path = "data/instances/jssp/orlib/la31.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la32.txt"
+path = "data/instances/jssp/orlib/la32.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la33.txt"
+path = "data/instances/jssp/orlib/la33.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la34.txt"
+path = "data/instances/jssp/orlib/la34.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la35.txt"
+path = "data/instances/jssp/orlib/la35.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la36.txt"
+path = "data/instances/jssp/orlib/la36.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la37.txt"
+path = "data/instances/jssp/orlib/la37.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la38.txt"
+path = "data/instances/jssp/orlib/la38.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la39.txt"
+path = "data/instances/jssp/orlib/la39.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la40.txt"
+path = "data/instances/jssp/orlib/la40.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/swv*.txt"
+path = "data/instances/jssp/orlib/swv*.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/yn*.txt"
+path = "data/instances/jssp/orlib/yn*.txt"
 problem = "JobShop"
 
 [[heuristics]]

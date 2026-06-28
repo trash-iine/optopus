@@ -5,11 +5,11 @@
 num_runs = 10
 
 [[instances]]
-path = "data/qubo/bqp/bqp50_*.txt"
+path = "data/instances/qubo/bqp/bqp50_*.txt"
 problem = "Qubo"
 
 [[instances]]
-path = "data/qubo/bqp/bqp100_*.txt"
+path = "data/instances/qubo/bqp/bqp100_*.txt"
 problem = "Qubo"
 
 [[heuristics]]
