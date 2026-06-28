@@ -1,0 +1,76 @@
+num_runs = 10
+
+[[instances]]
+path = "data/instances/max_cut/G22"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G23"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G24"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G25"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G26"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G27"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G28"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G29"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G30"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G31"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G32"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G33"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G34"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G35"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G36"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G37"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G38"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G39"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G40"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G41"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G42"
+problem = "MaxCut"
+
+[[heuristics]]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [3, 200]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[heuristics.stop_condition]
+max_iteration = 400_000_000

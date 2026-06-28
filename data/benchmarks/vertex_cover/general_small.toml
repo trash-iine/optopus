@@ -5,123 +5,123 @@
 num_runs = 10
 
 [[instances]]
-path = "data/max_cut/G1"
+path = "data/instances/max_cut/G1"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G2"
+path = "data/instances/max_cut/G2"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G3"
+path = "data/instances/max_cut/G3"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G4"
+path = "data/instances/max_cut/G4"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G5"
+path = "data/instances/max_cut/G5"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G6"
+path = "data/instances/max_cut/G6"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G7"
+path = "data/instances/max_cut/G7"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G8"
+path = "data/instances/max_cut/G8"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G9"
+path = "data/instances/max_cut/G9"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G10"
+path = "data/instances/max_cut/G10"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G11"
+path = "data/instances/max_cut/G11"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G12"
+path = "data/instances/max_cut/G12"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G13"
+path = "data/instances/max_cut/G13"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G14"
+path = "data/instances/max_cut/G14"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G15"
+path = "data/instances/max_cut/G15"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G16"
+path = "data/instances/max_cut/G16"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G17"
+path = "data/instances/max_cut/G17"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G18"
+path = "data/instances/max_cut/G18"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G19"
+path = "data/instances/max_cut/G19"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G20"
+path = "data/instances/max_cut/G20"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G21"
+path = "data/instances/max_cut/G21"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G43"
+path = "data/instances/max_cut/G43"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G44"
+path = "data/instances/max_cut/G44"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G45"
+path = "data/instances/max_cut/G45"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G46"
+path = "data/instances/max_cut/G46"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G47"
+path = "data/instances/max_cut/G47"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G51"
+path = "data/instances/max_cut/G51"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G52"
+path = "data/instances/max_cut/G52"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G53"
+path = "data/instances/max_cut/G53"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/max_cut/G54"
+path = "data/instances/max_cut/G54"
 problem = "VertexCover"
 
 [[heuristics]]

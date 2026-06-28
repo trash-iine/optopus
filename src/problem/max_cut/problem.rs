@@ -286,7 +286,7 @@ impl MaxCut {
     /// ```no_run
     /// use optopus::problem::MaxCut;
     ///
-    /// let mc = MaxCut::load_file("data/max_cut/G1").unwrap();
+    /// let mc = MaxCut::load_file("data/instances/max_cut/G1").unwrap();
     /// ```
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
         Graph::load_from_file(path).map(Self::new)

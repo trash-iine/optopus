@@ -616,7 +616,7 @@ mod tests {
 
     #[test]
     fn test_lkh_on_larger_instance() {
-        let prob = TspWithCoordinates::load_file("data/tsp/eil51.tsp").unwrap();
+        let prob = TspWithCoordinates::load_file("data/instances/tsp/eil51.tsp").unwrap();
         let mut state = SearchState::new(&prob);
         let initial_obj = state.solution.objective;
 

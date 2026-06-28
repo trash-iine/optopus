@@ -4,7 +4,7 @@
 num_runs = 10
 
 [[instances]]
-path = "data/tsp/dsj1000.tsp"
+path = "data/instances/tsp/dsj1000.tsp"
 problem = "Tsp"
 
 [[heuristics]]

@@ -288,7 +288,7 @@ pub struct HeuristicConfig {
 /// A single instance entry in the config file.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct InstanceConfig {
-    /// Path to the instance file; glob patterns (e.g. `"data/max_cut/G[1-9]*"`) are supported.
+    /// Path to the instance file; glob patterns (e.g. `"data/instances/max_cut/G[1-9]*"`) are supported.
     pub path: String,
     pub problem: ProblemKind,
 }
@@ -1638,7 +1638,7 @@ fn expand_instance_paths(config: &BenchmarkConfig) -> Result<Vec<(String, Proble
 impl Benchmark {
     /// Runs all (instance x heuristic) combinations from a `BenchmarkConfig` and returns a report.
     ///
-    /// Instance paths support glob patterns (e.g. `"data/max_cut/G[1-9]*"`).
+    /// Instance paths support glob patterns (e.g. `"data/instances/max_cut/G[1-9]*"`).
     /// For each combination, the heuristic is run `config.num_runs` times.
     pub fn run_from_config(
         config: BenchmarkConfig,

@@ -3,7 +3,7 @@
 num_runs = 1
 
 [[instances]]
-path = "data/tsp/sample.tsp"
+path = "data/instances/tsp/sample.tsp"
 problem = "Tsp"
 
 [[heuristics]]

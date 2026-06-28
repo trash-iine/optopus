@@ -772,7 +772,7 @@ mod qubo_tests {
 
     #[test]
     fn test_load_file() {
-        let qubo = Qubo::load_file("data/qubo/test_data.txt").unwrap();
+        let qubo = Qubo::load_file("data/instances/qubo/test_data.txt").unwrap();
         assert_eq!(qubo.get_q(0, 1), 2);
         assert_eq!(qubo.get_q(1, 2), -6);
         assert_eq!(qubo.get_q(0, 0), -1);

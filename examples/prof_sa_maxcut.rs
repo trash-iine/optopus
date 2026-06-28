@@ -20,7 +20,7 @@ use std::time::Duration;
 use optopus::prelude::*;
 
 fn main() {
-    let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G22").unwrap());
+    let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G22").unwrap());
 
     // --- SA × Flip: O(n) iter().choose() ---
     let mut state = SearchState::new(&mc);

@@ -48,7 +48,7 @@ let mc = MaxCut::new(Graph::from_edges([
 let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
 
 // Load from file:
-let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G1")?);
+let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
 # Ok::<(), optopus::error::OptError>(())
 ```
 

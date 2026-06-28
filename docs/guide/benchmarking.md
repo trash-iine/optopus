@@ -17,7 +17,7 @@ Output is written to `result/<timestamp>_<config_stem>.toml`.
 num_runs = 10                          # repetitions per (instance, heuristic) pair
 
 [[instances]]
-path = "data/max_cut/G*.txt"           # file path or glob
+path = "data/instances/max_cut/G*.txt"           # file path or glob
 problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop
 
 [[heuristics]]

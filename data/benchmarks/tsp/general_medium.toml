@@ -5,11 +5,11 @@
 num_runs = 10
 
 [[instances]]
-path = "data/tsp/eil101.tsp"
+path = "data/instances/tsp/eil101.tsp"
 problem = "Tsp"
 
 [[instances]]
-path = "data/tsp/ch150.tsp"
+path = "data/instances/tsp/ch150.tsp"
 problem = "Tsp"
 
 [[heuristics]]

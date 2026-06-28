@@ -4,7 +4,7 @@ num_runs = 1
 
 [[instances]]
 # TSPLIB-format file (NAME / TYPE / DIMENSION / EDGE_WEIGHT_TYPE / NODE_COORD_SECTION).
-path = "data/tsp/sample.tsp"
+path = "data/instances/tsp/sample.tsp"
 problem = "Tsp"
 
 [[heuristics]]

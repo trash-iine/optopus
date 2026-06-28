@@ -5,7 +5,7 @@ num_runs = 1
 
 [[instances]]
 # Instance file. MaxCut text format: "N M\n i j w\n…" (1-indexed).
-path = "data/max_cut/sample.txt"
+path = "data/instances/max_cut/sample.txt"
 # Problem dispatch tag: MaxCut | Qubo | Sat | Tsp | VertexCover.
 problem = "MaxCut"
 

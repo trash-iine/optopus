@@ -2,7 +2,7 @@ timestamp = "20260517_192120"
 config_file = "data/benchmarks/tsp/lkh_medium.toml"
 
 [[results]]
-instance_path = "data/tsp/eil101.tsp"
+instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
 kind = "LinKernighanHelsgott"
@@ -113,7 +113,7 @@ total_time_secs = 0.065445708
 solution = [79, 67, 28, 23, 53, 3, 54, 24, 38, 66, 22, 55, 74, 21, 40, 73, 71, 72, 20, 39, 57, 12, 93, 94, 96, 86, 1, 56, 14, 42, 41, 13, 37, 43, 85, 15, 60, 84, 90, 99, 36, 97, 91, 58, 92, 98, 95, 5, 88, 51, 17, 82, 59, 4, 83, 16, 44, 7, 45, 46, 35, 48, 63, 62, 89, 31, 9, 61, 10, 18, 47, 81, 6, 87, 30, 69, 29, 19, 65, 70, 64, 34, 33, 77, 80, 8, 50, 32, 78, 2, 76, 75, 49, 0, 68, 26, 100, 52, 27, 25, 11]
 
 [[results]]
-instance_path = "data/tsp/ch150.tsp"
+instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
 kind = "LinKernighanHelsgott"

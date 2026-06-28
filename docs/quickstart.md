@@ -52,19 +52,19 @@ Each problem ships with a loader that returns
 use optopus::prelude::*;
 
 // MaxCut / Vertex Cover use the shared Graph loader (format: `N M / i j w`).
-let mc = MaxCut::new(Graph::load_from_file("data/max_cut/G1")?);
+let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
 
 // QUBO loader (format: `N M / i j v`, 1-indexed):
-let qubo = Qubo::load_file("data/qubo/sample.txt")?;
+let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 
 // MaxSAT loader (DIMACS CNF):
-let sat = Sat::load_file("data/sat/example.cnf")?;
+let sat = Sat::load_file("data/instances/sat/example.cnf")?;
 
 // TSP loader (TSPLIB):
-let tsp = TspWithCoordinates::load_file("data/tsp/burma14.tsp")?;
+let tsp = TspWithCoordinates::load_file("data/instances/tsp/burma14.tsp")?;
 
 // Job Shop Scheduling loader (Taillard / OR-Library):
-let jssp = JobShopScheduling::load_file("data/jssp/ft06.txt")?;
+let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 

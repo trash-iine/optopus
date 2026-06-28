@@ -60,37 +60,37 @@ SA_COOLING = 0.9995
 
 # Instance globs per (problem, band). Lists become multiple [[instances]] blocks.
 INSTANCES: dict[tuple[str, str], list[str]] = {
-    ("MaxCut", "small"):  [f"data/max_cut/G{n}" for n in (
+    ("MaxCut", "small"):  [f"data/instances/max_cut/G{n}" for n in (
         list(range(1, 22)) + list(range(43, 48)) + list(range(51, 55)))],
-    ("MaxCut", "medium"): [f"data/max_cut/G{n}" for n in (
+    ("MaxCut", "medium"): [f"data/instances/max_cut/G{n}" for n in (
         list(range(22, 43)) + list(range(48, 51)))],
-    ("MaxCut", "large"):  [f"data/max_cut/G{n}" for n in (
+    ("MaxCut", "large"):  [f"data/instances/max_cut/G{n}" for n in (
         list(range(55, 68)) + [70, 72, 77, 81])],
-    ("Qubo", "small"):  ["data/qubo/bqp/bqp50_*.txt",  "data/qubo/bqp/bqp100_*.txt"],
-    ("Qubo", "medium"): ["data/qubo/bqp/bqp250_*.txt", "data/qubo/bqp/bqp500_*.txt"],
-    ("Qubo", "large"):  ["data/qubo/bqp/bqp1000_*.txt"],
-    ("Sat", "small"):  ["data/sat/satlib/uf50-218/*.cnf",  "data/sat/satlib/uf75-325/*.cnf"],
-    ("Sat", "medium"): ["data/sat/satlib/uf100-430/*.cnf", "data/sat/satlib/uf150-645/*.cnf"],
-    ("Sat", "large"):  ["data/sat/satlib/uf200-860/*.cnf"],
-    ("Tsp", "small"):  ["data/tsp/burma14.tsp", "data/tsp/eil51.tsp",
-                       "data/tsp/att48.tsp", "data/tsp/berlin52.tsp"],
-    ("Tsp", "medium"): ["data/tsp/eil101.tsp", "data/tsp/ch150.tsp"],
-    ("Tsp", "large"):  ["data/tsp/dsj1000.tsp"],
-    ("JobShop", "small"):  ["data/jssp/orlib/ft06.txt",  "data/jssp/orlib/ft10.txt",
-                            "data/jssp/orlib/ft20.txt",
-                            *[f"data/jssp/orlib/la0{n}.txt" for n in range(1, 6)],
-                            "data/jssp/orlib/abz5.txt"],
-    ("JobShop", "medium"): [*[f"data/jssp/orlib/la{n:02d}.txt" for n in range(6, 26)],
-                            *[f"data/jssp/orlib/abz{n}.txt" for n in range(6, 10)],
-                            *[f"data/jssp/orlib/orb{n:02d}.txt" for n in range(1, 11)]],
-    ("JobShop", "large"):  [*[f"data/jssp/orlib/la{n}.txt" for n in range(26, 41)],
-                            "data/jssp/orlib/swv*.txt",
-                            "data/jssp/orlib/yn*.txt"],
-    ("VertexCover", "small"):  [f"data/max_cut/G{n}" for n in
+    ("Qubo", "small"):  ["data/instances/qubo/bqp/bqp50_*.txt",  "data/instances/qubo/bqp/bqp100_*.txt"],
+    ("Qubo", "medium"): ["data/instances/qubo/bqp/bqp250_*.txt", "data/instances/qubo/bqp/bqp500_*.txt"],
+    ("Qubo", "large"):  ["data/instances/qubo/bqp/bqp1000_*.txt"],
+    ("Sat", "small"):  ["data/instances/sat/satlib/uf50-218/*.cnf",  "data/instances/sat/satlib/uf75-325/*.cnf"],
+    ("Sat", "medium"): ["data/instances/sat/satlib/uf100-430/*.cnf", "data/instances/sat/satlib/uf150-645/*.cnf"],
+    ("Sat", "large"):  ["data/instances/sat/satlib/uf200-860/*.cnf"],
+    ("Tsp", "small"):  ["data/instances/tsp/burma14.tsp", "data/instances/tsp/eil51.tsp",
+                       "data/instances/tsp/att48.tsp", "data/instances/tsp/berlin52.tsp"],
+    ("Tsp", "medium"): ["data/instances/tsp/eil101.tsp", "data/instances/tsp/ch150.tsp"],
+    ("Tsp", "large"):  ["data/instances/tsp/dsj1000.tsp"],
+    ("JobShop", "small"):  ["data/instances/jssp/orlib/ft06.txt",  "data/instances/jssp/orlib/ft10.txt",
+                            "data/instances/jssp/orlib/ft20.txt",
+                            *[f"data/instances/jssp/orlib/la0{n}.txt" for n in range(1, 6)],
+                            "data/instances/jssp/orlib/abz5.txt"],
+    ("JobShop", "medium"): [*[f"data/instances/jssp/orlib/la{n:02d}.txt" for n in range(6, 26)],
+                            *[f"data/instances/jssp/orlib/abz{n}.txt" for n in range(6, 10)],
+                            *[f"data/instances/jssp/orlib/orb{n:02d}.txt" for n in range(1, 11)]],
+    ("JobShop", "large"):  [*[f"data/instances/jssp/orlib/la{n}.txt" for n in range(26, 41)],
+                            "data/instances/jssp/orlib/swv*.txt",
+                            "data/instances/jssp/orlib/yn*.txt"],
+    ("VertexCover", "small"):  [f"data/instances/max_cut/G{n}" for n in
                                 (list(range(1, 22)) + list(range(43, 48)) + list(range(51, 55)))],
-    ("VertexCover", "medium"): [f"data/max_cut/G{n}" for n in
+    ("VertexCover", "medium"): [f"data/instances/max_cut/G{n}" for n in
                                 (list(range(22, 43)) + list(range(48, 51)))],
-    ("VertexCover", "large"):  [f"data/max_cut/G{n}" for n in
+    ("VertexCover", "large"):  [f"data/instances/max_cut/G{n}" for n in
                                 (list(range(55, 68)) + [70, 72, 77, 81])],
 }
 

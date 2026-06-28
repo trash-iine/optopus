@@ -57,7 +57,7 @@ let qubo = Qubo::from_entries([
 ]);
 
 // Load from file:
-let qubo = Qubo::load_file("data/qubo/sample.qubo")?;
+let qubo = Qubo::load_file("data/instances/qubo/sample.qubo")?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 

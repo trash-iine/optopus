@@ -9,7 +9,7 @@ by descriptive lines, then an `n_jobs n_machines` line and `n_jobs` operation ro
 with this project's loader (`src/problem/job_shop_scheduling/problem.rs::load_file`).
 
 Usage: python3 data/scripts/split_jobshop.py
-Outputs: data/jssp/orlib/<name>.txt
+Outputs: data/instances/jssp/orlib/<name>.txt
 """
 from __future__ import annotations
 

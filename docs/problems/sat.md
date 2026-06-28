@@ -40,7 +40,7 @@ sat.add_clause([1, -2, 3]);   // (x1 ∨ ¬x2 ∨ x3); literals are signed 1-ind
 sat.add_clause([-1, 2]);
 
 // Load DIMACS CNF:
-let sat = Sat::load_file("data/sat/example.cnf")?;
+let sat = Sat::load_file("data/instances/sat/example.cnf")?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 

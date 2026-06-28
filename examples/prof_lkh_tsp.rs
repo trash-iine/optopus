@@ -22,7 +22,7 @@ use std::time::Duration;
 use optopus::prelude::*;
 
 fn main() {
-    let tsp = TspWithCoordinates::load_file("data/tsp/berlin52.tsp").unwrap();
+    let tsp = TspWithCoordinates::load_file("data/instances/tsp/berlin52.tsp").unwrap();
     let mut state = SearchState::new(&tsp);
 
     Restart::new(

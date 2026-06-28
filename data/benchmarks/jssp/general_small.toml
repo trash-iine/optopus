@@ -5,39 +5,39 @@
 num_runs = 10
 
 [[instances]]
-path = "data/jssp/orlib/ft06.txt"
+path = "data/instances/jssp/orlib/ft06.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/ft10.txt"
+path = "data/instances/jssp/orlib/ft10.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/ft20.txt"
+path = "data/instances/jssp/orlib/ft20.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la01.txt"
+path = "data/instances/jssp/orlib/la01.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la02.txt"
+path = "data/instances/jssp/orlib/la02.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la03.txt"
+path = "data/instances/jssp/orlib/la03.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la04.txt"
+path = "data/instances/jssp/orlib/la04.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/la05.txt"
+path = "data/instances/jssp/orlib/la05.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/jssp/orlib/abz5.txt"
+path = "data/instances/jssp/orlib/abz5.txt"
 problem = "JobShop"
 
 [[heuristics]]

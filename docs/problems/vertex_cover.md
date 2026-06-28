@@ -51,7 +51,7 @@ let vc = VertexCover::new(Graph::from_edges([
 ]));
 
 // Load via the shared graph loader:
-let vc = VertexCover::new(Graph::load_from_file("data/max_cut/G1")?);
+let vc = VertexCover::new(Graph::load_from_file("data/instances/max_cut/G1")?);
 # Ok::<(), optopus::error::OptError>(())
 ```
 
