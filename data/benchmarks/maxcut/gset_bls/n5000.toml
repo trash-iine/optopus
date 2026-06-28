@@ -1,0 +1,28 @@
+num_runs = 10
+
+[[instances]]
+path = "data/instances/max_cut/G55"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G56"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G57"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G58"
+problem = "MaxCut"
+[[instances]]
+path = "data/instances/max_cut/G59"
+problem = "MaxCut"
+
+[[heuristics]]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [3, 500]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[heuristics.stop_condition]
+max_iteration = 1_000_000_000
