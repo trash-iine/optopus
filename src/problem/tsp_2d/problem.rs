@@ -516,26 +516,64 @@ EOF
 
     #[test]
     fn test_load_file_att() {
-        let tsp = TspWithCoordinates::load_file("data/instances/tsp/att48.tsp").unwrap();
-        assert_eq!(tsp.coordinates.len(), 48);
+        let path = write_tmp(
+            "NAME: att_fixture\n\
+             TYPE: TSP\n\
+             DIMENSION: 3\n\
+             EDGE_WEIGHT_TYPE: ATT\n\
+             NODE_COORD_SECTION\n\
+             1 0.0 0.0\n\
+             2 10.0 0.0\n\
+             3 5.0 5.0\n\
+             EOF\n",
+        );
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.coordinates.len(), 3);
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Att);
+        // r = sqrt(100 / 10) ≈ 3.162; t = 3; 3 < 3.162 → d = 4
+        assert_eq!(tsp.distance(0, 1), 4.0);
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
     fn test_load_file_geo() {
-        let tsp = TspWithCoordinates::load_file("data/instances/tsp/burma14.tsp").unwrap();
-        assert_eq!(tsp.coordinates.len(), 14);
+        // Coordinates in TSPLIB DDD.MM format (degrees.minutes).
+        let path = write_tmp(
+            "NAME: geo_fixture\n\
+             TYPE: TSP\n\
+             DIMENSION: 2\n\
+             EDGE_WEIGHT_TYPE: GEO\n\
+             NODE_COORD_SECTION\n\
+             1 16.47 96.10\n\
+             2 14.05 98.12\n\
+             EOF\n",
+        );
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.coordinates.len(), 2);
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Geo);
+        let d = tsp.distance(0, 1);
+        assert!(d > 0.0);
+        assert_eq!(d, d.trunc(), "GEO distances must be integer-valued");
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
     fn test_load_file_ceil_2d() {
-        let tsp = TspWithCoordinates::load_file("data/instances/tsp/dsj1000.tsp").unwrap();
+        let path = write_tmp(
+            "NAME: ceil_fixture\n\
+             TYPE: TSP\n\
+             DIMENSION: 2\n\
+             EDGE_WEIGHT_TYPE: CEIL_2D\n\
+             NODE_COORD_SECTION\n\
+             1 0.0 0.0\n\
+             2 1.0 1.0\n\
+             EOF\n",
+        );
+        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
         assert_eq!(tsp.edge_weight_type, EdgeWeightType::Ceil2d);
-        // dsj1000 is CEIL_2D; ceil(sqrt(...)) should be >= nint(sqrt(...)).
-        let d = tsp.distance(0, 1);
-        assert!(d >= 1.0);
-        assert_eq!(d, d.ceil(), "CEIL_2D distances must be integer-valued");
+        // ceil(sqrt(2)) = 2, whereas EUC_2D would round to 1.
+        assert_eq!(tsp.distance(0, 1), 2.0);
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]

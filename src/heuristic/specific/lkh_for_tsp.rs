@@ -622,7 +622,14 @@ mod tests {
 
     #[test]
     fn test_lkh_on_larger_instance() {
-        let prob = TspWithCoordinates::load_file("data/instances/tsp/eil51.tsp").unwrap();
+        use rand::{Rng, SeedableRng, rngs::SmallRng};
+
+        // Deterministic 51-city instance (eil51-sized) on a 100x100 plane.
+        let mut rng = SmallRng::seed_from_u64(51);
+        let coords: Vec<(f64, f64)> = (0..51)
+            .map(|_| (rng.random_range(0.0..100.0), rng.random_range(0.0..100.0)))
+            .collect();
+        let prob = TspWithCoordinates::new("synthetic51".to_string(), coords);
         let mut state = SearchState::new(&prob);
         let initial_obj = state.solution.objective;
 
