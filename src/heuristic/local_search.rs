@@ -1,6 +1,7 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
+use crate::search_state::SearchState;
+use crate::trait_defs::{MoveToNeighbor, ProblemTrait, Rankable};
 
 /// A local search algorithm that iteratively explores the neighborhood of the current solution.
 /// This algorithm applies the best move from the neighborhood until no better moves are found.
@@ -20,7 +21,7 @@ use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
 /// ```
 pub struct LocalSearch<N> {
     pub stop_condition: StopCondition,
-    phantom_neighbor: std::marker::PhantomData<N>,
+    _neighbor: std::marker::PhantomData<N>,
     no_best_move: bool,
 }
 
@@ -38,7 +39,7 @@ impl<N> LocalSearch<N> {
 
         Self {
             stop_condition,
-            phantom_neighbor: std::marker::PhantomData,
+            _neighbor: std::marker::PhantomData,
             no_best_move: false,
         }
     }
@@ -69,7 +70,66 @@ where
         Ok(())
     }
 
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
+    }
+
+    /// Done when the stop condition is met **or** the last iteration found no
+    /// improving move (a local optimum was reached).
     fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state) || self.no_best_move
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::problem::{MaxCut, MaxCutFlipNeighbor};
+
+    fn small_maxcut() -> MaxCut {
+        MaxCut::from_edges([
+            (0, 1, 1.0),
+            (0, 2, 1.0),
+            (0, 3, 1.0),
+            (1, 2, 1.0),
+            (2, 3, 1.0),
+        ])
+    }
+
+    #[test]
+    fn local_search_stops_at_local_optimum() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        let initial_obj = state.best_solution.objective;
+
+        let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1_000));
+        ls.run(&mut state).unwrap();
+
+        assert!(state.best_solution.objective >= initial_obj);
+        // At a local optimum no flip has positive gain.
+        assert!(state.best_solution.gain.iter().all(|&g| g <= 0.0));
+        // Must stop well before the iteration budget once the optimum is reached.
+        assert!(state.iteration < 1_000);
+    }
+
+    #[test]
+    fn local_search_keeps_counter_invariant() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 7);
+        let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1_000));
+        ls.run(&mut state).unwrap();
+        assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
+    }
+
+    #[test]
+    fn local_search_clear_resets_no_best_move() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 7);
+        let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1_000));
+        ls.run(&mut state).unwrap();
+        assert!(ls.no_best_move, "run must end at a local optimum");
+
+        ls.clear();
+        assert!(!ls.no_best_move);
     }
 }

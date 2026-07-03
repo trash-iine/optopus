@@ -65,7 +65,7 @@ pub struct RLSearch<N> {
     pub softmax_temperature: f64,
     pub reward_shaping: RewardShaping,
     pub max_candidates: Option<usize>,
-    phantom_neighbor: std::marker::PhantomData<N>,
+    _neighbor: std::marker::PhantomData<N>,
     baseline: f64,
     baseline_count: u64,
     initial_worsening_total: Option<f64>,
@@ -91,7 +91,7 @@ impl<N> RLSearch<N> {
             softmax_temperature,
             reward_shaping,
             max_candidates,
-            phantom_neighbor: std::marker::PhantomData,
+            _neighbor: std::marker::PhantomData,
             baseline: 0.0,
             baseline_count: 0,
             initial_worsening_total: None,
@@ -146,10 +146,12 @@ where
         // Policy weights and baseline are intentionally preserved across episodes.
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
+    /// An empty neighborhood only advances the iteration counter; the stop
+    /// condition eventually terminates the run.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         // 1. Enumerate moves, compute worsenings, and accumulate step context stats in one pass
         self.buf_moves.clear();

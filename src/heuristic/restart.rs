@@ -1,6 +1,7 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{ProblemTrait, SearchStateCloneType};
+use crate::search_state::SearchStateCloneType;
+use crate::trait_defs::ProblemTrait;
 
 /// Restart meta-heuristic.
 ///
@@ -33,17 +34,15 @@ impl<Problem: ProblemTrait> Restart<Problem> {
 }
 
 impl<Problem: ProblemTrait> Heuristic<Problem> for Restart<Problem> {
-    fn is_done<'a>(&self, state: &crate::search_state::SearchState<'a, Problem>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(
         &mut self,
         state: &mut crate::search_state::SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
-        let mut inner = state.clone_for_new_run(SearchStateCloneType::ClearBest);
-        self.heuristic.run(&mut inner)?;
-        state.update_state(inner);
+        state.run_sub(self.heuristic.as_mut(), SearchStateCloneType::ClearBest)?;
 
         if self.restart_condition.is_done(state) {
             tracing::debug!("Restart triggered at iteration {}", state.iteration);
@@ -52,5 +51,42 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Restart<Problem> {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::heuristic::LocalSearch;
+    use crate::problem::{MaxCut, MaxCutFlipNeighbor};
+    use crate::search_state::SearchState;
+    use crate::trait_defs::Rankable;
+
+    #[test]
+    fn restart_preserves_best_solution() {
+        let mc = MaxCut::from_edges([
+            (0, 1, 1.0),
+            (0, 2, 1.0),
+            (0, 3, 1.0),
+            (1, 2, 1.0),
+            (2, 3, 1.0),
+        ]);
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        let initial_obj = state.best_solution.objective;
+
+        // LocalSearch converges quickly, so `failed_updates(1)` triggers a
+        // restart on nearly every outer iteration.
+        let mut restart = Restart::new(
+            StopCondition::iterations(200),
+            Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+                StopCondition::iterations(50),
+            )),
+            StopCondition::failed_updates(1),
+        );
+        restart.run(&mut state).unwrap();
+
+        assert!(state.iteration >= 200);
+        assert!(state.best_solution.objective >= initial_obj);
+        assert!(!state.solution.is_better_than(&state.best_solution));
     }
 }

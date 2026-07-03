@@ -455,6 +455,12 @@ impl Heuristic<TspWithCoordinates> for LinKernighanHelsgott {
         self.no_improvement = false;
     }
 
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
+    }
+
+    /// Done when the stop condition is met **or** no improving LK move exists
+    /// (a local optimum was reached).
     fn is_done<'a>(&self, state: &SearchState<'a, TspWithCoordinates>) -> bool {
         self.stop_condition.is_done(state) || self.no_improvement
     }

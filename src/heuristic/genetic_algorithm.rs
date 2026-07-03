@@ -282,8 +282,8 @@ where
         self.best_idx = None;
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {

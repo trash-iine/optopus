@@ -1,7 +1,7 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
-use crate::trait_defs::rank_cmp;
+use crate::search_state::SearchState;
+use crate::trait_defs::{MoveToNeighbor, ProblemTrait, Rankable, rank_cmp};
 
 /// Beam search heuristic.
 ///
@@ -36,7 +36,7 @@ pub struct BeamSearch<P: ProblemTrait, N> {
     pub stop_condition: StopCondition,
     pub beam_width: usize,
     beam: Vec<P::Solution>,
-    _phantom: std::marker::PhantomData<N>,
+    _neighbor: std::marker::PhantomData<N>,
 }
 
 impl<P: ProblemTrait, N> BeamSearch<P, N> {
@@ -50,7 +50,7 @@ impl<P: ProblemTrait, N> BeamSearch<P, N> {
             stop_condition,
             beam_width,
             beam: Vec::new(),
-            _phantom: std::marker::PhantomData,
+            _neighbor: std::marker::PhantomData,
         }
     }
 }
@@ -65,10 +65,12 @@ where
         self.beam.clear();
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
+    /// An empty neighborhood only advances the iteration counter (the beam is
+    /// kept); the stop condition eventually terminates the run.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         // Initialize the beam from solution
         if self.beam.is_empty() {

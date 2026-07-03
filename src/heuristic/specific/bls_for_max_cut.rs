@@ -72,8 +72,8 @@ pub struct BreakoutLocalSearch {
 
 impl BreakoutLocalSearch {
     pub fn new(
-        tabu_tenure: (u64, u64),
         stop_condition: StopCondition,
+        tabu_tenure: (u64, u64),
         t: u64,
         l0: u64,
         p0: f64,
@@ -400,8 +400,8 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
         Ok(())
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, MaxCut>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 }
 
@@ -437,8 +437,8 @@ mod tests {
         for _ in 0..10 {
             let mut state = SearchState::new(&mc);
             let mut bls = BreakoutLocalSearch::new(
-                (3, 15),
                 StopCondition::iterations(5_000),
+                (3, 15),
                 1_000,
                 5,
                 0.8,
