@@ -102,8 +102,6 @@ impl BreakoutLocalSearch {
     }
 
     /// Checks if a vertex move is enabled (not tabu).
-    ///
-    /// `>=` so that the default entry `0` never marks a vertex tabu at iteration 0.
     #[inline]
     fn is_vertex_enabled(&self, vertex: usize, iteration: u64) -> bool {
         self.tabu_vec.get(vertex).is_none_or(|&exp| iteration >= exp)
