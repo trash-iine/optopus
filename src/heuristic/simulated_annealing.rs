@@ -3,7 +3,6 @@ use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, SearchState};
 use rand::Rng;
 use rand::seq::IteratorRandom;
-use std::ops::{DivAssign, MulAssign};
 
 /// Returns `true` with Boltzmann probability `exp(-worsening / temperature)`.
 ///
@@ -164,26 +163,93 @@ where
             &mut state.rng,
         ) {
             state.apply(&neighbor)?;
+        } else {
+            state.progress_iteration();
         }
 
         if self.is_going_down {
-            self.current_temperature.mul_assign(self.cooling_rate);
+            self.current_temperature *= self.cooling_rate;
             if self.current_temperature < self.min_wave_threashold {
                 tracing::debug!("Wave detected, going up");
                 self.is_going_down = false;
-            } else {
-                state.progress_iteration();
             }
         } else {
-            self.current_temperature.div_assign(self.cooling_rate);
+            self.current_temperature /= self.cooling_rate;
             if self.current_temperature > self.max_wave_threashold {
                 tracing::debug!("Wave detected, going down");
                 self.is_going_down = true;
-            } else {
-                state.progress_iteration();
             }
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::problem::MaxCutFlipNeighbor;
+    use crate::problem::max_cut::MaxCut;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    fn triangle() -> MaxCut {
+        MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)])
+    }
+
+    #[test]
+    fn boltzmann_accept_always_accepts_improving_moves() {
+        let mut rng = SmallRng::seed_from_u64(42);
+        for _ in 0..100 {
+            assert!(boltzmann_accept(Evaluable::Maximize(1.0), 1e-12, &mut rng));
+        }
+    }
+
+    #[test]
+    fn boltzmann_accept_rejects_worsening_at_low_temperature() {
+        let mut rng = SmallRng::seed_from_u64(42);
+        for _ in 0..100 {
+            assert!(!boltzmann_accept(Evaluable::Maximize(-1.0), 1e-12, &mut rng));
+        }
+    }
+
+    #[test]
+    fn boltzmann_accept_mostly_accepts_worsening_at_high_temperature() {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let accepted = (0..1000)
+            .filter(|_| boltzmann_accept(Evaluable::Maximize(-1.0), 1e9, &mut rng))
+            .count();
+        assert!(accepted > 900, "accepted only {accepted} of 1000");
+    }
+
+    #[test]
+    fn simulated_annealing_keeps_counter_invariant() {
+        let mc = triangle();
+        let mut state = SearchState::new(&mc);
+        let mut sa = SimulatedAnnealing::<MaxCutFlipNeighbor>::new(
+            StopCondition::iterations(100),
+            1.0,
+            0.95,
+        );
+        sa.run(&mut state).unwrap();
+        assert_eq!(state.iteration, 100);
+        assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
+    }
+
+    #[test]
+    fn bang_bang_keeps_counter_invariant_across_wave_switches() {
+        let mc = triangle();
+        let mut state = SearchState::new(&mc);
+        // Fast cooling with a narrow wave band forces frequent phase switches.
+        let mut sa = BangBangSimulatedAnnealing::<MaxCutFlipNeighbor>::new(
+            StopCondition::iterations(200),
+            1.0,
+            0.5,
+            0.1,
+            2.0,
+        );
+        sa.run(&mut state).unwrap();
+        assert_eq!(state.iteration, 200);
+        assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
     }
 }

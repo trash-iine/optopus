@@ -339,7 +339,6 @@ where
         self.solution = cloned_state.solution;
 
         // add iteration into the current iteration
-        let sub_run_best_offset = cloned_state.best_iteration - cloned_state.start_iteration;
         let old_iteration = self.iteration;
         self.iteration += cloned_state.iteration - cloned_state.start_iteration;
         self.n_accepted += cloned_state.n_accepted - cloned_state.start_n_accepted;
@@ -351,6 +350,11 @@ where
             .best_solution
             .is_better_than(&self.best_solution)
         {
+            // With `SearchStateCloneType::Simple` the inherited `best_iteration` can
+            // predate `start_iteration`; saturate so the offset is 0 in that case.
+            let sub_run_best_offset = cloned_state
+                .best_iteration
+                .saturating_sub(cloned_state.start_iteration);
             self.best_solution = cloned_state.best_solution;
             self.best_time = cloned_state.best_time;
             self.best_iteration = old_iteration + sub_run_best_offset;
@@ -417,6 +421,8 @@ where
     }
 
     /// Returns the best move from `move_list` using parallel chunk-based evaluation.
+    ///
+    /// A `chunk_size` of `0` is treated as `1`.
     pub fn get_best_move_par_chunks<M>(
         &self,
         move_list: impl Iterator<Item = M>,
@@ -429,7 +435,7 @@ where
     {
         let move_vec: Vec<_> = move_list.collect();
         let opt = move_vec
-            .par_chunks(chunk_size)
+            .par_chunks(chunk_size.max(1))
             .map(|chunk| {
                 chunk
                     .iter()
@@ -582,6 +588,25 @@ mod tests {
         assert_eq!(child.start_n_accepted, parent_n_accepted);
         assert_eq!(child.start_n_rejected, parent_n_rejected);
         assert_eq!(child.start_n_best_updates, parent_n_best);
+    }
+
+    #[test]
+    fn update_state_simple_clone_without_improvement_does_not_underflow() {
+        let mc = triangle();
+        let sol = MaxCutSolution::new_from_cut(&mc, vec![false, false, false]);
+        let mut state = SearchState::with_solution(&mc, sol);
+        let m = first_flip(&mc, &state.solution);
+        state.apply(&m).unwrap(); // best found at iteration 1
+        state.progress_iteration();
+        state.progress_iteration(); // iteration = 3 > best_iteration = 1
+
+        // Simple clone inherits best_iteration (1) < start_iteration (3);
+        // merging back a sub-run with no improvement must not underflow.
+        let child = state.clone_for_new_run(SearchStateCloneType::Simple);
+        let best_iteration_before = state.best_iteration;
+        state.update_state(child);
+        assert_eq!(state.best_iteration, best_iteration_before);
+        assert_eq!(state.iteration, 3);
     }
 
     #[test]
