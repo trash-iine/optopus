@@ -87,6 +87,11 @@ impl Sat {
     }
 
     /// Adds a clause. Literals are signed integers (1-indexed variables).
+    ///
+    /// # Panics
+    ///
+    /// Panics if a literal is `0` or its variable exceeds `n_vars`; such a
+    /// literal would otherwise cause an out-of-bounds access during search.
     pub fn add_clause(&mut self, literals: impl IntoIterator<Item = i64>) {
         let clause_idx = self.clauses.len();
         let clause: Vec<i64> = literals.into_iter().collect();
@@ -95,9 +100,13 @@ impl Sat {
         // `clauses_per_var` and the pairwise `var_neighbors` entries.
         let mut vars: Vec<usize> = clause
             .iter()
-            .filter_map(|&lit| {
-                let v = lit.unsigned_abs() as usize - 1;
-                (v < self.n_vars).then_some(v)
+            .map(|&lit| {
+                assert!(
+                    lit != 0 && lit.unsigned_abs() as usize <= self.n_vars,
+                    "literal {lit} is out of range for a problem with {} variables",
+                    self.n_vars
+                );
+                lit.unsigned_abs() as usize - 1
             })
             .collect();
         vars.sort_unstable();
@@ -310,6 +319,18 @@ impl Sat {
                 .collect::<Result<_, _>>()
                 .map_err(|e| err(line_num, format!("failed to parse literal in clause: {e}")))?;
             let clause: Vec<i64> = literals.into_iter().take_while(|&v| v != 0).collect();
+            if let Some(&lit) = clause
+                .iter()
+                .find(|&&lit| lit.unsigned_abs() as usize > s.n_vars)
+            {
+                return Err(err(
+                    line_num,
+                    format!(
+                        "literal {lit} exceeds n_vars = {} declared in the header",
+                        s.n_vars
+                    ),
+                ));
+            }
             if !clause.is_empty() {
                 s.add_clause(clause);
             }
@@ -390,6 +411,44 @@ mod tests {
         let sat = make_sat();
         assert_eq!(sat.n_clauses(), 3);
         assert_eq!(sat.n_vars(), 3);
+    }
+
+    #[test]
+    #[should_panic(expected = "out of range")]
+    fn test_add_clause_rejects_out_of_range_literal() {
+        let mut sat = Sat::new(3);
+        sat.add_clause([1, 4]);
+    }
+
+    #[test]
+    #[should_panic(expected = "out of range")]
+    fn test_add_clause_rejects_zero_literal() {
+        let mut sat = Sat::new(3);
+        sat.add_clause([1, 0]);
+    }
+
+    #[test]
+    fn test_load_file_rejects_literal_exceeding_n_vars() {
+        use std::io::Write;
+        let mut path = std::env::temp_dir();
+        path.push(format!(
+            "optopus_sat_oob_{}_{}.cnf",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        {
+            let mut f = std::fs::File::create(&path).unwrap();
+            writeln!(f, "p cnf 3 2").unwrap();
+            writeln!(f, "1 -2 0").unwrap();
+            writeln!(f, "2 -4 0").unwrap(); // variable 4 > n_vars = 3
+        }
+        let result = Sat::load_file(&path);
+        let _ = std::fs::remove_file(&path);
+        let err = result.expect_err("literal exceeding n_vars must be rejected");
+        assert!(err.to_string().contains("exceeds n_vars"), "{err}");
     }
 
     #[test]

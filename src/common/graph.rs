@@ -413,6 +413,15 @@ impl Graph {
                 ));
             }
             let i = i - 1;
+            if i >= n {
+                return Err(err(
+                    line_num,
+                    format!(
+                        "vertex index i = {} exceeds vertex count N = {n} declared in the header",
+                        i + 1
+                    ),
+                ));
+            }
             let j = iter
                 .next()
                 .ok_or_else(|| {
@@ -430,11 +439,21 @@ impl Graph {
                 ));
             }
             let j = j - 1;
-            let w = iter
-                .next()
-                .and_then(|s| s.parse::<f32>().ok())
-                .unwrap_or(1.0);
-            // File-loaded instances never have duplicate edges, so push directly.
+            if j >= n {
+                return Err(err(
+                    line_num,
+                    format!(
+                        "vertex index j = {} exceeds vertex count N = {n} declared in the header",
+                        j + 1
+                    ),
+                ));
+            }
+            let w = match iter.next() {
+                Some(s) => s
+                    .parse::<f32>()
+                    .map_err(|e| err(line_num, format!("failed to parse edge weight w: {e}")))?,
+                None => 1.0,
+            };
             g.adj[i].push((j, w));
             g.adj[j].push((i, w));
         }
@@ -442,6 +461,16 @@ impl Graph {
         // Sort adjacency lists for binary search
         for neighbors in &mut g.adj {
             neighbors.sort_by_key(|&(v, _)| v);
+        }
+        // A duplicate edge would leave two entries with the same key, breaking
+        // the sorted-unique invariant that binary search relies on.
+        for (u, neighbors) in g.adj.iter().enumerate() {
+            if let Some(pair) = neighbors.windows(2).find(|p| p[0].0 == p[1].0) {
+                return Err(err(
+                    0,
+                    format!("duplicate edge ({}, {}) in file", u + 1, pair[0].0 + 1),
+                ));
+            }
         }
 
         g.vertices = (0..n).filter(|&i| !g.adj[i].is_empty()).collect();
@@ -534,6 +563,59 @@ impl std::fmt::Display for Graph {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Writes `content` to a unique temp file and returns its path.
+    fn write_temp_file(tag: &str, content: &str) -> std::path::PathBuf {
+        use std::io::Write;
+        let mut path = std::env::temp_dir();
+        path.push(format!(
+            "optopus_graph_{tag}_{}_{}.txt",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let mut f = std::fs::File::create(&path).unwrap();
+        f.write_all(content.as_bytes()).unwrap();
+        path
+    }
+
+    #[test]
+    fn test_load_rejects_vertex_out_of_range() {
+        let path = write_temp_file("oob", "3 2\n1 2 1.0\n5 6 1.0\n");
+        let result = Graph::load_from_file(&path);
+        let _ = std::fs::remove_file(&path);
+        let err = result.expect_err("out-of-range vertex must be rejected");
+        assert!(err.to_string().contains("exceeds vertex count"), "{err}");
+    }
+
+    #[test]
+    fn test_load_rejects_duplicate_edge() {
+        let path = write_temp_file("dup", "3 3\n1 2 1.0\n2 3 1.0\n1 2 2.0\n");
+        let result = Graph::load_from_file(&path);
+        let _ = std::fs::remove_file(&path);
+        let err = result.expect_err("duplicate edge must be rejected");
+        assert!(err.to_string().contains("duplicate edge"), "{err}");
+    }
+
+    #[test]
+    fn test_load_rejects_malformed_weight() {
+        let path = write_temp_file("badw", "2 1\n1 2 abc\n");
+        let result = Graph::load_from_file(&path);
+        let _ = std::fs::remove_file(&path);
+        let err = result.expect_err("malformed weight must be rejected");
+        assert!(err.to_string().contains("edge weight"), "{err}");
+    }
+
+    #[test]
+    fn test_load_defaults_missing_weight_to_one() {
+        let path = write_temp_file("defw", "2 1\n1 2\n");
+        let result = Graph::load_from_file(&path);
+        let _ = std::fs::remove_file(&path);
+        let g = result.expect("missing weight defaults to 1.0");
+        assert_eq!(g.get_weight(0, 1), 1.0);
+    }
 
     #[test]
     fn test_blank_graph() {
