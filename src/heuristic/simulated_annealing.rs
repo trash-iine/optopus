@@ -209,7 +209,11 @@ mod tests {
     fn boltzmann_accept_rejects_worsening_at_low_temperature() {
         let mut rng = SmallRng::seed_from_u64(42);
         for _ in 0..100 {
-            assert!(!boltzmann_accept(Evaluable::Maximize(-1.0), 1e-12, &mut rng));
+            assert!(!boltzmann_accept(
+                Evaluable::Maximize(-1.0),
+                1e-12,
+                &mut rng
+            ));
         }
     }
 

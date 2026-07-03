@@ -8,28 +8,49 @@ use std::process::ExitCode;
 use optopus::benchmark::{Benchmark, BenchmarkConfig};
 use optopus::error::OptError;
 
-const USAGE: &str = "Usage: optopus <config_file>";
+const USAGE: &str = "\
+Usage: optopus <config_file>
+
+Runs the benchmark described by the TOML config file and writes the
+results to result/<config_name>_<timestamp>.toml.
+
+Options:
+  -h, --help     Show this help
+  -V, --version  Show version
+
+Log verbosity is controlled by RUST_LOG (default: info).";
 
 enum CliAction {
     Run(String),
     PrintHelp,
+    PrintVersion,
 }
 
 fn parse_args() -> Result<CliAction, OptError> {
     match std::env::args().nth(1).as_deref() {
         Some("-h") | Some("--help") => Ok(CliAction::PrintHelp),
+        Some("-V") | Some("--version") => Ok(CliAction::PrintVersion),
         Some(path) => Ok(CliAction::Run(path.to_string())),
         None => Err(OptError::Config(USAGE.to_string())),
     }
 }
 
 fn run() -> Result<(), OptError> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
+        .init();
 
     let config_file = match parse_args()? {
         CliAction::Run(path) => path,
         CliAction::PrintHelp => {
             println!("{USAGE}");
+            return Ok(());
+        }
+        CliAction::PrintVersion => {
+            println!("optopus {}", env!("CARGO_PKG_VERSION"));
             return Ok(());
         }
     };
@@ -54,11 +75,14 @@ fn run() -> Result<(), OptError> {
         detail: format!("failed to create output directory: {e}"),
     })?;
 
-    let output_file = output_dir.join(
-        chrono::Local::now()
-            .format("%Y%m%d_%H%M%S.toml")
-            .to_string(),
-    );
+    let config_stem = std::path::Path::new(&config_file)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("benchmark");
+    let output_file = output_dir.join(format!(
+        "{config_stem}_{}.toml",
+        chrono::Local::now().format("%Y%m%d_%H%M%S")
+    ));
 
     std::fs::write(&output_file, toml_str).map_err(|e| OptError::FileLoad {
         path: output_file.display().to_string(),

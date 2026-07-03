@@ -20,6 +20,8 @@ from typing import Iterable
 OUT = Path(__file__).resolve().parent.parent
 
 NUM_RUNS = 10
+# Master seed: makes every run reproducible (per-run seeds are derived from it).
+SEED = 42
 DURATION = {"small": 30.0, "medium": 120.0, "large": 600.0}
 SA_ITER_CAP = {"small": 10_000_000, "medium": 50_000_000, "large": 200_000_000}
 LAHC_HISTORY = {"small": 100, "medium": 500, "large": 2000}
@@ -178,6 +180,7 @@ def general_toml(problem: str, band: str) -> str:
              f"# See docs/benchmarks/profiles.md",
              f"",
              f"num_runs = {NUM_RUNS}",
+             f"seed = {SEED}",
              f"",
              instance_blocks(problem, band)]
     nbrs = NEIGHBORS[problem]
@@ -200,7 +203,7 @@ def general_toml(problem: str, band: str) -> str:
 def lkh_toml(band: str) -> str:
     return (f"# Auto-generated. Profile: Tsp / {band} (LinKernighanHelsgott).\n"
             f"# See docs/benchmarks/profiles.md\n\n"
-            f"num_runs = {NUM_RUNS}\n\n"
+            f"num_runs = {NUM_RUNS}\nseed = {SEED}\n\n"
             f"{instance_blocks('Tsp', band)}\n"
             f'[[heuristics]]\nkind = "LinKernighanHelsgott"\n'
             f"num_neighbors = 5\nmax_depth = 5\n"
