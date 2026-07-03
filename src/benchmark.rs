@@ -1,8 +1,8 @@
 //! Benchmark runner for comparing heuristics across problem instances.
 //!
-//! [`Benchmark`] accumulates [`BenchmarkResult`] records produced by [`Benchmark::run`].
-//! Each result captures the configuration, best objective value, time-to-best, and solution.
-//! Results can be serialized to TOML (or any serde format) for offline analysis.
+//! [`Benchmark::run_from_config`] runs every `(instance, heuristic)` pair from
+//! a [`BenchmarkConfig`] (parsed from TOML) and returns a [`BenchmarkReport`]
+//! that can be serialized back to TOML for offline analysis.
 
 use rayon::prelude::*;
 
@@ -26,6 +26,7 @@ use crate::{
         tsp_2d::{TspRelocateNeighbor, TspSolution, TspTwoOptNeighbor, TspWithCoordinates},
     },
     search_state::{Crossover, Distance, MoveToNeighbor, ProblemTrait, SearchState},
+    trait_defs::{EnabledTabu, Evaluate, Rankable},
 };
 use serde::{Deserialize, Serialize};
 
@@ -204,89 +205,190 @@ pub enum NeighborKind {
 
 /// Heuristic configuration as expressed in a config file.
 ///
-/// Uses a flat struct with optional fields; the `kind` string selects the algorithm.
+/// Internally tagged by `kind`, so a TOML entry looks like:
 ///
-/// Valid `kind` values:
-/// - `"LocalSearch"`, `"TabuSearch"`, `"SimulatedAnnealing"`, `"LateAcceptanceHillClimbing"`, `"BreakoutLocalSearch"` (MaxCut only)
-/// - `"RLSearch"` — reinforcement learning move selection with REINFORCE policy gradient
-/// - `"Sequential"` — repeats its `steps` cycle until `stop_condition` is met
-/// - `"Iterated"` — `steps\[0\]` = search phase, `steps\[1\]` = perturbation phase (ILS)
-/// - `"Restart"` — runs `steps\[0\]` then resets to a new random solution when `restart_condition` is met
-/// - `"GeneticAlgorithm"` — `steps\[0\]` = mutation, optional `steps\[1\]` = init_improvement (HEA pattern).
-///   Requires `population_size`. Optional fields: `crossover_kind` (default `"Uniform"`,
-///   TSP defaults to `"Order"`), `parent_selection` (`"Tournament"` default or `"DistantTopK"`),
-///   `parent_top_k` (required when `parent_selection = "DistantTopK"`).
+/// ```toml
+/// [[heuristics]]
+/// kind = "TabuSearch"
+/// neighbor = "Flip"
+/// tabu_tenure = [5, 10]
 ///
-/// The problem type is inferred from the instance being benchmarked and does not need
-/// to be specified here.
+/// [heuristics.stop_condition]
+/// max_iteration = 100000
+/// ```
+///
+/// Missing required fields and unknown `kind` values are rejected at parse
+/// time. The problem type is inferred from the instance being benchmarked and
+/// does not need to be specified here.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct HeuristicConfig {
-    /// Algorithm name.
-    pub kind: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub neighbor: Option<NeighborKind>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tabu_tenure: Option<(u64, u64)>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub initial_temperature: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cooling_rate: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub t: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub l0: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub p0: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub q: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub num_neighbors: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_depth: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub history_length: Option<usize>,
-    #[serde(default)]
-    pub stop_condition: StopConditionConfig,
-    /// Sub-heuristics for `"Sequential"`, `"Iterated"`, and `"Restart"`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub steps: Option<Vec<HeuristicConfig>>,
-    /// Restart trigger for `kind = "Restart"`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub restart_condition: Option<StopConditionConfig>,
-    /// Learning rate for `kind = "RLSearch"` (0.0 = evaluation mode). Default: 0.01.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub learning_rate: Option<f64>,
-    /// Discount factor γ for `kind = "RLSearch"`. Default: 0.99.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub discount: Option<f64>,
-    /// Softmax temperature for `kind = "RLSearch"`. Default: 1.0.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub softmax_temperature: Option<f64>,
-    /// Reward shaping strategy for `kind = "RLSearch"`: "Raw", "Normalized", "BestImprovement".
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub reward_shaping: Option<String>,
-    /// Pre-trained policy weights for `kind = "RLSearch"`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub policy_weights: Option<Vec<f64>>,
-    /// Max candidate moves to evaluate per step for `kind = "RLSearch"`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_candidates: Option<usize>,
-    // ----- GeneticAlgorithm fields -----
-    /// Population size for `kind = "GeneticAlgorithm"`. Required, must be >= 2.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub population_size: Option<usize>,
-    /// Crossover operator for `kind = "GeneticAlgorithm"`. Currently `"Uniform"`
-    /// is supported for every problem; TSP additionally accepts `"Order"`.
-    /// Defaults to `"Uniform"`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub crossover_kind: Option<String>,
-    /// Parent selection strategy for `kind = "GeneticAlgorithm"`:
-    /// `"Tournament"` (default) or `"DistantTopK"`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parent_selection: Option<String>,
-    /// `top_k` for `parent_selection = "DistantTopK"` (must be >= 1).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parent_top_k: Option<usize>,
+#[serde(tag = "kind")]
+pub enum HeuristicConfig {
+    LocalSearch {
+        neighbor: NeighborKind,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    TabuSearch {
+        neighbor: NeighborKind,
+        /// Tabu tenure range `(min, max)` in iterations.
+        tabu_tenure: (u64, u64),
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    SimulatedAnnealing {
+        neighbor: NeighborKind,
+        initial_temperature: f64,
+        cooling_rate: f64,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    LateAcceptanceHillClimbing {
+        neighbor: NeighborKind,
+        history_length: usize,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// REINFORCE policy-gradient move selection.
+    RLSearch {
+        neighbor: NeighborKind,
+        /// Learning rate (0.0 = evaluation mode). Default: 0.01.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        learning_rate: Option<f64>,
+        /// Discount factor. Default: 0.99.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        discount: Option<f64>,
+        /// Softmax temperature. Default: 1.0.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        softmax_temperature: Option<f64>,
+        /// Reward shaping strategy: "Raw", "Normalized" (default), "BestImprovement".
+        #[serde(skip_serializing_if = "Option::is_none")]
+        reward_shaping: Option<String>,
+        /// Pre-trained policy weights.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        policy_weights: Option<Vec<f64>>,
+        /// Max candidate moves evaluated per step.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        max_candidates: Option<usize>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// Breakout Local Search (MaxCut only).
+    BreakoutLocalSearch {
+        tabu_tenure: (u64, u64),
+        t: u64,
+        l0: u64,
+        p0: f64,
+        q: f64,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// Lin-Kernighan-Helsgaun (TSP only).
+    LinKernighanHelsgott {
+        /// Candidate neighbors per city. Default: 5.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        num_neighbors: Option<usize>,
+        /// Max LK move depth. Default: 5.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        max_depth: Option<usize>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// Repeats its `steps` cycle until `stop_condition` is met.
+    Sequential {
+        steps: Vec<HeuristicConfig>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// ILS: `steps[0]` = search phase, `steps[1]` = perturbation phase.
+    Iterated {
+        steps: Vec<HeuristicConfig>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// Runs `steps[0]`, resetting to a fresh random solution whenever
+    /// `restart_condition` is met.
+    Restart {
+        steps: Vec<HeuristicConfig>,
+        restart_condition: StopConditionConfig,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// `steps[0]` = mutation, optional `steps[1]` = init_improvement (HEA pattern).
+    GeneticAlgorithm {
+        /// Must be >= 2.
+        population_size: usize,
+        steps: Vec<HeuristicConfig>,
+        /// Crossover operator. Defaults: "Uniform" ("Order" for TSP, "Ppx" for JobShop).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        crossover_kind: Option<String>,
+        /// "Tournament" (default) or "DistantTopK".
+        #[serde(skip_serializing_if = "Option::is_none")]
+        parent_selection: Option<String>,
+        /// `top_k` for `parent_selection = "DistantTopK"` (must be >= 1).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        parent_top_k: Option<usize>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+}
+
+impl HeuristicConfig {
+    /// The `kind` tag as it appears in config files.
+    pub fn kind_name(&self) -> &'static str {
+        match self {
+            Self::LocalSearch { .. } => "LocalSearch",
+            Self::TabuSearch { .. } => "TabuSearch",
+            Self::SimulatedAnnealing { .. } => "SimulatedAnnealing",
+            Self::LateAcceptanceHillClimbing { .. } => "LateAcceptanceHillClimbing",
+            Self::RLSearch { .. } => "RLSearch",
+            Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
+            Self::LinKernighanHelsgott { .. } => "LinKernighanHelsgott",
+            Self::Sequential { .. } => "Sequential",
+            Self::Iterated { .. } => "Iterated",
+            Self::Restart { .. } => "Restart",
+            Self::GeneticAlgorithm { .. } => "GeneticAlgorithm",
+        }
+    }
+
+    /// The neighborhood move this config selects, when the kind uses one.
+    pub fn neighbor(&self) -> Option<&NeighborKind> {
+        match self {
+            Self::LocalSearch { neighbor, .. }
+            | Self::TabuSearch { neighbor, .. }
+            | Self::SimulatedAnnealing { neighbor, .. }
+            | Self::LateAcceptanceHillClimbing { neighbor, .. }
+            | Self::RLSearch { neighbor, .. } => Some(neighbor),
+            _ => None,
+        }
+    }
+
+    /// Nested sub-heuristics (empty for non-composite kinds).
+    pub fn steps(&self) -> &[HeuristicConfig] {
+        match self {
+            Self::Sequential { steps, .. }
+            | Self::Iterated { steps, .. }
+            | Self::Restart { steps, .. }
+            | Self::GeneticAlgorithm { steps, .. } => steps,
+            _ => &[],
+        }
+    }
+
+    /// The outer stop condition (every kind carries one).
+    pub fn stop_condition(&self) -> &StopConditionConfig {
+        match self {
+            Self::LocalSearch { stop_condition, .. }
+            | Self::TabuSearch { stop_condition, .. }
+            | Self::SimulatedAnnealing { stop_condition, .. }
+            | Self::LateAcceptanceHillClimbing { stop_condition, .. }
+            | Self::RLSearch { stop_condition, .. }
+            | Self::BreakoutLocalSearch { stop_condition, .. }
+            | Self::LinKernighanHelsgott { stop_condition, .. }
+            | Self::Sequential { stop_condition, .. }
+            | Self::Iterated { stop_condition, .. }
+            | Self::Restart { stop_condition, .. }
+            | Self::GeneticAlgorithm { stop_condition, .. } => stop_condition,
+        }
+    }
 }
 
 /// A single instance entry in the config file.
@@ -398,713 +500,285 @@ pub struct BenchmarkReport {
 }
 
 // ---------------------------------------------------------------------------
-// BenchmarkResult
+// ConfigurableProblem: per-problem registration for the config-driven factory
 // ---------------------------------------------------------------------------
 
-/// The result of a single experiment run (configuration + metrics).
-#[derive(Serialize)]
-pub struct BenchmarkResult {
-    pub instance_path: String,
-    pub problem: ProblemKind,
-    pub heuristic: HeuristicConfig,
-    /// Run status: `"success"` or `"error: <message>"`.
-    pub status: String,
-    /// Best objective value found (maximized for MaxCut/SAT, minimized for QUBO/TSP).
-    pub best_objective: f64,
-    /// Iteration at which the best solution was found.
-    pub best_iteration: u64,
-    /// Elapsed time (seconds) until the best solution was found.
-    pub time_to_best_secs: f64,
-    /// Total elapsed time (seconds) for the run.
-    pub total_time_secs: f64,
-    /// Best solution encoded as a list of indices (0-indexed):
-    /// - MaxCut: vertex indices on the cut side
-    /// - QUBO: variable indices set to 1
-    /// - SAT: variable indices set to `true`
-    /// - TSP: city visit order
-    /// - JobShop: operation sequence (job indices, each repeated `n_machines` times)
-    pub solution: Vec<usize>,
+/// Bound bundle every config-selectable neighborhood move must satisfy.
+///
+/// Blanket-implemented -- problems never implement it by hand. If a future
+/// neighbor type cannot satisfy one of the bounds (e.g. `Evaluate`), split
+/// the bundle instead of writing stub impls.
+trait ConfigNeighbor<P: ProblemTrait>:
+    MoveToNeighbor<P> + Rankable + Evaluate + EnabledTabu + Clone + 'static
+{
+}
+impl<P: ProblemTrait, T> ConfigNeighbor<P> for T where
+    T: MoveToNeighbor<P> + Rankable + Evaluate + EnabledTabu + Clone + 'static
+{
 }
 
-// ---------------------------------------------------------------------------
-// BenchmarkableProblem trait + per-problem implementations
-// ---------------------------------------------------------------------------
+/// Callback invoked with the concrete neighbor type chosen from config.
+trait NeighborVisitor<P: ProblemTrait> {
+    type Output;
+    fn visit<N: ConfigNeighbor<P>>(self) -> Self::Output;
+}
 
-/// Extends [`BenchmarkProblem`] with the ability to build heuristics from config.
+/// Per-problem registration point for the benchmark factory.
 ///
-/// Each problem implements `build_base_heuristic` to dispatch on [`NeighborKind`]
-/// and construct the concrete heuristic. Meta-heuristics (Sequential, Iterated,
-/// Restart) are handled generically by [`build_heuristic`].
-trait BenchmarkableProblem: BenchmarkProblem
+/// Adding a new problem to the benchmark requires exactly:
+/// 1. a variant in [`ProblemKind`],
+/// 2. an arm in [`with_problem`],
+/// 3. an impl of this trait (plus [`BenchmarkProblem`] / [`BenchmarkSolution`]).
+trait ConfigurableProblem: BenchmarkProblem + 'static
 where
     Self::Solution: BenchmarkSolution + Distance,
 {
-    fn build_base_heuristic(
+    /// Problem name used in error messages (matches the `ProblemKind` variant).
+    const NAME: &'static str;
+    /// Whether the problem is minimized (drives report statistics).
+    const MINIMIZE: bool;
+    /// The neighborhood kinds this problem supports.
+    const VALID_NEIGHBORS: &'static [NeighborKind];
+
+    /// The neighbor registry: maps a [`NeighborKind`] to the concrete move
+    /// type by invoking `visitor` with it.
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError>;
+
+    /// Problem-specific heuristics (BLS on MaxCut, LKH on TSP).
+    fn build_special_heuristic(
         config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn Heuristic<Self>>, String>;
+        _cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        Err(OptError::Config(format!(
+            "heuristic '{}' is not supported for {}",
+            config.kind_name(),
+            Self::NAME
+        )))
+    }
 
-    /// Builds the crossover operator selected by `config.crossover_kind`.
-    ///
-    /// Default: returns the problem's uniform crossover. Override to add
-    /// problem-specific operators (e.g. TSP order crossover).
-    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String>;
+    /// Builds the crossover operator selected by `crossover_kind`
+    /// (with a problem-specific default when `None`).
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError>;
 }
 
-impl HeuristicConfig {
-    fn req_neighbor(&self, problem: &str) -> Result<&NeighborKind, String> {
-        self.neighbor
-            .as_ref()
-            .ok_or_else(|| format!("'neighbor' required for {} {}", problem, self.kind))
-    }
-    fn req_tabu(&self, problem: &str) -> Result<(u64, u64), String> {
-        self.tabu_tenure
-            .ok_or_else(|| format!("'tabu_tenure' required for {} {}", problem, self.kind))
-    }
-    fn req_temp(&self, problem: &str) -> Result<f64, String> {
-        self.initial_temperature.ok_or_else(|| {
-            format!(
-                "'initial_temperature' required for {} {}",
-                problem, self.kind
-            )
-        })
-    }
-    fn req_cooling(&self, problem: &str) -> Result<f64, String> {
-        self.cooling_rate
-            .ok_or_else(|| format!("'cooling_rate' required for {} {}", problem, self.kind))
-    }
-    fn req_history_length(&self, problem: &str) -> Result<usize, String> {
-        let len = self
-            .history_length
-            .ok_or_else(|| format!("'history_length' required for {} {}", problem, self.kind))?;
-        if len == 0 {
-            return Err(format!(
-                "'history_length' must be at least 1 for {} {}",
-                problem, self.kind
-            ));
-        }
-        Ok(len)
-    }
-    fn parse_reward_shaping(&self) -> Result<RewardShaping, String> {
-        match self.reward_shaping.as_deref().unwrap_or("Normalized") {
-            "Raw" => Ok(RewardShaping::Raw),
-            "Normalized" => Ok(RewardShaping::Normalized),
-            "BestImprovement" => Ok(RewardShaping::BestImprovement),
-            other => Err(format!(
-                "Unknown reward_shaping '{}' (expected Raw, Normalized, or BestImprovement)",
-                other
-            )),
-        }
-    }
-    fn parse_policy_weights(
-        &self,
-    ) -> Result<
-        Option<[f64; crate::heuristic::reinforcement_learning::feature::NUM_FEATURES]>,
-        String,
-    > {
-        use crate::heuristic::reinforcement_learning::feature::NUM_FEATURES;
-        match &self.policy_weights {
-            None => Ok(None),
-            Some(v) => {
-                if v.len() != NUM_FEATURES {
-                    return Err(format!(
-                        "policy_weights must have exactly {} elements, got {}",
-                        NUM_FEATURES,
-                        v.len()
-                    ));
-                }
-                let mut arr = [0.0; NUM_FEATURES];
-                arr.copy_from_slice(v);
-                Ok(Some(arr))
-            }
-        }
-    }
-}
-
-fn build_rl_search_from_config<P, N>(
-    config: &HeuristicConfig,
-    cond: StopCondition,
-) -> Result<Box<dyn Heuristic<P>>, String>
+/// Shared error for a `(problem, neighbor)` mismatch.
+fn invalid_neighbor<P>(kind: &NeighborKind) -> OptError
 where
-    P: ProblemTrait + 'static,
-    N: MoveToNeighbor<P> + crate::search_state::Evaluate + Clone + 'static,
+    P: ConfigurableProblem,
+    P::Solution: BenchmarkSolution + Distance,
 {
-    let reward = config.parse_reward_shaping()?;
-    let mut rl = RLSearch::<N>::new(
-        cond,
-        config.learning_rate.unwrap_or(0.01),
-        config.discount.unwrap_or(0.99),
-        config.softmax_temperature.unwrap_or(1.0),
-        reward,
-        config.max_candidates,
-    );
-    if let Some(w) = config.parse_policy_weights()? {
-        rl = rl.with_policy_weights(w);
-    }
-    Ok(Box::new(rl))
+    OptError::Config(format!(
+        "Invalid neighbor {:?} for {} (valid: {:?})",
+        kind,
+        P::NAME,
+        P::VALID_NEIGHBORS
+    ))
 }
 
-impl BenchmarkableProblem for MaxCut {
-    fn build_base_heuristic(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn Heuristic<Self>>, String> {
-        match config.kind.as_str() {
-            "LocalSearch" => match config.req_neighbor("MaxCut")? {
-                NeighborKind::Flip => Ok(Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(cond))),
-                NeighborKind::Swap => Ok(Box::new(LocalSearch::<MaxCutSwapNeighbor>::new(cond))),
-                n => Err(format!(
-                    "Invalid neighbor {:?} for MaxCut (use Flip or Swap)",
-                    n
-                )),
-            },
-            "TabuSearch" => {
-                let tenure = config.req_tabu("MaxCut")?;
-                match config.req_neighbor("MaxCut")? {
-                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<MaxCutSwapNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for MaxCut (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "SimulatedAnnealing" => {
-                let temp = config.req_temp("MaxCut")?;
-                let cooling = config.req_cooling("MaxCut")?;
-                match config.req_neighbor("MaxCut")? {
-                    NeighborKind::Flip => Ok(Box::new(
-                        SimulatedAnnealing::<MaxCutFlipNeighbor>::new(cond, temp, cooling),
-                    )),
-                    NeighborKind::Swap => Ok(Box::new(
-                        SimulatedAnnealing::<MaxCutSwapNeighbor>::new(cond, temp, cooling),
-                    )),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for MaxCut (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "LateAcceptanceHillClimbing" => {
-                let history_length = config.req_history_length("MaxCut")?;
-                match config.req_neighbor("MaxCut")? {
-                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        MaxCutFlipNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        MaxCutSwapNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for MaxCut (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "BreakoutLocalSearch" => {
-                let tenure = config.req_tabu("MaxCut")?;
-                let t = config
-                    .t
-                    .ok_or("'t' required for MaxCut BreakoutLocalSearch")?;
-                let l0 = config
-                    .l0
-                    .ok_or("'l0' required for MaxCut BreakoutLocalSearch")?;
-                let p0 = config
-                    .p0
-                    .ok_or("'p0' required for MaxCut BreakoutLocalSearch")?;
-                let q = config
-                    .q
-                    .ok_or("'q' required for MaxCut BreakoutLocalSearch")?;
-                Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
-                    cond, tenure, t, l0, p0, q,
-                )))
-            }
-            "RLSearch" => match config.req_neighbor("MaxCut")? {
-                NeighborKind::Flip => {
-                    build_rl_search_from_config::<MaxCut, MaxCutFlipNeighbor>(config, cond)
-                }
-                NeighborKind::Swap => {
-                    build_rl_search_from_config::<MaxCut, MaxCutSwapNeighbor>(config, cond)
-                }
-                n => Err(format!(
-                    "Invalid neighbor {:?} for MaxCut RLSearch (use Flip or Swap)",
-                    n
-                )),
-            },
-            k => Err(format!("Unknown kind '{}' for MaxCut", k)),
+impl ConfigurableProblem for MaxCut {
+    const NAME: &'static str = "MaxCut";
+    const MINIMIZE: bool = false;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Flip => Ok(visitor.visit::<MaxCutFlipNeighbor>()),
+            NeighborKind::Swap => Ok(visitor.visit::<MaxCutSwapNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
         }
     }
 
-    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
-        match config.crossover_kind.as_deref().unwrap_or("Uniform") {
+    fn build_special_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        match config {
+            HeuristicConfig::BreakoutLocalSearch {
+                tabu_tenure,
+                t,
+                l0,
+                p0,
+                q,
+                ..
+            } => Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
+                cond,
+                *tabu_tenure,
+                *t,
+                *l0,
+                *p0,
+                *q,
+            ))),
+            _ => Err(OptError::Config(format!(
+                "heuristic '{}' is not supported for MaxCut",
+                config.kind_name()
+            ))),
+        }
+    }
+
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(MaxCutUniformCrossover)),
-            other => Err(format!(
+            other => Err(OptError::Config(format!(
                 "Unknown crossover_kind '{other}' for MaxCut (expected 'Uniform')"
-            )),
+            ))),
         }
     }
 }
 
-impl BenchmarkableProblem for Qubo {
-    fn build_base_heuristic(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn Heuristic<Self>>, String> {
-        match config.kind.as_str() {
-            "LocalSearch" => match config.req_neighbor("Qubo")? {
-                NeighborKind::Flip => Ok(Box::new(LocalSearch::<QuboFlipNeighbor>::new(cond))),
-                NeighborKind::Swap => Ok(Box::new(LocalSearch::<QuboSwapNeighbor>::new(cond))),
-                n => Err(format!(
-                    "Invalid neighbor {:?} for Qubo (use Flip or Swap)",
-                    n
-                )),
-            },
-            "TabuSearch" => {
-                let tenure = config.req_tabu("Qubo")?;
-                match config.req_neighbor("Qubo")? {
-                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<QuboFlipNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<QuboSwapNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Qubo (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "SimulatedAnnealing" => {
-                let temp = config.req_temp("Qubo")?;
-                let cooling = config.req_cooling("Qubo")?;
-                match config.req_neighbor("Qubo")? {
-                    NeighborKind::Flip => Ok(Box::new(
-                        SimulatedAnnealing::<QuboFlipNeighbor>::new(cond, temp, cooling),
-                    )),
-                    NeighborKind::Swap => Ok(Box::new(
-                        SimulatedAnnealing::<QuboSwapNeighbor>::new(cond, temp, cooling),
-                    )),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Qubo (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "LateAcceptanceHillClimbing" => {
-                let history_length = config.req_history_length("Qubo")?;
-                match config.req_neighbor("Qubo")? {
-                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        QuboFlipNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        QuboSwapNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Qubo (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "RLSearch" => match config.req_neighbor("Qubo")? {
-                NeighborKind::Flip => {
-                    build_rl_search_from_config::<Qubo, QuboFlipNeighbor>(config, cond)
-                }
-                NeighborKind::Swap => {
-                    build_rl_search_from_config::<Qubo, QuboSwapNeighbor>(config, cond)
-                }
-                n => Err(format!(
-                    "Invalid neighbor {:?} for Qubo RLSearch (use Flip or Swap)",
-                    n
-                )),
-            },
-            k => Err(format!("Unknown kind '{}' for Qubo", k)),
+impl ConfigurableProblem for Qubo {
+    const NAME: &'static str = "Qubo";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Flip => Ok(visitor.visit::<QuboFlipNeighbor>()),
+            NeighborKind::Swap => Ok(visitor.visit::<QuboSwapNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
         }
     }
 
-    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
-        match config.crossover_kind.as_deref().unwrap_or("Uniform") {
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(QuboUniformCrossover)),
-            other => Err(format!(
+            other => Err(OptError::Config(format!(
                 "Unknown crossover_kind '{other}' for Qubo (expected 'Uniform')"
-            )),
+            ))),
         }
     }
 }
 
-impl BenchmarkableProblem for Sat {
-    fn build_base_heuristic(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn Heuristic<Self>>, String> {
-        match config.kind.as_str() {
-            "LocalSearch" => match config.req_neighbor("Sat")? {
-                NeighborKind::Flip => Ok(Box::new(LocalSearch::<SatFlipNeighbor>::new(cond))),
-                NeighborKind::Swap => Ok(Box::new(LocalSearch::<SatSwapNeighbor>::new(cond))),
-                n => Err(format!(
-                    "Invalid neighbor {:?} for Sat (use Flip or Swap)",
-                    n
-                )),
-            },
-            "TabuSearch" => {
-                let tenure = config.req_tabu("Sat")?;
-                match config.req_neighbor("Sat")? {
-                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<SatFlipNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<SatSwapNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Sat (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "SimulatedAnnealing" => {
-                let temp = config.req_temp("Sat")?;
-                let cooling = config.req_cooling("Sat")?;
-                match config.req_neighbor("Sat")? {
-                    NeighborKind::Flip => Ok(Box::new(SimulatedAnnealing::<SatFlipNeighbor>::new(
-                        cond, temp, cooling,
-                    ))),
-                    NeighborKind::Swap => Ok(Box::new(SimulatedAnnealing::<SatSwapNeighbor>::new(
-                        cond, temp, cooling,
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Sat (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "LateAcceptanceHillClimbing" => {
-                let history_length = config.req_history_length("Sat")?;
-                match config.req_neighbor("Sat")? {
-                    NeighborKind::Flip => Ok(Box::new(
-                        LateAcceptanceHillClimbing::<SatFlipNeighbor>::new(cond, history_length),
-                    )),
-                    NeighborKind::Swap => Ok(Box::new(
-                        LateAcceptanceHillClimbing::<SatSwapNeighbor>::new(cond, history_length),
-                    )),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Sat (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "RLSearch" => match config.req_neighbor("Sat")? {
-                NeighborKind::Flip => {
-                    build_rl_search_from_config::<Sat, SatFlipNeighbor>(config, cond)
-                }
-                NeighborKind::Swap => {
-                    build_rl_search_from_config::<Sat, SatSwapNeighbor>(config, cond)
-                }
-                n => Err(format!(
-                    "Invalid neighbor {:?} for Sat RLSearch (use Flip or Swap)",
-                    n
-                )),
-            },
-            k => Err(format!("Unknown kind '{}' for Sat", k)),
+impl ConfigurableProblem for Sat {
+    const NAME: &'static str = "Sat";
+    const MINIMIZE: bool = false;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Flip => Ok(visitor.visit::<SatFlipNeighbor>()),
+            NeighborKind::Swap => Ok(visitor.visit::<SatSwapNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
         }
     }
 
-    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
-        match config.crossover_kind.as_deref().unwrap_or("Uniform") {
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(SatUniformCrossover)),
-            other => Err(format!(
+            other => Err(OptError::Config(format!(
                 "Unknown crossover_kind '{other}' for Sat (expected 'Uniform')"
-            )),
+            ))),
         }
     }
 }
 
-impl BenchmarkableProblem for TspWithCoordinates {
-    fn build_base_heuristic(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn Heuristic<Self>>, String> {
-        match config.kind.as_str() {
-            "LocalSearch" => match config.req_neighbor("Tsp")? {
-                NeighborKind::TwoOpt => Ok(Box::new(LocalSearch::<TspTwoOptNeighbor>::new(cond))),
-                NeighborKind::Relocate => {
-                    Ok(Box::new(LocalSearch::<TspRelocateNeighbor>::new(cond)))
-                }
-                n => Err(format!(
-                    "Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)",
-                    n
-                )),
-            },
-            "TabuSearch" => {
-                let tenure = config.req_tabu("Tsp")?;
-                match config.req_neighbor("Tsp")? {
-                    NeighborKind::TwoOpt => Ok(Box::new(TabuSearch::<TspTwoOptNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    NeighborKind::Relocate => Ok(Box::new(TabuSearch::<TspRelocateNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)",
-                        n
-                    )),
-                }
-            }
-            "SimulatedAnnealing" => {
-                let temp = config.req_temp("Tsp")?;
-                let cooling = config.req_cooling("Tsp")?;
-                match config.req_neighbor("Tsp")? {
-                    NeighborKind::TwoOpt => Ok(Box::new(
-                        SimulatedAnnealing::<TspTwoOptNeighbor>::new(cond, temp, cooling),
-                    )),
-                    NeighborKind::Relocate => Ok(Box::new(
-                        SimulatedAnnealing::<TspRelocateNeighbor>::new(cond, temp, cooling),
-                    )),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)",
-                        n
-                    )),
-                }
-            }
-            "LinKernighanHelsgott" => {
-                let num_neighbors = config.num_neighbors.unwrap_or(5);
-                let max_depth = config.max_depth.unwrap_or(5);
-                Ok(Box::new(LinKernighanHelsgottForTsp::new(
-                    cond,
-                    num_neighbors,
-                    max_depth,
-                )))
-            }
-            "LateAcceptanceHillClimbing" => {
-                let history_length = config.req_history_length("Tsp")?;
-                match config.req_neighbor("Tsp")? {
-                    NeighborKind::TwoOpt => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        TspTwoOptNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    NeighborKind::Relocate => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        TspRelocateNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for Tsp (use TwoOpt or Relocate)",
-                        n
-                    )),
-                }
-            }
-            "RLSearch" => match config.req_neighbor("Tsp")? {
-                NeighborKind::TwoOpt => build_rl_search_from_config::<
-                    TspWithCoordinates,
-                    TspTwoOptNeighbor,
-                >(config, cond),
-                NeighborKind::Relocate => build_rl_search_from_config::<
-                    TspWithCoordinates,
-                    TspRelocateNeighbor,
-                >(config, cond),
-                n => Err(format!(
-                    "Invalid neighbor {:?} for Tsp RLSearch (use TwoOpt or Relocate)",
-                    n
-                )),
-            },
-            k => Err(format!("Unknown kind '{}' for Tsp", k)),
+impl ConfigurableProblem for TspWithCoordinates {
+    const NAME: &'static str = "Tsp";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] =
+        &[NeighborKind::TwoOpt, NeighborKind::Relocate];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::TwoOpt => Ok(visitor.visit::<TspTwoOptNeighbor>()),
+            NeighborKind::Relocate => Ok(visitor.visit::<TspRelocateNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
         }
     }
 
-    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
-        match config.crossover_kind.as_deref().unwrap_or("Order") {
+    fn build_special_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        match config {
+            HeuristicConfig::LinKernighanHelsgott {
+                num_neighbors,
+                max_depth,
+                ..
+            } => Ok(Box::new(LinKernighanHelsgottForTsp::new(
+                cond,
+                num_neighbors.unwrap_or(5),
+                max_depth.unwrap_or(5),
+            ))),
+            _ => Err(OptError::Config(format!(
+                "heuristic '{}' is not supported for Tsp",
+                config.kind_name()
+            ))),
+        }
+    }
+
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Order") {
             "Order" => Ok(Box::new(TspOrderCrossover)),
-            other => Err(format!(
+            other => Err(OptError::Config(format!(
                 "Unknown crossover_kind '{other}' for Tsp (expected 'Order')"
-            )),
+            ))),
         }
     }
 }
 
-impl BenchmarkableProblem for VertexCover {
-    fn build_base_heuristic(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn Heuristic<Self>>, String> {
-        match config.kind.as_str() {
-            "LocalSearch" => match config.req_neighbor("VertexCover")? {
-                NeighborKind::Flip => {
-                    Ok(Box::new(LocalSearch::<VertexCoverFlipNeighbor>::new(cond)))
-                }
-                NeighborKind::Swap => {
-                    Ok(Box::new(LocalSearch::<VertexCoverSwapNeighbor>::new(cond)))
-                }
-                n => Err(format!(
-                    "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
-                    n
-                )),
-            },
-            "TabuSearch" => {
-                let tenure = config.req_tabu("VertexCover")?;
-                match config.req_neighbor("VertexCover")? {
-                    NeighborKind::Flip => Ok(Box::new(TabuSearch::<VertexCoverFlipNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<VertexCoverSwapNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "SimulatedAnnealing" => {
-                let temp = config.req_temp("VertexCover")?;
-                let cooling = config.req_cooling("VertexCover")?;
-                match config.req_neighbor("VertexCover")? {
-                    NeighborKind::Flip => Ok(Box::new(
-                        SimulatedAnnealing::<VertexCoverFlipNeighbor>::new(cond, temp, cooling),
-                    )),
-                    NeighborKind::Swap => Ok(Box::new(
-                        SimulatedAnnealing::<VertexCoverSwapNeighbor>::new(cond, temp, cooling),
-                    )),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            "LateAcceptanceHillClimbing" => {
-                let history_length = config.req_history_length("VertexCover")?;
-                match config.req_neighbor("VertexCover")? {
-                    NeighborKind::Flip => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        VertexCoverFlipNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        VertexCoverSwapNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for VertexCover (use Flip or Swap)",
-                        n
-                    )),
-                }
-            }
-            k => Err(format!("Unknown kind '{}' for VertexCover", k)),
+impl ConfigurableProblem for VertexCover {
+    const NAME: &'static str = "VertexCover";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Flip => Ok(visitor.visit::<VertexCoverFlipNeighbor>()),
+            NeighborKind::Swap => Ok(visitor.visit::<VertexCoverSwapNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
         }
     }
 
-    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
-        match config.crossover_kind.as_deref().unwrap_or("Uniform") {
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(VertexCoverUniformCrossover)),
-            other => Err(format!(
+            other => Err(OptError::Config(format!(
                 "Unknown crossover_kind '{other}' for VertexCover (expected 'Uniform')"
-            )),
+            ))),
         }
     }
 }
 
-impl BenchmarkableProblem for JobShopScheduling {
-    fn build_base_heuristic(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn Heuristic<Self>>, String> {
-        match config.kind.as_str() {
-            "LocalSearch" => match config.req_neighbor("JobShop")? {
-                NeighborKind::Swap => Ok(Box::new(LocalSearch::<JobShopSwapNeighbor>::new(cond))),
-                NeighborKind::Relocate => {
-                    Ok(Box::new(LocalSearch::<JobShopRelocateNeighbor>::new(cond)))
-                }
-                n => Err(format!(
-                    "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
-                    n
-                )),
-            },
-            "TabuSearch" => {
-                let tenure = config.req_tabu("JobShop")?;
-                match config.req_neighbor("JobShop")? {
-                    NeighborKind::Swap => Ok(Box::new(TabuSearch::<JobShopSwapNeighbor>::new(
-                        cond, tenure, None,
-                    ))),
-                    NeighborKind::Relocate => Ok(Box::new(
-                        TabuSearch::<JobShopRelocateNeighbor>::new(cond, tenure, None),
-                    )),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
-                        n
-                    )),
-                }
-            }
-            "SimulatedAnnealing" => {
-                let temp = config.req_temp("JobShop")?;
-                let cooling = config.req_cooling("JobShop")?;
-                match config.req_neighbor("JobShop")? {
-                    NeighborKind::Swap => Ok(Box::new(
-                        SimulatedAnnealing::<JobShopSwapNeighbor>::new(cond, temp, cooling),
-                    )),
-                    NeighborKind::Relocate => {
-                        Ok(Box::new(
-                            SimulatedAnnealing::<JobShopRelocateNeighbor>::new(cond, temp, cooling),
-                        ))
-                    }
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
-                        n
-                    )),
-                }
-            }
-            "LateAcceptanceHillClimbing" => {
-                let history_length = config.req_history_length("JobShop")?;
-                match config.req_neighbor("JobShop")? {
-                    NeighborKind::Swap => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        JobShopSwapNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    NeighborKind::Relocate => Ok(Box::new(LateAcceptanceHillClimbing::<
-                        JobShopRelocateNeighbor,
-                    >::new(
-                        cond, history_length
-                    ))),
-                    n => Err(format!(
-                        "Invalid neighbor {:?} for JobShop (use Swap or Relocate)",
-                        n
-                    )),
-                }
-            }
-            "RLSearch" => match config.req_neighbor("JobShop")? {
-                NeighborKind::Swap => build_rl_search_from_config::<
-                    JobShopScheduling,
-                    JobShopSwapNeighbor,
-                >(config, cond),
-                NeighborKind::Relocate => build_rl_search_from_config::<
-                    JobShopScheduling,
-                    JobShopRelocateNeighbor,
-                >(config, cond),
-                n => Err(format!(
-                    "Invalid neighbor {:?} for JobShop RLSearch (use Swap or Relocate)",
-                    n
-                )),
-            },
-            k => Err(format!("Unknown kind '{}' for JobShop", k)),
+impl ConfigurableProblem for JobShopScheduling {
+    const NAME: &'static str = "JobShop";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Swap, NeighborKind::Relocate];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Swap => Ok(visitor.visit::<JobShopSwapNeighbor>()),
+            NeighborKind::Relocate => Ok(visitor.visit::<JobShopRelocateNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
         }
     }
 
-    fn build_crossover(config: &HeuristicConfig) -> Result<Box<dyn Crossover<Self>>, String> {
-        match config.crossover_kind.as_deref().unwrap_or("Ppx") {
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Ppx") {
             "Ppx" => Ok(Box::new(JobShopPpxCrossover)),
-            other => Err(format!(
+            other => Err(OptError::Config(format!(
                 "Unknown crossover_kind '{other}' for JobShop (expected 'Ppx')"
-            )),
+            ))),
         }
     }
 }
@@ -1113,72 +787,186 @@ impl BenchmarkableProblem for JobShopScheduling {
 // Generic heuristic builder
 // ---------------------------------------------------------------------------
 
-/// Builds a `Box<dyn Heuristic<P>>` from a [`HeuristicConfig`].
-///
-/// Meta-heuristics (Sequential, Iterated, Restart) are handled generically here.
-/// Base algorithms are dispatched to [`BenchmarkableProblem::build_base_heuristic`].
-fn build_heuristic<P: BenchmarkableProblem + 'static>(
-    config: &HeuristicConfig,
-) -> Result<Box<dyn Heuristic<P>>, String>
+/// Builds the neighbor-parameterized base heuristics once the concrete
+/// neighbor type is known. One arm per base kind: adding a new base heuristic
+/// means adding a [`HeuristicConfig`] variant and following the compile
+/// errors -- this match is written once, not per problem.
+struct BaseBuilder<'c> {
+    config: &'c HeuristicConfig,
+    cond: StopCondition,
+}
+
+impl<'c, P> NeighborVisitor<P> for BaseBuilder<'c>
 where
+    P: ConfigurableProblem,
     P::Solution: BenchmarkSolution + Distance,
 {
-    let cond = config.stop_condition.to_stop_condition();
-    match config.kind.as_str() {
-        "Sequential" => {
-            let steps = config
-                .steps
-                .as_ref()
-                .ok_or("'steps' required for Sequential")?;
-            let sub: Result<Vec<Box<dyn Heuristic<P>>>, String> =
+    type Output = Result<Box<dyn Heuristic<P>>, OptError>;
+
+    fn visit<N: ConfigNeighbor<P>>(self) -> Self::Output {
+        match self.config {
+            HeuristicConfig::LocalSearch { .. } => Ok(Box::new(LocalSearch::<N>::new(self.cond))),
+            HeuristicConfig::TabuSearch { tabu_tenure, .. } => {
+                if tabu_tenure.0 > tabu_tenure.1 {
+                    return Err(OptError::Config(format!(
+                        "invalid tabu_tenure range [{}, {}]: min must be <= max",
+                        tabu_tenure.0, tabu_tenure.1
+                    )));
+                }
+                Ok(Box::new(TabuSearch::<N>::new(
+                    self.cond,
+                    *tabu_tenure,
+                    None,
+                )))
+            }
+            HeuristicConfig::SimulatedAnnealing {
+                initial_temperature,
+                cooling_rate,
+                ..
+            } => Ok(Box::new(SimulatedAnnealing::<N>::new(
+                self.cond,
+                *initial_temperature,
+                *cooling_rate,
+            ))),
+            HeuristicConfig::LateAcceptanceHillClimbing { history_length, .. } => {
+                if *history_length == 0 {
+                    return Err(OptError::Config(
+                        "'history_length' must be at least 1".to_string(),
+                    ));
+                }
+                Ok(Box::new(LateAcceptanceHillClimbing::<N>::new(
+                    self.cond,
+                    *history_length,
+                )))
+            }
+            HeuristicConfig::RLSearch { .. } => build_rl_search::<P, N>(self.config, self.cond),
+            _ => unreachable!("non-neighbor kinds are dispatched before with_neighbor"),
+        }
+    }
+}
+
+fn build_rl_search<P, N>(
+    config: &HeuristicConfig,
+    cond: StopCondition,
+) -> Result<Box<dyn Heuristic<P>>, OptError>
+where
+    P: ProblemTrait + 'static,
+    N: MoveToNeighbor<P> + Evaluate + Clone + 'static,
+{
+    use crate::heuristic::reinforcement_learning::feature::NUM_FEATURES;
+
+    let HeuristicConfig::RLSearch {
+        learning_rate,
+        discount,
+        softmax_temperature,
+        reward_shaping,
+        policy_weights,
+        max_candidates,
+        ..
+    } = config
+    else {
+        unreachable!("build_rl_search called with a non-RLSearch config");
+    };
+
+    let reward = match reward_shaping.as_deref().unwrap_or("Normalized") {
+        "Raw" => RewardShaping::Raw,
+        "Normalized" => RewardShaping::Normalized,
+        "BestImprovement" => RewardShaping::BestImprovement,
+        other => {
+            return Err(OptError::Config(format!(
+                "Unknown reward_shaping '{other}' (expected Raw, Normalized, or BestImprovement)"
+            )));
+        }
+    };
+
+    let mut rl = RLSearch::<N>::new(
+        cond,
+        learning_rate.unwrap_or(0.01),
+        discount.unwrap_or(0.99),
+        softmax_temperature.unwrap_or(1.0),
+        reward,
+        *max_candidates,
+    );
+    if let Some(v) = policy_weights {
+        if v.len() != NUM_FEATURES {
+            return Err(OptError::Config(format!(
+                "policy_weights must have exactly {} elements, got {}",
+                NUM_FEATURES,
+                v.len()
+            )));
+        }
+        let mut arr = [0.0; NUM_FEATURES];
+        arr.copy_from_slice(v);
+        rl = rl.with_policy_weights(arr);
+    }
+    Ok(Box::new(rl))
+}
+
+/// Builds a `Box<dyn Heuristic<P>>` from a [`HeuristicConfig`].
+///
+/// Meta-heuristics (Sequential / Iterated / Restart / GeneticAlgorithm) are
+/// handled generically here; problem-specific kinds go to
+/// [`ConfigurableProblem::build_special_heuristic`]; neighbor-parameterized
+/// base kinds go through [`ConfigurableProblem::with_neighbor`] +
+/// [`BaseBuilder`].
+fn build_heuristic<P>(config: &HeuristicConfig) -> Result<Box<dyn Heuristic<P>>, OptError>
+where
+    P: ConfigurableProblem,
+    P::Solution: BenchmarkSolution + Distance,
+{
+    let cond = config.stop_condition().to_stop_condition();
+    match config {
+        HeuristicConfig::Sequential { steps, .. } => {
+            let sub: Result<Vec<Box<dyn Heuristic<P>>>, OptError> =
                 steps.iter().map(build_heuristic::<P>).collect();
             Ok(Box::new(Sequential::new(cond, sub?)))
         }
-        "Iterated" => {
-            let steps = config
-                .steps
-                .as_ref()
-                .ok_or("'steps' required for Iterated")?;
+        HeuristicConfig::Iterated { steps, .. } => {
             if steps.len() != 2 {
-                return Err(format!(
+                return Err(OptError::Config(format!(
                     "Iterated requires exactly 2 steps (search + perturbation), but got {}",
                     steps.len()
-                ));
+                )));
             }
             let search = build_heuristic::<P>(&steps[0])?;
             let perturbation = build_heuristic::<P>(&steps[1])?;
             Ok(Box::new(Iterated::new(cond, search, perturbation)))
         }
-        "Restart" => {
-            let steps = config
-                .steps
-                .as_ref()
-                .ok_or("'steps' required for Restart")?;
+        HeuristicConfig::Restart {
+            steps,
+            restart_condition,
+            ..
+        } => {
             if steps.len() != 1 {
-                return Err(format!(
+                return Err(OptError::Config(format!(
                     "Restart requires exactly 1 step (inner heuristic), but got {}",
                     steps.len()
-                ));
+                )));
             }
             let inner = build_heuristic::<P>(&steps[0])?;
-            let rc = config
-                .restart_condition
-                .as_ref()
-                .ok_or("'restart_condition' required for Restart")?;
-            Ok(Box::new(Restart::new(cond, inner, rc.to_stop_condition())))
+            Ok(Box::new(Restart::new(
+                cond,
+                inner,
+                restart_condition.to_stop_condition(),
+            )))
         }
-        "GeneticAlgorithm" => {
-            let population_size = config
-                .population_size
-                .ok_or("'population_size' required for GeneticAlgorithm")?;
-            let steps = config
-                .steps
-                .as_ref()
-                .ok_or("'steps' required for GeneticAlgorithm (steps[0] = mutation, optional steps[1] = init_improvement)")?;
+        HeuristicConfig::GeneticAlgorithm {
+            population_size,
+            steps,
+            crossover_kind,
+            parent_selection,
+            parent_top_k,
+            ..
+        } => {
             if steps.is_empty() || steps.len() > 2 {
-                return Err(format!(
+                return Err(OptError::Config(format!(
                     "GeneticAlgorithm requires 1 or 2 steps (steps[0] = mutation, optional steps[1] = init_improvement), but got {}",
                     steps.len()
+                )));
+            }
+            if *population_size < 2 {
+                return Err(OptError::Config(
+                    "'population_size' must be at least 2".to_string(),
                 ));
             }
             let mutation = build_heuristic::<P>(&steps[0])?;
@@ -1186,30 +974,32 @@ where
                 Some(c) => Some(build_heuristic::<P>(c)?),
                 None => None,
             };
-            let crossover = P::build_crossover(config)?;
+            let crossover = P::build_crossover(crossover_kind.as_deref())?;
 
-            let parent_selection = match config.parent_selection.as_deref().unwrap_or("Tournament")
-            {
+            let parent_selection = match parent_selection.as_deref().unwrap_or("Tournament") {
                 "Tournament" => ParentSelection::Tournament,
                 "DistantTopK" => {
-                    let top_k = config
-                        .parent_top_k
-                        .ok_or("'parent_top_k' required for parent_selection = 'DistantTopK'")?;
+                    let top_k = parent_top_k.ok_or_else(|| {
+                        OptError::Config(
+                            "'parent_top_k' required for parent_selection = 'DistantTopK'"
+                                .to_string(),
+                        )
+                    })?;
                     if top_k == 0 {
-                        return Err("'parent_top_k' must be >= 1".to_string());
+                        return Err(OptError::Config("'parent_top_k' must be >= 1".to_string()));
                     }
                     ParentSelection::DistantTopK { top_k }
                 }
                 other => {
-                    return Err(format!(
+                    return Err(OptError::Config(format!(
                         "Unknown parent_selection '{other}' (expected 'Tournament' or 'DistantTopK')"
-                    ));
+                    )));
                 }
             };
 
             let ga = GeneticAlgorithm::new_with_init(
                 cond,
-                population_size,
+                *population_size,
                 crossover,
                 mutation,
                 init_improvement,
@@ -1217,7 +1007,76 @@ where
             .with_parent_selection(parent_selection);
             Ok(Box::new(ga))
         }
-        _ => P::build_base_heuristic(config, cond),
+        HeuristicConfig::BreakoutLocalSearch { .. }
+        | HeuristicConfig::LinKernighanHelsgott { .. } => P::build_special_heuristic(config, cond),
+        HeuristicConfig::LocalSearch { neighbor, .. }
+        | HeuristicConfig::TabuSearch { neighbor, .. }
+        | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
+        | HeuristicConfig::LateAcceptanceHillClimbing { neighbor, .. }
+        | HeuristicConfig::RLSearch { neighbor, .. } => {
+            P::with_neighbor(neighbor, BaseBuilder { config, cond })?
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Runtime problem dispatch -- the single place mapping ProblemKind to types
+// ---------------------------------------------------------------------------
+
+/// Callback invoked with the concrete problem type for a [`ProblemKind`].
+trait ProblemVisitor {
+    type Output;
+    fn visit<P>(self) -> Self::Output
+    where
+        P: ConfigurableProblem,
+        P::Solution: BenchmarkSolution + Distance;
+}
+
+/// Maps the runtime [`ProblemKind`] to the concrete problem type.
+fn with_problem<V: ProblemVisitor>(kind: &ProblemKind, visitor: V) -> V::Output {
+    match kind {
+        ProblemKind::MaxCut => visitor.visit::<MaxCut>(),
+        ProblemKind::Qubo => visitor.visit::<Qubo>(),
+        ProblemKind::Sat => visitor.visit::<Sat>(),
+        ProblemKind::Tsp => visitor.visit::<TspWithCoordinates>(),
+        ProblemKind::VertexCover => visitor.visit::<VertexCover>(),
+        ProblemKind::JobShop => visitor.visit::<JobShopScheduling>(),
+    }
+}
+
+struct MinimizeVisitor;
+impl ProblemVisitor for MinimizeVisitor {
+    type Output = bool;
+    fn visit<P>(self) -> bool
+    where
+        P: ConfigurableProblem,
+        P::Solution: BenchmarkSolution + Distance,
+    {
+        P::MINIMIZE
+    }
+}
+
+struct ValidNeighborsVisitor;
+impl ProblemVisitor for ValidNeighborsVisitor {
+    type Output = &'static [NeighborKind];
+    fn visit<P>(self) -> &'static [NeighborKind]
+    where
+        P: ConfigurableProblem,
+        P::Solution: BenchmarkSolution + Distance,
+    {
+        P::VALID_NEIGHBORS
+    }
+}
+
+impl ProblemKind {
+    /// Whether this problem is minimized (drives report statistics).
+    pub fn minimize(&self) -> bool {
+        with_problem(self, MinimizeVisitor)
+    }
+
+    /// The neighborhood kinds supported by this problem.
+    pub fn valid_neighbors(&self) -> &'static [NeighborKind] {
+        with_problem(self, ValidNeighborsVisitor)
     }
 }
 
@@ -1225,45 +1084,8 @@ where
 // Benchmark runner
 // ---------------------------------------------------------------------------
 
-/// Accumulates benchmark results from multiple runs.
-pub struct Benchmark {
-    pub results: Vec<BenchmarkResult>,
-}
-
-impl Default for Benchmark {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Benchmark {
-    pub fn new() -> Self {
-        Self {
-            results: Vec::new(),
-        }
-    }
-
-    /// Runs a single experiment and appends the result.
-    pub fn run(
-        &mut self,
-        instance_path: &str,
-        problem: &ProblemKind,
-        heuristic_config: &HeuristicConfig,
-    ) {
-        let metrics = run_for_problem_kind(problem, heuristic_config, instance_path, None);
-        self.results.push(BenchmarkResult {
-            instance_path: instance_path.to_string(),
-            problem: problem.clone(),
-            heuristic: heuristic_config.clone(),
-            status: metrics.status,
-            best_objective: metrics.best_objective,
-            best_iteration: metrics.best_iteration,
-            time_to_best_secs: metrics.time_to_best_secs,
-            total_time_secs: metrics.total_time_secs,
-            solution: metrics.solution,
-        });
-    }
-}
+/// Namespace for the benchmark entry point ([`Benchmark::run_from_config`]).
+pub struct Benchmark;
 
 // ---------------------------------------------------------------------------
 // Generic run functions
@@ -1322,42 +1144,55 @@ fn derive_run_seed(
     h.finish() & 0x7FFF_FFFF_FFFF_FFFF
 }
 
+struct RunVisitor<'a> {
+    config: &'a HeuristicConfig,
+    instance_path: &'a str,
+    seed: Option<u64>,
+}
+
+impl ProblemVisitor for RunVisitor<'_> {
+    type Output = RunMetrics;
+    fn visit<P>(self) -> RunMetrics
+    where
+        P: ConfigurableProblem,
+        P::Solution: BenchmarkSolution + Distance,
+    {
+        run_typed::<P>(self.instance_path, self.config, self.seed)
+    }
+}
+
 fn run_for_problem_kind(
     problem_kind: &ProblemKind,
     config: &HeuristicConfig,
     instance_path: &str,
     seed: Option<u64>,
 ) -> RunMetrics {
-    let minimize = matches!(
+    with_problem(
         problem_kind,
-        ProblemKind::Qubo | ProblemKind::Tsp | ProblemKind::VertexCover
-    );
-    match problem_kind {
-        ProblemKind::MaxCut => run_typed::<MaxCut>(instance_path, config, minimize, seed),
-        ProblemKind::Qubo => run_typed::<Qubo>(instance_path, config, minimize, seed),
-        ProblemKind::Sat => run_typed::<Sat>(instance_path, config, minimize, seed),
-        ProblemKind::Tsp => run_typed::<TspWithCoordinates>(instance_path, config, minimize, seed),
-        ProblemKind::VertexCover => run_typed::<VertexCover>(instance_path, config, minimize, seed),
-        ProblemKind::JobShop => {
-            run_typed::<JobShopScheduling>(instance_path, config, minimize, seed)
-        }
-    }
+        RunVisitor {
+            config,
+            instance_path,
+            seed,
+        },
+    )
 }
 
-fn run_typed<P: BenchmarkableProblem + 'static>(
-    instance_path: &str,
-    config: &HeuristicConfig,
-    minimize: bool,
-    seed: Option<u64>,
-) -> RunMetrics
+fn run_typed<P>(instance_path: &str, config: &HeuristicConfig, seed: Option<u64>) -> RunMetrics
 where
+    P: ConfigurableProblem,
     P::Solution: BenchmarkSolution + Distance,
 {
     let heuristic = match build_heuristic::<P>(config) {
         Ok(h) => h,
-        Err(e) => return empty_metrics(format!("config error: {}", e), seed),
+        Err(e) => {
+            let msg = match e {
+                OptError::Config(m) => m,
+                other => other.to_string(),
+            };
+            return empty_metrics(format!("config error: {msg}"), seed);
+        }
     };
-    run_problem::<P>(instance_path, heuristic, minimize, seed)
+    run_problem::<P>(instance_path, heuristic, P::MINIMIZE, seed)
 }
 
 fn run_problem<P>(
@@ -1536,23 +1371,6 @@ fn to_single_run_result(run_index: usize, m: RunMetrics) -> SingleRunResult {
     }
 }
 
-/// Returns the neighborhood-move kinds supported by `problem`.
-///
-/// Used by [`validate_config`] to reject `(problem, neighbor)` combinations
-/// at config-parse time, before any instance file is opened. The set is the
-/// same set the per-problem `BenchmarkableProblem::build_base_heuristic`
-/// dispatches on.
-fn valid_neighbors_for(problem: &ProblemKind) -> &'static [NeighborKind] {
-    use NeighborKind::*;
-    match problem {
-        ProblemKind::MaxCut | ProblemKind::Qubo | ProblemKind::Sat | ProblemKind::VertexCover => {
-            &[Flip, Swap]
-        }
-        ProblemKind::Tsp => &[TwoOpt, Relocate],
-        ProblemKind::JobShop => &[Swap, Relocate],
-    }
-}
-
 /// Recursively validates that every `neighbor` field in `h` (including in
 /// nested `steps` from Sequential / Iterated / Restart / GeneticAlgorithm)
 /// is supported by `problem`.
@@ -1561,20 +1379,22 @@ fn validate_heuristic_neighbors(
     problem: &ProblemKind,
     instance_path: &str,
 ) -> Result<(), OptError> {
-    if let Some(n) = &h.neighbor {
-        let valid = valid_neighbors_for(problem);
+    if let Some(n) = h.neighbor() {
+        let valid = problem.valid_neighbors();
         if !valid.contains(n) {
             return Err(OptError::Config(format!(
                 "instance '{}' ({:?}) does not support neighbor {:?} for heuristic '{}'. \
                  Valid neighbors: {:?}",
-                instance_path, problem, n, h.kind, valid,
+                instance_path,
+                problem,
+                n,
+                h.kind_name(),
+                valid,
             )));
         }
     }
-    if let Some(steps) = &h.steps {
-        for step in steps {
-            validate_heuristic_neighbors(step, problem, instance_path)?;
-        }
+    for step in h.steps() {
+        validate_heuristic_neighbors(step, problem, instance_path)?;
     }
     Ok(())
 }
@@ -1657,11 +1477,11 @@ impl Benchmark {
             for (heuristic_idx, heuristic_cfg) in config.heuristics.iter().enumerate() {
                 tracing::info!(
                     instance = %instance_path,
-                    heuristic = %heuristic_cfg.kind,
+                    heuristic = heuristic_cfg.kind_name(),
                     num_runs = config.num_runs,
-                    max_iteration = ?heuristic_cfg.stop_condition.max_iteration,
-                    max_duration_secs = ?heuristic_cfg.stop_condition.max_duration_secs,
-                    max_failed_update = ?heuristic_cfg.stop_condition.max_failed_update,
+                    max_iteration = ?heuristic_cfg.stop_condition().max_iteration,
+                    max_duration_secs = ?heuristic_cfg.stop_condition().max_duration_secs,
+                    max_failed_update = ?heuristic_cfg.stop_condition().max_failed_update,
                     seed = ?config.seed,
                     "Start:"
                 );
@@ -1693,14 +1513,10 @@ impl Benchmark {
                     .collect();
                 runs.sort_by_key(|r| r.run_index);
 
-                let minimize = matches!(
-                    problem_kind,
-                    ProblemKind::Qubo | ProblemKind::Tsp | ProblemKind::VertexCover
-                );
-                let summary = compute_summary(&runs, minimize);
+                let summary = compute_summary(&runs, problem_kind.minimize());
                 tracing::info!(
                     instance = %instance_path,
-                    heuristic = %heuristic_cfg.kind,
+                    heuristic = heuristic_cfg.kind_name(),
                     num_runs = summary.num_successful_runs,
                     best = summary.best_objective,
                     avg = summary.avg_objective,
@@ -1738,33 +1554,10 @@ mod validate_tests {
         }
     }
 
-    fn heuristic_with_neighbor(kind: &str, neighbor: NeighborKind) -> HeuristicConfig {
-        HeuristicConfig {
-            kind: kind.to_string(),
-            neighbor: Some(neighbor),
-            tabu_tenure: None,
-            initial_temperature: None,
-            cooling_rate: None,
-            t: None,
-            l0: None,
-            p0: None,
-            q: None,
-            num_neighbors: None,
-            max_depth: None,
-            history_length: None,
+    fn local_search(neighbor: NeighborKind) -> HeuristicConfig {
+        HeuristicConfig::LocalSearch {
+            neighbor,
             stop_condition: StopConditionConfig::default(),
-            steps: None,
-            restart_condition: None,
-            learning_rate: None,
-            discount: None,
-            softmax_temperature: None,
-            reward_shaping: None,
-            policy_weights: None,
-            max_candidates: None,
-            population_size: None,
-            crossover_kind: None,
-            parent_selection: None,
-            parent_top_k: None,
         }
     }
 
@@ -1781,7 +1574,7 @@ mod validate_tests {
     fn validate_accepts_compatible_problem_and_neighbor() {
         let c = cfg(
             vec![instance(ProblemKind::MaxCut)],
-            vec![heuristic_with_neighbor("LocalSearch", NeighborKind::Flip)],
+            vec![local_search(NeighborKind::Flip)],
         );
         validate_config(&c).expect("MaxCut x Flip is valid");
     }
@@ -1790,7 +1583,7 @@ mod validate_tests {
     fn validate_rejects_tsp_with_flip() {
         let c = cfg(
             vec![instance(ProblemKind::Tsp)],
-            vec![heuristic_with_neighbor("LocalSearch", NeighborKind::Flip)],
+            vec![local_search(NeighborKind::Flip)],
         );
         let err = validate_config(&c).expect_err("Tsp x Flip must fail");
         let msg = format!("{err}");
@@ -1806,7 +1599,7 @@ mod validate_tests {
     fn validate_rejects_jobshop_with_flip() {
         let c = cfg(
             vec![instance(ProblemKind::JobShop)],
-            vec![heuristic_with_neighbor("LocalSearch", NeighborKind::Flip)],
+            vec![local_search(NeighborKind::Flip)],
         );
         validate_config(&c).expect_err("JobShop x Flip must fail");
     }
@@ -1814,17 +1607,272 @@ mod validate_tests {
     #[test]
     fn validate_recurses_into_nested_steps() {
         // Iterated whose search step has an invalid neighbor for the problem.
-        let mut outer = heuristic_with_neighbor("Iterated", NeighborKind::Flip);
-        // The outer Iterated does not itself use a neighbor; make the validator
-        // reach the inner LocalSearch by nesting steps.
-        outer.neighbor = None;
-        outer.steps = Some(vec![heuristic_with_neighbor(
-            "LocalSearch",
-            NeighborKind::Flip,
-        )]);
+        let outer = HeuristicConfig::Iterated {
+            steps: vec![
+                local_search(NeighborKind::Flip),
+                local_search(NeighborKind::Flip),
+            ],
+            stop_condition: StopConditionConfig::default(),
+        };
         let c = cfg(vec![instance(ProblemKind::Tsp)], vec![outer]);
         let err = validate_config(&c).expect_err("nested invalid neighbor must fail");
         let msg = format!("{err}");
         assert!(msg.contains("Flip"), "error mentions Flip: {msg}");
+    }
+}
+
+#[cfg(test)]
+mod config_tests {
+    use super::*;
+
+    /// Every documented TOML shape must keep parsing unchanged -- this is the
+    /// compatibility contract for the internally-tagged enum.
+    #[test]
+    fn parses_flat_base_heuristic_toml() {
+        let h: HeuristicConfig = toml::from_str(
+            r#"
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [5, 10]
+
+[stop_condition]
+max_iteration = 1000
+"#,
+        )
+        .expect("TabuSearch TOML parses");
+        match &h {
+            HeuristicConfig::TabuSearch {
+                neighbor,
+                tabu_tenure,
+                stop_condition,
+            } => {
+                assert_eq!(*neighbor, NeighborKind::Flip);
+                assert_eq!(*tabu_tenure, (5, 10));
+                assert_eq!(stop_condition.max_iteration, Some(1000));
+            }
+            other => panic!("wrong variant: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_nested_steps_toml() {
+        let h: HeuristicConfig = toml::from_str(
+            r#"
+kind = "Iterated"
+
+[stop_condition]
+max_iteration = 100
+
+[[steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[[steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 1.0
+cooling_rate = 0.99
+"#,
+        )
+        .expect("Iterated TOML parses");
+        assert_eq!(h.kind_name(), "Iterated");
+        assert_eq!(h.steps().len(), 2);
+        assert_eq!(h.steps()[1].kind_name(), "SimulatedAnnealing");
+    }
+
+    #[test]
+    fn missing_required_field_fails_at_parse_time() {
+        let err = toml::from_str::<HeuristicConfig>(
+            r#"
+kind = "TabuSearch"
+neighbor = "Flip"
+"#,
+        )
+        .expect_err("missing tabu_tenure must fail");
+        assert!(
+            err.to_string().contains("tabu_tenure"),
+            "error names the missing field: {err}"
+        );
+    }
+
+    #[test]
+    fn unknown_kind_fails_at_parse_time() {
+        toml::from_str::<HeuristicConfig>(r#"kind = "NoSuchHeuristic""#)
+            .expect_err("unknown kind must fail");
+    }
+
+    #[test]
+    fn serialization_round_trips() {
+        let h = HeuristicConfig::SimulatedAnnealing {
+            neighbor: NeighborKind::Swap,
+            initial_temperature: 2.5,
+            cooling_rate: 0.9,
+            stop_condition: StopConditionConfig {
+                max_iteration: Some(42),
+                max_duration_secs: None,
+                max_failed_update: None,
+            },
+        };
+        let toml_str = toml::to_string(&h).expect("serializes");
+        assert!(
+            toml_str.contains("kind = \"SimulatedAnnealing\""),
+            "tag serializes as kind: {toml_str}"
+        );
+        let back: HeuristicConfig = toml::from_str(&toml_str).expect("round-trips");
+        assert_eq!(back.kind_name(), "SimulatedAnnealing");
+        assert_eq!(back.stop_condition().max_iteration, Some(42));
+    }
+}
+
+#[cfg(test)]
+mod factory_tests {
+    use super::*;
+
+    /// Visitor that builds the heuristic and reports success/failure only.
+    struct BuildCheck<'a> {
+        config: &'a HeuristicConfig,
+    }
+    impl ProblemVisitor for BuildCheck<'_> {
+        type Output = Result<(), OptError>;
+        fn visit<P>(self) -> Result<(), OptError>
+        where
+            P: ConfigurableProblem,
+            P::Solution: BenchmarkSolution + Distance,
+        {
+            build_heuristic::<P>(self.config).map(|_| ())
+        }
+    }
+
+    fn try_build(kind: &ProblemKind, config: &HeuristicConfig) -> Result<(), OptError> {
+        with_problem(kind, BuildCheck { config })
+    }
+
+    const ALL_PROBLEMS: &[ProblemKind] = &[
+        ProblemKind::MaxCut,
+        ProblemKind::Qubo,
+        ProblemKind::Sat,
+        ProblemKind::Tsp,
+        ProblemKind::VertexCover,
+        ProblemKind::JobShop,
+    ];
+
+    fn base_kinds_for(neighbor: NeighborKind) -> Vec<HeuristicConfig> {
+        let sc = StopConditionConfig::default;
+        vec![
+            HeuristicConfig::LocalSearch {
+                neighbor: neighbor.clone(),
+                stop_condition: sc(),
+            },
+            HeuristicConfig::TabuSearch {
+                neighbor: neighbor.clone(),
+                tabu_tenure: (1, 5),
+                stop_condition: sc(),
+            },
+            HeuristicConfig::SimulatedAnnealing {
+                neighbor: neighbor.clone(),
+                initial_temperature: 1.0,
+                cooling_rate: 0.99,
+                stop_condition: sc(),
+            },
+            HeuristicConfig::LateAcceptanceHillClimbing {
+                neighbor: neighbor.clone(),
+                history_length: 10,
+                stop_condition: sc(),
+            },
+            HeuristicConfig::RLSearch {
+                neighbor,
+                learning_rate: None,
+                discount: None,
+                softmax_temperature: None,
+                reward_shaping: None,
+                policy_weights: None,
+                max_candidates: None,
+                stop_condition: sc(),
+            },
+        ]
+    }
+
+    /// Every (problem x base kind x valid neighbor) combination must build.
+    #[test]
+    fn all_base_kinds_build_for_all_valid_neighbors() {
+        for problem in ALL_PROBLEMS {
+            for neighbor in problem.valid_neighbors() {
+                for config in base_kinds_for(neighbor.clone()) {
+                    try_build(problem, &config).unwrap_or_else(|e| {
+                        panic!(
+                            "{problem:?} x {} x {neighbor:?} must build: {e}",
+                            config.kind_name()
+                        )
+                    });
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn invalid_neighbor_reports_problem_and_valid_set() {
+        let config = HeuristicConfig::LocalSearch {
+            neighbor: NeighborKind::TwoOpt,
+            stop_condition: StopConditionConfig::default(),
+        };
+        let err = try_build(&ProblemKind::MaxCut, &config).expect_err("TwoOpt invalid for MaxCut");
+        let msg = err.to_string();
+        assert!(msg.contains("MaxCut"), "{msg}");
+        assert!(msg.contains("TwoOpt"), "{msg}");
+        assert!(msg.contains("Flip"), "{msg}");
+    }
+
+    #[test]
+    fn problem_specific_kinds_are_rejected_elsewhere() {
+        let bls = HeuristicConfig::BreakoutLocalSearch {
+            tabu_tenure: (1, 5),
+            t: 100,
+            l0: 5,
+            p0: 0.8,
+            q: 0.5,
+            stop_condition: StopConditionConfig::default(),
+        };
+        try_build(&ProblemKind::MaxCut, &bls).expect("BLS builds for MaxCut");
+        let err = try_build(&ProblemKind::Qubo, &bls).expect_err("BLS invalid for Qubo");
+        assert!(err.to_string().contains("Qubo"), "{err}");
+
+        let lkh = HeuristicConfig::LinKernighanHelsgott {
+            num_neighbors: None,
+            max_depth: None,
+            stop_condition: StopConditionConfig::default(),
+        };
+        try_build(&ProblemKind::Tsp, &lkh).expect("LKH builds for Tsp");
+        let err = try_build(&ProblemKind::MaxCut, &lkh).expect_err("LKH invalid for MaxCut");
+        assert!(err.to_string().contains("MaxCut"), "{err}");
+    }
+
+    #[test]
+    fn genetic_algorithm_uses_problem_specific_crossover_defaults() {
+        let ga = |crossover_kind: Option<String>| HeuristicConfig::GeneticAlgorithm {
+            population_size: 4,
+            steps: vec![HeuristicConfig::LocalSearch {
+                neighbor: NeighborKind::TwoOpt,
+                stop_condition: StopConditionConfig::default(),
+            }],
+            crossover_kind,
+            parent_selection: None,
+            parent_top_k: None,
+            stop_condition: StopConditionConfig::default(),
+        };
+        // TSP defaults to Order crossover.
+        try_build(&ProblemKind::Tsp, &ga(None)).expect("GA on Tsp with default crossover");
+        let err = try_build(&ProblemKind::Tsp, &ga(Some("NoSuch".to_string())))
+            .expect_err("unknown crossover_kind must fail");
+        assert!(err.to_string().contains("NoSuch"), "{err}");
+    }
+
+    #[test]
+    fn minimize_truth_table() {
+        assert!(!ProblemKind::MaxCut.minimize());
+        assert!(!ProblemKind::Sat.minimize());
+        assert!(ProblemKind::Qubo.minimize());
+        assert!(ProblemKind::Tsp.minimize());
+        assert!(ProblemKind::VertexCover.minimize());
+        assert!(ProblemKind::JobShop.minimize());
     }
 }
