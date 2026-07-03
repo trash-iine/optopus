@@ -1,8 +1,12 @@
-#!bin/bash
+#!/usr/bin/env bash
+# Fetch TSPLIB symmetric instances into data/instances/tsp/.
+# TSPLIB (Reinelt): non-commercial use; canonical source
+#   http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/
+# Downloaded here from the plain-text mirror github.com/mastqe/tsplib.
 set -u
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DATA_DIR=$SCRIPT_DIR/../data/instances/tsp
+DATA_DIR=$SCRIPT_DIR/../tsp
 mkdir -p $DATA_DIR
 
 FILES=(

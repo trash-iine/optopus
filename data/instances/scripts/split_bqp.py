@@ -5,7 +5,8 @@ Format of each bqpN.txt: first line = number of instances, then for each instanc
 a header `n m` followed by `m` lines of `i j v` (1-indexed) — directly compatible
 with this project's QUBO loader (`src/problem/qubo/problem.rs::Qubo::load_file`).
 
-Usage: python3 data/scripts/split_bqp.py
+Usage: python3 data/instances/scripts/split_bqp.py [SRC_DIR]
+  SRC_DIR holds the downloaded orlib_bqp{N}.txt bundles (default: /tmp).
 Outputs: data/instances/qubo/bqp/bqp{N}_{k}.txt for k = 1..n_instances
 """
 from __future__ import annotations
@@ -13,9 +14,8 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-REPO = Path(__file__).resolve().parents[2]
-SRC_DIR = Path("/tmp")
-DST_DIR = REPO / "data" / "qubo" / "bqp"
+SRC_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp")
+DST_DIR = Path(__file__).resolve().parent.parent / "qubo" / "bqp"
 SIZES = [50, 100, 250, 500, 1000]
 
 
