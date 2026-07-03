@@ -10,7 +10,6 @@ pub use crate::trait_defs::{
 };
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
-use rayon::prelude::*;
 
 /// Controls how [`SearchState`] is cloned when starting a sub-run.
 #[derive(Clone, Debug)]
@@ -418,33 +417,6 @@ where
         Move: MoveToNeighbor<Problem>,
     {
         m.move_to_be_better_than(self.instance, &self.solution, &self.best_solution)
-    }
-
-    /// Returns the best move from `move_list` using parallel chunk-based evaluation.
-    ///
-    /// A `chunk_size` of `0` is treated as `1`.
-    pub fn get_best_move_par_chunks<M>(
-        &self,
-        move_list: impl Iterator<Item = M>,
-        chunk_size: usize,
-    ) -> Option<M>
-    where
-        M: Send + Sync + Clone + Rankable,
-        Problem: Sync,
-        Problem::Solution: Sync,
-    {
-        let move_vec: Vec<_> = move_list.collect();
-        let opt = move_vec
-            .par_chunks(chunk_size.max(1))
-            .map(|chunk| {
-                chunk
-                    .iter()
-                    .max_by(|first, second| crate::trait_defs::rank_cmp(*first, *second))
-                    .unwrap()
-            })
-            .max_by(|first, second| crate::trait_defs::rank_cmp(*first, *second));
-
-        opt.cloned()
     }
 }
 
