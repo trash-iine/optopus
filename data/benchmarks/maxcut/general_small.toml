@@ -3,6 +3,7 @@
 # See docs/benchmarks/profiles.md
 
 num_runs = 10
+seed = 42
 
 [[instances]]
 path = "data/instances/max_cut/G1"

@@ -4,13 +4,13 @@
 //! backward compatibility, so `crate::search_state::ProblemTrait` and friends
 //! keep resolving.
 
-use rand::SeedableRng;
-use rand::rngs::SmallRng;
-use rayon::prelude::*;
 pub use crate::trait_defs::{
     Crossover, Distance, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
     SubProblemExtractable, filter_best,
 };
+use rand::SeedableRng;
+use rand::rngs::SmallRng;
+use rayon::prelude::*;
 
 /// Controls how [`SearchState`] is cloned when starting a sub-run.
 #[derive(Clone, Debug)]
@@ -100,7 +100,7 @@ where
     /// - `Simple`     — inherits the parent's `initial_solution`.
     /// - `ClearBest`  — re-anchored to the solution at clone time.
     /// - `StartBest`  — re-anchored to the best solution at clone time
-    ///                  (which is also the sub-run's starting solution).
+    ///   (which is also the sub-run's starting solution).
     pub initial_solution: Problem::Solution,
     /// Number of moves accepted (`apply` / `apply_move_only` calls) since this
     /// sub-run started. Always satisfies
@@ -708,9 +708,9 @@ mod tests {
         let child_best = child.n_best_updates;
 
         parent.update_state(child);
-        assert_eq!(parent.n_accepted, 0 + child_accepted);
+        assert_eq!(parent.n_accepted, child_accepted);
         assert_eq!(parent.n_rejected, 2 + child_rejected);
-        assert_eq!(parent.n_best_updates, 0 + child_best);
+        assert_eq!(parent.n_best_updates, child_best);
         // initial_solution must NOT be overwritten by the child's
         assert_eq!(parent.initial_solution.cut, parent_initial_before);
     }
