@@ -103,7 +103,12 @@ where
             .max_by(rank_cmp);
 
         if let Some(best_move) = best_move {
-            best_move.add_to_tabu_map(&mut self.tabu_map, state.iteration, self.tabu_tenure);
+            best_move.add_to_tabu_map(
+                &mut self.tabu_map,
+                state.iteration,
+                self.tabu_tenure,
+                &mut state.rng,
+            );
             state.apply(&best_move)?;
         } else {
             tracing::warn!("No best move found");

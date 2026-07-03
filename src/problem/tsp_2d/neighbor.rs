@@ -3,6 +3,7 @@ use crate::{
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
+use rand::Rng;
 
 /// A 2-opt move that removes edges `(tour[i], tour[i+1])` and `(tour[j], tour[(j+1)%n])`,
 /// then reconnects as `(tour[i], tour[j])` and `(tour[i+1], tour[(j+1)%n])`.
@@ -45,8 +46,9 @@ impl EnabledTabu for TspTwoOptNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
         let key = (self.i.min(self.j), self.i.max(self.j));
         tabu_map.insert(key, iteration + d);
     }
@@ -145,8 +147,9 @@ impl EnabledTabu for TspRelocateNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
         tabu_map.insert((self.pos, self.ins), iteration + d);
     }
 }

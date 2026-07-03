@@ -2,7 +2,10 @@ use super::super::{Heuristic, StopCondition};
 use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
-use crate::search_state::{MoveToNeighbor, SearchState};
+use crate::search_state::SearchState;
+use crate::trait_defs::MoveToNeighbor;
+use rand::Rng;
+use rand::rngs::SmallRng;
 
 // The positive-gain index attached to `MaxCutSolution` lets the local-search
 // phase skip the O(n) neighborhood scan: any improving flip must be a vertex
@@ -109,10 +112,10 @@ impl BreakoutLocalSearch {
             .is_none_or(|&exp| iteration >= exp)
     }
 
-    /// Adds a vertex to the tabu vec with a random tenure.
+    /// Adds a vertex to the tabu vec with a tenure sampled from `rng`.
     #[inline]
-    fn add_vertex_to_tabu(&mut self, vertex: usize, iteration: u64) {
-        let tabu_duration = rand::random_range(self.tabu_tenure.0..=self.tabu_tenure.1);
+    fn add_vertex_to_tabu(&mut self, vertex: usize, iteration: u64, rng: &mut SmallRng) {
+        let tabu_duration = rng.random_range(self.tabu_tenure.0..=self.tabu_tenure.1);
         if vertex < self.tabu_vec.len() {
             self.tabu_vec[vertex] = iteration + tabu_duration;
         }
@@ -145,7 +148,7 @@ impl BreakoutLocalSearch {
             }
 
             if let Some(best_move) = best_move_option {
-                self.add_vertex_to_tabu(best_move.i, state.iteration);
+                self.add_vertex_to_tabu(best_move.i, state.iteration, &mut state.rng);
                 state.apply(&best_move)?;
             } else {
                 return Ok(());
@@ -189,7 +192,7 @@ impl BreakoutLocalSearch {
     /// as `omega` grows the random (strong) perturbation becomes more likely.
     /// Only when `omega` exceeds the threshold `t` is the strongest random
     /// perturbation forced (and `omega` reset).
-    fn get_perturbation_type(&mut self) -> PerturbationType {
+    fn get_perturbation_type(&mut self, rng: &mut SmallRng) -> PerturbationType {
         if self.omega > self.t {
             self.omega = 0;
             return PerturbationType::Strong;
@@ -197,7 +200,7 @@ impl BreakoutLocalSearch {
 
         let p = (-(self.omega as f64 / self.t as f64)).exp().max(self.p0);
 
-        let prob: f64 = rand::random_range(0.0..=1.0);
+        let prob: f64 = rng.random_range(0.0..=1.0);
         if prob <= p * self.q {
             PerturbationType::WeakFlip
         } else if prob <= p {
@@ -214,9 +217,13 @@ impl BreakoutLocalSearch {
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
         for _ in 0..self.l {
-            let neighbor = MaxCutFlipNeighbor::random_neighbor(state.instance, &state.solution);
+            let neighbor = MaxCutFlipNeighbor::random_neighbor(
+                state.instance,
+                &state.solution,
+                &mut state.rng,
+            );
 
-            self.add_vertex_to_tabu(neighbor.i, state.iteration);
+            self.add_vertex_to_tabu(neighbor.i, state.iteration, &mut state.rng);
             state.apply_move_only(&neighbor)?;
         }
         Ok(())
@@ -250,7 +257,7 @@ impl BreakoutLocalSearch {
                 best = Some(neighbor);
             }
             if let Some(best_move) = best {
-                self.add_vertex_to_tabu(best_move.i, state.iteration);
+                self.add_vertex_to_tabu(best_move.i, state.iteration, &mut state.rng);
                 state.apply_move_only(&best_move)?;
             } else {
                 state.progress_iteration();
@@ -321,8 +328,8 @@ impl BreakoutLocalSearch {
                     j: v1.i,
                     gain: swap_gain,
                 };
-                self.add_vertex_to_tabu(v0.i, state.iteration);
-                self.add_vertex_to_tabu(v1.i, state.iteration);
+                self.add_vertex_to_tabu(v0.i, state.iteration, &mut state.rng);
+                self.add_vertex_to_tabu(v1.i, state.iteration, &mut state.rng);
                 state.apply_move_only(&swap)?;
             } else {
                 // Fallback: swap the oldest-tabu vertex on each side to force a
@@ -340,8 +347,8 @@ impl BreakoutLocalSearch {
                     j,
                     gain: fallback_gain,
                 };
-                self.add_vertex_to_tabu(i, state.iteration);
-                self.add_vertex_to_tabu(j, state.iteration);
+                self.add_vertex_to_tabu(i, state.iteration, &mut state.rng);
+                self.add_vertex_to_tabu(j, state.iteration, &mut state.rng);
                 state.apply_move_only(&swap)?;
             }
         }
@@ -373,7 +380,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
         self.update_omega(state);
         self.update_l(state);
 
-        let perturbation_type = self.get_perturbation_type();
+        let perturbation_type = self.get_perturbation_type(&mut state.rng);
         tracing::debug!(
             iteration = state.iteration,
             omega = self.omega,

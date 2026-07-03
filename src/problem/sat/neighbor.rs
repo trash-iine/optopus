@@ -37,8 +37,9 @@ impl EnabledTabu for SatFlipNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
     }
 }
 
@@ -113,9 +114,10 @@ impl EnabledTabu for SatSwapNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
-        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
+        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure, rng);
     }
 }
 
