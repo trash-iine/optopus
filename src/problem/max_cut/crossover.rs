@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 
-use rand::Rng;
-
-use crate::common::Graph;
+use crate::common::{Graph, uniform_binary_crossover};
 use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
 
 use super::neighbor::MaxCutFlipNeighbor;
@@ -52,18 +50,7 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
         sol2: &MaxCutSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<MaxCutSolution, crate::error::OptError> {
-        let mut sol = sol1.clone();
-        for &i in prob.graph.iter_on_vertices() {
-            if sol.cut[i] != sol2.cut[i] && rng.random::<bool>() {
-                let neighbor = MaxCutFlipNeighbor {
-                    i,
-                    gain: sol.gain[i],
-                };
-                neighbor.apply_to_solution(prob, &mut sol)?;
-            }
-        }
-
-        Ok(sol)
+        uniform_binary_crossover(prob, sol1, sol2, rng)
     }
 }
 

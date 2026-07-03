@@ -439,26 +439,10 @@ where
             .map(|chunk| {
                 chunk
                     .iter()
-                    .max_by(|first, second| {
-                        if first.is_better_than(second) {
-                            std::cmp::Ordering::Greater
-                        } else if second.is_better_than(first) {
-                            std::cmp::Ordering::Less
-                        } else {
-                            std::cmp::Ordering::Equal
-                        }
-                    })
+                    .max_by(|first, second| crate::trait_defs::rank_cmp(*first, *second))
                     .unwrap()
             })
-            .max_by(|first, second| {
-                if first.is_better_than(second) {
-                    std::cmp::Ordering::Greater
-                } else if second.is_better_than(first) {
-                    std::cmp::Ordering::Less
-                } else {
-                    std::cmp::Ordering::Equal
-                }
-            });
+            .max_by(|first, second| crate::trait_defs::rank_cmp(*first, *second));
 
         opt.cloned()
     }

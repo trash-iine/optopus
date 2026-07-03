@@ -1,5 +1,4 @@
-use rand::Rng;
-
+use crate::common::uniform_binary_crossover;
 use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
 
 use super::neighbor::FormulaFlipNeighbor;
@@ -19,17 +18,7 @@ impl Crossover<FormulaProblem> for FormulaUniformCrossover {
         sol2: &FormulaSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<FormulaSolution, crate::error::OptError> {
-        let mut sol = sol1.clone();
-        for i in 0..prob.n_vars {
-            if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
-                FormulaFlipNeighbor {
-                    i,
-                    gain: sol.gain[i],
-                }
-                .apply_to_solution(prob, &mut sol)?;
-            }
-        }
-        Ok(sol)
+        uniform_binary_crossover(prob, sol1, sol2, rng)
     }
 }
 

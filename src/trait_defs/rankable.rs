@@ -7,6 +7,22 @@ pub trait Rankable {
     fn is_better_than(&self, other: &Self) -> bool;
 }
 
+/// Total-order comparator derived from [`Rankable::is_better_than`], for use
+/// with `max_by` / `min_by`.
+///
+/// Ties compare as `Equal`, so `iter.max_by(rank_cmp)` returns the **last**
+/// tied-best element — the same element `filter_best(iter).pop()` yields.
+#[inline]
+pub fn rank_cmp<R: Rankable>(a: &R, b: &R) -> std::cmp::Ordering {
+    if a.is_better_than(b) {
+        std::cmp::Ordering::Greater
+    } else if b.is_better_than(a) {
+        std::cmp::Ordering::Less
+    } else {
+        std::cmp::Ordering::Equal
+    }
+}
+
 /// Returns all elements that are tied for the best rank among the items yielded by `iter`.
 ///
 /// If `iter` is empty, returns an empty `Vec`.

@@ -58,15 +58,7 @@ where
         // tie-breaking is arbitrary, which is fine for hill-climbing.
         let best_move = N::iter(state.instance, &state.solution)
             .filter(|n| state.is_neighbor_better_than_current(n))
-            .max_by(|a, b| {
-                if a.is_better_than(b) {
-                    std::cmp::Ordering::Greater
-                } else if b.is_better_than(a) {
-                    std::cmp::Ordering::Less
-                } else {
-                    std::cmp::Ordering::Equal
-                }
-            });
+            .max_by(crate::trait_defs::rank_cmp);
         if let Some(best_move) = best_move {
             state.apply(&best_move)?;
         } else {

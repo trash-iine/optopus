@@ -168,15 +168,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
             .population
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| {
-                if a.is_better_than(b) {
-                    std::cmp::Ordering::Greater
-                } else if b.is_better_than(a) {
-                    std::cmp::Ordering::Less
-                } else {
-                    std::cmp::Ordering::Equal
-                }
-            })
+            .max_by(|(_, a), (_, b)| crate::trait_defs::rank_cmp(*a, *b))
             .map(|(i, _)| i);
         Ok(())
     }
@@ -252,15 +244,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
             .population
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| {
-                if a.is_better_than(b) {
-                    std::cmp::Ordering::Greater
-                } else if b.is_better_than(a) {
-                    std::cmp::Ordering::Less
-                } else {
-                    std::cmp::Ordering::Equal
-                }
-            })
+            .min_by(|(_, a), (_, b)| crate::trait_defs::rank_cmp(*a, *b))
             .map(|(i, _)| i)
             .unwrap();
 
@@ -275,15 +259,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
                     .population
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| {
-                        if a.is_better_than(b) {
-                            std::cmp::Ordering::Greater
-                        } else if b.is_better_than(a) {
-                            std::cmp::Ordering::Less
-                        } else {
-                            std::cmp::Ordering::Equal
-                        }
-                    })
+                    .max_by(|(_, a), (_, b)| crate::trait_defs::rank_cmp(*a, *b))
                     .map(|(i, _)| i);
             } else if self.population[worst_idx]
                 .is_better_than(&self.population[self.best_idx.unwrap()])

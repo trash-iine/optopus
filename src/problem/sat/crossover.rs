@@ -1,5 +1,4 @@
-use rand::Rng;
-
+use crate::common::uniform_binary_crossover;
 use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
 
 use super::neighbor::SatFlipNeighbor;
@@ -19,17 +18,7 @@ impl Crossover<Sat> for SatUniformCrossover {
         sol2: &SatSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<SatSolution, crate::error::OptError> {
-        let mut sol = sol1.clone();
-        for i in 0..prob.n_vars() {
-            if sol.x[i] != sol2.x[i] && rng.random::<bool>() {
-                SatFlipNeighbor {
-                    i,
-                    gain: sol.gain[i],
-                }
-                .apply_to_solution(prob, &mut sol)?;
-            }
-        }
-        Ok(sol)
+        uniform_binary_crossover(prob, sol1, sol2, rng)
     }
 }
 
