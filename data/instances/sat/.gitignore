@@ -1,0 +1,5 @@
+# SATLIB instances (uf*) are not redistributed in this repo.
+# No explicit license is granted by SATLIB; fetch locally via the
+# reproduce script in data/instances/README.md. Local files are kept on disk
+# but excluded from version control.
+satlib/

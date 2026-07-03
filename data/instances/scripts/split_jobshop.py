@@ -8,7 +8,8 @@ by descriptive lines, then an `n_jobs n_machines` line and `n_jobs` operation ro
 (pairs of machine_id processing_time, machines 0-indexed) — directly compatible
 with this project's loader (`src/problem/job_shop_scheduling/problem.rs::load_file`).
 
-Usage: python3 data/scripts/split_jobshop.py
+Usage: python3 data/instances/scripts/split_jobshop.py [SRC_DIR]
+  SRC_DIR holds the downloaded orlib_jobshop{1,2}.txt bundles (default: /tmp).
 Outputs: data/instances/jssp/orlib/<name>.txt
 """
 from __future__ import annotations
@@ -17,9 +18,9 @@ from pathlib import Path
 import re
 import sys
 
-REPO = Path(__file__).resolve().parents[2]
-SRC_FILES = [Path("/tmp/orlib_jobshop1.txt"), Path("/tmp/orlib_jobshop2.txt")]
-DST_DIR = REPO / "data" / "jssp" / "orlib"
+SRC_DIR = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp")
+SRC_FILES = [SRC_DIR / "orlib_jobshop1.txt", SRC_DIR / "orlib_jobshop2.txt"]
+DST_DIR = Path(__file__).resolve().parent.parent / "jssp" / "orlib"
 
 INSTANCE_RE = re.compile(r"^\s*instance\s+(\S+)\s*$")
 DIM_RE = re.compile(r"^\s*(\d+)\s+(\d+)\s*$")
