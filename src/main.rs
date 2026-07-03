@@ -66,29 +66,7 @@ fn run() -> Result<(), OptError> {
 
     let report = Benchmark::run_from_config(config, &config_file)?;
 
-    let toml_str = toml::to_string(&report)?;
-
-    let output_dir = std::path::Path::new("result");
-    std::fs::create_dir_all(output_dir).map_err(|e| OptError::FileLoad {
-        path: output_dir.display().to_string(),
-        line: 0,
-        detail: format!("failed to create output directory: {e}"),
-    })?;
-
-    let config_stem = std::path::Path::new(&config_file)
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("benchmark");
-    let output_file = output_dir.join(format!(
-        "{config_stem}_{}.toml",
-        chrono::Local::now().format("%Y%m%d_%H%M%S")
-    ));
-
-    std::fs::write(&output_file, toml_str).map_err(|e| OptError::FileLoad {
-        path: output_file.display().to_string(),
-        line: 0,
-        detail: format!("failed to write result file: {e}"),
-    })?;
+    let output_file = report.write_to_dir("result")?;
 
     tracing::info!("Results written to {}", output_file.display());
     Ok(())
