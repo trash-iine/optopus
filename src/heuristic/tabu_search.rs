@@ -1,8 +1,7 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{
-    EnabledTabu, MoveToNeighbor, ProblemTrait, Rankable, SearchState, filter_best,
-};
+use crate::search_state::{EnabledTabu, MoveToNeighbor, ProblemTrait, Rankable, SearchState};
+use crate::trait_defs::rank_cmp;
 
 /// Tabu search heuristic.
 ///
@@ -89,13 +88,18 @@ where
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let mut best_list = filter_best(N::iter(state.instance, &state.solution).filter(|n| {
-            // Accept a tabu move if it satisfies the aspiration criterion
-            n.is_move_enabled(&self.tabu_map, state.iteration)
-                || state.is_neighbor_better_than_best(n)
-        }));
+        // `max_by(rank_cmp)` returns the last tied-best element — the same move
+        // the previous `filter_best(..).pop()` selected — without collecting
+        // the tie set into a Vec on every iteration.
+        let best_move = N::iter(state.instance, &state.solution)
+            .filter(|n| {
+                // Accept a tabu move if it satisfies the aspiration criterion
+                n.is_move_enabled(&self.tabu_map, state.iteration)
+                    || state.is_neighbor_better_than_best(n)
+            })
+            .max_by(rank_cmp);
 
-        if let Some(best_move) = best_list.pop() {
+        if let Some(best_move) = best_move {
             best_move.add_to_tabu_map(&mut self.tabu_map, state.iteration, self.tabu_tenure);
             state.apply(&best_move)?;
         } else {

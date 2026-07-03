@@ -607,6 +607,25 @@ impl ProblemTrait for FormulaProblem {
     }
 }
 
+impl crate::trait_defs::BinaryProblem for FormulaProblem {
+    type Flip = super::FormulaFlipNeighbor;
+
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        0..self.n_vars
+    }
+
+    fn variable(sol: &FormulaSolution, i: usize) -> bool {
+        sol.x[i]
+    }
+
+    fn flip_move(sol: &FormulaSolution, i: usize) -> Self::Flip {
+        super::FormulaFlipNeighbor {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

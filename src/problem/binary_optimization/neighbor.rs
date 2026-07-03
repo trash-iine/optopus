@@ -1,7 +1,6 @@
-use std::collections::HashMap;
-
 use super::problem::{FormulaProblem, FormulaSolution, Value};
 use crate::{
+    common::{VarTabuMap, add_var_to_tabu, is_var_enabled},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
@@ -30,10 +29,10 @@ impl Evaluate for FormulaFlipNeighbor {
 }
 
 impl EnabledTabu for FormulaFlipNeighbor {
-    type TabuMap = HashMap<usize, u64>;
+    type TabuMap = VarTabuMap;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.get(&self.i).is_none_or(|&t| iteration > t)
+        is_var_enabled(tabu_map, self.i, iteration)
     }
 
     fn add_to_tabu_map(
@@ -42,8 +41,7 @@ impl EnabledTabu for FormulaFlipNeighbor {
         iteration: u64,
         tabu_tenure: (u64, u64),
     ) {
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.i, iteration + d);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
     }
 }
 
@@ -116,12 +114,10 @@ impl Evaluate for FormulaSwapNeighbor {
 }
 
 impl EnabledTabu for FormulaSwapNeighbor {
-    type TabuMap = HashMap<usize, u64>;
+    type TabuMap = VarTabuMap;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let ok_i = tabu_map.get(&self.i).is_none_or(|&t| iteration > t);
-        let ok_j = tabu_map.get(&self.j).is_none_or(|&t| iteration > t);
-        ok_i && ok_j
+        is_var_enabled(tabu_map, self.i, iteration) && is_var_enabled(tabu_map, self.j, iteration)
     }
 
     fn add_to_tabu_map(
@@ -130,10 +126,8 @@ impl EnabledTabu for FormulaSwapNeighbor {
         iteration: u64,
         tabu_tenure: (u64, u64),
     ) {
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.i, iteration + d);
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.j, iteration + d);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
+        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure);
     }
 }
 

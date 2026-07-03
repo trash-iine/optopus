@@ -371,6 +371,25 @@ impl ProblemTrait for Sat {
     }
 }
 
+impl crate::trait_defs::BinaryProblem for Sat {
+    type Flip = super::SatFlipNeighbor;
+
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        0..self.n_vars
+    }
+
+    fn variable(sol: &SatSolution, i: usize) -> bool {
+        sol.x[i]
+    }
+
+    fn flip_move(sol: &SatSolution, i: usize) -> Self::Flip {
+        super::SatFlipNeighbor {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

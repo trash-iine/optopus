@@ -157,6 +157,25 @@ impl ProblemTrait for VertexCover {
     }
 }
 
+impl crate::trait_defs::BinaryProblem for VertexCover {
+    type Flip = super::VertexCoverFlipNeighbor;
+
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        self.graph.iter_on_vertices().copied()
+    }
+
+    fn variable(sol: &VertexCoverSolution, i: usize) -> bool {
+        sol.cover[i]
+    }
+
+    fn flip_move(sol: &VertexCoverSolution, i: usize) -> Self::Flip {
+        super::VertexCoverFlipNeighbor {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

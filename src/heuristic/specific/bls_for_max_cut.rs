@@ -134,7 +134,7 @@ impl BreakoutLocalSearch {
         state.solution.enable_positive_gain_index();
         loop {
             let mut best_move_option: Option<MaxCutFlipNeighbor> = None;
-            for &v in &state.solution.positive_gain {
+            for &v in state.solution.positive_gain.as_slice() {
                 let g = state.solution.gain[v];
                 if let Some(best) = best_move_option
                     && best.gain >= g

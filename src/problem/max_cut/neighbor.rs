@@ -17,6 +17,7 @@
 
 use super::{MaxCut, MaxCutSolution};
 use crate::{
+    common::{VarTabuMap, add_var_to_tabu, is_var_enabled},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
@@ -54,13 +55,11 @@ impl Rankable for MaxCutFlipNeighbor {
 }
 
 impl EnabledTabu for MaxCutFlipNeighbor {
-    type TabuMap = std::collections::HashMap<usize, u64>;
+    type TabuMap = VarTabuMap;
 
     /// A flip move is tabu if the vertex `i` is in the tabu map with a tenure greater than the current iteration.
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map
-            .get(&self.i)
-            .is_none_or(|&tabu_tenure| iteration > tabu_tenure)
+        is_var_enabled(tabu_map, self.i, iteration)
     }
 
     /// When a flip move is applied,
@@ -72,8 +71,7 @@ impl EnabledTabu for MaxCutFlipNeighbor {
         iteration: u64,
         tabu_tenure: (u64, u64),
     ) {
-        let tabu_duration = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.i, iteration + tabu_duration);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
     }
 }
 
@@ -224,18 +222,12 @@ impl Evaluate for MaxCutSwapNeighbor {
 }
 
 impl EnabledTabu for MaxCutSwapNeighbor {
-    type TabuMap = std::collections::HashMap<usize, u64>;
+    type TabuMap = VarTabuMap;
 
     /// A swap move is tabu if either vertex `i` or `j` is in the tabu map with a tenure
     /// greater than the current iteration.
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let enabled_i = tabu_map
-            .get(&self.i)
-            .is_none_or(|&tabu_tenure| iteration > tabu_tenure);
-        let enabled_j = tabu_map
-            .get(&self.j)
-            .is_none_or(|&tabu_tenure| iteration > tabu_tenure);
-        enabled_i && enabled_j
+        is_var_enabled(tabu_map, self.i, iteration) && is_var_enabled(tabu_map, self.j, iteration)
     }
 
     /// Adds both vertices `i` and `j` to the tabu map, each with an independently
@@ -246,11 +238,8 @@ impl EnabledTabu for MaxCutSwapNeighbor {
         iteration: u64,
         tabu_tenure: (u64, u64),
     ) {
-        let tabu_duration = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.i, iteration + tabu_duration);
-
-        let tabu_duration = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.j, iteration + tabu_duration);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
+        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure);
     }
 }
 

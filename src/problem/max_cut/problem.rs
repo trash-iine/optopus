@@ -1,5 +1,6 @@
-use crate::common::Graph;
+use crate::common::{GainIndex, Graph};
 use crate::search_state::{Distance, ProblemTrait, Rankable};
+use crate::trait_defs::BinaryProblem;
 
 /// The MaxCut problem instance — an undirected weighted graph.
 ///
@@ -79,17 +80,10 @@ pub struct MaxCutSolution {
     pub gain: Vec<f32>,
     /// The total weight of edges crossing the cut.
     pub objective: f32,
-    /// Advanced: whether the `positive_gain` index is enabled.
-    /// When `false`, `update_positive_gain_membership` is a no-op.
+    /// Advanced: index of vertices `v` with `gain[v] > 0`, maintained
+    /// incrementally once enabled. Not needed for standard heuristic use.
     /// See [`enable_positive_gain_index`](Self::enable_positive_gain_index).
-    pub(crate) positive_gain_enabled: bool,
-    /// Advanced: unordered list of vertices `v` with `gain[v] > 0`.
-    /// Only maintained when `positive_gain_enabled` is `true`.
-    /// Not needed for standard heuristic use.
-    pub(crate) positive_gain: Vec<usize>,
-    /// Advanced: inverse index for O(1) membership updates.
-    /// `positive_gain_pos[v]` = position of `v` in `positive_gain`, or `-1` if absent.
-    pub(crate) positive_gain_pos: Vec<i32>,
+    pub(crate) positive_gain: GainIndex,
 }
 
 impl Rankable for MaxCutSolution {
@@ -139,9 +133,7 @@ impl MaxCutSolution {
             cut,
             gain,
             objective,
-            positive_gain_enabled: false,
-            positive_gain: Vec::new(),
-            positive_gain_pos: Vec::new(),
+            positive_gain: GainIndex::default(),
         }
     }
 
@@ -196,19 +188,7 @@ impl MaxCutSolution {
     /// // Now positive_gain tracks vertices with gain > 0
     /// ```
     pub fn enable_positive_gain_index(&mut self) {
-        if self.positive_gain_enabled {
-            return;
-        }
-        self.positive_gain_enabled = true;
-        let n = self.gain.len();
-        self.positive_gain.clear();
-        self.positive_gain_pos = vec![-1i32; n];
-        for (v, &g) in self.gain.iter().enumerate() {
-            if g > 0.0 {
-                self.positive_gain_pos[v] = self.positive_gain.len() as i32;
-                self.positive_gain.push(v);
-            }
-        }
+        self.positive_gain.enable(&self.gain, |&g| g > 0.0);
     }
 
     /// Records that vertex `v`'s gain is changing from `self.gain[v]` to `new_gain`.
@@ -218,26 +198,8 @@ impl MaxCutSolution {
     /// No-op when the index is not enabled.
     #[inline]
     pub(crate) fn update_positive_gain_membership(&mut self, v: usize, new_gain: f32) {
-        if !self.positive_gain_enabled {
-            return;
-        }
-        let was_positive = self.gain[v] > 0.0;
-        let is_positive = new_gain > 0.0;
-        if was_positive == is_positive {
-            return;
-        }
-        if is_positive {
-            self.positive_gain_pos[v] = self.positive_gain.len() as i32;
-            self.positive_gain.push(v);
-        } else {
-            let pos = self.positive_gain_pos[v] as usize;
-            let last = *self.positive_gain.last().expect("positive_gain non-empty");
-            self.positive_gain.swap_remove(pos);
-            if last != v {
-                self.positive_gain_pos[last] = pos as i32;
-            }
-            self.positive_gain_pos[v] = -1;
-        }
+        self.positive_gain
+            .update(v, self.gain[v] > 0.0, new_gain > 0.0);
     }
 }
 
@@ -381,6 +343,25 @@ impl ProblemTrait for MaxCut {
     }
 }
 
+impl BinaryProblem for MaxCut {
+    type Flip = super::MaxCutFlipNeighbor;
+
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        self.graph.iter_on_vertices().copied()
+    }
+
+    fn variable(sol: &MaxCutSolution, i: usize) -> bool {
+        sol.cut[i]
+    }
+
+    fn flip_move(sol: &MaxCutSolution, i: usize) -> Self::Flip {
+        super::MaxCutFlipNeighbor {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -486,24 +467,15 @@ mod tests {
         (mc, sol)
     }
 
-    // 1. from_parts() creates a solution with positive_gain_enabled == false
-    //    and empty positive_gain / positive_gain_pos vecs.
+    // 1. from_parts() creates a solution with the positive_gain index disabled.
     #[test]
     fn test_from_parts_index_disabled_by_default() {
         let (_mc, sol) = make_triangle_solution();
-        // The index must not be built yet.
         assert!(
-            !sol.positive_gain_enabled,
+            !sol.positive_gain.is_enabled(),
             "index should be disabled after from_parts"
         );
-        assert!(
-            sol.positive_gain.is_empty(),
-            "positive_gain vec must be empty"
-        );
-        assert!(
-            sol.positive_gain_pos.is_empty(),
-            "positive_gain_pos vec must be empty"
-        );
+        assert!(sol.positive_gain.is_empty(), "positive_gain must be empty");
     }
 
     // 2. enable_positive_gain_index() correctly builds the index from gain[].
@@ -515,25 +487,17 @@ mod tests {
         sol.enable_positive_gain_index();
 
         assert!(
-            sol.positive_gain_enabled,
+            sol.positive_gain.is_enabled(),
             "index should be enabled after call"
         );
         // All gains are 2.0 > 0, so all three vertices appear.
-        let mut listed = sol.positive_gain.clone();
+        let mut listed = sol.positive_gain.as_slice().to_vec();
         listed.sort();
         assert_eq!(
             listed,
             vec![0, 1, 2],
             "all vertices should be in positive_gain"
         );
-        // Inverse index must be consistent.
-        for &v in &sol.positive_gain {
-            let pos = sol.positive_gain_pos[v] as usize;
-            assert_eq!(
-                sol.positive_gain[pos], v,
-                "positive_gain_pos[{v}] must point back to {v}"
-            );
-        }
     }
 
     // Also verify the case where some vertices have non-positive gain.
@@ -562,12 +526,10 @@ mod tests {
             sol.positive_gain.is_empty(),
             "no vertex has gain > 0; positive_gain must be empty"
         );
-        // positive_gain_pos vec must be length n and all -1.
-        assert_eq!(sol.positive_gain_pos.len(), n);
         for v in 0..n {
-            assert_eq!(
-                sol.positive_gain_pos[v], -1,
-                "positive_gain_pos[{v}] must be -1 when vertex is absent"
+            assert!(
+                !sol.positive_gain.contains(v),
+                "vertex {v} must be absent from the index"
             );
         }
     }
@@ -578,35 +540,26 @@ mod tests {
     fn test_enable_positive_gain_index_idempotent() {
         let (_mc, mut sol) = make_triangle_solution();
         sol.enable_positive_gain_index();
-        let pg_after_first = sol.positive_gain.clone();
-        let pg_pos_after_first = sol.positive_gain_pos.clone();
+        let pg_after_first = sol.positive_gain.as_slice().to_vec();
 
         sol.enable_positive_gain_index();
 
         assert_eq!(
-            sol.positive_gain, pg_after_first,
+            sol.positive_gain.as_slice(),
+            pg_after_first,
             "second call must not change positive_gain"
-        );
-        assert_eq!(
-            sol.positive_gain_pos, pg_pos_after_first,
-            "second call must not change positive_gain_pos"
         );
     }
 
     // 4. update_positive_gain_membership() is a no-op when the index is disabled.
-    //    positive_gain and positive_gain_pos must remain empty even after the call.
     #[test]
     fn test_update_positive_gain_membership_noop_when_disabled() {
         let (_mc, mut sol) = make_triangle_solution();
-        // Index not enabled; calling the update must not populate the vecs.
+        // Index not enabled; calling the update must not populate it.
         sol.update_positive_gain_membership(0, 5.0);
         assert!(
             sol.positive_gain.is_empty(),
             "positive_gain must stay empty when index is disabled"
-        );
-        assert!(
-            sol.positive_gain_pos.is_empty(),
-            "positive_gain_pos must stay empty when index is disabled"
         );
     }
 
@@ -625,39 +578,19 @@ mod tests {
         sol.update_positive_gain_membership(0, -1.0);
         sol.gain[0] = -1.0;
         assert!(
-            !sol.positive_gain.contains(&0),
+            !sol.positive_gain.contains(0),
             "vertex 0 must leave positive_gain when gain becomes negative"
         );
-        assert_eq!(
-            sol.positive_gain_pos[0], -1,
-            "inverse index must be -1 for absent vertex"
-        );
         assert_eq!(sol.positive_gain.len(), 2);
-
-        // Verify inverse consistency for remaining vertices.
-        for &v in &sol.positive_gain {
-            let pos = sol.positive_gain_pos[v] as usize;
-            assert_eq!(
-                sol.positive_gain[pos], v,
-                "inverse must be consistent after removal"
-            );
-        }
 
         // Simulate: vertex 0's gain changes back to 3.0 (should re-enter the index).
         sol.update_positive_gain_membership(0, 3.0);
         sol.gain[0] = 3.0;
         assert!(
-            sol.positive_gain.contains(&0),
+            sol.positive_gain.contains(0),
             "vertex 0 must re-enter positive_gain when gain becomes positive"
         );
         assert_eq!(sol.positive_gain.len(), 3);
-        for &v in &sol.positive_gain {
-            let pos = sol.positive_gain_pos[v] as usize;
-            assert_eq!(
-                sol.positive_gain[pos], v,
-                "inverse must be consistent after re-insertion"
-            );
-        }
     }
 
     // 5b. Verify that the positive_gain index stays consistent after applying a real
@@ -691,17 +624,16 @@ mod tests {
             sol.positive_gain.is_empty(),
             "positive_gain must be empty after flip makes all gains non-positive"
         );
-        // Verify the inverse index is all -1.
-        for v in 0..sol.positive_gain_pos.len() {
-            assert_eq!(
-                sol.positive_gain_pos[v], -1,
-                "positive_gain_pos[{v}] must be -1 when index is empty"
+        for v in 0..sol.gain.len() {
+            assert!(
+                !sol.positive_gain.contains(v),
+                "vertex {v} must be absent when index is empty"
             );
         }
     }
 
-    // 6. Clone of an enabled solution preserves positive_gain_enabled == true
-    //    and the index content intact.
+    // 6. Clone of an enabled solution preserves the enabled state and the
+    //    index content intact.
     #[test]
     fn test_clone_preserves_positive_gain_index() {
         let (_mc, mut sol) = make_triangle_solution();
@@ -710,36 +642,31 @@ mod tests {
         let cloned = sol.clone();
 
         assert!(
-            cloned.positive_gain_enabled,
-            "clone must inherit positive_gain_enabled == true"
+            cloned.positive_gain.is_enabled(),
+            "clone must inherit the enabled index"
         );
-        let mut orig_sorted = sol.positive_gain.clone();
+        let mut orig_sorted = sol.positive_gain.as_slice().to_vec();
         orig_sorted.sort();
-        let mut clone_sorted = cloned.positive_gain.clone();
+        let mut clone_sorted = cloned.positive_gain.as_slice().to_vec();
         clone_sorted.sort();
         assert_eq!(
             orig_sorted, clone_sorted,
             "clone must have the same positive_gain contents"
         );
-        assert_eq!(
-            cloned.positive_gain_pos, sol.positive_gain_pos,
-            "clone must have the same positive_gain_pos contents"
-        );
     }
 
-    // 6b. Clone of a disabled solution preserves positive_gain_enabled == false.
+    // 6b. Clone of a disabled solution preserves the disabled state.
     #[test]
     fn test_clone_preserves_disabled_state() {
         let (_mc, sol) = make_triangle_solution();
-        assert!(!sol.positive_gain_enabled);
+        assert!(!sol.positive_gain.is_enabled());
 
         let cloned = sol.clone();
         assert!(
-            !cloned.positive_gain_enabled,
-            "clone must preserve positive_gain_enabled == false"
+            !cloned.positive_gain.is_enabled(),
+            "clone must preserve the disabled index"
         );
         assert!(cloned.positive_gain.is_empty());
-        assert!(cloned.positive_gain_pos.is_empty());
     }
 
     #[test]

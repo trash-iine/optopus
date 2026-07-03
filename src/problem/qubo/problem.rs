@@ -2,7 +2,9 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+use crate::common::GainIndex;
 use crate::search_state::{Distance, ProblemTrait, Rankable};
+use crate::trait_defs::BinaryProblem;
 
 /// Integer coefficient type used in the Q matrix.
 pub type Coefficient = i32;
@@ -49,17 +51,10 @@ pub struct QuboSolution {
     pub x: Vec<bool>,
     pub gain: Vec<Coefficient>,
     pub objective: Coefficient,
-    /// Advanced: whether the `negative_gain` index is enabled.
-    /// When `false`, `update_negative_gain_membership` is a no-op.
+    /// Advanced: index of variables `v` with `gain[v] < 0`, maintained
+    /// incrementally once enabled. Not needed for standard heuristic use.
     /// See [`enable_negative_gain_index`](Self::enable_negative_gain_index).
-    pub(crate) negative_gain_enabled: bool,
-    /// Advanced: unordered list of variables `v` with `gain[v] < 0`.
-    /// Only maintained when `negative_gain_enabled` is `true`.
-    /// Not needed for standard heuristic use.
-    pub(crate) negative_gain: Vec<usize>,
-    /// Advanced: inverse index for O(1) membership updates.
-    /// `negative_gain_pos[v]` = position of `v` in `negative_gain`, or `-1` if absent.
-    pub(crate) negative_gain_pos: Vec<i32>,
+    pub(crate) negative_gain: GainIndex,
 }
 
 impl Rankable for QuboSolution {
@@ -97,9 +92,7 @@ impl QuboSolution {
             x,
             gain,
             objective,
-            negative_gain_enabled: false,
-            negative_gain: Vec::new(),
-            negative_gain_pos: Vec::new(),
+            negative_gain: GainIndex::default(),
         }
     }
 
@@ -152,19 +145,7 @@ impl QuboSolution {
     /// state.solution.enable_negative_gain_index();
     /// ```
     pub fn enable_negative_gain_index(&mut self) {
-        if self.negative_gain_enabled {
-            return;
-        }
-        self.negative_gain_enabled = true;
-        let n = self.gain.len();
-        self.negative_gain.clear();
-        self.negative_gain_pos = vec![-1i32; n];
-        for (v, &g) in self.gain.iter().enumerate() {
-            if g < 0 {
-                self.negative_gain_pos[v] = self.negative_gain.len() as i32;
-                self.negative_gain.push(v);
-            }
-        }
+        self.negative_gain.enable(&self.gain, |&g| g < 0);
     }
 
     /// Records that variable `v`'s gain is changing from `self.gain[v]` to `new_gain`.
@@ -174,26 +155,7 @@ impl QuboSolution {
     /// No-op when the index is not enabled.
     #[inline]
     pub(crate) fn update_negative_gain_membership(&mut self, v: usize, new_gain: Coefficient) {
-        if !self.negative_gain_enabled {
-            return;
-        }
-        let was_negative = self.gain[v] < 0;
-        let is_negative = new_gain < 0;
-        if was_negative == is_negative {
-            return;
-        }
-        if is_negative {
-            self.negative_gain_pos[v] = self.negative_gain.len() as i32;
-            self.negative_gain.push(v);
-        } else {
-            let pos = self.negative_gain_pos[v] as usize;
-            let last = *self.negative_gain.last().expect("negative_gain non-empty");
-            self.negative_gain.swap_remove(pos);
-            if last != v {
-                self.negative_gain_pos[last] = pos as i32;
-            }
-            self.negative_gain_pos[v] = -1;
-        }
+        self.negative_gain.update(v, self.gain[v] < 0, new_gain < 0);
     }
 }
 
@@ -716,6 +678,25 @@ impl ProblemTrait for Qubo {
     }
 }
 
+impl BinaryProblem for Qubo {
+    type Flip = super::QuboFlipNeighbor;
+
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        self.iter_on_variables().copied()
+    }
+
+    fn variable(sol: &QuboSolution, i: usize) -> bool {
+        sol.x[i]
+    }
+
+    fn flip_move(sol: &QuboSolution, i: usize) -> Self::Flip {
+        super::QuboFlipNeighbor {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+}
+
 #[allow(dead_code)]
 pub fn calc_xor_of_solutions(sol1: &QuboSolution, sol2: &QuboSolution) -> usize {
     sol1.x
@@ -1018,11 +999,10 @@ mod qubo_tests {
     fn test_from_parts_index_disabled_by_default() {
         let (_qubo, sol) = make_qubo_and_solution();
         assert!(
-            !sol.negative_gain_enabled,
+            !sol.negative_gain.is_enabled(),
             "index should be disabled after construction"
         );
         assert!(sol.negative_gain.is_empty());
-        assert!(sol.negative_gain_pos.is_empty());
     }
 
     #[test]
@@ -1033,9 +1013,9 @@ mod qubo_tests {
         let (_qubo, mut sol) = make_qubo_and_solution();
         sol.enable_negative_gain_index();
 
-        assert!(sol.negative_gain_enabled);
+        assert!(sol.negative_gain.is_enabled());
         // All-false assignment on all-positive Q: gains are non-negative → no negative gains
-        for &v in &sol.negative_gain {
+        for &v in sol.negative_gain.as_slice() {
             assert!(
                 sol.gain[v] < 0,
                 "all entries in negative_gain must have gain < 0"
@@ -1058,16 +1038,10 @@ mod qubo_tests {
         // gain[2] = -(Q[0][2] + Q[1][2]) = -2
         sol.enable_negative_gain_index();
 
-        assert!(sol.negative_gain_enabled);
-        let mut listed = sol.negative_gain.clone();
+        assert!(sol.negative_gain.is_enabled());
+        let mut listed = sol.negative_gain.as_slice().to_vec();
         listed.sort();
         assert_eq!(listed, vec![0, 1, 2], "all variables should have gain < 0");
-
-        // Verify inverse index consistency
-        for &v in &sol.negative_gain {
-            let pos = sol.negative_gain_pos[v] as usize;
-            assert_eq!(sol.negative_gain[pos], v);
-        }
     }
 
     #[test]
@@ -1082,10 +1056,8 @@ mod qubo_tests {
             sol.negative_gain.is_empty(),
             "no variable has gain < 0; negative_gain must be empty"
         );
-        let n = sol.gain.len();
-        assert_eq!(sol.negative_gain_pos.len(), n);
-        for v in 0..n {
-            assert_eq!(sol.negative_gain_pos[v], -1);
+        for v in 0..sol.gain.len() {
+            assert!(!sol.negative_gain.contains(v));
         }
     }
 
@@ -1094,13 +1066,11 @@ mod qubo_tests {
         let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 1), (0, 2, 1)]);
         let mut sol = QuboSolution::new_from_assignment(&qubo, vec![true, true, true]);
         sol.enable_negative_gain_index();
-        let ng_after_first = sol.negative_gain.clone();
-        let ng_pos_after_first = sol.negative_gain_pos.clone();
+        let ng_after_first = sol.negative_gain.as_slice().to_vec();
 
         sol.enable_negative_gain_index();
 
-        assert_eq!(sol.negative_gain, ng_after_first);
-        assert_eq!(sol.negative_gain_pos, ng_pos_after_first);
+        assert_eq!(sol.negative_gain.as_slice(), ng_after_first);
     }
 
     #[test]
@@ -1108,7 +1078,6 @@ mod qubo_tests {
         let (_qubo, mut sol) = make_qubo_and_solution();
         sol.update_negative_gain_membership(0, -5);
         assert!(sol.negative_gain.is_empty());
-        assert!(sol.negative_gain_pos.is_empty());
     }
 
     #[test]
@@ -1123,27 +1092,16 @@ mod qubo_tests {
         sol.update_negative_gain_membership(0, 1);
         sol.gain[0] = 1;
         assert!(
-            !sol.negative_gain.contains(&0),
+            !sol.negative_gain.contains(0),
             "variable 0 must leave negative_gain when gain becomes non-negative"
         );
-        assert_eq!(sol.negative_gain_pos[0], -1);
         assert_eq!(sol.negative_gain.len(), 2);
-
-        // Verify inverse consistency for remaining variables
-        for &v in &sol.negative_gain {
-            let pos = sol.negative_gain_pos[v] as usize;
-            assert_eq!(sol.negative_gain[pos], v);
-        }
 
         // Simulate: variable 0's gain changes back to -3 (should re-enter the index)
         sol.update_negative_gain_membership(0, -3);
         sol.gain[0] = -3;
-        assert!(sol.negative_gain.contains(&0));
+        assert!(sol.negative_gain.contains(0));
         assert_eq!(sol.negative_gain.len(), 3);
-        for &v in &sol.negative_gain {
-            let pos = sol.negative_gain_pos[v] as usize;
-            assert_eq!(sol.negative_gain[pos], v);
-        }
     }
 
     #[test]
@@ -1164,19 +1122,13 @@ mod qubo_tests {
 
         // Verify the index matches the actual gain values
         for &v in qubo.iter_on_variables() {
-            let in_index = sol.negative_gain.contains(&v);
+            let in_index = sol.negative_gain.contains(v);
             let has_negative_gain = sol.gain[v] < 0;
             assert_eq!(
                 in_index, has_negative_gain,
                 "variable {v}: in_index={in_index} but gain={} (negative={})",
                 sol.gain[v], has_negative_gain
             );
-        }
-
-        // Verify inverse index consistency
-        for &v in &sol.negative_gain {
-            let pos = sol.negative_gain_pos[v] as usize;
-            assert_eq!(sol.negative_gain[pos], v);
         }
     }
 
@@ -1188,23 +1140,21 @@ mod qubo_tests {
 
         let cloned = sol.clone();
 
-        assert!(cloned.negative_gain_enabled);
-        let mut orig_sorted = sol.negative_gain.clone();
+        assert!(cloned.negative_gain.is_enabled());
+        let mut orig_sorted = sol.negative_gain.as_slice().to_vec();
         orig_sorted.sort();
-        let mut clone_sorted = cloned.negative_gain.clone();
+        let mut clone_sorted = cloned.negative_gain.as_slice().to_vec();
         clone_sorted.sort();
         assert_eq!(orig_sorted, clone_sorted);
-        assert_eq!(cloned.negative_gain_pos, sol.negative_gain_pos);
     }
 
     #[test]
     fn test_clone_preserves_disabled_state() {
         let (_qubo, sol) = make_qubo_and_solution();
-        assert!(!sol.negative_gain_enabled);
+        assert!(!sol.negative_gain.is_enabled());
 
         let cloned = sol.clone();
-        assert!(!cloned.negative_gain_enabled);
+        assert!(!cloned.negative_gain.is_enabled());
         assert!(cloned.negative_gain.is_empty());
-        assert!(cloned.negative_gain_pos.is_empty());
     }
 }
