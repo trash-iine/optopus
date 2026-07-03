@@ -63,8 +63,8 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
         prob: &VertexCover,
         sol: &mut VertexCoverSolution,
     ) -> Result<(), OptError> {
-        let was_in = sol.cover[self.i];
-        sol.cover[self.i] = !was_in;
+        let was_in = sol.x[self.i];
+        sol.x[self.i] = !was_in;
 
         // Self gain inverts on a flip (since flipping back exactly undoes the move).
         sol.gain[self.i] = -self.gain;
@@ -82,7 +82,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
         //   - If !cover[j]: edge (i, j) flips between covered ↔ uncovered.
         //   - gain[j] shifts by ±pw depending on (cover[j], was_in).
         for &(j, _w) in prob.graph.iter_on_adjacency(self.i) {
-            let cj = sol.cover[j];
+            let cj = sol.x[j];
             if !cj {
                 if was_in {
                     sol.uncovered_edges += 1;
@@ -192,17 +192,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
         prob: &VertexCover,
         sol: &mut VertexCoverSolution,
     ) -> Result<(), OptError> {
-        let flip_i = VertexCoverFlipNeighbor {
-            i: self.i,
-            gain: sol.gain[self.i],
-        };
-        flip_i.apply_to_solution(prob, sol)?;
-        let flip_j = VertexCoverFlipNeighbor {
-            i: self.j,
-            gain: sol.gain[self.j],
-        };
-        flip_j.apply_to_solution(prob, sol)?;
-        Ok(())
+        crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
@@ -210,7 +200,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
         prob.graph.iter_on_vertices().flat_map(move |&i| {
             prob.graph
                 .iter_on_vertices()
-                .filter(move |&&j| j < i && (sol.cover[i] != sol.cover[j]))
+                .filter(move |&&j| j < i && (sol.x[i] != sol.x[j]))
                 .map(move |&j| {
                     // Combined Δobjective for flipping i then j (cover_size unchanged):
                     //   gain[i] + gain[j] - pw if (i, j) is an edge, else gain[i] + gain[j].
@@ -263,12 +253,12 @@ mod tests {
         state.apply(&n).unwrap();
 
         // After inserting vertex 0: cover_size = 1, uncovered edges = 1 (only (1,2)).
-        assert!(state.solution.cover[0]);
+        assert!(state.solution.x[0]);
         assert_eq!(state.solution.cover_size, 1);
         assert_eq!(state.solution.uncovered_edges, 1);
 
         // Verify against from-scratch recomputation.
-        let (gain, obj, cs, ue) = vc.calculate_state(&state.solution.cover);
+        let (gain, obj, cs, ue) = vc.calculate_state(&state.solution.x);
         assert_eq!(state.solution.gain, gain);
         assert_eq!(state.solution.objective, obj);
         assert_eq!(state.solution.cover_size, cs);
@@ -293,7 +283,7 @@ mod tests {
         let predicted_gain = swap.gain;
         state.apply(&swap).unwrap();
 
-        let (gain, obj, cs, ue) = vc.calculate_state(&state.solution.cover);
+        let (gain, obj, cs, ue) = vc.calculate_state(&state.solution.x);
         assert_eq!(state.solution.gain, gain);
         assert_eq!(state.solution.objective, obj);
         assert_eq!(state.solution.cover_size, cs);
@@ -309,7 +299,7 @@ mod tests {
         // Mixed (i, j) with j < i: (1, 0) and (2, 0). No (2, 1) since both are out.
         assert_eq!(pairs.len(), 2);
         for p in &pairs {
-            assert_ne!(sol.cover[p.i], sol.cover[p.j]);
+            assert_ne!(sol.x[p.i], sol.x[p.j]);
             assert!(p.j < p.i);
         }
     }

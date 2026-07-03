@@ -67,14 +67,14 @@ pub struct MaxCut {
 ///
 /// let sol = &state.best_solution;
 /// // sol.objective — the cut weight
-/// // sol.cut[i]   — which side vertex i is on
+/// // sol.x[i]   — which side vertex i is on
 /// // sol.gain[i]  — how much flipping vertex i would change the objective
 /// ```
 #[derive(Debug, Clone)]
 pub struct MaxCutSolution {
     /// The cut assignment for each vertex: `cut[i]` is the side of vertex `i`.
     /// Sized to `max_vertex_id + 1`; only indices in `MaxCut::graph.vertices` are meaningful.
-    pub cut: Vec<bool>,
+    pub x: Vec<bool>,
     /// The gain of flipping each vertex: `gain[i]` = change in cut weight when flipping `i`.
     /// Sized to `max_vertex_id + 1`.
     pub gain: Vec<f32>,
@@ -94,16 +94,12 @@ impl Rankable for MaxCutSolution {
 
 impl Distance for MaxCutSolution {
     fn distance(&self, other: &Self) -> usize {
-        self.cut
-            .iter()
-            .zip(other.cut.iter())
-            .filter(|(a, b)| a != b)
-            .count()
+        crate::common::hamming_distance(&self.x, &other.x)
     }
 }
 
 impl MaxCutSolution {
-    /// Returns an iterator over all vertex indices `0..cut.len()`.
+    /// Returns an iterator over all vertex indices `0..x.len()`.
     ///
     /// # Examples
     ///
@@ -113,11 +109,11 @@ impl MaxCutSolution {
     /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
     /// let state = SearchState::new(&mc);
     /// for v in state.solution.iter_on_vertices() {
-    ///     println!("vertex {v}: side={}", state.solution.cut[v]);
+    ///     println!("vertex {v}: side={}", state.solution.x[v]);
     /// }
     /// ```
     pub fn iter_on_vertices(&self) -> impl Iterator<Item = usize> + '_ {
-        0..self.cut.len()
+        0..self.x.len()
     }
 
     /// Builds a [`MaxCutSolution`] from pre-computed components.
@@ -126,11 +122,11 @@ impl MaxCutSolution {
     /// The advanced `positive_gain` index is not initialised; see
     /// [`enable_positive_gain_index`](Self::enable_positive_gain_index) if you need it.
     ///
-    /// Prefer [`new_from_cut`](Self::new_from_cut) for constructing solutions from
+    /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions from
     /// a cut assignment — it computes `gain` and `objective` automatically.
-    pub(crate) fn new_from_parts(cut: Vec<bool>, gain: Vec<f32>, objective: f32) -> Self {
+    pub(crate) fn new_from_parts(x: Vec<bool>, gain: Vec<f32>, objective: f32) -> Self {
         Self {
-            cut,
+            x,
             gain,
             objective,
             positive_gain: GainIndex::default(),
@@ -145,10 +141,10 @@ impl MaxCutSolution {
     /// use optopus::prelude::*;
     ///
     /// let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
-    /// let sol = MaxCutSolution::new_from_cut(&mc, vec![true, false, false]);
+    /// let sol = MaxCutSolution::new_from_assignment(&mc, vec![true, false, false]);
     /// assert_eq!(sol.objective, 3.0);  // edges (0,1)=1.0 + (0,2)=2.0
     /// ```
-    pub fn new_from_cut(mc: &MaxCut, cut: Vec<bool>) -> Self {
+    pub fn new_from_assignment(mc: &MaxCut, cut: Vec<bool>) -> Self {
         let n = mc.graph.len();
         let mut gain = vec![0.0; n];
         for &i in mc.graph.iter_on_vertices() {
@@ -339,7 +335,7 @@ impl ProblemTrait for MaxCut {
         for &i in self.graph.iter_on_vertices() {
             cut[i] = rng.random_bool(0.5);
         }
-        MaxCutSolution::new_from_cut(self, cut)
+        MaxCutSolution::new_from_assignment(self, cut)
     }
 }
 
@@ -351,7 +347,7 @@ impl BinaryProblem for MaxCut {
     }
 
     fn variable(sol: &MaxCutSolution, i: usize) -> bool {
-        sol.cut[i]
+        sol.x[i]
     }
 
     fn flip_move(sol: &MaxCutSolution, i: usize) -> Self::Flip {

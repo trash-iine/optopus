@@ -4,9 +4,9 @@
 //! for the objective and a list of penalty-weighted constraints ([`Constraint`]).
 //! Both maximization and minimization directions are supported via [`OptDirection`].
 
-pub mod crossover;
-pub mod neighbor;
-pub mod problem;
+mod crossover;
+mod neighbor;
+mod problem;
 
 pub use crossover::FormulaUniformCrossover;
 pub use neighbor::{FormulaFlipNeighbor, FormulaSwapNeighbor};

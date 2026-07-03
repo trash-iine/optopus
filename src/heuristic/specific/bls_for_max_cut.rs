@@ -284,7 +284,7 @@ impl BreakoutLocalSearch {
             let mut oldest_tabu_v1: Option<(usize, u64)> = None;
 
             for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
-                let on_side0 = state.solution.cut[neighbor.i];
+                let on_side0 = state.solution.x[neighbor.i];
 
                 // Track best vertex per side (regardless of tabu status).
                 let best_ref = if on_side0 { &mut best_v0 } else { &mut best_v1 };

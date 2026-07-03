@@ -134,19 +134,7 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
 
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
         // Flip i first, then flip j using the updated gain[j] after the first flip
-        let flip_i = SatFlipNeighbor {
-            i: self.i,
-            gain: sol.gain[self.i],
-        };
-        flip_i.apply_to_solution(prob, sol)?;
-
-        let flip_j = SatFlipNeighbor {
-            i: self.j,
-            gain: sol.gain[self.j],
-        };
-        flip_j.apply_to_solution(prob, sol)?;
-
-        Ok(())
+        crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {

@@ -1,6 +1,4 @@
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 
 use crate::common::GainIndex;
 use crate::search_state::{Distance, ProblemTrait, Rankable};
@@ -65,7 +63,7 @@ impl Rankable for QuboSolution {
 
 impl Distance for QuboSolution {
     fn distance(&self, other: &Self) -> usize {
-        calc_xor_of_solutions(self, other)
+        crate::common::hamming_distance(&self.x, &other.x)
     }
 }
 
@@ -487,96 +485,33 @@ impl Qubo {
     /// (diagonal) coefficient. Duplicate entries follow [`set_q`](Self::set_q)
     /// semantics: the last write wins.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
-        use crate::error::OptError;
+        use crate::common::InstanceLines;
 
-        let path = path.as_ref();
-        let path_display = path.display().to_string();
-        let err = |line: usize, detail: String| OptError::FileLoad {
-            path: path_display.clone(),
-            line,
-            detail,
-        };
-
-        let file = File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
-        let reader = BufReader::new(file);
-        let mut line_iter = reader.lines();
-        let (n, _) = {
-            let line = line_iter
-                .next()
-                .ok_or_else(|| err(1, "file is empty, expected header 'N M'".into()))?
-                .map_err(|e| err(1, format!("failed to read header line: {e}")))?;
-            let mut iter = line.split_whitespace();
-            let n = iter
-                .next()
-                .ok_or_else(|| err(1, "expected header 'N M', but line is empty".into()))?
-                .parse::<usize>()
-                .map_err(|e| err(1, format!("failed to parse variable count N: {e}")))?;
-            let m = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        1,
-                        "expected header 'N M', but entry count M is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(1, format!("failed to parse entry count M: {e}")))?;
-            (n, m)
-        };
+        let mut lines = InstanceLines::open(path)?;
+        let header = lines
+            .next_line()?
+            .ok_or_else(|| lines.err("file is empty, expected header 'N M'"))?;
+        let mut tokens = header.split_whitespace();
+        let n: usize = lines.parse_next(&mut tokens, "variable count N in header 'N M'")?;
+        let _m: usize = lines.parse_next(&mut tokens, "entry count M in header 'N M'")?;
 
         let mut qubo = Qubo {
             adj: vec![vec![]; n],
             variables: (0..n).collect(),
         };
 
-        let mut line_num = 1;
-        for result in line_iter {
-            line_num += 1;
-            let line = result.map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
-            if line.trim().is_empty() {
-                continue;
-            }
-            let mut iter = line.split_whitespace();
-            let i = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        "expected entry 'i j v', but index i is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(line_num, format!("failed to parse index i: {e}")))?;
+        while let Some(line) = lines.next_data_line()? {
+            let mut tokens = line.split_whitespace();
+            let i: usize = lines.parse_next(&mut tokens, "index i in entry 'i j v'")?;
             if i == 0 {
-                return Err(err(line_num, "index i must be >= 1 (1-indexed)".into()));
+                return Err(lines.err("index i must be >= 1 (1-indexed)"));
             }
-            let i = i - 1;
-            let j = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        "expected entry 'i j v', but index j is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(line_num, format!("failed to parse index j: {e}")))?;
+            let j: usize = lines.parse_next(&mut tokens, "index j in entry 'i j v'")?;
             if j == 0 {
-                return Err(err(line_num, "index j must be >= 1 (1-indexed)".into()));
+                return Err(lines.err("index j must be >= 1 (1-indexed)"));
             }
-            let j = j - 1;
-            let v = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        "expected entry 'i j v', but coefficient v is missing".into(),
-                    )
-                })?
-                .parse::<i32>()
-                .map_err(|e| err(line_num, format!("failed to parse coefficient v: {e}")))?;
-
-            qubo.set_q(i, j, v);
+            let v: i32 = lines.parse_next(&mut tokens, "coefficient v in entry 'i j v'")?;
+            qubo.set_q(i - 1, j - 1, v);
         }
 
         Ok(qubo)
@@ -695,15 +630,6 @@ impl BinaryProblem for Qubo {
             gain: sol.gain[i],
         }
     }
-}
-
-#[allow(dead_code)]
-pub fn calc_xor_of_solutions(sol1: &QuboSolution, sol2: &QuboSolution) -> usize {
-    sol1.x
-        .iter()
-        .zip(sol2.x.iter())
-        .filter(|(a, b)| a != b)
-        .count()
 }
 
 pub fn make_sub_problem_from(qubo: &Qubo, parents: &[&QuboSolution]) -> Qubo {

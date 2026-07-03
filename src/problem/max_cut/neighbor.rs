@@ -81,7 +81,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
     /// Applies the flip move: transfers vertex `self.i` to the opposite partition side.
     ///
     /// Updates the solution in-place in O(degree(i)):
-    /// 1. Flips `solution.cut[i]`
+    /// 1. Flips `solution.x[i]`
     /// 2. Inverts `solution.gain[i]`
     /// 3. Updates `gain[j]` for each neighbor `j` of `i`
     /// 4. Adds `self.gain` to `solution.objective`
@@ -92,22 +92,22 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         prob: &MaxCut,
         solution: &mut MaxCutSolution,
     ) -> Result<(), OptError> {
-        let bi = solution.cut[self.i];
+        let bi = solution.x[self.i];
 
         // Flip
-        solution.cut[self.i] = !bi;
+        solution.x[self.i] = !bi;
 
         // Update the gain for the flipped vertex (its sign always inverts).
         let new_gain_i = -self.gain;
         solution.update_positive_gain_membership(self.i, new_gain_i);
         solution.gain[self.i] = new_gain_i;
 
-        // Update neighbour gains. After `self.cut[self.i]` has been flipped,
+        // Update neighbour gains. After `self.x[self.i]` has been flipped,
         // `bi` still holds the pre-flip side, so `bi ^ bj` reflects whether the
         // edge was crossing before the flip (and is now not crossing, hence
         // `+2w`), and vice versa.
         for &(j, w) in prob.graph.iter_on_adjacency(self.i) {
-            let bj = solution.cut[j];
+            let bj = solution.x[j];
             let delta = if bi ^ bj { w * 2.0 } else { -w * 2.0 };
             let new_g = solution.gain[j] + delta;
             solution.update_positive_gain_membership(j, new_g);
@@ -262,17 +262,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     /// The second flip uses the updated gain after the first flip, so the combined
     /// effect accounts for the interaction between the two vertices.
     fn apply_to_solution(&self, prob: &MaxCut, sol: &mut MaxCutSolution) -> Result<(), OptError> {
-        let flip_i = MaxCutFlipNeighbor {
-            i: self.i,
-            gain: sol.gain[self.i],
-        };
-        flip_i.apply_to_solution(prob, sol)?;
-        let flip_j = MaxCutFlipNeighbor {
-            i: self.j,
-            gain: sol.gain[self.j],
-        };
-        flip_j.apply_to_solution(prob, sol)?;
-        Ok(())
+        crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     /// Returns a lazy iterator over all valid swap pairs `(i, j)` where
@@ -284,7 +274,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
         prob.graph.iter_on_vertices().flat_map(move |&i| {
             prob.graph
                 .iter_on_vertices()
-                .filter(move |&&j| j < i && (sol.cut[i] ^ sol.cut[j]))
+                .filter(move |&&j| j < i && (sol.x[i] ^ sol.x[j]))
                 .map(move |&j| Self {
                     i,
                     j,
@@ -328,13 +318,13 @@ mod tests {
         let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
 
         let mut state = SearchState::new(&mc);
-        state.solution.cut[0] = true;
-        state.solution.cut[1] = false;
-        state.solution.cut[2] = true;
+        state.solution.x[0] = true;
+        state.solution.x[1] = false;
+        state.solution.x[2] = true;
 
         let neighbor = MaxCutFlipNeighbor { i: 1, gain: -2.0 };
         state.apply(&neighbor).unwrap();
 
-        assert!(state.solution.cut[1]);
+        assert!(state.solution.x[1]);
     }
 }

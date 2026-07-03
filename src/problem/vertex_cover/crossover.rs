@@ -1,9 +1,8 @@
 use std::collections::HashSet;
 
-use crate::common::{Graph, uniform_binary_crossover};
-use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
+use crate::common::{Graph, lift_binary_solution, uniform_binary_crossover};
+use crate::search_state::{Crossover, SubProblemExtractable};
 
-use super::neighbor::VertexCoverFlipNeighbor;
 use super::problem::{VertexCover, VertexCoverSolution};
 
 /// Uniform crossover for Vertex Cover.
@@ -35,7 +34,7 @@ impl SubProblemExtractable for VertexCover {
         let free: HashSet<usize> = self
             .graph
             .iter_on_vertices()
-            .filter(|&&v| sol1.cover[v] != sol2.cover[v])
+            .filter(|&&v| sol1.x[v] != sol2.x[v])
             .copied()
             .collect();
 
@@ -60,24 +59,7 @@ impl SubProblemExtractable for VertexCover {
         sol2: &VertexCoverSolution,
         sub_solution: &VertexCoverSolution,
     ) -> VertexCoverSolution {
-        let mut sol = sol1.clone();
-        for v in 0..sub_solution.cover.len() {
-            // Skip fixed vertices (same membership in both parents).
-            if sol1.cover[v] == sol2.cover[v] {
-                continue;
-            }
-            if sol.cover[v] == sub_solution.cover[v] {
-                continue;
-            }
-            let neighbor = VertexCoverFlipNeighbor {
-                i: v,
-                gain: sol.gain[v],
-            };
-            neighbor
-                .apply_to_solution(self, &mut sol)
-                .expect("flipping should never fail");
-        }
-        sol
+        lift_binary_solution(self, sol1, sol2, sub_solution, 0..sub_solution.x.len())
     }
 }
 
@@ -101,7 +83,7 @@ mod tests {
         let mut cx = VertexCoverUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         let offspring = cx.crossover(&vc, &s, &s, &mut rng).unwrap();
-        assert_eq!(offspring.cover, s.cover);
+        assert_eq!(offspring.x, s.x);
         assert_eq!(offspring.objective, s.objective);
     }
 
@@ -114,7 +96,7 @@ mod tests {
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         let offspring = cx.crossover(&vc, &a, &b, &mut rng).unwrap();
 
-        let (gain, obj, cs, ue) = vc.calculate_state(&offspring.cover);
+        let (gain, obj, cs, ue) = vc.calculate_state(&offspring.x);
         assert_eq!(offspring.gain, gain);
         assert_eq!(offspring.objective, obj);
         assert_eq!(offspring.cover_size, cs);
@@ -146,12 +128,12 @@ mod tests {
         let lifted = vc.lift_solution(&parent_a, &parent_b, &sub_sol);
 
         // Fixed vertex 0 inherits from parent_a.
-        assert_eq!(lifted.cover[0], parent_a.cover[0]);
-        assert_eq!(lifted.cover[1], sub_sol.cover[1]);
-        assert_eq!(lifted.cover[2], sub_sol.cover[2]);
+        assert_eq!(lifted.x[0], parent_a.x[0]);
+        assert_eq!(lifted.x[1], sub_sol.x[1]);
+        assert_eq!(lifted.x[2], sub_sol.x[2]);
 
         // Verify gain consistency.
-        let (gain, obj, cs, ue) = vc.calculate_state(&lifted.cover);
+        let (gain, obj, cs, ue) = vc.calculate_state(&lifted.x);
         assert_eq!(lifted.gain, gain);
         assert_eq!(lifted.objective, obj);
         assert_eq!(lifted.cover_size, cs);

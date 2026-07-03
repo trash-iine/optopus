@@ -234,19 +234,7 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
 
     /// Applies the swap by performing two sequential flips: first `i`, then `j`.
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
-        let flip_i = QuboFlipNeighbor {
-            i: self.i,
-            gain: sol.gain[self.i],
-        };
-        flip_i.apply_to_solution(prob, sol)?;
-
-        let flip_j = QuboFlipNeighbor {
-            i: self.j,
-            gain: sol.gain[self.j],
-        };
-        flip_j.apply_to_solution(prob, sol)?;
-
-        Ok(())
+        crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     /// Returns a lazy iterator over all valid swap pairs `(i, j)` where

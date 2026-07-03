@@ -142,7 +142,7 @@
 //!
 //! let sol = &state.best_solution;
 //! println!("objective = {}", sol.objective);          // cut weight
-//! println!("cut = {:?}", sol.cut);                    // partition assignment
+//! println!("cut = {:?}", sol.x);                    // partition assignment
 //! println!("gain[0] = {}", sol.gain[0]);              // flip gain for vertex 0
 //! println!("found at iteration {}", state.best_iteration);
 //! ```
