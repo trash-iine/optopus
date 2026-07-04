@@ -69,20 +69,6 @@ pub trait Heuristic<Problem: ProblemTrait> {
     }
 }
 
-pub trait ParallelHeuristic<Problem: ProblemTrait>: Heuristic<Problem> {
-    fn run_once_par<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError> {
-        self.run_once(state)
-    }
-    fn run_par<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError> {
-        self.clear();
-        while !self.is_done(state) {
-            self.run_once_par(state)?;
-        }
-
-        Ok(())
-    }
-}
-
 /// This struct represents the stopping condition for heuristics.
 ///
 /// It can be configured with

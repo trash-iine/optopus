@@ -246,24 +246,6 @@ where
 
         Ok(())
     }
-
-    fn run<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        self.clear();
-        tracing::debug!("RLSearch run started");
-
-        while !self.is_done(state) {
-            self.run_once(state)?;
-        }
-
-        tracing::debug!(
-            iteration = state.iteration,
-            best_iteration = state.best_iteration,
-            elapsed_secs = state.duration().as_secs_f64(),
-            weights = ?self.policy.weights,
-            "RLSearch run completed"
-        );
-        Ok(())
-    }
 }
 
 #[cfg(test)]
