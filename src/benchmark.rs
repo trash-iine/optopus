@@ -55,7 +55,7 @@ impl BenchmarkSolution for MaxCutSolution {
         self.objective as f64
     }
     fn encode_as_indices(&self) -> Vec<usize> {
-        self.cut
+        self.x
             .iter()
             .enumerate()
             .filter(|&(_, &v)| v)
@@ -131,7 +131,7 @@ impl BenchmarkSolution for VertexCoverSolution {
         self.objective as f64
     }
     fn encode_as_indices(&self) -> Vec<usize> {
-        self.cover
+        self.x
             .iter()
             .enumerate()
             .filter(|&(_, &v)| v)
@@ -160,6 +160,10 @@ impl BenchmarkSolution for JobShopSolution {
 // ---------------------------------------------------------------------------
 
 /// Problem type discriminant used in config files.
+///
+/// `FormulaProblem` is intentionally absent: it is library-only, constructed
+/// in code from an [`Expr`](crate::problem::Expr) AST, and has no instance
+/// file format for the benchmark runner to load.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum ProblemKind {
     MaxCut,

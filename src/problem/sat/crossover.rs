@@ -1,7 +1,6 @@
-use crate::common::uniform_binary_crossover;
-use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
+use crate::common::{lift_compact_binary_solution, uniform_binary_crossover};
+use crate::search_state::{Crossover, SubProblemExtractable};
 
-use super::neighbor::SatFlipNeighbor;
 use super::problem::{Sat, SatSolution};
 
 /// Uniform crossover for SAT.
@@ -84,23 +83,7 @@ impl SubProblemExtractable for Sat {
         sol2: &SatSolution,
         sub_solution: &SatSolution,
     ) -> SatSolution {
-        let free_vars: Vec<usize> = (0..self.n_vars())
-            .filter(|&i| sol1.x[i] != sol2.x[i])
-            .collect();
-
-        let mut sol = sol1.clone();
-        for (sub_idx, &orig_idx) in free_vars.iter().enumerate() {
-            if sol.x[orig_idx] == sub_solution.x[sub_idx] {
-                continue;
-            }
-            SatFlipNeighbor {
-                i: orig_idx,
-                gain: sol.gain[orig_idx],
-            }
-            .apply_to_solution(self, &mut sol)
-            .expect("flipping should never fail");
-        }
-        sol
+        lift_compact_binary_solution(self, sol1, sol2, sub_solution, self.n_vars())
     }
 }
 

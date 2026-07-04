@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-
 use rand::seq::SliceRandom;
 
 use crate::error::OptError;
@@ -74,41 +71,36 @@ impl JobShopScheduling {
     /// ```
     /// Machine indices are 0-indexed. Empty lines and `#`-prefixed comment lines are ignored.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, OptError> {
-        let path = path.as_ref();
-        let path_display = path.display().to_string();
-        let err = |line: usize, detail: String| OptError::FileLoad {
-            path: path_display.clone(),
-            line,
-            detail,
-        };
+        use crate::common::InstanceLines;
 
-        let file = File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
-        let reader = BufReader::new(file);
+        let path = path.as_ref();
+        let mut lines = InstanceLines::open(path)?;
 
         let mut tokens: Vec<(usize, String)> = Vec::new();
-        for (idx, line) in reader.lines().enumerate() {
-            let line = line.map_err(|e| err(idx + 1, format!("failed to read line: {e}")))?;
+        while let Some(line) = lines.next_line()? {
             let trimmed = line.trim();
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 continue;
             }
             for tok in trimmed.split_whitespace() {
-                tokens.push((idx + 1, tok.to_string()));
+                tokens.push((lines.line_num(), tok.to_string()));
             }
         }
 
         let mut iter = tokens.into_iter();
         let parse_usize = |entry: Option<(usize, String)>, what: &str| -> Result<usize, OptError> {
-            let (line_num, tok) =
-                entry.ok_or_else(|| err(0, format!("unexpected end of file, expected {what}")))?;
+            let (line_num, tok) = entry.ok_or_else(|| {
+                lines.err_at(0, format!("unexpected end of file, expected {what}"))
+            })?;
             tok.parse::<usize>()
-                .map_err(|e| err(line_num, format!("failed to parse {what} '{tok}': {e}")))
+                .map_err(|e| lines.err_at(line_num, format!("failed to parse {what} '{tok}': {e}")))
         };
         let parse_u32 = |entry: Option<(usize, String)>, what: &str| -> Result<u32, OptError> {
-            let (line_num, tok) =
-                entry.ok_or_else(|| err(0, format!("unexpected end of file, expected {what}")))?;
+            let (line_num, tok) = entry.ok_or_else(|| {
+                lines.err_at(0, format!("unexpected end of file, expected {what}"))
+            })?;
             tok.parse::<u32>()
-                .map_err(|e| err(line_num, format!("failed to parse {what} '{tok}': {e}")))
+                .map_err(|e| lines.err_at(line_num, format!("failed to parse {what} '{tok}': {e}")))
         };
 
         let n_jobs = parse_usize(iter.next(), "n_jobs")?;
@@ -123,7 +115,7 @@ impl JobShopScheduling {
                 let duration =
                     parse_u32(iter.next(), &format!("duration for job {j} operation {k}"))?;
                 if machine >= n_machines {
-                    return Err(err(
+                    return Err(lines.err_at(
                         0,
                         format!(
                             "machine index {machine} out of range (n_machines = {n_machines}) for job {j} operation {k}"

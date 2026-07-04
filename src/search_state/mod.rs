@@ -503,18 +503,18 @@ mod tests {
         assert_eq!(state.n_rejected, 0);
         assert_eq!(state.n_best_updates, 0);
         // initial == current == best at construction
-        assert_eq!(state.initial_solution.cut, state.solution.cut);
-        assert_eq!(state.initial_solution.cut, state.best_solution.cut);
+        assert_eq!(state.initial_solution.x, state.solution.x);
+        assert_eq!(state.initial_solution.x, state.best_solution.x);
     }
 
     #[test]
     fn with_solution_anchors_initial_to_provided_solution() {
         let mc = triangle();
-        let sol = MaxCutSolution::new_from_cut(&mc, vec![true, false, true]);
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![true, false, true]);
         let state = SearchState::with_solution(&mc, sol.clone());
-        assert_eq!(state.initial_solution.cut, sol.cut);
-        assert_eq!(state.solution.cut, sol.cut);
-        assert_eq!(state.best_solution.cut, sol.cut);
+        assert_eq!(state.initial_solution.x, sol.x);
+        assert_eq!(state.solution.x, sol.x);
+        assert_eq!(state.best_solution.x, sol.x);
     }
 
     #[test]
@@ -543,7 +543,7 @@ mod tests {
     fn update_best_counts_real_updates_only() {
         let mc = triangle();
         // Start from a non-optimal solution so that flipping yields improvement
-        let sol = MaxCutSolution::new_from_cut(&mc, vec![false, false, false]);
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, false, false]);
         let mut state = SearchState::with_solution(&mc, sol);
         let before = state.n_best_updates;
         let m = first_flip(&mc, &state.solution);
@@ -564,13 +564,13 @@ mod tests {
         let m = first_flip(&mc, &state.solution);
         state.apply(&m).unwrap();
         state.progress_iteration();
-        let parent_initial = state.initial_solution.cut.clone();
+        let parent_initial = state.initial_solution.x.clone();
         let parent_n_accepted = state.n_accepted;
         let parent_n_rejected = state.n_rejected;
         let parent_n_best = state.n_best_updates;
 
         let child = state.clone_for_new_run(SearchStateCloneType::Simple);
-        assert_eq!(child.initial_solution.cut, parent_initial);
+        assert_eq!(child.initial_solution.x, parent_initial);
         assert_eq!(child.n_accepted, parent_n_accepted);
         assert_eq!(child.n_rejected, parent_n_rejected);
         assert_eq!(child.n_best_updates, parent_n_best);
@@ -582,7 +582,7 @@ mod tests {
     #[test]
     fn update_state_simple_clone_without_improvement_does_not_underflow() {
         let mc = triangle();
-        let sol = MaxCutSolution::new_from_cut(&mc, vec![false, false, false]);
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, false, false]);
         let mut state = SearchState::with_solution(&mc, sol);
         let m = first_flip(&mc, &state.solution);
         state.apply(&m).unwrap(); // best found at iteration 1
@@ -601,7 +601,7 @@ mod tests {
     #[test]
     fn clone_for_new_run_clear_best_reanchors_to_current() {
         let mc = triangle();
-        let sol = MaxCutSolution::new_from_cut(&mc, vec![true, false, false]);
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![true, false, false]);
         let mut state = SearchState::with_solution(&mc, sol);
         state.progress_iteration(); // bump n_rejected so we can tell it gets cleared
 
@@ -610,28 +610,28 @@ mod tests {
         assert_eq!(child.n_accepted, 0);
         assert_eq!(child.n_rejected, 0);
         assert_eq!(child.n_best_updates, 0);
-        assert_eq!(child.initial_solution.cut, child.solution.cut);
-        assert_eq!(child.initial_solution.cut, state.solution.cut);
+        assert_eq!(child.initial_solution.x, child.solution.x);
+        assert_eq!(child.initial_solution.x, state.solution.x);
     }
 
     #[test]
     fn clone_for_new_run_start_best_reanchors_to_best() {
         let mc = triangle();
-        let sol = MaxCutSolution::new_from_cut(&mc, vec![false, false, false]);
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, false, false]);
         let mut state = SearchState::with_solution(&mc, sol);
         let m = first_flip(&mc, &state.solution);
         state.apply(&m).unwrap();
         // current solution should now differ from initial; best should equal current
-        let best_cut = state.best_solution.cut.clone();
+        let best_cut = state.best_solution.x.clone();
 
         let child = state.clone_for_new_run(SearchStateCloneType::StartBest);
         assert_eq!(child.iteration, 0);
         assert_eq!(child.n_accepted, 0);
         assert_eq!(child.n_rejected, 0);
         assert_eq!(child.n_best_updates, 0);
-        assert_eq!(child.initial_solution.cut, best_cut);
-        assert_eq!(child.solution.cut, best_cut);
-        assert_eq!(child.best_solution.cut, best_cut);
+        assert_eq!(child.initial_solution.x, best_cut);
+        assert_eq!(child.solution.x, best_cut);
+        assert_eq!(child.best_solution.x, best_cut);
     }
 
     #[test]
@@ -639,7 +639,7 @@ mod tests {
         let mc = triangle();
         let a = SearchState::new_with_seed(&mc, 42);
         let b = SearchState::new_with_seed(&mc, 42);
-        assert_eq!(a.initial_solution.cut, b.initial_solution.cut);
+        assert_eq!(a.initial_solution.x, b.initial_solution.x);
     }
 
     #[test]
@@ -648,7 +648,7 @@ mod tests {
         let a = SearchState::new_with_seed(&mc, 1);
         let b = SearchState::new_with_seed(&mc, 2);
         // Two unrelated seeds on a 30-bit space almost certainly disagree.
-        assert_ne!(a.initial_solution.cut, b.initial_solution.cut);
+        assert_ne!(a.initial_solution.x, b.initial_solution.x);
     }
 
     #[test]
@@ -680,12 +680,12 @@ mod tests {
     #[test]
     fn update_state_merges_counter_deltas() {
         let mc = triangle();
-        let sol = MaxCutSolution::new_from_cut(&mc, vec![false, false, false]);
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, false, false]);
         let mut parent = SearchState::with_solution(&mc, sol);
         // Pre-existing parent counters to verify additive merge
         parent.progress_iteration();
         parent.progress_iteration();
-        let parent_initial_before = parent.initial_solution.cut.clone();
+        let parent_initial_before = parent.initial_solution.x.clone();
 
         // Spawn ClearBest sub-run (counters start at 0)
         let mut child = parent.clone_for_new_run(SearchStateCloneType::ClearBest);
@@ -701,6 +701,6 @@ mod tests {
         assert_eq!(parent.n_rejected, 2 + child_rejected);
         assert_eq!(parent.n_best_updates, child_best);
         // initial_solution must NOT be overwritten by the child's
-        assert_eq!(parent.initial_solution.cut, parent_initial_before);
+        assert_eq!(parent.initial_solution.x, parent_initial_before);
     }
 }

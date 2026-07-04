@@ -1,9 +1,8 @@
 use std::collections::HashSet;
 
-use crate::common::{Graph, uniform_binary_crossover};
-use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
+use crate::common::{Graph, lift_binary_solution, uniform_binary_crossover};
+use crate::search_state::{Crossover, SubProblemExtractable};
 
-use super::neighbor::MaxCutFlipNeighbor;
 use super::problem::{MaxCut, MaxCutSolution};
 
 /// Uniform crossover for MaxCut.
@@ -74,8 +73,8 @@ impl SubProblemExtractable for MaxCut {
     /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
     ///
     /// // Parent A: all false, Parent B: all true → all vertices disagree
-    /// let sol_a = MaxCutSolution::new_from_cut(&mc,vec![false; 3]);
-    /// let sol_b = MaxCutSolution::new_from_cut(&mc,vec![true; 3]);
+    /// let sol_a = MaxCutSolution::new_from_assignment(&mc,vec![false; 3]);
+    /// let sol_b = MaxCutSolution::new_from_assignment(&mc,vec![true; 3]);
     /// let sub = mc.extract_sub_problem(&sol_a, &sol_b);
     /// assert_eq!(sub.graph.num_vertices(), 3);  // all vertices are free
     /// assert_eq!(sub.graph.num_edges(), 3);
@@ -88,7 +87,7 @@ impl SubProblemExtractable for MaxCut {
         let free: HashSet<usize> = self
             .graph
             .iter_on_vertices()
-            .filter(|&&v| sol1.cut[v] != sol2.cut[v])
+            .filter(|&&v| sol1.x[v] != sol2.x[v])
             .copied()
             .collect();
 
@@ -118,18 +117,18 @@ impl SubProblemExtractable for MaxCut {
     /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
     ///
     /// // Vertex 0 agrees (false), vertices 1 and 2 disagree
-    /// let sol_a = MaxCutSolution::new_from_cut(&mc,vec![false, false, false]);
-    /// let sol_b = MaxCutSolution::new_from_cut(&mc,vec![false, true, true]);
+    /// let sol_a = MaxCutSolution::new_from_assignment(&mc,vec![false, false, false]);
+    /// let sol_b = MaxCutSolution::new_from_assignment(&mc,vec![false, true, true]);
     ///
     /// let sub = mc.extract_sub_problem(&sol_a, &sol_b);
     ///
     /// // Solve sub-problem: assign vertex 1=true, 2=false
-    /// let sub_sol = MaxCutSolution::new_from_cut(&sub,vec![false, true, false]);
+    /// let sub_sol = MaxCutSolution::new_from_assignment(&sub,vec![false, true, false]);
     ///
     /// let lifted = mc.lift_solution(&sol_a, &sol_b, &sub_sol);
-    /// assert_eq!(lifted.cut[0], false);  // fixed from sol_a
-    /// assert_eq!(lifted.cut[1], true);   // from sub_solution
-    /// assert_eq!(lifted.cut[2], false);  // from sub_solution
+    /// assert_eq!(lifted.x[0], false);  // fixed from sol_a
+    /// assert_eq!(lifted.x[1], true);   // from sub_solution
+    /// assert_eq!(lifted.x[2], false);  // from sub_solution
     /// ```
     fn lift_solution(
         &self,
@@ -137,25 +136,13 @@ impl SubProblemExtractable for MaxCut {
         sol2: &MaxCutSolution,
         sub_solution: &MaxCutSolution,
     ) -> MaxCutSolution {
-        let mut sol = sol1.clone();
-        for v in sub_solution.iter_on_vertices() {
-            // Skip fixed vertices (same side in both parents).
-            if sol1.cut[v] == sol2.cut[v] {
-                continue;
-            }
-            if sol.cut[v] == sub_solution.cut[v] {
-                continue;
-            }
-            let neighbor = MaxCutFlipNeighbor {
-                i: v,
-                gain: sol.gain[v],
-            };
-            neighbor
-                .apply_to_solution(self, &mut sol)
-                .expect("flipping should never fail");
-        }
-
-        sol
+        lift_binary_solution(
+            self,
+            sol1,
+            sol2,
+            sub_solution,
+            sub_solution.iter_on_vertices(),
+        )
     }
 }
 
@@ -176,7 +163,7 @@ mod tests {
         for &(v, side) in assignments {
             cut[v] = side;
         }
-        MaxCutSolution::new_from_cut(mc, cut)
+        MaxCutSolution::new_from_assignment(mc, cut)
     }
 
     #[test]
@@ -186,7 +173,7 @@ mod tests {
         let mut cx = MaxCutUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         let offspring = cx.crossover(&mc, &s, &s, &mut rng).unwrap();
-        assert_eq!(offspring.cut, s.cut);
+        assert_eq!(offspring.x, s.x);
         assert_eq!(offspring.objective, s.objective);
     }
 
@@ -200,7 +187,7 @@ mod tests {
         let offspring = cx.crossover(&mc, &a, &b, &mut rng).unwrap();
         for &v in mc.graph.iter_on_vertices() {
             let g = offspring.gain[v];
-            let mut flipped = offspring.cut.clone();
+            let mut flipped = offspring.x.clone();
             flipped[v] = !flipped[v];
             let expected = mc.calculate_cut_size(&flipped) - offspring.objective;
             assert!(
@@ -244,21 +231,21 @@ mod tests {
         let lifted = mc.lift_solution(&parent_a, &parent_b, &sub_sol);
 
         assert_eq!(
-            lifted.cut[0], parent_a.cut[0],
+            lifted.x[0], parent_a.x[0],
             "fixed vertex 0 inherits from parent_a"
         );
         assert_eq!(
-            lifted.cut[1], sub_sol.cut[1],
+            lifted.x[1], sub_sol.x[1],
             "free vertex 1 comes from sub_solution"
         );
         assert_eq!(
-            lifted.cut[2], sub_sol.cut[2],
+            lifted.x[2], sub_sol.x[2],
             "free vertex 2 comes from sub_solution"
         );
 
         for &v in mc.graph.iter_on_vertices() {
             let g = lifted.gain[v];
-            let mut flipped = lifted.cut.clone();
+            let mut flipped = lifted.x.clone();
             flipped[v] = !flipped[v];
             let expected = mc.calculate_cut_size(&flipped) - lifted.objective;
             assert!((g - expected).abs() < 1e-5, "lifted gain[{v}] mismatch");

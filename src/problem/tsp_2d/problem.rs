@@ -1,7 +1,5 @@
 use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait, Rankable};
@@ -134,37 +132,10 @@ impl TspWithCoordinates {
 
     /// Loads a TSP instance from a TSPLIB-format file.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
-        use crate::error::OptError;
+        use crate::common::InstanceLines;
 
         let path = path.as_ref();
-        let path_display = path.display().to_string();
-        let err = |line: usize, detail: String| OptError::FileLoad {
-            path: path_display.clone(),
-            line,
-            detail,
-        };
-
-        let file = File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
-        let reader = BufReader::new(file);
-        let mut lines = reader.lines();
-        let mut line_num = 0usize;
-
-        // Helper to read the next line with proper error handling
-        let next_line = |lines: &mut std::io::Lines<BufReader<File>>,
-                         line_num: &mut usize,
-                         expected: &str|
-         -> Result<String, OptError> {
-            *line_num += 1;
-            lines
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        *line_num,
-                        format!("unexpected end of file, expected {expected}"),
-                    )
-                })?
-                .map_err(|e| err(*line_num, format!("failed to read line: {e}")))
-        };
+        let mut lines = InstanceLines::open(path)?;
 
         // Parse TSPLIB header lines until NODE_COORD_SECTION.
         // Accepts any key order, skips unknown keys (TYPE, COMMENT, DISPLAY_DATA_TYPE, ...),
@@ -173,11 +144,9 @@ impl TspWithCoordinates {
         let mut dimension: Option<usize> = None;
         let mut edge_weight_type: Option<String> = None;
         loop {
-            let line = next_line(
-                &mut lines,
-                &mut line_num,
-                "header line or 'NODE_COORD_SECTION'",
-            )?;
+            let line = lines.next_line()?.ok_or_else(|| {
+                lines.err("unexpected end of file, expected header line or 'NODE_COORD_SECTION'")
+            })?;
             let trimmed = line.trim();
             if trimmed.is_empty() {
                 continue;
@@ -198,9 +167,10 @@ impl TspWithCoordinates {
             match key_upper.as_str() {
                 "NAME" => name = Some(value),
                 "DIMENSION" => {
-                    dimension = Some(value.parse::<usize>().map_err(|e| {
-                        err(line_num, format!("failed to parse DIMENSION value: {e}"))
-                    })?);
+                    dimension =
+                        Some(value.parse::<usize>().map_err(|e| {
+                            lines.err(format!("failed to parse DIMENSION value: {e}"))
+                        })?);
                 }
                 "EDGE_WEIGHT_TYPE" => edge_weight_type = Some(value),
                 // TYPE / COMMENT / EDGE_WEIGHT_FORMAT / DISPLAY_DATA_TYPE / ... — skip
@@ -208,26 +178,18 @@ impl TspWithCoordinates {
             }
         }
 
-        let n =
-            dimension.ok_or_else(|| err(line_num, "'DIMENSION: N' not found in header".into()))?;
-        let ewt_raw = edge_weight_type.ok_or_else(|| {
-            err(
-                line_num,
-                "'EDGE_WEIGHT_TYPE: ...' not found in header".into(),
-            )
-        })?;
+        let n = dimension.ok_or_else(|| lines.err("'DIMENSION: N' not found in header"))?;
+        let ewt_raw = edge_weight_type
+            .ok_or_else(|| lines.err("'EDGE_WEIGHT_TYPE: ...' not found in header"))?;
         let ewt = match ewt_raw.to_ascii_uppercase().as_str() {
             "EUC_2D" => EdgeWeightType::Euc2d,
             "CEIL_2D" => EdgeWeightType::Ceil2d,
             "ATT" => EdgeWeightType::Att,
             "GEO" => EdgeWeightType::Geo,
             other => {
-                return Err(err(
-                    line_num,
-                    format!(
-                        "unsupported EDGE_WEIGHT_TYPE '{other}' (supported: EUC_2D, CEIL_2D, ATT, GEO)"
-                    ),
-                ));
+                return Err(lines.err(format!(
+                    "unsupported EDGE_WEIGHT_TYPE '{other}' (supported: EUC_2D, CEIL_2D, ATT, GEO)"
+                )));
             }
         };
         let name = name.unwrap_or_else(|| {
@@ -239,58 +201,26 @@ impl TspWithCoordinates {
 
         let mut coord = vec![];
         for city_idx in 0..n {
-            let line = next_line(
-                &mut lines,
-                &mut line_num,
-                &format!("coordinate for city {}/{}", city_idx + 1, n),
-            )?;
-            let mut iter = line.split_whitespace();
+            let line = lines.next_line()?.ok_or_else(|| {
+                lines.err(format!(
+                    "unexpected end of file, expected coordinate for city {}/{}",
+                    city_idx + 1,
+                    n
+                ))
+            })?;
+            let mut tokens = line.split_whitespace();
 
             // skip index
-            let _ = iter.next();
+            let _ = tokens.next();
 
-            let x = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        format!(
-                            "expected coordinate 'index x y' for city {}, but x is missing",
-                            city_idx + 1
-                        ),
-                    )
-                })?
-                .parse::<f64>()
-                .map_err(|e| {
-                    err(
-                        line_num,
-                        format!(
-                            "failed to parse x coordinate for city {}: {e}",
-                            city_idx + 1
-                        ),
-                    )
-                })?;
-            let y = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        format!(
-                            "expected coordinate 'index x y' for city {}, but y is missing",
-                            city_idx + 1
-                        ),
-                    )
-                })?
-                .parse::<f64>()
-                .map_err(|e| {
-                    err(
-                        line_num,
-                        format!(
-                            "failed to parse y coordinate for city {}: {e}",
-                            city_idx + 1
-                        ),
-                    )
-                })?;
+            let x: f64 = lines.parse_next(
+                &mut tokens,
+                &format!("x coordinate for city {}", city_idx + 1),
+            )?;
+            let y: f64 = lines.parse_next(
+                &mut tokens,
+                &format!("y coordinate for city {}", city_idx + 1),
+            )?;
 
             coord.push((x, y));
         }

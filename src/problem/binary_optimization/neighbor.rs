@@ -143,18 +143,7 @@ impl MoveToNeighbor<FormulaProblem> for FormulaSwapNeighbor {
         prob: &FormulaProblem,
         sol: &mut FormulaSolution,
     ) -> Result<(), OptError> {
-        let flip_i = FormulaFlipNeighbor {
-            i: self.i,
-            gain: sol.gain[self.i],
-        };
-        flip_i.apply_to_solution(prob, sol)?;
-
-        let flip_j = FormulaFlipNeighbor {
-            i: self.j,
-            gain: sol.gain[self.j],
-        };
-        flip_j.apply_to_solution(prob, sol)?;
-        Ok(())
+        crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     fn iter(prob: &FormulaProblem, sol: &FormulaSolution) -> impl Iterator<Item = Self> + Send {

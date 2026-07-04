@@ -18,7 +18,7 @@ pub struct VertexCover {
 #[derive(Debug, Clone)]
 pub struct VertexCoverSolution {
     /// `cover[v] = true` iff vertex `v` is selected.
-    pub cover: Vec<bool>,
+    pub x: Vec<bool>,
     /// `gain[v]` = change in `objective` if vertex `v` is flipped (negative = improving).
     pub gain: Vec<i32>,
     /// Penalty-augmented objective: `cover_size + penalty_weight * uncovered_edges`.
@@ -37,11 +37,7 @@ impl Rankable for VertexCoverSolution {
 
 impl Distance for VertexCoverSolution {
     fn distance(&self, other: &Self) -> usize {
-        self.cover
-            .iter()
-            .zip(other.cover.iter())
-            .filter(|(a, b)| a != b)
-            .count()
+        crate::common::hamming_distance(&self.x, &other.x)
     }
 }
 
@@ -129,7 +125,7 @@ impl VertexCover {
         };
         let (gain, objective, cover_size, uncovered_edges) = self.calculate_state(&cover);
         VertexCoverSolution {
-            cover,
+            x: cover,
             gain,
             objective,
             cover_size,
@@ -148,7 +144,7 @@ impl ProblemTrait for VertexCover {
         }
         let (gain, objective, cover_size, uncovered_edges) = self.calculate_state(&cover);
         VertexCoverSolution {
-            cover,
+            x: cover,
             gain,
             objective,
             cover_size,
@@ -165,7 +161,7 @@ impl crate::trait_defs::BinaryProblem for VertexCover {
     }
 
     fn variable(sol: &VertexCoverSolution, i: usize) -> bool {
-        sol.cover[i]
+        sol.x[i]
     }
 
     fn flip_move(sol: &VertexCoverSolution, i: usize) -> Self::Flip {
@@ -293,7 +289,7 @@ mod tests {
             };
             neighbor.apply_to_solution(&vc, &mut sol).unwrap();
 
-            let (gain, obj, cs, ue) = vc.calculate_state(&sol.cover);
+            let (gain, obj, cs, ue) = vc.calculate_state(&sol.x);
             assert_eq!(sol.gain, gain, "gain drift");
             assert_eq!(sol.objective, obj, "objective drift");
             assert_eq!(sol.cover_size, cs, "cover_size drift");

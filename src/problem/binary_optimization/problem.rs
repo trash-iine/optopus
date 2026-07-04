@@ -406,11 +406,7 @@ impl Rankable for FormulaSolution {
 
 impl Distance for FormulaSolution {
     fn distance(&self, other: &Self) -> usize {
-        self.x
-            .iter()
-            .zip(other.x.iter())
-            .filter(|(a, b)| a != b)
-            .count()
+        crate::common::hamming_distance(&self.x, &other.x)
     }
 }
 
