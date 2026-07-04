@@ -322,7 +322,7 @@ where
             Ok(Box::new(ga))
         }
         HeuristicConfig::BreakoutLocalSearch { .. }
-        | HeuristicConfig::LinKernighanHelsgott { .. } => P::build_special_heuristic(config, cond),
+        | HeuristicConfig::LinKernighanHelsgaun { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::LocalSearch { neighbor, .. }
         | HeuristicConfig::TabuSearch { neighbor, .. }
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
@@ -447,7 +447,7 @@ mod factory_tests {
         let err = try_build(&ProblemKind::Qubo, &bls).expect_err("BLS invalid for Qubo");
         assert!(err.to_string().contains("Qubo"), "{err}");
 
-        let lkh = HeuristicConfig::LinKernighanHelsgott {
+        let lkh = HeuristicConfig::LinKernighanHelsgaun {
             num_neighbors: None,
             max_depth: None,
             stop_condition: StopConditionConfig::default(),

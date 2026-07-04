@@ -78,7 +78,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
         }
 
         // Update neighbor gains and edge coverage counters.
-        // For each neighbour `j`:
+        // For each neighbor `j`:
         //   - If !cover[j]: edge (i, j) flips between covered ↔ uncovered.
         //   - gain[j] shifts by ±pw depending on (cover[j], was_in).
         for &(j, _w) in prob.graph.iter_on_adjacency(self.i) {

@@ -76,7 +76,7 @@ impl QuboSolution {
     /// Builds a [`QuboSolution`] from pre-computed components.
     ///
     /// The resulting solution is fully functional for all standard heuristics.
-    /// The advanced `negative_gain` index is not initialised; see
+    /// The advanced `negative_gain` index is not initialized; see
     /// [`enable_negative_gain_index`](Self::enable_negative_gain_index) if you need it.
     ///
     /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions

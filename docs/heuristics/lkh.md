@@ -1,4 +1,4 @@
-# LinKernighanHelsgottForTsp
+# LinKernighanHelsgaunForTsp
 
 Problem-specific heuristic for [TSP](../problems/tsp.md). Performs a
 variable-depth edge-exchange search (up to *k*-opt) starting from each city.
@@ -26,7 +26,7 @@ fires.
 ## Constructor
 
 ```rust
-LinKernighanHelsgottForTsp::new(
+LinKernighanHelsgaunForTsp::new(
     stop_condition: StopCondition,
     num_neighbors: usize,
     max_depth: usize,

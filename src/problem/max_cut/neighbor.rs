@@ -102,7 +102,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         solution.update_positive_gain_membership(self.i, new_gain_i);
         solution.gain[self.i] = new_gain_i;
 
-        // Update neighbour gains. After `self.x[self.i]` has been flipped,
+        // Update neighbor gains. After `self.x[self.i]` has been flipped,
         // `bi` still holds the pre-flip side, so `bi ^ bj` reflects whether the
         // edge was crossing before the flip (and is now not crossing, hence
         // `+2w`), and vice versa.

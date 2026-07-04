@@ -132,7 +132,7 @@ pub enum HeuristicConfig {
         stop_condition: StopConditionConfig,
     },
     /// Lin-Kernighan-Helsgaun (TSP only).
-    LinKernighanHelsgott {
+    LinKernighanHelsgaun {
         /// Candidate neighbors per city. Default: 5.
         #[serde(skip_serializing_if = "Option::is_none")]
         num_neighbors: Option<usize>,
@@ -191,7 +191,7 @@ impl HeuristicConfig {
             Self::LateAcceptanceHillClimbing { .. } => "LateAcceptanceHillClimbing",
             Self::RLSearch { .. } => "RLSearch",
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
-            Self::LinKernighanHelsgott { .. } => "LinKernighanHelsgott",
+            Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::Sequential { .. } => "Sequential",
             Self::Iterated { .. } => "Iterated",
             Self::Restart { .. } => "Restart",
@@ -231,7 +231,7 @@ impl HeuristicConfig {
             | Self::LateAcceptanceHillClimbing { stop_condition, .. }
             | Self::RLSearch { stop_condition, .. }
             | Self::BreakoutLocalSearch { stop_condition, .. }
-            | Self::LinKernighanHelsgott { stop_condition, .. }
+            | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
             | Self::Iterated { stop_condition, .. }
             | Self::Restart { stop_condition, .. }

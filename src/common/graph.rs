@@ -26,7 +26,7 @@ static ZERO_WEIGHT: f32 = 0.0;
 /// ```
 #[derive(Debug, Clone)]
 pub struct Graph {
-    /// `adj[i]` = sorted list of `(j, weight)` for all neighbours of vertex `i`.
+    /// `adj[i]` = sorted list of `(j, weight)` for all neighbors of vertex `i`.
     adj: Vec<Vec<(usize, f32)>>,
     /// Sorted list of vertex IDs that appear in the graph (used by `iter_on_vertices`).
     pub vertices: Vec<usize>,
@@ -150,7 +150,7 @@ impl Graph {
         self.vertices.iter()
     }
 
-    /// Returns an iterator over `(neighbour_id, weight)` pairs for vertex `i`.
+    /// Returns an iterator over `(neighbor_id, weight)` pairs for vertex `i`.
     ///
     /// # Examples
     ///
@@ -168,7 +168,7 @@ impl Graph {
         }
     }
 
-    /// Returns an iterator over `(neighbour_id, weight)` pairs for vertex `i`.
+    /// Returns an iterator over `(neighbor_id, weight)` pairs for vertex `i`.
     ///
     /// This is an alias for [`iter_on_adjacency`](Self::iter_on_adjacency).
     pub fn neighbors(&self, i: usize) -> std::slice::Iter<'_, (usize, f32)> {

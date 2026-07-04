@@ -18,7 +18,7 @@ pub use crate::search_state::{SearchState, SearchStateCloneType};
 // Heuristics
 pub use crate::heuristic::{
     BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, GeneticAlgorithm,
-    Heuristic, Iterated, LateAcceptanceHillClimbing, LinKernighanHelsgottForTsp, LocalSearch,
+    Heuristic, Iterated, LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp, LocalSearch,
     ParentSelection, RLSearch, RandomWalk, Restart, RewardShaping, Sequential, SimulatedAnnealing,
     StopCondition, SubProblemBasedCrossover, TabuSearch, boltzmann_accept,
 };

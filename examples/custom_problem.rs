@@ -1,6 +1,6 @@
 //! 独自の最適化問題を定義するサンプル。
 //!
-//! ProblemTrait / MoveToNeigbor / Rankable を実装して、
+//! ProblemTrait / MoveToNeighbor / Rankable を実装して、
 //! 組み込みの LocalSearch を使って解を求めます。
 //!
 //! ここでは「整数ベクトルの要素和を最大化する」単純な問題を例に取ります。

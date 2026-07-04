@@ -1,4 +1,4 @@
-//! Lin-Kernighan-Helsgott (LKH) variable-depth search for TSP.
+//! Lin-Kernighan-Helsgaun (LKH) variable-depth search for TSP.
 //!
 //! Each iteration picks a starting city, performs a variable-depth
 //! edge-exchange search (up to `max_depth`-opt) guided by candidate lists,
@@ -18,7 +18,7 @@ struct LkMove {
     gain: f64,
 }
 
-/// Lin-Kernighan-Helsgott heuristic for the Travelling Salesman Problem.
+/// Lin-Kernighan-Helsgaun heuristic for the Traveling Salesman Problem.
 ///
 /// Performs a variable-depth edge-exchange search starting from each city.
 /// At each depth level the algorithm:
@@ -45,7 +45,7 @@ struct LkMove {
 /// - `stop_condition` — overall stopping criterion
 /// - `num_neighbors` — number of nearest neighbors in candidate lists (default: 5)
 /// - `max_depth` — maximum LK search depth (default: 5)
-pub struct LinKernighanHelsgott {
+pub struct LinKernighanHelsgaun {
     stop_condition: StopCondition,
     num_neighbors: usize,
     max_depth: usize,
@@ -54,7 +54,7 @@ pub struct LinKernighanHelsgott {
     no_improvement: bool,
 }
 
-impl LinKernighanHelsgott {
+impl LinKernighanHelsgaun {
     pub fn new(stop_condition: StopCondition, num_neighbors: usize, max_depth: usize) -> Self {
         Self {
             stop_condition,
@@ -450,7 +450,7 @@ fn is_valid_move(
 
 // -- Heuristic impl ------------------------------------------------------
 
-impl Heuristic<TspWithCoordinates> for LinKernighanHelsgott {
+impl Heuristic<TspWithCoordinates> for LinKernighanHelsgaun {
     fn clear(&mut self) {
         self.no_improvement = false;
     }
@@ -538,7 +538,7 @@ mod tests {
         let initial_obj = sol.objective;
 
         let mut state = SearchState::with_solution(&prob, sol);
-        let mut lkh = LinKernighanHelsgott::new(StopCondition::iterations(100), 3, 5);
+        let mut lkh = LinKernighanHelsgaun::new(StopCondition::iterations(100), 3, 5);
         lkh.run(&mut state).unwrap();
 
         assert!(
@@ -555,7 +555,7 @@ mod tests {
         let sol = make_solution(&prob, vec![0, 1, 3, 2]);
 
         let mut state = SearchState::with_solution(&prob, sol);
-        let mut lkh = LinKernighanHelsgott::new(StopCondition::iterations(100), 3, 5);
+        let mut lkh = LinKernighanHelsgaun::new(StopCondition::iterations(100), 3, 5);
         lkh.run(&mut state).unwrap();
 
         let tour = &state.best_solution.tour;
@@ -582,7 +582,7 @@ mod tests {
         let sol = make_solution(&prob, vec![0, 1, 3, 2]);
 
         let mut state = SearchState::with_solution(&prob, sol);
-        let mut lkh = LinKernighanHelsgott::new(StopCondition::iterations(100), 3, 5);
+        let mut lkh = LinKernighanHelsgaun::new(StopCondition::iterations(100), 3, 5);
         lkh.run(&mut state).unwrap();
 
         let expected_gains = prob.compute_all_gains(&state.solution.tour);
@@ -607,7 +607,7 @@ mod tests {
         let initial_obj = sol.objective;
 
         let mut state = SearchState::with_solution(&prob, sol);
-        let mut lkh = LinKernighanHelsgott::new(StopCondition::iterations(100), 3, 5);
+        let mut lkh = LinKernighanHelsgaun::new(StopCondition::iterations(100), 3, 5);
         lkh.run(&mut state).unwrap();
 
         assert!(
@@ -633,7 +633,7 @@ mod tests {
         let mut state = SearchState::new(&prob);
         let initial_obj = state.solution.objective;
 
-        let mut lkh = LinKernighanHelsgott::new(StopCondition::iterations(1000), 3, 5);
+        let mut lkh = LinKernighanHelsgaun::new(StopCondition::iterations(1000), 3, 5);
         lkh.run(&mut state).unwrap();
 
         // Should find at least as good a solution

@@ -39,4 +39,4 @@ Used by `GeneticAlgorithm`:
 | Algorithm | Problem | Notes |
 |---|---|---|
 | [BreakoutLocalSearchForMaxCut](breakout_local_search.md) | MaxCut | Greedy LS + adaptive perturbation. |
-| [LinKernighanHelsgottForTsp](lkh.md) | TSP 2D | Variable-depth k-opt with candidate lists. |
+| [LinKernighanHelsgaunForTsp](lkh.md) | TSP 2D | Variable-depth k-opt with candidate lists. |

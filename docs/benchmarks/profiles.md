@@ -41,7 +41,7 @@ added as a safety net.
 | Heuristic | Target problem(s) | small | medium | large |
 |---|---|---|---|---|
 | BreakoutLocalSearchForMaxCut | MaxCut | (existing: 113s @ G1–G21) | (existing: 505s @ G22–G42) | (existing: 2993s @ G55–G64, 7388s @ G65) |
-| LinKernighanHelsgott | TSP | duration 30s | duration 120s | duration 600s |
+| LinKernighanHelsgaun | TSP | duration 30s | duration 120s | duration 600s |
 
 The BLS budget mirrors the curated runs in `docs/benchmarks/data/bls_maxcut_gset_*.toml`
 so existing results carry over; LKH uses the same budget as the general
