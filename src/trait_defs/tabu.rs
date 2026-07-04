@@ -9,11 +9,13 @@ pub trait EnabledTabu: Clone {
     /// Returns `true` if this move is allowed under the current tabu map at the given iteration.
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool;
 
-    /// Adds this move to the tabu map with a randomly sampled tenure in the given range.
+    /// Adds this move to the tabu map with a tenure sampled from `tabu_tenure`
+    /// using `rng` (pass `&mut state.rng` so seeded runs stay reproducible).
     fn add_to_tabu_map(
         &self,
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     );
 }

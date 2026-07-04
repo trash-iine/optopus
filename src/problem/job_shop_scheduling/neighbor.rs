@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::collections::HashMap;
 
 use super::problem::{JobShopScheduling, JobShopSolution};
@@ -42,8 +43,9 @@ impl EnabledTabu for JobShopSwapNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
         tabu_map.insert(self.i, iteration + d);
     }
 }
@@ -132,8 +134,9 @@ impl EnabledTabu for JobShopRelocateNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
         tabu_map.insert((self.from, self.to), iteration + d);
     }
 }

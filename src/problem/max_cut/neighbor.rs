@@ -21,6 +21,7 @@ use crate::{
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
+use rand::Rng;
 
 /// A flip move that transfers vertex `i` to the opposite partition side.
 ///
@@ -70,8 +71,9 @@ impl EnabledTabu for MaxCutFlipNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
     }
 }
 
@@ -162,12 +164,17 @@ impl MaxCutFlipNeighbor {
     /// use optopus::prelude::*;
     ///
     /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
-    /// let state = SearchState::new(&mc);
-    /// let flip = MaxCutFlipNeighbor::random_neighbor(&mc, &state.solution);
+    /// let mut state = SearchState::new(&mc);
+    /// let solution = state.solution.clone();
+    /// let flip = MaxCutFlipNeighbor::random_neighbor(&mc, &solution, &mut state.rng);
     /// println!("random flip: vertex {}, gain {}", flip.i, flip.gain);
     /// ```
-    pub fn random_neighbor(prob: &MaxCut, sol: &MaxCutSolution) -> Self {
-        let i = prob.graph.vertices[rand::random_range(0..prob.graph.vertices.len())];
+    pub fn random_neighbor(
+        prob: &MaxCut,
+        sol: &MaxCutSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Self {
+        let i = prob.graph.vertices[rng.random_range(0..prob.graph.vertices.len())];
         Self {
             i,
             gain: sol.gain[i],
@@ -237,9 +244,10 @@ impl EnabledTabu for MaxCutSwapNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
-        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
+        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure, rng);
     }
 }
 

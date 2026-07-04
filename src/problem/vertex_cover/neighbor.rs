@@ -6,6 +6,7 @@ use crate::{
     problem::vertex_cover::problem::VertexCoverSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
+use rand::Rng;
 
 /// A flip move that toggles whether vertex `i` is in the cover.
 ///
@@ -46,8 +47,9 @@ impl EnabledTabu for VertexCoverFlipNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        let tabu_duration = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        let tabu_duration = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
         if self.i >= tabu_map.len() {
             tabu_map.resize(self.i + 1, 0);
         }
@@ -167,14 +169,15 @@ impl EnabledTabu for VertexCoverSwapNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
         let max_v = self.i.max(self.j);
         if max_v >= tabu_map.len() {
             tabu_map.resize(max_v + 1, 0);
         }
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
         tabu_map[self.i] = iteration + d;
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
+        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
         tabu_map[self.j] = iteration + d;
     }
 }

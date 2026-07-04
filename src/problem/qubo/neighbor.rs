@@ -22,6 +22,7 @@ use crate::{
     problem::qubo::problem::QuboSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
+use rand::Rng;
 
 /// A flip move that toggles a single variable `i`.
 ///
@@ -65,8 +66,9 @@ impl EnabledTabu for QuboFlipNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
     }
 }
 
@@ -145,12 +147,16 @@ impl QuboFlipNeighbor {
     /// use optopus::prelude::*;
     ///
     /// let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 1)]);
-    /// let state = SearchState::new(&qubo);
-    /// let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution);
+    /// let mut state = SearchState::new(&qubo);
+    /// let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution, &mut state.rng);
     /// println!("random flip: variable {}, gain {}", flip.i, flip.gain);
     /// ```
-    pub fn random_neighbor(prob: &Qubo, sol: &QuboSolution) -> Self {
-        let i = prob.variables[rand::random_range(0..prob.variables.len())];
+    pub fn random_neighbor(
+        prob: &Qubo,
+        sol: &QuboSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Self {
+        let i = prob.variables[rng.random_range(0..prob.variables.len())];
         Self {
             i,
             gain: sol.gain[i],
@@ -202,12 +208,10 @@ impl Evaluate for QuboSwapNeighbor {
 }
 
 impl EnabledTabu for QuboSwapNeighbor {
-    type TabuMap = std::collections::HashMap<usize, u64>;
+    type TabuMap = VarTabuMap;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let enabled_i = tabu_map.get(&self.i).is_none_or(|&t| iteration > t);
-        let enabled_j = tabu_map.get(&self.j).is_none_or(|&t| iteration > t);
-        enabled_i && enabled_j
+        is_var_enabled(tabu_map, self.i, iteration) && is_var_enabled(tabu_map, self.j, iteration)
     }
 
     fn add_to_tabu_map(
@@ -215,11 +219,10 @@ impl EnabledTabu for QuboSwapNeighbor {
         tabu_map: &mut Self::TabuMap,
         iteration: u64,
         tabu_tenure: (u64, u64),
+        rng: &mut rand::rngs::SmallRng,
     ) {
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.i, iteration + d);
-        let d = rand::random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.j, iteration + d);
+        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
+        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure, rng);
     }
 }
 
@@ -385,9 +388,9 @@ mod tests {
     #[test]
     fn test_random_neighbor() {
         let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
-        let state = SearchState::new(&qubo);
+        let mut state = SearchState::new(&qubo);
         for _ in 0..20 {
-            let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution);
+            let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution, &mut state.rng);
             assert!(flip.i < qubo.len(), "random neighbor index out of bounds");
             assert_eq!(flip.gain, state.solution.gain[flip.i]);
         }

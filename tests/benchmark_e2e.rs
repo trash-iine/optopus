@@ -108,6 +108,123 @@ max_iteration = 500
     }
 }
 
+/// Runs `heuristic_toml` twice on a fixed instance with a fixed seed and asserts
+/// bit-identical per-run results.
+fn assert_reproducible(tag: &str, heuristic_toml: &str) {
+    // A slightly larger instance so tabu/perturbation phases actually engage.
+    let instance = write_temp_file(
+        tag,
+        "6 9\n1 2 1\n2 3 1\n3 4 1\n4 5 1\n5 6 1\n6 1 1\n1 4 1\n2 5 1\n3 6 1\n",
+    );
+    let config_toml = format!(
+        r#"
+num_runs = 3
+seed = 777
+
+[[instances]]
+path = "{}"
+problem = "MaxCut"
+
+{}
+"#,
+        instance.display(),
+        heuristic_toml
+    );
+
+    let first = run_benchmark(&config_toml);
+    let second = run_benchmark(&config_toml);
+    let _ = std::fs::remove_file(&instance);
+
+    let first_runs = &first.results[0].runs;
+    let second_runs = &second.results[0].runs;
+    assert_eq!(first_runs.len(), second_runs.len());
+    for (a, b) in first_runs.iter().zip(second_runs) {
+        assert_eq!(a.status, "success");
+        assert_eq!(
+            a.best_objective, b.best_objective,
+            "{tag} objective diverged"
+        );
+        assert_eq!(
+            a.best_iteration, b.best_iteration,
+            "{tag} iteration diverged"
+        );
+        assert_eq!(a.solution, b.solution, "{tag} run {} diverged", a.run_index);
+    }
+}
+
+/// TabuSearch samples the tabu tenure from the RNG on every applied move, so
+/// this locks in the seeded-tenure fix (previously the thread RNG was used and
+/// runs were not reproducible).
+#[test]
+fn tabu_search_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_ts",
+        r#"
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [2, 5]
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#,
+    );
+}
+
+/// BLS consumes the RNG for tenure sampling, perturbation-type selection, and
+/// random flips; all three previously used the thread RNG.
+#[test]
+fn breakout_local_search_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_bls",
+        r#"
+[[heuristics]]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [2, 5]
+t = 100
+l0 = 3
+p0 = 0.8
+q = 0.5
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#,
+    );
+}
+
+/// Meta-heuristic composition forks the RNG per sub-run; this covers the
+/// clone_for_new_run path together with the tabu tenure fix.
+#[test]
+fn iterated_tabu_search_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_ils",
+        r#"
+[[heuristics]]
+kind = "Iterated"
+
+[heuristics.stop_condition]
+max_iteration = 300
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [2, 5]
+
+[heuristics.steps.stop_condition]
+max_iteration = 50
+
+[[heuristics.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 10.0
+cooling_rate = 1.0
+
+[heuristics.steps.stop_condition]
+max_iteration = 10
+"#,
+    );
+}
+
 #[test]
 fn run_from_config_rejects_empty_glob() {
     let config_toml = r#"
