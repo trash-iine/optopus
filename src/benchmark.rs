@@ -619,7 +619,7 @@ impl BenchmarkableProblem for MaxCut {
                     .q
                     .ok_or("'q' required for MaxCut BreakoutLocalSearch")?;
                 Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
-                    tenure, cond, t, l0, p0, q,
+                    cond, tenure, t, l0, p0, q,
                 )))
             }
             "RLSearch" => match config.req_neighbor("MaxCut")? {

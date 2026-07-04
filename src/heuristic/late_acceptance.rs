@@ -1,7 +1,7 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{Evaluate, MoveToNeighbor, ProblemTrait, SearchState};
-use rand::seq::IteratorRandom;
+use crate::search_state::SearchState;
+use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait};
 
 /// Late Acceptance Hill Climbing (LAHC) heuristic.
 ///
@@ -19,7 +19,7 @@ use rand::seq::IteratorRandom;
 pub struct LateAcceptanceHillClimbing<N> {
     pub stop_condition: StopCondition,
     pub history_length: usize,
-    phantom_neighbor: std::marker::PhantomData<N>,
+    _neighbor: std::marker::PhantomData<N>,
     /// Circular buffer of "higher-is-better" scores.
     history: Vec<f64>,
     /// Current position in the circular buffer.
@@ -45,7 +45,7 @@ impl<N> LateAcceptanceHillClimbing<N> {
         Self {
             stop_condition,
             history_length,
-            phantom_neighbor: std::marker::PhantomData,
+            _neighbor: std::marker::PhantomData,
             history: Vec::new(),
             history_index: 0,
             current_score: 0.0,
@@ -66,8 +66,8 @@ where
         self.initialized = false;
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
@@ -78,14 +78,7 @@ where
             self.initialized = true;
         }
 
-        let neighbor = N::iter(state.instance, &state.solution)
-            .choose(&mut state.rng)
-            .ok_or_else(|| {
-                OptError::InvalidState(
-                    "LateAcceptanceHillClimbing: neighborhood is empty, no move can be selected"
-                        .to_string(),
-                )
-            })?;
+        let neighbor: N = state.random_neighbor("LateAcceptanceHillClimbing")?;
 
         // Compute the candidate score (higher is always better).
         // worsening_amount() is positive when the move is worse,

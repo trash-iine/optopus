@@ -13,14 +13,14 @@ use optopus::prelude::*;
 
 struct FirstImprovingSearch<N> {
     stop_condition: StopCondition,
-    _phantom: std::marker::PhantomData<N>,
+    _neighbor: std::marker::PhantomData<N>,
 }
 
 impl<N> FirstImprovingSearch<N> {
     fn new(stop_condition: StopCondition) -> Self {
         Self {
             stop_condition,
-            _phantom: std::marker::PhantomData,
+            _neighbor: std::marker::PhantomData,
         }
     }
 }
@@ -30,8 +30,8 @@ where
     P: ProblemTrait,
     N: MoveToNeighbor<P>,
 {
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {

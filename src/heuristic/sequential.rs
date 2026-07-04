@@ -1,6 +1,7 @@
-use super::Heuristic;
+use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{ProblemTrait, SearchStateCloneType};
+use crate::search_state::SearchStateCloneType;
+use crate::trait_defs::ProblemTrait;
 
 /// Sequential meta-heuristic that runs a list of heuristics one after another.
 ///
@@ -32,8 +33,8 @@ impl<Problem: ProblemTrait> Sequential<Problem> {
 }
 
 impl<Problem: ProblemTrait> Heuristic<Problem> for Sequential<Problem> {
-    fn is_done<'a>(&self, state: &crate::search_state::SearchState<'a, Problem>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(
@@ -41,11 +42,7 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Sequential<Problem> {
         state: &mut crate::search_state::SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
         for heuristic in self.heuristics.iter_mut() {
-            let mut cloned = state.clone_for_new_run(SearchStateCloneType::ClearBest);
-
-            heuristic.run(&mut cloned)?;
-
-            state.update_state(cloned);
+            state.run_sub(heuristic.as_mut(), SearchStateCloneType::ClearBest)?;
 
             if self.stop_condition.is_done(state) {
                 return Ok(());
@@ -99,8 +96,8 @@ impl<Problem: ProblemTrait> Iterated<Problem> {
 }
 
 impl<Problem: ProblemTrait> Heuristic<Problem> for Iterated<Problem> {
-    fn is_done<'a>(&self, state: &crate::search_state::SearchState<'a, Problem>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(
@@ -108,19 +105,103 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Iterated<Problem> {
         state: &mut crate::search_state::SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
         // Search phase
-        let mut search_state = state.clone_for_new_run(SearchStateCloneType::ClearBest);
-        self.search.run(&mut search_state)?;
-        state.update_state(search_state);
+        state.run_sub(self.search.as_mut(), SearchStateCloneType::ClearBest)?;
 
         if self.stop_condition.is_done(state) {
             return Ok(());
         }
 
         // Perturbation phase
-        let mut perturb_state = state.clone_for_new_run(SearchStateCloneType::ClearBest);
-        self.perturbation.run(&mut perturb_state)?;
-        state.update_state(perturb_state);
+        state.run_sub(self.perturbation.as_mut(), SearchStateCloneType::ClearBest)?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::heuristic::{LocalSearch, RandomWalk, StopCondition};
+    use crate::problem::{MaxCut, MaxCutFlipNeighbor};
+    use crate::search_state::SearchState;
+    use crate::trait_defs::Rankable;
+
+    fn small_maxcut() -> MaxCut {
+        MaxCut::from_edges([
+            (0, 1, 1.0),
+            (0, 2, 1.0),
+            (0, 3, 1.0),
+            (1, 2, 1.0),
+            (2, 3, 1.0),
+        ])
+    }
+
+    #[test]
+    fn sequential_merges_sub_run_iterations() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
+
+        // Two 10-iteration walks per cycle; the outer condition (15) is checked
+        // between steps, so exactly one full cycle of 20 iterations runs.
+        let mut seq = Sequential::new(
+            StopCondition::iterations(15),
+            vec![
+                Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
+                    StopCondition::iterations(10),
+                )),
+                Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
+                    StopCondition::iterations(10),
+                )),
+            ],
+        );
+        seq.run(&mut state).unwrap();
+
+        assert_eq!(state.iteration, 20);
+        assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
+    }
+
+    #[test]
+    fn sequential_stops_mid_cycle_when_outer_condition_met() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
+
+        let mut seq = Sequential::new(
+            StopCondition::iterations(10),
+            vec![
+                Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
+                    StopCondition::iterations(10),
+                )),
+                Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
+                    StopCondition::iterations(10),
+                )),
+            ],
+        );
+        seq.run(&mut state).unwrap();
+
+        // The outer condition is satisfied right after the first step.
+        assert_eq!(state.iteration, 10);
+    }
+
+    #[test]
+    fn iterated_preserves_best_across_perturbation() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        let initial_obj = state.best_solution.objective;
+
+        let mut ils = Iterated::new(
+            StopCondition::iterations(100),
+            Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+                StopCondition::iterations(50),
+            )),
+            Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
+                StopCondition::iterations(5),
+            )),
+        );
+        ils.run(&mut state).unwrap();
+
+        assert!(state.iteration >= 100);
+        assert!(state.best_solution.objective >= initial_obj);
+        // The best solution must never be worse than the current one.
+        assert!(!state.solution.is_better_than(&state.best_solution));
     }
 }

@@ -1,7 +1,7 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{EnabledTabu, MoveToNeighbor, ProblemTrait, Rankable, SearchState};
-use crate::trait_defs::rank_cmp;
+use crate::search_state::SearchState;
+use crate::trait_defs::{EnabledTabu, MoveToNeighbor, ProblemTrait, Rankable, rank_cmp};
 
 /// Tabu search heuristic.
 ///
@@ -83,10 +83,13 @@ where
         self.tabu_map = N::TabuMap::default();
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
+    /// When every move is tabu and none satisfies the aspiration criterion, the
+    /// iteration is counted as rejected (with a warning) rather than erroring —
+    /// the tabu map will eventually expire entries and unblock the search.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         // `max_by(rank_cmp)` returns the last tied-best element — the same move
         // the previous `filter_best(..).pop()` selected — without collecting
@@ -108,5 +111,70 @@ where
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::problem::{MaxCut, MaxCutFlipNeighbor};
+    use crate::search_state::SearchState;
+
+    fn small_maxcut() -> MaxCut {
+        MaxCut::from_edges([
+            (0, 1, 1.0),
+            (0, 2, 1.0),
+            (0, 3, 1.0),
+            (1, 2, 1.0),
+            (2, 3, 1.0),
+        ])
+    }
+
+    #[test]
+    fn tabu_search_improves_and_respects_budget() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        let initial_obj = state.best_solution.objective;
+
+        let mut ts =
+            TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(200), (1, 3), None);
+        ts.run(&mut state).unwrap();
+
+        assert!(state.best_solution.objective >= initial_obj);
+        assert_eq!(state.iteration, 200);
+        assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
+    }
+
+    #[test]
+    fn tabu_search_progresses_when_all_moves_are_tabu() {
+        // A huge tenure makes every vertex tabu after its first flip; without the
+        // aspiration criterion or the reject path this would loop or error.
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
+
+        let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
+            StopCondition::iterations(50),
+            (10_000, 10_001),
+            None,
+        );
+        ts.run(&mut state).unwrap();
+        assert_eq!(state.iteration, 50);
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid tabu tenure range")]
+    fn tabu_search_panics_on_inverted_tenure() {
+        TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (5, 1), None);
+    }
+
+    #[test]
+    fn tabu_search_clear_resets_tabu_map() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        let mut ts =
+            TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (5, 10), None);
+        ts.run(&mut state).unwrap();
+        ts.clear();
+        assert!(ts.borrow_tabu_map().is_empty());
     }
 }

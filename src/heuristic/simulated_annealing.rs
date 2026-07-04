@@ -1,8 +1,8 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, SearchState};
+use crate::search_state::SearchState;
+use crate::trait_defs::{Evaluable, Evaluate, MoveToNeighbor, ProblemTrait};
 use rand::Rng;
-use rand::seq::IteratorRandom;
 
 /// Returns `true` with Boltzmann probability `exp(-worsening / temperature)`.
 ///
@@ -40,7 +40,7 @@ pub struct SimulatedAnnealing<N> {
     pub stop_condition: StopCondition,
     pub initial_temperature: f64,
     pub cooling_rate: f64,
-    phantom_neighbor: std::marker::PhantomData<N>,
+    _neighbor: std::marker::PhantomData<N>,
     current_temperature: f64,
 }
 
@@ -52,7 +52,7 @@ impl<N> SimulatedAnnealing<N> {
             initial_temperature,
             cooling_rate,
             current_temperature: initial_temperature,
-            phantom_neighbor: std::marker::PhantomData,
+            _neighbor: std::marker::PhantomData,
         }
     }
 }
@@ -67,19 +67,12 @@ where
         self.current_temperature = self.initial_temperature;
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let neighbor = N::iter(state.instance, &state.solution)
-            .choose(&mut state.rng)
-            .ok_or_else(|| {
-                OptError::InvalidState(
-                    "SimulatedAnnealing: neighborhood is empty, no move can be selected"
-                        .to_string(),
-                )
-            })?;
+        let neighbor: N = state.random_neighbor("SimulatedAnnealing")?;
         if boltzmann_accept(
             neighbor.evaluate(),
             self.current_temperature,
@@ -109,9 +102,9 @@ pub struct BangBangSimulatedAnnealing<N> {
     pub stop_condition: StopCondition,
     pub initial_temperature: f64,
     pub cooling_rate: f64,
-    pub min_wave_threashold: f64,
-    pub max_wave_threashold: f64,
-    phantom_neighbor: std::marker::PhantomData<N>,
+    pub min_wave_threshold: f64,
+    pub max_wave_threshold: f64,
+    _neighbor: std::marker::PhantomData<N>,
     current_temperature: f64,
     is_going_down: bool,
 }
@@ -121,18 +114,18 @@ impl<N> BangBangSimulatedAnnealing<N> {
         stop_condition: StopCondition,
         initial_temperature: f64,
         cooling_rate: f64,
-        min_wave_threashold: f64,
-        max_wave_threashold: f64,
+        min_wave_threshold: f64,
+        max_wave_threshold: f64,
     ) -> Self {
         Self {
             stop_condition,
             initial_temperature,
             cooling_rate,
-            min_wave_threashold,
-            max_wave_threashold,
+            min_wave_threshold,
+            max_wave_threshold,
             current_temperature: initial_temperature,
             is_going_down: true,
-            phantom_neighbor: std::marker::PhantomData,
+            _neighbor: std::marker::PhantomData,
         }
     }
 }
@@ -148,14 +141,12 @@ where
         self.is_going_down = true;
     }
 
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let neighbor = N::iter(state.instance, &state.solution)
-            .choose(&mut state.rng)
-            .ok_or_else(|| OptError::InvalidState("SimulatedAnnealing (bang-bang): neighborhood is empty, no move can be selected".to_string()))?;
+        let neighbor: N = state.random_neighbor("SimulatedAnnealing (bang-bang)")?;
 
         if boltzmann_accept(
             neighbor.evaluate(),
@@ -169,13 +160,13 @@ where
 
         if self.is_going_down {
             self.current_temperature *= self.cooling_rate;
-            if self.current_temperature < self.min_wave_threashold {
+            if self.current_temperature < self.min_wave_threshold {
                 tracing::debug!("Wave detected, going up");
                 self.is_going_down = false;
             }
         } else {
             self.current_temperature /= self.cooling_rate;
-            if self.current_temperature > self.max_wave_threashold {
+            if self.current_temperature > self.max_wave_threshold {
                 tracing::debug!("Wave detected, going down");
                 self.is_going_down = true;
             }

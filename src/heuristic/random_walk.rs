@@ -1,7 +1,7 @@
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::search_state::{MoveToNeighbor, ProblemTrait, Rankable, SearchState};
-use rand::seq::IteratorRandom;
+use crate::search_state::SearchState;
+use crate::trait_defs::{MoveToNeighbor, ProblemTrait, Rankable};
 
 /// Random walk heuristic.
 ///
@@ -10,7 +10,7 @@ use rand::seq::IteratorRandom;
 /// The best solution encountered during the walk is recorded in [`SearchState::best_solution`].
 pub struct RandomWalk<N> {
     pub stop_condition: StopCondition,
-    phantom_neighbor: std::marker::PhantomData<N>,
+    _neighbor: std::marker::PhantomData<N>,
 }
 
 impl<N> RandomWalk<N> {
@@ -18,7 +18,7 @@ impl<N> RandomWalk<N> {
     pub fn new(stop_condition: StopCondition) -> Self {
         Self {
             stop_condition,
-            phantom_neighbor: std::marker::PhantomData,
+            _neighbor: std::marker::PhantomData,
         }
     }
 }
@@ -28,20 +28,32 @@ where
     P: ProblemTrait,
     N: MoveToNeighbor<P> + Rankable,
 {
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
-    fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let neighbor = N::iter(state.instance, &state.solution)
-            .choose(&mut state.rng)
-            .ok_or_else(|| {
-                OptError::InvalidState(
-                    "RandomWalk: neighborhood is empty, no move can be selected".to_string(),
-                )
-            })?;
 
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
+        let neighbor: N = state.random_neighbor("RandomWalk")?;
         state.apply(&neighbor)?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::problem::{MaxCut, MaxCutFlipNeighbor};
+
+    #[test]
+    fn random_walk_accepts_every_move() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]);
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        let mut rw = RandomWalk::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100));
+        rw.run(&mut state).unwrap();
+
+        assert_eq!(state.iteration, 100);
+        assert_eq!(state.n_accepted, 100);
+        assert_eq!(state.n_rejected, 0);
     }
 }

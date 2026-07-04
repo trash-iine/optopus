@@ -33,18 +33,26 @@ use serde::Serialize;
 
 /// [`Heuristic`] trait is a common interface for heuristics.
 ///
-/// To implement a heuristic, you need to implement [`Heuristic::is_done`] and [`Heuristic::run_once`] methods.
+/// To implement a heuristic, you need to implement [`Heuristic::stop_condition`] and [`Heuristic::run_once`] methods.
 ///
-/// - [`Heuristic::is_done`] method checks if the heuristic should stop based on the current search state.
+/// - [`Heuristic::stop_condition`] exposes the heuristic's [`StopCondition`], which drives the default [`Heuristic::is_done`].
 /// - [`Heuristic::run_once`] method performs one iteration of the heuristic and updates the search state accordingly
+///
+/// Heuristics with extra termination logic (e.g. "stop at a local optimum") override
+/// [`Heuristic::is_done`] on top of the default.
 ///
 /// Please see [`local_search::LocalSearch`] as an example implementation of the `Heuristic` trait.
 pub trait Heuristic<Problem: ProblemTrait> {
     /// Clear the internal state of the heuristic before running. This is called at the beginning of [`Heuristic::run`].
     fn clear(&mut self) {}
 
+    /// The stop condition consulted by the default [`Heuristic::is_done`].
+    fn stop_condition(&self) -> &StopCondition;
+
     /// Check if the heuristic should stop based on the current search state.
-    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool;
+    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool {
+        self.stop_condition().is_done(state)
+    }
 
     /// Perform one iteration of the heuristic and update the search state accordingly.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError>;
@@ -181,5 +189,39 @@ impl StopCondition {
             return true;
         }
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::problem::MaxCut;
+
+    /// Minimal heuristic that only advances the iteration counter, relying
+    /// entirely on the default `is_done` provided by the trait.
+    struct CountingHeuristic {
+        stop_condition: StopCondition,
+    }
+
+    impl Heuristic<MaxCut> for CountingHeuristic {
+        fn stop_condition(&self) -> &StopCondition {
+            &self.stop_condition
+        }
+
+        fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
+            state.progress_iteration();
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn default_is_done_delegates_to_stop_condition() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0)]);
+        let mut state = SearchState::new_with_seed(&mc, 0);
+        let mut h = CountingHeuristic {
+            stop_condition: StopCondition::iterations(25),
+        };
+        h.run(&mut state).unwrap();
+        assert_eq!(state.iteration, 25);
     }
 }

@@ -401,6 +401,39 @@ where
         self.n_rejected += 1;
     }
 
+    /// Picks a uniformly random move from the neighborhood of the current solution.
+    ///
+    /// Returns [`OptError::InvalidState`](crate::error::OptError::InvalidState) when
+    /// the neighborhood is empty; `context` (typically the heuristic name) prefixes
+    /// the error message.
+    pub fn random_neighbor<N>(&mut self, context: &str) -> Result<N, crate::error::OptError>
+    where
+        N: MoveToNeighbor<Problem>,
+    {
+        use rand::seq::IteratorRandom;
+        N::iter(self.instance, &self.solution)
+            .choose(&mut self.rng)
+            .ok_or_else(|| {
+                crate::error::OptError::InvalidState(format!(
+                    "{context}: neighborhood is empty, no move can be selected"
+                ))
+            })
+    }
+
+    /// Runs `heuristic` on a sub-state cloned with `clone_type`, then merges the
+    /// result back — the standard `clone_for_new_run` → `run` → `update_state`
+    /// triad used by meta-heuristics.
+    pub fn run_sub(
+        &mut self,
+        heuristic: &mut dyn crate::heuristic::Heuristic<Problem>,
+        clone_type: SearchStateCloneType,
+    ) -> Result<(), crate::error::OptError> {
+        let mut sub = self.clone_for_new_run(clone_type);
+        heuristic.run(&mut sub)?;
+        self.update_state(sub);
+        Ok(())
+    }
+
     /// Returns `true` if applying `m` to the current solution yields a solution
     /// better than the current solution.
     pub fn is_neighbor_better_than_current<Move>(&self, m: &Move) -> bool
