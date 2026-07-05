@@ -1,6 +1,6 @@
 # TSP 2D
 
-Traveling Salesperson Problem on cities given by 2D coordinates. **Minimize**
+Traveling Salesman Problem on cities given by 2D coordinates. **Minimize**
 the total length of a Hamiltonian tour.
 
 ## Solution

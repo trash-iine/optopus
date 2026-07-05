@@ -5,7 +5,7 @@ config_file = "data/benchmarks/tsp/lkh_small.toml"
 instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
-kind = "LinKernighanHelsgott"
+kind = "LinKernighanHelsgaun"
 num_neighbors = 5
 max_depth = 5
 
@@ -116,7 +116,7 @@ solution = [4, 5, 11, 6, 12, 7, 10, 8, 9, 0, 1, 13, 2, 3]
 instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
-kind = "LinKernighanHelsgott"
+kind = "LinKernighanHelsgaun"
 num_neighbors = 5
 max_depth = 5
 
@@ -227,7 +227,7 @@ solution = [34, 35, 2, 27, 30, 25, 7, 47, 5, 22, 6, 42, 23, 13, 24, 17, 46, 11, 
 instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
-kind = "LinKernighanHelsgott"
+kind = "LinKernighanHelsgaun"
 num_neighbors = 5
 max_depth = 5
 
@@ -338,7 +338,7 @@ solution = [43, 17, 6, 27, 5, 36, 18, 26, 16, 42, 29, 35, 45, 32, 19, 46, 20, 31
 instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]
-kind = "LinKernighanHelsgott"
+kind = "LinKernighanHelsgaun"
 num_neighbors = 5
 max_depth = 5
 

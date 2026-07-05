@@ -9,7 +9,7 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    BreakoutLocalSearchForMaxCut, Heuristic, LinKernighanHelsgottForTsp, StopCondition,
+    BreakoutLocalSearchForMaxCut, Heuristic, LinKernighanHelsgaunForTsp, StopCondition,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -277,11 +277,11 @@ impl ConfigurableProblem for TspWithCoordinates {
         cond: StopCondition,
     ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
         match config {
-            HeuristicConfig::LinKernighanHelsgott {
+            HeuristicConfig::LinKernighanHelsgaun {
                 num_neighbors,
                 max_depth,
                 ..
-            } => Ok(Box::new(LinKernighanHelsgottForTsp::new(
+            } => Ok(Box::new(LinKernighanHelsgaunForTsp::new(
                 cond,
                 num_neighbors.unwrap_or(5),
                 max_depth.unwrap_or(5),

@@ -27,7 +27,7 @@ fn main() {
 
     Restart::new(
         StopCondition::duration(Duration::from_secs(5)),
-        Box::new(LinKernighanHelsgottForTsp::new(
+        Box::new(LinKernighanHelsgaunForTsp::new(
             StopCondition::iterations(u64::MAX),
             5,
             5,

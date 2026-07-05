@@ -1,4 +1,4 @@
-# Auto-generated. Profile: Tsp / small (LinKernighanHelsgott).
+# Auto-generated. Profile: Tsp / small (LinKernighanHelsgaun).
 # See docs/benchmarks/profiles.md
 
 num_runs = 10
@@ -21,7 +21,7 @@ path = "data/instances/tsp/berlin52.tsp"
 problem = "Tsp"
 
 [[heuristics]]
-kind = "LinKernighanHelsgott"
+kind = "LinKernighanHelsgaun"
 num_neighbors = 5
 max_depth = 5
 [heuristics.stop_condition]

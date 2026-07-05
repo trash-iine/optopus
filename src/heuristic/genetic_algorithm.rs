@@ -39,7 +39,7 @@ pub enum ParentSelection {
 ///
 /// When `init_improvement` is `Some`, each random initial individual is also passed
 /// through that heuristic via the same sub-run pattern. This reproduces the
-/// Galinier-Hao Hybrid Evolutionary Algorithm (HEA) for graph colouring when paired
+/// Galinier-Hao Hybrid Evolutionary Algorithm (HEA) for graph coloring when paired
 /// with a [`crate::heuristic::TabuSearch`] mutation operator.
 ///
 /// The global best solution is tracked in `SearchState::best_solution`.
@@ -86,7 +86,7 @@ pub struct GeneticAlgorithm<P: ProblemTrait, C> {
     /// Mutation operator — any [`Heuristic<P>`] works (local search, SA, random walk, …).
     pub mutation: Box<dyn Heuristic<P>>,
     /// Optional per-individual local-improvement applied to each random seed during
-    /// population initialisation. `None` (default) means the initial population is
+    /// population initialization. `None` (default) means the initial population is
     /// pure random; `Some(op)` reproduces the HEA pattern.
     pub init_improvement: Option<Box<dyn Heuristic<P>>>,
     /// Strategy for sampling the two parents each iteration.

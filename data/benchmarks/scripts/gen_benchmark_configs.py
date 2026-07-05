@@ -201,11 +201,11 @@ def general_toml(problem: str, band: str) -> str:
 
 
 def lkh_toml(band: str) -> str:
-    return (f"# Auto-generated. Profile: Tsp / {band} (LinKernighanHelsgott).\n"
+    return (f"# Auto-generated. Profile: Tsp / {band} (LinKernighanHelsgaun).\n"
             f"# See docs/benchmarks/profiles.md\n\n"
             f"num_runs = {NUM_RUNS}\nseed = {SEED}\n\n"
             f"{instance_blocks('Tsp', band)}\n"
-            f'[[heuristics]]\nkind = "LinKernighanHelsgott"\n'
+            f'[[heuristics]]\nkind = "LinKernighanHelsgaun"\n'
             f"num_neighbors = 5\nmax_depth = 5\n"
             f"{stop_duration(band)}")
 

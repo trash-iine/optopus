@@ -58,7 +58,7 @@ file-based loading.
 | [Genetic Algorithm](docs/heuristics/genetic_algorithm.md) | `GeneticAlgorithm<P, C>` |
 | [Sequential / Iterated / Restart](docs/heuristics/meta.md) | `Sequential<P>`, `Iterated<P>`, `Restart<P>` |
 | [Breakout Local Search (MaxCut)](docs/heuristics/breakout_local_search.md) | `BreakoutLocalSearchForMaxCut` |
-| [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgottForTsp` |
+| [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |
 
 ## Documentation
 

@@ -12,7 +12,7 @@
 //! | [`max_cut`] | Maximum Cut | Maximize cut weight |
 //! | [`qubo`] | Quadratic Unconstrained Binary Optimization | Minimize energy |
 //! | [`sat`] | Maximum Satisfiability (MaxSAT) | Maximize satisfied clauses |
-//! | [`tsp_2d`] | Travelling Salesman Problem | Minimize tour length |
+//! | [`tsp_2d`] | Traveling Salesman Problem | Minimize tour length |
 //! | [`vertex_cover`] | Minimum Vertex Cover | Minimize cover size |
 //! | [`job_shop_scheduling`] | Job Shop Scheduling | Minimize makespan |
 //! | [`binary_optimization`] | Formula-based binary optimization | Configurable |

@@ -5,7 +5,7 @@ config_file = "data/benchmarks/tsp/lkh_medium.toml"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
-kind = "LinKernighanHelsgott"
+kind = "LinKernighanHelsgaun"
 num_neighbors = 5
 max_depth = 5
 
@@ -116,7 +116,7 @@ solution = [79, 67, 28, 23, 53, 3, 54, 24, 38, 66, 22, 55, 74, 21, 40, 73, 71, 7
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
-kind = "LinKernighanHelsgott"
+kind = "LinKernighanHelsgaun"
 num_neighbors = 5
 max_depth = 5
 

@@ -119,7 +119,7 @@ impl MaxCutSolution {
     /// Builds a [`MaxCutSolution`] from pre-computed components.
     ///
     /// The resulting solution is fully functional for all standard heuristics.
-    /// The advanced `positive_gain` index is not initialised; see
+    /// The advanced `positive_gain` index is not initialized; see
     /// [`enable_positive_gain_index`](Self::enable_positive_gain_index) if you need it.
     ///
     /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions from
