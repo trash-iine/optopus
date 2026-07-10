@@ -4,6 +4,7 @@ use crate::{
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
+use rand::Rng;
 
 /// A flip move that toggles a single variable `i`.
 ///
@@ -88,6 +89,22 @@ impl MoveToNeighbor<FormulaProblem> for FormulaFlipNeighbor {
         other: &FormulaSolution,
     ) -> bool {
         src.score + self.gain > other.score
+    }
+
+    /// O(1): picks a uniformly random variable.
+    fn random_neighbor(
+        prob: &FormulaProblem,
+        sol: &FormulaSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        if prob.n_vars == 0 {
+            return None;
+        }
+        let i = rng.random_range(0..prob.n_vars);
+        Some(Self {
+            i,
+            gain: sol.gain[i],
+        })
     }
 }
 
@@ -192,6 +209,44 @@ impl MoveToNeighbor<FormulaProblem> for FormulaSwapNeighbor {
         other: &FormulaSolution,
     ) -> bool {
         src.score + self.gain > other.score
+    }
+
+    /// O(n): samples a uniformly random pair `i < j` and computes its gain
+    /// with a single virtual flip of `i` (instead of enumerating all O(n²)
+    /// pairs). Matches the distribution of sampling
+    /// [`iter`](MoveToNeighbor::iter) uniformly.
+    fn random_neighbor(
+        prob: &FormulaProblem,
+        sol: &FormulaSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let n = prob.n_vars;
+        if n < 2 {
+            return None;
+        }
+        let a = rng.random_range(0..n);
+        let b = {
+            let b = rng.random_range(0..n - 1);
+            if b >= a { b + 1 } else { b }
+        };
+        let (i, j) = (a.min(b), a.max(b));
+
+        let gain_i = prob.calc_gain_fast(&sol.x, &sol.constraint_vals, i);
+
+        // Virtual flip of i, mirroring the gain computation in `iter`.
+        let mut x = sol.x.clone();
+        let mut cv = sol.constraint_vals.clone();
+        for (v, poly) in cv.iter_mut().zip(prob.constraint_polys.iter()) {
+            *v += prob.eval_poly_delta(poly, &x, i);
+        }
+        x[i] = !x[i];
+        let gain_j = prob.calc_gain_fast(&x, &cv, j);
+
+        Some(Self {
+            i,
+            j,
+            gain: gain_i + gain_j,
+        })
     }
 }
 
@@ -342,5 +397,49 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn test_random_neighbor_samples_member_of_iter() {
+        use rand::SeedableRng;
+        let prob = make_problem();
+        let sol = make_solution(&prob, vec![false, true, false]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let flips: Vec<_> = FormulaFlipNeighbor::iter(&prob, &sol).collect();
+        for _ in 0..20 {
+            let m = <FormulaFlipNeighbor as MoveToNeighbor<FormulaProblem>>::random_neighbor(
+                &prob, &sol, &mut rng,
+            )
+            .unwrap();
+            assert!(flips.iter().any(|f| f.i == m.i && f.gain == m.gain));
+        }
+
+        let swaps: Vec<_> = FormulaSwapNeighbor::iter(&prob, &sol).collect();
+        for _ in 0..20 {
+            let m = <FormulaSwapNeighbor as MoveToNeighbor<FormulaProblem>>::random_neighbor(
+                &prob, &sol, &mut rng,
+            )
+            .unwrap();
+            assert!(
+                swaps
+                    .iter()
+                    .any(|s| s.i == m.i && s.j == m.j && s.gain == m.gain)
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_swap_neighbor_none_when_too_small() {
+        use rand::SeedableRng;
+        let prob = FormulaProblem::new(1, Expr::Var(0), OptDirection::Maximize, vec![]);
+        let sol = make_solution(&prob, vec![false]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+        assert!(
+            <FormulaSwapNeighbor as MoveToNeighbor<FormulaProblem>>::random_neighbor(
+                &prob, &sol, &mut rng
+            )
+            .is_none()
+        );
     }
 }

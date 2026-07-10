@@ -1,14 +1,16 @@
 //! Profiling: LocalSearch × TSP × TwoOpt + Relocate (Tier 1)
 //!
 //! Hot paths (TwoOpt):
-//!   - O(n²) iter: lookup into `sol.gain: HashMap<(Edge, Edge), f64>`
-//!     keyed by normalize_edge_pair ((Edge, Edge))
-//!   - apply_to_solution: update_gains_for_removed/added_edge is
-//!     linear in segment length (j - i + 1)
+//!   - O(n²) iter: 4 distance-matrix reads per candidate
+//!     (calc_2opt_gain_cities)
+//!   - apply_to_solution: tour segment reversal, linear in segment
+//!     length (j - i + 1)
 //!
 //! Hot paths (Relocate):
-//!   - iter() eagerly collects the O(n²) enumeration into a Vec (no Arc)
-//!   - For each (pos, ins) pair, prob.distance() invokes f64::sqrt 6 times
+//!   - O(n²) lazy iter: 6 distance-matrix reads per (pos, ins) pair
+//!
+//! Distances come from the lazily built distance matrix
+//! (n ≤ DIST_MATRIX_MAX_N), so no sqrt appears in the loop.
 //!
 //! LocalSearch halts at a local optimum, so wrap in Restart to run for a fixed time.
 //!

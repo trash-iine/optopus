@@ -46,7 +46,7 @@ pub(crate) trait NeighborVisitor<P: ProblemTrait> {
 /// 1. a variant in [`ProblemKind`],
 /// 2. an arm in [`with_problem`],
 /// 3. an impl of this trait (plus [`BenchmarkProblem`] / [`BenchmarkSolution`]).
-pub(crate) trait ConfigurableProblem: BenchmarkProblem + 'static
+pub(crate) trait ConfigurableProblem: BenchmarkProblem + Send + Sync + 'static
 where
     Self::Solution: BenchmarkSolution + Distance,
 {

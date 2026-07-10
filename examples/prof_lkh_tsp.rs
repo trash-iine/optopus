@@ -4,9 +4,10 @@
 //!   - ensure_candidates(): one-time O(n²) all-pairs distance computation +
 //!     sort (candidate-list construction)
 //!   - find_lk_move(): depth-bounded DFS — walks succ/pred along the tour
-//!     to search for improving edge-exchange sequences
-//!   - prob.distance(): f64::sqrt (recomputed from coordinates each call)
-//!   - apply_to_solution(): partial tour reversal + incremental update of the gain HashMap
+//!     to search for improving edge-exchange sequences; validity checks and
+//!     chain state reuse the scratch buffers in LkScratch (no allocation)
+//!   - prob.distance(): O(1) read from the lazily built distance matrix
+//!     (n ≤ DIST_MATRIX_MAX_N)
 //!
 //! LKH self-terminates with `no_improvement = true` at a local optimum,
 //! so wrap in Restart to run for a fixed time (berlin52 converges very fast).

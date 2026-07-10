@@ -74,40 +74,87 @@ fn derive_run_seed(
     h.finish() & 0x7FFF_FFFF_FFFF_FFFF
 }
 
-struct RunVisitor<'a> {
-    config: &'a HeuristicConfig,
+/// Runs every heuristic from the config against one instance, loading the
+/// instance file exactly once and sharing it across all heuristics and runs.
+struct InstanceVisitor<'a> {
+    config: &'a BenchmarkConfig,
     instance_path: &'a str,
-    seed: Option<u64>,
 }
 
-impl ProblemVisitor for RunVisitor<'_> {
-    type Output = RunMetrics;
-    fn visit<P>(self) -> RunMetrics
+impl ProblemVisitor for InstanceVisitor<'_> {
+    type Output = Vec<InstanceHeuristicResult>;
+    fn visit<P>(self) -> Vec<InstanceHeuristicResult>
     where
         P: ConfigurableProblem,
         P::Solution: BenchmarkSolution + Distance,
     {
-        run_typed::<P>(self.instance_path, self.config, self.seed)
+        let instance = P::load_instance(self.instance_path);
+        let mut results = Vec::with_capacity(self.config.heuristics.len());
+
+        for (heuristic_idx, heuristic_cfg) in self.config.heuristics.iter().enumerate() {
+            tracing::info!(
+                instance = %self.instance_path,
+                heuristic = heuristic_cfg.kind_name(),
+                num_runs = self.config.num_runs,
+                max_iteration = ?heuristic_cfg.stop_condition().max_iteration,
+                max_duration_secs = ?heuristic_cfg.stop_condition().max_duration_secs,
+                max_failed_update = ?heuristic_cfg.stop_condition().max_failed_update,
+                seed = ?self.config.seed,
+                "Start:"
+            );
+
+            let master_seed = self.config.seed;
+            let mut runs: Vec<SingleRunResult> = (0..self.config.num_runs)
+                .into_par_iter()
+                .map(|run_index| {
+                    let run_seed = master_seed
+                        .map(|m| derive_run_seed(m, self.instance_path, heuristic_idx, run_index));
+                    let metrics = run_typed::<P>(&instance, heuristic_cfg, run_seed);
+
+                    tracing::info!(
+                        run = run_index + 1,
+                        objective = metrics.best_objective,
+                        best_iteration = metrics.best_iteration,
+                        time_to_best_secs = metrics.time_to_best_secs,
+                        total_time_secs = metrics.total_time_secs,
+                        "Completed:"
+                    );
+
+                    to_single_run_result(run_index, metrics)
+                })
+                .collect();
+            runs.sort_by_key(|r| r.run_index);
+
+            let summary = compute_summary(&runs, P::MINIMIZE);
+            tracing::info!(
+                instance = %self.instance_path,
+                heuristic = heuristic_cfg.kind_name(),
+                num_runs = summary.num_successful_runs,
+                best = summary.best_objective,
+                avg = summary.avg_objective,
+                worst = summary.worst_objective,
+                std = summary.std_objective,
+                avg_time_to_best_secs = summary.avg_time_to_best_secs,
+                avg_total_time_secs = summary.avg_total_time_secs,
+                "Summary:"
+            );
+            results.push(InstanceHeuristicResult {
+                instance_path: self.instance_path.to_string(),
+                heuristic: heuristic_cfg.clone(),
+                summary,
+                runs,
+            });
+        }
+
+        results
     }
 }
 
-fn run_for_problem_kind(
-    problem_kind: &ProblemKind,
+fn run_typed<P>(
+    instance: &Result<P, OptError>,
     config: &HeuristicConfig,
-    instance_path: &str,
     seed: Option<u64>,
-) -> RunMetrics {
-    with_problem(
-        problem_kind,
-        RunVisitor {
-            config,
-            instance_path,
-            seed,
-        },
-    )
-}
-
-fn run_typed<P>(instance_path: &str, config: &HeuristicConfig, seed: Option<u64>) -> RunMetrics
+) -> RunMetrics
 where
     P: ConfigurableProblem,
     P::Solution: BenchmarkSolution + Distance,
@@ -122,11 +169,15 @@ where
             return empty_metrics(format!("config error: {msg}"), seed);
         }
     };
-    run_problem::<P>(instance_path, heuristic, P::MINIMIZE, seed)
+    let instance = match instance {
+        Ok(v) => v,
+        Err(e) => return empty_metrics(format!("error loading instance: {}", e), seed),
+    };
+    run_problem::<P>(instance, heuristic, P::MINIMIZE, seed)
 }
 
 fn run_problem<P>(
-    instance_path: &str,
+    instance: &P,
     mut heuristic: Box<dyn Heuristic<P>>,
     minimize: bool,
     seed: Option<u64>,
@@ -135,13 +186,9 @@ where
     P: BenchmarkProblem,
     P::Solution: BenchmarkSolution,
 {
-    let instance = match P::load_instance(instance_path) {
-        Ok(v) => v,
-        Err(e) => return empty_metrics(format!("error loading instance: {}", e), seed),
-    };
     let mut state = match seed {
-        Some(s) => SearchState::new_with_seed(&instance, s),
-        None => SearchState::new(&instance),
+        Some(s) => SearchState::new_with_seed(instance, s),
+        None => SearchState::new(instance),
     };
     let initial_objective = state.initial_solution.best_objective_f64();
     let start = std::time::Instant::now();
@@ -236,70 +283,27 @@ impl Benchmark {
     ) -> Result<BenchmarkReport, OptError> {
         validate_config(&config)?;
         let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S").to_string();
-        let mut results: Vec<InstanceHeuristicResult> = Vec::new();
         let instance_paths = expand_instance_paths(&config)?;
 
-        for (instance_path, problem_kind) in &instance_paths {
-            for (heuristic_idx, heuristic_cfg) in config.heuristics.iter().enumerate() {
-                tracing::info!(
-                    instance = %instance_path,
-                    heuristic = heuristic_cfg.kind_name(),
-                    num_runs = config.num_runs,
-                    max_iteration = ?heuristic_cfg.stop_condition().max_iteration,
-                    max_duration_secs = ?heuristic_cfg.stop_condition().max_duration_secs,
-                    max_failed_update = ?heuristic_cfg.stop_condition().max_failed_update,
-                    seed = ?config.seed,
-                    "Start:"
-                );
-
-                let master_seed = config.seed;
-                let mut runs: Vec<SingleRunResult> = (0..config.num_runs)
-                    .into_par_iter()
-                    .map(|run_index| {
-                        let run_seed = master_seed
-                            .map(|m| derive_run_seed(m, instance_path, heuristic_idx, run_index));
-                        let metrics = run_for_problem_kind(
-                            problem_kind,
-                            heuristic_cfg,
-                            instance_path,
-                            run_seed,
-                        );
-
-                        tracing::info!(
-                            run = run_index + 1,
-                            objective = metrics.best_objective,
-                            best_iteration = metrics.best_iteration,
-                            time_to_best_secs = metrics.time_to_best_secs,
-                            total_time_secs = metrics.total_time_secs,
-                            "Completed:"
-                        );
-
-                        to_single_run_result(run_index, metrics)
-                    })
-                    .collect();
-                runs.sort_by_key(|r| r.run_index);
-
-                let summary = compute_summary(&runs, problem_kind.minimize());
-                tracing::info!(
-                    instance = %instance_path,
-                    heuristic = heuristic_cfg.kind_name(),
-                    num_runs = summary.num_successful_runs,
-                    best = summary.best_objective,
-                    avg = summary.avg_objective,
-                    worst = summary.worst_objective,
-                    std = summary.std_objective,
-                    avg_time_to_best_secs = summary.avg_time_to_best_secs,
-                    avg_total_time_secs = summary.avg_total_time_secs,
-                    "Summary:"
-                );
-                results.push(InstanceHeuristicResult {
-                    instance_path: instance_path.clone(),
-                    heuristic: heuristic_cfg.clone(),
-                    summary,
-                    runs,
-                });
-            }
-        }
+        // Instances run in parallel with each other, and each (heuristic, run)
+        // pair inside an instance runs in parallel too (rayon nests fine).
+        // Per-run seeds are derived from (master, path, heuristic, run), so the
+        // report is independent of scheduling order.
+        let results: Vec<InstanceHeuristicResult> = instance_paths
+            .par_iter()
+            .map(|(instance_path, problem_kind)| {
+                with_problem(
+                    problem_kind,
+                    InstanceVisitor {
+                        config: &config,
+                        instance_path,
+                    },
+                )
+            })
+            .collect::<Vec<_>>()
+            .into_iter()
+            .flatten()
+            .collect();
 
         Ok(BenchmarkReport {
             timestamp,

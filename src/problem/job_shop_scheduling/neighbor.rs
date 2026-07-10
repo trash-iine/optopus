@@ -1,4 +1,5 @@
 use rand::Rng;
+use rayon::prelude::*;
 use std::collections::HashMap;
 
 use super::problem::{JobShopScheduling, JobShopSolution};
@@ -7,11 +8,20 @@ use crate::{
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 
+/// Minimum operation-sequence length for parallel neighborhood evaluation.
+///
+/// Each candidate costs a full O(n) schedule decode, so the neighborhood scan
+/// is O(n²) (swap) / O(n³) (relocate) — heavy enough for rayon to pay off on
+/// larger instances. Candidates are collected in index order, so results are
+/// identical to the serial path regardless of thread count.
+const PARALLEL_ITER_MIN_OPS: usize = 400;
+
 /// Adjacent-pair swap on the operation sequence.
 ///
 /// Swaps `operations[i]` with `operations[i+1]`. `gain` is the change in
-/// makespan (negative = improvement); the schedule is re-decoded after the
-/// swap to obtain the exact value.
+/// makespan (negative = improvement) relative to the solution the move was
+/// enumerated from; the schedule is re-decoded after the swap to obtain the
+/// exact value.
 #[derive(Debug, Clone)]
 pub struct JobShopSwapNeighbor {
     pub i: usize,
@@ -66,40 +76,89 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
     fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.operations.len();
         let base = sol.objective as f64;
-        let mut items = Vec::with_capacity(n.saturating_sub(1));
-        for i in 0..n.saturating_sub(1) {
-            if sol.operations[i] == sol.operations[i + 1] {
-                continue; // identity swap (same job)
-            }
+        let items: Vec<Self> = if n >= PARALLEL_ITER_MIN_OPS {
+            (0..n.saturating_sub(1))
+                .into_par_iter()
+                .filter(|&i| sol.operations[i] != sol.operations[i + 1])
+                .map_init(
+                    || sol.operations.clone(),
+                    |tentative, i| {
+                        tentative.swap(i, i + 1);
+                        let makespan = prob
+                            .compute_makespan(tentative)
+                            .expect("swap of valid sequence stays valid");
+                        tentative.swap(i, i + 1);
+                        JobShopSwapNeighbor {
+                            i,
+                            gain: makespan as f64 - base,
+                        }
+                    },
+                )
+                .collect()
+        } else {
+            let mut items = Vec::with_capacity(n.saturating_sub(1));
             let mut tentative = sol.operations.clone();
-            tentative.swap(i, i + 1);
-            let (makespan, _) = prob
-                .decode(&tentative)
-                .expect("swap of valid sequence stays valid");
-            let gain = makespan as f64 - base;
-            items.push(JobShopSwapNeighbor { i, gain });
-        }
+            for i in 0..n.saturating_sub(1) {
+                if sol.operations[i] == sol.operations[i + 1] {
+                    continue; // identity swap (same job)
+                }
+                tentative.swap(i, i + 1);
+                let makespan = prob
+                    .compute_makespan(&tentative)
+                    .expect("swap of valid sequence stays valid");
+                tentative.swap(i, i + 1);
+                let gain = makespan as f64 - base;
+                items.push(JobShopSwapNeighbor { i, gain });
+            }
+            items
+        };
         items.into_iter()
     }
 
-    /// Apply the swap to a temporary buffer and compare makespans directly.
+    /// Compares via the cached `gain` (exact: makespans are integers), which
+    /// is relative to the solution the move was enumerated from (`src`).
     fn move_to_be_better_than(
         &self,
-        prob: &JobShopScheduling,
+        _prob: &JobShopScheduling,
         src: &JobShopSolution,
         other: &JobShopSolution,
     ) -> bool {
-        let mut ops = src.operations.clone();
-        ops.swap(self.i, self.i + 1);
-        match prob.compute_makespan(&ops) {
-            Ok(makespan) => makespan < other.objective,
-            Err(_) => false,
+        src.objective as f64 + self.gain < other.objective as f64
+    }
+
+    /// O(n) + one decode: collects the non-identity swap positions once,
+    /// picks one uniformly, and evaluates only that candidate (instead of
+    /// decoding all n of them).
+    fn random_neighbor(
+        prob: &JobShopScheduling,
+        sol: &JobShopSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let n = sol.operations.len();
+        let positions: Vec<usize> = (0..n.saturating_sub(1))
+            .filter(|&i| sol.operations[i] != sol.operations[i + 1])
+            .collect();
+        if positions.is_empty() {
+            return None;
         }
+        let i = positions[rng.random_range(0..positions.len())];
+        let mut tentative = sol.operations.clone();
+        tentative.swap(i, i + 1);
+        let makespan = prob
+            .compute_makespan(&tentative)
+            .expect("swap of valid sequence stays valid");
+        Some(Self {
+            i,
+            gain: makespan as f64 - sol.objective as f64,
+        })
     }
 }
 
 /// Removes `operations[from]` and re-inserts it at position `to` (in the
 /// post-removal indexing — i.e. `to ∈ 0..n-1`).
+///
+/// `gain` is the change in makespan relative to the solution the move was
+/// enumerated from (negative = improvement).
 #[derive(Debug, Clone)]
 pub struct JobShopRelocateNeighbor {
     pub from: usize,
@@ -162,37 +221,82 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
     fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.operations.len();
         let base = sol.objective as f64;
-        let mut items = Vec::with_capacity(n * n.saturating_sub(1));
-        for from in 0..n {
+        let relocate_row = |tentative: &mut Vec<usize>, from: usize| {
+            let mut row = Vec::with_capacity(n.saturating_sub(1));
             for to in 0..n {
                 if to == from {
                     continue; // identity move
                 }
-                let mut tentative = sol.operations.clone();
-                relocate_in_place(&mut tentative, from, to);
-                let (makespan, _) = prob
-                    .decode(&tentative)
+                relocate_in_place(tentative, from, to);
+                let makespan = prob
+                    .compute_makespan(tentative)
                     .expect("relocate of valid sequence stays valid");
+                relocate_in_place(tentative, to, from);
                 let gain = makespan as f64 - base;
-                items.push(JobShopRelocateNeighbor { from, to, gain });
+                row.push(JobShopRelocateNeighbor { from, to, gain });
             }
-        }
+            row
+        };
+        let items: Vec<Self> = if n >= PARALLEL_ITER_MIN_OPS {
+            (0..n)
+                .into_par_iter()
+                .map_init(
+                    || sol.operations.clone(),
+                    |buf, from| relocate_row(buf, from),
+                )
+                .collect::<Vec<Vec<Self>>>()
+                .into_iter()
+                .flatten()
+                .collect()
+        } else {
+            let mut items = Vec::with_capacity(n * n.saturating_sub(1));
+            let mut tentative = sol.operations.clone();
+            for from in 0..n {
+                items.extend(relocate_row(&mut tentative, from));
+            }
+            items
+        };
         items.into_iter()
     }
 
-    /// Apply the relocate to a temporary buffer and compare makespans.
+    /// Compares via the cached `gain` (exact: makespans are integers), which
+    /// is relative to the solution the move was enumerated from (`src`).
     fn move_to_be_better_than(
         &self,
-        prob: &JobShopScheduling,
+        _prob: &JobShopScheduling,
         src: &JobShopSolution,
         other: &JobShopSolution,
     ) -> bool {
-        let mut ops = src.operations.clone();
-        relocate_in_place(&mut ops, self.from, self.to);
-        match prob.compute_makespan(&ops) {
-            Ok(makespan) => makespan < other.objective,
-            Err(_) => false,
+        src.objective as f64 + self.gain < other.objective as f64
+    }
+
+    /// O(1) + one decode: samples a uniformly random `(from, to)` pair with
+    /// `to != from` and evaluates only that candidate (instead of decoding
+    /// all n·(n−1) of them).
+    fn random_neighbor(
+        prob: &JobShopScheduling,
+        sol: &JobShopSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let n = sol.operations.len();
+        if n < 2 {
+            return None;
         }
+        let from = rng.random_range(0..n);
+        let to = {
+            let t = rng.random_range(0..n - 1);
+            if t >= from { t + 1 } else { t }
+        };
+        let mut tentative = sol.operations.clone();
+        relocate_in_place(&mut tentative, from, to);
+        let makespan = prob
+            .compute_makespan(&tentative)
+            .expect("relocate of valid sequence stays valid");
+        Some(Self {
+            from,
+            to,
+            gain: makespan as f64 - sol.objective as f64,
+        })
     }
 }
 
@@ -325,6 +429,53 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_random_neighbor_samples_member_of_iter() {
+        use rand::SeedableRng;
+        let inst = make_inst();
+        let sol = make_sol(&inst, vec![0, 1, 0, 1]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let swaps: Vec<_> = JobShopSwapNeighbor::iter(&inst, &sol).collect();
+        for _ in 0..20 {
+            let m = <JobShopSwapNeighbor as MoveToNeighbor<JobShopScheduling>>::random_neighbor(
+                &inst, &sol, &mut rng,
+            )
+            .unwrap();
+            assert!(swaps.iter().any(|s| s.i == m.i && s.gain == m.gain));
+        }
+
+        let relocs: Vec<_> = JobShopRelocateNeighbor::iter(&inst, &sol).collect();
+        for _ in 0..20 {
+            let m =
+                <JobShopRelocateNeighbor as MoveToNeighbor<JobShopScheduling>>::random_neighbor(
+                    &inst, &sol, &mut rng,
+                )
+                .unwrap();
+            assert!(
+                relocs
+                    .iter()
+                    .any(|r| r.from == m.from && r.to == m.to && r.gain == m.gain)
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_swap_neighbor_none_for_single_job() {
+        use rand::SeedableRng;
+        // One job only: every adjacent pair is the same job → no swap moves.
+        let inst = JobShopScheduling::new("single".to_string(), 2, vec![vec![(0, 2), (1, 3)]]);
+        let sol = make_sol(&inst, vec![0, 0]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+        assert!(JobShopSwapNeighbor::iter(&inst, &sol).next().is_none());
+        assert!(
+            <JobShopSwapNeighbor as MoveToNeighbor<JobShopScheduling>>::random_neighbor(
+                &inst, &sol, &mut rng
+            )
+            .is_none()
+        );
     }
 
     #[test]

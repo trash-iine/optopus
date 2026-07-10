@@ -59,11 +59,9 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
         let objective = prob
             .calculate_tour_length(&child)
             .expect("OX crossover should produce a valid tour");
-        let gain = prob.compute_all_gains(&child);
         Ok(TspSolution {
             tour: child,
             objective,
-            gain,
         })
     }
 }
@@ -147,12 +145,7 @@ impl SubProblemExtractable for TspWithCoordinates {
         let objective = self
             .calculate_tour_length(&tour)
             .expect("lifted TSP tour should be valid");
-        let gain = self.compute_all_gains(&tour);
-        TspSolution {
-            tour,
-            objective,
-            gain,
-        }
+        TspSolution { tour, objective }
     }
 }
 
@@ -176,12 +169,7 @@ mod tests {
 
     fn make_sol(tsp: &TspWithCoordinates, tour: Vec<usize>) -> TspSolution {
         let objective = tsp.calculate_tour_length(&tour).unwrap();
-        let gain = tsp.compute_all_gains(&tour);
-        TspSolution {
-            tour,
-            objective,
-            gain,
-        }
+        TspSolution { tour, objective }
     }
 
     #[test]

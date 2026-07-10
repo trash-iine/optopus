@@ -93,8 +93,12 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
   fn iter(prob, sol) -> impl Iterator<Item = Self> + Send;     // lazy
   fn apply_to_solution(&self, prob, sol) -> Result<(), OptError>;
   fn move_to_be_better_than(&self, prob, src, other) -> bool;  // default: clone + apply
+  fn random_neighbor(prob, sol, rng) -> Option<Self>;          // default: reservoir over iter()
   fn apply_to_iteration(&self, iter: u64) -> u64;              // default: iter + 1
   ```
+  The two defaults are slow-but-correct and emit a one-shot `tracing::warn!` when hit;
+  every built-in move overrides both (O(1) gain compare; direct O(1)/O(n) sampler used
+  each step by SA / LAHC / RandomWalk).
 - **`Evaluable<T>` / `Evaluate<T>`** (default `T = f64`): `Maximize(T)` / `Minimize(T)` carries the direction of an objective delta. `Evaluable<f64>::worsening_amount()` normalizes both directions to "positive = worse" (used by `boltzmann_accept`). Required for SA / LAHC / RLSearch. QUBO also exposes `Evaluate<Coefficient = i32>` for integer gains.
 - **`Crossover<P>`**: `crossover(&mut self, prob, sol1, sol2, rng) -> Solution` (exactly two parents; RNG passed in for reproducibility).
 - **`EnabledTabu`**: `type TabuMap: Default`, `is_move_enabled(map, iter)`, `add_to_tabu_map(map, iter, tenure, rng)`. The tenure is sampled from the passed RNG (`&mut state.rng`) so seeded runs are bit-reproducible. Required by TabuSearch.
@@ -181,7 +185,7 @@ Binary solutions all name the assignment vector `x: Vec<bool>`.
 | **MaxCut** | Max | `x`, `gain: Vec<f32>`, `objective: f32` | Flip / Swap | Uniform | format: `N M / i j w` (1-indexed); optional `positive_gain` index (advanced) |
 | **QUBO** | Min | `x`, `gain: Vec<i32>`, `objective: i32` | Flip / Swap | Uniform | `Coefficient = i32`; `SubProblemExtractable` (bias folding); optional `negative_gain` index (advanced) |
 | **MaxSAT** | Max | `x` (0-indexed), `n_satisfied: usize`, `gain: Vec<i64>` | Flip / Swap | Uniform | DIMACS CNF |
-| **TSP 2D** | Min | `tour: Vec<usize>`, `objective: f64` | TwoOpt / Relocate | Order (OX) | TSPLIB (EUC_2D / CEIL_2D / ATT / GEO) |
+| **TSP 2D** | Min | `tour: Vec<usize>`, `objective: f64` | TwoOpt / Relocate | Order (OX) | TSPLIB (EUC_2D / CEIL_2D / ATT / GEO); lazy distance matrix for `n ≤ 2000` (`DIST_MATRIX_MAX_N`), move gains computed on the fly from it |
 | **VertexCover** | Min | `x`, `gain: Vec<i32>`, `objective` (penalty-augmented), `cover_size`, `uncovered_edges` | Flip / Swap | Uniform | same edge-list format as MaxCut |
 | **JobShop** | Min | `operations: Vec<usize>`, `objective` (makespan) | Swap / Relocate | Ppx | `n_jobs n_machines` header + one job per line |
 | **FormulaProblem** | Configurable (`OptDirection`) | `x`, `score: f64` (always higher-is-better), `gain: Vec<f64>` | Flip / Swap | Uniform + `SubProblemExtractable` | see below; **library-only** (no instance file format, so intentionally absent from `ProblemKind`) |
@@ -213,7 +217,7 @@ max_iteration = 100000         # max_duration_secs / max_failed_update also supp
 
 ## Key Design Patterns
 
-1. **Gain-based incremental updates** — every solution caches per-variable `gain`. Applying a move only refreshes the affected neighbors in O(degree). MaxCut and QUBO additionally offer optional `positive_gain` / `negative_gain` indexes (advanced) to enumerate only improving moves — used by problem-specific heuristics like BLS, not needed for standard use.
+1. **Gain-based incremental updates** — binary/formula solutions cache per-variable `gain`; applying a move only refreshes the affected neighbors in O(degree). MaxCut and QUBO additionally offer optional `positive_gain` / `negative_gain` indexes (advanced) to enumerate only improving moves — used by problem-specific heuristics like BLS, not needed for standard use. TSP instead computes move gains on the fly from the lazily built distance matrix; JobShop re-decodes per candidate (and evaluates candidates with rayon on large instances, order-preserving so results are thread-count independent).
 2. **Sub-run clone/merge** — every meta-heuristic uses `state.run_sub(inner, clone_type)` (`clone_for_new_run` → run → `update_state`). The global iteration counter advances monotonically across all phases.
 3. **Seeded reproducibility** — all randomness flows through `state.rng` (`SmallRng`); `EnabledTabu::add_to_tabu_map` and `Crossover::crossover` take the RNG explicitly. With `seed` set in the benchmark config, reruns are bit-identical (enforced by e2e tests).
 4. **Tabu abstraction via trait** — `TabuSearch` is generic over `N: EnabledTabu`. Each move type owns its `TabuMap`; binary problems share `VarTabuMap` + helpers from `common/tabu.rs`.

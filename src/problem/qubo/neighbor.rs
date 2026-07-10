@@ -134,6 +134,22 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
         self.gain + src.objective < other.objective
     }
+
+    /// O(1): picks a uniformly random variable.
+    fn random_neighbor(
+        prob: &Qubo,
+        sol: &QuboSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        if prob.variables.is_empty() {
+            return None;
+        }
+        let i = prob.variables[rng.random_range(0..prob.variables.len())];
+        Some(Self {
+            i,
+            gain: sol.gain[i],
+        })
+    }
 }
 
 impl QuboFlipNeighbor {
@@ -253,6 +269,36 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
         self.gain + src.objective < other.objective
+    }
+
+    /// O(n): collects the variables of each value once and picks one from each.
+    /// Every differing-value pair is hit with equal probability, matching the
+    /// distribution of sampling [`iter`](MoveToNeighbor::iter) uniformly.
+    fn random_neighbor(
+        prob: &Qubo,
+        sol: &QuboSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let mut zeros = Vec::new();
+        let mut ones = Vec::new();
+        for &v in prob.iter_on_variables() {
+            if sol.x[v] {
+                ones.push(v);
+            } else {
+                zeros.push(v);
+            }
+        }
+        if zeros.is_empty() || ones.is_empty() {
+            return None;
+        }
+        let a = zeros[rng.random_range(0..zeros.len())];
+        let b = ones[rng.random_range(0..ones.len())];
+        let (i, j) = (a.max(b), a.min(b));
+        Some(Self {
+            i,
+            j,
+            gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
+        })
     }
 }
 
@@ -382,5 +428,45 @@ mod tests {
             assert!(flip.i < qubo.len(), "random neighbor index out of bounds");
             assert_eq!(flip.gain, state.solution.gain[flip.i]);
         }
+    }
+
+    #[test]
+    fn test_trait_random_neighbor_samples_member_of_iter() {
+        use rand::SeedableRng;
+        let qubo = make_qubo();
+        let sol = make_solution(&qubo, &[(0, true), (1, false), (2, true)]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let flips: Vec<_> = QuboFlipNeighbor::iter(&qubo, &sol).collect();
+        for _ in 0..20 {
+            let m =
+                <QuboFlipNeighbor as MoveToNeighbor<Qubo>>::random_neighbor(&qubo, &sol, &mut rng)
+                    .unwrap();
+            assert!(flips.iter().any(|f| f.i == m.i && f.gain == m.gain));
+        }
+
+        let swaps: Vec<_> = QuboSwapNeighbor::iter(&qubo, &sol).collect();
+        for _ in 0..20 {
+            let m =
+                <QuboSwapNeighbor as MoveToNeighbor<Qubo>>::random_neighbor(&qubo, &sol, &mut rng)
+                    .unwrap();
+            assert!(
+                swaps
+                    .iter()
+                    .any(|s| s.i == m.i && s.j == m.j && s.gain == m.gain)
+            );
+        }
+    }
+
+    #[test]
+    fn test_trait_random_swap_neighbor_none_when_uniform() {
+        use rand::SeedableRng;
+        let qubo = make_qubo();
+        let sol = make_solution(&qubo, &[(0, false), (1, false), (2, false)]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+        assert!(
+            <QuboSwapNeighbor as MoveToNeighbor<Qubo>>::random_neighbor(&qubo, &sol, &mut rng)
+                .is_none()
+        );
     }
 }

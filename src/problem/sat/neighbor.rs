@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 use super::problem::{Sat, SatSolution};
 use crate::{
     common::{VarTabuMap, add_var_to_tabu, is_var_enabled},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
+use rand::Rng;
 
 /// A flip move that toggles a single variable `i`.
 ///
@@ -79,6 +78,23 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
         (src.n_satisfied as i64 + self.gain) > other.n_satisfied as i64
     }
+
+    /// O(1): picks a uniformly random variable.
+    fn random_neighbor(
+        prob: &Sat,
+        sol: &SatSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let n = prob.n_vars();
+        if n == 0 {
+            return None;
+        }
+        let i = rng.random_range(0..n);
+        Some(Self {
+            i,
+            gain: sol.gain[i],
+        })
+    }
 }
 
 /// A swap move that simultaneously flips variables `i` and `j`.
@@ -137,40 +153,42 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
         crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
+    /// Iterates the precomputed clause-sharing pairs lazily (no per-call
+    /// allocation); the pair list itself is cached on the problem.
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
-        // Enumerate clause-sharing pairs (i, j) without duplicates
-        let mut seen: HashSet<(usize, usize)> = HashSet::new();
-        let mut items: Vec<SatSwapNeighbor> = Vec::new();
-
-        for clause in prob.all_clauses() {
-            for (a, &lit_a) in clause.iter().enumerate() {
-                for &lit_b in &clause[a + 1..] {
-                    let i = lit_a.unsigned_abs() as usize - 1;
-                    let j = lit_b.unsigned_abs() as usize - 1;
-                    let pair = (i.min(j), i.max(j));
-                    if !seen.insert(pair) {
-                        continue;
-                    }
-                    let (i, j) = pair;
-
-                    // gain_swap = gain_i + gain_j_after_flip_i
-                    let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&sol.x, i, j);
-                    let swap_gain = sol.gain[i] + gain_j_after_flip_i;
-
-                    items.push(SatSwapNeighbor {
-                        i,
-                        j,
-                        gain: swap_gain,
-                    });
-                }
+        prob.clause_sharing_pairs().iter().map(move |&(i, j)| {
+            // gain_swap = gain_i + gain_j_after_flip_i
+            let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&sol.x, i, j);
+            SatSwapNeighbor {
+                i,
+                j,
+                gain: sol.gain[i] + gain_j_after_flip_i,
             }
-        }
-
-        items.into_iter()
+        })
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
         (src.n_satisfied as i64 + self.gain) > other.n_satisfied as i64
+    }
+
+    /// O(clause): picks a uniformly random pair from the precomputed
+    /// clause-sharing pair list and computes its gain.
+    fn random_neighbor(
+        prob: &Sat,
+        sol: &SatSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let pairs = prob.clause_sharing_pairs();
+        if pairs.is_empty() {
+            return None;
+        }
+        let (i, j) = pairs[rng.random_range(0..pairs.len())];
+        let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&sol.x, i, j);
+        Some(Self {
+            i,
+            j,
+            gain: sol.gain[i] + gain_j_after_flip_i,
+        })
     }
 }
 
@@ -286,5 +304,63 @@ mod tests {
                 neighbor.i, neighbor.j, s.n_satisfied, expected_n_sat
             );
         }
+    }
+
+    #[test]
+    fn test_random_neighbor_samples_member_of_iter() {
+        use rand::SeedableRng;
+        let sat = make_sat();
+        let sol = make_solution(&sat, vec![true, false, true]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let flips: Vec<_> = SatFlipNeighbor::iter(&sat, &sol).collect();
+        for _ in 0..20 {
+            let m = <SatFlipNeighbor as MoveToNeighbor<Sat>>::random_neighbor(&sat, &sol, &mut rng)
+                .unwrap();
+            assert!(flips.iter().any(|f| f.i == m.i && f.gain == m.gain));
+        }
+
+        let swaps: Vec<_> = SatSwapNeighbor::iter(&sat, &sol).collect();
+        for _ in 0..20 {
+            let m = <SatSwapNeighbor as MoveToNeighbor<Sat>>::random_neighbor(&sat, &sol, &mut rng)
+                .unwrap();
+            assert!(
+                swaps
+                    .iter()
+                    .any(|s| s.i == m.i && s.j == m.j && s.gain == m.gain)
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_swap_neighbor_none_without_shared_clauses() {
+        use rand::SeedableRng;
+        // Two variables that never share a clause: no swap pairs exist.
+        let mut sat = Sat::new(2);
+        sat.add_clause([1]);
+        sat.add_clause([-2]);
+        let sol = make_solution(&sat, vec![true, false]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+        assert!(SatSwapNeighbor::iter(&sat, &sol).next().is_none());
+        assert!(
+            <SatSwapNeighbor as MoveToNeighbor<Sat>>::random_neighbor(&sat, &sol, &mut rng)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn test_clause_sharing_pairs_reset_by_add_clause() {
+        let mut sat = make_sat();
+        assert_eq!(sat.clause_sharing_pairs(), &[(0, 1), (0, 2), (1, 2)]);
+        // A new clause introducing no new pair keeps the set; one with a new
+        // pair (via a 4th variable) must appear after the cache reset.
+        let mut sat4 = Sat::new(4);
+        sat4.add_clause([1, 2]);
+        assert_eq!(sat4.clause_sharing_pairs(), &[(0, 1)]);
+        sat4.add_clause([3, 4]);
+        assert_eq!(sat4.clause_sharing_pairs(), &[(0, 1), (2, 3)]);
+        // make_sat-based instance: adding a clause resets its cache too.
+        sat.add_clause([1, 2, 3]);
+        assert_eq!(sat.clause_sharing_pairs(), &[(0, 1), (0, 2), (1, 2)]);
     }
 }
