@@ -8,7 +8,7 @@
 # Total wall-clock at 11 cores: ~10 hours.
 set -u
 
-REPO="$HOME/Workspace/optopus"
+REPO="${REPO:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 BIN="$REPO/target/release/optopus"
 RESULT_DIR="$REPO/result"
 CURATED_DIR="$REPO/docs/benchmarks/data"
