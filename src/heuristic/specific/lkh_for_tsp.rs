@@ -18,6 +18,42 @@ struct LkMove {
     gain: f64,
 }
 
+/// Reusable buffers for the LK search, so the hot path (candidate expansion
+/// and move-validity checks) performs no per-call allocations.
+#[derive(Default)]
+struct LkScratch {
+    /// Adjacency of the current tour (each city's two tour neighbors).
+    base_adj: Vec<[usize; 2]>,
+    /// Working copy of `base_adj`, patched per validity check / move apply.
+    adj: Vec<[usize; 2]>,
+    /// Cities already part of the current LK chain (cycle avoidance).
+    in_chain: Vec<bool>,
+    /// Chain stacks: tour edges broken / non-closing edges added so far.
+    broken: Vec<(usize, usize)>,
+    added: Vec<(usize, usize)>,
+}
+
+impl LkScratch {
+    /// Rebuilds `base_adj` from `tour` and resets the chain state.
+    fn prepare(&mut self, tour: &[usize]) {
+        let n = tour.len();
+        self.base_adj.clear();
+        self.base_adj.resize(n, [usize::MAX; 2]);
+        for i in 0..n {
+            let a = tour[i];
+            let b = tour[(i + 1) % n];
+            let s = if self.base_adj[a][0] == usize::MAX { 0 } else { 1 };
+            self.base_adj[a][s] = b;
+            let s = if self.base_adj[b][0] == usize::MAX { 0 } else { 1 };
+            self.base_adj[b][s] = a;
+        }
+        self.in_chain.clear();
+        self.in_chain.resize(n, false);
+        self.broken.clear();
+        self.added.clear();
+    }
+}
+
 /// Lin-Kernighan-Helsgaun heuristic for the Traveling Salesman Problem.
 ///
 /// Performs a variable-depth edge-exchange search starting from each city.
@@ -51,6 +87,7 @@ pub struct LinKernighanHelsgaun {
     max_depth: usize,
     candidates: Vec<Vec<usize>>,
     position: Vec<usize>,
+    scratch: LkScratch,
     no_improvement: bool,
 }
 
@@ -62,6 +99,7 @@ impl LinKernighanHelsgaun {
             max_depth,
             candidates: Vec::new(),
             position: Vec::new(),
+            scratch: LkScratch::default(),
             no_improvement: false,
         }
     }
@@ -105,8 +143,17 @@ impl LinKernighanHelsgaun {
     // -- LK search -------------------------------------------------------
 
     /// Tries to find an improving LK move starting from city `t1`.
-    fn find_lk_move(&self, prob: &TspWithCoordinates, tour: &[usize], t1: usize) -> Option<LkMove> {
-        let n = tour.len();
+    ///
+    /// `scratch.prepare` must have been called for the current tour; the
+    /// chain state in `scratch` is left in an arbitrary (but flag-clean)
+    /// state on return.
+    fn find_lk_move(
+        &self,
+        prob: &TspWithCoordinates,
+        tour: &[usize],
+        t1: usize,
+        scratch: &mut LkScratch,
+    ) -> Option<LkMove> {
         let t2_options = [self.succ(tour, t1), self.pred(tour, t1)];
 
         for &t2 in &t2_options {
@@ -140,12 +187,14 @@ impl LinKernighanHelsgaun {
                     let d_close = prob.distance(t4, t1);
                     let g_close = g1 + d_x2 - d_close;
                     if g_close > 1e-10 {
-                        let removed = vec![(t1, t2), (t3, t4)];
-                        let added = vec![(t2, t3), (t4, t1)];
-                        if is_valid_move(n, tour, &removed, &added) {
+                        scratch.broken.clear();
+                        scratch.broken.extend([(t1, t2), (t3, t4)]);
+                        scratch.added.clear();
+                        scratch.added.extend([(t2, t3), (t4, t1)]);
+                        if is_valid_move(scratch, tour[0]) {
                             return Some(LkMove {
-                                removed,
-                                added,
+                                removed: scratch.broken.clone(),
+                                added: scratch.added.clone(),
                                 gain: g_close,
                             });
                         }
@@ -153,26 +202,25 @@ impl LinKernighanHelsgaun {
 
                     // -- extend to deeper levels --
                     if self.max_depth >= 2 && t4 != t1 {
-                        let broken = vec![(t1, t2), (t3, t4)];
-                        let added_so_far = vec![(t2, t3)];
-                        let mut in_chain = vec![false; n];
-                        in_chain[t1] = true;
-                        in_chain[t2] = true;
-                        in_chain[t3] = true;
-                        in_chain[t4] = true;
+                        scratch.broken.clear();
+                        scratch.broken.extend([(t1, t2), (t3, t4)]);
+                        scratch.added.clear();
+                        scratch.added.push((t2, t3));
+                        scratch.in_chain[t1] = true;
+                        scratch.in_chain[t2] = true;
+                        scratch.in_chain[t3] = true;
+                        scratch.in_chain[t4] = true;
 
-                        if let Some(mv) = self.extend_search(
-                            prob,
-                            tour,
-                            t1,
-                            t4,
-                            g1 + d_x2,
-                            2,
-                            broken,
-                            added_so_far,
-                            &mut in_chain,
-                        ) {
-                            return Some(mv);
+                        let result =
+                            self.extend_search(prob, tour, t1, t4, g1 + d_x2, 2, scratch);
+
+                        scratch.in_chain[t1] = false;
+                        scratch.in_chain[t2] = false;
+                        scratch.in_chain[t3] = false;
+                        scratch.in_chain[t4] = false;
+
+                        if result.is_some() {
+                            return result;
                         }
                     }
                 }
@@ -183,13 +231,12 @@ impl LinKernighanHelsgaun {
 
     /// Recursively extends the LK chain to deeper levels.
     ///
-    /// * `t1`         – starting city (for the closing edge)
-    /// * `t_last`     – current dangling endpoint of the chain
-    /// * `g_sum`      – Σ(broken costs) − Σ(added costs) so far
-    /// * `depth`      – current depth (2-indexed: 2 means trying a 3-opt, etc.)
-    /// * `broken`     – tour edges broken so far
-    /// * `added_so_far` – non-closing edges added so far
-    /// * `in_chain`   – cities already part of the chain (for cycle avoidance)
+    /// * `t1`      – starting city (for the closing edge)
+    /// * `t_last`  – current dangling endpoint of the chain
+    /// * `g_sum`   – Σ(broken costs) − Σ(added costs) so far
+    /// * `depth`   – current depth (2-indexed: 2 means trying a 3-opt, etc.)
+    /// * `scratch` – chain state: `broken` / `added` stacks (push before
+    ///   recursing, pop after) and the `in_chain` cycle-avoidance flags
     #[allow(clippy::too_many_arguments)]
     fn extend_search(
         &self,
@@ -199,14 +246,10 @@ impl LinKernighanHelsgaun {
         t_last: usize,
         g_sum: f64,
         depth: usize,
-        broken: Vec<(usize, usize)>,
-        added_so_far: Vec<(usize, usize)>,
-        in_chain: &mut Vec<bool>,
+        scratch: &mut LkScratch,
     ) -> Option<LkMove> {
-        let n = tour.len();
-
         for &t_next in &self.candidates[t_last] {
-            if t_next == t1 || in_chain[t_next] {
+            if t_next == t1 || scratch.in_chain[t_next] {
                 continue;
             }
             // Added edge must not be a tour edge
@@ -214,7 +257,7 @@ impl LinKernighanHelsgaun {
                 continue;
             }
             // Must not re-add a previously broken edge
-            if is_edge_in(&broken, t_last, t_next) {
+            if is_edge_in(&scratch.broken, t_last, t_next) {
                 continue;
             }
 
@@ -230,11 +273,11 @@ impl LinKernighanHelsgaun {
                     continue;
                 }
                 // Don't break an already-added edge
-                if is_edge_in(&added_so_far, t_next, t_break) {
+                if is_edge_in(&scratch.added, t_next, t_break) {
                     continue;
                 }
                 // Don't close with an already-broken edge
-                if is_edge_in(&broken, t_break, t1) {
+                if is_edge_in(&scratch.broken, t_break, t1) {
                     continue;
                 }
 
@@ -244,30 +287,28 @@ impl LinKernighanHelsgaun {
                 let d_close = prob.distance(t_break, t1);
                 let g_close = g_partial + d_x - d_close;
                 if g_close > 1e-10 {
-                    let mut removed = broken.clone();
-                    removed.push((t_next, t_break));
-                    let mut added = added_so_far.clone();
-                    added.push((t_last, t_next));
-                    added.push((t_break, t1));
+                    scratch.broken.push((t_next, t_break));
+                    scratch.added.push((t_last, t_next));
+                    scratch.added.push((t_break, t1));
 
-                    if is_valid_move(n, tour, &removed, &added) {
+                    if is_valid_move(scratch, tour[0]) {
                         return Some(LkMove {
-                            removed,
-                            added,
+                            removed: scratch.broken.clone(),
+                            added: scratch.added.clone(),
                             gain: g_close,
                         });
                     }
+                    scratch.broken.pop();
+                    scratch.added.pop();
+                    scratch.added.pop();
                 }
 
                 // -- extend further --
                 if depth < self.max_depth && t_break != t1 {
-                    let mut new_broken = broken.clone();
-                    new_broken.push((t_next, t_break));
-                    let mut new_added = added_so_far.clone();
-                    new_added.push((t_last, t_next));
-
-                    in_chain[t_next] = true;
-                    in_chain[t_break] = true;
+                    scratch.broken.push((t_next, t_break));
+                    scratch.added.push((t_last, t_next));
+                    scratch.in_chain[t_next] = true;
+                    scratch.in_chain[t_break] = true;
 
                     let result = self.extend_search(
                         prob,
@@ -276,17 +317,17 @@ impl LinKernighanHelsgaun {
                         t_break,
                         g_partial + d_x,
                         depth + 1,
-                        new_broken,
-                        new_added,
-                        in_chain,
+                        scratch,
                     );
 
-                    in_chain[t_next] = false;
-                    in_chain[t_break] = false;
+                    scratch.in_chain[t_next] = false;
+                    scratch.in_chain[t_break] = false;
 
                     if result.is_some() {
                         return result;
                     }
+                    scratch.broken.pop();
+                    scratch.added.pop();
                 }
             }
         }
@@ -295,24 +336,13 @@ impl LinKernighanHelsgaun {
 
     // -- move application -------------------------------------------------
 
-    fn apply_lk_move(
-        &mut self,
-        prob: &TspWithCoordinates,
-        sol: &mut TspSolution,
-        lk_move: &LkMove,
-    ) {
+    /// Applies the move by patching the cached tour adjacency
+    /// (`scratch.base_adj`, kept current by `run_once`) and traversing it.
+    fn apply_lk_move(sol: &mut TspSolution, lk_move: &LkMove, scratch: &mut LkScratch) {
         let n = sol.tour.len();
 
-        // Build adjacency from the current tour, then patch it.
-        let mut adj = vec![[usize::MAX; 2]; n];
-        for i in 0..n {
-            let a = sol.tour[i];
-            let b = sol.tour[(i + 1) % n];
-            let s = if adj[a][0] == usize::MAX { 0 } else { 1 };
-            adj[a][s] = b;
-            let s = if adj[b][0] == usize::MAX { 0 } else { 1 };
-            adj[b][s] = a;
-        }
+        scratch.adj.clone_from(&scratch.base_adj);
+        let adj = &mut scratch.adj;
         for &(a, b) in &lk_move.removed {
             if adj[a][0] == b {
                 adj[a][0] = usize::MAX;
@@ -349,7 +379,6 @@ impl LinKernighanHelsgaun {
 
         sol.tour = new_tour;
         sol.objective -= lk_move.gain;
-        sol.gain = prob.compute_all_gains(&sol.tour);
     }
 }
 
@@ -362,28 +391,19 @@ fn is_edge_in(edges: &[(usize, usize)], a: usize, b: usize) -> bool {
         .any(|&(x, y)| (x == a && y == b) || (x == b && y == a))
 }
 
-/// Checks whether replacing `removed` edges with `added` edges in the tour
-/// produces a valid Hamiltonian cycle.
-fn is_valid_move(
-    n: usize,
-    tour: &[usize],
-    removed: &[(usize, usize)],
-    added: &[(usize, usize)],
-) -> bool {
-    let mut adj = vec![[usize::MAX; 2]; n];
-
-    // Original tour edges
-    for i in 0..n {
-        let a = tour[i];
-        let b = tour[(i + 1) % n];
-        let s = if adj[a][0] == usize::MAX { 0 } else { 1 };
-        adj[a][s] = b;
-        let s = if adj[b][0] == usize::MAX { 0 } else { 1 };
-        adj[b][s] = a;
-    }
+/// Checks whether replacing `scratch.broken` edges with `scratch.added`
+/// edges in the tour produces a valid Hamiltonian cycle.
+///
+/// Reuses `scratch.adj` as a working copy of the tour adjacency
+/// (`scratch.base_adj`, built by [`LkScratch::prepare`]); no allocation.
+/// `start` must be a tour city (the traversal anchor, `tour[0]`).
+fn is_valid_move(scratch: &mut LkScratch, start: usize) -> bool {
+    let n = scratch.base_adj.len();
+    scratch.adj.clone_from(&scratch.base_adj);
+    let adj = &mut scratch.adj;
 
     // Remove
-    for &(a, b) in removed {
+    for &(a, b) in &scratch.broken {
         if adj[a][0] == b {
             adj[a][0] = usize::MAX;
         } else if adj[a][1] == b {
@@ -401,7 +421,7 @@ fn is_valid_move(
     }
 
     // Add
-    for &(a, b) in added {
+    for &(a, b) in &scratch.added {
         if adj[a][0] == usize::MAX {
             adj[a][0] = b;
         } else if adj[a][1] == usize::MAX {
@@ -418,16 +438,21 @@ fn is_valid_move(
         }
     }
 
-    // Every vertex must have degree 2
-    for entry in adj.iter().take(n) {
-        if entry[0] == usize::MAX || entry[1] == usize::MAX {
+    // Every vertex must have degree 2. The base adjacency is a tour (all
+    // degree 2), so only vertices touched by the patch can violate this.
+    for &(a, b) in scratch.broken.iter().chain(scratch.added.iter()) {
+        if adj[a][0] == usize::MAX
+            || adj[a][1] == usize::MAX
+            || adj[b][0] == usize::MAX
+            || adj[b][1] == usize::MAX
+        {
             return false;
         }
     }
 
     // Traverse and check single cycle of length n
     let mut count = 0usize;
-    let mut current = tour[0];
+    let mut current = start;
     let mut prev = usize::MAX;
     loop {
         count += 1;
@@ -441,7 +466,7 @@ fn is_valid_move(
         };
         prev = current;
         current = next;
-        if current == tour[0] {
+        if current == start {
             break;
         }
     }
@@ -479,28 +504,45 @@ impl Heuristic<TspWithCoordinates> for LinKernighanHelsgaun {
             return Ok(());
         }
 
+        // Take the scratch out of `self` so `find_lk_move` can borrow both
+        // (`&self` for candidates/position, `&mut scratch` for the buffers).
+        let mut scratch = std::mem::take(&mut self.scratch);
+        scratch.prepare(&state.solution.tour);
+
+        let mut found: Option<LkMove> = None;
         for tour_idx in 0..n {
             let t1 = state.solution.tour[tour_idx];
+            if let Some(lk_move) =
+                self.find_lk_move(state.instance, &state.solution.tour, t1, &mut scratch)
+            {
+                found = Some(lk_move);
+                break;
+            }
+        }
 
-            if let Some(lk_move) = self.find_lk_move(state.instance, &state.solution.tour, t1) {
+        let result = match found {
+            Some(lk_move) => {
                 tracing::debug!(
-                    t1 = t1,
+                    t1 = lk_move.removed[0].0,
                     gain = lk_move.gain,
                     depth = lk_move.removed.len(),
                     "LKH: improving move found"
                 );
-                self.apply_lk_move(state.instance, &mut state.solution, &lk_move);
+                Self::apply_lk_move(&mut state.solution, &lk_move, &mut scratch);
                 self.build_position(&state.solution.tour);
                 state.iteration += 1;
                 state.update_best();
-                return Ok(());
+                Ok(())
             }
-        }
-
-        // No improving move found for any starting city — local optimum.
-        self.no_improvement = true;
-        state.progress_iteration();
-        Ok(())
+            None => {
+                // No improving move found for any starting city — local optimum.
+                self.no_improvement = true;
+                state.progress_iteration();
+                Ok(())
+            }
+        };
+        self.scratch = scratch;
+        result
     }
 }
 
@@ -522,12 +564,7 @@ mod tests {
         tour: Vec<usize>,
     ) -> crate::problem::tsp_2d::TspSolution {
         let objective = prob.calculate_tour_length(&tour).unwrap();
-        let gain = prob.compute_all_gains(&tour);
-        crate::problem::tsp_2d::TspSolution {
-            tour,
-            objective,
-            gain,
-        }
+        crate::problem::tsp_2d::TspSolution { tour, objective }
     }
 
     #[test]
@@ -574,29 +611,6 @@ mod tests {
             state.best_solution.objective,
             expected,
         );
-    }
-
-    #[test]
-    fn test_lkh_gain_cache_consistent() {
-        let prob = make_square_tsp();
-        let sol = make_solution(&prob, vec![0, 1, 3, 2]);
-
-        let mut state = SearchState::with_solution(&prob, sol);
-        let mut lkh = LinKernighanHelsgaun::new(StopCondition::iterations(100), 3, 5);
-        lkh.run(&mut state).unwrap();
-
-        let expected_gains = prob.compute_all_gains(&state.solution.tour);
-        for (key, &val) in &state.solution.gain {
-            let exp = expected_gains[key];
-            assert!(
-                (val - exp).abs() < 1e-9,
-                "gain[{:?}]: {} expected {}",
-                key,
-                val,
-                exp,
-            );
-        }
-        assert_eq!(state.solution.gain.len(), expected_gains.len());
     }
 
     #[test]
@@ -658,15 +672,18 @@ mod tests {
     #[test]
     fn test_is_valid_move_basic() {
         let tour = vec![0, 1, 2, 3];
+        let mut scratch = LkScratch::default();
+
         // Valid 2-opt: remove (0,1) and (2,3), add (0,2) and (1,3)
         // New tour: [0, 2, 1, 3]
-        assert!(is_valid_move(
-            4,
-            &tour,
-            &[(0, 1), (2, 3)],
-            &[(0, 2), (1, 3)]
-        ));
+        scratch.prepare(&tour);
+        scratch.broken.extend([(0, 1), (2, 3)]);
+        scratch.added.extend([(0, 2), (1, 3)]);
+        assert!(is_valid_move(&mut scratch, tour[0]));
+
         // Invalid: remove one edge without replacement → broken cycle
-        assert!(!is_valid_move(4, &tour, &[(0, 1)], &[]));
+        scratch.prepare(&tour);
+        scratch.broken.push((0, 1));
+        assert!(!is_valid_move(&mut scratch, tour[0]));
     }
 }
