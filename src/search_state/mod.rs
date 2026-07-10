@@ -410,14 +410,11 @@ where
     where
         N: MoveToNeighbor<Problem>,
     {
-        use rand::seq::IteratorRandom;
-        N::iter(self.instance, &self.solution)
-            .choose(&mut self.rng)
-            .ok_or_else(|| {
-                crate::error::OptError::InvalidState(format!(
-                    "{context}: neighborhood is empty, no move can be selected"
-                ))
-            })
+        N::random_neighbor(self.instance, &self.solution, &mut self.rng).ok_or_else(|| {
+            crate::error::OptError::InvalidState(format!(
+                "{context}: neighborhood is empty, no move can be selected"
+            ))
+        })
     }
 
     /// Runs `heuristic` on a sub-state cloned with `clone_type`, then merges the

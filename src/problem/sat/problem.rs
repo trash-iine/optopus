@@ -59,6 +59,10 @@ pub struct Sat {
     /// that share at least one clause with `i`. Used in flip-move incremental
     /// updates to avoid recomputing this set on every iteration.
     var_neighbors: Vec<Vec<usize>>,
+    /// Lazily built, deduplicated list of clause-sharing pairs `(i, j)` with
+    /// `i < j` — the swap-move neighborhood. Built on first use and reset by
+    /// [`Sat::add_clause`].
+    swap_pairs: std::sync::OnceLock<Vec<(usize, usize)>>,
 }
 
 impl Sat {
@@ -68,6 +72,7 @@ impl Sat {
             clauses: Vec::new(),
             clauses_per_var: vec![vec![]; n_vars],
             var_neighbors: vec![vec![]; n_vars],
+            swap_pairs: std::sync::OnceLock::new(),
         }
     }
 
@@ -114,7 +119,23 @@ impl Sat {
                 insert_unique_sorted(&mut self.var_neighbors[b], a);
             }
         }
+        self.swap_pairs = std::sync::OnceLock::new();
         self.clauses.push(clause);
+    }
+
+    /// The deduplicated clause-sharing pairs `(i, j)` with `i < j` — the
+    /// swap-move neighborhood. Built lazily from `var_neighbors` on first
+    /// call, then cached until the next [`Sat::add_clause`].
+    pub(crate) fn clause_sharing_pairs(&self) -> &[(usize, usize)] {
+        self.swap_pairs.get_or_init(|| {
+            let mut pairs = Vec::new();
+            for (i, neighbors) in self.var_neighbors.iter().enumerate() {
+                // var_neighbors[i] is sorted, so the j > i suffix is contiguous.
+                let start = neighbors.partition_point(|&j| j <= i);
+                pairs.extend(neighbors[start..].iter().map(|&j| (i, j)));
+            }
+            pairs
+        })
     }
 
     /// Returns the literals of clause `idx`.

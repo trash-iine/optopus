@@ -126,6 +126,22 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
     ) -> bool {
         self.gain + src.objective < other.objective
     }
+
+    /// O(1): picks a uniformly random vertex.
+    fn random_neighbor(
+        prob: &VertexCover,
+        sol: &VertexCoverSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        if prob.graph.vertices.is_empty() {
+            return None;
+        }
+        let i = prob.graph.vertices[rng.random_range(0..prob.graph.vertices.len())];
+        Some(Self {
+            i,
+            gain: sol.gain[i],
+        })
+    }
 }
 
 /// A swap move that simultaneously flips an in-cover vertex `i` and an out-of-cover vertex `j`
@@ -223,6 +239,41 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
     ) -> bool {
         self.gain + src.objective < other.objective
     }
+
+    /// O(n): collects in-cover and out-of-cover vertices once and picks one
+    /// from each. Every mixed pair is hit with equal probability, matching
+    /// the distribution of sampling [`iter`](MoveToNeighbor::iter) uniformly.
+    fn random_neighbor(
+        prob: &VertexCover,
+        sol: &VertexCoverSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let mut ins = Vec::new();
+        let mut outs = Vec::new();
+        for &v in prob.graph.iter_on_vertices() {
+            if sol.x[v] {
+                ins.push(v);
+            } else {
+                outs.push(v);
+            }
+        }
+        if ins.is_empty() || outs.is_empty() {
+            return None;
+        }
+        let a = ins[rng.random_range(0..ins.len())];
+        let b = outs[rng.random_range(0..outs.len())];
+        let (i, j) = (a.max(b), a.min(b));
+        let edge_correction = if prob.graph.has_edge(i, j) {
+            prob.penalty_weight()
+        } else {
+            0
+        };
+        Some(Self {
+            i,
+            j,
+            gain: sol.gain[i] + sol.gain[j] - edge_correction,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -302,5 +353,49 @@ mod tests {
             assert_ne!(sol.x[p.i], sol.x[p.j]);
             assert!(p.j < p.i);
         }
+    }
+
+    #[test]
+    fn test_random_neighbor_samples_member_of_iter() {
+        use rand::SeedableRng;
+        let vc = make_triangle();
+        let sol = vc.solution_from_assignment(&[true, false, false]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let flips: Vec<_> = VertexCoverFlipNeighbor::iter(&vc, &sol).collect();
+        for _ in 0..20 {
+            let m = <VertexCoverFlipNeighbor as MoveToNeighbor<VertexCover>>::random_neighbor(
+                &vc, &sol, &mut rng,
+            )
+            .unwrap();
+            assert!(flips.iter().any(|f| f.i == m.i && f.gain == m.gain));
+        }
+
+        let swaps: Vec<_> = VertexCoverSwapNeighbor::iter(&vc, &sol).collect();
+        for _ in 0..20 {
+            let m = <VertexCoverSwapNeighbor as MoveToNeighbor<VertexCover>>::random_neighbor(
+                &vc, &sol, &mut rng,
+            )
+            .unwrap();
+            assert!(
+                swaps
+                    .iter()
+                    .any(|s| s.i == m.i && s.j == m.j && s.gain == m.gain)
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_swap_neighbor_none_when_uniform() {
+        use rand::SeedableRng;
+        let vc = make_triangle();
+        let sol = vc.solution_from_assignment(&[false, false, false]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+        assert!(
+            <VertexCoverSwapNeighbor as MoveToNeighbor<VertexCover>>::random_neighbor(
+                &vc, &sol, &mut rng
+            )
+            .is_none()
+        );
     }
 }

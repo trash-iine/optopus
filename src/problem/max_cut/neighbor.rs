@@ -140,6 +140,22 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
     ) -> bool {
         self.gain + src.objective > other.objective
     }
+
+    /// O(1): picks a uniformly random vertex.
+    fn random_neighbor(
+        prob: &MaxCut,
+        sol: &MaxCutSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        if prob.graph.vertices.is_empty() {
+            return None;
+        }
+        let i = prob.graph.vertices[rng.random_range(0..prob.graph.vertices.len())];
+        Some(Self {
+            i,
+            gain: sol.gain[i],
+        })
+    }
 }
 
 impl Evaluate for MaxCutFlipNeighbor {
@@ -299,6 +315,42 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     ) -> bool {
         self.gain + src.objective > other.objective
     }
+
+    /// O(n): collects the vertices of each side once and picks one from each.
+    /// Every cross-side pair is hit with equal probability, matching the
+    /// distribution of sampling [`iter`](MoveToNeighbor::iter) uniformly.
+    fn random_neighbor(
+        prob: &MaxCut,
+        sol: &MaxCutSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let mut side0 = Vec::new();
+        let mut side1 = Vec::new();
+        for &v in prob.graph.iter_on_vertices() {
+            if sol.x[v] {
+                side1.push(v);
+            } else {
+                side0.push(v);
+            }
+        }
+        if side0.is_empty() || side1.is_empty() {
+            return None;
+        }
+        let a = side0[rng.random_range(0..side0.len())];
+        let b = side1[rng.random_range(0..side1.len())];
+        let (i, j) = (a.max(b), a.min(b));
+        Some(Self {
+            i,
+            j,
+            gain: sol.gain[i]
+                + sol.gain[j]
+                + if prob.graph.has_edge(i, j) {
+                    2.0 * prob.graph.get_weight(i, j)
+                } else {
+                    0.0
+                },
+        })
+    }
 }
 
 #[cfg(test)]
@@ -326,5 +378,54 @@ mod tests {
         state.apply(&neighbor).unwrap();
 
         assert!(state.solution.x[1]);
+    }
+
+    #[test]
+    fn test_random_neighbor_samples_member_of_iter() {
+        use rand::SeedableRng;
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        state.solution.x = vec![true, false, true];
+        let sol = state.solution.clone();
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let flips: Vec<_> = MaxCutFlipNeighbor::iter(&mc, &sol).collect();
+        for _ in 0..20 {
+            let m = <MaxCutFlipNeighbor as MoveToNeighbor<MaxCut>>::random_neighbor(
+                &mc, &sol, &mut rng,
+            )
+            .unwrap();
+            assert!(flips.iter().any(|f| f.i == m.i && f.gain == m.gain));
+        }
+
+        let swaps: Vec<_> = MaxCutSwapNeighbor::iter(&mc, &sol).collect();
+        for _ in 0..20 {
+            let m = <MaxCutSwapNeighbor as MoveToNeighbor<MaxCut>>::random_neighbor(
+                &mc, &sol, &mut rng,
+            )
+            .unwrap();
+            assert!(
+                swaps
+                    .iter()
+                    .any(|s| s.i == m.i && s.j == m.j && s.gain == m.gain)
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_swap_neighbor_none_when_one_sided() {
+        use rand::SeedableRng;
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+        let mut state = SearchState::new(&mc);
+        state.solution.x = vec![false, false, false];
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+        assert!(
+            <MaxCutSwapNeighbor as MoveToNeighbor<MaxCut>>::random_neighbor(
+                &mc,
+                &state.solution,
+                &mut rng
+            )
+            .is_none()
+        );
     }
 }

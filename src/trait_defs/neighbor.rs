@@ -27,6 +27,47 @@ where
     /// Returns an iterator over all moves reachable from the given solution.
     fn iter(prob: &Problem, sol: &Problem::Solution) -> impl Iterator<Item = Self> + Send;
 
+    /// Picks a uniformly random move from the neighborhood, or `None` when the
+    /// neighborhood is empty. Used every step by SA / LAHC / RandomWalk.
+    ///
+    /// <div class="warning">
+    /// The default implementation reservoir-samples the full
+    /// [`iter`](Self::iter) neighborhood, which may be inefficient (O(n) or
+    /// worse per step). Override it with a direct sampler when a random move
+    /// can be constructed cheaply. The override must draw uniformly from the
+    /// same move set that <code>iter</code> yields and return <code>None</code>
+    /// exactly when <code>iter</code> is empty.
+    ///
+    /// When this default is invoked at runtime, a one-shot
+    /// <code>tracing::warn!</code> is emitted per concrete Move type (via
+    /// <code>OnceLock</code>). Providing an override bypasses the default
+    /// body entirely, so the warning never fires — no opt-in flag required.
+    /// </div>
+    fn random_neighbor(
+        prob: &Problem,
+        sol: &Problem::Solution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        // Monomorphization gives every concrete (Problem, Self) pair its own
+        // copy of this static, so the warning fires once per Move type per
+        // process — not once total, and not once per call site.
+        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+        WARNED.get_or_init(|| {
+            tracing::warn!(
+                move_type = std::any::type_name::<Self>(),
+                "Using the default reservoir-sampling implementation of \
+                 random_neighbor, which walks the full neighborhood every \
+                 step. Override it with a direct sampler for hot-path \
+                 heuristics."
+            );
+        });
+        use rand::seq::IteratorRandom;
+        Self::iter(prob, sol).choose(rng)
+    }
+
     /// Returns `true` if applying this move to `src` yields a solution better than `other`.
     ///
     /// <div class="warning">
@@ -210,6 +251,28 @@ mod default_move_warning_tests {
         assert!(
             !logs.contains("default clone+apply"),
             "override path must skip the warning entirely, got: {logs}"
+        );
+    }
+
+    #[test]
+    fn default_random_neighbor_emits_warning_once_and_handles_empty() {
+        use rand::SeedableRng;
+        let prob = ToyProblem;
+        let sol = ToySolution { value: 0 };
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let logs = captured(|| {
+            // NaiveAddOne::iter is empty, so the default must return None.
+            let m = NaiveAddOne::random_neighbor(&prob, &sol, &mut rng);
+            assert!(m.is_none());
+            // Second call: the OnceLock has fired; no additional warning.
+            let _ = NaiveAddOne::random_neighbor(&prob, &sol, &mut rng);
+        });
+
+        let count = logs.matches("reservoir-sampling").count();
+        assert_eq!(
+            count, 1,
+            "expected exactly one random_neighbor warning, got {count}: {logs}"
         );
     }
 }
