@@ -42,9 +42,17 @@ impl LkScratch {
         for i in 0..n {
             let a = tour[i];
             let b = tour[(i + 1) % n];
-            let s = if self.base_adj[a][0] == usize::MAX { 0 } else { 1 };
+            let s = if self.base_adj[a][0] == usize::MAX {
+                0
+            } else {
+                1
+            };
             self.base_adj[a][s] = b;
-            let s = if self.base_adj[b][0] == usize::MAX { 0 } else { 1 };
+            let s = if self.base_adj[b][0] == usize::MAX {
+                0
+            } else {
+                1
+            };
             self.base_adj[b][s] = a;
         }
         self.in_chain.clear();
@@ -211,8 +219,7 @@ impl LinKernighanHelsgaun {
                         scratch.in_chain[t3] = true;
                         scratch.in_chain[t4] = true;
 
-                        let result =
-                            self.extend_search(prob, tour, t1, t4, g1 + d_x2, 2, scratch);
+                        let result = self.extend_search(prob, tour, t1, t4, g1 + d_x2, 2, scratch);
 
                         scratch.in_chain[t1] = false;
                         scratch.in_chain[t2] = false;

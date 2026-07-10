@@ -427,10 +427,8 @@ mod tests {
     #[test]
     fn test_random_neighbor_none_when_too_small() {
         use rand::SeedableRng;
-        let tsp = TspWithCoordinates::new(
-            "tiny".to_string(),
-            vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)],
-        );
+        let tsp =
+            TspWithCoordinates::new("tiny".to_string(), vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)]);
         let sol = make_sol(&tsp, vec![0, 1, 2]);
         let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
         // n=3: the 2-opt neighborhood is empty (iter yields nothing).

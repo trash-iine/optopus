@@ -107,11 +107,9 @@ impl ProblemVisitor for InstanceVisitor<'_> {
             let mut runs: Vec<SingleRunResult> = (0..self.config.num_runs)
                 .into_par_iter()
                 .map(|run_index| {
-                    let run_seed = master_seed.map(|m| {
-                        derive_run_seed(m, self.instance_path, heuristic_idx, run_index)
-                    });
-                    let metrics =
-                        run_typed::<P>(&instance, heuristic_cfg, run_seed);
+                    let run_seed = master_seed
+                        .map(|m| derive_run_seed(m, self.instance_path, heuristic_idx, run_index));
+                    let metrics = run_typed::<P>(&instance, heuristic_cfg, run_seed);
 
                     tracing::info!(
                         run = run_index + 1,

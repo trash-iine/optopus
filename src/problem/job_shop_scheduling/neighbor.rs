@@ -240,7 +240,10 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
         let items: Vec<Self> = if n >= PARALLEL_ITER_MIN_OPS {
             (0..n)
                 .into_par_iter()
-                .map_init(|| sol.operations.clone(), |buf, from| relocate_row(buf, from))
+                .map_init(
+                    || sol.operations.clone(),
+                    |buf, from| relocate_row(buf, from),
+                )
                 .collect::<Vec<Vec<Self>>>()
                 .into_iter()
                 .flatten()
