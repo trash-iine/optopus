@@ -77,3 +77,13 @@ m d m d m d ...
 ## Optional traits
 
 - `Distance` — number of positions where the operation index differs.
+
+## References
+
+- Fisher, H. and Thompson, G. L. "Probabilistic Learning Combinations of
+  Local Job-Shop Scheduling Rules." In *Industrial Scheduling*, pp. 225-251.
+  Prentice-Hall, 1963. (Source of the classic `ft06` instance.)
+- Taillard, E. "Benchmarks for Basic Scheduling Problems." *European Journal
+  of Operational Research*, 64(2), 278-285, 1993.
+- See [`data/instances/README.md`](../../data/instances/README.md) for
+  instance sources and licensing.

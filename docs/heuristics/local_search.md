@@ -33,3 +33,8 @@ let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1_
 ls.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
+
+## References
+
+- Aarts, E. and Lenstra, J. K. (eds.) *Local Search in Combinatorial
+  Optimization*. Princeton University Press, 2003.

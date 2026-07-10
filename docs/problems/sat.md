@@ -66,3 +66,13 @@ p cnf N M
 ## Optional traits
 
 - `Distance` — Hamming distance on `x`.
+
+## References
+
+- "Satisfiability Suggested Format." DIMACS Challenge technical report, 1993.
+  (Defines the DIMACS CNF file format.)
+- Hoos, H. H. and Stützle, T. "SATLIB: An Online Resource for Research on
+  SAT." In *SAT 2000*, pp. 283-292. IOS Press, 2000. (Source of the `uf`
+  instance sets.)
+- See [`data/instances/README.md`](../../data/instances/README.md) for
+  instance sources and download instructions.

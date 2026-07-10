@@ -50,3 +50,10 @@ let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
 ts.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
+
+## References
+
+- Glover, F. "Future Paths for Integer Programming and Links to Artificial
+  Intelligence." *Computers & Operations Research*, 13(5), 533-549, 1986.
+- Glover, F. "Tabu Search — Part I." *ORSA Journal on Computing*, 1(3),
+  190-206, 1989.

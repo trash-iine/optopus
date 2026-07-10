@@ -62,3 +62,9 @@ let mut solver = Restart::new(
     StopCondition::failed_updates(10_000),
 );
 ```
+
+## References
+
+- Williams, R. J. "Simple Statistical Gradient-Following Algorithms for
+  Connectionist Reinforcement Learning." *Machine Learning*, 8(3-4), 229-256,
+  1992.

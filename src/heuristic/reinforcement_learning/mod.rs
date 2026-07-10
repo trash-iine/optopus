@@ -57,6 +57,12 @@ pub enum RewardShaping {
 /// **Key property**: `clear()` resets per-episode state but preserves the learned
 /// weights, so the policy improves across episodes when used inside
 /// [`super::Restart`] or [`super::Iterated`].
+///
+/// # References
+///
+/// - Williams, R. J. "Simple Statistical Gradient-Following Algorithms for
+///   Connectionist Reinforcement Learning." *Machine Learning*, 8(3-4), 229-256, 1992.
+///   [DOI](https://doi.org/10.1007/BF00992696)
 pub struct RLSearch<N> {
     pub stop_condition: StopCondition,
     pub policy: LinearPolicy,

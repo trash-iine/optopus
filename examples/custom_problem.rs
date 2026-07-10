@@ -1,24 +1,25 @@
-//! 独自の最適化問題を定義するサンプル。
+//! Example of defining your own optimization problem.
 //!
-//! ProblemTrait / MoveToNeighbor / Rankable を実装して、
-//! 組み込みの LocalSearch を使って解を求めます。
+//! Implements ProblemTrait / MoveToNeighbor / Rankable and solves the
+//! problem with the built-in LocalSearch.
 //!
-//! ここでは「整数ベクトルの要素和を最大化する」単純な問題を例に取ります。
+//! The problem here is deliberately simple: maximize the number of `true`
+//! bits in a binary vector (OneMax).
 //!
-//! 実行方法:
+//! Run with:
 //! ```
 //! cargo run --example custom_problem
 //! ```
 
 use optopus::prelude::*;
 
-// ─── 問題定義 ───────────────────────────────────────────────
-/// N個の整数値 (0 or 1) の和を最大化する問題（カバーの例）
+// ─── Problem definition ─────────────────────────────────────
+/// Maximize the number of bits set to 1 among `n` binary variables (OneMax).
 struct OneMaxProblem {
     n: usize,
 }
 
-// ─── 解の定義 ────────────────────────────────────────────────
+// ─── Solution definition ────────────────────────────────────
 #[derive(Clone)]
 struct OneMaxSolution {
     bits: Vec<bool>,
@@ -46,7 +47,7 @@ impl ProblemTrait for OneMaxProblem {
     }
 }
 
-// ─── 近傍定義（1ビットフリップ）─────────────────────────────
+// ─── Neighborhood definition (single-bit flip) ──────────────
 struct FlipMove {
     index: usize,
 }
@@ -80,11 +81,11 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
 
 impl Rankable for FlipMove {
     fn is_better_than(&self, _other: &Self) -> bool {
-        false // 移動同士の比較は不要（LocalSearch は解の優劣で選ぶ）
+        false // move-vs-move comparison is unused (LocalSearch ranks by resulting solutions)
     }
 }
 
-// ─── メイン ─────────────────────────────────────────────────
+// ─── Main ───────────────────────────────────────────────────
 fn main() {
     let prob = OneMaxProblem { n: 20 };
     let mut state = SearchState::new(&prob);

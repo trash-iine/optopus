@@ -86,3 +86,14 @@ i j v
 - An optional **`negative_gain` index** lets problem-specific algorithms
   enumerate only improving flips in O(|improving|). Not needed for standard
   heuristic use.
+
+## References
+
+- Kochenberger, G., Hao, J.-K., Glover, F., Lewis, M., Lü, Z., Wang, H., and
+  Wang, Y. "The Unconstrained Binary Quadratic Programming Problem: A Survey."
+  *Journal of Combinatorial Optimization*, 28(1), 58-81, 2014.
+- Beasley, J. E. "Obtaining Test Problems via Internet." *Journal of Global
+  Optimization*, 8(4), 429-433, 1996. (OR-Library, source of the bundled
+  `bqp` instance set.)
+- See [`data/instances/README.md`](../../data/instances/README.md) for
+  instance sources and licensing.
