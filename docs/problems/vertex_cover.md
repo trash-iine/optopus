@@ -61,3 +61,11 @@ weights are ignored (every edge contributes equally to the cover constraint).
 ## Optional traits
 
 - `Distance` — Hamming distance on `cover`.
+
+## References
+
+- Karp, R. M. "Reducibility Among Combinatorial Problems." In *Complexity of
+  Computer Computations*, pp. 85-103. Plenum Press, 1972. (Vertex Cover is
+  one of Karp's 21 NP-complete problems.)
+- See [`data/instances/README.md`](../../data/instances/README.md) for
+  instance sources.

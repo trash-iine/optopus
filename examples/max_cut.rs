@@ -1,8 +1,9 @@
-//! Max Cut 問題のサンプル。
+//! Max Cut example.
 //!
-//! LocalSearch と TabuSearch を同じ問題インスタンスに適用して結果を比較します。
+//! Applies LocalSearch and TabuSearch to the same problem instance and
+//! compares the results.
 //!
-//! 実行方法:
+//! Run with:
 //! ```
 //! cargo run --example max_cut
 //! ```
@@ -10,7 +11,7 @@
 use optopus::prelude::*;
 
 fn main() {
-    // 小さな手動グラフを作成（ファイル不要）
+    // Build a small graph by hand (no instance file needed).
     let mc = MaxCut::new(Graph::from_edges([
         (0, 1, 1.0),
         (0, 2, 1.0),

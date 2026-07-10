@@ -46,3 +46,8 @@ let mut bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
 bs.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
+
+## References
+
+- Ow, P. S. and Morton, T. E. "Filtered Beam Search in Scheduling."
+  *International Journal of Production Research*, 26(1), 35-62, 1988.

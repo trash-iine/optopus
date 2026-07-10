@@ -60,6 +60,21 @@ file-based loading.
 | [Breakout Local Search (MaxCut)](docs/heuristics/breakout_local_search.md) | `BreakoutLocalSearchForMaxCut` |
 | [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |
 
+## Benchmark CLI
+
+The crate also builds a CLI benchmark runner: describe instances, heuristics,
+and stop conditions in a TOML config, and get aggregated
+best/avg/worst/std/time results.
+
+```bash
+cargo run --release -- path/to/config.toml
+# report is written to result/<config_stem>_<timestamp>.toml
+```
+
+See [`docs/guide/benchmarking.md`](docs/guide/benchmarking.md) for the config
+schema and [`docs/benchmarks/`](docs/benchmarks/) for results on standard
+instance sets.
+
 ## Documentation
 
 - [`docs/quickstart.md`](docs/quickstart.md) — getting started, file loaders
@@ -75,6 +90,7 @@ file-based loading.
 
 ```bash
 cargo run --example max_cut             # MaxCut: LocalSearch and TabuSearch
+cargo run --example beam_search         # MaxCut: BeamSearch
 cargo run --example custom_problem      # define your own problem
 cargo run --example custom_heuristic    # define your own heuristic
 ```

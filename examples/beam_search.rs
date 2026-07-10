@@ -1,8 +1,9 @@
-//! Beam Search サンプル。
+//! Beam Search example.
 //!
-//! MaxCut 問題に対して BeamSearch・LocalSearch・TabuSearch を適用して結果を比較します。
+//! Applies BeamSearch (two beam widths) and LocalSearch to the same MaxCut
+//! instance and compares the results.
 //!
-//! 実行方法:
+//! Run with:
 //! ```
 //! cargo run --example beam_search
 //! ```
@@ -33,7 +34,7 @@ fn main() {
         state.best_solution.objective, state.best_iteration
     );
 
-    // --- Beam Search (beam_width = 1 = LocalSearch に相当) ---
+    // --- Beam Search (beam_width = 1, equivalent to LocalSearch) ---
     let mut state = SearchState::new(&mc);
     let mut bs1 = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(sc.clone(), 1);
     bs1.run(&mut state).unwrap();
@@ -42,7 +43,7 @@ fn main() {
         state.best_solution.objective, state.best_iteration
     );
 
-    // --- LocalSearch (比較用) ---
+    // --- LocalSearch (for comparison) ---
     let mut state = SearchState::new(&mc);
     let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(sc.clone());
     ls.run(&mut state).unwrap();

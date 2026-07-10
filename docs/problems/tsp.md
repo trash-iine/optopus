@@ -90,3 +90,11 @@ internally. The `EXPLICIT` weight type is not supported.
 ## Optional traits
 
 - `Distance` — number of positions where the tour differs (diversity proxy).
+
+## References
+
+- Reinelt, G. "TSPLIB — A Traveling Salesman Problem Library." *ORSA Journal
+  on Computing*, 3(4), 376-384, 1991. (Defines the file format and the
+  standard instance set.)
+- See [`data/instances/README.md`](../../data/instances/README.md) for
+  instance sources and download instructions.

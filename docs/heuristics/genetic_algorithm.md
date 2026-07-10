@@ -91,13 +91,19 @@ ga.run(&mut state)?;
 
 ```rust
 pub trait Crossover<P: ProblemTrait> {
-    fn crossover(&mut self, prob: &P, sol1: &P::Solution, sol2: &P::Solution) -> P::Solution;
-    fn apply_to_crossover_count(&self, count: u64) -> u64 { count + 1 }
+    fn crossover(
+        &mut self,
+        prob: &P,
+        sol1: &P::Solution,
+        sol2: &P::Solution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<P::Solution, OptError>;
 }
 ```
 
 `&mut self` lets stateful operators (such as `SubProblemBasedCrossover`,
-which runs an inner heuristic) hold mutable state across calls.
+which runs an inner heuristic) hold mutable state across calls. The RNG is
+passed in explicitly so seeded runs stay reproducible.
 
 ## SubProblemBasedCrossover
 
@@ -117,3 +123,12 @@ let crossover = SubProblemBasedCrossover {
 ```
 
 Implemented by MaxCut, QUBO, SAT, Vertex Cover, and Formula.
+
+## References
+
+- Holland, J. H. *Adaptation in Natural and Artificial Systems*. University of
+  Michigan Press, 1975.
+- Goldberg, D. E. *Genetic Algorithms in Search, Optimization, and Machine
+  Learning*. Addison-Wesley, 1989.
+- Galinier, P. and Hao, J.-K. "Hybrid Evolutionary Algorithms for Graph
+  Coloring." *Journal of Combinatorial Optimization*, 3(4), 379-397, 1999.

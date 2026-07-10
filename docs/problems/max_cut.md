@@ -81,3 +81,13 @@ i j w
   enumerates only improving flips in O(|improving|). It is used by problem-
   specific algorithms such as [Breakout Local Search](../heuristics/breakout_local_search.md);
   standard heuristics do not need to enable it.
+
+## References
+
+- Karp, R. M. "Reducibility Among Combinatorial Problems." In *Complexity of
+  Computer Computations*, pp. 85-103. Plenum Press, 1972. (Max Cut is one of
+  Karp's 21 NP-complete problems.)
+- Standard benchmark set: the **Gset** graphs (G1–G81), generated with the
+  `rudy` graph generator and distributed by Y. Ye. See
+  [`data/instances/README.md`](../../data/instances/README.md) for instance
+  sources and download instructions.

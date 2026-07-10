@@ -1,7 +1,7 @@
 # Benchmark Instance Inventory
 
 This document catalogs every benchmark instance file in this directory
-(`data/instances/`) used by the optopus benchmark pipeline (`src/benchmark.rs`),
+(`data/instances/`) used by the optopus benchmark pipeline (`src/benchmark/`),
 with sources and licensing. Instances are pure numerical descriptions of
 optimization problems (adjacency lists, processing times, CNF clauses, city
 coordinates). Paths below are relative to this directory unless noted.
@@ -71,13 +71,13 @@ MaxSAT framing makes them equivalent to `uf` for this benchmark suite.
 | Ad-hoc | `sample.txt`, `test_data.txt` | tiny | repo-local |
 
 VertexCover reuses MaxCut graph files via `Graph::load_from_file`
-(`src/benchmark.rs:50, 125`).
+(see `src/benchmark/problems.rs`).
 
 ## Excluded
 
 - `FormulaProblem` (`src/problem/binary_optimization/`) is not wired into
-  `ProblemKind` in `src/benchmark.rs`, so no benchmark instance files are
-  required. The problem is library-API only.
+  `ProblemKind` in `src/benchmark/config.rs`, so no benchmark instance files
+  are required. The problem is library-API only.
 - OR-Library `bqp2500.txt` returned an HTML error page at fetch time and is
   excluded.
 

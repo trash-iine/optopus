@@ -84,3 +84,9 @@ let mut solver = Restart::new(
 solver.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
+
+## References
+
+- Lourenco, H. R., Martin, O. C., and Stutzle, T. "Iterated Local Search."
+  In Glover, F. and Kochenberger, G. A. (eds.), *Handbook of Metaheuristics*,
+  pp. 320-353. Springer, 2003.

@@ -9,12 +9,14 @@ heuristic on each instance N times in parallel, and writes a TOML report.
 cargo run --release -- path/to/config.toml
 ```
 
-Output is written to `result/<timestamp>_<config_stem>.toml`.
+Output is written to `result/<config_stem>_<timestamp>.toml`.
 
 ## Config schema
 
 ```toml
 num_runs = 10                          # repetitions per (instance, heuristic) pair
+seed = 42                              # optional master seed; when set, reruns are
+                                       # bit-identical (each run derives its own seed)
 
 [[instances]]
 path = "data/instances/max_cut/G*.txt"           # file path or glob
@@ -46,7 +48,7 @@ takes the Cartesian product.
 | `Sequential` | all | `steps` | — |
 | `Iterated` | all | `steps` (`[0]` = search, `[1]` = perturbation) | — |
 | `Restart` | all | `steps` (single inner), `restart_condition` | — |
-| `GeneticAlgorithm` | all | `population_size` (≥ 2), `steps` (`[0]` = mutation, optional `[1]` = init_improvement) | `crossover_kind` (`Uniform` default; TSP also accepts `Order`), `parent_selection` (`Tournament` default \| `DistantTopK`), `parent_top_k` (required when `DistantTopK`) |
+| `GeneticAlgorithm` | all | `population_size` (≥ 2), `steps` (`[0]` = mutation, optional `[1]` = init_improvement) | `crossover_kind` (per-problem default: `Uniform`, `Order` for TSP, `Ppx` for JobShop), `parent_selection` (`Tournament` default \| `DistantTopK`), `parent_top_k` (required when `DistantTopK`) |
 
 `tabu_tenure` is a `(min, max)` pair, e.g. `tabu_tenure = [5, 10]`.
 `stop_condition` accepts any subset of `max_iteration`, `max_duration_secs`,
@@ -75,14 +77,17 @@ neighbor = "Flip"
 max_failed_update = 1
 
 [[heuristics.steps]]                   # perturbation phase
-kind = "RandomWalk"                    # (note: RandomWalk is library-only)
+kind = "SimulatedAnnealing"            # high temperature = randomizing kick
 neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
 [heuristics.steps.stop_condition]
-max_iteration = 5
+max_iteration = 200
 ```
 
 > `RandomWalk` is exposed in the library API but does not currently have a CLI
-> `kind`. Use `Sequential` / `Iterated` with the supported kinds above.
+> `kind`. In TOML configs, a short high-temperature `SimulatedAnnealing` phase
+> (as above) serves as the perturbation.
 
 ## Output report
 

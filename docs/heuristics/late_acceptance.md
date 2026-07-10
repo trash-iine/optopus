@@ -43,3 +43,8 @@ lahc.run(&mut state)?;
 
 `clear()` empties the history buffer; the buffer is re-initialized on the
 first `run_once` call after a `run`.
+
+## References
+
+- Burke, E. K. and Bykov, Y. "The Late Acceptance Hill-Climbing Heuristic."
+  *European Journal of Operational Research*, 258(1), 70-78, 2017.

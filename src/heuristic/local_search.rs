@@ -19,6 +19,11 @@ use crate::trait_defs::{MoveToNeighbor, ProblemTrait, Rankable};
 /// let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000));
 /// ls.run(&mut state).unwrap();
 /// ```
+///
+/// # References
+///
+/// - Aarts, E. and Lenstra, J. K. (eds.) *Local Search in Combinatorial Optimization*.
+///   Princeton University Press, 2003.
 pub struct LocalSearch<N> {
     pub stop_condition: StopCondition,
     _neighbor: std::marker::PhantomData<N>,
