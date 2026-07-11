@@ -19,12 +19,15 @@ pub use genetic_algorithm::{GeneticAlgorithm, ParentSelection};
 pub use late_acceptance::LateAcceptanceHillClimbing;
 pub use local_search::LocalSearch;
 pub use random_walk::RandomWalk;
-pub use reinforcement_learning::{RLSearch, RewardShaping};
+pub use reinforcement_learning::{RewardShaping, RlSearch};
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
 pub use specific::BreakoutLocalSearchForMaxCut;
 pub use specific::LinKernighanHelsgaunForTsp;
+pub use specific::PopulationAnnealingForMaxCut;
+pub use specific::RlBreakoutLocalSearchForMaxCut;
+pub use specific::{NUM_CONTEXT_FEATURES, NUM_PERTURBATION_TYPES};
 pub use tabu_search::TabuSearch;
 
 use crate::error::OptError;

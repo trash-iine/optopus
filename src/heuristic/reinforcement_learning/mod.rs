@@ -1,6 +1,6 @@
 //! Reinforcement learning heuristic for combinatorial optimization.
 //!
-//! [`RLSearch`] uses a learned softmax policy over move features to select
+//! [`RlSearch`] uses a learned softmax policy over move features to select
 //! which neighborhood move to apply at each step. The policy is trained online
 //! via the REINFORCE algorithm with baseline subtraction.
 //!
@@ -9,13 +9,12 @@
 //! ```rust,ignore
 //! use optopus::prelude::*;
 //!
-//! let rl = RLSearch::<MaxCutFlipNeighbor>::new(
+//! let rl = RlSearch::<MaxCutFlipNeighbor>::new(
 //!     StopCondition::failed_updates(1000),
 //!     0.01,   // learning_rate
-//!     0.99,   // discount
 //!     1.0,    // softmax_temperature
 //!     RewardShaping::Normalized,
-//!     None,   // max_candidates
+//!     Some(64), // max_candidates: sample 64 moves per step instead of all
 //! );
 //! // Wrap in Restart for multi-episode learning
 //! let solver = Restart::new(
@@ -25,10 +24,11 @@
 //! );
 //! ```
 
+pub mod bandit;
 pub mod feature;
 pub mod policy;
 
-use feature::{NUM_FEATURES, StepStatsAccumulator, extract_features};
+use feature::{EPSILON, NUM_FEATURES, StepStatsAccumulator, extract_features};
 use policy::LinearPolicy;
 
 use super::{Heuristic, StopCondition};
@@ -63,46 +63,68 @@ pub enum RewardShaping {
 /// - Williams, R. J. "Simple Statistical Gradient-Following Algorithms for
 ///   Connectionist Reinforcement Learning." *Machine Learning*, 8(3-4), 229-256, 1992.
 ///   [DOI](https://doi.org/10.1007/BF00992696)
-pub struct RLSearch<N> {
+pub struct RlSearch<N> {
     pub stop_condition: StopCondition,
     pub policy: LinearPolicy,
     pub learning_rate: f64,
-    pub discount: f64,
     pub softmax_temperature: f64,
     pub reward_shaping: RewardShaping,
+    /// When set, each step reservoir-samples this many moves from the lazy
+    /// neighborhood iterator *before* evaluating them, so per-step evaluation
+    /// and feature cost is O(max_candidates) instead of O(neighborhood).
+    /// Step statistics (and therefore the neighborhood-level features) are
+    /// computed over the sample only.
     pub max_candidates: Option<usize>,
     _neighbor: std::marker::PhantomData<N>,
     baseline: f64,
     baseline_count: u64,
-    initial_worsening_total: Option<f64>,
+    // Applied-move ledger for the `improvement_ratio` feature: the summed
+    // worsening of applied moves telescopes to the objective delta since the
+    // episode start, without needing an objective accessor on the solution.
+    cum_worsening: f64,
+    cum_abs_worsening: f64,
     // Pre-allocated buffers (reused across iterations)
     buf_moves: Vec<(N, f64)>,
     buf_scores: Vec<f64>,
+    buf_features: Vec<[f64; NUM_FEATURES]>,
 }
 
-impl<N> RLSearch<N> {
+impl<N> RlSearch<N> {
+    /// # Panics
+    ///
+    /// Panics if `learning_rate` is negative, `softmax_temperature` is not
+    /// strictly positive, or `max_candidates` is `Some(0)`.
     pub fn new(
         stop_condition: StopCondition,
         learning_rate: f64,
-        discount: f64,
         softmax_temperature: f64,
         reward_shaping: RewardShaping,
         max_candidates: Option<usize>,
     ) -> Self {
+        assert!(learning_rate >= 0.0, "learning_rate must be non-negative");
+        assert!(
+            softmax_temperature > 0.0,
+            "softmax_temperature must be strictly positive"
+        );
+        assert!(
+            max_candidates != Some(0),
+            "max_candidates must be at least 1 when set"
+        );
         Self {
             stop_condition,
             policy: LinearPolicy::new(),
             learning_rate,
-            discount,
             softmax_temperature,
             reward_shaping,
             max_candidates,
             _neighbor: std::marker::PhantomData,
             baseline: 0.0,
             baseline_count: 0,
-            initial_worsening_total: None,
+            cum_worsening: 0.0,
+            cum_abs_worsening: 0.0,
             buf_moves: Vec::new(),
             buf_scores: Vec::new(),
+            buf_features: Vec::new(),
         }
     }
 
@@ -142,13 +164,14 @@ fn softmax_in_place(scores: &mut [f64]) {
     }
 }
 
-impl<P, N> Heuristic<P> for RLSearch<N>
+impl<P, N> Heuristic<P> for RlSearch<N>
 where
     P: ProblemTrait,
     N: MoveToNeighbor<P> + Evaluate + Clone,
 {
     fn clear(&mut self) {
-        self.initial_worsening_total = None;
+        self.cum_worsening = 0.0;
+        self.cum_abs_worsening = 0.0;
         // Policy weights and baseline are intentionally preserved across episodes.
     }
 
@@ -159,13 +182,36 @@ where
     /// An empty neighborhood only advances the iteration counter; the stop
     /// condition eventually terminates the run.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        // 1. Enumerate moves, compute worsenings, and accumulate step context stats in one pass
+        // 1. Collect candidate moves. With `max_candidates` set, reservoir-
+        //    sample from the lazy iterator (Algorithm R) so that only the
+        //    sampled moves are ever evaluated; otherwise take the whole
+        //    neighborhood.
         self.buf_moves.clear();
         let mut acc = StepStatsAccumulator::new();
-        for m in N::iter(state.instance, &state.solution) {
-            let w = m.evaluate().worsening_amount();
-            acc.push(w);
-            self.buf_moves.push((m, w));
+        match self.max_candidates {
+            Some(k) => {
+                for (i, m) in N::iter(state.instance, &state.solution).enumerate() {
+                    if i < k {
+                        self.buf_moves.push((m, 0.0));
+                    } else {
+                        let j = state.rng.random_range(0..=i);
+                        if j < k {
+                            self.buf_moves[j] = (m, 0.0);
+                        }
+                    }
+                }
+                for entry in self.buf_moves.iter_mut() {
+                    entry.1 = entry.0.evaluate().worsening_amount();
+                    acc.push(entry.1);
+                }
+            }
+            None => {
+                for m in N::iter(state.instance, &state.solution) {
+                    let w = m.evaluate().worsening_amount();
+                    acc.push(w);
+                    self.buf_moves.push((m, w));
+                }
+            }
         }
 
         if self.buf_moves.is_empty() {
@@ -173,63 +219,42 @@ where
             return Ok(());
         }
 
-        // Subsample if max_candidates is set
-        if let Some(max_cand) = self.max_candidates
-            && self.buf_moves.len() > max_cand
-        {
-            let n = self.buf_moves.len();
-            for i in 0..max_cand.min(n) {
-                let j = state.rng.random_range(i..n);
-                self.buf_moves.swap(i, j);
-            }
-            self.buf_moves.truncate(max_cand);
-        }
-
-        if self.initial_worsening_total.is_none() {
-            self.initial_worsening_total = Some(0.0);
-        }
-
-        let initial_wt = self.initial_worsening_total.unwrap();
+        let improvement_ratio = -self.cum_worsening / self.cum_abs_worsening.max(EPSILON);
         let ctx = acc.finalize(
             state.iteration,
             state.start_iteration,
             state.best_iteration,
             self.max_iteration_budget(),
-            initial_wt,
-            0.0,
+            improvement_ratio,
         );
 
-        // 2. Score moves with approximate rank (O(n) instead of O(n log n) sort)
+        // 2. Score moves with approximate rank (O(n) instead of O(n log n) sort),
+        //    keeping each move's feature vector for the exact gradient below.
         let inv_temp = 1.0 / self.softmax_temperature;
         let range = ctx.max_worsening - ctx.min_worsening;
         let inv_range = if range > 1e-10 { 1.0 / range } else { 0.0 };
         let min_w = ctx.min_worsening;
 
         self.buf_scores.clear();
-        self.buf_scores.extend(self.buf_moves.iter().map(|&(_, w)| {
+        self.buf_features.clear();
+        for &(_, w) in self.buf_moves.iter() {
             let approx_rank = if inv_range > 0.0 {
                 (w - min_w) * inv_range
             } else {
                 0.5
             };
             let f = extract_features(w, approx_rank, &ctx);
-            self.policy.score(&f) * inv_temp
-        }));
+            self.buf_scores.push(self.policy.score(&f) * inv_temp);
+            self.buf_features.push(f);
+        }
         softmax_in_place(&mut self.buf_scores);
         let selected_idx = sample_categorical(&self.buf_scores, &mut state.rng);
 
-        // Recompute features only for the selected move
-        let sel_w = self.buf_moves[selected_idx].1;
-        let sel_rank = if inv_range > 0.0 {
-            (sel_w - min_w) * inv_range
-        } else {
-            0.5
-        };
-        let selected_features = extract_features(sel_w, sel_rank, &ctx);
-
-        // 3. Apply the selected move
+        // 3. Apply the selected move and update the episode ledger
         let selected_worsening = self.buf_moves[selected_idx].1;
         state.apply(&self.buf_moves[selected_idx].0)?;
+        self.cum_worsening += selected_worsening;
+        self.cum_abs_worsening += selected_worsening.abs();
 
         // 4. Compute reward and update policy online (single-step REINFORCE)
         let reward = match self.reward_shaping {
@@ -248,8 +273,18 @@ where
         self.baseline_count += 1;
         self.baseline += (reward - self.baseline) / self.baseline_count as f64;
         if self.learning_rate > 0.0 {
-            self.policy
-                .update(&selected_features, advantage, self.learning_rate);
+            // Exact softmax policy gradient:
+            // ∇w log π(a) = (φ_a − Σ_i π_i φ_i) / τ.
+            let mut grad = self.buf_features[selected_idx];
+            for (f, &p) in self.buf_features.iter().zip(self.buf_scores.iter()) {
+                for (g, &x) in grad.iter_mut().zip(f.iter()) {
+                    *g -= p * x;
+                }
+            }
+            for g in grad.iter_mut() {
+                *g *= inv_temp;
+            }
+            self.policy.update(&grad, advantage, self.learning_rate);
         }
 
         Ok(())
@@ -334,17 +369,17 @@ mod tests {
 
     #[test]
     fn online_update_moves_weights() {
-        let mut rl = RLSearch::<()>::new(
+        let mut rl = RlSearch::<()>::new(
             StopCondition::iterations(100),
             0.1,
-            0.99,
             1.0,
             RewardShaping::Raw,
             None,
         );
 
         // Simulate online update: positive reward with feature[0] = 1.0
-        let features_good = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let mut features_good = [0.0; NUM_FEATURES];
+        features_good[0] = 1.0;
         let reward_good = 1.0;
         let advantage = reward_good - rl.baseline;
         rl.baseline_count += 1;
@@ -353,7 +388,8 @@ mod tests {
             .update(&features_good, advantage, rl.learning_rate);
 
         // Simulate online update: negative reward with feature[1] = 1.0
-        let features_bad = [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let mut features_bad = [0.0; NUM_FEATURES];
+        features_bad[1] = 1.0;
         let reward_bad = -1.0;
         let advantage = reward_bad - rl.baseline;
         rl.baseline_count += 1;
@@ -364,5 +400,62 @@ mod tests {
         // weight for feature 1 should be negative (negative reward)
         assert!(rl.policy.weights[0] > 0.0);
         assert!(rl.policy.weights[1] < 0.0);
+    }
+
+    #[test]
+    fn ledger_improvement_ratio_resets_on_clear() {
+        let mut rl = RlSearch::<()>::new(
+            StopCondition::iterations(100),
+            0.1,
+            1.0,
+            RewardShaping::Raw,
+            None,
+        );
+        // Two improving moves (worsening -2, -1) and one worsening move (+1):
+        // ratio = -(-2 - 1 + 1) / (2 + 1 + 1) = 0.5
+        for w in [-2.0, -1.0, 1.0] {
+            rl.cum_worsening += w;
+            rl.cum_abs_worsening += f64::abs(w);
+        }
+        let ratio = -rl.cum_worsening / rl.cum_abs_worsening.max(EPSILON);
+        assert!((ratio - 0.5).abs() < 1e-10);
+
+        <RlSearch<()> as Heuristic<DummyProblem>>::clear(&mut rl);
+        assert_eq!(rl.cum_worsening, 0.0);
+        assert_eq!(rl.cum_abs_worsening, 0.0);
+    }
+
+    /// Minimal problem/neighbor pair so `clear` (a `Heuristic` method) can be
+    /// called on `RlSearch<()>` in tests.
+    struct DummyProblem;
+    #[derive(Clone)]
+    struct DummySolution;
+    impl crate::trait_defs::Rankable for DummySolution {
+        fn is_better_than(&self, _other: &Self) -> bool {
+            false
+        }
+    }
+    impl crate::trait_defs::ProblemTrait for DummyProblem {
+        type Solution = DummySolution;
+        fn new_solution(&self, _rng: &mut impl rand::Rng) -> DummySolution {
+            DummySolution
+        }
+    }
+    impl MoveToNeighbor<DummyProblem> for () {
+        fn iter(_prob: &DummyProblem, _sol: &DummySolution) -> impl Iterator<Item = Self> + Send {
+            std::iter::empty()
+        }
+        fn apply_to_solution(
+            &self,
+            _prob: &DummyProblem,
+            _sol: &mut DummySolution,
+        ) -> Result<(), OptError> {
+            Ok(())
+        }
+    }
+    impl crate::trait_defs::Evaluate for () {
+        fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
+            crate::trait_defs::Evaluable::Minimize(0.0)
+        }
     }
 }

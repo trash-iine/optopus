@@ -36,6 +36,24 @@ pub enum SearchStateCloneType {
     StartBest,
 }
 
+/// A single best-solution improvement recorded during a run.
+///
+/// Points are recorded by [`SearchState::update_best`] whenever an objective
+/// probe is installed via [`SearchState::set_objective_probe`], giving an
+/// anytime trajectory of the search. The wall-clock `instant` is absolute, so
+/// elapsed times stay consistent even across sub-run clones whose relative
+/// timers reset (`ClearBest` / `StartBest`).
+#[derive(Clone, Copy, Debug)]
+pub struct TrajectoryPoint {
+    /// Wall-clock instant at which the improvement happened.
+    pub instant: std::time::Instant,
+    /// Iteration at which the improvement happened (remapped into the parent's
+    /// frame when a sub-run is merged).
+    pub iteration: u64,
+    /// Objective value of the new best solution, as reported by the probe.
+    pub objective: f64,
+}
+
 /// Holds the full runtime state of a heuristic search.
 ///
 /// Contains the problem instance (by reference), the current solution,
@@ -124,6 +142,18 @@ where
     /// composition (Sequential / Iterated / Restart / GA) does not leak its
     /// internal RNG consumption back to the parent.
     pub rng: SmallRng,
+    /// Anytime trajectory: one point per recorded best-solution improvement.
+    ///
+    /// Empty unless an objective probe is installed with
+    /// [`Self::set_objective_probe`]. Points merged from `ClearBest` /
+    /// `StartBest` sub-runs track the *sub-run's* best, which may be worse
+    /// than an earlier parent best — consumers wanting a monotone incumbent
+    /// curve must filter with the problem's optimization direction.
+    pub trajectory: Vec<TrajectoryPoint>,
+    /// Extracts an `f64` objective from a solution for trajectory recording.
+    /// `None` (the default) disables recording entirely, keeping
+    /// `update_best` allocation-free for library users who don't need it.
+    pub(crate) objective_probe: Option<fn(&Problem::Solution) -> f64>,
 }
 
 impl<'a, Problem> SearchState<'a, Problem>
@@ -167,6 +197,8 @@ where
             n_rejected: 0,
             n_best_updates: 0,
             rng,
+            trajectory: Vec::new(),
+            objective_probe: None,
         };
         tracing::debug!("SearchState initialized");
         state
@@ -213,7 +245,19 @@ where
             n_rejected: 0,
             n_best_updates: 0,
             rng,
+            trajectory: Vec::new(),
+            objective_probe: None,
         }
+    }
+
+    /// Installs an objective probe, enabling anytime-trajectory recording.
+    ///
+    /// After this call every actual best-solution improvement appends a
+    /// [`TrajectoryPoint`] to [`trajectory`](Self::trajectory). The probe is
+    /// inherited by sub-run clones, so improvements found inside
+    /// meta-heuristic phases are recorded too.
+    pub fn set_objective_probe(&mut self, probe: fn(&Problem::Solution) -> f64) {
+        self.objective_probe = Some(probe);
     }
 
     /// Returns the elapsed time since the current sub-run started.
@@ -233,6 +277,13 @@ where
             self.best_time = std::time::Instant::now();
             self.best_iteration = self.iteration;
             self.n_best_updates += 1;
+            if let Some(probe) = self.objective_probe {
+                self.trajectory.push(TrajectoryPoint {
+                    instant: self.best_time,
+                    iteration: self.iteration,
+                    objective: probe(&self.best_solution),
+                });
+            }
             tracing::debug!(
                 iteration = self.best_iteration,
                 elapsed_secs = self.duration().as_secs_f64(),
@@ -271,6 +322,8 @@ where
                 n_rejected: self.n_rejected,
                 n_best_updates: self.n_best_updates,
                 rng: child_rng,
+                trajectory: Vec::new(),
+                objective_probe: self.objective_probe,
             },
             SearchStateCloneType::ClearBest => Self {
                 start_iteration: 0,
@@ -289,6 +342,8 @@ where
                 n_rejected: 0,
                 n_best_updates: 0,
                 rng: child_rng,
+                trajectory: Vec::new(),
+                objective_probe: self.objective_probe,
             },
             SearchStateCloneType::StartBest => Self {
                 start_iteration: 0,
@@ -307,6 +362,8 @@ where
                 n_rejected: 0,
                 n_best_updates: 0,
                 rng: child_rng,
+                trajectory: Vec::new(),
+                objective_probe: self.objective_probe,
             },
         }
     }
@@ -344,6 +401,16 @@ where
         self.n_rejected += cloned_state.n_rejected - cloned_state.start_n_rejected;
         self.n_best_updates += cloned_state.n_best_updates - cloned_state.start_n_best_updates;
 
+        // Append the sub-run's trajectory, remapping iterations into this
+        // state's frame (same saturating scheme as `best_iteration` below).
+        // Instants are absolute, so the time axis needs no adjustment.
+        self.trajectory
+            .extend(cloned_state.trajectory.iter().map(|p| TrajectoryPoint {
+                instant: p.instant,
+                iteration: old_iteration + p.iteration.saturating_sub(cloned_state.start_iteration),
+                objective: p.objective,
+            }));
+
         // update the best solution if the one of the new state is better than the current
         if cloned_state
             .best_solution
@@ -358,6 +425,13 @@ where
             self.best_time = cloned_state.best_time;
             self.best_iteration = old_iteration + sub_run_best_offset;
         }
+        // `best_time` adopted from a sub-run always postdates this state's
+        // `start_time` (sub-runs are cloned after this state started); the
+        // `start_time` inversion warning above covers the exotic cases.
+        debug_assert!(
+            self.best_time >= self.start_time,
+            "best_time must not precede start_time after a sub-run merge"
+        );
         tracing::debug!(
             iteration = self.iteration,
             best_iteration = self.best_iteration,
@@ -672,6 +746,56 @@ mod tests {
         let n1: u64 = child1.rng.random();
         let n2: u64 = child2.rng.random();
         assert_ne!(n1, n2, "two sibling forks must yield distinct streams");
+    }
+
+    #[test]
+    fn trajectory_empty_without_probe() {
+        let mc = triangle();
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, false, false]);
+        let mut state = SearchState::with_solution(&mc, sol);
+        let m = first_flip(&mc, &state.solution);
+        state.apply(&m).unwrap();
+        assert!(state.n_best_updates > 0);
+        assert!(state.trajectory.is_empty());
+    }
+
+    #[test]
+    fn trajectory_records_real_best_updates_only() {
+        let mc = triangle();
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, false, false]);
+        let mut state = SearchState::with_solution(&mc, sol);
+        state.set_objective_probe(|s| s.objective as f64);
+        let m = first_flip(&mc, &state.solution);
+        state.apply(&m).unwrap(); // improves: cut 0 -> 2
+        assert_eq!(state.trajectory.len(), 1);
+        assert_eq!(state.trajectory[0].objective, 2.0);
+        assert_eq!(state.trajectory[0].iteration, 1);
+
+        // A no-op update_best must not append a point.
+        state.update_best();
+        assert_eq!(state.trajectory.len(), 1);
+    }
+
+    #[test]
+    fn update_state_merges_and_remaps_trajectory() {
+        let mc = triangle();
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, false, false]);
+        let mut parent = SearchState::with_solution(&mc, sol);
+        parent.set_objective_probe(|s| s.objective as f64);
+        parent.progress_iteration();
+        parent.progress_iteration(); // parent iteration = 2
+
+        let mut child = parent.clone_for_new_run(SearchStateCloneType::ClearBest);
+        assert!(child.trajectory.is_empty(), "child starts empty");
+        let m = first_flip(&mc, &child.solution);
+        child.apply(&m).unwrap(); // child-frame iteration 1
+
+        parent.update_state(child);
+        assert_eq!(parent.trajectory.len(), 1);
+        // Child-frame iteration 1 remapped into the parent frame: 2 + 1.
+        assert_eq!(parent.trajectory[0].iteration, 3);
+        assert_eq!(parent.trajectory[0].objective, 2.0);
+        assert!(parent.best_time >= parent.start_time);
     }
 
     #[test]

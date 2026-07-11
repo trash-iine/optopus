@@ -54,7 +54,7 @@ file-based loading.
 | [Tabu Search](docs/heuristics/tabu_search.md) | `TabuSearch<N>` |
 | [Random Walk](docs/heuristics/random_walk.md) | `RandomWalk<N>` |
 | [Beam Search](docs/heuristics/beam_search.md) | `BeamSearch<P, N>` |
-| [RL Search](docs/heuristics/rl_search.md) | `RLSearch<N>` |
+| [RL Search](docs/heuristics/rl_search.md) | `RlSearch<N>` |
 | [Genetic Algorithm](docs/heuristics/genetic_algorithm.md) | `GeneticAlgorithm<P, C>` |
 | [Sequential / Iterated / Restart](docs/heuristics/meta.md) | `Sequential<P>`, `Iterated<P>`, `Restart<P>` |
 | [Breakout Local Search (MaxCut)](docs/heuristics/breakout_local_search.md) | `BreakoutLocalSearchForMaxCut` |
@@ -94,3 +94,21 @@ cargo run --example beam_search         # MaxCut: BeamSearch
 cargo run --example custom_problem      # define your own problem
 cargo run --example custom_heuristic    # define your own heuristic
 ```
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
+
+at your option.
+
+Benchmark instance data under `data/instances/` has its own provenance and
+licensing — see [`data/instances/README.md`](data/instances/README.md).
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.

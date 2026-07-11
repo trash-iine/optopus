@@ -13,14 +13,15 @@ pub use crate::common::Graph;
 pub use crate::error::OptError;
 
 // Search state
-pub use crate::search_state::{SearchState, SearchStateCloneType};
+pub use crate::search_state::{SearchState, SearchStateCloneType, TrajectoryPoint};
 
 // Heuristics
 pub use crate::heuristic::{
     BangBangSimulatedAnnealing, BeamSearch, BreakoutLocalSearchForMaxCut, GeneticAlgorithm,
     Heuristic, Iterated, LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp, LocalSearch,
-    ParentSelection, RLSearch, RandomWalk, Restart, RewardShaping, Sequential, SimulatedAnnealing,
-    StopCondition, SubProblemBasedCrossover, TabuSearch, boltzmann_accept,
+    ParentSelection, RandomWalk, Restart, RewardShaping, RlBreakoutLocalSearchForMaxCut, RlSearch,
+    Sequential, SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch,
+    boltzmann_accept,
 };
 
 // Traits

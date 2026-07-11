@@ -40,7 +40,8 @@ in the URL hash so a view can be shared by copying the URL.
 | Iterated | [iterated.md](iterated.md) |
 | Restart | [restart.md](restart.md) |
 | BreakoutLocalSearchForMaxCut | [breakout_local_search.md](breakout_local_search.md) |
-| LinKernighanHelsgaun (TSP) | [lin_kernighan_helsgaun.md](lin_kernighan_helsgaun.md) |
+| RLBreakoutLocalSearchForMaxCut | [rl_breakout_local_search.md](rl_breakout_local_search.md) |
+| LinKernighanHelsgaun (TSP) | [lin_kernighan_helsgott.md](lin_kernighan_helsgott.md) |
 
 ## Methodology
 

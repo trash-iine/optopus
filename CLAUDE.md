@@ -4,7 +4,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 
 **Design philosophy:** three orthogonal concerns kept strictly separate:
 - **Problems** — what to optimize (MaxCut, QUBO, MaxSAT, TSP, VertexCover, JobShop, custom formula)
-- **Heuristics** — how to search (LocalSearch, SA, TabuSearch, GA, RLSearch, …)
+- **Heuristics** — how to search (LocalSearch, SA, TabuSearch, GA, RlSearch, …)
 - **SearchState** — iteration count, timing, RNG, current and best solutions
 
 Any heuristic works with any problem; no problem-specific code lives in the heuristic layer.
@@ -13,7 +13,7 @@ CLI entry `src/main.rs`: TOML config → benchmark run → TOML output (via `Ben
 ## Library Concept (3 use cases)
 
 1. **Existing problem × existing heuristic** — run `LocalSearch`, `SimulatedAnnealing`, `TabuSearch`, etc. on MaxCut / QUBO / SAT / TSP / VertexCover / JobShop in a few lines via `use optopus::prelude::*`.
-2. **Apply existing heuristics to a new problem** — implement just three traits (`ProblemTrait` + `Rankable` on `Solution` + `MoveToNeighbor`) and every heuristic works as-is. Add `Evaluate<f64>` for SA/LAHC/RLSearch, `EnabledTabu` for TabuSearch, `BinaryProblem` to reuse the generic binary machinery in `src/common/`.
+2. **Apply existing heuristics to a new problem** — implement just three traits (`ProblemTrait` + `Rankable` on `Solution` + `MoveToNeighbor`) and every heuristic works as-is. Add `Evaluate<f64>` for SA/LAHC/RlSearch, `EnabledTabu` for TabuSearch, `BinaryProblem` to reuse the generic binary machinery in `src/common/`.
 3. **Combine heuristics and run benchmarks** — compose components with `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm`, write a TOML config, and get aggregated best/avg/worst/std/time results.
 
 ## Extension recipes
@@ -23,7 +23,7 @@ CLI entry `src/main.rs`: TOML config → benchmark run → TOML output (via `Ben
 2. `with_problem` arm in `src/benchmark/problems.rs`
 3. One impl block in `src/benchmark/problems.rs`: `BenchmarkProblem` (load_instance) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (`NAME`, `MINIMIZE`, `VALID_NEIGHBORS`, `with_neighbor` registry, optional `build_special_heuristic`, `build_crossover`)
 
-Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` and `src/prelude.rs`.
+Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`).
 
 **Add a new base metaheuristic:** implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/mod.rs` + prelude, then add one `HeuristicConfig` variant in `src/benchmark/config.rs` and follow the compile errors (one arm in `BaseBuilder::visit` in `src/benchmark/factory.rs`). The base-heuristic dispatch is written once, not per problem.
 
@@ -44,7 +44,7 @@ src/
 ├── search_state/
 │   └── mod.rs                SearchState<'a, P>, SearchStateCloneType
 ├── trait_defs/               core traits (re-exported via search_state & prelude)
-│   ├── rankable.rs           Rankable, filter_best, Distance
+│   ├── rankable.rs           Rankable, rank_cmp, filter_best, Distance
 │   ├── problem.rs            ProblemTrait
 │   ├── neighbor.rs           MoveToNeighbor
 │   ├── evaluate.rs           Evaluable, Evaluate
@@ -68,7 +68,7 @@ src/
 │   ├── restart.rs            Restart<P>
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
-│   ├── reinforcement_learning/  RLSearch<N> (REINFORCE policy over move features)
+│   ├── reinforcement_learning/  RlSearch<N> (REINFORCE policy over move features)
 │   └── specific/
 │       ├── bls_for_max_cut.rs   BreakoutLocalSearchForMaxCut
 │       └── lkh_for_tsp.rs       LinKernighanHelsgaunForTsp
@@ -99,8 +99,8 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
   The two defaults are slow-but-correct and emit a one-shot `tracing::warn!` when hit;
   every built-in move overrides both (O(1) gain compare; direct O(1)/O(n) sampler used
   each step by SA / LAHC / RandomWalk).
-- **`Evaluable<T>` / `Evaluate<T>`** (default `T = f64`): `Maximize(T)` / `Minimize(T)` carries the direction of an objective delta. `Evaluable<f64>::worsening_amount()` normalizes both directions to "positive = worse" (used by `boltzmann_accept`). Required for SA / LAHC / RLSearch. QUBO also exposes `Evaluate<Coefficient = i32>` for integer gains.
-- **`Crossover<P>`**: `crossover(&mut self, prob, sol1, sol2, rng) -> Solution` (exactly two parents; RNG passed in for reproducibility).
+- **`Evaluable<T>` / `Evaluate<T>`** (default `T = f64`): `Maximize(T)` / `Minimize(T)` carries the direction of an objective delta. `Evaluable<f64>::worsening_amount()` normalizes both directions to "positive = worse" (used by `boltzmann_accept`). Required for SA / LAHC / RlSearch. QUBO also exposes `Evaluate<Coefficient = i32>` for integer gains.
+- **`Crossover<P>`**: `crossover(&mut self, prob, sol1, sol2, rng) -> Result<Solution, OptError>` (exactly two parents; RNG passed in for reproducibility; `Err` only when the operator genuinely cannot produce an offspring, e.g. an inner sub-heuristic failed).
 - **`EnabledTabu`**: `type TabuMap: Default`, `is_move_enabled(map, iter)`, `add_to_tabu_map(map, iter, tenure, rng)`. The tenure is sampled from the passed RNG (`&mut state.rng`) so seeded runs are bit-reproducible. Required by TabuSearch.
 - **`SubProblemExtractable`**: `extract_sub_problem(sol1, sol2) -> Self`, `lift_solution(sol1, sol2, sub_sol)`. Variables that agree in both parents are fixed; the disagreeing variables form the sub-problem. Binary problems delegate lifting to `common::lift_binary_solution` (shared index space: MaxCut, VertexCover) or `common::lift_compact_binary_solution` (compacted indices: SAT, Formula); QUBO keeps its own bias-folding variant.
 - **`BinaryProblem`**: `type Flip`, `variable_indices()`, `variable(sol, i)`, `flip_move(sol, i)` — implemented by all binary problems; unlocks the shared machinery in `src/common/binary.rs`.
@@ -121,7 +121,7 @@ pub struct SearchState<'a, P: ProblemTrait> {
 }
 ```
 
-**Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `apply_crossover(op, sol1, sol2)`, `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `run_sub(heuristic, clone_type)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, `duration()`.
+**Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` / `with_solution_and_seed(problem, sol, seed)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `run_sub(heuristic, clone_type)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, `duration()`.
 
 **Reproducibility**: all randomness (initial solutions, move selection, tabu tenures, BLS perturbations) flows through `state.rng`. `clone_for_new_run` forks the RNG so meta-heuristic composition stays deterministic under a fixed seed.
 
@@ -157,7 +157,7 @@ StopCondition::iterations(1_000_000)
 | `TabuSearch<N>` | Best non-tabu neighbor; aspiration overrides tabu when global best is improved; tenure ∈ `(min, max)` sampled from `state.rng` |
 | `RandomWalk<N>` | Uniform random move with unconditional acceptance (useful as a perturbation) |
 | `BeamSearch<P, N>` | Maintains top-`k` candidates; expands the full neighborhood of every beam member each iteration |
-| `RLSearch<N>` | REINFORCE policy-gradient move selection over hand-crafted move features; weights persist across episodes (requires `Evaluate<f64>`) |
+| `RlSearch<N>` | REINFORCE policy-gradient move selection over hand-crafted move features; weights persist across episodes (requires `Evaluate<f64>`) |
 
 ### Meta
 | Type | Description |
@@ -173,7 +173,8 @@ StopCondition::iterations(1_000_000)
 - `TspOrderCrossover` (OX) for TSP; `JobShopPpxCrossover` for JobShop.
 
 ### Problem-specific
-- `BreakoutLocalSearchForMaxCut` (`specific/bls_for_max_cut.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap), with probabilities decaying via the non-improvement counter `omega`.
+- `BreakoutLocalSearchForMaxCut` (`specific/bls_for_max_cut.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances.
+- `RlBreakoutLocalSearchForMaxCut` (`specific/rl_bls_for_max_cut.rs`): same `BlsOps` machinery, but a contextual softmax bandit picks perturbation type (5 ops incl. both plateau variants) × strength; weights persist across `Restart`/`Iterated` episodes.
 - `LinKernighanHelsgaunForTsp` (`specific/lkh_for_tsp.rs`): LK-style variable-depth moves with candidate lists; stops at a local optimum.
 
 ## Problem Types (`src/problem/`)
@@ -200,7 +201,7 @@ TOML config → `BenchmarkConfig` → run each heuristic on each instance N time
 num_runs = 10
 seed = 42                      # optional: makes every run bit-reproducible
 [[instances]]
-path = "data/instances/max_cut/G*.txt"   # globs supported
+path = "data/instances/max_cut/G*"   # globs supported (Gset files have no extension)
 problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop
 [[heuristics]]
 kind = "LocalSearch"           # see list below
@@ -211,7 +212,7 @@ max_iteration = 100000         # max_duration_secs / max_failed_update also supp
 
 `HeuristicConfig` is an internally-tagged enum (`#[serde(tag = "kind")]`), so each `kind` declares exactly its own required fields; missing fields and unknown kinds fail at parse time.
 
-**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RLSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), and the meta-heuristics `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
+**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`, optional `plateau_prob`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), and the meta-heuristics `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
 
 **`Summary` fields**: `num_successful_runs`, `best/avg/worst/std_objective`, `best/avg_time_to_best_secs`, `avg_total_time_secs`, plus averaged `initial_objective` / `improvement` / acceptance counters. Each `SingleRunResult` carries `best_objective: f64`, `best_iteration: u64`, timing, the per-run `seed`, and `solution: Vec<usize>` (0-indexed encoding).
 

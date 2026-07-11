@@ -9,7 +9,9 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    BreakoutLocalSearchForMaxCut, Heuristic, LinKernighanHelsgaunForTsp, StopCondition,
+    BreakoutLocalSearchForMaxCut, Heuristic, LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES,
+    PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut, StopCondition,
+    SubProblemBasedCrossover,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -177,15 +179,129 @@ impl ConfigurableProblem for MaxCut {
                 l0,
                 p0,
                 q,
+                plateau_prob,
                 ..
-            } => Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
-                cond,
-                *tabu_tenure,
-                *t,
-                *l0,
-                *p0,
-                *q,
-            ))),
+            } => {
+                let plateau = plateau_prob.unwrap_or(0.0);
+                if !(0.0..=1.0).contains(&plateau) {
+                    return Err(OptError::Config(
+                        "'plateau_prob' must be within [0, 1]".to_string(),
+                    ));
+                }
+                Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
+                    cond,
+                    *tabu_tenure,
+                    *t,
+                    *l0,
+                    *p0,
+                    *q,
+                    plateau,
+                )))
+            }
+            HeuristicConfig::RlBreakoutLocalSearch {
+                tabu_tenure,
+                t,
+                l0,
+                strength_bins,
+                learning_rate,
+                softmax_temperature,
+                exploration,
+                policy_weights,
+                ..
+            } => {
+                let bins = strength_bins.clone().unwrap_or_else(|| vec![1.0, 2.0, 4.0]);
+                if bins.is_empty() || bins.iter().any(|&b| b <= 0.0) {
+                    return Err(OptError::Config(
+                        "'strength_bins' must be non-empty and strictly positive".to_string(),
+                    ));
+                }
+                if *l0 == 0 {
+                    return Err(OptError::Config("'l0' must be at least 1".to_string()));
+                }
+                let lr = learning_rate.unwrap_or(0.1);
+                let temp = softmax_temperature.unwrap_or(1.0);
+                let eps = exploration.unwrap_or(0.05);
+                if lr < 0.0 {
+                    return Err(OptError::Config(
+                        "'learning_rate' must be non-negative".to_string(),
+                    ));
+                }
+                if temp <= 0.0 {
+                    return Err(OptError::Config(
+                        "'softmax_temperature' must be strictly positive".to_string(),
+                    ));
+                }
+                if !(0.0..=1.0).contains(&eps) {
+                    return Err(OptError::Config(
+                        "'exploration' must be within [0, 1]".to_string(),
+                    ));
+                }
+                let mut rl = RlBreakoutLocalSearchForMaxCut::new(
+                    cond,
+                    *tabu_tenure,
+                    *t,
+                    *l0,
+                    bins,
+                    lr,
+                    temp,
+                    eps,
+                );
+                if let Some(w) = policy_weights {
+                    let expected = rl.num_actions() * NUM_CONTEXT_FEATURES;
+                    if w.len() != expected {
+                        return Err(OptError::Config(format!(
+                            "policy_weights must have exactly {} elements \
+                             (num_actions {} x {} context features), got {}",
+                            expected,
+                            rl.num_actions(),
+                            NUM_CONTEXT_FEATURES,
+                            w.len()
+                        )));
+                    }
+                    rl = rl.with_policy_weights(w.clone());
+                }
+                Ok(Box::new(rl))
+            }
+            HeuristicConfig::PopulationAnnealingForMaxCut {
+                population_size,
+                initial_beta,
+                delta_beta,
+                sweeps_per_step,
+                reset_period,
+                cluster_moves,
+                ..
+            } => {
+                if *population_size < 2 {
+                    return Err(OptError::Config(
+                        "'population_size' must be at least 2".to_string(),
+                    ));
+                }
+                let beta0 = initial_beta.unwrap_or(0.1);
+                let dbeta = delta_beta.unwrap_or(0.02);
+                let sweeps = sweeps_per_step.unwrap_or(50);
+                if beta0 <= 0.0 || dbeta <= 0.0 {
+                    return Err(OptError::Config(
+                        "'initial_beta' and 'delta_beta' must be positive".to_string(),
+                    ));
+                }
+                if sweeps == 0 {
+                    return Err(OptError::Config(
+                        "'sweeps_per_step' must be at least 1".to_string(),
+                    ));
+                }
+                // reset_period defaults to 400; 0 disables resets.
+                let period = reset_period.unwrap_or(400);
+                let reset = if period == 0 { None } else { Some(period) };
+                Ok(Box::new(PopulationAnnealingForMaxCut::new(
+                    cond,
+                    *population_size,
+                    beta0,
+                    dbeta,
+                    sweeps,
+                    reset,
+                    cluster_moves.unwrap_or(true),
+                )))
+            }
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for MaxCut",
                 config.kind_name()
@@ -196,8 +312,23 @@ impl ConfigurableProblem for MaxCut {
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(MaxCutUniformCrossover)),
+            // Solves the sub-MaxCut formed by the variables the two parents
+            // disagree on (TSHEA/MOH-style memetic recombination). The
+            // sub-problem shrinks as the population converges, so a bounded
+            // plateau-BLS is enough to solve it well.
+            "SubProblem" => Ok(Box::new(SubProblemBasedCrossover {
+                sub_heuristic: Box::new(BreakoutLocalSearchForMaxCut::new(
+                    StopCondition::iterations(50_000).with_failed_updates(10_000),
+                    (3, 50),
+                    1_000,
+                    20,
+                    0.8,
+                    0.5,
+                    0.5,
+                )),
+            })),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for MaxCut (expected 'Uniform')"
+                "Unknown crossover_kind '{other}' for MaxCut (expected 'Uniform' or 'SubProblem')"
             ))),
         }
     }

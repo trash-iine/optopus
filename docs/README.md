@@ -35,6 +35,7 @@ Start here, then dive into the section that matches your task.
 - [Genetic Algorithm](heuristics/genetic_algorithm.md) (incl. `Crossover` trait)
 - [Meta-heuristics](heuristics/meta.md) — Sequential, Iterated (ILS), Restart
 - [Breakout Local Search (MaxCut)](heuristics/breakout_local_search.md)
+- [RL Breakout Local Search (MaxCut)](heuristics/rl_breakout_local_search.md)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
 
 ## Guides
