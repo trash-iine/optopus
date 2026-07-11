@@ -22,6 +22,7 @@ pub enum ProblemKind {
     Tsp,
     VertexCover,
     JobShop,
+    GraphColoring,
 }
 
 /// Stop condition as expressed in a config file (duration in seconds instead of `Duration`).
