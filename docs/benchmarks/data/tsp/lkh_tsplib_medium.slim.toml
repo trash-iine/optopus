@@ -1,0 +1,44 @@
+timestamp = "20260517_192120"
+config_file = "data/benchmarks/tsp/lkh_medium.toml"
+
+[[results]]
+instance_path = "data/instances/tsp/eil101.tsp"
+
+[results.heuristic]
+kind = "LinKernighanHelsgaun"
+num_neighbors = 5
+max_depth = 5
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 629.0
+avg_objective = 635.2
+worst_objective = 645.0
+std_objective = 4.5563142999578075
+best_time_to_best_secs = 0.063563958
+avg_time_to_best_secs = 0.0846079915
+avg_total_time_secs = 0.0860962999
+
+[[results]]
+instance_path = "data/instances/tsp/ch150.tsp"
+
+[results.heuristic]
+kind = "LinKernighanHelsgaun"
+num_neighbors = 5
+max_depth = 5
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6553.0
+avg_objective = 6576.6
+worst_objective = 6668.0
+std_objective = 32.6441418940673
+best_time_to_best_secs = 0.221357541
+avg_time_to_best_secs = 0.25556507920000004
+avg_total_time_secs = 0.25714390829999995

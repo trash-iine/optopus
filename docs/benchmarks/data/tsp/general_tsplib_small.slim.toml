@@ -1,0 +1,1110 @@
+timestamp = "20260517_110145"
+config_file = "data/benchmarks/tsp/general_small.toml"
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3356.7
+worst_objective = 3461.0
+std_objective = 50.945166600964214
+best_time_to_best_secs = 5.6333e-05
+avg_time_to_best_secs = 0.00012075410000000001
+avg_total_time_secs = 0.0001220292
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3366.1
+worst_objective = 3754.0
+std_objective = 129.29999999999998
+best_time_to_best_secs = 0.000164584
+avg_time_to_best_secs = 0.00030522070000000006
+avg_total_time_secs = 0.0003187332
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000104625
+avg_time_to_best_secs = 0.0002641874
+avg_total_time_secs = 30.000014870999998
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000142875
+avg_time_to_best_secs = 0.0005127375
+avg_total_time_secs = 30.000022591599997
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "TwoOpt"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3324.3
+worst_objective = 3336.0
+std_objective = 3.9000000000000004
+best_time_to_best_secs = 0.008952958
+avg_time_to_best_secs = 0.016889762600000004
+avg_total_time_secs = 30.0000079541
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.07492075
+avg_time_to_best_secs = 0.0979938583
+avg_total_time_secs = 30.000016529099998
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.035767584
+avg_time_to_best_secs = 0.0433889084
+avg_total_time_secs = 23.5959778625
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.124016958
+avg_time_to_best_secs = 0.1630991002
+avg_total_time_secs = 30.000013733500005
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Order"
+parent_selection = "Tournament"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000650583
+avg_time_to_best_secs = 0.0013335960000000003
+avg_total_time_secs = 30.001580374999996
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3336.8
+worst_objective = 3461.0
+std_objective = 41.4
+best_time_to_best_secs = 4.0625e-05
+avg_time_to_best_secs = 3.9743629125999993
+avg_total_time_secs = 30.000186558399996
+
+[[results]]
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "Restart"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 8.7167e-05
+avg_time_to_best_secs = 0.0001964333
+avg_total_time_secs = 30.209767658199997
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 438.0
+avg_objective = 455.3
+worst_objective = 477.0
+std_objective = 10.854031509075325
+best_time_to_best_secs = 0.002174875
+avg_time_to_best_secs = 0.003346346
+avg_total_time_secs = 0.0033661584000000003
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 464.0
+avg_objective = 484.2
+worst_objective = 527.0
+std_objective = 20.1037309970065
+best_time_to_best_secs = 0.001914666
+avg_time_to_best_secs = 0.0031492916999999996
+avg_total_time_secs = 0.0031866375
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.1
+worst_objective = 427.0
+std_objective = 0.30000000000000004
+best_time_to_best_secs = 0.0238575
+avg_time_to_best_secs = 1.8096074583
+avg_total_time_secs = 30.0000596666
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 438.0
+avg_objective = 458.4
+worst_objective = 487.0
+std_objective = 16.457217261736567
+best_time_to_best_secs = 0.006399666
+avg_time_to_best_secs = 4.546243833299999
+avg_total_time_secs = 30.0000544915
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "TwoOpt"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 437.0
+avg_objective = 442.8
+worst_objective = 449.0
+std_objective = 3.3406586176980126
+best_time_to_best_secs = 1.172839375
+avg_time_to_best_secs = 1.4836112291
+avg_total_time_secs = 30.0000203709
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 431.0
+avg_objective = 453.7
+worst_objective = 480.0
+std_objective = 15.179262169156972
+best_time_to_best_secs = 1.49383775
+avg_time_to_best_secs = 2.1111960875999998
+avg_total_time_secs = 30.000013775000003
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 440.0
+avg_objective = 448.7
+worst_objective = 463.0
+std_objective = 6.679071791798619
+best_time_to_best_secs = 0.985922125
+avg_time_to_best_secs = 1.1592376000000002
+avg_total_time_secs = 30.0000197875
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 441.0
+avg_objective = 461.9
+worst_objective = 504.0
+std_objective = 17.739503938949365
+best_time_to_best_secs = 0.991227333
+avg_time_to_best_secs = 1.4621549416000001
+avg_total_time_secs = 30.0000346709
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Order"
+parent_selection = "Tournament"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.0
+worst_objective = 426.0
+std_objective = 0.0
+best_time_to_best_secs = 0.115673417
+avg_time_to_best_secs = 0.36310864989999997
+avg_total_time_secs = 30.007707150099996
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.3
+worst_objective = 427.0
+std_objective = 0.45825756949558394
+best_time_to_best_secs = 0.398793625
+avg_time_to_best_secs = 9.247267904200001
+avg_total_time_secs = 30.0031313083
+
+[[results]]
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "Restart"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.0
+worst_objective = 426.0
+std_objective = 0.0
+best_time_to_best_secs = 0.040750541
+avg_time_to_best_secs = 4.760695650000001
+avg_total_time_secs = 31.016604866899996
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10653.0
+avg_objective = 10952.0
+worst_objective = 11129.0
+std_objective = 152.86726268236768
+best_time_to_best_secs = 0.0024575
+avg_time_to_best_secs = 0.0037853207000000007
+avg_total_time_secs = 0.003802446
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 11256.0
+avg_objective = 12144.7
+worst_objective = 12871.0
+std_objective = 552.9765004048545
+best_time_to_best_secs = 0.003076834
+avg_time_to_best_secs = 0.0044306
+avg_total_time_secs = 0.0044778002
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10648.0
+avg_objective = 10797.0
+worst_objective = 10962.0
+std_objective = 95.9353949280452
+best_time_to_best_secs = 0.006530625
+avg_time_to_best_secs = 0.2717595169
+avg_total_time_secs = 30.0000461664
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 11151.0
+avg_objective = 12051.0
+worst_objective = 12714.0
+std_objective = 454.44361586449867
+best_time_to_best_secs = 0.009077583
+avg_time_to_best_secs = 4.0491187751
+avg_total_time_secs = 30.000062154200002
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "TwoOpt"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10663.0
+avg_objective = 10946.5
+worst_objective = 11305.0
+std_objective = 208.06453325831387
+best_time_to_best_secs = 0.939793208
+avg_time_to_best_secs = 1.1248882166
+avg_total_time_secs = 30.000020495700007
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10690.0
+avg_objective = 11157.6
+worst_objective = 11481.0
+std_objective = 221.83606559799966
+best_time_to_best_secs = 1.651390375
+avg_time_to_best_secs = 1.9488345124000002
+avg_total_time_secs = 30.000024954099995
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10661.0
+avg_objective = 11068.7
+worst_objective = 11342.0
+std_objective = 207.0251434005058
+best_time_to_best_secs = 0.40186975
+avg_time_to_best_secs = 0.4884306251
+avg_total_time_secs = 30.000029387799998
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10965.0
+avg_objective = 11534.6
+worst_objective = 12678.0
+std_objective = 472.99771669639165
+best_time_to_best_secs = 0.639033041
+avg_time_to_best_secs = 0.9388973624000002
+avg_total_time_secs = 30.000027745900002
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Order"
+parent_selection = "Tournament"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10628.0
+avg_objective = 10633.6
+worst_objective = 10684.0
+std_objective = 16.800000000000004
+best_time_to_best_secs = 0.012309833
+avg_time_to_best_secs = 2.5890506417
+avg_total_time_secs = 30.0079726584
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10931.0
+avg_objective = 11084.5
+worst_objective = 11255.0
+std_objective = 93.02929646084614
+best_time_to_best_secs = 0.002593042
+avg_time_to_best_secs = 0.28770978750000004
+avg_total_time_secs = 30.0018105542
+
+[[results]]
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "Restart"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10628.0
+avg_objective = 10656.0
+worst_objective = 10738.0
+std_objective = 28.124722220850465
+best_time_to_best_secs = 0.416051334
+avg_time_to_best_secs = 9.3546256292
+avg_total_time_secs = 33.1144017958
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7862.0
+avg_objective = 8264.5
+worst_objective = 8631.0
+std_objective = 203.29940973844464
+best_time_to_best_secs = 0.002533958
+avg_time_to_best_secs = 0.0035784250000000005
+avg_total_time_secs = 0.0035988955999999997
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8473.0
+avg_objective = 8988.0
+worst_objective = 9377.0
+std_objective = 288.02673487021997
+best_time_to_best_secs = 0.00256175
+avg_time_to_best_secs = 0.003754516699999999
+avg_total_time_secs = 0.003792404299999999
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7843.7
+worst_objective = 8253.0
+std_objective = 232.37342791291778
+best_time_to_best_secs = 0.004346708
+avg_time_to_best_secs = 1.6791288375
+avg_total_time_secs = 30.000051041699997
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7965.0
+avg_objective = 8476.7
+worst_objective = 9187.0
+std_objective = 388.1973853595617
+best_time_to_best_secs = 0.007013
+avg_time_to_best_secs = 0.7384983124
+avg_total_time_secs = 30.0000625251
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "TwoOpt"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7897.2
+worst_objective = 8277.0
+std_objective = 216.92708452380953
+best_time_to_best_secs = 1.327218834
+avg_time_to_best_secs = 1.4845405542
+avg_total_time_secs = 30.000017399999997
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 8043.7
+worst_objective = 8530.0
+std_objective = 291.1872421655866
+best_time_to_best_secs = 1.562059542
+avg_time_to_best_secs = 1.9368205916
+avg_total_time_secs = 30.000026158400004
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7708.0
+avg_objective = 8140.9
+worst_objective = 8495.0
+std_objective = 267.11737120599247
+best_time_to_best_secs = 0.526226875
+avg_time_to_best_secs = 0.6300636043000001
+avg_total_time_secs = 30.000011979299995
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 1000.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7944.0
+avg_objective = 8479.1
+worst_objective = 9072.0
+std_objective = 361.0447202217476
+best_time_to_best_secs = 0.714627583
+avg_time_to_best_secs = 1.0750031959
+avg_total_time_secs = 30.000015166699995
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Order"
+parent_selection = "Tournament"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7542.0
+worst_objective = 7542.0
+std_objective = 0.0
+best_time_to_best_secs = 0.083531667
+avg_time_to_best_secs = 0.40639989590000003
+avg_total_time_secs = 30.00642493739999
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7902.0
+avg_objective = 8222.1
+worst_objective = 8411.0
+std_objective = 152.24943349648302
+best_time_to_best_secs = 0.003794334
+avg_time_to_best_secs = 6.6069309917
+avg_total_time_secs = 30.0023824375
+
+[[results]]
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "Restart"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "TwoOpt"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7557.7
+worst_objective = 7699.0
+std_objective = 47.1
+best_time_to_best_secs = 0.011848625
+avg_time_to_best_secs = 10.8944193084
+avg_total_time_secs = 31.1474066587

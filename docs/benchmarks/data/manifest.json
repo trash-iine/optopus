@@ -1,0 +1,86 @@
+[
+  {
+    "path": "bls_maxcut_gset_1000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "bls_maxcut_gset_2000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "bls_maxcut_gset_3000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "bls_maxcut_gset_5000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "bls_maxcut_gset_7000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "bls_maxcut_gset_800.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "bls_maxcut_gset_8000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "jssp/general_orlib_medium.slim.toml",
+    "problem": "JobShopScheduling"
+  },
+  {
+    "path": "jssp/general_orlib_small.slim.toml",
+    "problem": "JobShopScheduling"
+  },
+  {
+    "path": "maxcut/general_gset_medium.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/general_gset_small.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "qubo/general_bqp_medium.slim.toml",
+    "problem": "QUBO"
+  },
+  {
+    "path": "qubo/general_bqp_small.slim.toml",
+    "problem": "QUBO"
+  },
+  {
+    "path": "sat/general_uf_medium.slim.toml",
+    "problem": "SAT"
+  },
+  {
+    "path": "sat/general_uf_small.slim.toml",
+    "problem": "SAT"
+  },
+  {
+    "path": "tsp/general_tsplib_medium.slim.toml",
+    "problem": "TSP"
+  },
+  {
+    "path": "tsp/general_tsplib_small.slim.toml",
+    "problem": "TSP"
+  },
+  {
+    "path": "tsp/lkh_tsplib_medium.slim.toml",
+    "problem": "TSP"
+  },
+  {
+    "path": "tsp/lkh_tsplib_small.slim.toml",
+    "problem": "TSP"
+  },
+  {
+    "path": "vertex_cover/general_gset_medium.slim.toml",
+    "problem": "VertexCover"
+  },
+  {
+    "path": "vertex_cover/general_gset_small.slim.toml",
+    "problem": "VertexCover"
+  }
+]

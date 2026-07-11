@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optopus — metaheuristic optimization library</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    max-width: 760px; margin: 0 auto; padding: 2.5rem 1.25rem;
+    line-height: 1.6;
+  }
+  h1 { margin-bottom: 0.25rem; }
+  .tagline { color: #666; margin-top: 0; }
+  .cards { display: grid; gap: 1rem; margin: 2rem 0; }
+  a.card {
+    display: block; padding: 1rem 1.25rem; border: 1px solid #8884;
+    border-radius: 10px; text-decoration: none; color: inherit;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  a.card:hover { border-color: #4a90d9; background: #4a90d90f; }
+  a.card h2 { margin: 0 0 0.25rem; font-size: 1.1rem; }
+  a.card p { margin: 0; color: #666; font-size: 0.95rem; }
+  ul.links { padding-left: 1.2rem; }
+  ul.links li { margin: 0.25rem 0; }
+  footer { margin-top: 2.5rem; color: #888; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+  <h1>Optopus</h1>
+  <p class="tagline">A metaheuristic optimization library for combinatorial problems, written in Rust.</p>
+
+  <div class="cards">
+    <a class="card" href="benchmarks/viewer.html">
+      <h2>Benchmark viewer &rarr;</h2>
+      <p>Filterable, sortable cross-heuristic comparison across every supported
+         problem type (MaxCut, QUBO, MaxSAT, TSP, VertexCover, JobShop).</p>
+    </a>
+    <a class="card" href="benchmarks/README.md">
+      <h2>Benchmarks overview &rarr;</h2>
+      <p>Coverage matrix, methodology, per-heuristic result tables, and how to
+         reproduce the runs.</p>
+    </a>
+  </div>
+
+  <h2>Documentation</h2>
+  <ul class="links">
+    <li><a href="README.md">Docs index</a></li>
+    <li><a href="quickstart.md">Quickstart</a></li>
+    <li><a href="concepts.md">Concepts</a> &middot;
+        <a href="traits.md">Core traits</a> &middot;
+        <a href="search_state.md">SearchState</a></li>
+    <li><a href="problems/README.md">Problems</a> &middot;
+        <a href="heuristics/README.md">Heuristics</a></li>
+  </ul>
+
+  <footer>
+    Source: <a href="https://github.com/trash-iine/optopus">github.com/trash-iine/optopus</a>
+  </footer>
+</body>
+</html>
