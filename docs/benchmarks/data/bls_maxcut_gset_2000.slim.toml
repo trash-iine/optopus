@@ -1,0 +1,569 @@
+timestamp = "20260505_223800"
+config_file = "data/benchmark_gset_2000.toml"
+
+[[results]]
+instance_path = "data/instances/max_cut/G22"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13359.0
+avg_objective = 13335.3
+worst_objective = 13316.0
+std_objective = 19.16272423221709
+best_time_to_best_secs = 3.3116740829999998
+avg_time_to_best_secs = 193.4018903667
+avg_total_time_secs = 504.2578950541999
+
+[[results]]
+instance_path = "data/instances/max_cut/G23"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13340.0
+avg_objective = 13321.0
+worst_objective = 13300.0
+std_objective = 11.916375287812984
+best_time_to_best_secs = 1.516215917
+avg_time_to_best_secs = 204.5398174792
+avg_total_time_secs = 505.65509542930005
+
+[[results]]
+instance_path = "data/instances/max_cut/G24"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13327.0
+avg_objective = 13311.3
+worst_objective = 13289.0
+std_objective = 12.977287852244011
+best_time_to_best_secs = 1.861283791
+avg_time_to_best_secs = 120.84851589150003
+avg_total_time_secs = 502.6066971876
+
+[[results]]
+instance_path = "data/instances/max_cut/G25"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13340.0
+avg_objective = 13321.9
+worst_objective = 13301.0
+std_objective = 11.022250223978766
+best_time_to_best_secs = 3.027752916
+avg_time_to_best_secs = 102.14115597080001
+avg_total_time_secs = 507.75681348750004
+
+[[results]]
+instance_path = "data/instances/max_cut/G26"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13326.0
+avg_objective = 13308.6
+worst_objective = 13291.0
+std_objective = 11.315476127852508
+best_time_to_best_secs = 1.02711075
+avg_time_to_best_secs = 124.5303692126
+avg_total_time_secs = 505.05066562490003
+
+[[results]]
+instance_path = "data/instances/max_cut/G27"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3335.0
+avg_objective = 3318.6
+worst_objective = 3290.0
+std_objective = 13.727344972717775
+best_time_to_best_secs = 16.974104333
+avg_time_to_best_secs = 177.64409227069999
+avg_total_time_secs = 507.26141488739995
+
+[[results]]
+instance_path = "data/instances/max_cut/G28"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3295.0
+avg_objective = 3276.2
+worst_objective = 3262.0
+std_objective = 11.070682002478438
+best_time_to_best_secs = 1.278176041
+avg_time_to_best_secs = 123.9233386627
+avg_total_time_secs = 507.6954435793
+
+[[results]]
+instance_path = "data/instances/max_cut/G29"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3394.0
+avg_objective = 3380.4
+worst_objective = 3371.0
+std_objective = 7.391887445030532
+best_time_to_best_secs = 2.474650458
+avg_time_to_best_secs = 100.22619309580001
+avg_total_time_secs = 505.7578882417
+
+[[results]]
+instance_path = "data/instances/max_cut/G30"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3411.0
+avg_objective = 3392.6
+worst_objective = 3363.0
+std_objective = 15.67928569801571
+best_time_to_best_secs = 2.273182917
+avg_time_to_best_secs = 102.0026493458
+avg_total_time_secs = 508.3164539042
+
+[[results]]
+instance_path = "data/instances/max_cut/G31"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3298.0
+avg_objective = 3283.9
+worst_objective = 3267.0
+std_objective = 8.653900854527976
+best_time_to_best_secs = 6.945026875
+avg_time_to_best_secs = 255.07081490410002
+avg_total_time_secs = 507.3915990169001
+
+[[results]]
+instance_path = "data/instances/max_cut/G32"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1406.0
+avg_objective = 1401.6
+worst_objective = 1398.0
+std_objective = 1.9595917942265422
+best_time_to_best_secs = 25.036994292
+avg_time_to_best_secs = 153.9840152959
+avg_total_time_secs = 502.84788077080003
+
+[[results]]
+instance_path = "data/instances/max_cut/G33"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1372.0
+avg_objective = 1369.0
+worst_objective = 1368.0
+std_objective = 1.3416407864998738
+best_time_to_best_secs = 14.324138875
+avg_time_to_best_secs = 319.3083495291
+avg_total_time_secs = 501.5418941625
+
+[[results]]
+instance_path = "data/instances/max_cut/G34"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1376.0
+avg_objective = 1373.8
+worst_objective = 1372.0
+std_objective = 1.077032961426901
+best_time_to_best_secs = 49.079400917
+avg_time_to_best_secs = 243.05148913349998
+avg_total_time_secs = 502.391377079
+
+[[results]]
+instance_path = "data/instances/max_cut/G35"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7682.0
+avg_objective = 7669.9
+worst_objective = 7657.0
+std_objective = 7.063285354564121
+best_time_to_best_secs = 63.03437125
+avg_time_to_best_secs = 287.07118099179996
+avg_total_time_secs = 536.3880741959999
+
+[[results]]
+instance_path = "data/instances/max_cut/G36"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7668.0
+avg_objective = 7663.7
+worst_objective = 7659.0
+std_objective = 3.132091952673165
+best_time_to_best_secs = 172.683609458
+avg_time_to_best_secs = 356.3128646793
+avg_total_time_secs = 537.3453405375001
+
+[[results]]
+instance_path = "data/instances/max_cut/G37"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7681.0
+avg_objective = 7671.2
+worst_objective = 7660.0
+std_objective = 5.758472019555188
+best_time_to_best_secs = 10.074554375
+avg_time_to_best_secs = 178.89147998750002
+avg_total_time_secs = 535.0839510749
+
+[[results]]
+instance_path = "data/instances/max_cut/G38"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7678.0
+avg_objective = 7667.8
+worst_objective = 7658.0
+std_objective = 6.554387843269575
+best_time_to_best_secs = 37.636264083
+avg_time_to_best_secs = 264.16835368730005
+avg_total_time_secs = 536.0602194999
+
+[[results]]
+instance_path = "data/instances/max_cut/G39"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2402.0
+avg_objective = 2381.5
+worst_objective = 2360.0
+std_objective = 10.092076099594175
+best_time_to_best_secs = 48.097191375
+avg_time_to_best_secs = 183.23377959980002
+avg_total_time_secs = 541.1104386249001
+
+[[results]]
+instance_path = "data/instances/max_cut/G40"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2386.0
+avg_objective = 2372.1
+worst_objective = 2343.0
+std_objective = 12.809761902549164
+best_time_to_best_secs = 18.988958792
+avg_time_to_best_secs = 208.24468700839998
+avg_total_time_secs = 530.3484363376
+
+[[results]]
+instance_path = "data/instances/max_cut/G41"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2398.0
+avg_objective = 2373.7
+worst_objective = 2357.0
+std_objective = 11.576268828944844
+best_time_to_best_secs = 75.71786325
+avg_time_to_best_secs = 228.8071334334
+avg_total_time_secs = 540.444556575
+
+[[results]]
+instance_path = "data/instances/max_cut/G42"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    200,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 400000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2472.0
+avg_objective = 2449.2
+worst_objective = 2423.0
+std_objective = 13.481839637082174
+best_time_to_best_secs = 32.337850083
+avg_time_to_best_secs = 255.60041367510001
+avg_total_time_secs = 535.7402587374

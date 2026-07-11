@@ -1,0 +1,83 @@
+timestamp = "20260506_151321"
+config_file = "data/benchmark_gset_3000.toml"
+
+[[results]]
+instance_path = "data/instances/max_cut/G48"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    300,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 600000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6000.0
+avg_objective = 6000.0
+worst_objective = 6000.0
+std_objective = 0.0
+best_time_to_best_secs = 0.060285
+avg_time_to_best_secs = 0.34318182890000004
+avg_total_time_secs = 941.4915434206999
+
+[[results]]
+instance_path = "data/instances/max_cut/G49"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    300,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 600000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6000.0
+avg_objective = 6000.0
+worst_objective = 6000.0
+std_objective = 0.0
+best_time_to_best_secs = 0.093207542
+avg_time_to_best_secs = 0.5777019667000001
+avg_total_time_secs = 946.9181931416
+
+[[results]]
+instance_path = "data/instances/max_cut/G50"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    300,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 600000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5880.0
+avg_objective = 5880.0
+worst_objective = 5880.0
+std_objective = 0.0
+best_time_to_best_secs = 26.202079834
+avg_time_to_best_secs = 102.37928372510001
+avg_total_time_secs = 974.6004908498

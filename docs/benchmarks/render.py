@@ -1,10 +1,16 @@
-"""Render benchmark TOMLs in `docs/benchmarks/data/` into per-heuristic Markdown.
+"""Render benchmark TOMLs in `docs/benchmarks/data/` into docs artifacts.
 
-Reads every `*.toml` under `docs/benchmarks/data/` (curated, publish-ready outputs
-of the Rust benchmark runner) and groups results by `heuristic.kind`. For each
-kind, writes a Markdown file alongside this script with one table per problem.
+Reads every curated `*.toml` under `docs/benchmarks/data/` (publish-ready outputs
+of the Rust benchmark runner) and produces two things:
 
-Run from anywhere:
+1. Per-heuristic Markdown (grouped by `heuristic.kind`), one file per kind
+   alongside this script.
+2. The web viewer's data source: a slim copy of each TOML with the heavy
+   per-run `runs` arrays stripped (`*.slim.toml`), plus a `manifest.json` the
+   browser fetches to discover them. `viewer.html` parses those slim TOMLs
+   client-side (see `docs/benchmarks/vendor/smol-toml.js`).
+
+Requires `tomli_w` (`pip install tomli-w`). Run from anywhere:
 
     python3 docs/benchmarks/render.py
 """
@@ -21,16 +27,6 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DATA_DIR = HERE / "data"
-VIEWER_PATH = HERE / "viewer.html"
-
-PROBLEM_DIRECTION = {
-    "MaxCut": "max",
-    "SAT": "max",
-    "QUBO": "min",
-    "TSP": "min",
-    "JobShopScheduling": "min",
-    "VertexCover": "min",
-}
 
 
 @dataclass
@@ -259,62 +255,77 @@ def render_kind(kind: str, problems: dict[str, list[Row]]) -> str:
     return "\n".join(lines)
 
 
-def derive_band(source: str) -> str | None:
-    for band in ("small", "medium", "large"):
-        if source.endswith(f"_{band}"):
-            return band
-    return None
+SLIM_SUFFIX = ".slim.toml"
+MANIFEST_PATH = DATA_DIR / "manifest.json"
 
 
-def build_viewer_payload(items: list[tuple[str, Path, dict, dict]]) -> dict:
-    rows: list[dict] = []
-    for source, toml_path, heuristic, r in items:
-        instance_path = r["instance_path"]
-        problem = detect_problem(toml_path, instance_path)
-        rows.append({
-            "problem": problem,
-            "instance": instance_short(instance_path),
-            "instance_path": instance_path,
-            "heuristic_kind": heuristic["kind"],
-            "neighbor": heuristic.get("neighbor"),
-            "source": source,
-            "band": derive_band(source),
-            "summary": r["summary"],
-            "hyperparams": fmt_hyperparams(heuristic),
-        })
-    return {
-        "problem_direction": PROBLEM_DIRECTION,
-        "rows": rows,
-    }
-
-
-DATA_MARKER_BEGIN = "/* DATA_BEGIN */"
-DATA_MARKER_END = "/* DATA_END */"
-
-
-def build_viewer(items: list[tuple[str, Path, dict, dict]]) -> None:
-    if not VIEWER_PATH.is_file():
-        sys.exit(f"viewer template not found: {VIEWER_PATH}")
-    html = VIEWER_PATH.read_text()
-    start = html.find(DATA_MARKER_BEGIN)
-    end = html.find(DATA_MARKER_END)
-    if start < 0 or end < 0 or end < start:
-        sys.exit(
-            f"viewer markers not found in {VIEWER_PATH}: "
-            f"need {DATA_MARKER_BEGIN} ... {DATA_MARKER_END}"
-        )
-    payload = build_viewer_payload(items)
-    body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
-    new_html = (
-        html[: start + len(DATA_MARKER_BEGIN)]
-        + body
-        + html[end:]
+def raw_toml_paths() -> list[Path]:
+    """Curated source TOMLs under DATA_DIR, excluding generated slim copies."""
+    return sorted(
+        p
+        for p in DATA_DIR.rglob("*.toml")
+        if not p.name.endswith(SLIM_SUFFIX)
     )
-    VIEWER_PATH.write_text(new_html)
-    size_kb = len(new_html.encode()) / 1024
+
+
+def slim_document(doc: dict) -> dict:
+    """Strip the per-run `runs` arrays; keep only what the viewer needs.
+
+    The bulk of each curated TOML is `results[].runs[].solution` (full solution
+    vectors). The web viewer only reads `instance_path`, `heuristic`, and
+    `summary`, so the slim copy drops `runs` entirely.
+    """
+    slim: dict = {}
+    for key in ("timestamp", "config_file"):
+        if key in doc:
+            slim[key] = doc[key]
+    slim["results"] = [
+        {
+            "instance_path": r["instance_path"],
+            "heuristic": r["heuristic"],
+            "summary": r["summary"],
+        }
+        for r in doc.get("results", [])
+    ]
+    return slim
+
+
+def build_site_data() -> None:
+    """Write slim TOMLs (viewer data source) + a manifest listing them.
+
+    GitHub Pages exposes no directory listing, so the viewer discovers the data
+    files through `manifest.json`. Each entry carries the parent-dir-derived
+    `problem` because some problems share instance files (VertexCover reuses
+    MaxCut GSET graphs), making the TOML alone ambiguous.
+    """
+    import tomli_w
+
+    manifest: list[dict] = []
+    for toml_path in raw_toml_paths():
+        with toml_path.open("rb") as f:
+            doc = tomllib.load(f)
+        results = doc.get("results", [])
+        if not results:
+            continue
+        problem = detect_problem(toml_path, results[0]["instance_path"])
+
+        slim_path = toml_path.with_name(toml_path.stem + SLIM_SUFFIX)
+        with slim_path.open("wb") as f:
+            tomli_w.dump(slim_document(doc), f)
+
+        rel = slim_path.relative_to(DATA_DIR).as_posix()
+        manifest.append({"path": rel, "problem": problem})
+
+    manifest.sort(key=lambda e: e["path"])
+    MANIFEST_PATH.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
+    )
+    total_kb = sum(
+        (DATA_DIR / e["path"]).stat().st_size for e in manifest
+    ) / 1024
     print(
-        f"wrote {VIEWER_PATH.relative_to(HERE.parent.parent)} "
-        f"({len(payload['rows'])} rows, {size_kb:.1f} KB)"
+        f"wrote {MANIFEST_PATH.relative_to(HERE.parent.parent)} "
+        f"({len(manifest)} slim files, {total_kb:.1f} KB total)"
     )
 
 
@@ -327,7 +338,7 @@ def main() -> None:
         out_path = HERE / f"{snake_case(kind)}.md"
         out_path.write_text(render_kind(kind, problems))
         print(f"wrote {out_path.relative_to(HERE.parent.parent)}")
-    build_viewer(items)
+    build_site_data()
 
 
 if __name__ == "__main__":
