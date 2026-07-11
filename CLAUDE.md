@@ -103,7 +103,7 @@ src/
 └── problem/                  each holds problem, solution, neighbors, crossover
     ├── max_cut/              + kernel.rs (MaxCutKernel, the one ProblemReduction),
     │                         planted.rs (PlantedMaxCut)
-    ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/
+    ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/
     ├── vrp/                  + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
     │                         ops/ (pricing fns, RouteState, granular.rs, Descent),
     │                         ruin.rs (the Ruinable + LocalRepair impl)
@@ -123,7 +123,7 @@ num_runs = 10
 seed = 42                      # optional: makes every run bit-reproducible
 [[instances]]
 path = "data/instances/max_cut/G*"   # globs supported (Gset files have no extension)
-problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | Vrp
+problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | Vrp | GraphColoring
 [[heuristics]]
 kind = "LocalSearch"           # see the table below
 neighbor = "Flip"              # Flip | Swap | TwoOpt | Relocate

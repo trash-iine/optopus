@@ -13,8 +13,9 @@ use crate::heuristic::{
     SubProblemBasedCrossover, WalkSatForSat, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
 };
 use crate::problem::{
-    JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
-    JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
+    GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
+    GraphColoringUniformCrossover, JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling,
+    JobShopSolution, JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
     MaxCutUniformCrossover, QuboFlipNeighbor, QuboSwapNeighbor, QuboUniformCrossover,
     SatUniformCrossover, TspOrderCrossover, VertexCover, VertexCoverFlipNeighbor,
     VertexCoverSolution, VertexCoverSwapNeighbor, VertexCoverUniformCrossover,
@@ -178,6 +179,23 @@ impl BenchmarkSolution for JobShopSolution {
     }
     fn encode_as_indices(&self) -> Vec<usize> {
         self.operations.clone()
+    }
+}
+
+impl BenchmarkProblem for GraphColoring {
+    fn load_instance(path: &str) -> Result<Self, OptError> {
+        GraphColoring::load_file(path)
+    }
+}
+
+impl BenchmarkSolution for GraphColoringSolution {
+    fn best_objective_f64(&self) -> f64 {
+        // Penalty-augmented objective so improper colorings are penalized.
+        self.objective as f64
+    }
+    fn encode_as_indices(&self) -> Vec<usize> {
+        // The color assigned to each vertex (0-indexed color ids).
+        self.colors.clone()
     }
 }
 
@@ -505,6 +523,33 @@ impl ConfigurableProblem for JobShopScheduling {
     }
 }
 
+impl ConfigurableProblem for GraphColoring {
+    const NAME: &'static str = "GraphColoring";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            // `Flip` is the single-vertex recolor.
+            NeighborKind::Flip => Ok(visitor.visit::<GraphColoringRecolorNeighbor>()),
+            NeighborKind::Swap => Ok(visitor.visit::<GraphColoringSwapNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
+        }
+    }
+
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Uniform") {
+            "Uniform" => Ok(Box::new(GraphColoringUniformCrossover)),
+            other => Err(OptError::Config(format!(
+                "Unknown crossover_kind '{other}' for GraphColoring (expected 'Uniform')"
+            ))),
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Runtime problem dispatch -- the single place mapping ProblemKind to types
 // ---------------------------------------------------------------------------
@@ -528,6 +573,7 @@ pub(crate) fn with_problem<V: ProblemVisitor>(kind: &ProblemKind, visitor: V) ->
         ProblemKind::VertexCover => visitor.visit::<VertexCover>(),
         ProblemKind::JobShop => visitor.visit::<JobShopScheduling>(),
         ProblemKind::Vrp => visitor.visit::<Vrp>(),
+        ProblemKind::GraphColoring => visitor.visit::<GraphColoring>(),
     }
 }
 

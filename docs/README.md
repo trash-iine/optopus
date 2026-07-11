@@ -36,6 +36,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Vertex Cover](problems/vertex_cover.md)
 - [Job Shop Scheduling](problems/job_shop_scheduling.md)
 - [CVRP](problems/vrp.md)
+- [Graph Coloring](problems/graph_coloring.md)
 - [Formula](problems/formula.md)
 
 ### Heuristics
