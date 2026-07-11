@@ -51,21 +51,32 @@ mod tests {
     #[test]
     fn zero_weights_give_zero_score() {
         let policy = LinearPolicy::new();
-        let features = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        let mut features = [0.0; NUM_FEATURES];
+        for (i, f) in features.iter_mut().enumerate() {
+            *f = (i + 1) as f64;
+        }
         assert_eq!(policy.score(&features), 0.0);
     }
 
     #[test]
     fn score_is_dot_product() {
-        let policy = LinearPolicy::with_weights([1.0, -1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        let features = [3.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let mut weights = [0.0; NUM_FEATURES];
+        weights[0] = 1.0;
+        weights[1] = -1.0;
+        weights[2] = 2.0;
+        let policy = LinearPolicy::with_weights(weights);
+        let mut features = [0.0; NUM_FEATURES];
+        features[0] = 3.0;
+        features[1] = 2.0;
+        features[2] = 1.0;
         assert!((policy.score(&features) - 3.0).abs() < 1e-10);
     }
 
     #[test]
     fn update_moves_weights_in_gradient_direction() {
         let mut policy = LinearPolicy::new();
-        let features = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let mut features = [0.0; NUM_FEATURES];
+        features[0] = 1.0;
 
         // Positive advantage → weight should increase
         policy.update(&features, 1.0, 0.1);

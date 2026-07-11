@@ -39,6 +39,10 @@ pub struct SingleRunResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<u64>,
     pub solution: Vec<usize>,
+    /// Anytime trajectory: `(elapsed_secs, objective)` per strict improvement
+    /// of the incumbent, monotone in both time and objective.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub trajectory: Vec<(f64, f64)>,
 }
 
 /// Summary statistics across all runs for one (instance, heuristic) combination.

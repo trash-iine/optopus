@@ -68,7 +68,7 @@ comparison.
 
 | Trait on solution / move | Required by | Without it |
 |---|---|---|
-| `Evaluate<f64>` (move) | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing`, `RLSearch` | Those heuristics won't compile for your move type. |
+| `Evaluate<f64>` (move) | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing`, `RlSearch` | Those heuristics won't compile for your move type. |
 | `Evaluate<i32>` (move) | Optional integer-valued objective deltas (used by QUBO). | Just don't impl. |
 | `EnabledTabu` (move) | `TabuSearch` | Same. |
 | `Distance` (solution) | `GeneticAlgorithm` (any selection), `ParentSelection::DistantTopK` | GA won't compile. |

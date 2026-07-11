@@ -10,7 +10,7 @@ use super::problems::{BenchmarkProblem, BenchmarkSolution};
 use crate::error::OptError;
 use crate::heuristic::{
     GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
-    ParentSelection, RLSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing,
+    ParentSelection, Restart, RewardShaping, RlSearch, Sequential, SimulatedAnnealing,
     StopCondition, TabuSearch,
 };
 use crate::search_state::{Crossover, Distance, MoveToNeighbor, ProblemTrait};
@@ -151,7 +151,7 @@ where
                     *history_length,
                 )))
             }
-            HeuristicConfig::RLSearch { .. } => build_rl_search::<P, N>(self.config, self.cond),
+            HeuristicConfig::RlSearch { .. } => build_rl_search::<P, N>(self.config, self.cond),
             _ => unreachable!("non-neighbor kinds are dispatched before with_neighbor"),
         }
     }
@@ -167,7 +167,7 @@ where
 {
     use crate::heuristic::reinforcement_learning::feature::NUM_FEATURES;
 
-    let HeuristicConfig::RLSearch {
+    let HeuristicConfig::RlSearch {
         learning_rate,
         discount,
         softmax_temperature,
@@ -177,7 +177,7 @@ where
         ..
     } = config
     else {
-        unreachable!("build_rl_search called with a non-RLSearch config");
+        unreachable!("build_rl_search called with a non-RlSearch config");
     };
 
     let reward = match reward_shaping.as_deref().unwrap_or("Normalized") {
@@ -191,10 +191,21 @@ where
         }
     };
 
-    let mut rl = RLSearch::<N>::new(
+    if discount.is_some() {
+        tracing::warn!(
+            "'discount' is deprecated and ignored: RlSearch uses single-step \
+             REINFORCE, which has no discount factor"
+        );
+    }
+    if max_candidates == &Some(0) {
+        return Err(OptError::Config(
+            "'max_candidates' must be at least 1 when set".to_string(),
+        ));
+    }
+
+    let mut rl = RlSearch::<N>::new(
         cond,
         learning_rate.unwrap_or(0.01),
-        discount.unwrap_or(0.99),
         softmax_temperature.unwrap_or(1.0),
         reward,
         *max_candidates,
@@ -322,12 +333,14 @@ where
             Ok(Box::new(ga))
         }
         HeuristicConfig::BreakoutLocalSearch { .. }
+        | HeuristicConfig::PopulationAnnealingForMaxCut { .. }
+        | HeuristicConfig::RlBreakoutLocalSearch { .. }
         | HeuristicConfig::LinKernighanHelsgaun { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::LocalSearch { neighbor, .. }
         | HeuristicConfig::TabuSearch { neighbor, .. }
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
         | HeuristicConfig::LateAcceptanceHillClimbing { neighbor, .. }
-        | HeuristicConfig::RLSearch { neighbor, .. } => {
+        | HeuristicConfig::RlSearch { neighbor, .. } => {
             P::with_neighbor(neighbor, BaseBuilder { config, cond })?
         }
     }
@@ -390,7 +403,7 @@ mod factory_tests {
                 history_length: 10,
                 stop_condition: sc(),
             },
-            HeuristicConfig::RLSearch {
+            HeuristicConfig::RlSearch {
                 neighbor,
                 learning_rate: None,
                 discount: None,
@@ -441,10 +454,26 @@ mod factory_tests {
             l0: 5,
             p0: 0.8,
             q: 0.5,
+            plateau_prob: None,
             stop_condition: StopConditionConfig::default(),
         };
         try_build(&ProblemKind::MaxCut, &bls).expect("BLS builds for MaxCut");
         let err = try_build(&ProblemKind::Qubo, &bls).expect_err("BLS invalid for Qubo");
+        assert!(err.to_string().contains("Qubo"), "{err}");
+
+        let rl_bls = HeuristicConfig::RlBreakoutLocalSearch {
+            tabu_tenure: (1, 5),
+            t: 100,
+            l0: 5,
+            strength_bins: None,
+            learning_rate: None,
+            softmax_temperature: None,
+            exploration: None,
+            policy_weights: None,
+            stop_condition: StopConditionConfig::default(),
+        };
+        try_build(&ProblemKind::MaxCut, &rl_bls).expect("RL-BLS builds for MaxCut");
+        let err = try_build(&ProblemKind::Qubo, &rl_bls).expect_err("RL-BLS invalid for Qubo");
         assert!(err.to_string().contains("Qubo"), "{err}");
 
         let lkh = HeuristicConfig::LinKernighanHelsgaun {
@@ -475,6 +504,31 @@ mod factory_tests {
         let err = try_build(&ProblemKind::Tsp, &ga(Some("NoSuch".to_string())))
             .expect_err("unknown crossover_kind must fail");
         assert!(err.to_string().contains("NoSuch"), "{err}");
+    }
+
+    #[test]
+    fn genetic_algorithm_builds_sub_problem_crossover_for_max_cut() {
+        let ga = |crossover_kind: Option<String>| HeuristicConfig::GeneticAlgorithm {
+            population_size: 4,
+            steps: vec![HeuristicConfig::LocalSearch {
+                neighbor: NeighborKind::Flip,
+                stop_condition: StopConditionConfig::default(),
+            }],
+            crossover_kind,
+            parent_selection: None,
+            parent_top_k: None,
+            stop_condition: StopConditionConfig::default(),
+        };
+        try_build(&ProblemKind::MaxCut, &ga(Some("SubProblem".to_string())))
+            .expect("GA on MaxCut with SubProblem crossover");
+        // Not registered for problems without a SubProblemExtractable-backed
+        // entry (e.g. VertexCover keeps 'Uniform' only).
+        let err = try_build(
+            &ProblemKind::VertexCover,
+            &ga(Some("SubProblem".to_string())),
+        )
+        .expect_err("SubProblem crossover is MaxCut-only for now");
+        assert!(err.to_string().contains("SubProblem"), "{err}");
     }
 
     #[test]

@@ -86,7 +86,8 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
     /// 3. Updates `gain[j]` for each neighbor `j` of `i`
     /// 4. Adds `self.gain` to `solution.objective`
     ///
-    /// If the `positive_gain` index is enabled, it is maintained incrementally.
+    /// If the `positive_gain` / `zero_gain` indexes are enabled, they are
+    /// maintained incrementally.
     fn apply_to_solution(
         &self,
         prob: &MaxCut,
@@ -99,7 +100,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
 
         // Update the gain for the flipped vertex (its sign always inverts).
         let new_gain_i = -self.gain;
-        solution.update_positive_gain_membership(self.i, new_gain_i);
+        solution.update_gain_memberships(self.i, new_gain_i);
         solution.gain[self.i] = new_gain_i;
 
         // Update neighbor gains. After `self.x[self.i]` has been flipped,
@@ -110,7 +111,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
             let bj = solution.x[j];
             let delta = if bi ^ bj { w * 2.0 } else { -w * 2.0 };
             let new_g = solution.gain[j] + delta;
-            solution.update_positive_gain_membership(j, new_g);
+            solution.update_gain_memberships(j, new_g);
             solution.gain[j] = new_g;
         }
 

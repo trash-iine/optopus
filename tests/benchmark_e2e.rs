@@ -67,6 +67,71 @@ max_iteration = 1000
 }
 
 #[test]
+fn runs_record_a_monotone_anytime_trajectory() {
+    let instance = write_temp_file("trajectory", "4 4\n1 2 1\n2 3 1\n3 4 1\n4 1 1\n");
+    // Iterated composition exercises the sub-run trajectory merge path.
+    let config_toml = format!(
+        r#"
+num_runs = 2
+seed = 7
+
+[[instances]]
+path = "{}"
+problem = "MaxCut"
+
+[[heuristics]]
+kind = "Iterated"
+
+[heuristics.stop_condition]
+max_iteration = 200
+
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[heuristics.steps.stop_condition]
+max_iteration = 50
+
+[[heuristics.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 10.0
+cooling_rate = 1.0
+
+[heuristics.steps.stop_condition]
+max_iteration = 5
+"#,
+        instance.display()
+    );
+
+    let report = run_benchmark(&config_toml);
+    let _ = std::fs::remove_file(&instance);
+
+    for run in &report.results[0].runs {
+        assert_eq!(run.status, "success");
+        assert!(
+            !run.trajectory.is_empty(),
+            "an improving run must record trajectory points"
+        );
+        // MaxCut maximizes: objectives strictly increase, times never decrease.
+        for pair in run.trajectory.windows(2) {
+            assert!(pair[1].1 > pair[0].1, "objective must strictly improve");
+            assert!(pair[1].0 >= pair[0].0, "elapsed time must be monotone");
+        }
+        let &(last_elapsed, last_objective) = run.trajectory.last().unwrap();
+        assert_eq!(
+            last_objective, run.best_objective,
+            "trajectory must end at the final best objective"
+        );
+        assert!(last_elapsed <= run.total_time_secs + 1e-6);
+        assert!(
+            (run.time_to_best_secs - last_elapsed).abs() < 1e-9,
+            "time_to_best must come from the trajectory"
+        );
+    }
+}
+
+#[test]
 fn run_from_config_is_bit_identical_across_reruns_with_seed() {
     let instance = write_temp_file("repro", "4 4\n1 2 1\n2 3 1\n3 4 1\n4 1 1\n");
     // SimulatedAnnealing consumes the RNG on every step, so any seeding
@@ -185,6 +250,91 @@ t = 100
 l0 = 3
 p0 = 0.8
 q = 0.5
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#,
+    );
+}
+
+/// The plateau-cluster perturbation adds RNG consumption for cluster seeding
+/// and the strong fallback; runs with `plateau_prob` set must be seed-stable.
+#[test]
+fn breakout_local_search_with_plateau_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_bls_plateau",
+        r#"
+[[heuristics]]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [2, 5]
+t = 100
+l0 = 3
+p0 = 0.8
+q = 0.5
+plateau_prob = 0.4
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#,
+    );
+}
+
+/// Population Annealing consumes the RNG for population init, Metropolis
+/// sweeps, cluster-move independent-set selection, and resampling; all must be
+/// seed-stable.
+#[test]
+fn population_annealing_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_pa",
+        r#"
+[[heuristics]]
+kind = "PopulationAnnealingForMaxCut"
+population_size = 12
+initial_beta = 0.1
+delta_beta = 0.05
+sweeps_per_step = 5
+reset_period = 20
+cluster_moves = true
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#,
+    );
+}
+
+/// The RL perturbation controller consumes the RNG for tabu tenures, bandit
+/// action sampling, and strong-perturbation flips; all must be seed-stable.
+#[test]
+fn rl_breakout_local_search_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_rl_bls",
+        r#"
+[[heuristics]]
+kind = "RlBreakoutLocalSearch"
+tabu_tenure = [2, 5]
+t = 100
+l0 = 3
+learning_rate = 0.1
+exploration = 0.05
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#,
+    );
+}
+
+/// RlSearch consumes the RNG for reservoir sampling (`max_candidates`) and
+/// softmax move sampling; this locks in the sampled-before-evaluation path.
+#[test]
+fn rl_search_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_rl",
+        r#"
+[[heuristics]]
+kind = "RlSearch"
+neighbor = "Flip"
+learning_rate = 0.05
+max_candidates = 4
 
 [heuristics.stop_condition]
 max_iteration = 300

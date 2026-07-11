@@ -1,10 +1,19 @@
+/// Number of move-level features: normalized_gain, is_improving, gain_rank_ratio.
+pub const MOVE_FEATURES: usize = 3;
+/// Number of state/neighborhood-level features: progress, stagnation,
+/// improvement_ratio, fraction_improving, mean_gain_normalized, std_gain_normalized.
+pub const STATE_FEATURES: usize = 6;
 /// Number of features per move used by the RL policy.
 ///
-/// - 3 move-level: normalized_gain, is_improving, gain_rank_ratio
-/// - 3 state-level: progress, stagnation, improvement_ratio
-/// - 3 neighborhood-level: fraction_improving, mean_gain_normalized, std_gain_normalized
-pub const NUM_FEATURES: usize = 9;
-const EPSILON: f64 = 1e-10;
+/// The vector is the interaction product `φ_move ⊗ [1, φ_state]`: each
+/// move-level feature appears once on its own and once multiplied by every
+/// state-level feature. State-level features are constant across the moves of
+/// one step, so as plain additive terms they would cancel in the softmax and
+/// contribute nothing to move selection; as interactions they let the state
+/// *modulate* the policy's move preferences (e.g. "prefer worsening moves
+/// when stagnating").
+pub const NUM_FEATURES: usize = MOVE_FEATURES * (1 + STATE_FEATURES);
+pub(crate) const EPSILON: f64 = 1e-10;
 
 /// Per-step context computed once from the full neighborhood, reused for every move's features.
 pub struct StepContext {
@@ -20,7 +29,7 @@ pub struct StepContext {
 }
 
 /// Streaming accumulator for the per-step worsening statistics consumed by
-/// [`StepContext`]. Allows callers (such as `RLSearch::run_once`) to feed
+/// [`StepContext`]. Allows callers (such as `RlSearch::run_once`) to feed
 /// values one at a time during move enumeration without materializing a slice.
 pub struct StepStatsAccumulator {
     count: usize,
@@ -68,17 +77,16 @@ impl StepStatsAccumulator {
     ///
     /// - `iteration`, `start_iteration`, `best_iteration`: from SearchState.
     /// - `max_iteration_budget`: the configured max iterations (for normalization).
-    /// - `initial_worsening_total`: worsening measure of the initial solution
-    ///   (for `improvement_ratio`).
-    /// - `current_worsening_total`: worsening measure of the current solution.
+    /// - `improvement_ratio`: net episode improvement in `[-1, 1]`, as
+    ///   maintained by the caller (e.g. `RlSearch`'s applied-move ledger:
+    ///   `-cum_worsening / max(cum_abs_worsening, ε)`).
     pub fn finalize(
         &self,
         iteration: u64,
         start_iteration: u64,
         best_iteration: u64,
         max_iteration_budget: f64,
-        initial_worsening_total: f64,
-        current_worsening_total: f64,
+        improvement_ratio: f64,
     ) -> StepContext {
         debug_assert!(self.count > 0);
 
@@ -92,9 +100,6 @@ impl StepStatsAccumulator {
         let elapsed = (iteration - start_iteration) as f64;
         let progress = (elapsed / budget).min(1.0);
         let stagnation = ((iteration - best_iteration) as f64 / budget).min(1.0);
-
-        let denom = initial_worsening_total.abs().max(EPSILON);
-        let improvement_ratio = (current_worsening_total - initial_worsening_total) / denom;
 
         StepContext {
             max_abs_worsening: max_abs,
@@ -125,8 +130,7 @@ pub fn compute_step_context(
     start_iteration: u64,
     best_iteration: u64,
     max_iteration_budget: f64,
-    initial_worsening_total: f64,
-    current_worsening_total: f64,
+    improvement_ratio: f64,
 ) -> StepContext {
     let mut acc = StepStatsAccumulator::new();
     for &w in worsenings {
@@ -137,12 +141,12 @@ pub fn compute_step_context(
         start_iteration,
         best_iteration,
         max_iteration_budget,
-        initial_worsening_total,
-        current_worsening_total,
+        improvement_ratio,
     )
 }
 
-/// Build the feature vector for a single move.
+/// Build the feature vector for a single move: `φ_move ⊗ [1, φ_state]`
+/// (see [`NUM_FEATURES`] for the layout rationale).
 ///
 /// - `worsening`: this move's worsening amount (positive = worse).
 /// - `rank_ratio`: this move's rank among all candidates (0.0 = best, 1.0 = worst).
@@ -151,20 +155,25 @@ pub fn extract_features(worsening: f64, rank_ratio: f64, ctx: &StepContext) -> [
     let normalized_gain = -worsening / ctx.max_abs_worsening;
     let is_improving = if worsening < 0.0 { 1.0 } else { 0.0 };
 
-    [
-        // Move-level
-        normalized_gain,
-        is_improving,
-        rank_ratio,
-        // State-level
+    let move_features = [normalized_gain, is_improving, rank_ratio];
+    let state_features = [
         ctx.progress,
         ctx.stagnation,
         ctx.improvement_ratio,
-        // Neighborhood-level
         ctx.fraction_improving,
         ctx.mean_worsening_normalized,
         ctx.std_worsening_normalized,
-    ]
+    ];
+
+    let mut features = [0.0; NUM_FEATURES];
+    for (block, &m) in move_features.iter().enumerate() {
+        let base = block * (1 + STATE_FEATURES);
+        features[base] = m;
+        for (j, &s) in state_features.iter().enumerate() {
+            features[base + 1 + j] = m * s;
+        }
+    }
+    features
 }
 
 #[cfg(test)]
@@ -174,13 +183,13 @@ mod tests {
     #[test]
     fn step_context_basic() {
         let worsenings = vec![-2.0, -1.0, 0.0, 1.0, 3.0];
-        let ctx = compute_step_context(&worsenings, 50, 0, 40, 100.0, 10.0, 8.0);
+        let ctx = compute_step_context(&worsenings, 50, 0, 40, 100.0, -0.2);
 
         assert!((ctx.max_abs_worsening - 3.0).abs() < 1e-10);
         assert!((ctx.fraction_improving - 0.4).abs() < 1e-10); // 2 out of 5
         assert!((ctx.progress - 0.5).abs() < 1e-10);
         assert!((ctx.stagnation - 0.1).abs() < 1e-10);
-        assert!((ctx.improvement_ratio - (-0.2)).abs() < 1e-10); // (8-10)/10
+        assert!((ctx.improvement_ratio - (-0.2)).abs() < 1e-10); // passed through
     }
 
     #[test]
@@ -199,9 +208,13 @@ mod tests {
 
         let features = extract_features(-2.0, 0.0, &ctx);
 
+        let block = 1 + STATE_FEATURES;
         assert!((features[0] - 0.5).abs() < 1e-10); // normalized_gain = 2/4
-        assert!((features[1] - 1.0).abs() < 1e-10); // is_improving
-        assert!((features[2] - 0.0).abs() < 1e-10); // rank_ratio = best
+        assert!((features[block] - 1.0).abs() < 1e-10); // is_improving
+        assert!((features[2 * block] - 0.0).abs() < 1e-10); // rank_ratio = best
+        // Interaction terms: move feature × state feature.
+        assert!((features[1] - 0.5 * ctx.progress).abs() < 1e-10);
+        assert!((features[block + 2] - 1.0 * ctx.stagnation).abs() < 1e-10);
     }
 
     #[test]
@@ -220,15 +233,20 @@ mod tests {
 
         let features = extract_features(2.0, 1.0, &ctx);
 
+        let block = 1 + STATE_FEATURES;
         assert!((features[0] - (-0.5)).abs() < 1e-10); // normalized_gain = -2/4
-        assert!((features[1] - 0.0).abs() < 1e-10); // not improving
-        assert!((features[2] - 1.0).abs() < 1e-10); // rank_ratio = worst
+        assert!((features[block] - 0.0).abs() < 1e-10); // not improving
+        assert!((features[2 * block] - 1.0).abs() < 1e-10); // rank_ratio = worst
+        // is_improving = 0 zeroes its whole interaction block.
+        for j in 0..STATE_FEATURES {
+            assert_eq!(features[block + 1 + j], 0.0);
+        }
     }
 
     #[test]
     fn zero_budget_does_not_panic() {
         let worsenings = vec![1.0];
-        let ctx = compute_step_context(&worsenings, 0, 0, 0, 0.0, 0.0, 0.0);
+        let ctx = compute_step_context(&worsenings, 0, 0, 0, 0.0, 0.0);
         assert!(ctx.progress.is_finite());
         assert!(ctx.stagnation.is_finite());
     }

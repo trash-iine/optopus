@@ -43,8 +43,9 @@ takes the Cartesian product.
 | `SimulatedAnnealing` | all | `neighbor`, `initial_temperature`, `cooling_rate` | — |
 | `LateAcceptanceHillClimbing` | all | `neighbor`, `history_length` | — |
 | `BreakoutLocalSearch` | MaxCut only | `tabu_tenure`, `t`, `l0`, `p0`, `q` | — |
+| `RlBreakoutLocalSearch` | MaxCut only | `tabu_tenure`, `t`, `l0` | `strength_bins` (`[1.0, 2.0, 4.0]`), `learning_rate` (0.1), `softmax_temperature` (1.0), `exploration` (0.05), `policy_weights` |
 | `LinKernighanHelsgaun` | TSP only | — | `num_neighbors` (default 5), `max_depth` (default 5) |
-| `RLSearch` | all | `neighbor` | `learning_rate` (0.01), `discount` (0.99), `softmax_temperature` (1.0), `reward_shaping` (`Raw`\|`Normalized`\|`BestImprovement`, default `Normalized`), `policy_weights`, `max_candidates` |
+| `RlSearch` | all | `neighbor` | `learning_rate` (0.01), `softmax_temperature` (1.0), `reward_shaping` (`Raw`\|`Normalized`\|`BestImprovement`, default `Normalized`), `policy_weights`, `max_candidates` |
 | `Sequential` | all | `steps` | — |
 | `Iterated` | all | `steps` (`[0]` = search, `[1]` = perturbation) | — |
 | `Restart` | all | `steps` (single inner), `restart_condition` | — |

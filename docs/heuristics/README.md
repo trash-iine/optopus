@@ -15,7 +15,7 @@ plugs straight in.
 | [TabuSearch](tabu_search.md) | `MoveToNeighbor`, `Rankable`, `EnabledTabu` | Best non-tabu neighbor + aspiration. |
 | [RandomWalk](random_walk.md) | `MoveToNeighbor`, `Rankable` | Uniform random move; useful as perturbation. |
 | [BeamSearch](beam_search.md) | `MoveToNeighbor`, `Rankable` | Maintains top-`k` candidates. |
-| [RLSearch](rl_search.md) | `MoveToNeighbor`, `Evaluate<f64>`, `Clone` | Online REINFORCE over move features. |
+| [RlSearch](rl_search.md) | `MoveToNeighbor`, `Evaluate<f64>`, `Clone` | Online REINFORCE over move features. |
 
 ## Meta
 
@@ -39,4 +39,5 @@ Used by `GeneticAlgorithm`:
 | Algorithm | Problem | Notes |
 |---|---|---|
 | [BreakoutLocalSearchForMaxCut](breakout_local_search.md) | MaxCut | Greedy LS + adaptive perturbation. |
+| [RlBreakoutLocalSearchForMaxCut](rl_breakout_local_search.md) | MaxCut | BLS machinery + learned (contextual-bandit) perturbation policy. |
 | [LinKernighanHelsgaunForTsp](lkh.md) | TSP 2D | Variable-depth k-opt with candidate lists. |

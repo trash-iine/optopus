@@ -34,6 +34,7 @@ struct RunMetrics {
     n_best_updates: Option<u64>,
     seed: Option<u64>,
     solution: Vec<usize>,
+    trajectory: Vec<(f64, f64)>,
 }
 
 fn empty_metrics(status: String, seed: Option<u64>) -> RunMetrics {
@@ -50,7 +51,33 @@ fn empty_metrics(status: String, seed: Option<u64>) -> RunMetrics {
         n_best_updates: None,
         seed,
         solution: Vec::new(),
+        trajectory: Vec::new(),
     }
+}
+
+/// Converts a recorded trajectory into `(elapsed_secs, objective)` pairs,
+/// keeping only points that strictly improve the incumbent. Points merged
+/// from `ClearBest`/`StartBest` sub-runs track the sub-run's *local* best,
+/// which can be worse than an earlier global best; this filter restores the
+/// monotone anytime curve.
+fn monotone_trajectory(
+    state: &SearchState<'_, impl crate::trait_defs::ProblemTrait>,
+    minimize: bool,
+) -> Vec<(f64, f64)> {
+    let mut out: Vec<(f64, f64)> = Vec::with_capacity(state.trajectory.len());
+    for p in &state.trajectory {
+        let improves = out.last().is_none_or(|&(_, incumbent)| {
+            if minimize {
+                p.objective < incumbent
+            } else {
+                p.objective > incumbent
+            }
+        });
+        if improves {
+            out.push(((p.instant - state.start_time).as_secs_f64(), p.objective));
+        }
+    }
+    out
 }
 
 /// Derives a per-run u64 seed from the master seed and the run coordinates.
@@ -190,6 +217,7 @@ where
         Some(s) => SearchState::new_with_seed(instance, s),
         None => SearchState::new(instance),
     };
+    state.set_objective_probe(|s| s.best_objective_f64());
     let initial_objective = state.initial_solution.best_objective_f64();
     let start = std::time::Instant::now();
     let status = heuristic.run(&mut state);
@@ -197,11 +225,20 @@ where
     let best_objective = state.best_solution.best_objective_f64();
     let raw_diff = best_objective - initial_objective;
     let improvement = if minimize { -raw_diff } else { raw_diff };
+    let trajectory = monotone_trajectory(&state, minimize);
+    // The trajectory records the true wall-clock instant of each improvement,
+    // so its last point is authoritative even when sub-run clones reset the
+    // relative timers; fall back to the timer difference when no improvement
+    // was ever recorded.
+    let time_to_best_secs = trajectory
+        .last()
+        .map(|&(elapsed, _)| elapsed)
+        .unwrap_or_else(|| (state.best_time - state.start_time).as_secs_f64());
     RunMetrics {
         status: status_str(status),
         best_objective,
         best_iteration: state.best_iteration,
-        time_to_best_secs: (state.best_time - state.start_time).as_secs_f64(),
+        time_to_best_secs,
         total_time_secs: total_time.as_secs_f64(),
         initial_objective: Some(initial_objective),
         improvement: Some(improvement),
@@ -210,6 +247,7 @@ where
         n_best_updates: Some(state.n_best_updates),
         seed,
         solution: state.best_solution.encode_as_indices(),
+        trajectory,
     }
 }
 
@@ -235,6 +273,7 @@ fn to_single_run_result(run_index: usize, m: RunMetrics) -> SingleRunResult {
         n_best_updates: m.n_best_updates,
         seed: m.seed,
         solution: m.solution,
+        trajectory: m.trajectory,
     }
 }
 

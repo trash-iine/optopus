@@ -98,12 +98,13 @@ pub enum HeuristicConfig {
         stop_condition: StopConditionConfig,
     },
     /// REINFORCE policy-gradient move selection.
-    RLSearch {
+    RlSearch {
         neighbor: NeighborKind,
         /// Learning rate (0.0 = evaluation mode). Default: 0.01.
         #[serde(skip_serializing_if = "Option::is_none")]
         learning_rate: Option<f64>,
-        /// Discount factor. Default: 0.99.
+        /// Deprecated and ignored (single-step REINFORCE has no discount
+        /// factor); accepted for config compatibility, warns at build time.
         #[serde(skip_serializing_if = "Option::is_none")]
         discount: Option<f64>,
         /// Softmax temperature. Default: 1.0.
@@ -112,10 +113,10 @@ pub enum HeuristicConfig {
         /// Reward shaping strategy: "Raw", "Normalized" (default), "BestImprovement".
         #[serde(skip_serializing_if = "Option::is_none")]
         reward_shaping: Option<String>,
-        /// Pre-trained policy weights.
+        /// Pre-trained policy weights (`NUM_FEATURES` = 21 elements).
         #[serde(skip_serializing_if = "Option::is_none")]
         policy_weights: Option<Vec<f64>>,
-        /// Max candidate moves evaluated per step.
+        /// Max candidate moves sampled (before evaluation) per step.
         #[serde(skip_serializing_if = "Option::is_none")]
         max_candidates: Option<usize>,
         #[serde(default)]
@@ -128,6 +129,64 @@ pub enum HeuristicConfig {
         l0: u64,
         p0: f64,
         q: f64,
+        /// Probability that a weak perturbation flips a connected cluster of
+        /// zero-gain vertices instead (plateau traversal). Default: 0.0
+        /// (original Benlic & Hao behavior).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        plateau_prob: Option<f64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// Population Annealing Monte Carlo with non-local cluster moves
+    /// (MaxCut only).
+    PopulationAnnealingForMaxCut {
+        /// Number of replicas `R` (>= 2).
+        population_size: usize,
+        /// Starting inverse temperature. Default: 0.1.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        initial_beta: Option<f64>,
+        /// Inverse-temperature increment per step. Default: 0.02.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        delta_beta: Option<f64>,
+        /// Metropolis sweeps per replica per step. Default: 50.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        sweeps_per_step: Option<usize>,
+        /// Reset `β` to `initial_beta` every this many steps. Default: 400
+        /// (set to 0 to disable resets).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        reset_period: Option<usize>,
+        /// Enable the non-local cluster (iso-site) move. Default: true.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        cluster_moves: Option<bool>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// Breakout Local Search with a learned (contextual-bandit) perturbation
+    /// policy (MaxCut only).
+    RlBreakoutLocalSearch {
+        tabu_tenure: (u64, u64),
+        /// Omega normalization period for the stagnation features.
+        t: u64,
+        /// Base perturbation length; actions scale it by a strength bin.
+        l0: u64,
+        /// Strength multipliers of `l0`. Default: `[1.0, 2.0, 4.0]`.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        strength_bins: Option<Vec<f64>>,
+        /// Bandit step size (0.0 = frozen-policy evaluation). Default: 0.1.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        learning_rate: Option<f64>,
+        /// Bandit softmax temperature. Default: 1.0.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        softmax_temperature: Option<f64>,
+        /// ε-uniform exploration floor. Default: 0.05.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        exploration: Option<f64>,
+        /// Pre-trained bandit weights, row-major
+        /// `(5 × strength_bins.len()) × NUM_CONTEXT_FEATURES` elements.
+        /// Weights saved before the plateau operators were added (3 types ×
+        /// 7 features) are rejected at parse time with a size error.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        policy_weights: Option<Vec<f64>>,
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
@@ -168,6 +227,8 @@ pub enum HeuristicConfig {
         population_size: usize,
         steps: Vec<HeuristicConfig>,
         /// Crossover operator. Defaults: "Uniform" ("Order" for TSP, "Ppx" for JobShop).
+        /// MaxCut also accepts "SubProblem" (memetic recombination: solves the
+        /// sub-MaxCut of disagreeing variables with an internal bounded BLS).
         #[serde(skip_serializing_if = "Option::is_none")]
         crossover_kind: Option<String>,
         /// "Tournament" (default) or "DistantTopK".
@@ -189,8 +250,10 @@ impl HeuristicConfig {
             Self::TabuSearch { .. } => "TabuSearch",
             Self::SimulatedAnnealing { .. } => "SimulatedAnnealing",
             Self::LateAcceptanceHillClimbing { .. } => "LateAcceptanceHillClimbing",
-            Self::RLSearch { .. } => "RLSearch",
+            Self::RlSearch { .. } => "RlSearch",
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
+            Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
+            Self::RlBreakoutLocalSearch { .. } => "RlBreakoutLocalSearch",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::Sequential { .. } => "Sequential",
             Self::Iterated { .. } => "Iterated",
@@ -206,7 +269,7 @@ impl HeuristicConfig {
             | Self::TabuSearch { neighbor, .. }
             | Self::SimulatedAnnealing { neighbor, .. }
             | Self::LateAcceptanceHillClimbing { neighbor, .. }
-            | Self::RLSearch { neighbor, .. } => Some(neighbor),
+            | Self::RlSearch { neighbor, .. } => Some(neighbor),
             _ => None,
         }
     }
@@ -229,8 +292,10 @@ impl HeuristicConfig {
             | Self::TabuSearch { stop_condition, .. }
             | Self::SimulatedAnnealing { stop_condition, .. }
             | Self::LateAcceptanceHillClimbing { stop_condition, .. }
-            | Self::RLSearch { stop_condition, .. }
+            | Self::RlSearch { stop_condition, .. }
             | Self::BreakoutLocalSearch { stop_condition, .. }
+            | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
+            | Self::RlBreakoutLocalSearch { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
             | Self::Iterated { stop_condition, .. }
