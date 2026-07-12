@@ -9,9 +9,9 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    BreakoutLocalSearchForMaxCut, Heuristic, LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES,
-    PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut, StopCondition,
-    SubProblemBasedCrossover,
+    AdaptiveLargeNeighborhoodSearchForVrp, BreakoutLocalSearchForMaxCut, Heuristic,
+    LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES, PopulationAnnealingForMaxCut,
+    RlBreakoutLocalSearchForMaxCut, StopCondition, SubProblemBasedCrossover,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -23,6 +23,10 @@ use crate::problem::{
     qubo::{Qubo, QuboSolution},
     sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
     tsp_2d::{TspRelocateNeighbor, TspSolution, TspTwoOptNeighbor, TspWithCoordinates},
+    vrp::{
+        Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution, VrpSwapNeighbor,
+        VrpTwoOptNeighbor,
+    },
 };
 use crate::search_state::{Crossover, Distance, ProblemTrait};
 
@@ -113,6 +117,32 @@ impl BenchmarkSolution for TspSolution {
     }
     fn encode_as_indices(&self) -> Vec<usize> {
         self.tour.clone()
+    }
+}
+
+impl BenchmarkProblem for Vrp {
+    fn load_instance(path: &str) -> Result<Self, OptError> {
+        Vrp::load_file(path)
+    }
+}
+
+impl BenchmarkSolution for VrpSolution {
+    fn best_objective_f64(&self) -> f64 {
+        // Penalty-augmented objective so infeasible solutions are correctly
+        // penalized; equals the true distance for any feasible best.
+        self.objective
+    }
+    fn encode_as_indices(&self) -> Vec<usize> {
+        // Flatten routes, using the depot (0) as a separator: `0, r0…, 0, r1…, 0`.
+        let mut out = vec![0];
+        for route in &self.routes {
+            if route.is_empty() {
+                continue;
+            }
+            out.extend_from_slice(route);
+            out.push(0);
+        }
+        out
     }
 }
 
@@ -434,6 +464,58 @@ impl ConfigurableProblem for TspWithCoordinates {
     }
 }
 
+impl ConfigurableProblem for Vrp {
+    const NAME: &'static str = "Vrp";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[
+        NeighborKind::Relocate,
+        NeighborKind::Swap,
+        NeighborKind::TwoOpt,
+    ];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Relocate => Ok(visitor.visit::<VrpRelocateNeighbor>()),
+            NeighborKind::Swap => Ok(visitor.visit::<VrpSwapNeighbor>()),
+            NeighborKind::TwoOpt => Ok(visitor.visit::<VrpTwoOptNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
+        }
+    }
+
+    fn build_special_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        match config {
+            HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
+                removal_fraction,
+                cooling_rate,
+                ..
+            } => Ok(Box::new(AdaptiveLargeNeighborhoodSearchForVrp::new(
+                cond,
+                removal_fraction.unwrap_or(0.15),
+                cooling_rate.unwrap_or(0.9995),
+            ))),
+            _ => Err(OptError::Config(format!(
+                "heuristic '{}' is not supported for Vrp",
+                config.kind_name()
+            ))),
+        }
+    }
+
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Order") {
+            "Order" => Ok(Box::new(VrpOrderCrossover)),
+            other => Err(OptError::Config(format!(
+                "Unknown crossover_kind '{other}' for Vrp (expected 'Order')"
+            ))),
+        }
+    }
+}
+
 impl ConfigurableProblem for VertexCover {
     const NAME: &'static str = "VertexCover";
     const MINIMIZE: bool = true;
@@ -508,6 +590,7 @@ pub(crate) fn with_problem<V: ProblemVisitor>(kind: &ProblemKind, visitor: V) ->
         ProblemKind::Tsp => visitor.visit::<TspWithCoordinates>(),
         ProblemKind::VertexCover => visitor.visit::<VertexCover>(),
         ProblemKind::JobShop => visitor.visit::<JobShopScheduling>(),
+        ProblemKind::Vrp => visitor.visit::<Vrp>(),
     }
 }
 

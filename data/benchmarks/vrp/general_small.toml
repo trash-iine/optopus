@@ -1,0 +1,63 @@
+# Capacitated VRP benchmark: generic heuristics plus bespoke ALNS on a small
+# synthetic CVRPLIB-format instance. `seed` makes every run bit-reproducible.
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/vrp/demo16.vrp"
+problem = "Vrp"
+
+# --- Generic neighborhood heuristics (unlocked for free by the VRP moves) ---
+
+[[heuristics]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+[heuristics.stop_condition]
+max_duration_secs = 5.0
+
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [5, 20]
+[heuristics.stop_condition]
+max_duration_secs = 5.0
+
+[[heuristics]]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 50.0
+cooling_rate = 0.9995
+[heuristics.stop_condition]
+max_duration_secs = 5.0
+max_iteration = 5000000
+
+# --- ILS: local search + a Swap-based random-walk perturbation ---
+
+[[heuristics]]
+kind = "Iterated"
+[heuristics.stop_condition]
+max_duration_secs = 5.0
+
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+[heuristics.steps.stop_condition]
+max_failed_update = 1
+
+[[heuristics.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 5.0
+cooling_rate = 0.99
+[heuristics.steps.stop_condition]
+max_iteration = 100
+
+# --- Bespoke Adaptive Large Neighborhood Search (VRP-only) ---
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.2
+cooling_rate = 0.9995
+[heuristics.stop_condition]
+max_duration_secs = 5.0

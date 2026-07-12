@@ -335,7 +335,10 @@ where
         HeuristicConfig::BreakoutLocalSearch { .. }
         | HeuristicConfig::PopulationAnnealingForMaxCut { .. }
         | HeuristicConfig::RlBreakoutLocalSearch { .. }
-        | HeuristicConfig::LinKernighanHelsgaun { .. } => P::build_special_heuristic(config, cond),
+        | HeuristicConfig::LinKernighanHelsgaun { .. }
+        | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => {
+            P::build_special_heuristic(config, cond)
+        }
         HeuristicConfig::LocalSearch { neighbor, .. }
         | HeuristicConfig::TabuSearch { neighbor, .. }
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
@@ -378,6 +381,7 @@ mod factory_tests {
         ProblemKind::Tsp,
         ProblemKind::VertexCover,
         ProblemKind::JobShop,
+        ProblemKind::Vrp,
     ];
 
     fn base_kinds_for(neighbor: NeighborKind) -> Vec<HeuristicConfig> {
@@ -539,5 +543,6 @@ mod factory_tests {
         assert!(ProblemKind::Tsp.minimize());
         assert!(ProblemKind::VertexCover.minimize());
         assert!(ProblemKind::JobShop.minimize());
+        assert!(ProblemKind::Vrp.minimize());
     }
 }

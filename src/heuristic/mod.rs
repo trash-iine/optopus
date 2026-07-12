@@ -23,6 +23,7 @@ pub use reinforcement_learning::{RewardShaping, RlSearch};
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
+pub use specific::AdaptiveLargeNeighborhoodSearchForVrp;
 pub use specific::BreakoutLocalSearchForMaxCut;
 pub use specific::LinKernighanHelsgaunForTsp;
 pub use specific::PopulationAnnealingForMaxCut;

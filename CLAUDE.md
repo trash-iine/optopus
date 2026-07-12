@@ -3,7 +3,7 @@
 A metaheuristic optimization library for combinatorial problems, written in Rust.
 
 **Design philosophy:** three orthogonal concerns kept strictly separate:
-- **Problems** — what to optimize (MaxCut, QUBO, MaxSAT, TSP, VertexCover, JobShop, custom formula)
+- **Problems** — what to optimize (MaxCut, QUBO, MaxSAT, TSP, VertexCover, JobShop, VRP, custom formula)
 - **Heuristics** — how to search (LocalSearch, SA, TabuSearch, GA, RlSearch, …)
 - **SearchState** — iteration count, timing, RNG, current and best solutions
 
@@ -12,7 +12,7 @@ CLI entry `src/main.rs`: TOML config → benchmark run → TOML output (via `Ben
 
 ## Library Concept (3 use cases)
 
-1. **Existing problem × existing heuristic** — run `LocalSearch`, `SimulatedAnnealing`, `TabuSearch`, etc. on MaxCut / QUBO / SAT / TSP / VertexCover / JobShop in a few lines via `use optopus::prelude::*`.
+1. **Existing problem × existing heuristic** — run `LocalSearch`, `SimulatedAnnealing`, `TabuSearch`, etc. on MaxCut / QUBO / SAT / TSP / VertexCover / JobShop / VRP in a few lines via `use optopus::prelude::*`.
 2. **Apply existing heuristics to a new problem** — implement just three traits (`ProblemTrait` + `Rankable` on `Solution` + `MoveToNeighbor`) and every heuristic works as-is. Add `Evaluate<f64>` for SA/LAHC/RlSearch, `EnabledTabu` for TabuSearch, `BinaryProblem` to reuse the generic binary machinery in `src/common/`.
 3. **Combine heuristics and run benchmarks** — compose components with `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm`, write a TOML config, and get aggregated best/avg/worst/std/time results.
 
@@ -71,7 +71,8 @@ src/
 │   ├── reinforcement_learning/  RlSearch<N> (REINFORCE policy over move features)
 │   └── specific/
 │       ├── bls_for_max_cut.rs   BreakoutLocalSearchForMaxCut
-│       └── lkh_for_tsp.rs       LinKernighanHelsgaunForTsp
+│       ├── lkh_for_tsp.rs       LinKernighanHelsgaunForTsp
+│       └── alns_for_vrp.rs      AdaptiveLargeNeighborhoodSearchForVrp
 └── problem/
     ├── max_cut/              MaxCut, MaxCutSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── qubo/                 Qubo, QuboSolution, {Flip,Swap}Neighbor, UniformCrossover
@@ -79,6 +80,7 @@ src/
     ├── tsp_2d/               TspWithCoordinates, TspSolution, {TwoOpt,Relocate}Neighbor, OrderCrossover
     ├── vertex_cover/         VertexCover, VertexCoverSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── job_shop_scheduling/  JobShopScheduling, JobShopSolution, {Swap,Relocate}Neighbor, PpxCrossover
+    ├── vrp/                  Vrp, VrpSolution, {Relocate,Swap,TwoOpt}Neighbor, OrderCrossover
     └── binary_optimization/  FormulaProblem, Expr, Formula{Flip,Swap}Neighbor, FormulaUniformCrossover
 ```
 
@@ -176,6 +178,7 @@ StopCondition::iterations(1_000_000)
 - `BreakoutLocalSearchForMaxCut` (`specific/bls_for_max_cut.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances.
 - `RlBreakoutLocalSearchForMaxCut` (`specific/rl_bls_for_max_cut.rs`): same `BlsOps` machinery, but a contextual softmax bandit picks perturbation type (5 ops incl. both plateau variants) × strength; weights persist across `Restart`/`Iterated` episodes.
 - `LinKernighanHelsgaunForTsp` (`specific/lkh_for_tsp.rs`): LK-style variable-depth moves with candidate lists; stops at a local optimum.
+- `AdaptiveLargeNeighborhoodSearchForVrp` (`specific/alns_for_vrp.rs`): ALNS ruin-and-recreate for CVRP. An `AlnsOps` bank (destroy: random / worst / Shaw removal; repair: greedy / regret-2 insertion) with adaptive roulette-wheel operator weights (segment-updated) and SA acceptance; operates directly on `state.solution` like LKH. VRP-only, via `build_special_heuristic`.
 
 ## Problem Types (`src/problem/`)
 
@@ -189,6 +192,7 @@ Binary solutions all name the assignment vector `x: Vec<bool>`.
 | **TSP 2D** | Min | `tour: Vec<usize>`, `objective: f64` | TwoOpt / Relocate | Order (OX) | TSPLIB (EUC_2D / CEIL_2D / ATT / GEO); lazy distance matrix for `n ≤ 2000` (`DIST_MATRIX_MAX_N`), move gains computed on the fly from it |
 | **VertexCover** | Min | `x`, `gain: Vec<i32>`, `objective` (penalty-augmented), `cover_size`, `uncovered_edges` | Flip / Swap | Uniform | same edge-list format as MaxCut |
 | **JobShop** | Min | `operations: Vec<usize>`, `objective` (makespan) | Swap / Relocate | Ppx | `n_jobs n_machines` header + one job per line |
+| **VRP (CVRP)** | Min | `routes: Vec<Vec<usize>>` (fixed `num_vehicles`, depot implicit), `route_loads`, `distance`, `overload`, `objective` (penalty-augmented) | Relocate / Swap (inter-route) / TwoOpt (intra-route) | Order (OX + greedy capacity split) | CVRPLIB format (EUC_2D, `NODE_COORD`/`DEMAND`/`DEPOT` sections); capacity is soft via `penalty_weight` like VertexCover; lazy distance matrix for `nodes ≤ 2000` |
 | **FormulaProblem** | Configurable (`OptDirection`) | `x`, `score: f64` (always higher-is-better), `gain: Vec<f64>` | Flip / Swap | Uniform + `SubProblemExtractable` | see below; **library-only** (no instance file format, so intentionally absent from `ProblemKind`) |
 
 **FormulaProblem details**: AST `Expr = Const(f64) | Var(usize) | Neg | Add(Vec) | Mul(Vec)` with `+ - * /` operators. Constraints: `Comparison { lhs, rel: ConstraintRel, rhs, penalty_weight }` (Lt / Gt / Le / Ge / Eq) or `Clamp { expr, lo, hi, penalty_weight }`. A pre-compiled polynomial (`CompiledPoly`) gives O(d) gain deltas; `interaction_neighbors` tracks which variables' gains may change on each flip.
@@ -202,7 +206,7 @@ num_runs = 10
 seed = 42                      # optional: makes every run bit-reproducible
 [[instances]]
 path = "data/instances/max_cut/G*"   # globs supported (Gset files have no extension)
-problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop
+problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | Vrp
 [[heuristics]]
 kind = "LocalSearch"           # see list below
 neighbor = "Flip"              # Flip | Swap | TwoOpt | Relocate
@@ -212,7 +216,7 @@ max_iteration = 100000         # max_duration_secs / max_failed_update also supp
 
 `HeuristicConfig` is an internally-tagged enum (`#[serde(tag = "kind")]`), so each `kind` declares exactly its own required fields; missing fields and unknown kinds fail at parse time.
 
-**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`, optional `plateau_prob`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), and the meta-heuristics `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
+**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`, optional `plateau_prob`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), `AdaptiveLargeNeighborhoodSearch` (VRP only; optional `removal_fraction`, `cooling_rate`), and the meta-heuristics `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
 
 **`Summary` fields**: `num_successful_runs`, `best/avg/worst/std_objective`, `best/avg_time_to_best_secs`, `avg_total_time_secs`, plus averaged `initial_objective` / `improvement` / acceptance counters. Each `SingleRunResult` carries `best_objective: f64`, `best_iteration: u64`, timing, the per-run `seed`, and `solution: Vec<usize>` (0-indexed encoding).
 
