@@ -15,9 +15,11 @@
 //! | [`tsp_2d`] | Traveling Salesman Problem | Minimize tour length |
 //! | [`vertex_cover`] | Minimum Vertex Cover | Minimize cover size |
 //! | [`job_shop_scheduling`] | Job Shop Scheduling | Minimize makespan |
+//! | [`graph_coloring`] | Graph Coloring | Minimize colors (proper) |
 //! | [`binary_optimization`] | Formula-based binary optimization | Configurable |
 
 pub mod binary_optimization;
+pub mod graph_coloring;
 pub mod job_shop_scheduling;
 pub mod max_cut;
 pub mod qubo;
@@ -28,6 +30,10 @@ pub mod vertex_cover;
 pub use binary_optimization::{
     Constraint, ConstraintRel, Expr, FormulaFlipNeighbor, FormulaProblem, FormulaSolution,
     FormulaSwapNeighbor, FormulaUniformCrossover, OptDirection,
+};
+pub use graph_coloring::{
+    GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
+    GraphColoringUniformCrossover,
 };
 pub use job_shop_scheduling::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,

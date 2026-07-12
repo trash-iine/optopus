@@ -41,6 +41,11 @@ pub use crate::problem::{
     FormulaSolution,
     FormulaSwapNeighbor,
     FormulaUniformCrossover,
+    // Graph Coloring
+    GraphColoring,
+    GraphColoringRecolorNeighbor,
+    GraphColoringSolution,
+    GraphColoringSwapNeighbor,
     // Job Shop Scheduling
     JobShopPpxCrossover,
     JobShopRelocateNeighbor,

@@ -3,7 +3,7 @@
 A metaheuristic optimization library for combinatorial problems, written in Rust.
 
 **Design philosophy:** three orthogonal concerns kept strictly separate:
-- **Problems** — what to optimize (MaxCut, QUBO, MaxSAT, TSP, VertexCover, JobShop, custom formula)
+- **Problems** — what to optimize (MaxCut, QUBO, MaxSAT, TSP, VertexCover, JobShop, GraphColoring, custom formula)
 - **Heuristics** — how to search (LocalSearch, SA, TabuSearch, GA, RlSearch, …)
 - **SearchState** — iteration count, timing, RNG, current and best solutions
 
@@ -12,7 +12,7 @@ CLI entry `src/main.rs`: TOML config → benchmark run → TOML output (via `Ben
 
 ## Library Concept (3 use cases)
 
-1. **Existing problem × existing heuristic** — run `LocalSearch`, `SimulatedAnnealing`, `TabuSearch`, etc. on MaxCut / QUBO / SAT / TSP / VertexCover / JobShop in a few lines via `use optopus::prelude::*`.
+1. **Existing problem × existing heuristic** — run `LocalSearch`, `SimulatedAnnealing`, `TabuSearch`, etc. on MaxCut / QUBO / SAT / TSP / VertexCover / JobShop / GraphColoring in a few lines via `use optopus::prelude::*`.
 2. **Apply existing heuristics to a new problem** — implement just three traits (`ProblemTrait` + `Rankable` on `Solution` + `MoveToNeighbor`) and every heuristic works as-is. Add `Evaluate<f64>` for SA/LAHC/RlSearch, `EnabledTabu` for TabuSearch, `BinaryProblem` to reuse the generic binary machinery in `src/common/`.
 3. **Combine heuristics and run benchmarks** — compose components with `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm`, write a TOML config, and get aggregated best/avg/worst/std/time results.
 
@@ -79,6 +79,7 @@ src/
     ├── tsp_2d/               TspWithCoordinates, TspSolution, {TwoOpt,Relocate}Neighbor, OrderCrossover
     ├── vertex_cover/         VertexCover, VertexCoverSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── job_shop_scheduling/  JobShopScheduling, JobShopSolution, {Swap,Relocate}Neighbor, PpxCrossover
+    ├── graph_coloring/       GraphColoring, GraphColoringSolution, {Recolor,Swap}Neighbor, UniformCrossover
     └── binary_optimization/  FormulaProblem, Expr, Formula{Flip,Swap}Neighbor, FormulaUniformCrossover
 ```
 
@@ -189,6 +190,7 @@ Binary solutions all name the assignment vector `x: Vec<bool>`.
 | **TSP 2D** | Min | `tour: Vec<usize>`, `objective: f64` | TwoOpt / Relocate | Order (OX) | TSPLIB (EUC_2D / CEIL_2D / ATT / GEO); lazy distance matrix for `n ≤ 2000` (`DIST_MATRIX_MAX_N`), move gains computed on the fly from it |
 | **VertexCover** | Min | `x`, `gain: Vec<i32>`, `objective` (penalty-augmented), `cover_size`, `uncovered_edges` | Flip / Swap | Uniform | same edge-list format as MaxCut |
 | **JobShop** | Min | `operations: Vec<usize>`, `objective` (makespan) | Swap / Relocate | Ppx | `n_jobs n_machines` header + one job per line |
+| **GraphColoring** | Min | `colors: Vec<usize>`, `gamma` (Γ matrix), `class_size`, `colors_used`, `conflicts`, `objective: i64` | Recolor (Flip) / Swap | Uniform | penalty-augmented `colors_used + (n+1)·conflicts`; palette `k = max_degree+1`; edge-list format like MaxCut. The `Flip` neighbor is a single-vertex **recolor**, not a binary flip |
 | **FormulaProblem** | Configurable (`OptDirection`) | `x`, `score: f64` (always higher-is-better), `gain: Vec<f64>` | Flip / Swap | Uniform + `SubProblemExtractable` | see below; **library-only** (no instance file format, so intentionally absent from `ProblemKind`) |
 
 **FormulaProblem details**: AST `Expr = Const(f64) | Var(usize) | Neg | Add(Vec) | Mul(Vec)` with `+ - * /` operators. Constraints: `Comparison { lhs, rel: ConstraintRel, rhs, penalty_weight }` (Lt / Gt / Le / Ge / Eq) or `Clamp { expr, lo, hi, penalty_weight }`. A pre-compiled polynomial (`CompiledPoly`) gives O(d) gain deltas; `interaction_neighbors` tracks which variables' gains may change on each flip.
@@ -202,7 +204,7 @@ num_runs = 10
 seed = 42                      # optional: makes every run bit-reproducible
 [[instances]]
 path = "data/instances/max_cut/G*"   # globs supported (Gset files have no extension)
-problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop
+problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | GraphColoring
 [[heuristics]]
 kind = "LocalSearch"           # see list below
 neighbor = "Flip"              # Flip | Swap | TwoOpt | Relocate
