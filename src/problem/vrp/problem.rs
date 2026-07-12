@@ -122,7 +122,14 @@ impl Vrp {
         capacity: i64,
         num_vehicles: usize,
     ) -> Self {
-        Self::build(name.into(), coordinates, demands, capacity, num_vehicles, false)
+        Self::build(
+            name.into(),
+            coordinates,
+            demands,
+            capacity,
+            num_vehicles,
+            false,
+        )
     }
 
     /// Like [`Vrp::new`] but with nearest-integer `EUC_2D` distances.
@@ -133,7 +140,14 @@ impl Vrp {
         capacity: i64,
         num_vehicles: usize,
     ) -> Self {
-        Self::build(name.into(), coordinates, demands, capacity, num_vehicles, true)
+        Self::build(
+            name.into(),
+            coordinates,
+            demands,
+            capacity,
+            num_vehicles,
+            true,
+        )
     }
 
     fn build(
@@ -321,57 +335,56 @@ impl Vrp {
         let mut num_vehicles: usize = 0;
 
         // Header: parse until the first *_SECTION keyword.
-        let first_section = loop {
-            let line = lines
-                .next_line()?
-                .ok_or_else(|| lines.err("unexpected end of file in header"))?;
-            let trimmed = line.trim();
-            if trimmed.is_empty() {
-                continue;
-            }
-            let key_upper = trimmed
-                .split(|c: char| c == ':' || c.is_whitespace())
-                .next()
-                .unwrap_or("")
-                .to_ascii_uppercase();
-            if key_upper.ends_with("_SECTION") {
-                break key_upper;
-            }
-            let value = trimmed
-                .split_once(':')
-                .map(|(_, v)| v.trim().to_string())
-                .unwrap_or_default();
-            match key_upper.as_str() {
-                "NAME" => name = Some(value),
-                "DIMENSION" => {
-                    dimension = Some(value.parse::<usize>().map_err(|e| {
-                        lines.err(format!("failed to parse DIMENSION value: {e}"))
-                    })?);
+        let first_section =
+            loop {
+                let line = lines
+                    .next_line()?
+                    .ok_or_else(|| lines.err("unexpected end of file in header"))?;
+                let trimmed = line.trim();
+                if trimmed.is_empty() {
+                    continue;
                 }
-                "CAPACITY" => {
-                    capacity = Some(
-                        value
-                            .parse::<i64>()
-                            .map_err(|e| lines.err(format!("failed to parse CAPACITY value: {e}")))?,
-                    );
+                let key_upper = trimmed
+                    .split(|c: char| c == ':' || c.is_whitespace())
+                    .next()
+                    .unwrap_or("")
+                    .to_ascii_uppercase();
+                if key_upper.ends_with("_SECTION") {
+                    break key_upper;
                 }
-                "EDGE_WEIGHT_TYPE" => {
-                    let ewt = value.to_ascii_uppercase();
-                    if ewt != "EUC_2D" {
-                        return Err(lines.err(format!(
-                            "unsupported EDGE_WEIGHT_TYPE '{ewt}' (only EUC_2D is supported)"
-                        )));
+                let value = trimmed
+                    .split_once(':')
+                    .map(|(_, v)| v.trim().to_string())
+                    .unwrap_or_default();
+                match key_upper.as_str() {
+                    "NAME" => name = Some(value),
+                    "DIMENSION" => {
+                        dimension = Some(value.parse::<usize>().map_err(|e| {
+                            lines.err(format!("failed to parse DIMENSION value: {e}"))
+                        })?);
                     }
-                }
-                "COMMENT" => {
-                    // Best-effort extraction of "No of trucks: K".
-                    if let Some(k) = parse_trucks_from_comment(&value) {
-                        num_vehicles = k;
+                    "CAPACITY" => {
+                        capacity = Some(value.parse::<i64>().map_err(|e| {
+                            lines.err(format!("failed to parse CAPACITY value: {e}"))
+                        })?);
                     }
+                    "EDGE_WEIGHT_TYPE" => {
+                        let ewt = value.to_ascii_uppercase();
+                        if ewt != "EUC_2D" {
+                            return Err(lines.err(format!(
+                                "unsupported EDGE_WEIGHT_TYPE '{ewt}' (only EUC_2D is supported)"
+                            )));
+                        }
+                    }
+                    "COMMENT" => {
+                        // Best-effort extraction of "No of trucks: K".
+                        if let Some(k) = parse_trucks_from_comment(&value) {
+                            num_vehicles = k;
+                        }
+                    }
+                    _ => {}
                 }
-                _ => {}
-            }
-        };
+            };
 
         let dim = dimension.ok_or_else(|| lines.err("'DIMENSION: N' not found in header"))?;
         let capacity = capacity.ok_or_else(|| lines.err("'CAPACITY: Q' not found in header"))?;
@@ -394,7 +407,9 @@ impl Vrp {
                         let x: f64 = lines.parse_next(&mut t, "x coordinate")?;
                         let y: f64 = lines.parse_next(&mut t, "y coordinate")?;
                         if idx < 1 || idx > dim {
-                            return Err(lines.err(format!("node index {idx} out of range 1..={dim}")));
+                            return Err(
+                                lines.err(format!("node index {idx} out of range 1..={dim}"))
+                            );
                         }
                         coordinates[idx - 1] = (x, y);
                     }
@@ -408,7 +423,9 @@ impl Vrp {
                         let idx: usize = lines.parse_next(&mut t, "node index")?;
                         let d: i64 = lines.parse_next(&mut t, "demand")?;
                         if idx < 1 || idx > dim {
-                            return Err(lines.err(format!("node index {idx} out of range 1..={dim}")));
+                            return Err(
+                                lines.err(format!("node index {idx} out of range 1..={dim}"))
+                            );
                         }
                         demands[idx - 1] = d;
                     }
@@ -428,8 +445,12 @@ impl Vrp {
                         match l {
                             None => break,
                             Some(l) => {
-                                let v: i64 =
-                                    l.split_whitespace().next().unwrap_or("-1").parse().unwrap_or(-1);
+                                let v: i64 = l
+                                    .split_whitespace()
+                                    .next()
+                                    .unwrap_or("-1")
+                                    .parse()
+                                    .unwrap_or(-1);
                                 if v == -1 {
                                     break;
                                 }
@@ -519,9 +540,8 @@ impl ProblemTrait for Vrp {
             let feasible = (0..v)
                 .filter(|&r| loads[r] + d <= self.capacity)
                 .min_by_key(|&r| loads[r]);
-            let r = feasible.unwrap_or_else(|| {
-                (0..v).min_by_key(|&r| loads[r]).expect("num_vehicles >= 1")
-            });
+            let r = feasible
+                .unwrap_or_else(|| (0..v).min_by_key(|&r| loads[r]).expect("num_vehicles >= 1"));
             routes[r].push(c);
             loads[r] += d;
         }

@@ -107,7 +107,8 @@ impl AlnsOps {
         for i in 0..NUM_DESTROY {
             if self.destroy_counts[i] > 0 {
                 let avg = self.destroy_scores[i] / self.destroy_counts[i] as f64;
-                self.destroy_weights[i] = (1.0 - REACTION) * self.destroy_weights[i] + REACTION * avg;
+                self.destroy_weights[i] =
+                    (1.0 - REACTION) * self.destroy_weights[i] + REACTION * avg;
             }
             self.destroy_scores[i] = 0.0;
             self.destroy_counts[i] = 0;
@@ -173,7 +174,11 @@ impl AlnsOps {
             for i in 0..route.len() {
                 let c = route[i];
                 let prev = if i == 0 { 0 } else { route[i - 1] };
-                let next = if i + 1 == route.len() { 0 } else { route[i + 1] };
+                let next = if i + 1 == route.len() {
+                    0
+                } else {
+                    route[i + 1]
+                };
                 let saving =
                     prob.distance(prev, c) + prob.distance(c, next) - prob.distance(prev, next);
                 costs.push((saving, c));
@@ -259,8 +264,7 @@ impl AlnsOps {
             for pos in 0..=route.len() {
                 let a = if pos == 0 { 0 } else { route[pos - 1] };
                 let b = if pos == route.len() { 0 } else { route[pos] };
-                let cost =
-                    prob.distance(a, c) + prob.distance(c, b) - prob.distance(a, b) + pen;
+                let cost = prob.distance(a, c) + prob.distance(c, b) - prob.distance(a, b) + pen;
                 if cost < b1.0 {
                     b2 = b1;
                     b1 = (cost, r, pos);
@@ -420,8 +424,14 @@ impl Heuristic<Vrp> for AdaptiveLargeNeighborhoodSearch {
         let removed = self
             .ops
             .destroy(d_idx, prob, &mut routes, &mut loads, k, &mut state.rng);
-        self.ops
-            .repair(r_idx, prob, &mut routes, &mut loads, removed, &mut state.rng);
+        self.ops.repair(
+            r_idx,
+            prob,
+            &mut routes,
+            &mut loads,
+            removed,
+            &mut state.rng,
+        );
         let candidate = prob.solution_from_routes(routes);
 
         // Simulated-annealing acceptance (minimization).
@@ -477,11 +487,8 @@ mod tests {
         let vrp = ring_vrp();
         let mut state = SearchState::new_with_seed(&vrp, 7);
         let initial = state.best_solution.objective;
-        let mut alns = AdaptiveLargeNeighborhoodSearch::new(
-            StopCondition::iterations(3_000),
-            0.3,
-            0.999,
-        );
+        let mut alns =
+            AdaptiveLargeNeighborhoodSearch::new(StopCondition::iterations(3_000), 0.3, 0.999);
         alns.run(&mut state).unwrap();
         assert!(
             state.best_solution.objective <= initial,

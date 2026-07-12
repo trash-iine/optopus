@@ -128,20 +128,23 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
         let v = sol.routes.len();
         (0..v).flat_map(move |from_r| {
             (0..sol.routes[from_r].len()).flat_map(move |from_i| {
-                (0..v).filter(move |&to_r| to_r != from_r).flat_map(move |to_r| {
-                    (0..=sol.routes[to_r].len()).map(move |to_i| {
-                        let (gain, od, c) = relocate_gain(prob, sol, from_r, from_i, to_r, to_i);
-                        VrpRelocateNeighbor {
-                            from_r,
-                            from_i,
-                            to_r,
-                            to_i,
-                            customer: c,
-                            gain,
-                            overload_delta: od,
-                        }
+                (0..v)
+                    .filter(move |&to_r| to_r != from_r)
+                    .flat_map(move |to_r| {
+                        (0..=sol.routes[to_r].len()).map(move |to_i| {
+                            let (gain, od, c) =
+                                relocate_gain(prob, sol, from_r, from_i, to_r, to_i);
+                            VrpRelocateNeighbor {
+                                from_r,
+                                from_i,
+                                to_r,
+                                to_i,
+                                customer: c,
+                                gain,
+                                overload_delta: od,
+                            }
+                        })
                     })
-                })
             })
         })
     }
@@ -375,7 +378,11 @@ pub struct VrpTwoOptNeighbor {
 fn two_opt_gain(prob: &Vrp, sol: &VrpSolution, r: usize, p: usize, q: usize) -> f64 {
     let route = &sol.routes[r];
     let before = if p == 0 { 0 } else { route[p - 1] };
-    let after = if q + 1 == route.len() { 0 } else { route[q + 1] };
+    let after = if q + 1 == route.len() {
+        0
+    } else {
+        route[q + 1]
+    };
     prob.distance(before, route[q]) + prob.distance(route[p], after)
         - prob.distance(before, route[p])
         - prob.distance(route[q], after)
@@ -579,8 +586,8 @@ mod tests {
         let prob = vrp();
         let sol = prob.solution_from_routes(vec![vec![1, 2, 3], vec![4, 5, 6], vec![]]);
         // Some relocate move must target the empty route (index 2, position 0).
-        let has_empty_target = VrpRelocateNeighbor::iter(&prob, &sol)
-            .any(|m| m.to_r == 2 && m.to_i == 0);
+        let has_empty_target =
+            VrpRelocateNeighbor::iter(&prob, &sol).any(|m| m.to_r == 2 && m.to_i == 0);
         assert!(has_empty_target);
     }
 }

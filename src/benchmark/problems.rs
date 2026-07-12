@@ -23,8 +23,10 @@ use crate::problem::{
     qubo::{Qubo, QuboSolution},
     sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
     tsp_2d::{TspRelocateNeighbor, TspSolution, TspTwoOptNeighbor, TspWithCoordinates},
-    vrp::{Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution, VrpSwapNeighbor,
-        VrpTwoOptNeighbor},
+    vrp::{
+        Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution, VrpSwapNeighbor,
+        VrpTwoOptNeighbor,
+    },
 };
 use crate::search_state::{Crossover, Distance, ProblemTrait};
 
