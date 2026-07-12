@@ -34,7 +34,9 @@ impl EnabledTabu for GraphColoringRecolorNeighbor {
     type TabuMap = Vec<u64>;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.get(self.v).is_none_or(|&tenure| iteration > tenure)
+        tabu_map
+            .get(self.v)
+            .is_none_or(|&tenure| iteration > tenure)
     }
 
     fn add_to_tabu_map(
@@ -62,7 +64,10 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringRecolorNeighbor {
         Ok(())
     }
 
-    fn iter(prob: &GraphColoring, sol: &GraphColoringSolution) -> impl Iterator<Item = Self> + Send {
+    fn iter(
+        prob: &GraphColoring,
+        sol: &GraphColoringSolution,
+    ) -> impl Iterator<Item = Self> + Send {
         let n = prob.graph.len();
         let k = prob.k;
         (0..n).flat_map(move |v| {
@@ -178,7 +183,10 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringSwapNeighbor {
         Ok(())
     }
 
-    fn iter(prob: &GraphColoring, sol: &GraphColoringSolution) -> impl Iterator<Item = Self> + Send {
+    fn iter(
+        prob: &GraphColoring,
+        sol: &GraphColoringSolution,
+    ) -> impl Iterator<Item = Self> + Send {
         let n = prob.graph.len();
         (0..n).flat_map(move |i| {
             (0..i)

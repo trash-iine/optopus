@@ -212,21 +212,14 @@ impl ProblemTrait for GraphColoring {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::problem::graph_coloring::{
-        GraphColoringRecolorNeighbor, GraphColoringSwapNeighbor,
-    };
+    use crate::problem::graph_coloring::{GraphColoringRecolorNeighbor, GraphColoringSwapNeighbor};
     use crate::search_state::MoveToNeighbor;
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
 
     /// Triangle + a pendant vertex: forces at least 3 colors on the triangle.
     fn sample() -> GraphColoring {
-        let g = Graph::from_edges([
-            (0, 1, 1.0),
-            (1, 2, 1.0),
-            (2, 0, 1.0),
-            (2, 3, 1.0),
-        ]);
+        let g = Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (2, 0, 1.0), (2, 3, 1.0)]);
         GraphColoring::new(g)
     }
 
@@ -283,11 +276,7 @@ mod tests {
             let before = sol.objective;
             let gain = m.gain;
             m.apply_to_solution(&prob, &mut sol).unwrap();
-            assert_eq!(
-                before + gain,
-                sol.objective,
-                "recolor gain mismatch"
-            );
+            assert_eq!(before + gain, sol.objective, "recolor gain mismatch");
             assert_consistent(&prob, &sol);
         }
     }
