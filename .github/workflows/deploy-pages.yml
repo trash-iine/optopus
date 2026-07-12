@@ -27,7 +27,7 @@ jobs:
           python-version: "3.12"
       - name: Install deps
         run: pip install tomli-w
-      - name: Regenerate viewer data (slim TOML + manifest) and markdown
+      - name: Regenerate viewer data (slim TOML + manifest)
         run: python3 docs/benchmarks/render.py
       - name: Stage site (drop the heavy raw benchmark TOMLs)
         run: |
