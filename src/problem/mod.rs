@@ -15,6 +15,7 @@
 //! | [`tsp_2d`] | Traveling Salesman Problem | Minimize tour length |
 //! | [`vertex_cover`] | Minimum Vertex Cover | Minimize cover size |
 //! | [`job_shop_scheduling`] | Job Shop Scheduling | Minimize makespan |
+//! | [`vrp`] | Capacitated Vehicle Routing | Minimize total distance |
 //! | [`binary_optimization`] | Formula-based binary optimization | Configurable |
 
 pub mod binary_optimization;
@@ -24,6 +25,7 @@ pub mod qubo;
 pub mod sat;
 pub mod tsp_2d;
 pub mod vertex_cover;
+pub mod vrp;
 
 pub use binary_optimization::{
     Constraint, ConstraintRel, Expr, FormulaFlipNeighbor, FormulaProblem, FormulaSolution,
@@ -45,4 +47,7 @@ pub use tsp_2d::{
 pub use vertex_cover::{
     VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
     VertexCoverUniformCrossover,
+};
+pub use vrp::{
+    Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution, VrpSwapNeighbor, VrpTwoOptNeighbor,
 };

@@ -22,6 +22,7 @@ pub enum ProblemKind {
     Tsp,
     VertexCover,
     JobShop,
+    Vrp,
 }
 
 /// Stop condition as expressed in a config file (duration in seconds instead of `Duration`).
@@ -201,6 +202,17 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Adaptive Large Neighborhood Search (VRP only).
+    AdaptiveLargeNeighborhoodSearch {
+        /// Fraction of customers ruined each iteration. Default: 0.15.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        removal_fraction: Option<f64>,
+        /// Geometric cooling factor applied per iteration. Default: 0.9995.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        cooling_rate: Option<f64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Repeats its `steps` cycle until `stop_condition` is met.
     Sequential {
         steps: Vec<HeuristicConfig>,
@@ -255,6 +267,7 @@ impl HeuristicConfig {
             Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
             Self::RlBreakoutLocalSearch { .. } => "RlBreakoutLocalSearch",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
+            Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
             Self::Sequential { .. } => "Sequential",
             Self::Iterated { .. } => "Iterated",
             Self::Restart { .. } => "Restart",
@@ -297,6 +310,7 @@ impl HeuristicConfig {
             | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
             | Self::RlBreakoutLocalSearch { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
+            | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
             | Self::Iterated { stop_condition, .. }
             | Self::Restart { stop_condition, .. }
