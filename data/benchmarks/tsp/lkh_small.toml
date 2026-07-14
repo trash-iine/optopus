@@ -1,5 +1,5 @@
 # Auto-generated. Profile: Tsp / small (LinKernighanHelsgaun).
-# See docs/benchmarks/profiles.md
+# See docs/benchmarks/README.md#profiles
 
 num_runs = 10
 seed = 42

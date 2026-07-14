@@ -5,138 +5,259 @@
 <title>Optopus benchmark viewer</title>
 <style>
 :root {
-  --bg: #ffffff;
-  --fg: #1a1a1a;
-  --muted: #6b6b6b;
-  --border: #d4d4d4;
-  --chip-bg: #f3f3f3;
-  --chip-on: #1a73e8;
-  --chip-on-fg: #ffffff;
-  --best-bg: #c8e6c9;
-  --best-fg: #1b5e20;
-  --header-bg: #f8f8f8;
-  --row-alt: #fafafa;
-  --section-bg: #eef2ff;
+  --bg: #f4f5f8;
+  --card: #ffffff;
+  --fg: #1c2333;
+  --muted: #697085;
+  --faint: #98a0b3;
+  --border: #e4e6ee;
+  --border-strong: #d3d6e0;
+  --accent: oklch(50% 0.13 262);
+  --accent-soft: oklch(95% 0.025 262);
+  --accent-softer: oklch(97.5% 0.012 262);
+  --good: oklch(46% 0.11 152);
+  --good-soft: oklch(94% 0.05 152);
+  --bad: oklch(48% 0.13 25);
+  --header-bg: #f8f9fc;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(18, 25, 48, 0.05), 0 1px 6px rgba(18, 25, 48, 0.04);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", Roboto, sans-serif;
   font-size: 13px;
   color: var(--fg);
   background: var(--bg);
 }
+a { color: var(--accent); }
+a:hover { color: oklch(40% 0.13 262); }
+
+/* ---------- header ---------- */
 header {
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 10;
+  flex-wrap: wrap;
 }
 header h1 {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+header h1 .logo {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.view-toggle {
+  display: flex;
+  background: #e9ebf2;
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
 }
 .view-toggle button {
-  border: 1px solid var(--border);
-  background: var(--chip-bg);
-  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  padding: 5px 16px;
   cursor: pointer;
   font: inherit;
-}
-.view-toggle button.on {
-  background: var(--chip-on);
-  color: var(--chip-on-fg);
-  border-color: var(--chip-on);
-}
-.view-toggle button:first-child { border-radius: 4px 0 0 4px; }
-.view-toggle button:last-child { border-radius: 0 4px 4px 0; }
-.filters {
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  row-gap: 6px;
-  column-gap: 8px;
-  align-items: center;
-  background: var(--header-bg);
-}
-.filters label.row-label {
   font-weight: 600;
   color: var(--muted);
+  border-radius: 7px;
 }
-.chips {
+.view-toggle button.on {
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(18,25,48,.12);
+}
+
+/* ---------- layout ---------- */
+main {
+  padding: 0 24px 240px 24px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-direction: column;
+  gap: 12px;
 }
-.chip {
+.card {
+  background: var(--card);
   border: 1px solid var(--border);
-  background: var(--chip-bg);
-  padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ---------- filters ---------- */
+.filters {
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  row-gap: 8px;
+  column-gap: 12px;
+  align-items: baseline;
+}
+.filters .row-label {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  color: var(--muted);
+  padding: 3px 11px;
+  border-radius: 999px;
   cursor: pointer;
   user-select: none;
   font-size: 12px;
+  line-height: 1.5;
+  transition: background .1s, color .1s, border-color .1s;
 }
+.chip:hover { border-color: var(--accent); }
 .chip.on {
-  background: var(--chip-on);
-  color: var(--chip-on-fg);
-  border-color: var(--chip-on);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: oklch(75% 0.08 262);
+  font-weight: 600;
 }
 .filters input[type=text] {
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
   font: inherit;
   width: 240px;
+  background: var(--card);
 }
-.filters select {
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font: inherit;
+.filters input[type=text]:focus,
+select:focus {
+  outline: 2px solid oklch(80% 0.08 262);
+  outline-offset: 0;
+  border-color: var(--accent);
 }
-.filters .reset {
+.reset {
   margin-left: 8px;
-  border: 1px solid var(--border);
-  background: var(--chip-bg);
-  padding: 3px 10px;
-  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  color: var(--muted);
+  padding: 4px 12px;
+  border-radius: 8px;
   cursor: pointer;
   font: inherit;
-}
-main {
-  padding: 8px 16px 240px 16px;
-}
-.summary-bar {
-  padding: 6px 0;
-  color: var(--muted);
   font-size: 12px;
 }
+.reset:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- controls bar ---------- */
+.controls {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.control > label {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+select {
+  padding: 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  background: var(--card);
+  color: var(--fg);
+  max-width: 320px;
+}
+.vs { font-weight: 700; color: var(--faint); font-size: 11px; }
+
+/* ---------- summary ---------- */
+.summary-bar {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 0 2px;
+}
+
+/* ---------- duel summary cards ---------- */
+.duel-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.duel-card {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.duel-card .k {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.duel-card .v {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.duel-card .v.good { color: var(--good); }
+.duel-card .v.bad { color: var(--bad); }
+.duel-card .sub { font-size: 11px; color: var(--muted); }
+
+/* ---------- table ---------- */
 .table-wrap {
   overflow: auto;
-  border: 1px solid var(--border);
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 300px);
+  border-radius: var(--radius);
 }
 table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 12px;
   width: max-content;
   min-width: 100%;
 }
 th, td {
-  border: 1px solid var(--border);
-  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 5px 10px;
   text-align: right;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
+th:last-child, td:last-child { border-right: none; }
 th {
   background: var(--header-bg);
   font-weight: 600;
@@ -144,60 +265,155 @@ th {
   position: sticky;
   top: 0;
   z-index: 2;
+  color: var(--muted);
 }
+th .h-kind { display: block; color: var(--fg); font-weight: 700; }
+th .h-sub { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }
+th .h-params {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--faint);
+  font-family: var(--mono);
+  max-width: 170px;
+  margin: 1px auto 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+th.confable { cursor: pointer; }
+th.confable:hover .h-kind { color: var(--accent); }
+th.baseline-col { box-shadow: inset 0 -2px 0 var(--accent); color: var(--accent); }
+th.baseline-col .h-kind { color: var(--accent); }
+td.num { font-family: var(--mono); font-size: 11.5px; }
+td .sub-delta {
+  display: block;
+  font-size: 10.5px;
+  line-height: 1.3;
+  color: var(--faint);
+}
+td .sub-delta.good { color: var(--good); }
+td .sub-delta.bad { color: var(--bad); }
 th.section, td.section {
-  background: var(--section-bg);
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   position: sticky;
   left: 0;
   z-index: 3;
+  background: var(--card);
+  color: var(--accent);
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 td.instance {
   text-align: left;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--mono);
+  font-size: 11.5px;
   position: sticky;
-  left: 0;
-  background: var(--bg);
+  left: 110px;
+  background: var(--card);
   z-index: 1;
+  border-right: 1px solid var(--border-strong);
 }
-tr:nth-child(even) td.instance { background: var(--row-alt); }
-tr:nth-child(even) td:not(.instance) { background: var(--row-alt); }
+tbody tr:hover td { background-color: var(--accent-softer); }
+tbody tr:hover td.instance, tbody tr:hover td.section { background-color: var(--accent-softer); }
 td.best {
-  background: var(--best-bg) !important;
-  color: var(--best-fg);
   font-weight: 700;
+  color: var(--good);
 }
-td.empty { color: var(--muted); font-style: italic; text-align: center; }
+td.best::before {
+  content: "●";
+  font-size: 7px;
+  vertical-align: 2px;
+  margin-right: 5px;
+  color: var(--good);
+}
+td.empty { color: var(--faint); text-align: center; }
 td.clickable { cursor: pointer; }
-td.clickable:hover { outline: 2px solid var(--chip-on); outline-offset: -2px; }
 th.sortable { cursor: pointer; }
-th.sortable.sort-asc::after { content: " \25B2"; }
-th.sortable.sort-desc::after { content: " \25BC"; }
+th.sortable:hover { color: var(--accent); }
+th.sortable.sort-asc::after { content: " \25B2"; font-size: 9px; }
+th.sortable.sort-desc::after { content: " \25BC"; font-size: 9px; }
+
+/* duel table bits */
+.gap-chip {
+  display: inline-block;
+  min-width: 64px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: right;
+}
+.gap-chip.good { background: var(--good-soft); color: var(--good); }
+.gap-chip.bad { background: oklch(95% 0.03 25); color: var(--bad); }
+.gap-chip.tie { background: #eef0f5; color: var(--muted); }
+.gap-bar {
+  display: inline-flex;
+  width: 120px;
+  height: 8px;
+  vertical-align: middle;
+  background: #eef0f5;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.gap-bar .mid {
+  position: absolute; left: 50%; top: 0; bottom: 0;
+  width: 1px; background: var(--border-strong);
+}
+.gap-bar .fill {
+  position: absolute; top: 0; bottom: 0;
+  border-radius: 3px;
+}
+.gap-bar .fill.a { background: oklch(60% 0.11 152); right: 50%; }
+.gap-bar .fill.b { background: oklch(62% 0.13 25); left: 50%; }
+.winner { font-weight: 700; }
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #eef0f5;
+  color: var(--muted);
+}
+.badge.small { background: oklch(94% 0.04 240); color: oklch(42% 0.1 240); }
+.badge.medium { background: oklch(94% 0.05 70); color: oklch(45% 0.1 60); }
+.badge.large { background: oklch(94% 0.04 350); color: oklch(45% 0.12 350); }
+.empty-state {
+  padding: 48px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ---------- detail panel ---------- */
 .detail {
   position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  padding: 12px 16px;
-  max-height: 220px;
+  bottom: 16px; right: 16px;
+  width: min(560px, calc(100vw - 32px));
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 30px rgba(18,25,48,.18);
+  padding: 14px 18px;
+  max-height: 300px;
   overflow: auto;
   font-size: 12px;
-  z-index: 9;
+  z-index: 20;
 }
 .detail.hidden { display: none; }
-.detail h2 {
-  margin: 0 0 6px 0;
-  font-size: 13px;
-}
+.detail h2 { margin: 0 0 8px 0; font-size: 13px; }
 .detail dl {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 2px 16px;
+  gap: 3px 16px;
   margin: 0;
 }
 .detail dt { color: var(--muted); }
-.detail dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.detail dd { margin: 0; font-family: var(--mono); }
 .detail .close {
   float: right;
   cursor: pointer;
@@ -206,61 +422,66 @@ th.sortable.sort-desc::after { content: " \25BC"; }
   font-size: 16px;
   color: var(--muted);
 }
-.badge {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 8px;
-  font-size: 11px;
-  background: var(--chip-bg);
-  color: var(--muted);
-  margin-left: 4px;
-}
-.badge.small { background: #e3f2fd; color: #1565c0; }
-.badge.medium { background: #fff3e0; color: #ef6c00; }
-.badge.large { background: #fce4ec; color: #ad1457; }
-.empty-state {
-  padding: 40px;
-  text-align: center;
-  color: var(--muted);
-}
 </style>
 </head>
 <body>
 <header>
-  <h1>Optopus benchmark viewer</h1>
+  <h1><span class="logo">Op</span>Optopus benchmark viewer</h1>
   <div class="view-toggle">
     <button id="view-comparison" class="on">Comparison</button>
+    <button id="view-duel">Duel</button>
     <button id="view-flat">Flat</button>
   </div>
 </header>
 
-<section class="filters" id="filter-bar">
-  <label class="row-label">Problem</label><div class="chips" data-axis="problems"></div>
-  <label class="row-label">Heuristic</label><div class="chips" data-axis="kinds"></div>
-  <label class="row-label">Neighbor</label><div class="chips" data-axis="neighbors"></div>
-  <label class="row-label">Band</label><div class="chips" data-axis="bands"></div>
-  <label class="row-label">Instance</label>
-  <div>
-    <input type="text" id="instance-filter" placeholder="substring (case-insensitive)">
-    <button class="reset" id="reset-filters">Reset filters</button>
-  </div>
-  <label class="row-label">Metric</label>
-  <div>
-    <select id="metric">
-      <option value="best_objective">best objective</option>
-      <option value="avg_objective">avg objective</option>
-      <option value="worst_objective">worst objective</option>
-      <option value="std_objective">std objective (lower better)</option>
-      <option value="best_time_to_best_secs">best time-to-best [s] (lower better)</option>
-      <option value="avg_time_to_best_secs">avg time-to-best [s] (lower better)</option>
-      <option value="avg_total_time_secs">avg total time [s] (lower better)</option>
-    </select>
-  </div>
-</section>
-
 <main>
+  <section class="card filters" id="filter-bar">
+    <label class="row-label">Problem</label><div class="chips" data-axis="problems"></div>
+    <label class="row-label">Heuristic</label><div class="chips" data-axis="kinds"></div>
+    <label class="row-label">Instance</label>
+    <div>
+      <input type="text" id="instance-filter" placeholder="substring (case-insensitive)">
+      <button class="reset" id="reset-filters">Reset filters</button>
+    </div>
+  </section>
+
+  <section class="card controls" id="controls">
+    <div class="control">
+      <label for="metric">Metric</label>
+      <select id="metric">
+        <option value="best_objective">best objective</option>
+        <option value="avg_objective">avg objective</option>
+        <option value="worst_objective">worst objective</option>
+        <option value="std_objective">std objective (lower better)</option>
+        <option value="best_time_to_best_secs">best time-to-best [s] (lower better)</option>
+        <option value="avg_time_to_best_secs">avg time-to-best [s] (lower better)</option>
+        <option value="avg_total_time_secs">avg total time [s] (lower better)</option>
+      </select>
+    </div>
+    <div class="control" data-view="comparison">
+      <label for="baseline">Baseline</label>
+      <select id="baseline"></select>
+    </div>
+    <div class="control" data-view="comparison">
+      <label for="delta-mode">Show</label>
+      <select id="delta-mode">
+        <option value="pct">value + Δ%</option>
+        <option value="abs">value + Δ</option>
+        <option value="none">value only</option>
+      </select>
+    </div>
+    <div class="control" data-view="duel" style="display:none">
+      <label for="duel-a">A</label>
+      <select id="duel-a"></select>
+      <span class="vs">VS</span>
+      <label for="duel-b">B</label>
+      <select id="duel-b"></select>
+    </div>
+  </section>
+
   <div class="summary-bar" id="summary"></div>
-  <div class="table-wrap" id="table-wrap"></div>
+  <div class="duel-cards" id="duel-cards" style="display:none"></div>
+  <section class="card table-wrap" id="table-wrap"></section>
 </main>
 
 <aside class="detail hidden" id="detail">
@@ -304,20 +525,40 @@ function deriveBand(source) {
   return null;
 }
 
-// Mirror of fmt_hyperparams() in render.py: same field order and formatting.
-function fmtHyperparams(heuristic) {
-  const parts = [];
-  for (const key of ["tabu_tenure", "t", "l0", "p0", "q"]) {
-    let v = heuristic[key];
+// Generic hyperparameter extraction: every field on the heuristic except
+// kind/neighbor, plus stop_condition entries and nested steps (Iterated,
+// Restart, ...) recursively.
+function fmtParamVal(v) {
+  if (Array.isArray(v)) return "(" + v.join(", ") + ")";
+  if (v && typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+
+function heurEntries(h, prefix = "") {
+  const out = [];
+  if (!h || typeof h !== "object") return out;
+  for (const [k, v] of Object.entries(h)) {
+    if (k === "kind" || k === "neighbor" || k === "stop_condition" || k === "steps") continue;
     if (v === undefined || v === null) continue;
-    if (Array.isArray(v)) v = "(" + v.join(", ") + ")";
-    parts.push(`${key}=${v}`);
+    out.push([prefix + k, fmtParamVal(v)]);
   }
-  const sc = heuristic.stop_condition || {};
-  for (const key of ["max_iteration", "max_duration_secs", "max_failed_update"]) {
-    if (sc[key] !== undefined && sc[key] !== null) parts.push(`${key}=${sc[key]}`);
+  const sc = h.stop_condition || {};
+  for (const [k, v] of Object.entries(sc)) {
+    if (v === undefined || v === null) continue;
+    out.push([prefix + "stop." + k, fmtParamVal(v)]);
   }
-  return parts.join(", ");
+  if (Array.isArray(h.steps)) {
+    h.steps.forEach((s, i) => {
+      const label = `${prefix}step${i + 1}`;
+      out.push([label, s.kind + (s.neighbor ? ` (${s.neighbor})` : "")]);
+      out.push(...heurEntries(s, label + "."));
+    });
+  }
+  return out;
+}
+
+function fmtHyperparams(heuristic) {
+  return heurEntries(heuristic).map(([k, v]) => `${k}=${v}`).join(", ");
 }
 
 // Fetch manifest.json, then each slim TOML in parallel; parse client-side and
@@ -341,6 +582,7 @@ async function loadData() {
       source,
       band,
       summary: r.summary,
+      heuristic: r.heuristic,
       hyperparams: fmtHyperparams(r.heuristic),
     }));
   }));
@@ -374,18 +616,19 @@ const STATE = {
   bands: new Set(),
   instance: "",
   metric: "best_objective",
+  baseline: "",        // "" = best-in-row
+  deltaMode: "pct",    // pct | abs | none
+  duelA: "",
+  duelB: "",
   flatSortKey: "instance",
   flatSortDir: "asc",
 };
 
 function bootstrapState() {
   if (!DATA || !DATA.rows) return;
-  // Initialize all chips to active.
   for (const row of DATA.rows) {
     STATE.problems.add(row.problem);
-    STATE.kinds.add(row.heuristic_kind);
-    if (row.neighbor) STATE.neighbors.add(row.neighbor);
-    if (row.band) STATE.bands.add(row.band);
+    STATE.kinds.add(colKey(row));
   }
 }
 
@@ -393,15 +636,13 @@ function allValues(axis) {
   const set = new Set();
   for (const row of DATA.rows) {
     if (axis === "problems") set.add(row.problem);
-    else if (axis === "kinds") set.add(row.heuristic_kind);
-    else if (axis === "neighbors") { if (row.neighbor) set.add(row.neighbor); }
-    else if (axis === "bands") { if (row.band) set.add(row.band); }
+    else if (axis === "kinds") set.add(colKey(row));
   }
   return Array.from(set).sort();
 }
 
 function renderChips() {
-  for (const axis of ["problems", "kinds", "neighbors", "bands"]) {
+  for (const axis of ["problems", "kinds"]) {
     const el = document.querySelector(`.chips[data-axis="${axis}"]`);
     el.innerHTML = "";
     for (const v of allValues(axis)) {
@@ -424,16 +665,63 @@ function filteredRows() {
   const needle = STATE.instance.trim().toLowerCase();
   return DATA.rows.filter(r => {
     if (!STATE.problems.has(r.problem)) return false;
-    if (!STATE.kinds.has(r.heuristic_kind)) return false;
-    if (r.neighbor && !STATE.neighbors.has(r.neighbor)) return false;
-    if (r.band && !STATE.bands.has(r.band)) return false;
+    if (!STATE.kinds.has(colKey(r))) return false;
     if (needle && !r.instance.toLowerCase().includes(needle)) return false;
     return true;
   });
 }
 
-function colKey(row) {
+function baseKey(row) {
   return row.neighbor ? `${row.heuristic_kind} (${row.neighbor})` : row.heuristic_kind;
+}
+
+// Distinguish parameter variants of the same kind+neighbor: if several
+// distinct hyperparameter sets exist, each becomes its own column "#n".
+let VARIANTS = new Map(); // baseKey -> sorted array of hyperparams signatures
+let COLMETA = new Map();  // colKey -> { kind, neighbor, variant, diff, hyperparams, heuristic }
+
+function computeVariants() {
+  VARIANTS = new Map();
+  for (const r of DATA.rows) {
+    const b = baseKey(r);
+    if (!VARIANTS.has(b)) VARIANTS.set(b, new Set());
+    VARIANTS.get(b).add(r.hyperparams);
+  }
+  for (const [b, set] of VARIANTS) VARIANTS.set(b, Array.from(set).sort());
+  COLMETA = new Map();
+  for (const r of DATA.rows) {
+    const k = colKey(r);
+    if (COLMETA.has(k)) continue;
+    const sigs = VARIANTS.get(baseKey(r));
+    let diff = "";
+    if (sigs.length > 1) {
+      // Show only the params that differ between the variants.
+      const lists = sigs.map(s => s ? s.split(", ") : []);
+      const shared = new Set(lists[0].filter(e => lists.every(l => l.includes(e))));
+      diff = (r.hyperparams ? r.hyperparams.split(", ") : []).filter(e => !shared.has(e)).join(", ");
+    }
+    COLMETA.set(k, {
+      kind: r.heuristic_kind,
+      neighbor: r.neighbor,
+      variant: sigs.length > 1 ? sigs.indexOf(r.hyperparams) + 1 : 0,
+      diff,
+      hyperparams: r.hyperparams,
+      heuristic: r.heuristic,
+    });
+  }
+}
+
+function colKey(row) {
+  const b = baseKey(row);
+  const sigs = VARIANTS.get(b);
+  if (sigs && sigs.length > 1) return `${b} #${sigs.indexOf(row.hyperparams) + 1}`;
+  return b;
+}
+
+function allColKeys() {
+  const set = new Set();
+  for (const r of DATA.rows) set.add(colKey(r));
+  return Array.from(set).sort();
 }
 
 function metricValue(row) {
@@ -442,7 +730,6 @@ function metricValue(row) {
 }
 
 function rowBetterDirection(problem) {
-  // For objective-type metrics use problem direction; otherwise min.
   if (LOWER_BETTER_METRICS.has(STATE.metric)) return "min";
   return DATA.problem_direction[problem] || "max";
 }
@@ -456,6 +743,48 @@ function fmtNum(x) {
   return x.toPrecision(3);
 }
 
+function fmtPct(x) {
+  const s = x > 0 ? "+" : "";
+  return s + x.toFixed(Math.abs(x) < 10 ? 2 : 1) + "%";
+}
+
+function fmtDelta(x) {
+  const s = x > 0 ? "+" : "";
+  return s + fmtNum(x);
+}
+
+// Signed "goodness": positive means v is better than ref for this direction.
+function betterness(v, ref, direction) {
+  return direction === "max" ? v - ref : ref - v;
+}
+
+function makeColHeader(c) {
+  const th = document.createElement("th");
+  const meta = COLMETA.get(c);
+  const kind = document.createElement("span");
+  kind.className = "h-kind";
+  kind.textContent = meta ? meta.kind : c;
+  th.appendChild(kind);
+  if (meta && (meta.neighbor || meta.variant)) {
+    const sub = document.createElement("span");
+    sub.className = "h-sub";
+    sub.textContent = (meta.neighbor || "") + (meta.variant ? ` #${meta.variant}` : "");
+    th.appendChild(sub);
+  }
+  if (meta && meta.diff) {
+    const params = document.createElement("span");
+    params.className = "h-params";
+    params.textContent = meta.diff;
+    th.appendChild(params);
+  }
+  if (meta) {
+    th.title = meta.hyperparams ? `${c}\n${meta.hyperparams}\n(click for configuration)` : c;
+    th.classList.add("confable");
+    th.addEventListener("click", () => showConfig(c));
+  }
+  return th;
+}
+
 function renderComparison() {
   const rows = filteredRows();
   const wrap = document.getElementById("table-wrap");
@@ -464,12 +793,10 @@ function renderComparison() {
     return;
   }
 
-  // Collect column keys (sorted by kind then neighbor).
   const colSet = new Set();
   for (const r of rows) colSet.add(colKey(r));
   const cols = Array.from(colSet).sort();
 
-  // Group rows by (problem, instance).
   const byPI = new Map();
   for (const r of rows) {
     const k = `${r.problem}\t${r.instance}`;
@@ -477,19 +804,23 @@ function renderComparison() {
     byPI.get(k).cells.set(colKey(r), r);
   }
 
-  // Sort: by problem, then instance natural-ish order.
   const groups = Array.from(byPI.values()).sort((a, b) => {
     if (a.problem !== b.problem) return a.problem.localeCompare(b.problem);
     return instanceCompare(a.instance, b.instance);
   });
 
-  // Build HTML.
+  const baseline = cols.includes(STATE.baseline) ? STATE.baseline : "";
+
   const t = document.createElement("table");
   const thead = document.createElement("thead");
   const trh = document.createElement("tr");
   trh.appendChild(makeTh("Problem"));
   trh.appendChild(makeTh("Instance"));
-  for (const c of cols) trh.appendChild(makeTh(c));
+  for (const c of cols) {
+    const th = makeColHeader(c);
+    if (c === baseline) th.classList.add("baseline-col");
+    trh.appendChild(th);
+  }
   thead.appendChild(trh);
   t.appendChild(thead);
 
@@ -497,7 +828,6 @@ function renderComparison() {
   let lastProblem = null;
   for (const g of groups) {
     const tr = document.createElement("tr");
-    // Problem cell (only show once per group; merged visually via class)
     const tdP = document.createElement("td");
     tdP.className = "section";
     tdP.textContent = (g.problem !== lastProblem) ? g.problem : "";
@@ -509,7 +839,6 @@ function renderComparison() {
     tdI.textContent = g.instance;
     tr.appendChild(tdI);
 
-    // Determine best value among present cells.
     const direction = rowBetterDirection(g.problem);
     let best = null;
     for (const c of cols) {
@@ -518,6 +847,13 @@ function renderComparison() {
       const v = metricValue(r);
       if (v === null) continue;
       if (best === null || (direction === "max" ? v > best : v < best)) best = v;
+    }
+    // Reference value for deltas: baseline column if chosen, else best-in-row.
+    let refVal = best;
+    if (baseline) {
+      const br = g.cells.get(baseline);
+      const bv = br ? metricValue(br) : null;
+      refVal = bv;
     }
 
     for (const c of cols) {
@@ -528,9 +864,32 @@ function renderComparison() {
         td.textContent = "-";
       } else {
         const v = metricValue(r);
-        td.className = "clickable";
+        td.className = "clickable num";
         if (v !== null && v === best) td.classList.add("best");
         td.textContent = fmtNum(v);
+
+        // Delta annotation + heat tint
+        if (STATE.deltaMode !== "none" && v !== null && refVal !== null && refVal !== undefined) {
+          const isRefCell = baseline ? (c === baseline) : (v === best);
+          if (!isRefCell) {
+            const good = betterness(v, refVal, direction);
+            const pct = refVal !== 0 ? (good / Math.abs(refVal)) * 100 : 0;
+            const sub = document.createElement("span");
+            sub.className = "sub-delta " + (good > 0 ? "good" : good < 0 ? "bad" : "");
+            const signedRaw = direction === "max" ? v - refVal : v - refVal; // raw delta for abs mode
+            sub.textContent = STATE.deltaMode === "pct" ? fmtPct(pct) : fmtDelta(signedRaw);
+            td.appendChild(sub);
+            // background tint scaled by |pct|, capped
+            const a = Math.min(Math.abs(pct) / 8, 1) * 0.22;
+            if (a > 0.01) {
+              td.style.backgroundColor = good > 0
+                ? `oklch(93% 0.07 152 / ${a + 0.15})`
+                : `oklch(94% 0.07 25 / ${a + 0.1})`;
+            }
+          } else if (baseline) {
+            td.style.backgroundColor = "var(--accent-softer)";
+          }
+        }
         td.addEventListener("click", () => showDetail(r));
       }
       tr.appendChild(td);
@@ -543,8 +902,151 @@ function renderComparison() {
   wrap.appendChild(t);
 }
 
+function renderDuel() {
+  const rows = filteredRows();
+  const wrap = document.getElementById("table-wrap");
+  const cardsEl = document.getElementById("duel-cards");
+  cardsEl.innerHTML = "";
+  if (rows.length === 0) {
+    wrap.innerHTML = `<div class="empty-state">No rows match current filters.</div>`;
+    return;
+  }
+  const A = STATE.duelA, B = STATE.duelB;
+  if (!A || !B || A === B) {
+    wrap.innerHTML = `<div class="empty-state">Pick two different methods (A vs B) above.</div>`;
+    return;
+  }
+
+  const byPI = new Map();
+  for (const r of rows) {
+    const ck = colKey(r);
+    if (ck !== A && ck !== B) continue;
+    const k = `${r.problem}\t${r.instance}`;
+    if (!byPI.has(k)) byPI.set(k, { problem: r.problem, instance: r.instance });
+    byPI.get(k)[ck === A ? "a" : "b"] = r;
+  }
+  const groups = Array.from(byPI.values())
+    .filter(g => g.a && g.b)
+    .sort((x, y) => x.problem !== y.problem
+      ? x.problem.localeCompare(y.problem)
+      : instanceCompare(x.instance, y.instance));
+
+  if (groups.length === 0) {
+    wrap.innerHTML = `<div class="empty-state">No instances where both methods have results.</div>`;
+    return;
+  }
+
+  // Stats
+  let winsA = 0, winsB = 0, ties = 0;
+  const gaps = [];
+  for (const g of groups) {
+    const dir = rowBetterDirection(g.problem);
+    const va = metricValue(g.a), vb = metricValue(g.b);
+    if (va === null || vb === null) continue;
+    const good = betterness(va, vb, dir);
+    g.gapPct = vb !== 0 ? (good / Math.abs(vb)) * 100 : 0;
+    gaps.push(g.gapPct);
+    if (good > 0) winsA++;
+    else if (good < 0) winsB++;
+    else ties++;
+  }
+  const meanGap = gaps.length ? gaps.reduce((s, x) => s + x, 0) / gaps.length : 0;
+
+  const cards = [
+    { k: `${A} wins`, v: String(winsA), cls: winsA >= winsB ? "good" : "" },
+    { k: "Ties", v: String(ties), cls: "" },
+    { k: `${B} wins`, v: String(winsB), cls: winsB > winsA ? "good" : "" },
+    { k: "Mean gap (A vs B)", v: fmtPct(meanGap), cls: meanGap > 0 ? "good" : meanGap < 0 ? "bad" : "", sub: "positive = A better" },
+    { k: "Instances", v: String(groups.length), cls: "" },
+  ];
+  for (const c of cards) {
+    const div = document.createElement("div");
+    div.className = "card duel-card";
+    div.innerHTML = `<span class="k"></span><span class="v ${c.cls}"></span>` + (c.sub ? `<span class="sub">${c.sub}</span>` : "");
+    div.querySelector(".k").textContent = c.k;
+    div.querySelector(".v").textContent = c.v;
+    cardsEl.appendChild(div);
+  }
+
+  // Table
+  const maxAbsGap = Math.max(1e-9, ...groups.map(g => Math.abs(g.gapPct ?? 0)));
+  const t = document.createElement("table");
+  const thead = document.createElement("thead");
+  const trh = document.createElement("tr");
+  trh.appendChild(makeTh("Problem"));
+  trh.appendChild(makeTh("Instance"));
+  const thA = makeColHeader(A); trh.appendChild(thA);
+  const thB = makeColHeader(B); trh.appendChild(thB);
+  trh.appendChild(makeTh("Gap (A vs B)"));
+  trh.appendChild(makeTh("A ← better → B"));
+  thead.appendChild(trh);
+  t.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  let lastProblem = null;
+  for (const g of groups) {
+    const dir = rowBetterDirection(g.problem);
+    const va = metricValue(g.a), vb = metricValue(g.b);
+    const good = (va !== null && vb !== null) ? betterness(va, vb, dir) : 0;
+
+    const tr = document.createElement("tr");
+    const tdP = document.createElement("td");
+    tdP.className = "section";
+    tdP.textContent = (g.problem !== lastProblem) ? g.problem : "";
+    tr.appendChild(tdP);
+    lastProblem = g.problem;
+
+    const tdI = document.createElement("td");
+    tdI.className = "instance";
+    tdI.textContent = g.instance;
+    tr.appendChild(tdI);
+
+    const tdA = document.createElement("td");
+    tdA.className = "clickable num";
+    tdA.textContent = fmtNum(va);
+    if (good > 0) tdA.classList.add("best");
+    tdA.addEventListener("click", () => showDetail(g.a));
+    tr.appendChild(tdA);
+
+    const tdB = document.createElement("td");
+    tdB.className = "clickable num";
+    tdB.textContent = fmtNum(vb);
+    if (good < 0) tdB.classList.add("best");
+    tdB.addEventListener("click", () => showDetail(g.b));
+    tr.appendChild(tdB);
+
+    const tdG = document.createElement("td");
+    const chip = document.createElement("span");
+    const gp = g.gapPct ?? 0;
+    chip.className = "gap-chip " + (gp > 0 ? "good" : gp < 0 ? "bad" : "tie");
+    chip.textContent = fmtPct(gp);
+    tdG.appendChild(chip);
+    tr.appendChild(tdG);
+
+    const tdBar = document.createElement("td");
+    tdBar.style.textAlign = "center";
+    const bar = document.createElement("span");
+    bar.className = "gap-bar";
+    const half = Math.min(Math.abs(gp) / maxAbsGap, 1) * 50;
+    bar.innerHTML = `<span class="mid"></span>`;
+    if (Math.abs(gp) > 1e-12) {
+      const fill = document.createElement("span");
+      fill.className = "fill " + (gp > 0 ? "a" : "b");
+      fill.style.width = half + "%";
+      bar.appendChild(fill);
+    }
+    tdBar.appendChild(bar);
+    tr.appendChild(tdBar);
+
+    tbody.appendChild(tr);
+  }
+  t.appendChild(tbody);
+
+  wrap.innerHTML = "";
+  wrap.appendChild(t);
+}
+
 function instanceCompare(a, b) {
-  // Numeric-aware: split into chunks of (digit, non-digit).
   const ra = a.match(/(\d+|\D+)/g) || [a];
   const rb = b.match(/(\d+|\D+)/g) || [b];
   for (let i = 0; i < Math.min(ra.length, rb.length); i++) {
@@ -574,6 +1076,7 @@ function makeTh(text, sortKey) {
         STATE.flatSortKey = sortKey;
         STATE.flatSortDir = "asc";
       }
+      updateHash();
       render();
     });
   }
@@ -583,9 +1086,7 @@ function makeTh(text, sortKey) {
 const FLAT_COLS = [
   ["problem", "Problem"],
   ["instance", "Instance"],
-  ["heuristic_kind", "Heuristic"],
-  ["neighbor", "Neighbor"],
-  ["band", "Band"],
+  ["heuristic", "Heuristic"],
   ["best_objective", "Best"],
   ["avg_objective", "Avg"],
   ["worst_objective", "Worst"],
@@ -599,7 +1100,8 @@ const FLAT_COLS = [
 ];
 
 function flatField(row, key) {
-  if (["problem", "instance", "heuristic_kind", "neighbor", "band", "source", "hyperparams"].includes(key)) {
+  if (key === "heuristic") return colKey(row);
+  if (["problem", "instance", "source", "hyperparams"].includes(key)) {
     return row[key];
   }
   return row.summary[key];
@@ -638,17 +1140,13 @@ function renderFlat() {
     for (const [k] of FLAT_COLS) {
       const td = document.createElement("td");
       const v = flatField(r, k);
-      if (k === "band" && v) {
-        const span = document.createElement("span");
-        span.className = `badge ${v}`;
-        span.textContent = v;
-        td.appendChild(span);
-        td.style.textAlign = "left";
-      } else if (k === "problem" || k === "instance" || k === "heuristic_kind" || k === "neighbor" || k === "source" || k === "hyperparams") {
+      if (["problem", "instance", "heuristic", "source", "hyperparams"].includes(k)) {
         td.textContent = v ?? "-";
         td.style.textAlign = "left";
+        if (k === "instance") td.style.fontFamily = "var(--mono)";
       } else {
         td.textContent = fmtNum(v);
+        td.classList.add("num");
       }
       td.classList.add("clickable");
       td.addEventListener("click", () => showDetail(r));
@@ -662,6 +1160,27 @@ function renderFlat() {
   wrap.appendChild(t);
 }
 
+function showConfig(c) {
+  const meta = COLMETA.get(c);
+  if (!meta) return;
+  const detail = document.getElementById("detail");
+  detail.classList.remove("hidden");
+  document.getElementById("detail-title").textContent = `${c} — configuration`;
+  const dl = document.getElementById("detail-body");
+  dl.innerHTML = "";
+  const fields = [
+    ["kind", meta.kind],
+    ...(meta.neighbor ? [["neighbor", meta.neighbor]] : []),
+    ...heurEntries(meta.heuristic),
+  ];
+  if (fields.length <= (meta.neighbor ? 2 : 1)) fields.push(["params", "(none)"]);
+  for (const [k, v] of fields) {
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd"); dd.textContent = v;
+    dl.appendChild(dt); dl.appendChild(dd);
+  }
+}
+
 function showDetail(r) {
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
@@ -671,9 +1190,8 @@ function showDetail(r) {
   dl.innerHTML = "";
   const fields = [
     ["instance_path", r.instance_path],
-    ["band", r.band ?? "-"],
     ["source", r.source],
-    ["hyperparams", r.hyperparams || "-"],
+    ...heurEntries(r.heuristic),
     ...SUMMARY_FIELDS.map(([k, label]) => [label, fmtNum(r.summary[k])]),
   ];
   for (const [k, v] of fields) {
@@ -690,12 +1208,20 @@ function render() {
     document.getElementById("summary").textContent = "";
     return;
   }
+  // toggle per-view controls
+  for (const el of document.querySelectorAll('[data-view]')) {
+    el.style.display = el.dataset.view === STATE.view ? "" : "none";
+  }
+  document.getElementById("duel-cards").style.display =
+    STATE.view === "duel" ? "" : "none";
+
   const filtered = filteredRows();
   const problems = new Set(filtered.map(r => r.problem));
   const instances = new Set(filtered.map(r => `${r.problem}/${r.instance}`));
   document.getElementById("summary").textContent =
     `${filtered.length} rows across ${problems.size} problem(s), ${instances.size} (problem, instance) pair(s).`;
   if (STATE.view === "comparison") renderComparison();
+  else if (STATE.view === "duel") renderDuel();
   else renderFlat();
 }
 
@@ -709,10 +1235,12 @@ function updateHash() {
   };
   dumpSet("problem", "problems");
   dumpSet("kind", "kinds");
-  dumpSet("neighbor", "neighbors");
-  dumpSet("band", "bands");
   if (STATE.instance) parts.push(`instance=${encodeURIComponent(STATE.instance)}`);
   if (STATE.metric !== "best_objective") parts.push(`metric=${STATE.metric}`);
+  if (STATE.baseline) parts.push(`baseline=${encodeURIComponent(STATE.baseline)}`);
+  if (STATE.deltaMode !== "pct") parts.push(`delta=${STATE.deltaMode}`);
+  if (STATE.duelA) parts.push(`a=${encodeURIComponent(STATE.duelA)}`);
+  if (STATE.duelB) parts.push(`b=${encodeURIComponent(STATE.duelB)}`);
   if (STATE.view === "flat") {
     if (STATE.flatSortKey !== "instance") parts.push(`sort=${STATE.flatSortKey}`);
     if (STATE.flatSortDir !== "asc") parts.push(`dir=${STATE.flatSortDir}`);
@@ -732,41 +1260,87 @@ function loadHash() {
   if (params.has("view")) STATE.view = params.get("view");
   setAxis("problem", "problems");
   setAxis("kind", "kinds");
-  setAxis("neighbor", "neighbors");
-  setAxis("band", "bands");
   if (params.has("instance")) STATE.instance = params.get("instance");
   if (params.has("metric")) STATE.metric = params.get("metric");
+  if (params.has("baseline")) STATE.baseline = params.get("baseline");
+  if (params.has("delta")) STATE.deltaMode = params.get("delta");
+  if (params.has("a")) STATE.duelA = params.get("a");
+  if (params.has("b")) STATE.duelB = params.get("b");
   if (params.has("sort")) STATE.flatSortKey = params.get("sort");
   if (params.has("dir")) STATE.flatSortDir = params.get("dir");
 }
 
+function fillMethodSelects() {
+  const cols = allColKeys();
+  const baseSel = document.getElementById("baseline");
+  baseSel.innerHTML = "";
+  const optBest = document.createElement("option");
+  optBest.value = "";
+  optBest.textContent = "best in row";
+  baseSel.appendChild(optBest);
+  for (const c of cols) {
+    const o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    baseSel.appendChild(o);
+  }
+
+  for (const id of ["duel-a", "duel-b"]) {
+    const sel = document.getElementById(id);
+    sel.innerHTML = "";
+    for (const c of cols) {
+      const o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    }
+  }
+  if (!STATE.duelA && cols.length > 0) STATE.duelA = cols[0];
+  if (!STATE.duelB && cols.length > 1) STATE.duelB = cols[1];
+}
+
 function syncControls() {
   document.getElementById("view-comparison").classList.toggle("on", STATE.view === "comparison");
+  document.getElementById("view-duel").classList.toggle("on", STATE.view === "duel");
   document.getElementById("view-flat").classList.toggle("on", STATE.view === "flat");
   document.getElementById("instance-filter").value = STATE.instance;
   document.getElementById("metric").value = STATE.metric;
+  document.getElementById("baseline").value = STATE.baseline;
+  document.getElementById("delta-mode").value = STATE.deltaMode;
+  if (STATE.duelA) document.getElementById("duel-a").value = STATE.duelA;
+  if (STATE.duelB) document.getElementById("duel-b").value = STATE.duelB;
 }
 
 function attachListeners() {
-  document.getElementById("view-comparison").addEventListener("click", () => {
-    STATE.view = "comparison"; syncControls(); updateHash(); render();
-  });
-  document.getElementById("view-flat").addEventListener("click", () => {
-    STATE.view = "flat"; syncControls(); updateHash(); render();
-  });
+  const setView = (v) => () => {
+    STATE.view = v; syncControls(); updateHash(); render();
+  };
+  document.getElementById("view-comparison").addEventListener("click", setView("comparison"));
+  document.getElementById("view-duel").addEventListener("click", setView("duel"));
+  document.getElementById("view-flat").addEventListener("click", setView("flat"));
   document.getElementById("instance-filter").addEventListener("input", e => {
     STATE.instance = e.target.value; updateHash(); render();
   });
   document.getElementById("metric").addEventListener("change", e => {
     STATE.metric = e.target.value; updateHash(); render();
   });
+  document.getElementById("baseline").addEventListener("change", e => {
+    STATE.baseline = e.target.value; updateHash(); render();
+  });
+  document.getElementById("delta-mode").addEventListener("change", e => {
+    STATE.deltaMode = e.target.value; updateHash(); render();
+  });
+  document.getElementById("duel-a").addEventListener("change", e => {
+    STATE.duelA = e.target.value; updateHash(); render();
+  });
+  document.getElementById("duel-b").addEventListener("change", e => {
+    STATE.duelB = e.target.value; updateHash(); render();
+  });
   document.getElementById("reset-filters").addEventListener("click", () => {
     STATE.problems = new Set(allValues("problems"));
     STATE.kinds = new Set(allValues("kinds"));
-    STATE.neighbors = new Set(allValues("neighbors"));
-    STATE.bands = new Set(allValues("bands"));
     STATE.instance = "";
     STATE.metric = "best_objective";
+    STATE.baseline = "";
+    STATE.deltaMode = "pct";
     syncControls();
     renderChips();
     updateHash();
@@ -793,8 +1367,10 @@ async function main() {
       `<code>python3 docs/benchmarks/render.py</code> if <code>data/manifest.json</code> is missing.</div>`;
     return;
   }
+  computeVariants();
   bootstrapState();
   loadHash();
+  fillMethodSelects();
   syncControls();
   renderChips();
   attachListeners();
