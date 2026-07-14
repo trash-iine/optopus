@@ -106,10 +106,11 @@ main {
   padding: 12px 16px;
   display: grid;
   grid-template-columns: 84px 1fr;
-  row-gap: 8px;
+  row-gap: 10px;
   column-gap: 12px;
-  align-items: baseline;
+  align-items: start;
 }
+.filters .row-label { padding-top: 6px; }
 .filters .row-label {
   font-weight: 600;
   font-size: 11px;
@@ -117,7 +118,7 @@ main {
   letter-spacing: 0.05em;
   color: var(--faint);
 }
-.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
 .chip {
   border: 1px solid var(--border-strong);
   background: var(--card);
@@ -136,6 +137,34 @@ main {
   color: var(--accent);
   border-color: oklch(75% 0.08 262);
   font-weight: 600;
+}
+.chip.all { font-weight: 700; letter-spacing: 0.04em; font-size: 11px; }
+.chip.all.some { background: var(--card); color: var(--accent); border-color: oklch(75% 0.08 262); }
+.chip-group {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 3px;
+  max-width: 100%;
+  background: #edeff5; border: 1px solid var(--border);
+  border-radius: 14px; padding: 2px;
+}
+.chip-group .group-label {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 5px 2px 10px; cursor: pointer; user-select: none;
+  font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap;
+}
+.chip-group .group-label:hover { color: var(--accent); }
+.chip-group.on-all .group-label { color: var(--accent); }
+.chip-group .group-label .g-count { font-weight: 500; color: var(--faint); font-variant-numeric: tabular-nums; }
+.chip-group .chip { padding: 2px 9px; font-size: 11px; }
+.chips-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.chips.collapsed { max-height: 68px; overflow: hidden; }
+.expand-toggle {
+  border: none; background: none; padding: 0; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 600; color: var(--accent);
+}
+.expand-toggle:hover { text-decoration: underline; }
+.row-label .count {
+  display: block; font-weight: 500; letter-spacing: 0; text-transform: none;
+  font-size: 10px; color: var(--faint); font-variant-numeric: tabular-nums; margin-top: 1px;
 }
 .filters input[type=text] {
   padding: 5px 10px;
@@ -203,38 +232,6 @@ select {
   font-size: 12px;
   padding: 0 2px;
 }
-
-/* ---------- duel summary cards ---------- */
-.duel-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-}
-.duel-card {
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.duel-card .k {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--faint);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.duel-card .v {
-  font-size: 22px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-.duel-card .v.good { color: var(--good); }
-.duel-card .v.bad { color: var(--bad); }
-.duel-card .sub { font-size: 11px; color: var(--muted); }
 
 /* ---------- table ---------- */
 .table-wrap {
@@ -337,41 +334,6 @@ th.sortable:hover { color: var(--accent); }
 th.sortable.sort-asc::after { content: " \25B2"; font-size: 9px; }
 th.sortable.sort-desc::after { content: " \25BC"; font-size: 9px; }
 
-/* duel table bits */
-.gap-chip {
-  display: inline-block;
-  min-width: 64px;
-  padding: 1px 8px;
-  border-radius: 999px;
-  font-family: var(--mono);
-  font-size: 11px;
-  text-align: right;
-}
-.gap-chip.good { background: var(--good-soft); color: var(--good); }
-.gap-chip.bad { background: oklch(95% 0.03 25); color: var(--bad); }
-.gap-chip.tie { background: #eef0f5; color: var(--muted); }
-.gap-bar {
-  display: inline-flex;
-  width: 120px;
-  height: 8px;
-  vertical-align: middle;
-  background: #eef0f5;
-  border-radius: 4px;
-  overflow: hidden;
-  position: relative;
-}
-.gap-bar .mid {
-  position: absolute; left: 50%; top: 0; bottom: 0;
-  width: 1px; background: var(--border-strong);
-}
-.gap-bar .fill {
-  position: absolute; top: 0; bottom: 0;
-  border-radius: 3px;
-}
-.gap-bar .fill.a { background: oklch(60% 0.11 152); right: 50%; }
-.gap-bar .fill.b { background: oklch(62% 0.13 25); left: 50%; }
-.winner { font-weight: 700; }
-
 .badge {
   display: inline-block;
   padding: 1px 8px;
@@ -429,15 +391,19 @@ th.sortable.sort-desc::after { content: " \25BC"; font-size: 9px; }
   <h1><span class="logo">Op</span>Optopus benchmark viewer</h1>
   <div class="view-toggle">
     <button id="view-comparison" class="on">Comparison</button>
-    <button id="view-duel">Duel</button>
     <button id="view-flat">Flat</button>
   </div>
 </header>
 
 <main>
   <section class="card filters" id="filter-bar">
-    <label class="row-label">Problem</label><div class="chips" data-axis="problems"></div>
-    <label class="row-label">Heuristic</label><div class="chips" data-axis="kinds"></div>
+    <label class="row-label">Problem<span class="count" id="count-problems"></span></label>
+    <div class="chips" data-axis="problems"></div>
+    <label class="row-label">Heuristic<span class="count" id="count-kinds"></span></label>
+    <div class="chips-cell">
+      <div class="chips" data-axis="kinds"></div>
+      <button class="expand-toggle" id="kinds-expand" hidden>Show all ▾</button>
+    </div>
     <label class="row-label">Instance</label>
     <div>
       <input type="text" id="instance-filter" placeholder="substring (case-insensitive)">
@@ -470,17 +436,9 @@ th.sortable.sort-desc::after { content: " \25BC"; font-size: 9px; }
         <option value="none">value only</option>
       </select>
     </div>
-    <div class="control" data-view="duel" style="display:none">
-      <label for="duel-a">A</label>
-      <select id="duel-a"></select>
-      <span class="vs">VS</span>
-      <label for="duel-b">B</label>
-      <select id="duel-b"></select>
-    </div>
   </section>
 
   <div class="summary-bar" id="summary"></div>
-  <div class="duel-cards" id="duel-cards" style="display:none"></div>
   <section class="card table-wrap" id="table-wrap"></section>
 </main>
 
@@ -495,15 +453,22 @@ th.sortable.sort-desc::after { content: " \25BC"; font-size: 9px; }
 
 import { parse as parseToml } from "./vendor/smol-toml.js";
 
-// Objective direction per problem (mirrors PROBLEM_DIRECTION in render.py).
+// Objective direction per problem. Keys are the Rust `ProblemKind` spelling
+// (see `src/benchmark/config.rs`), matching each result's `problem` field and
+// PROBLEM_DIRECTION in render.py.
 const PROBLEM_DIRECTION = {
   MaxCut: "max",
-  SAT: "max",
-  QUBO: "min",
-  TSP: "min",
-  JobShopScheduling: "min",
+  Sat: "max",
+  Qubo: "min",
+  Tsp: "min",
+  JobShop: "min",
   VertexCover: "min",
 };
+
+// Display labels: internal keys stay in the Rust spelling; only the UI text is
+// prettified.
+const PROBLEM_LABEL = { Qubo: "QUBO", Sat: "SAT", Tsp: "TSP" };
+const problemLabel = (p) => PROBLEM_LABEL[p] ?? p;
 
 // Populated by loadData() before the UI is bootstrapped.
 let DATA = null;
@@ -561,20 +526,22 @@ function fmtHyperparams(heuristic) {
   return heurEntries(heuristic).map(([k, v]) => `${k}=${v}`).join(", ");
 }
 
-// Fetch manifest.json, then each slim TOML in parallel; parse client-side and
-// flatten into the { problem_direction, rows } shape the UI expects.
+// Fetch index.json, then each slim TOML in parallel; parse client-side and
+// flatten into the { problem_direction, rows } shape the UI expects. The
+// problem type is sourced from each result's own `problem` field (the index
+// mirrors it only as a lazy-load / discovery hint).
 async function loadData() {
-  const manifestResp = await fetch("data/manifest.json");
-  if (!manifestResp.ok) throw new Error(`manifest.json (HTTP ${manifestResp.status})`);
-  const manifest = await manifestResp.json();
-  const perFile = await Promise.all(manifest.map(async (entry) => {
+  const indexResp = await fetch("data/index.json");
+  if (!indexResp.ok) throw new Error(`index.json (HTTP ${indexResp.status})`);
+  const index = await indexResp.json();
+  const perFile = await Promise.all(index.map(async (entry) => {
     const resp = await fetch(`data/${entry.path}`);
     if (!resp.ok) throw new Error(`${entry.path} (HTTP ${resp.status})`);
     const doc = parseToml(await resp.text());
     const source = sourceFromPath(entry.path);
     const band = deriveBand(source);
     return (doc.results || []).map((r) => ({
-      problem: entry.problem,
+      problem: r.problem ?? entry.problem,
       instance: instanceStem(r.instance_path),
       instance_path: r.instance_path,
       heuristic_kind: r.heuristic.kind,
@@ -618,8 +585,6 @@ const STATE = {
   metric: "best_objective",
   baseline: "",        // "" = best-in-row
   deltaMode: "pct",    // pct | abs | none
-  duelA: "",
-  duelB: "",
   flatSortKey: "instance",
   flatSortDir: "asc",
 };
@@ -641,24 +606,146 @@ function allValues(axis) {
   return Array.from(set).sort();
 }
 
+const UI = { kindsExpanded: false };
+
+function refreshFilters() {
+  renderChips();
+  fillMethodSelects();
+  syncControls();
+  updateHash();
+  render();
+}
+
+function toggleVal(axis, v) {
+  if (STATE[axis].has(v)) STATE[axis].delete(v);
+  else STATE[axis].add(v);
+  refreshFilters();
+}
+
+function makeChip(label, on, axis, v, extraTitle) {
+  const chip = document.createElement("span");
+  chip.className = "chip" + (on ? " on" : "");
+  chip.textContent = label;
+  chip.title = (extraTitle ? extraTitle + "\n" : "") + "Click: toggle \u00b7 Double-click: only this";
+  chip.addEventListener("click", () => toggleVal(axis, v));
+  chip.addEventListener("dblclick", () => {
+    STATE[axis] = new Set([v]);
+    refreshFilters();
+  });
+  return chip;
+}
+
+function makeAllChip(axis, all) {
+  const nOn = all.filter(v => STATE[axis].has(v)).length;
+  const chip = document.createElement("span");
+  chip.className = "chip all" + (nOn === all.length ? " on" : nOn > 0 ? " some" : "");
+  chip.textContent = "ALL";
+  chip.title = nOn === all.length ? "Deselect all" : "Select all";
+  chip.addEventListener("click", () => {
+    const on = nOn !== all.length;
+    for (const v of all) {
+      if (on) STATE[axis].add(v); else STATE[axis].delete(v);
+    }
+    refreshFilters();
+  });
+  return chip;
+}
+
+// Heuristics that have at least one result for the selected problems —
+// keeps the filter short as more heuristics get benchmarked.
+function visibleKinds() {
+  const set = new Set();
+  for (const r of DATA.rows) {
+    if (STATE.problems.size && !STATE.problems.has(r.problem)) continue;
+    set.add(colKey(r));
+  }
+  return Array.from(set).sort(instanceCompare);
+}
+
+// Group heuristic columns by kind so long lists stay scannable.
+function kindGroups(kinds) {
+  const groups = new Map();
+  for (const c of kinds) {
+    const meta = COLMETA.get(c);
+    const base = meta ? meta.kind : c;
+    if (!groups.has(base)) groups.set(base, []);
+    groups.get(base).push(c);
+  }
+  return groups;
+}
+
+function memberLabel(meta, fallback) {
+  if (!meta) return fallback;
+  return meta.neighbor || meta.kind;
+}
+
+function setCount(id, axis, all) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const n = all.filter(v => STATE[axis].has(v)).length;
+  el.textContent = `${n}/${all.length}`;
+}
+
 function renderChips() {
-  for (const axis of ["problems", "kinds"]) {
-    const el = document.querySelector(`.chips[data-axis="${axis}"]`);
-    el.innerHTML = "";
-    for (const v of allValues(axis)) {
-      const chip = document.createElement("span");
-      chip.className = "chip" + (STATE[axis].has(v) ? " on" : "");
-      chip.textContent = v;
-      chip.addEventListener("click", () => {
-        if (STATE[axis].has(v)) STATE[axis].delete(v);
-        else STATE[axis].add(v);
-        chip.classList.toggle("on");
-        updateHash();
-        render();
+  const pEl = document.querySelector('.chips[data-axis="problems"]');
+  pEl.innerHTML = "";
+  pEl.appendChild(makeAllChip("problems", allValues("problems")));
+  for (const v of allValues("problems")) {
+    pEl.appendChild(makeChip(problemLabel(v), STATE.problems.has(v), "problems", v));
+  }
+
+  const kinds = visibleKinds();
+  const kEl = document.querySelector('.chips[data-axis="kinds"]');
+  kEl.innerHTML = "";
+  kEl.appendChild(makeAllChip("kinds", kinds));
+  for (const [base, members] of kindGroups(kinds)) {
+    if (members.length === 1) {
+      const c = members[0];
+      const meta = COLMETA.get(c);
+      const lbl = meta && meta.neighbor ? `${base} (${meta.neighbor})` : base;
+      kEl.appendChild(makeChip(lbl, STATE.kinds.has(c), "kinds", c,
+        meta && meta.variants > 1 ? `best of ${meta.variants} variations` : (meta && meta.hyperparams ? meta.hyperparams : "")));
+    } else {
+      const nOn = members.filter(m => STATE.kinds.has(m)).length;
+      const g = document.createElement("span");
+      g.className = "chip-group" + (nOn === members.length ? " on-all" : "");
+      const lbl = document.createElement("span");
+      lbl.className = "group-label";
+      const name = document.createElement("span");
+      name.textContent = base;
+      const cnt = document.createElement("span");
+      cnt.className = "g-count";
+      cnt.textContent = `${nOn}/${members.length}`;
+      lbl.appendChild(name);
+      lbl.appendChild(cnt);
+      lbl.title = nOn === members.length ? `Deselect all ${base}` : `Select all ${base}`;
+      lbl.addEventListener("click", () => {
+        const on = nOn !== members.length;
+        for (const m of members) {
+          if (on) STATE.kinds.add(m); else STATE.kinds.delete(m);
+        }
+        refreshFilters();
       });
-      el.appendChild(chip);
+      g.appendChild(lbl);
+      for (const c of members) {
+        const meta = COLMETA.get(c);
+        g.appendChild(makeChip(memberLabel(meta, c), STATE.kinds.has(c), "kinds", c,
+          c + (meta && meta.variants > 1 ? `\nbest of ${meta.variants} variations` : "")));
+      }
+      kEl.appendChild(g);
     }
   }
+
+  setCount("count-problems", "problems", allValues("problems"));
+  setCount("count-kinds", "kinds", kinds);
+
+  kEl.classList.toggle("collapsed", !UI.kindsExpanded);
+  const btn = document.getElementById("kinds-expand");
+  btn.textContent = UI.kindsExpanded ? "Show less \u25b4" : "Show all \u25be";
+  requestAnimationFrame(() => {
+    const overflowing = kEl.scrollHeight > kEl.clientHeight + 4;
+    btn.hidden = !(overflowing || UI.kindsExpanded);
+  });
 }
 
 function filteredRows() {
@@ -675,10 +762,17 @@ function baseKey(row) {
   return row.neighbor ? `${row.heuristic_kind} (${row.neighbor})` : row.heuristic_kind;
 }
 
-// Distinguish parameter variants of the same kind+neighbor: if several
-// distinct hyperparameter sets exist, each becomes its own column "#n".
+// Parameter variations of the same kind+neighbor are folded into ONE column;
+// each cell shows the best result across variations (see bestRow).
 let VARIANTS = new Map(); // baseKey -> sorted array of hyperparams signatures
-let COLMETA = new Map();  // colKey -> { kind, neighbor, variant, diff, hyperparams, heuristic }
+let SHARED = new Map();   // baseKey -> Set of param entries common to all variations
+let COLMETA = new Map();  // colKey -> { kind, neighbor, variants, hyperparams, heuristic }
+
+// Split a hyperparams signature only before `key=` tokens so tuple values
+// like tabu_tenure=(3, 100) stay intact.
+function sigEntries(sig) {
+  return sig ? sig.split(/, (?=[\w.]+=)/) : [];
+}
 
 function computeVariants() {
   VARIANTS = new Map();
@@ -687,24 +781,21 @@ function computeVariants() {
     if (!VARIANTS.has(b)) VARIANTS.set(b, new Set());
     VARIANTS.get(b).add(r.hyperparams);
   }
-  for (const [b, set] of VARIANTS) VARIANTS.set(b, Array.from(set).sort());
+  SHARED = new Map();
+  for (const [b, set] of VARIANTS) {
+    const sigs = Array.from(set).sort();
+    VARIANTS.set(b, sigs);
+    const lists = sigs.map(sigEntries);
+    SHARED.set(b, new Set(lists[0].filter(e => lists.every(l => l.includes(e)))));
+  }
   COLMETA = new Map();
   for (const r of DATA.rows) {
     const k = colKey(r);
     if (COLMETA.has(k)) continue;
-    const sigs = VARIANTS.get(baseKey(r));
-    let diff = "";
-    if (sigs.length > 1) {
-      // Show only the params that differ between the variants.
-      const lists = sigs.map(s => s ? s.split(", ") : []);
-      const shared = new Set(lists[0].filter(e => lists.every(l => l.includes(e))));
-      diff = (r.hyperparams ? r.hyperparams.split(", ") : []).filter(e => !shared.has(e)).join(", ");
-    }
     COLMETA.set(k, {
       kind: r.heuristic_kind,
       neighbor: r.neighbor,
-      variant: sigs.length > 1 ? sigs.indexOf(r.hyperparams) + 1 : 0,
-      diff,
+      variants: VARIANTS.get(k).length,
       hyperparams: r.hyperparams,
       heuristic: r.heuristic,
     });
@@ -712,10 +803,37 @@ function computeVariants() {
 }
 
 function colKey(row) {
-  const b = baseKey(row);
-  const sigs = VARIANTS.get(b);
-  if (sigs && sigs.length > 1) return `${b} #${sigs.indexOf(row.hyperparams) + 1}`;
-  return b;
+  return baseKey(row);
+}
+
+// Params of this signature that differ between the variations of baseKey b.
+function sigDiff(b, sig) {
+  const shared = SHARED.get(b) || new Set();
+  return sigEntries(sig).filter(e => !shared.has(e)).join(", ");
+}
+
+function variantInfo(r) {
+  const b = baseKey(r);
+  const sigs = VARIANTS.get(b) || [];
+  if (sigs.length <= 1) return null;
+  return { n: sigs.indexOf(r.hyperparams) + 1, total: sigs.length, diff: sigDiff(b, r.hyperparams) };
+}
+
+function cellTitle(r) {
+  const vi = variantInfo(r);
+  return vi
+    ? `variation #${vi.n}/${vi.total}: ${vi.diff || "(defaults)"}\n(click for details)`
+    : "(click for details)";
+}
+
+// Of two rows for the same column+instance, keep the better one for the
+// current metric (null-valued rows lose).
+function bestRow(a, b) {
+  if (!b) return a;
+  const va = metricValue(a), vb = metricValue(b);
+  if (vb === null) return a;
+  if (va === null) return b;
+  return betterness(va, vb, rowBetterDirection(a.problem)) > 0 ? a : b;
 }
 
 function allColKeys() {
@@ -765,20 +883,22 @@ function makeColHeader(c) {
   kind.className = "h-kind";
   kind.textContent = meta ? meta.kind : c;
   th.appendChild(kind);
-  if (meta && (meta.neighbor || meta.variant)) {
+  if (meta && meta.neighbor) {
     const sub = document.createElement("span");
     sub.className = "h-sub";
-    sub.textContent = (meta.neighbor || "") + (meta.variant ? ` #${meta.variant}` : "");
+    sub.textContent = meta.neighbor;
     th.appendChild(sub);
   }
-  if (meta && meta.diff) {
+  if (meta && meta.variants > 1) {
     const params = document.createElement("span");
     params.className = "h-params";
-    params.textContent = meta.diff;
+    params.textContent = `best of ${meta.variants} variations`;
     th.appendChild(params);
   }
   if (meta) {
-    th.title = meta.hyperparams ? `${c}\n${meta.hyperparams}\n(click for configuration)` : c;
+    th.title = meta.variants > 1
+      ? `${c}\n${meta.variants} parameter variations — each cell shows the best one\n(click for the variation list)`
+      : (meta.hyperparams ? `${c}\n${meta.hyperparams}\n(click for configuration)` : c);
     th.classList.add("confable");
     th.addEventListener("click", () => showConfig(c));
   }
@@ -795,13 +915,15 @@ function renderComparison() {
 
   const colSet = new Set();
   for (const r of rows) colSet.add(colKey(r));
-  const cols = Array.from(colSet).sort();
+  const cols = Array.from(colSet).sort(instanceCompare);
 
   const byPI = new Map();
   for (const r of rows) {
     const k = `${r.problem}\t${r.instance}`;
     if (!byPI.has(k)) byPI.set(k, { problem: r.problem, instance: r.instance, cells: new Map() });
-    byPI.get(k).cells.set(colKey(r), r);
+    const cells = byPI.get(k).cells;
+    const ck = colKey(r);
+    cells.set(ck, bestRow(r, cells.get(ck)));
   }
 
   const groups = Array.from(byPI.values()).sort((a, b) => {
@@ -830,7 +952,7 @@ function renderComparison() {
     const tr = document.createElement("tr");
     const tdP = document.createElement("td");
     tdP.className = "section";
-    tdP.textContent = (g.problem !== lastProblem) ? g.problem : "";
+    tdP.textContent = (g.problem !== lastProblem) ? problemLabel(g.problem) : "";
     tr.appendChild(tdP);
     lastProblem = g.problem;
 
@@ -891,153 +1013,10 @@ function renderComparison() {
           }
         }
         td.addEventListener("click", () => showDetail(r));
+        td.title = cellTitle(r);
       }
       tr.appendChild(td);
     }
-    tbody.appendChild(tr);
-  }
-  t.appendChild(tbody);
-
-  wrap.innerHTML = "";
-  wrap.appendChild(t);
-}
-
-function renderDuel() {
-  const rows = filteredRows();
-  const wrap = document.getElementById("table-wrap");
-  const cardsEl = document.getElementById("duel-cards");
-  cardsEl.innerHTML = "";
-  if (rows.length === 0) {
-    wrap.innerHTML = `<div class="empty-state">No rows match current filters.</div>`;
-    return;
-  }
-  const A = STATE.duelA, B = STATE.duelB;
-  if (!A || !B || A === B) {
-    wrap.innerHTML = `<div class="empty-state">Pick two different methods (A vs B) above.</div>`;
-    return;
-  }
-
-  const byPI = new Map();
-  for (const r of rows) {
-    const ck = colKey(r);
-    if (ck !== A && ck !== B) continue;
-    const k = `${r.problem}\t${r.instance}`;
-    if (!byPI.has(k)) byPI.set(k, { problem: r.problem, instance: r.instance });
-    byPI.get(k)[ck === A ? "a" : "b"] = r;
-  }
-  const groups = Array.from(byPI.values())
-    .filter(g => g.a && g.b)
-    .sort((x, y) => x.problem !== y.problem
-      ? x.problem.localeCompare(y.problem)
-      : instanceCompare(x.instance, y.instance));
-
-  if (groups.length === 0) {
-    wrap.innerHTML = `<div class="empty-state">No instances where both methods have results.</div>`;
-    return;
-  }
-
-  // Stats
-  let winsA = 0, winsB = 0, ties = 0;
-  const gaps = [];
-  for (const g of groups) {
-    const dir = rowBetterDirection(g.problem);
-    const va = metricValue(g.a), vb = metricValue(g.b);
-    if (va === null || vb === null) continue;
-    const good = betterness(va, vb, dir);
-    g.gapPct = vb !== 0 ? (good / Math.abs(vb)) * 100 : 0;
-    gaps.push(g.gapPct);
-    if (good > 0) winsA++;
-    else if (good < 0) winsB++;
-    else ties++;
-  }
-  const meanGap = gaps.length ? gaps.reduce((s, x) => s + x, 0) / gaps.length : 0;
-
-  const cards = [
-    { k: `${A} wins`, v: String(winsA), cls: winsA >= winsB ? "good" : "" },
-    { k: "Ties", v: String(ties), cls: "" },
-    { k: `${B} wins`, v: String(winsB), cls: winsB > winsA ? "good" : "" },
-    { k: "Mean gap (A vs B)", v: fmtPct(meanGap), cls: meanGap > 0 ? "good" : meanGap < 0 ? "bad" : "", sub: "positive = A better" },
-    { k: "Instances", v: String(groups.length), cls: "" },
-  ];
-  for (const c of cards) {
-    const div = document.createElement("div");
-    div.className = "card duel-card";
-    div.innerHTML = `<span class="k"></span><span class="v ${c.cls}"></span>` + (c.sub ? `<span class="sub">${c.sub}</span>` : "");
-    div.querySelector(".k").textContent = c.k;
-    div.querySelector(".v").textContent = c.v;
-    cardsEl.appendChild(div);
-  }
-
-  // Table
-  const maxAbsGap = Math.max(1e-9, ...groups.map(g => Math.abs(g.gapPct ?? 0)));
-  const t = document.createElement("table");
-  const thead = document.createElement("thead");
-  const trh = document.createElement("tr");
-  trh.appendChild(makeTh("Problem"));
-  trh.appendChild(makeTh("Instance"));
-  const thA = makeColHeader(A); trh.appendChild(thA);
-  const thB = makeColHeader(B); trh.appendChild(thB);
-  trh.appendChild(makeTh("Gap (A vs B)"));
-  trh.appendChild(makeTh("A ← better → B"));
-  thead.appendChild(trh);
-  t.appendChild(thead);
-
-  const tbody = document.createElement("tbody");
-  let lastProblem = null;
-  for (const g of groups) {
-    const dir = rowBetterDirection(g.problem);
-    const va = metricValue(g.a), vb = metricValue(g.b);
-    const good = (va !== null && vb !== null) ? betterness(va, vb, dir) : 0;
-
-    const tr = document.createElement("tr");
-    const tdP = document.createElement("td");
-    tdP.className = "section";
-    tdP.textContent = (g.problem !== lastProblem) ? g.problem : "";
-    tr.appendChild(tdP);
-    lastProblem = g.problem;
-
-    const tdI = document.createElement("td");
-    tdI.className = "instance";
-    tdI.textContent = g.instance;
-    tr.appendChild(tdI);
-
-    const tdA = document.createElement("td");
-    tdA.className = "clickable num";
-    tdA.textContent = fmtNum(va);
-    if (good > 0) tdA.classList.add("best");
-    tdA.addEventListener("click", () => showDetail(g.a));
-    tr.appendChild(tdA);
-
-    const tdB = document.createElement("td");
-    tdB.className = "clickable num";
-    tdB.textContent = fmtNum(vb);
-    if (good < 0) tdB.classList.add("best");
-    tdB.addEventListener("click", () => showDetail(g.b));
-    tr.appendChild(tdB);
-
-    const tdG = document.createElement("td");
-    const chip = document.createElement("span");
-    const gp = g.gapPct ?? 0;
-    chip.className = "gap-chip " + (gp > 0 ? "good" : gp < 0 ? "bad" : "tie");
-    chip.textContent = fmtPct(gp);
-    tdG.appendChild(chip);
-    tr.appendChild(tdG);
-
-    const tdBar = document.createElement("td");
-    tdBar.style.textAlign = "center";
-    const bar = document.createElement("span");
-    bar.className = "gap-bar";
-    const half = Math.min(Math.abs(gp) / maxAbsGap, 1) * 50;
-    bar.innerHTML = `<span class="mid"></span>`;
-    if (Math.abs(gp) > 1e-12) {
-      const fill = document.createElement("span");
-      fill.className = "fill " + (gp > 0 ? "a" : "b");
-      fill.style.width = half + "%";
-      bar.appendChild(fill);
-    }
-    tdBar.appendChild(bar);
-    tr.appendChild(tdBar);
-
     tbody.appendChild(tr);
   }
   t.appendChild(tbody);
@@ -1165,15 +1144,27 @@ function showConfig(c) {
   if (!meta) return;
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
-  document.getElementById("detail-title").textContent = `${c} — configuration`;
   const dl = document.getElementById("detail-body");
   dl.innerHTML = "";
-  const fields = [
-    ["kind", meta.kind],
-    ...(meta.neighbor ? [["neighbor", meta.neighbor]] : []),
-    ...heurEntries(meta.heuristic),
-  ];
-  if (fields.length <= (meta.neighbor ? 2 : 1)) fields.push(["params", "(none)"]);
+  let fields;
+  if (meta.variants > 1) {
+    document.getElementById("detail-title").textContent = `${c} — ${meta.variants} variations (cells show the best)`;
+    const shared = Array.from(SHARED.get(c) || []);
+    fields = [
+      ["kind", meta.kind],
+      ...(meta.neighbor ? [["neighbor", meta.neighbor]] : []),
+      ...(shared.length ? [["shared", shared.join(", ")]] : []),
+      ...VARIANTS.get(c).map((sig, i) => [`#${i + 1}`, sigDiff(c, sig) || "(defaults)"]),
+    ];
+  } else {
+    document.getElementById("detail-title").textContent = `${c} — configuration`;
+    fields = [
+      ["kind", meta.kind],
+      ...(meta.neighbor ? [["neighbor", meta.neighbor]] : []),
+      ...heurEntries(meta.heuristic),
+    ];
+    if (fields.length <= (meta.neighbor ? 2 : 1)) fields.push(["params", "(none)"]);
+  }
   for (const [k, v] of fields) {
     const dt = document.createElement("dt"); dt.textContent = k;
     const dd = document.createElement("dd"); dd.textContent = v;
@@ -1185,12 +1176,14 @@ function showDetail(r) {
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
   document.getElementById("detail-title").textContent =
-    `${r.problem} / ${r.instance} — ${colKey(r)}`;
+    `${problemLabel(r.problem)} / ${r.instance} — ${colKey(r)}`;
   const dl = document.getElementById("detail-body");
   dl.innerHTML = "";
+  const vi = variantInfo(r);
   const fields = [
     ["instance_path", r.instance_path],
     ["source", r.source],
+    ...(vi ? [["variation", `#${vi.n} of ${vi.total}${vi.diff ? " — " + vi.diff : ""}`]] : []),
     ...heurEntries(r.heuristic),
     ...SUMMARY_FIELDS.map(([k, label]) => [label, fmtNum(r.summary[k])]),
   ];
@@ -1212,8 +1205,6 @@ function render() {
   for (const el of document.querySelectorAll('[data-view]')) {
     el.style.display = el.dataset.view === STATE.view ? "" : "none";
   }
-  document.getElementById("duel-cards").style.display =
-    STATE.view === "duel" ? "" : "none";
 
   const filtered = filteredRows();
   const problems = new Set(filtered.map(r => r.problem));
@@ -1221,7 +1212,6 @@ function render() {
   document.getElementById("summary").textContent =
     `${filtered.length} rows across ${problems.size} problem(s), ${instances.size} (problem, instance) pair(s).`;
   if (STATE.view === "comparison") renderComparison();
-  else if (STATE.view === "duel") renderDuel();
   else renderFlat();
 }
 
@@ -1239,8 +1229,6 @@ function updateHash() {
   if (STATE.metric !== "best_objective") parts.push(`metric=${STATE.metric}`);
   if (STATE.baseline) parts.push(`baseline=${encodeURIComponent(STATE.baseline)}`);
   if (STATE.deltaMode !== "pct") parts.push(`delta=${STATE.deltaMode}`);
-  if (STATE.duelA) parts.push(`a=${encodeURIComponent(STATE.duelA)}`);
-  if (STATE.duelB) parts.push(`b=${encodeURIComponent(STATE.duelB)}`);
   if (STATE.view === "flat") {
     if (STATE.flatSortKey !== "instance") parts.push(`sort=${STATE.flatSortKey}`);
     if (STATE.flatSortDir !== "asc") parts.push(`dir=${STATE.flatSortDir}`);
@@ -1264,14 +1252,12 @@ function loadHash() {
   if (params.has("metric")) STATE.metric = params.get("metric");
   if (params.has("baseline")) STATE.baseline = params.get("baseline");
   if (params.has("delta")) STATE.deltaMode = params.get("delta");
-  if (params.has("a")) STATE.duelA = params.get("a");
-  if (params.has("b")) STATE.duelB = params.get("b");
   if (params.has("sort")) STATE.flatSortKey = params.get("sort");
   if (params.has("dir")) STATE.flatSortDir = params.get("dir");
 }
 
 function fillMethodSelects() {
-  const cols = allColKeys();
+  const cols = visibleKinds();
   const baseSel = document.getElementById("baseline");
   baseSel.innerHTML = "";
   const optBest = document.createElement("option");
@@ -1284,29 +1270,17 @@ function fillMethodSelects() {
     baseSel.appendChild(o);
   }
 
-  for (const id of ["duel-a", "duel-b"]) {
-    const sel = document.getElementById(id);
-    sel.innerHTML = "";
-    for (const c of cols) {
-      const o = document.createElement("option");
-      o.value = c; o.textContent = c;
-      sel.appendChild(o);
-    }
-  }
-  if (!STATE.duelA && cols.length > 0) STATE.duelA = cols[0];
-  if (!STATE.duelB && cols.length > 1) STATE.duelB = cols[1];
+  // keep selection valid when the visible set shrinks
+  if (STATE.baseline && !cols.includes(STATE.baseline)) STATE.baseline = "";
 }
 
 function syncControls() {
   document.getElementById("view-comparison").classList.toggle("on", STATE.view === "comparison");
-  document.getElementById("view-duel").classList.toggle("on", STATE.view === "duel");
   document.getElementById("view-flat").classList.toggle("on", STATE.view === "flat");
   document.getElementById("instance-filter").value = STATE.instance;
   document.getElementById("metric").value = STATE.metric;
   document.getElementById("baseline").value = STATE.baseline;
   document.getElementById("delta-mode").value = STATE.deltaMode;
-  if (STATE.duelA) document.getElementById("duel-a").value = STATE.duelA;
-  if (STATE.duelB) document.getElementById("duel-b").value = STATE.duelB;
 }
 
 function attachListeners() {
@@ -1314,7 +1288,6 @@ function attachListeners() {
     STATE.view = v; syncControls(); updateHash(); render();
   };
   document.getElementById("view-comparison").addEventListener("click", setView("comparison"));
-  document.getElementById("view-duel").addEventListener("click", setView("duel"));
   document.getElementById("view-flat").addEventListener("click", setView("flat"));
   document.getElementById("instance-filter").addEventListener("input", e => {
     STATE.instance = e.target.value; updateHash(); render();
@@ -1328,12 +1301,6 @@ function attachListeners() {
   document.getElementById("delta-mode").addEventListener("change", e => {
     STATE.deltaMode = e.target.value; updateHash(); render();
   });
-  document.getElementById("duel-a").addEventListener("change", e => {
-    STATE.duelA = e.target.value; updateHash(); render();
-  });
-  document.getElementById("duel-b").addEventListener("change", e => {
-    STATE.duelB = e.target.value; updateHash(); render();
-  });
   document.getElementById("reset-filters").addEventListener("click", () => {
     STATE.problems = new Set(allValues("problems"));
     STATE.kinds = new Set(allValues("kinds"));
@@ -1345,6 +1312,10 @@ function attachListeners() {
     renderChips();
     updateHash();
     render();
+  });
+  document.getElementById("kinds-expand").addEventListener("click", () => {
+    UI.kindsExpanded = !UI.kindsExpanded;
+    renderChips();
   });
   document.getElementById("detail-close").addEventListener("click", () => {
     document.getElementById("detail").classList.add("hidden");
@@ -1364,7 +1335,7 @@ async function main() {
       ` This page must be served over HTTP — locally run ` +
       `<code>cd docs &amp;&amp; python3 -m http.server</code> then open ` +
       `<code>benchmarks/viewer.html</code>. Regenerate the data with ` +
-      `<code>python3 docs/benchmarks/render.py</code> if <code>data/manifest.json</code> is missing.</div>`;
+      `<code>python3 docs/benchmarks/render.py</code> if <code>data/index.json</code> is missing.</div>`;
     return;
   }
   computeVariants();

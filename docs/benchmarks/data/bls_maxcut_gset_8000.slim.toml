@@ -2,6 +2,7 @@ timestamp = "20260509_115010"
 config_file = "data/benchmark_gset_8000.toml"
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G65"
 
 [results.heuristic]

@@ -2,6 +2,7 @@ timestamp = "20260517_195759"
 config_file = "data/benchmarks/qubo/general_medium.toml"
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -22,6 +23,7 @@ avg_time_to_best_secs = 7.300009999999999e-05
 avg_total_time_secs = 7.30958e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -42,6 +44,7 @@ avg_time_to_best_secs = 0.024803675199999996
 avg_total_time_secs = 0.025078629199999997
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -66,6 +69,7 @@ avg_time_to_best_secs = 19.248479754399998
 avg_total_time_secs = 120.0000022417
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -90,6 +94,7 @@ avg_time_to_best_secs = 43.451818
 avg_total_time_secs = 120.0003662332
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -111,6 +116,7 @@ avg_time_to_best_secs = 0.0237151584
 avg_total_time_secs = 120.0000000918
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -132,6 +138,7 @@ avg_time_to_best_secs = 68.2653804749
 avg_total_time_secs = 120.00018550450002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -155,6 +162,7 @@ avg_time_to_best_secs = 0.0010917333
 avg_total_time_secs = 6.9363261417
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -178,6 +186,7 @@ avg_time_to_best_secs = 15.093760558299996
 avg_total_time_secs = 120.00024853750001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -211,6 +220,7 @@ avg_time_to_best_secs = 0.028572875000000005
 avg_total_time_secs = 120.0004895418
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -246,6 +256,7 @@ avg_time_to_best_secs = 9.134775570799999
 avg_total_time_secs = 120.00000985019999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
@@ -279,6 +290,7 @@ avg_time_to_best_secs = 1.2503394918
 avg_total_time_secs = 120.10372955839998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -299,6 +311,7 @@ avg_time_to_best_secs = 4.787070000000001e-05
 avg_total_time_secs = 4.8024899999999995e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -319,6 +332,7 @@ avg_time_to_best_secs = 0.026599875000000002
 avg_total_time_secs = 0.026900399900000004
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -343,6 +357,7 @@ avg_time_to_best_secs = 22.8730861834
 avg_total_time_secs = 120.0000019583
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -367,6 +382,7 @@ avg_time_to_best_secs = 35.830276420699995
 avg_total_time_secs = 120.00047399999998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -388,6 +404,7 @@ avg_time_to_best_secs = 0.023707775000000004
 avg_total_time_secs = 120.0000003206
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -409,6 +426,7 @@ avg_time_to_best_secs = 64.8452887959
 avg_total_time_secs = 120.0001786
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -432,6 +450,7 @@ avg_time_to_best_secs = 0.0010104124
 avg_total_time_secs = 6.989914320800001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -455,6 +474,7 @@ avg_time_to_best_secs = 16.632765150100003
 avg_total_time_secs = 120.0001573043
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -488,6 +508,7 @@ avg_time_to_best_secs = 0.0882990335
 avg_total_time_secs = 120.00028930820001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -523,6 +544,7 @@ avg_time_to_best_secs = 21.6921645667
 avg_total_time_secs = 120.00000865010001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
@@ -556,6 +578,7 @@ avg_time_to_best_secs = 2.9213687958000003
 avg_total_time_secs = 120.0881315334
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -576,6 +599,7 @@ avg_time_to_best_secs = 5.17082e-05
 avg_total_time_secs = 5.1833200000000004e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -596,6 +620,7 @@ avg_time_to_best_secs = 0.027993399599999996
 avg_total_time_secs = 0.0282456417
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -620,6 +645,7 @@ avg_time_to_best_secs = 47.8363836918
 avg_total_time_secs = 120.00000173779999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -644,6 +670,7 @@ avg_time_to_best_secs = 24.8291497959
 avg_total_time_secs = 120.00052613739999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -665,6 +692,7 @@ avg_time_to_best_secs = 0.0226748167
 avg_total_time_secs = 120.000003629
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -686,6 +714,7 @@ avg_time_to_best_secs = 70.4136132541
 avg_total_time_secs = 120.00015782519999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -709,6 +738,7 @@ avg_time_to_best_secs = 0.0009413958999999999
 avg_total_time_secs = 6.8820113748999985
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -732,6 +762,7 @@ avg_time_to_best_secs = 17.5362384249
 avg_total_time_secs = 120.0001720126
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -765,6 +796,7 @@ avg_time_to_best_secs = 0.1110887542
 avg_total_time_secs = 120.0002688499
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -800,6 +832,7 @@ avg_time_to_best_secs = 7.780371633200001
 avg_total_time_secs = 120.00001097510001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
@@ -833,6 +866,7 @@ avg_time_to_best_secs = 4.2139498417
 avg_total_time_secs = 120.06397976649998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -853,6 +887,7 @@ avg_time_to_best_secs = 4.97542e-05
 avg_total_time_secs = 4.98832e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -873,6 +908,7 @@ avg_time_to_best_secs = 0.025908962599999995
 avg_total_time_secs = 0.026188912400000004
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -897,6 +933,7 @@ avg_time_to_best_secs = 23.141471308299998
 avg_total_time_secs = 120.0000055625
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -921,6 +958,7 @@ avg_time_to_best_secs = 55.15058697479999
 avg_total_time_secs = 120.00038972930001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -942,6 +980,7 @@ avg_time_to_best_secs = 0.0234101583
 avg_total_time_secs = 120.00000004160002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -963,6 +1002,7 @@ avg_time_to_best_secs = 69.90465278759999
 avg_total_time_secs = 120.0001816334
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -986,6 +1026,7 @@ avg_time_to_best_secs = 0.001003308
 avg_total_time_secs = 6.997773175000001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -1009,6 +1050,7 @@ avg_time_to_best_secs = 19.0130678501
 avg_total_time_secs = 120.00013073730001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -1042,6 +1084,7 @@ avg_time_to_best_secs = 4.650345841700001
 avg_total_time_secs = 120.0004279167
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -1077,6 +1120,7 @@ avg_time_to_best_secs = 30.951184016600003
 avg_total_time_secs = 120.00001189999998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
@@ -1110,6 +1154,7 @@ avg_time_to_best_secs = 1.8697057788999998
 avg_total_time_secs = 120.11257645010001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1130,6 +1175,7 @@ avg_time_to_best_secs = 4.27582e-05
 avg_total_time_secs = 4.28999e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1150,6 +1196,7 @@ avg_time_to_best_secs = 0.026675100100000005
 avg_total_time_secs = 0.026956921000000002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1174,6 +1221,7 @@ avg_time_to_best_secs = 5.118722816499999
 avg_total_time_secs = 120.00000217089999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1198,6 +1246,7 @@ avg_time_to_best_secs = 17.6760438961
 avg_total_time_secs = 120.00035427899998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1219,6 +1268,7 @@ avg_time_to_best_secs = 0.023369562400000002
 avg_total_time_secs = 120.00000070840001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1240,6 +1290,7 @@ avg_time_to_best_secs = 72.72037185820001
 avg_total_time_secs = 120.00017959979998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1263,6 +1314,7 @@ avg_time_to_best_secs = 0.0009626751000000001
 avg_total_time_secs = 7.0782652542
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1286,6 +1338,7 @@ avg_time_to_best_secs = 14.6984388124
 avg_total_time_secs = 120.00021342510001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1319,6 +1372,7 @@ avg_time_to_best_secs = 0.035653670699999994
 avg_total_time_secs = 120.0003958961
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1354,6 +1408,7 @@ avg_time_to_best_secs = 38.696683579200005
 avg_total_time_secs = 120.000013571
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
@@ -1387,6 +1442,7 @@ avg_time_to_best_secs = 0.5498024083999999
 avg_total_time_secs = 120.06981425430001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1407,6 +1463,7 @@ avg_time_to_best_secs = 5.275410000000001e-05
 avg_total_time_secs = 5.2850100000000004e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1427,6 +1484,7 @@ avg_time_to_best_secs = 0.027749125000000003
 avg_total_time_secs = 0.028098150100000004
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1451,6 +1509,7 @@ avg_time_to_best_secs = 13.551995216499998
 avg_total_time_secs = 120.00000291670001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1475,6 +1534,7 @@ avg_time_to_best_secs = 26.5929335499
 avg_total_time_secs = 120.000447971
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1496,6 +1556,7 @@ avg_time_to_best_secs = 0.026020899999999996
 avg_total_time_secs = 120.00000007490003
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1517,6 +1578,7 @@ avg_time_to_best_secs = 69.987002671
 avg_total_time_secs = 120.0002455416
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1540,6 +1602,7 @@ avg_time_to_best_secs = 0.001000225
 avg_total_time_secs = 7.0976800956999995
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1563,6 +1626,7 @@ avg_time_to_best_secs = 18.190181291699997
 avg_total_time_secs = 120.00019874590001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1596,6 +1660,7 @@ avg_time_to_best_secs = 0.029968708200000006
 avg_total_time_secs = 120.00045377490001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1631,6 +1696,7 @@ avg_time_to_best_secs = 12.139939095799999
 avg_total_time_secs = 120.0000080334
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
@@ -1664,6 +1730,7 @@ avg_time_to_best_secs = 1.9155464249
 avg_total_time_secs = 120.08821504580001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1684,6 +1751,7 @@ avg_time_to_best_secs = 4.82874e-05
 avg_total_time_secs = 4.8396e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1704,6 +1772,7 @@ avg_time_to_best_secs = 0.0299691247
 avg_total_time_secs = 0.0302962835
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1728,6 +1797,7 @@ avg_time_to_best_secs = 29.8868586459
 avg_total_time_secs = 120.0000026166
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1752,6 +1822,7 @@ avg_time_to_best_secs = 16.153005070600003
 avg_total_time_secs = 120.00026335840002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1773,6 +1844,7 @@ avg_time_to_best_secs = 0.024000983400000002
 avg_total_time_secs = 120.0000000708
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1794,6 +1866,7 @@ avg_time_to_best_secs = 65.70074609580001
 avg_total_time_secs = 120.00019381679999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1817,6 +1890,7 @@ avg_time_to_best_secs = 0.0007816666999999999
 avg_total_time_secs = 7.0864568417000005
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1840,6 +1914,7 @@ avg_time_to_best_secs = 11.483544212300002
 avg_total_time_secs = 120.00013268759999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1873,6 +1948,7 @@ avg_time_to_best_secs = 0.04053679590000001
 avg_total_time_secs = 120.0005151251
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1908,6 +1984,7 @@ avg_time_to_best_secs = 16.798542799899998
 avg_total_time_secs = 120.00000857079999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
@@ -1941,6 +2018,7 @@ avg_time_to_best_secs = 1.9235274333999999
 avg_total_time_secs = 120.09573468319999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -1961,6 +2039,7 @@ avg_time_to_best_secs = 4.67291e-05
 avg_total_time_secs = 4.6841499999999995e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -1981,6 +2060,7 @@ avg_time_to_best_secs = 0.025833704199999995
 avg_total_time_secs = 0.0261172707
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2005,6 +2085,7 @@ avg_time_to_best_secs = 23.015749941499998
 avg_total_time_secs = 120.00001972920002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2029,6 +2110,7 @@ avg_time_to_best_secs = 25.6816122124
 avg_total_time_secs = 120.0003339207
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2050,6 +2132,7 @@ avg_time_to_best_secs = 0.023702412500000002
 avg_total_time_secs = 120.0000020668
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2071,6 +2154,7 @@ avg_time_to_best_secs = 67.6677409165
 avg_total_time_secs = 120.0001995501
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2094,6 +2178,7 @@ avg_time_to_best_secs = 0.0011191125
 avg_total_time_secs = 6.9847897957
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2117,6 +2202,7 @@ avg_time_to_best_secs = 20.901768179199998
 avg_total_time_secs = 120.0001502126
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2150,6 +2236,7 @@ avg_time_to_best_secs = 0.0438021
 avg_total_time_secs = 120.00034007480001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2185,6 +2272,7 @@ avg_time_to_best_secs = 42.1096469044
 avg_total_time_secs = 120.00000858320001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
@@ -2218,6 +2306,7 @@ avg_time_to_best_secs = 1.1507693372999999
 avg_total_time_secs = 120.0820783333
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2238,6 +2327,7 @@ avg_time_to_best_secs = 4.63083e-05
 avg_total_time_secs = 4.64166e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2258,6 +2348,7 @@ avg_time_to_best_secs = 0.028158625
 avg_total_time_secs = 0.028441579099999996
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2282,6 +2373,7 @@ avg_time_to_best_secs = 41.114036574699995
 avg_total_time_secs = 120.0000024167
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2306,6 +2398,7 @@ avg_time_to_best_secs = 33.70367402070001
 avg_total_time_secs = 120.0003446584
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2327,6 +2420,7 @@ avg_time_to_best_secs = 0.022991349799999998
 avg_total_time_secs = 120.000000025
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2348,6 +2442,7 @@ avg_time_to_best_secs = 73.70567879160001
 avg_total_time_secs = 120.00009686669998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2371,6 +2466,7 @@ avg_time_to_best_secs = 0.0010196460000000001
 avg_total_time_secs = 6.8706498876
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2394,6 +2490,7 @@ avg_time_to_best_secs = 14.700738474900001
 avg_total_time_secs = 120.0001613166
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2427,6 +2524,7 @@ avg_time_to_best_secs = 0.0278932084
 avg_total_time_secs = 120.00027062090001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2462,6 +2560,7 @@ avg_time_to_best_secs = 9.4042639667
 avg_total_time_secs = 120.00000977510001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 
 [results.heuristic]
@@ -2495,6 +2594,7 @@ avg_time_to_best_secs = 1.7940805418
 avg_total_time_secs = 120.06795066679999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2515,6 +2615,7 @@ avg_time_to_best_secs = 5.0771000000000006e-05
 avg_total_time_secs = 5.08917e-05
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2535,6 +2636,7 @@ avg_time_to_best_secs = 0.027748887499999996
 avg_total_time_secs = 0.0280112792
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2559,6 +2661,7 @@ avg_time_to_best_secs = 1.4253758083999999
 avg_total_time_secs = 120.00000167929997
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2583,6 +2686,7 @@ avg_time_to_best_secs = 42.0745621084
 avg_total_time_secs = 120.00036445420001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2604,6 +2708,7 @@ avg_time_to_best_secs = 0.0267300708
 avg_total_time_secs = 120.00002964999999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2625,6 +2730,7 @@ avg_time_to_best_secs = 70.516731754
 avg_total_time_secs = 120.0001935042
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2648,6 +2754,7 @@ avg_time_to_best_secs = 0.0016157457
 avg_total_time_secs = 6.948120833500001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2671,6 +2778,7 @@ avg_time_to_best_secs = 10.539828008299999
 avg_total_time_secs = 120.00016714149999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2704,6 +2812,7 @@ avg_time_to_best_secs = 0.0140032085
 avg_total_time_secs = 120.0003365625
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2739,6 +2848,7 @@ avg_time_to_best_secs = 9.767815529300002
 avg_total_time_secs = 120.0000078416
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
@@ -2772,6 +2882,7 @@ avg_time_to_best_secs = 0.18991880840000003
 avg_total_time_secs = 120.0913951624
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2792,6 +2903,7 @@ avg_time_to_best_secs = 0.0001466959
 avg_total_time_secs = 0.0001469086
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2812,6 +2924,7 @@ avg_time_to_best_secs = 0.3261647833
 avg_total_time_secs = 0.3277356916
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2836,6 +2949,7 @@ avg_time_to_best_secs = 22.864191387199998
 avg_total_time_secs = 120.00000607939998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2860,6 +2974,7 @@ avg_time_to_best_secs = 37.6171703999
 avg_total_time_secs = 120.0023531417
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2881,6 +2996,7 @@ avg_time_to_best_secs = 0.07645054159999999
 avg_total_time_secs = 120.00000320840002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2902,6 +3018,7 @@ avg_time_to_best_secs = 117.10968198329999
 avg_total_time_secs = 120.00093362080001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2925,6 +3042,7 @@ avg_time_to_best_secs = 0.0015406543000000001
 avg_total_time_secs = 10.428262333100001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2948,6 +3066,7 @@ avg_time_to_best_secs = 107.41647474579997
 avg_total_time_secs = 120.00071033319998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -2981,6 +3100,7 @@ avg_time_to_best_secs = 0.2070815208
 avg_total_time_secs = 120.0006603626
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -3016,6 +3136,7 @@ avg_time_to_best_secs = 28.463764787400002
 avg_total_time_secs = 120.00001552500001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
@@ -3049,6 +3170,7 @@ avg_time_to_best_secs = 5.701489666700001
 avg_total_time_secs = 120.1303811833
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3069,6 +3191,7 @@ avg_time_to_best_secs = 0.0001598418
 avg_total_time_secs = 0.0001600835
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3089,6 +3212,7 @@ avg_time_to_best_secs = 0.319054925
 avg_total_time_secs = 0.320617475
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3113,6 +3237,7 @@ avg_time_to_best_secs = 42.738197675100004
 avg_total_time_secs = 120.00000487920002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3137,6 +3262,7 @@ avg_time_to_best_secs = 18.5321862959
 avg_total_time_secs = 120.00199467479999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3158,6 +3284,7 @@ avg_time_to_best_secs = 0.0752425624
 avg_total_time_secs = 120.000000129
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3179,6 +3306,7 @@ avg_time_to_best_secs = 118.02101430420001
 avg_total_time_secs = 120.00077604159999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3202,6 +3330,7 @@ avg_time_to_best_secs = 0.0022165125
 avg_total_time_secs = 10.3382979665
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3225,6 +3354,7 @@ avg_time_to_best_secs = 102.67863737079999
 avg_total_time_secs = 120.0008623291
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3258,6 +3388,7 @@ avg_time_to_best_secs = 0.1258971709
 avg_total_time_secs = 120.0010372376
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3293,6 +3424,7 @@ avg_time_to_best_secs = 15.735615700299999
 avg_total_time_secs = 120.0000169249
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
@@ -3326,6 +3458,7 @@ avg_time_to_best_secs = 5.6806071167
 avg_total_time_secs = 120.11492490419998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3346,6 +3479,7 @@ avg_time_to_best_secs = 0.0001515502
 avg_total_time_secs = 0.0001517583
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3366,6 +3500,7 @@ avg_time_to_best_secs = 0.30988064569999996
 avg_total_time_secs = 0.31156372920000003
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3390,6 +3525,7 @@ avg_time_to_best_secs = 35.047294495900005
 avg_total_time_secs = 120.0000066999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3414,6 +3550,7 @@ avg_time_to_best_secs = 56.32276087519999
 avg_total_time_secs = 120.00204773310001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3435,6 +3572,7 @@ avg_time_to_best_secs = 0.0800829751
 avg_total_time_secs = 120.00000867470001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3456,6 +3594,7 @@ avg_time_to_best_secs = 118.2884441208
 avg_total_time_secs = 120.0009038167
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3479,6 +3618,7 @@ avg_time_to_best_secs = 0.0019687960000000005
 avg_total_time_secs = 10.4096406083
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3502,6 +3642,7 @@ avg_time_to_best_secs = 100.0803514332
 avg_total_time_secs = 120.0008837333
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3535,6 +3676,7 @@ avg_time_to_best_secs = 0.26958146689999996
 avg_total_time_secs = 120.00093446659999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3570,6 +3712,7 @@ avg_time_to_best_secs = 19.4633647873
 avg_total_time_secs = 120.00001314600001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
@@ -3603,6 +3746,7 @@ avg_time_to_best_secs = 7.6998308751
 avg_total_time_secs = 120.16496795420001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3623,6 +3767,7 @@ avg_time_to_best_secs = 0.0001785251
 avg_total_time_secs = 0.0001787291
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3643,6 +3788,7 @@ avg_time_to_best_secs = 0.3252138125
 avg_total_time_secs = 0.3268391667
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3667,6 +3813,7 @@ avg_time_to_best_secs = 31.231866370800002
 avg_total_time_secs = 120.0000189207
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3691,6 +3838,7 @@ avg_time_to_best_secs = 32.822543895799996
 avg_total_time_secs = 120.0023027124
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3712,6 +3860,7 @@ avg_time_to_best_secs = 0.07570728330000001
 avg_total_time_secs = 120.0000006082
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3733,6 +3882,7 @@ avg_time_to_best_secs = 117.29159428329999
 avg_total_time_secs = 120.0009233541
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3756,6 +3906,7 @@ avg_time_to_best_secs = 0.0018674833000000002
 avg_total_time_secs = 10.684757012499999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3779,6 +3930,7 @@ avg_time_to_best_secs = 108.34809551240001
 avg_total_time_secs = 120.0008993834
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3812,6 +3964,7 @@ avg_time_to_best_secs = 0.3292034085
 avg_total_time_secs = 120.00106352499999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3847,6 +4000,7 @@ avg_time_to_best_secs = 30.869672958400002
 avg_total_time_secs = 120.0000116208
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
@@ -3880,6 +4034,7 @@ avg_time_to_best_secs = 6.905297162399999
 avg_total_time_secs = 120.163474196
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -3900,6 +4055,7 @@ avg_time_to_best_secs = 0.00015566670000000002
 avg_total_time_secs = 0.00015585810000000002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -3920,6 +4076,7 @@ avg_time_to_best_secs = 0.3299977916
 avg_total_time_secs = 0.33146222519999996
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -3944,6 +4101,7 @@ avg_time_to_best_secs = 33.713659224900006
 avg_total_time_secs = 120.0000037498
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -3968,6 +4126,7 @@ avg_time_to_best_secs = 22.107563608200003
 avg_total_time_secs = 120.0019362457
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -3989,6 +4148,7 @@ avg_time_to_best_secs = 0.07447807079999999
 avg_total_time_secs = 120.00000011249999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -4010,6 +4170,7 @@ avg_time_to_best_secs = 117.25017736260001
 avg_total_time_secs = 120.00125798329998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -4033,6 +4194,7 @@ avg_time_to_best_secs = 0.0020113582
 avg_total_time_secs = 10.422464208399997
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -4056,6 +4218,7 @@ avg_time_to_best_secs = 110.85428382939999
 avg_total_time_secs = 120.000605004
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -4089,6 +4252,7 @@ avg_time_to_best_secs = 0.2221397873
 avg_total_time_secs = 120.00062336280003
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -4124,6 +4288,7 @@ avg_time_to_best_secs = 37.1686772336
 avg_total_time_secs = 120.0000152585
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
@@ -4157,6 +4322,7 @@ avg_time_to_best_secs = 14.168822183400001
 avg_total_time_secs = 120.15586094170003
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4177,6 +4343,7 @@ avg_time_to_best_secs = 0.0001693624
 avg_total_time_secs = 0.0001695831
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4197,6 +4364,7 @@ avg_time_to_best_secs = 0.31653973329999996
 avg_total_time_secs = 0.3181322332
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4221,6 +4389,7 @@ avg_time_to_best_secs = 20.640985883200003
 avg_total_time_secs = 120.0000025834
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4245,6 +4414,7 @@ avg_time_to_best_secs = 36.182534921
 avg_total_time_secs = 120.00144251239999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4266,6 +4436,7 @@ avg_time_to_best_secs = 0.0735888168
 avg_total_time_secs = 120.00000008329998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4287,6 +4458,7 @@ avg_time_to_best_secs = 117.3024761001
 avg_total_time_secs = 120.00084906679999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4310,6 +4482,7 @@ avg_time_to_best_secs = 0.0019580126000000005
 avg_total_time_secs = 10.4217846043
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4333,6 +4506,7 @@ avg_time_to_best_secs = 105.32422676230001
 avg_total_time_secs = 120.0010657459
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4366,6 +4540,7 @@ avg_time_to_best_secs = 2.1658399626000002
 avg_total_time_secs = 120.0009066499
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4401,6 +4576,7 @@ avg_time_to_best_secs = 32.758365525
 avg_total_time_secs = 120.000018
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
@@ -4434,6 +4610,7 @@ avg_time_to_best_secs = 9.3067880291
 avg_total_time_secs = 120.15034982480002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4454,6 +4631,7 @@ avg_time_to_best_secs = 0.00014942939999999997
 avg_total_time_secs = 0.00014964569999999998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4474,6 +4652,7 @@ avg_time_to_best_secs = 0.3043322666
 avg_total_time_secs = 0.30595697099999997
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4498,6 +4677,7 @@ avg_time_to_best_secs = 35.925122370699995
 avg_total_time_secs = 120.00000169579998
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4522,6 +4702,7 @@ avg_time_to_best_secs = 33.8173744081
 avg_total_time_secs = 120.00210165000001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4543,6 +4724,7 @@ avg_time_to_best_secs = 0.0733902417
 avg_total_time_secs = 120.00000063750001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4564,6 +4746,7 @@ avg_time_to_best_secs = 117.89346312080002
 avg_total_time_secs = 120.0009737959
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4587,6 +4770,7 @@ avg_time_to_best_secs = 0.0020208999000000004
 avg_total_time_secs = 10.3109714166
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4610,6 +4794,7 @@ avg_time_to_best_secs = 110.4596730084
 avg_total_time_secs = 120.00103044989996
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4643,6 +4828,7 @@ avg_time_to_best_secs = 0.2639063083
 avg_total_time_secs = 120.0007075961
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4678,6 +4864,7 @@ avg_time_to_best_secs = 54.995297171100006
 avg_total_time_secs = 120.0000207456
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
@@ -4711,6 +4898,7 @@ avg_time_to_best_secs = 15.9880934625
 avg_total_time_secs = 120.14336834170001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4731,6 +4919,7 @@ avg_time_to_best_secs = 0.0001756082
 avg_total_time_secs = 0.0001758293
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4751,6 +4940,7 @@ avg_time_to_best_secs = 0.327627225
 avg_total_time_secs = 0.32923491229999996
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4775,6 +4965,7 @@ avg_time_to_best_secs = 19.391997037499998
 avg_total_time_secs = 120.00000513350001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4799,6 +4990,7 @@ avg_time_to_best_secs = 38.563152724999995
 avg_total_time_secs = 120.0018824791
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4820,6 +5012,7 @@ avg_time_to_best_secs = 0.0750054291
 avg_total_time_secs = 120.00000017079999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4841,6 +5034,7 @@ avg_time_to_best_secs = 118.8541980667
 avg_total_time_secs = 120.00071572489999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4864,6 +5058,7 @@ avg_time_to_best_secs = 0.0017462207
 avg_total_time_secs = 10.5127317458
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4887,6 +5082,7 @@ avg_time_to_best_secs = 102.9303141417
 avg_total_time_secs = 120.00104371240002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4920,6 +5116,7 @@ avg_time_to_best_secs = 0.17500711680000003
 avg_total_time_secs = 120.0007370168
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4955,6 +5152,7 @@ avg_time_to_best_secs = 28.008921362499997
 avg_total_time_secs = 120.0000204458
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
@@ -4988,6 +5186,7 @@ avg_time_to_best_secs = 21.6508636502
 avg_total_time_secs = 120.139636029
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5008,6 +5207,7 @@ avg_time_to_best_secs = 0.00013791670000000002
 avg_total_time_secs = 0.0001381458
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5028,6 +5228,7 @@ avg_time_to_best_secs = 0.31164316249999996
 avg_total_time_secs = 0.31322592479999994
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5052,6 +5253,7 @@ avg_time_to_best_secs = 69.4690945833
 avg_total_time_secs = 120.0000035
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5076,6 +5278,7 @@ avg_time_to_best_secs = 35.7484832832
 avg_total_time_secs = 120.00224515840003
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5097,6 +5300,7 @@ avg_time_to_best_secs = 0.0787255833
 avg_total_time_secs = 120.00000006240002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5118,6 +5322,7 @@ avg_time_to_best_secs = 118.10322513329997
 avg_total_time_secs = 120.0009616583
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5141,6 +5346,7 @@ avg_time_to_best_secs = 0.0022195124000000004
 avg_total_time_secs = 10.360876262400001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5164,6 +5370,7 @@ avg_time_to_best_secs = 103.24805482050002
 avg_total_time_secs = 120.00061674180002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5197,6 +5404,7 @@ avg_time_to_best_secs = 4.2082797585
 avg_total_time_secs = 120.0006030001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5232,6 +5440,7 @@ avg_time_to_best_secs = 21.992405479000002
 avg_total_time_secs = 120.0000080124
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
@@ -5265,6 +5474,7 @@ avg_time_to_best_secs = 20.353151645900002
 avg_total_time_secs = 120.2000751331
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5285,6 +5495,7 @@ avg_time_to_best_secs = 0.00017730000000000003
 avg_total_time_secs = 0.00017761249999999996
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5305,6 +5516,7 @@ avg_time_to_best_secs = 0.3054401624
 avg_total_time_secs = 0.30704438340000006
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5329,6 +5541,7 @@ avg_time_to_best_secs = 24.3729890457
 avg_total_time_secs = 120.00000449190001
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5353,6 +5566,7 @@ avg_time_to_best_secs = 32.917900616699995
 avg_total_time_secs = 120.00182690820002
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5374,6 +5588,7 @@ avg_time_to_best_secs = 0.07387530010000001
 avg_total_time_secs = 120.000000075
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5395,6 +5610,7 @@ avg_time_to_best_secs = 117.4449773039
 avg_total_time_secs = 120.0009376458
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5418,6 +5634,7 @@ avg_time_to_best_secs = 0.0021068625000000003
 avg_total_time_secs = 10.5046740999
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5441,6 +5658,7 @@ avg_time_to_best_secs = 110.82951101659998
 avg_total_time_secs = 120.0006794918
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5474,6 +5692,7 @@ avg_time_to_best_secs = 0.362610546
 avg_total_time_secs = 120.0006859625
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
@@ -5509,6 +5728,7 @@ avg_time_to_best_secs = 18.224975320899993
 avg_total_time_secs = 120.0000148499
 
 [[results]]
+problem = "Qubo"
 instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]

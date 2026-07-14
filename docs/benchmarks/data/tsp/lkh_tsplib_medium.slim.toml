@@ -2,6 +2,7 @@ timestamp = "20260517_192120"
 config_file = "data/benchmarks/tsp/lkh_medium.toml"
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -23,6 +24,7 @@ avg_time_to_best_secs = 0.0846079915
 avg_total_time_secs = 0.0860962999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]

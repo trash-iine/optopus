@@ -29,11 +29,11 @@
   },
   {
     "path": "jssp/general_orlib_medium.slim.toml",
-    "problem": "JobShopScheduling"
+    "problem": "JobShop"
   },
   {
     "path": "jssp/general_orlib_small.slim.toml",
-    "problem": "JobShopScheduling"
+    "problem": "JobShop"
   },
   {
     "path": "maxcut/general_gset_medium.slim.toml",
@@ -45,35 +45,35 @@
   },
   {
     "path": "qubo/general_bqp_medium.slim.toml",
-    "problem": "QUBO"
+    "problem": "Qubo"
   },
   {
     "path": "qubo/general_bqp_small.slim.toml",
-    "problem": "QUBO"
+    "problem": "Qubo"
   },
   {
     "path": "sat/general_uf_medium.slim.toml",
-    "problem": "SAT"
+    "problem": "Sat"
   },
   {
     "path": "sat/general_uf_small.slim.toml",
-    "problem": "SAT"
+    "problem": "Sat"
   },
   {
     "path": "tsp/general_tsplib_medium.slim.toml",
-    "problem": "TSP"
+    "problem": "Tsp"
   },
   {
     "path": "tsp/general_tsplib_small.slim.toml",
-    "problem": "TSP"
+    "problem": "Tsp"
   },
   {
     "path": "tsp/lkh_tsplib_medium.slim.toml",
-    "problem": "TSP"
+    "problem": "Tsp"
   },
   {
     "path": "tsp/lkh_tsplib_small.slim.toml",
-    "problem": "TSP"
+    "problem": "Tsp"
   },
   {
     "path": "vertex_cover/general_gset_medium.slim.toml",

@@ -2,6 +2,7 @@ timestamp = "20260508_112916"
 config_file = "data/benchmark_gset_7000.toml"
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G60"
 
 [results.heuristic]
@@ -29,6 +30,7 @@ avg_time_to_best_secs = 4907.2243754083
 avg_total_time_secs = 5855.3134323042
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G61"
 
 [results.heuristic]
@@ -56,6 +58,7 @@ avg_time_to_best_secs = 4129.8480808917
 avg_total_time_secs = 5919.738893874901
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G62"
 
 [results.heuristic]
@@ -83,6 +86,7 @@ avg_time_to_best_secs = 4543.8388366374
 avg_total_time_secs = 6041.861174362601
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G63"
 
 [results.heuristic]
@@ -110,6 +114,7 @@ avg_time_to_best_secs = 5474.7875422792995
 avg_total_time_secs = 6987.6897070709
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G64"
 
 [results.heuristic]

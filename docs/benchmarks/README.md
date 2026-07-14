@@ -22,7 +22,7 @@ is planned but not yet executed.
 
 Published on GitHub Pages: **https://trash-iine.github.io/optopus/** (Benchmark
 viewer card). The viewer loads its data via `fetch` from
-`data/manifest.json` + `data/**/*.slim.toml`, so it must be served over HTTP —
+`data/index.json` + `data/**/*.slim.toml`, so it must be served over HTTP —
 locally run `cd docs && python3 -m http.server` and open
 `http://localhost:8000/benchmarks/viewer.html` (opening the `file://` path
 directly no longer works). It offers a
@@ -146,9 +146,11 @@ So e.g. MaxCut × LocalSearch produces two rows (Flip + Swap) in the
   publish-ready outputs of `optopus <config>` runs.
 - **`render.py`** (`pip install tomli-w` first) aggregates the curated TOMLs into
   the viewer's data source — a slim copy of each TOML with the heavy per-run
-  `runs` arrays stripped (`*.slim.toml`, ~1.4 MB total vs ~65 MB raw) plus a
-  `manifest.json` the browser fetches. The viewer parses those slim TOMLs
-  client-side with the vendored parser in `vendor/smol-toml.js` (BSD-3-Clause).
+  `runs` arrays stripped (`*.slim.toml`, ~1.4 MB total vs ~65 MB raw) plus an
+  `index.json` the browser fetches to discover them. Each result carries its own
+  `problem` field (emitted by the runner); `index.json` is derived from the slim
+  TOMLs, not hand-maintained. The viewer parses those slim TOMLs client-side with
+  the vendored parser in `vendor/smol-toml.js` (BSD-3-Clause).
 - **GitHub Pages**: `.github/workflows/deploy-pages.yml` runs `render.py` and
   deploys `docs/` on every push to `main` (the raw benchmark TOMLs are pruned
   from the published site). Requires Settings → Pages → Source = "GitHub Actions".
@@ -160,7 +162,7 @@ cargo build --release
 ./target/release/optopus data/benchmarks/maxcut/general_small.toml
 mv result/<timestamp>.toml docs/benchmarks/data/maxcut/general_gset_small.toml
 
-# Regenerate viewer data (slim TOML + manifest)
+# Regenerate viewer data (slim TOML + index)
 python3 docs/benchmarks/render.py
 ```
 

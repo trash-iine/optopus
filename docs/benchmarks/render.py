@@ -3,9 +3,15 @@
 Reads every curated `*.toml` under `docs/benchmarks/data/` (publish-ready outputs
 of the Rust benchmark runner) and produces the web viewer's data source: a slim
 copy of each TOML with the heavy per-run `runs` arrays stripped (`*.slim.toml`),
-plus a `manifest.json` the browser fetches to discover them. `viewer.html` parses
+plus an `index.json` the browser fetches to discover them. `viewer.html` parses
 those slim TOMLs client-side (see `docs/benchmarks/vendor/smol-toml.js`) and is the
 single, interactive presentation of the results.
+
+The problem type is the Rust runner's own output: each `[[results]]` entry carries
+a `problem` field. `index.json` is a pure derivation of the slim TOMLs — it lists
+their paths and mirrors each file's `problem` for the viewer's filters; it is never
+hand-maintained. Older curated TOMLs that predate the `problem` field fall back to
+`detect_problem` (parent-directory heuristic) so they keep working un-regenerated.
 
 Requires `tomli_w` (`pip install tomli-w`). Run from anywhere:
 
@@ -23,22 +29,26 @@ HERE = Path(__file__).resolve().parent
 DATA_DIR = HERE / "data"
 
 
+# Directory / instance-path names use the Rust `ProblemKind` serde spelling
+# (see `src/benchmark/config.rs`) so the fallback below matches the runner's
+# native `problem` field exactly.
 PROBLEM_DIRS = {
     "maxcut": "MaxCut",
-    "qubo": "QUBO",
-    "sat": "SAT",
-    "tsp": "TSP",
-    "jssp": "JobShopScheduling",
+    "qubo": "Qubo",
+    "sat": "Sat",
+    "tsp": "Tsp",
+    "jssp": "JobShop",
     "vertex_cover": "VertexCover",
 }
 
 
 def detect_problem(toml_path: Path, instance_path: str) -> str:
-    """Resolve the problem type from the curated file's parent directory.
+    """Fallback problem type for legacy TOMLs lacking the `problem` field.
 
-    Some problems share the same instance file (e.g. VertexCover uses MaxCut GSET
-    graphs), so the result TOML alone is ambiguous; the parent directory under
-    `docs/benchmarks/data/<problem>/` disambiguates.
+    The runner now writes `problem` into each result, so this is only used for
+    older curated files. Some problems share the same instance file (e.g.
+    VertexCover uses MaxCut GSET graphs), so the result TOML alone is ambiguous;
+    the parent directory under `docs/benchmarks/data/<problem>/` disambiguates.
     """
     rel_parts = toml_path.relative_to(DATA_DIR).parts
     if len(rel_parts) >= 2:
@@ -47,18 +57,18 @@ def detect_problem(toml_path: Path, instance_path: str) -> str:
     if "max_cut" in parts:
         return "MaxCut"
     if "qubo" in parts:
-        return "QUBO"
+        return "Qubo"
     if "sat" in parts:
-        return "SAT"
+        return "Sat"
     if "tsp" in parts:
-        return "TSP"
+        return "Tsp"
     if "jssp" in parts:
-        return "JobShopScheduling"
+        return "JobShop"
     return "Other"
 
 
 SLIM_SUFFIX = ".slim.toml"
-MANIFEST_PATH = DATA_DIR / "manifest.json"
+INDEX_PATH = DATA_DIR / "index.json"
 
 
 def raw_toml_paths() -> list[Path]:
@@ -70,12 +80,13 @@ def raw_toml_paths() -> list[Path]:
     )
 
 
-def slim_document(doc: dict) -> dict:
+def slim_document(doc: dict, toml_path: Path) -> dict:
     """Strip the per-run `runs` arrays; keep only what the viewer needs.
 
     The bulk of each curated TOML is `results[].runs[].solution` (full solution
-    vectors). The web viewer only reads `instance_path`, `heuristic`, and
-    `summary`, so the slim copy drops `runs` entirely.
+    vectors). The web viewer only reads `problem`, `instance_path`, `heuristic`,
+    and `summary`, so the slim copy drops `runs` entirely. `problem` comes from
+    the runner's own field, falling back to `detect_problem` for legacy TOMLs.
     """
     slim: dict = {}
     for key in ("timestamp", "config_file"):
@@ -83,6 +94,8 @@ def slim_document(doc: dict) -> dict:
             slim[key] = doc[key]
     slim["results"] = [
         {
+            "problem": r.get("problem")
+            or detect_problem(toml_path, r["instance_path"]),
             "instance_path": r["instance_path"],
             "heuristic": r["heuristic"],
             "summary": r["summary"],
@@ -93,41 +106,41 @@ def slim_document(doc: dict) -> dict:
 
 
 def build_site_data() -> None:
-    """Write slim TOMLs (viewer data source) + a manifest listing them.
+    """Write slim TOMLs (viewer data source) + an index derived from them.
 
     GitHub Pages exposes no directory listing, so the viewer discovers the data
-    files through `manifest.json`. Each entry carries the parent-dir-derived
-    `problem` because some problems share instance files (VertexCover reuses
-    MaxCut GSET graphs), making the TOML alone ambiguous.
+    files through `index.json`. The index is a pure derivation of the slim TOMLs:
+    each entry lists a file's path and mirrors its `problem` (read from the slim
+    document, itself sourced from the runner's `problem` field). It is never
+    hand-maintained.
     """
     import tomli_w
 
-    manifest: list[dict] = []
+    index: list[dict] = []
     for toml_path in raw_toml_paths():
         with toml_path.open("rb") as f:
             doc = tomllib.load(f)
-        results = doc.get("results", [])
-        if not results:
+        slim = slim_document(doc, toml_path)
+        if not slim["results"]:
             continue
-        problem = detect_problem(toml_path, results[0]["instance_path"])
 
         slim_path = toml_path.with_name(toml_path.stem + SLIM_SUFFIX)
         with slim_path.open("wb") as f:
-            tomli_w.dump(slim_document(doc), f)
+            tomli_w.dump(slim, f)
 
         rel = slim_path.relative_to(DATA_DIR).as_posix()
-        manifest.append({"path": rel, "problem": problem})
+        index.append({"path": rel, "problem": slim["results"][0]["problem"]})
 
-    manifest.sort(key=lambda e: e["path"])
-    MANIFEST_PATH.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
+    index.sort(key=lambda e: e["path"])
+    INDEX_PATH.write_text(
+        json.dumps(index, ensure_ascii=False, indent=2) + "\n"
     )
     total_kb = sum(
-        (DATA_DIR / e["path"]).stat().st_size for e in manifest
+        (DATA_DIR / e["path"]).stat().st_size for e in index
     ) / 1024
     print(
-        f"wrote {MANIFEST_PATH.relative_to(HERE.parent.parent)} "
-        f"({len(manifest)} slim files, {total_kb:.1f} KB total)"
+        f"wrote {INDEX_PATH.relative_to(HERE.parent.parent)} "
+        f"({len(index)} slim files, {total_kb:.1f} KB total)"
     )
 
 

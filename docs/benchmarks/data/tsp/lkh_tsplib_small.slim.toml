@@ -2,6 +2,7 @@ timestamp = "20260517_110145"
 config_file = "data/benchmarks/tsp/lkh_small.toml"
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/burma14.tsp"
 
 [results.heuristic]
@@ -23,6 +24,7 @@ avg_time_to_best_secs = 0.005680279
 avg_total_time_secs = 0.007167033099999999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil51.tsp"
 
 [results.heuristic]
@@ -44,6 +46,7 @@ avg_time_to_best_secs = 0.0112794501
 avg_total_time_secs = 0.011716833199999999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/att48.tsp"
 
 [results.heuristic]
@@ -65,6 +68,7 @@ avg_time_to_best_secs = 0.0252828416
 avg_total_time_secs = 0.027301746
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/berlin52.tsp"
 
 [results.heuristic]

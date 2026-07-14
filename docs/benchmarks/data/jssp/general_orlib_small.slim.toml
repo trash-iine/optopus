@@ -2,6 +2,7 @@ timestamp = "20260517_111950"
 config_file = "data/benchmarks/jssp/general_small.toml"
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -22,6 +23,7 @@ avg_time_to_best_secs = 0.0003500082
 avg_total_time_secs = 0.0004660332
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -42,6 +44,7 @@ avg_time_to_best_secs = 0.0049940455000000005
 avg_total_time_secs = 0.005561433100000001
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -66,6 +69,7 @@ avg_time_to_best_secs = 2.6138854086
 avg_total_time_secs = 30.000006687299997
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -90,6 +94,7 @@ avg_time_to_best_secs = 0.47324865419999995
 avg_total_time_secs = 30.0002064958
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -111,6 +116,7 @@ avg_time_to_best_secs = 0.185845371
 avg_total_time_secs = 30.0000073542
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -132,6 +138,7 @@ avg_time_to_best_secs = 1.4209283750000004
 avg_total_time_secs = 30.000148645599996
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -155,6 +162,7 @@ avg_time_to_best_secs = 0.2355123291
 avg_total_time_secs = 30.0000033459
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -178,6 +186,7 @@ avg_time_to_best_secs = 3.4532447458
 avg_total_time_secs = 30.000168979399994
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -211,6 +220,7 @@ avg_time_to_best_secs = 1.3997696873
 avg_total_time_secs = 30.001163812599998
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -246,6 +256,7 @@ avg_time_to_best_secs = 0.35808395410000005
 avg_total_time_secs = 30.000579399900005
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft06.txt"
 
 [results.heuristic]
@@ -279,6 +290,7 @@ avg_time_to_best_secs = 17.0522911499
 avg_total_time_secs = 30.203482516500003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -299,6 +311,7 @@ avg_time_to_best_secs = 0.0019067291000000003
 avg_total_time_secs = 0.0020085625
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -319,6 +332,7 @@ avg_time_to_best_secs = 0.1609339834
 avg_total_time_secs = 0.16909841659999997
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -343,6 +357,7 @@ avg_time_to_best_secs = 1.1253471790999998
 avg_total_time_secs = 30.000050220699997
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -367,6 +382,7 @@ avg_time_to_best_secs = 1.0697649623
 avg_total_time_secs = 30.002928924899997
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -388,6 +404,7 @@ avg_time_to_best_secs = 12.647240116599999
 avg_total_time_secs = 30.000035016800005
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -409,6 +426,7 @@ avg_time_to_best_secs = 24.3837638125
 avg_total_time_secs = 30.0015015336
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -432,6 +450,7 @@ avg_time_to_best_secs = 8.8131802208
 avg_total_time_secs = 30.000022879200003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -455,6 +474,7 @@ avg_time_to_best_secs = 25.259420271000003
 avg_total_time_secs = 30.003161995899994
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -488,6 +508,7 @@ avg_time_to_best_secs = 7.6695845792
 avg_total_time_secs = 30.007051675099994
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -523,6 +544,7 @@ avg_time_to_best_secs = 15.341345045799997
 avg_total_time_secs = 30.003196499900003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
@@ -556,6 +578,7 @@ avg_time_to_best_secs = 13.997592729199999
 avg_total_time_secs = 31.861301358499997
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -576,6 +599,7 @@ avg_time_to_best_secs = 0.0011072541
 avg_total_time_secs = 0.001293504
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -596,6 +620,7 @@ avg_time_to_best_secs = 0.227244854
 avg_total_time_secs = 0.2361141956
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -620,6 +645,7 @@ avg_time_to_best_secs = 2.0195625874000003
 avg_total_time_secs = 30.0000468291
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -644,6 +670,7 @@ avg_time_to_best_secs = 0.23970568329999997
 avg_total_time_secs = 30.00238637489999
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -665,6 +692,7 @@ avg_time_to_best_secs = 19.404379033399998
 avg_total_time_secs = 30.0000369459
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -686,6 +714,7 @@ avg_time_to_best_secs = 27.9120575915
 avg_total_time_secs = 30.001666029399995
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -709,6 +738,7 @@ avg_time_to_best_secs = 17.1414160624
 avg_total_time_secs = 30.000032908100003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -732,6 +762,7 @@ avg_time_to_best_secs = 29.135946862399997
 avg_total_time_secs = 30.003061429099994
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -765,6 +796,7 @@ avg_time_to_best_secs = 5.1674557456
 avg_total_time_secs = 30.006732933299997
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -800,6 +832,7 @@ avg_time_to_best_secs = 22.3635002417
 avg_total_time_secs = 30.005045737400003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft20.txt"
 
 [results.heuristic]
@@ -833,6 +866,7 @@ avg_time_to_best_secs = 17.182932312300004
 avg_total_time_secs = 32.052854696
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -853,6 +887,7 @@ avg_time_to_best_secs = 0.0004161542
 avg_total_time_secs = 0.0005806544
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -873,6 +908,7 @@ avg_time_to_best_secs = 0.0105355959
 avg_total_time_secs = 0.011997999999999998
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -897,6 +933,7 @@ avg_time_to_best_secs = 2.4594646665
 avg_total_time_secs = 30.000016625200004
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -921,6 +958,7 @@ avg_time_to_best_secs = 0.0160496332
 avg_total_time_secs = 30.000330104099998
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -942,6 +980,7 @@ avg_time_to_best_secs = 0.5140087334000001
 avg_total_time_secs = 30.0000140875
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -963,6 +1002,7 @@ avg_time_to_best_secs = 3.5430388919
 avg_total_time_secs = 30.0004194331
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -986,6 +1026,7 @@ avg_time_to_best_secs = 0.6627700624999999
 avg_total_time_secs = 30.000011849899995
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -1009,6 +1050,7 @@ avg_time_to_best_secs = 4.9573160253
 avg_total_time_secs = 30.000224712300003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -1042,6 +1084,7 @@ avg_time_to_best_secs = 2.6825004125000005
 avg_total_time_secs = 30.002396079199997
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -1077,6 +1120,7 @@ avg_time_to_best_secs = 6.883681037600001
 avg_total_time_secs = 30.0011242832
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
@@ -1110,6 +1154,7 @@ avg_time_to_best_secs = 17.335900924999997
 avg_total_time_secs = 30.580806204100003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1130,6 +1175,7 @@ avg_time_to_best_secs = 5.529990000000001e-05
 avg_total_time_secs = 8.205410000000002e-05
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1150,6 +1196,7 @@ avg_time_to_best_secs = 0.0114683
 avg_total_time_secs = 0.012760262599999999
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1174,6 +1221,7 @@ avg_time_to_best_secs = 5.1468892582
 avg_total_time_secs = 30.0000106458
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1198,6 +1246,7 @@ avg_time_to_best_secs = 0.0423893459
 avg_total_time_secs = 30.0004421375
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1219,6 +1268,7 @@ avg_time_to_best_secs = 3.2632921375999997
 avg_total_time_secs = 30.000008429
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1240,6 +1290,7 @@ avg_time_to_best_secs = 12.3611564625
 avg_total_time_secs = 30.0002855167
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1263,6 +1314,7 @@ avg_time_to_best_secs = 2.4802694625
 avg_total_time_secs = 30.0000100168
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1286,6 +1338,7 @@ avg_time_to_best_secs = 9.8680965415
 avg_total_time_secs = 30.000405416599996
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1319,6 +1372,7 @@ avg_time_to_best_secs = 0.8607794418000001
 avg_total_time_secs = 30.002026378899995
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1354,6 +1408,7 @@ avg_time_to_best_secs = 6.1370908876
 avg_total_time_secs = 30.001589575100002
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la02.txt"
 
 [results.heuristic]
@@ -1387,6 +1442,7 @@ avg_time_to_best_secs = 11.4304246914
 avg_total_time_secs = 30.2581178041
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1407,6 +1463,7 @@ avg_time_to_best_secs = 8.209999999999999e-05
 avg_total_time_secs = 0.0001056959
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1427,6 +1484,7 @@ avg_time_to_best_secs = 0.0140030749
 avg_total_time_secs = 0.015273129
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1451,6 +1509,7 @@ avg_time_to_best_secs = 6.1197211792
 avg_total_time_secs = 30.0000122165
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1475,6 +1534,7 @@ avg_time_to_best_secs = 0.2100918583
 avg_total_time_secs = 30.0003515543
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1496,6 +1556,7 @@ avg_time_to_best_secs = 3.5310151498000004
 avg_total_time_secs = 30.000008650099993
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1517,6 +1578,7 @@ avg_time_to_best_secs = 11.7382843959
 avg_total_time_secs = 30.000303641600006
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1540,6 +1602,7 @@ avg_time_to_best_secs = 1.2279373543
 avg_total_time_secs = 30.000007166700005
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1563,6 +1626,7 @@ avg_time_to_best_secs = 10.914635591500002
 avg_total_time_secs = 30.0004578626
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1596,6 +1660,7 @@ avg_time_to_best_secs = 1.3660084876
 avg_total_time_secs = 30.002183145700002
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1631,6 +1696,7 @@ avg_time_to_best_secs = 12.3269233163
 avg_total_time_secs = 30.000865258500006
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la03.txt"
 
 [results.heuristic]
@@ -1664,6 +1730,7 @@ avg_time_to_best_secs = 18.499358779
 avg_total_time_secs = 30.439272441299998
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1684,6 +1751,7 @@ avg_time_to_best_secs = 5.818729999999999e-05
 avg_total_time_secs = 8.88125e-05
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1704,6 +1772,7 @@ avg_time_to_best_secs = 0.0113562084
 avg_total_time_secs = 0.012836187499999999
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1728,6 +1797,7 @@ avg_time_to_best_secs = 2.8507629914999995
 avg_total_time_secs = 30.0000119955
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1752,6 +1822,7 @@ avg_time_to_best_secs = 0.29921820820000006
 avg_total_time_secs = 30.000355225200003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1773,6 +1844,7 @@ avg_time_to_best_secs = 1.9887999249999997
 avg_total_time_secs = 30.0000088958
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1794,6 +1866,7 @@ avg_time_to_best_secs = 9.253883995799999
 avg_total_time_secs = 30.0004805501
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1817,6 +1890,7 @@ avg_time_to_best_secs = 1.7093491832
 avg_total_time_secs = 30.0000068123
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1840,6 +1914,7 @@ avg_time_to_best_secs = 13.553865237599998
 avg_total_time_secs = 30.0002787001
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1873,6 +1948,7 @@ avg_time_to_best_secs = 2.285317079
 avg_total_time_secs = 30.001846341899995
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1908,6 +1984,7 @@ avg_time_to_best_secs = 18.187871783600002
 avg_total_time_secs = 30.001666204099998
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la04.txt"
 
 [results.heuristic]
@@ -1941,6 +2018,7 @@ avg_time_to_best_secs = 15.046154470900001
 avg_total_time_secs = 30.449265416600003
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -1961,6 +2039,7 @@ avg_time_to_best_secs = 6.1875e-05
 avg_total_time_secs = 8.85958e-05
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -1981,6 +2060,7 @@ avg_time_to_best_secs = 0.0082294919
 avg_total_time_secs = 0.0095172001
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2005,6 +2085,7 @@ avg_time_to_best_secs = 2.2833568416
 avg_total_time_secs = 30.0000106833
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2029,6 +2110,7 @@ avg_time_to_best_secs = 0.007670337500000002
 avg_total_time_secs = 30.0003675459
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2050,6 +2132,7 @@ avg_time_to_best_secs = 0.17100409600000002
 avg_total_time_secs = 30.000006962600004
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2071,6 +2154,7 @@ avg_time_to_best_secs = 0.5554745082
 avg_total_time_secs = 30.000350304199998
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2094,6 +2178,7 @@ avg_time_to_best_secs = 0.12193981660000001
 avg_total_time_secs = 30.0000065
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2117,6 +2202,7 @@ avg_time_to_best_secs = 1.4164948291000004
 avg_total_time_secs = 30.0004356583
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2150,6 +2236,7 @@ avg_time_to_best_secs = 0.08033965009999999
 avg_total_time_secs = 30.0016786916
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2185,6 +2272,7 @@ avg_time_to_best_secs = 0.096321996
 avg_total_time_secs = 30.001233854
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/la05.txt"
 
 [results.heuristic]
@@ -2218,6 +2306,7 @@ avg_time_to_best_secs = 7.5415775666
 avg_total_time_secs = 30.288229596
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2238,6 +2327,7 @@ avg_time_to_best_secs = 0.0001434584
 avg_total_time_secs = 0.0002118248
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2258,6 +2348,7 @@ avg_time_to_best_secs = 0.1363808375
 avg_total_time_secs = 0.1470059416
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2282,6 +2373,7 @@ avg_time_to_best_secs = 1.171769454
 avg_total_time_secs = 30.0000359417
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2306,6 +2398,7 @@ avg_time_to_best_secs = 0.1171407708
 avg_total_time_secs = 30.0025666833
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2327,6 +2420,7 @@ avg_time_to_best_secs = 10.4466126248
 avg_total_time_secs = 30.0000236459
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2348,6 +2442,7 @@ avg_time_to_best_secs = 26.463541528999997
 avg_total_time_secs = 30.0025834543
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2371,6 +2466,7 @@ avg_time_to_best_secs = 8.122712662599998
 avg_total_time_secs = 30.0000257333
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2394,6 +2490,7 @@ avg_time_to_best_secs = 25.715057266600002
 avg_total_time_secs = 30.002574837800005
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2427,6 +2524,7 @@ avg_time_to_best_secs = 4.8427024668
 avg_total_time_secs = 30.0050221918
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
@@ -2462,6 +2560,7 @@ avg_time_to_best_secs = 15.268715000000004
 avg_total_time_secs = 30.004358908499995
 
 [[results]]
+problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/abz5.txt"
 
 [results.heuristic]
