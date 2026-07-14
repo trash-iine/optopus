@@ -4,6 +4,12 @@ Aggregated comparison of every implemented heuristic across every supported
 problem type. Each row is `(problem, instance, neighbor, heuristic)` averaged
 over 10 runs.
 
+> ⚠️ **Reference values only.** These benchmarks were collected in a
+> non-isolated environment (shared machine, background load) and some code
+> paths are deliberately generalized, trading raw speed for flexibility. The
+> numbers therefore do **not** reflect each algorithm's true performance — treat
+> them as indicative reference values, not a rigorous ranking.
+
 ## Coverage
 
 Small (≤30s budget) and medium (120s) bands are complete. Large band (600s)
