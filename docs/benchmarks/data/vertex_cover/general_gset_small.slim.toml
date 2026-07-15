@@ -2,6 +2,7 @@ timestamp = "20260519_151115"
 config_file = "data/benchmarks/vertex_cover/general_small.toml"
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -22,6 +23,7 @@ avg_time_to_best_secs = 0.00041984989999999995
 avg_total_time_secs = 0.0004201415
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -42,6 +44,7 @@ avg_time_to_best_secs = 0.6078234458
 avg_total_time_secs = 0.6087756123
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -66,6 +69,7 @@ avg_time_to_best_secs = 6.8027564624000005
 avg_total_time_secs = 30.000000750100003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -90,6 +94,7 @@ avg_time_to_best_secs = 11.4958804292
 avg_total_time_secs = 30.0009758876
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -111,6 +116,7 @@ avg_time_to_best_secs = 10.3796355625
 avg_total_time_secs = 30.000000149999998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -132,6 +138,7 @@ avg_time_to_best_secs = 29.700347562599994
 avg_total_time_secs = 30.000486866800003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -155,6 +162,7 @@ avg_time_to_best_secs = 0.004353029
 avg_total_time_secs = 3.333645808
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -178,6 +186,7 @@ avg_time_to_best_secs = 28.7869015626
 avg_total_time_secs = 30.0006487625
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -211,6 +220,7 @@ avg_time_to_best_secs = 0.47820348739999996
 avg_total_time_secs = 30.000179600000003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -246,6 +256,7 @@ avg_time_to_best_secs = 12.9713864586
 avg_total_time_secs = 30.000021308199997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G1"
 
 [results.heuristic]
@@ -279,6 +290,7 @@ avg_time_to_best_secs = 17.510463112399997
 avg_total_time_secs = 30.030628170800004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -299,6 +311,7 @@ avg_time_to_best_secs = 0.00037704579999999995
 avg_total_time_secs = 0.00037736669999999993
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -319,6 +332,7 @@ avg_time_to_best_secs = 0.5980108752000001
 avg_total_time_secs = 0.5990157335
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -343,6 +357,7 @@ avg_time_to_best_secs = 1.1285638292
 avg_total_time_secs = 30.000000829099996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -367,6 +382,7 @@ avg_time_to_best_secs = 11.270514395800001
 avg_total_time_secs = 30.001120778999997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -388,6 +404,7 @@ avg_time_to_best_secs = 7.193158920900001
 avg_total_time_secs = 30.000001104300004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -409,6 +426,7 @@ avg_time_to_best_secs = 29.7521835457
 avg_total_time_secs = 30.000749654099998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -432,6 +450,7 @@ avg_time_to_best_secs = 0.0041553041999999995
 avg_total_time_secs = 3.2233436583
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -455,6 +474,7 @@ avg_time_to_best_secs = 28.6326061042
 avg_total_time_secs = 30.000878529500007
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -488,6 +508,7 @@ avg_time_to_best_secs = 0.2537417957
 avg_total_time_secs = 30.000139329300005
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -523,6 +544,7 @@ avg_time_to_best_secs = 11.709932379
 avg_total_time_secs = 30.0000433375
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G2"
 
 [results.heuristic]
@@ -556,6 +578,7 @@ avg_time_to_best_secs = 10.8277639791
 avg_total_time_secs = 30.0268514003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -576,6 +599,7 @@ avg_time_to_best_secs = 0.0003834291
 avg_total_time_secs = 0.0003838542
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -596,6 +620,7 @@ avg_time_to_best_secs = 0.6427897208000001
 avg_total_time_secs = 0.6438289792
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -620,6 +645,7 @@ avg_time_to_best_secs = 4.5944894208000004
 avg_total_time_secs = 30.000000674800003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -644,6 +670,7 @@ avg_time_to_best_secs = 10.113327154
 avg_total_time_secs = 30.001042991600002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -665,6 +692,7 @@ avg_time_to_best_secs = 5.526367841600001
 avg_total_time_secs = 30.000000179299995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -686,6 +714,7 @@ avg_time_to_best_secs = 29.373002379200006
 avg_total_time_secs = 30.000756571000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -709,6 +738,7 @@ avg_time_to_best_secs = 0.005025466600000001
 avg_total_time_secs = 3.1038847583
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -732,6 +762,7 @@ avg_time_to_best_secs = 28.685899633500004
 avg_total_time_secs = 30.0006984749
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -765,6 +796,7 @@ avg_time_to_best_secs = 0.35752188760000003
 avg_total_time_secs = 30.000150387599994
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -800,6 +832,7 @@ avg_time_to_best_secs = 11.4449438415
 avg_total_time_secs = 30.000031649900002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G3"
 
 [results.heuristic]
@@ -833,6 +866,7 @@ avg_time_to_best_secs = 13.164440037400002
 avg_total_time_secs = 30.0355020336
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -853,6 +887,7 @@ avg_time_to_best_secs = 0.0003609917
 avg_total_time_secs = 0.00036130839999999994
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -873,6 +908,7 @@ avg_time_to_best_secs = 0.5863168790999999
 avg_total_time_secs = 0.5875792665
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -897,6 +933,7 @@ avg_time_to_best_secs = 9.271799179199999
 avg_total_time_secs = 30.000000875
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -921,6 +958,7 @@ avg_time_to_best_secs = 13.492510016600002
 avg_total_time_secs = 30.0008265333
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -942,6 +980,7 @@ avg_time_to_best_secs = 4.3124945502
 avg_total_time_secs = 30.000000262599997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -963,6 +1002,7 @@ avg_time_to_best_secs = 29.468628200100007
 avg_total_time_secs = 30.000715804200002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -986,6 +1026,7 @@ avg_time_to_best_secs = 0.0043707499
 avg_total_time_secs = 2.9026020126
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -1009,6 +1050,7 @@ avg_time_to_best_secs = 28.9885746626
 avg_total_time_secs = 30.000766283399997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -1042,6 +1084,7 @@ avg_time_to_best_secs = 0.2008748917
 avg_total_time_secs = 30.000264433399998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -1077,6 +1120,7 @@ avg_time_to_best_secs = 6.451057471
 avg_total_time_secs = 30.000021045800004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G4"
 
 [results.heuristic]
@@ -1110,6 +1154,7 @@ avg_time_to_best_secs = 12.9902968418
 avg_total_time_secs = 30.027183449999995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1130,6 +1175,7 @@ avg_time_to_best_secs = 0.0003508459999999999
 avg_total_time_secs = 0.0003511666000000001
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1150,6 +1196,7 @@ avg_time_to_best_secs = 0.5861398416000001
 avg_total_time_secs = 0.5875339876
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1174,6 +1221,7 @@ avg_time_to_best_secs = 1.9372115623
 avg_total_time_secs = 30.000001595999997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1198,6 +1246,7 @@ avg_time_to_best_secs = 10.9719909042
 avg_total_time_secs = 30.0006333374
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1219,6 +1268,7 @@ avg_time_to_best_secs = 5.0252893169
 avg_total_time_secs = 30.000015954300004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1240,6 +1290,7 @@ avg_time_to_best_secs = 29.6677023001
 avg_total_time_secs = 30.0007973584
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1263,6 +1314,7 @@ avg_time_to_best_secs = 0.005043162499999999
 avg_total_time_secs = 3.103585875
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1286,6 +1338,7 @@ avg_time_to_best_secs = 29.3814451708
 avg_total_time_secs = 30.0007516959
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1319,6 +1372,7 @@ avg_time_to_best_secs = 0.16509183340000003
 avg_total_time_secs = 30.000194829100003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1354,6 +1408,7 @@ avg_time_to_best_secs = 11.5534578334
 avg_total_time_secs = 30.000013512699997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G5"
 
 [results.heuristic]
@@ -1387,6 +1442,7 @@ avg_time_to_best_secs = 13.254667758399998
 avg_total_time_secs = 30.0459325292
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1407,6 +1463,7 @@ avg_time_to_best_secs = 0.00033883350000000003
 avg_total_time_secs = 0.0003391584
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1427,6 +1484,7 @@ avg_time_to_best_secs = 0.5803196293000001
 avg_total_time_secs = 0.5813814040999999
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1451,6 +1509,7 @@ avg_time_to_best_secs = 5.6386977583
 avg_total_time_secs = 30.0000007124
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1475,6 +1534,7 @@ avg_time_to_best_secs = 11.4741521166
 avg_total_time_secs = 30.0008446708
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1496,6 +1556,7 @@ avg_time_to_best_secs = 9.6785948335
 avg_total_time_secs = 30.0000001499
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1517,6 +1578,7 @@ avg_time_to_best_secs = 29.664344541699997
 avg_total_time_secs = 30.000621045799996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1540,6 +1602,7 @@ avg_time_to_best_secs = 0.0041168833000000005
 avg_total_time_secs = 2.9254036416
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1563,6 +1626,7 @@ avg_time_to_best_secs = 29.5359645583
 avg_total_time_secs = 30.001093266500003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1596,6 +1660,7 @@ avg_time_to_best_secs = 0.26795140409999996
 avg_total_time_secs = 30.000143116799997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1631,6 +1696,7 @@ avg_time_to_best_secs = 15.3151895168
 avg_total_time_secs = 30.0000287248
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G6"
 
 [results.heuristic]
@@ -1664,6 +1730,7 @@ avg_time_to_best_secs = 11.016537649899998
 avg_total_time_secs = 30.024545791499996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1684,6 +1751,7 @@ avg_time_to_best_secs = 0.00040973320000000003
 avg_total_time_secs = 0.00041007930000000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1704,6 +1772,7 @@ avg_time_to_best_secs = 0.6285125375
 avg_total_time_secs = 0.6297568706
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1728,6 +1797,7 @@ avg_time_to_best_secs = 4.2226759123
 avg_total_time_secs = 30.0000402543
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1752,6 +1822,7 @@ avg_time_to_best_secs = 9.8803449042
 avg_total_time_secs = 30.000841312400006
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1773,6 +1844,7 @@ avg_time_to_best_secs = 5.324035199900001
 avg_total_time_secs = 30.0000001627
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1794,6 +1866,7 @@ avg_time_to_best_secs = 29.622384150100004
 avg_total_time_secs = 30.000827704
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1817,6 +1890,7 @@ avg_time_to_best_secs = 0.0040296791
 avg_total_time_secs = 3.1174819166
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1840,6 +1914,7 @@ avg_time_to_best_secs = 29.233670637499994
 avg_total_time_secs = 30.0006345125
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1873,6 +1948,7 @@ avg_time_to_best_secs = 0.36461102089999997
 avg_total_time_secs = 30.000135691700002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1908,6 +1984,7 @@ avg_time_to_best_secs = 5.2419231459
 avg_total_time_secs = 30.0000170124
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G7"
 
 [results.heuristic]
@@ -1941,6 +2018,7 @@ avg_time_to_best_secs = 12.605255583300002
 avg_total_time_secs = 30.0341768753
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -1961,6 +2039,7 @@ avg_time_to_best_secs = 0.000422846
 avg_total_time_secs = 0.00042315820000000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -1981,6 +2060,7 @@ avg_time_to_best_secs = 0.5853903792
 avg_total_time_secs = 0.5866660458
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2005,6 +2085,7 @@ avg_time_to_best_secs = 1.8181692333000001
 avg_total_time_secs = 30.0000019959
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2029,6 +2110,7 @@ avg_time_to_best_secs = 9.7255458874
 avg_total_time_secs = 30.0008481416
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2050,6 +2132,7 @@ avg_time_to_best_secs = 6.570896820799999
 avg_total_time_secs = 30.00000089590001
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2071,6 +2154,7 @@ avg_time_to_best_secs = 29.4814718959
 avg_total_time_secs = 30.001772179
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2094,6 +2178,7 @@ avg_time_to_best_secs = 0.0044990459
 avg_total_time_secs = 2.9314818667
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2117,6 +2202,7 @@ avg_time_to_best_secs = 28.831129437299996
 avg_total_time_secs = 30.000542612299995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2150,6 +2236,7 @@ avg_time_to_best_secs = 0.20187459580000003
 avg_total_time_secs = 30.000195420700003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2185,6 +2272,7 @@ avg_time_to_best_secs = 13.349865054099999
 avg_total_time_secs = 30.000019154200004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G8"
 
 [results.heuristic]
@@ -2218,6 +2306,7 @@ avg_time_to_best_secs = 13.263181308399998
 avg_total_time_secs = 30.050200379099998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2238,6 +2327,7 @@ avg_time_to_best_secs = 0.0003634833
 avg_total_time_secs = 0.00036384129999999994
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2258,6 +2348,7 @@ avg_time_to_best_secs = 0.5815728834000001
 avg_total_time_secs = 0.5824943126
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2282,6 +2373,7 @@ avg_time_to_best_secs = 2.6908132208
 avg_total_time_secs = 30.0000186665
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2306,6 +2398,7 @@ avg_time_to_best_secs = 8.6025238375
 avg_total_time_secs = 30.000755333300003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2327,6 +2420,7 @@ avg_time_to_best_secs = 8.591230879
 avg_total_time_secs = 30.000000145800005
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2348,6 +2442,7 @@ avg_time_to_best_secs = 29.4908880334
 avg_total_time_secs = 30.000428487199997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2371,6 +2466,7 @@ avg_time_to_best_secs = 0.0045744958
 avg_total_time_secs = 2.9210932249000003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2394,6 +2490,7 @@ avg_time_to_best_secs = 29.485630125100005
 avg_total_time_secs = 30.0005934835
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2427,6 +2524,7 @@ avg_time_to_best_secs = 0.1966163625
 avg_total_time_secs = 30.001411241799996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2462,6 +2560,7 @@ avg_time_to_best_secs = 10.0084593377
 avg_total_time_secs = 30.0000331708
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G9"
 
 [results.heuristic]
@@ -2495,6 +2594,7 @@ avg_time_to_best_secs = 11.9023701832
 avg_total_time_secs = 30.035202329000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2515,6 +2615,7 @@ avg_time_to_best_secs = 0.00036657110000000003
 avg_total_time_secs = 0.0003668835
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2535,6 +2636,7 @@ avg_time_to_best_secs = 0.6555864167000001
 avg_total_time_secs = 0.6566987625999999
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2559,6 +2661,7 @@ avg_time_to_best_secs = 2.0083930667
 avg_total_time_secs = 30.000006033400002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2583,6 +2686,7 @@ avg_time_to_best_secs = 7.989156025099999
 avg_total_time_secs = 30.0011518793
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2604,6 +2708,7 @@ avg_time_to_best_secs = 5.767636166399999
 avg_total_time_secs = 30.000001220900003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2625,6 +2730,7 @@ avg_time_to_best_secs = 29.229252408500003
 avg_total_time_secs = 30.001171004299998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2648,6 +2754,7 @@ avg_time_to_best_secs = 0.0047041623
 avg_total_time_secs = 3.2696853042000003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2671,6 +2778,7 @@ avg_time_to_best_secs = 29.140223341800002
 avg_total_time_secs = 30.000808737800003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2704,6 +2812,7 @@ avg_time_to_best_secs = 0.25957513349999994
 avg_total_time_secs = 30.0003087708
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2739,6 +2848,7 @@ avg_time_to_best_secs = 12.0120110001
 avg_total_time_secs = 30.001483812300002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G10"
 
 [results.heuristic]
@@ -2772,6 +2882,7 @@ avg_time_to_best_secs = 13.317053582999998
 avg_total_time_secs = 30.0282593334
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2792,6 +2903,7 @@ avg_time_to_best_secs = 0.00030419180000000004
 avg_total_time_secs = 0.0003046418
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2812,6 +2924,7 @@ avg_time_to_best_secs = 0.4469516294
 avg_total_time_secs = 0.4476933709
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2836,6 +2949,7 @@ avg_time_to_best_secs = 6.9564194668
 avg_total_time_secs = 30.0000040458
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2860,6 +2974,7 @@ avg_time_to_best_secs = 2.3187865248
 avg_total_time_secs = 30.000710237799996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2881,6 +2996,7 @@ avg_time_to_best_secs = 21.463454879
 avg_total_time_secs = 30.0000033457
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2902,6 +3018,7 @@ avg_time_to_best_secs = 28.3028575499
 avg_total_time_secs = 30.000409721
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2925,6 +3042,7 @@ avg_time_to_best_secs = 0.004870462300000001
 avg_total_time_secs = 2.9515606125
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2948,6 +3066,7 @@ avg_time_to_best_secs = 28.496235866699998
 avg_total_time_secs = 30.0004411291
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -2981,6 +3100,7 @@ avg_time_to_best_secs = 0.1437748418
 avg_total_time_secs = 30.0002329084
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -3016,6 +3136,7 @@ avg_time_to_best_secs = 0.6085252669
 avg_total_time_secs = 30.0000307583
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G11"
 
 [results.heuristic]
@@ -3049,6 +3170,7 @@ avg_time_to_best_secs = 20.354037045800002
 avg_total_time_secs = 30.0567478043
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3069,6 +3191,7 @@ avg_time_to_best_secs = 0.0002711667
 avg_total_time_secs = 0.00027147099999999996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3089,6 +3212,7 @@ avg_time_to_best_secs = 0.3737267333
 avg_total_time_secs = 0.37435092080000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3113,6 +3237,7 @@ avg_time_to_best_secs = 8.2225871459
 avg_total_time_secs = 30.000011045799994
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3137,6 +3262,7 @@ avg_time_to_best_secs = 3.7832717876000004
 avg_total_time_secs = 30.000841708399996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3158,6 +3284,7 @@ avg_time_to_best_secs = 22.033251512699998
 avg_total_time_secs = 30.000000158399995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3179,6 +3306,7 @@ avg_time_to_best_secs = 28.2427213251
 avg_total_time_secs = 30.0004161583
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3202,6 +3330,7 @@ avg_time_to_best_secs = 0.0049472708
 avg_total_time_secs = 3.0386172084
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3225,6 +3354,7 @@ avg_time_to_best_secs = 28.934828645699998
 avg_total_time_secs = 30.000673825
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3258,6 +3388,7 @@ avg_time_to_best_secs = 1.7473187372999999
 avg_total_time_secs = 30.0002619372
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3293,6 +3424,7 @@ avg_time_to_best_secs = 0.3106832125
 avg_total_time_secs = 30.0000516208
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G12"
 
 [results.heuristic]
@@ -3326,6 +3458,7 @@ avg_time_to_best_secs = 11.233152524800001
 avg_total_time_secs = 30.0553771625
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3346,6 +3479,7 @@ avg_time_to_best_secs = 0.0002814332
 avg_total_time_secs = 0.0002817501
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3366,6 +3500,7 @@ avg_time_to_best_secs = 0.4128912666000001
 avg_total_time_secs = 0.41397302909999995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3390,6 +3525,7 @@ avg_time_to_best_secs = 9.7978917584
 avg_total_time_secs = 30.0000038834
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3414,6 +3550,7 @@ avg_time_to_best_secs = 0.854635225
 avg_total_time_secs = 30.000620116599997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3435,6 +3572,7 @@ avg_time_to_best_secs = 23.696890279099996
 avg_total_time_secs = 30.0000051667
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3456,6 +3594,7 @@ avg_time_to_best_secs = 28.161143983200002
 avg_total_time_secs = 30.000568766699995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3479,6 +3618,7 @@ avg_time_to_best_secs = 0.005249512600000001
 avg_total_time_secs = 2.9346863209999996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3502,6 +3642,7 @@ avg_time_to_best_secs = 27.5997457833
 avg_total_time_secs = 30.0004423417
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3535,6 +3676,7 @@ avg_time_to_best_secs = 0.21241712489999998
 avg_total_time_secs = 30.000318249899998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3570,6 +3712,7 @@ avg_time_to_best_secs = 0.0548700501
 avg_total_time_secs = 30.000031149999995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G13"
 
 [results.heuristic]
@@ -3603,6 +3746,7 @@ avg_time_to_best_secs = 15.0291957251
 avg_total_time_secs = 30.068375570600004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3623,6 +3767,7 @@ avg_time_to_best_secs = 0.0003073458
 avg_total_time_secs = 0.00030775839999999996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3643,6 +3788,7 @@ avg_time_to_best_secs = 0.43881222090000005
 avg_total_time_secs = 0.4395988040999999
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3667,6 +3813,7 @@ avg_time_to_best_secs = 0.38533291680000004
 avg_total_time_secs = 30.0000013125
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3691,6 +3838,7 @@ avg_time_to_best_secs = 4.2331947666000005
 avg_total_time_secs = 30.0009857458
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3712,6 +3860,7 @@ avg_time_to_best_secs = 22.220076837500002
 avg_total_time_secs = 30.0000001669
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3733,6 +3882,7 @@ avg_time_to_best_secs = 29.607070220700002
 avg_total_time_secs = 30.0006135544
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3756,6 +3906,7 @@ avg_time_to_best_secs = 0.0048255416
 avg_total_time_secs = 2.9160265667000003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3779,6 +3930,7 @@ avg_time_to_best_secs = 25.887660895800003
 avg_total_time_secs = 30.000619154099997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3812,6 +3964,7 @@ avg_time_to_best_secs = 0.1819055626
 avg_total_time_secs = 30.0002185125
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3847,6 +4000,7 @@ avg_time_to_best_secs = 8.5981424791
 avg_total_time_secs = 30.000021854100005
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G14"
 
 [results.heuristic]
@@ -3880,6 +4034,7 @@ avg_time_to_best_secs = 11.7273983457
 avg_total_time_secs = 30.056662400000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -3900,6 +4055,7 @@ avg_time_to_best_secs = 0.0002733584
 avg_total_time_secs = 0.0002736667
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -3920,6 +4076,7 @@ avg_time_to_best_secs = 0.42459661249999997
 avg_total_time_secs = 0.4252910461
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -3944,6 +4101,7 @@ avg_time_to_best_secs = 2.4536833833
 avg_total_time_secs = 30.000000695899995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -3968,6 +4126,7 @@ avg_time_to_best_secs = 3.0698401497
 avg_total_time_secs = 30.0006695084
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -3989,6 +4148,7 @@ avg_time_to_best_secs = 20.513973366699997
 avg_total_time_secs = 30.000000162499997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -4010,6 +4170,7 @@ avg_time_to_best_secs = 29.6182374124
 avg_total_time_secs = 30.000857671
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -4033,6 +4194,7 @@ avg_time_to_best_secs = 0.0046127419
 avg_total_time_secs = 2.9490448873999995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -4056,6 +4218,7 @@ avg_time_to_best_secs = 28.372607483300005
 avg_total_time_secs = 30.000676179
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -4089,6 +4252,7 @@ avg_time_to_best_secs = 0.149837846
 avg_total_time_secs = 30.000239187300004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -4124,6 +4288,7 @@ avg_time_to_best_secs = 9.2998246375
 avg_total_time_secs = 30.000037504299996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G15"
 
 [results.heuristic]
@@ -4157,6 +4322,7 @@ avg_time_to_best_secs = 14.762789287500002
 avg_total_time_secs = 30.045624241699993
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4177,6 +4343,7 @@ avg_time_to_best_secs = 0.0002444627
 avg_total_time_secs = 0.0002447458
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4197,6 +4364,7 @@ avg_time_to_best_secs = 0.44499812070000005
 avg_total_time_secs = 0.44572507110000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4221,6 +4389,7 @@ avg_time_to_best_secs = 0.15738095839999997
 avg_total_time_secs = 30.000000995700002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4245,6 +4414,7 @@ avg_time_to_best_secs = 3.5261513539000005
 avg_total_time_secs = 30.000859945899997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4266,6 +4436,7 @@ avg_time_to_best_secs = 20.520458887700002
 avg_total_time_secs = 30.0000001377
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4287,6 +4458,7 @@ avg_time_to_best_secs = 29.367685108399996
 avg_total_time_secs = 30.0008637958
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4310,6 +4482,7 @@ avg_time_to_best_secs = 0.0043857791
 avg_total_time_secs = 2.9535364916000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4333,6 +4506,7 @@ avg_time_to_best_secs = 28.0235602873
 avg_total_time_secs = 30.000637754199992
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4366,6 +4540,7 @@ avg_time_to_best_secs = 1.2239370876
 avg_total_time_secs = 30.000172825200004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4401,6 +4576,7 @@ avg_time_to_best_secs = 10.9991191667
 avg_total_time_secs = 30.0000176834
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G16"
 
 [results.heuristic]
@@ -4434,6 +4610,7 @@ avg_time_to_best_secs = 11.7297435833
 avg_total_time_secs = 30.036021249999997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4454,6 +4631,7 @@ avg_time_to_best_secs = 0.00031178330000000004
 avg_total_time_secs = 0.0003120792
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4474,6 +4652,7 @@ avg_time_to_best_secs = 0.4192836917
 avg_total_time_secs = 0.4202113248
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4498,6 +4677,7 @@ avg_time_to_best_secs = 2.095479621
 avg_total_time_secs = 30.0000017626
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4522,6 +4702,7 @@ avg_time_to_best_secs = 7.947385862399999
 avg_total_time_secs = 30.0008890877
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4543,6 +4724,7 @@ avg_time_to_best_secs = 21.1202303542
 avg_total_time_secs = 30.000001083199997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4564,6 +4746,7 @@ avg_time_to_best_secs = 29.490701266499997
 avg_total_time_secs = 30.000447454200003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4587,6 +4770,7 @@ avg_time_to_best_secs = 0.0045949166
 avg_total_time_secs = 2.9481747540999996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4610,6 +4794,7 @@ avg_time_to_best_secs = 26.1841764291
 avg_total_time_secs = 30.000520233199996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4643,6 +4828,7 @@ avg_time_to_best_secs = 1.2640372999
 avg_total_time_secs = 30.000249466899998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4678,6 +4864,7 @@ avg_time_to_best_secs = 11.0064328293
 avg_total_time_secs = 30.000012404099998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G17"
 
 [results.heuristic]
@@ -4711,6 +4898,7 @@ avg_time_to_best_secs = 15.604273904299998
 avg_total_time_secs = 30.0533643378
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4731,6 +4919,7 @@ avg_time_to_best_secs = 0.0003154583
 avg_total_time_secs = 0.0003157458
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4751,6 +4940,7 @@ avg_time_to_best_secs = 0.4957275001
 avg_total_time_secs = 0.4964013582
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4775,6 +4965,7 @@ avg_time_to_best_secs = 0.1765449501
 avg_total_time_secs = 30.000013970799994
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4799,6 +4990,7 @@ avg_time_to_best_secs = 3.1773983081000003
 avg_total_time_secs = 30.000772512699996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4820,6 +5012,7 @@ avg_time_to_best_secs = 22.771425437399998
 avg_total_time_secs = 30.000000179100006
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4841,6 +5034,7 @@ avg_time_to_best_secs = 29.555769533299998
 avg_total_time_secs = 30.0007588834
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4864,6 +5058,7 @@ avg_time_to_best_secs = 0.0048476752
 avg_total_time_secs = 3.4018534625
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4887,6 +5082,7 @@ avg_time_to_best_secs = 23.4842428958
 avg_total_time_secs = 30.000511208299997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4920,6 +5116,7 @@ avg_time_to_best_secs = 0.2118718417
 avg_total_time_secs = 30.00026435
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4955,6 +5152,7 @@ avg_time_to_best_secs = 15.4048983958
 avg_total_time_secs = 30.000040658400003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G18"
 
 [results.heuristic]
@@ -4988,6 +5186,7 @@ avg_time_to_best_secs = 7.994203704199999
 avg_total_time_secs = 30.0604137959
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5008,6 +5207,7 @@ avg_time_to_best_secs = 0.00029308759999999997
 avg_total_time_secs = 0.0002934917
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5028,6 +5228,7 @@ avg_time_to_best_secs = 0.4972222666
 avg_total_time_secs = 0.49826587079999995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5052,6 +5253,7 @@ avg_time_to_best_secs = 0.0006216876
 avg_total_time_secs = 30.000000883400002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5076,6 +5278,7 @@ avg_time_to_best_secs = 4.798535683399999
 avg_total_time_secs = 30.0009910208
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5097,6 +5300,7 @@ avg_time_to_best_secs = 19.0227546875
 avg_total_time_secs = 30.000000212599993
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5118,6 +5322,7 @@ avg_time_to_best_secs = 29.060355445899994
 avg_total_time_secs = 30.0004742083
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5141,6 +5346,7 @@ avg_time_to_best_secs = 0.0053514749
 avg_total_time_secs = 3.2962792959000007
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5164,6 +5370,7 @@ avg_time_to_best_secs = 26.5298417084
 avg_total_time_secs = 30.000683466700004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5197,6 +5404,7 @@ avg_time_to_best_secs = 0.18463318340000004
 avg_total_time_secs = 30.000199233399997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5232,6 +5440,7 @@ avg_time_to_best_secs = 13.5484880997
 avg_total_time_secs = 30.000029029000007
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G19"
 
 [results.heuristic]
@@ -5265,6 +5474,7 @@ avg_time_to_best_secs = 12.7653971917
 avg_total_time_secs = 30.030482521099998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5285,6 +5495,7 @@ avg_time_to_best_secs = 0.0002969791000000001
 avg_total_time_secs = 0.00029733339999999997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5305,6 +5516,7 @@ avg_time_to_best_secs = 0.462405142
 avg_total_time_secs = 0.4631127457
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5329,6 +5541,7 @@ avg_time_to_best_secs = 1.0870181666
 avg_total_time_secs = 30.000001687399998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5353,6 +5566,7 @@ avg_time_to_best_secs = 8.9915599792
 avg_total_time_secs = 30.0005210126
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5374,6 +5588,7 @@ avg_time_to_best_secs = 18.704972683300003
 avg_total_time_secs = 30.000021333199992
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5395,6 +5610,7 @@ avg_time_to_best_secs = 29.500109041499996
 avg_total_time_secs = 30.000482641599994
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5418,6 +5634,7 @@ avg_time_to_best_secs = 0.0050644917
 avg_total_time_secs = 3.2744453834
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5441,6 +5658,7 @@ avg_time_to_best_secs = 27.903804704100004
 avg_total_time_secs = 30.0006744374
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5474,6 +5692,7 @@ avg_time_to_best_secs = 0.17894839579999997
 avg_total_time_secs = 30.000302604199998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5509,6 +5728,7 @@ avg_time_to_best_secs = 8.3056580372
 avg_total_time_secs = 30.000081862500004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G20"
 
 [results.heuristic]
@@ -5542,6 +5762,7 @@ avg_time_to_best_secs = 13.0975209623
 avg_total_time_secs = 30.052342279100003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5562,6 +5783,7 @@ avg_time_to_best_secs = 0.00027139169999999997
 avg_total_time_secs = 0.00027165429999999996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5582,6 +5804,7 @@ avg_time_to_best_secs = 0.41511175410000006
 avg_total_time_secs = 0.4159185791000001
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5606,6 +5829,7 @@ avg_time_to_best_secs = 1.0949779834000002
 avg_total_time_secs = 30.0000280708
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5630,6 +5854,7 @@ avg_time_to_best_secs = 3.5824916541999996
 avg_total_time_secs = 30.000755787599996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5651,6 +5876,7 @@ avg_time_to_best_secs = 20.5651045541
 avg_total_time_secs = 30.000000237299997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5672,6 +5898,7 @@ avg_time_to_best_secs = 29.121302125200003
 avg_total_time_secs = 30.000670020799998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5695,6 +5922,7 @@ avg_time_to_best_secs = 0.005777912299999999
 avg_total_time_secs = 2.989138075
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5718,6 +5946,7 @@ avg_time_to_best_secs = 27.140859675
 avg_total_time_secs = 30.000520795800004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5751,6 +5980,7 @@ avg_time_to_best_secs = 1.5658720208
 avg_total_time_secs = 30.000257879199996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5786,6 +6016,7 @@ avg_time_to_best_secs = 10.846159953999999
 avg_total_time_secs = 30.000022212300003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G21"
 
 [results.heuristic]
@@ -5819,6 +6050,7 @@ avg_time_to_best_secs = 11.520890379199999
 avg_total_time_secs = 30.0542787834
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -5839,6 +6071,7 @@ avg_time_to_best_secs = 0.0005331292
 avg_total_time_secs = 0.0005335791
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -5859,6 +6092,7 @@ avg_time_to_best_secs = 1.0867917792
 avg_total_time_secs = 1.0883596624
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -5883,6 +6117,7 @@ avg_time_to_best_secs = 5.3809305582
 avg_total_time_secs = 30.0000011292
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -5907,6 +6142,7 @@ avg_time_to_best_secs = 9.471951875
 avg_total_time_secs = 30.001562091600004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -5928,6 +6164,7 @@ avg_time_to_best_secs = 23.0075983128
 avg_total_time_secs = 30.000000112399995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -5949,6 +6186,7 @@ avg_time_to_best_secs = 29.293785537399998
 avg_total_time_secs = 30.001599612499994
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -5972,6 +6210,7 @@ avg_time_to_best_secs = 0.0071220625
 avg_total_time_secs = 3.5435603708000003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -5995,6 +6234,7 @@ avg_time_to_best_secs = 29.1943125082
 avg_total_time_secs = 30.0008434876
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -6028,6 +6268,7 @@ avg_time_to_best_secs = 0.2639013751
 avg_total_time_secs = 30.000157524899997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -6063,6 +6304,7 @@ avg_time_to_best_secs = 14.6114485292
 avg_total_time_secs = 30.000014646000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G43"
 
 [results.heuristic]
@@ -6096,6 +6338,7 @@ avg_time_to_best_secs = 12.6635478209
 avg_total_time_secs = 30.05726851670001
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6116,6 +6359,7 @@ avg_time_to_best_secs = 0.00042077490000000004
 avg_total_time_secs = 0.0004211748999999999
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6136,6 +6380,7 @@ avg_time_to_best_secs = 1.029139821
 avg_total_time_secs = 1.0308057875999999
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6160,6 +6405,7 @@ avg_time_to_best_secs = 3.2113174083000002
 avg_total_time_secs = 30.0000007751
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6184,6 +6430,7 @@ avg_time_to_best_secs = 13.1146303333
 avg_total_time_secs = 30.0015522543
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6205,6 +6452,7 @@ avg_time_to_best_secs = 24.213816316699997
 avg_total_time_secs = 30.000009621000004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6226,6 +6474,7 @@ avg_time_to_best_secs = 29.292369174999997
 avg_total_time_secs = 30.0009616166
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6249,6 +6498,7 @@ avg_time_to_best_secs = 0.006373116600000001
 avg_total_time_secs = 3.4945467875000005
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6272,6 +6522,7 @@ avg_time_to_best_secs = 29.665103779300004
 avg_total_time_secs = 30.0009568209
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6305,6 +6556,7 @@ avg_time_to_best_secs = 0.2588205582
 avg_total_time_secs = 30.000204054300003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6340,6 +6592,7 @@ avg_time_to_best_secs = 12.2364274124
 avg_total_time_secs = 30.0000208751
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G44"
 
 [results.heuristic]
@@ -6373,6 +6626,7 @@ avg_time_to_best_secs = 11.4472538042
 avg_total_time_secs = 30.036613612300005
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6393,6 +6647,7 @@ avg_time_to_best_secs = 0.0004560459
 avg_total_time_secs = 0.0004564208
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6413,6 +6668,7 @@ avg_time_to_best_secs = 1.0739581334000001
 avg_total_time_secs = 1.0753308792999998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6437,6 +6693,7 @@ avg_time_to_best_secs = 2.2576366707
 avg_total_time_secs = 30.000001074799997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6461,6 +6718,7 @@ avg_time_to_best_secs = 13.070253466599999
 avg_total_time_secs = 30.0014688873
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6482,6 +6740,7 @@ avg_time_to_best_secs = 22.949942404199998
 avg_total_time_secs = 30.000000175099995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6503,6 +6762,7 @@ avg_time_to_best_secs = 29.345911637500002
 avg_total_time_secs = 30.0013773248
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6526,6 +6786,7 @@ avg_time_to_best_secs = 0.005868429
 avg_total_time_secs = 3.6809402957
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6549,6 +6810,7 @@ avg_time_to_best_secs = 29.515176004299995
 avg_total_time_secs = 30.001248420700005
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6582,6 +6844,7 @@ avg_time_to_best_secs = 0.28834380410000005
 avg_total_time_secs = 30.0005079498
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6617,6 +6880,7 @@ avg_time_to_best_secs = 12.883618500099999
 avg_total_time_secs = 30.001555795899996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G45"
 
 [results.heuristic]
@@ -6650,6 +6914,7 @@ avg_time_to_best_secs = 17.855603262400003
 avg_total_time_secs = 30.073466924900004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6670,6 +6935,7 @@ avg_time_to_best_secs = 0.0004152416999999999
 avg_total_time_secs = 0.000415704
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6690,6 +6956,7 @@ avg_time_to_best_secs = 1.147199575
 avg_total_time_secs = 1.1490977708
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6714,6 +6981,7 @@ avg_time_to_best_secs = 2.7099871457
 avg_total_time_secs = 30.000025024999996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6738,6 +7006,7 @@ avg_time_to_best_secs = 10.533587221
 avg_total_time_secs = 30.0017103501
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6759,6 +7028,7 @@ avg_time_to_best_secs = 18.3736088331
 avg_total_time_secs = 30.0000275751
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6780,6 +7050,7 @@ avg_time_to_best_secs = 29.535911216800002
 avg_total_time_secs = 30.000784333499997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6803,6 +7074,7 @@ avg_time_to_best_secs = 0.0056325667
 avg_total_time_secs = 3.4979463500000003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6826,6 +7098,7 @@ avg_time_to_best_secs = 29.2785060122
 avg_total_time_secs = 30.000833741599997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6859,6 +7132,7 @@ avg_time_to_best_secs = 0.2886935415
 avg_total_time_secs = 30.000301537300004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6894,6 +7168,7 @@ avg_time_to_best_secs = 11.0593011167
 avg_total_time_secs = 30.000013966799997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G46"
 
 [results.heuristic]
@@ -6927,6 +7202,7 @@ avg_time_to_best_secs = 17.8138281334
 avg_total_time_secs = 30.063616453900003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -6947,6 +7223,7 @@ avg_time_to_best_secs = 0.0004482957
 avg_total_time_secs = 0.0004486835000000001
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -6967,6 +7244,7 @@ avg_time_to_best_secs = 1.0882948664999996
 avg_total_time_secs = 1.089839179
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -6991,6 +7269,7 @@ avg_time_to_best_secs = 2.9166067290999997
 avg_total_time_secs = 30.0000012958
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -7015,6 +7294,7 @@ avg_time_to_best_secs = 9.2616872917
 avg_total_time_secs = 30.001305870800003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -7036,6 +7316,7 @@ avg_time_to_best_secs = 22.394028445600004
 avg_total_time_secs = 30.0000002042
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -7057,6 +7338,7 @@ avg_time_to_best_secs = 29.1981372751
 avg_total_time_secs = 30.001429170799998
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -7080,6 +7362,7 @@ avg_time_to_best_secs = 0.0052751917
 avg_total_time_secs = 3.4742306085
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -7103,6 +7386,7 @@ avg_time_to_best_secs = 29.352114529199998
 avg_total_time_secs = 30.001358554400007
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -7136,6 +7420,7 @@ avg_time_to_best_secs = 0.4101022875
 avg_total_time_secs = 30.000317579300003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -7171,6 +7456,7 @@ avg_time_to_best_secs = 13.7176406042
 avg_total_time_secs = 30.000033121
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G47"
 
 [results.heuristic]
@@ -7204,6 +7490,7 @@ avg_time_to_best_secs = 14.627146004000002
 avg_total_time_secs = 30.0398189291
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7224,6 +7511,7 @@ avg_time_to_best_secs = 0.0004388375
 avg_total_time_secs = 0.00043936659999999994
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7244,6 +7532,7 @@ avg_time_to_best_secs = 0.81968365
 avg_total_time_secs = 0.8212215374999999
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7268,6 +7557,7 @@ avg_time_to_best_secs = 0.7961125374000002
 avg_total_time_secs = 30.000000970899997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7292,6 +7582,7 @@ avg_time_to_best_secs = 2.9032838123999998
 avg_total_time_secs = 30.00079895
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7313,6 +7604,7 @@ avg_time_to_best_secs = 24.281731308199998
 avg_total_time_secs = 30.000000187499996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7334,6 +7626,7 @@ avg_time_to_best_secs = 29.5047577458
 avg_total_time_secs = 30.000569412700003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7357,6 +7650,7 @@ avg_time_to_best_secs = 0.0066207126
 avg_total_time_secs = 3.5597397582
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7380,6 +7674,7 @@ avg_time_to_best_secs = 28.601670691800006
 avg_total_time_secs = 30.001130837300003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7413,6 +7708,7 @@ avg_time_to_best_secs = 0.20668439579999998
 avg_total_time_secs = 30.000255095899995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7448,6 +7744,7 @@ avg_time_to_best_secs = 12.42952125
 avg_total_time_secs = 30.000094012300003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G51"
 
 [results.heuristic]
@@ -7481,6 +7778,7 @@ avg_time_to_best_secs = 17.6048682748
 avg_total_time_secs = 30.079663999900003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7501,6 +7799,7 @@ avg_time_to_best_secs = 0.0004338583
 avg_total_time_secs = 0.00043422090000000006
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7521,6 +7820,7 @@ avg_time_to_best_secs = 0.8456574874999999
 avg_total_time_secs = 0.8467879503000001
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7545,6 +7845,7 @@ avg_time_to_best_secs = 2.069908871
 avg_total_time_secs = 30.000002108400004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7569,6 +7870,7 @@ avg_time_to_best_secs = 5.4455370959
 avg_total_time_secs = 30.000675054200002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7590,6 +7892,7 @@ avg_time_to_best_secs = 23.6214234375
 avg_total_time_secs = 30.000000262699995
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7611,6 +7914,7 @@ avg_time_to_best_secs = 29.609417054199998
 avg_total_time_secs = 30.0008402085
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7634,6 +7938,7 @@ avg_time_to_best_secs = 0.0057147292
 avg_total_time_secs = 3.518813
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7657,6 +7962,7 @@ avg_time_to_best_secs = 28.726497500100002
 avg_total_time_secs = 30.000611074800002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7690,6 +7996,7 @@ avg_time_to_best_secs = 0.22540657930000002
 avg_total_time_secs = 30.0002810709
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7725,6 +8032,7 @@ avg_time_to_best_secs = 6.387808487400001
 avg_total_time_secs = 30.0000300959
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G52"
 
 [results.heuristic]
@@ -7758,6 +8066,7 @@ avg_time_to_best_secs = 16.070071445700002
 avg_total_time_secs = 30.0790662623
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7778,6 +8087,7 @@ avg_time_to_best_secs = 0.00041767080000000003
 avg_total_time_secs = 0.00041800839999999996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7798,6 +8108,7 @@ avg_time_to_best_secs = 0.8362991084999999
 avg_total_time_secs = 0.8374229834000001
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7822,6 +8133,7 @@ avg_time_to_best_secs = 0.0252445168
 avg_total_time_secs = 30.000002037500003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7846,6 +8158,7 @@ avg_time_to_best_secs = 4.30622355
 avg_total_time_secs = 30.0014854875
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7867,6 +8180,7 @@ avg_time_to_best_secs = 22.501370529100004
 avg_total_time_secs = 30.0000002417
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7888,6 +8202,7 @@ avg_time_to_best_secs = 29.126888812300002
 avg_total_time_secs = 30.000837275000002
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7911,6 +8226,7 @@ avg_time_to_best_secs = 0.0061834792
 avg_total_time_secs = 3.4667421039000006
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7934,6 +8250,7 @@ avg_time_to_best_secs = 28.878911429
 avg_total_time_secs = 30.000901775100004
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -7967,6 +8284,7 @@ avg_time_to_best_secs = 0.5799591875
 avg_total_time_secs = 30.0002003876
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -8002,6 +8320,7 @@ avg_time_to_best_secs = 15.6537205751
 avg_total_time_secs = 30.000024945800003
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G53"
 
 [results.heuristic]
@@ -8035,6 +8354,7 @@ avg_time_to_best_secs = 15.0129012415
 avg_total_time_secs = 30.029386491599997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8055,6 +8375,7 @@ avg_time_to_best_secs = 0.0003485249
 avg_total_time_secs = 0.0003488918
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8075,6 +8396,7 @@ avg_time_to_best_secs = 0.9750914289999999
 avg_total_time_secs = 0.9766636499000001
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8099,6 +8421,7 @@ avg_time_to_best_secs = 2.4839324667
 avg_total_time_secs = 30.0000587918
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8123,6 +8446,7 @@ avg_time_to_best_secs = 8.0651992875
 avg_total_time_secs = 30.0007262793
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8144,6 +8468,7 @@ avg_time_to_best_secs = 20.7204753291
 avg_total_time_secs = 30.000003525
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8165,6 +8490,7 @@ avg_time_to_best_secs = 29.4650777334
 avg_total_time_secs = 30.0010484082
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8188,6 +8514,7 @@ avg_time_to_best_secs = 0.005660521
 avg_total_time_secs = 3.4445650543
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8211,6 +8538,7 @@ avg_time_to_best_secs = 29.132638375099997
 avg_total_time_secs = 30.000852766499996
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8244,6 +8572,7 @@ avg_time_to_best_secs = 0.23880300839999996
 avg_total_time_secs = 30.0002843251
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]
@@ -8279,6 +8608,7 @@ avg_time_to_best_secs = 8.827401962600002
 avg_total_time_secs = 30.000025191499997
 
 [[results]]
+problem = "VertexCover"
 instance_path = "data/instances/max_cut/G54"
 
 [results.heuristic]

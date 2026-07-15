@@ -2,6 +2,7 @@ timestamp = "20260517_170503"
 config_file = "data/benchmarks/sat/general_small.toml"
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -22,6 +23,7 @@ avg_time_to_best_secs = 7.82916e-05
 avg_total_time_secs = 7.83045e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -42,6 +44,7 @@ avg_time_to_best_secs = 0.0015199915
 avg_total_time_secs = 0.0016485916999999998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -66,6 +69,7 @@ avg_time_to_best_secs = 0.002021125
 avg_total_time_secs = 30.000007258300002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -90,6 +94,7 @@ avg_time_to_best_secs = 0.012223916799999998
 avg_total_time_secs = 30.000081041599998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -111,6 +116,7 @@ avg_time_to_best_secs = 1.4492309249
 avg_total_time_secs = 30.0000010124
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -132,6 +138,7 @@ avg_time_to_best_secs = 14.463734658300003
 avg_total_time_secs = 30.0000344375
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -155,6 +162,7 @@ avg_time_to_best_secs = 0.032800979
 avg_total_time_secs = 2.1938669627000005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -178,6 +186,7 @@ avg_time_to_best_secs = 1.7761836998999996
 avg_total_time_secs = 30.0000790208
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -211,6 +220,7 @@ avg_time_to_best_secs = 0.0028523333
 avg_total_time_secs = 30.000306945800002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -246,6 +256,7 @@ avg_time_to_best_secs = 0.24937737910000002
 avg_total_time_secs = 30.000292983400005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 
 [results.heuristic]
@@ -279,6 +290,7 @@ avg_time_to_best_secs = 0.0017130166
 avg_total_time_secs = 30.0776431375
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -299,6 +311,7 @@ avg_time_to_best_secs = 6.28751e-05
 avg_total_time_secs = 6.29543e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -319,6 +332,7 @@ avg_time_to_best_secs = 0.0010053790999999999
 avg_total_time_secs = 0.0010769168
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -343,6 +357,7 @@ avg_time_to_best_secs = 0.0007425789999999999
 avg_total_time_secs = 30.000003616799994
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -367,6 +382,7 @@ avg_time_to_best_secs = 0.008608212600000002
 avg_total_time_secs = 30.0000558832
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -388,6 +404,7 @@ avg_time_to_best_secs = 0.26897054589999997
 avg_total_time_secs = 30.000000762299997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -409,6 +426,7 @@ avg_time_to_best_secs = 6.489190500099999
 avg_total_time_secs = 30.0000481707
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -432,6 +450,7 @@ avg_time_to_best_secs = 0.032841037499999996
 avg_total_time_secs = 2.2881032207
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -455,6 +474,7 @@ avg_time_to_best_secs = 1.3699311752
 avg_total_time_secs = 30.0000514625
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -488,6 +508,7 @@ avg_time_to_best_secs = 0.001405921
 avg_total_time_secs = 30.0003308292
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -523,6 +544,7 @@ avg_time_to_best_secs = 0.19591894569999999
 avg_total_time_secs = 30.0002616375
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
 
 [results.heuristic]
@@ -556,6 +578,7 @@ avg_time_to_best_secs = 0.0006104209
 avg_total_time_secs = 30.095029416800003
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -576,6 +599,7 @@ avg_time_to_best_secs = 5.189579999999999e-05
 avg_total_time_secs = 5.19292e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -596,6 +620,7 @@ avg_time_to_best_secs = 0.0008886373
 avg_total_time_secs = 0.0009742293000000001
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -620,6 +645,7 @@ avg_time_to_best_secs = 0.004796729099999999
 avg_total_time_secs = 30.0000019667
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -644,6 +670,7 @@ avg_time_to_best_secs = 0.06042747930000001
 avg_total_time_secs = 30.000075346
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -665,6 +692,7 @@ avg_time_to_best_secs = 2.8136604789999997
 avg_total_time_secs = 30.000000645800004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -686,6 +714,7 @@ avg_time_to_best_secs = 6.7009385543
 avg_total_time_secs = 30.000045916399994
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -709,6 +738,7 @@ avg_time_to_best_secs = 0.03521758330000001
 avg_total_time_secs = 2.0076542956999996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -732,6 +762,7 @@ avg_time_to_best_secs = 1.2960676541999998
 avg_total_time_secs = 30.000045629200002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -765,6 +796,7 @@ avg_time_to_best_secs = 0.0026725915999999995
 avg_total_time_secs = 30.000263458299997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -800,6 +832,7 @@ avg_time_to_best_secs = 0.9592802126000001
 avg_total_time_secs = 30.000172071
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
 
 [results.heuristic]
@@ -833,6 +866,7 @@ avg_time_to_best_secs = 0.0057165831
 avg_total_time_secs = 30.0999037044
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -853,6 +887,7 @@ avg_time_to_best_secs = 5.643740000000001e-05
 avg_total_time_secs = 5.6508299999999996e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -873,6 +908,7 @@ avg_time_to_best_secs = 0.0009050708000000001
 avg_total_time_secs = 0.0009812832
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -897,6 +933,7 @@ avg_time_to_best_secs = 0.0029390752000000003
 avg_total_time_secs = 30.0000054542
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -921,6 +958,7 @@ avg_time_to_best_secs = 0.0324684082
 avg_total_time_secs = 30.000061445899995
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -942,6 +980,7 @@ avg_time_to_best_secs = 1.9854266166999999
 avg_total_time_secs = 30.000002025000004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -963,6 +1002,7 @@ avg_time_to_best_secs = 16.8719688374
 avg_total_time_secs = 30.000034304399996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -986,6 +1026,7 @@ avg_time_to_best_secs = 0.0448278292
 avg_total_time_secs = 2.0132350167
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -1009,6 +1050,7 @@ avg_time_to_best_secs = 1.58098195
 avg_total_time_secs = 30.0000324209
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -1042,6 +1084,7 @@ avg_time_to_best_secs = 0.0038390541999999994
 avg_total_time_secs = 30.000458812499993
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -1077,6 +1120,7 @@ avg_time_to_best_secs = 0.2593390333
 avg_total_time_secs = 30.0001336665
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-01000.cnf"
 
 [results.heuristic]
@@ -1110,6 +1154,7 @@ avg_time_to_best_secs = 0.0040742581
 avg_total_time_secs = 30.080148649799998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1130,6 +1175,7 @@ avg_time_to_best_secs = 5.475e-05
 avg_total_time_secs = 5.4791500000000006e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1150,6 +1196,7 @@ avg_time_to_best_secs = 0.001039304
 avg_total_time_secs = 0.001116721
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1174,6 +1221,7 @@ avg_time_to_best_secs = 0.0005847208
 avg_total_time_secs = 30.000002304200002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1198,6 +1246,7 @@ avg_time_to_best_secs = 0.0156555542
 avg_total_time_secs = 30.0000787124
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1219,6 +1268,7 @@ avg_time_to_best_secs = 0.7691149331999999
 avg_total_time_secs = 30.0000016584
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1240,6 +1290,7 @@ avg_time_to_best_secs = 12.8696541249
 avg_total_time_secs = 30.000051483300002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1263,6 +1314,7 @@ avg_time_to_best_secs = 0.035198279
 avg_total_time_secs = 1.7465410292
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1286,6 +1338,7 @@ avg_time_to_best_secs = 1.4075167335
 avg_total_time_secs = 30.000062375000006
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1319,6 +1372,7 @@ avg_time_to_best_secs = 0.0018842498999999996
 avg_total_time_secs = 30.000330087500004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1354,6 +1408,7 @@ avg_time_to_best_secs = 0.3690448083999999
 avg_total_time_secs = 30.000213774900004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0101.cnf"
 
 [results.heuristic]
@@ -1387,6 +1442,7 @@ avg_time_to_best_secs = 0.001805025
 avg_total_time_secs = 30.064506279
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1407,6 +1463,7 @@ avg_time_to_best_secs = 5.05001e-05
 avg_total_time_secs = 5.0549899999999995e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1427,6 +1484,7 @@ avg_time_to_best_secs = 0.0008859707999999999
 avg_total_time_secs = 0.0009561208
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1451,6 +1509,7 @@ avg_time_to_best_secs = 0.000617746
 avg_total_time_secs = 30.000003162499997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1475,6 +1534,7 @@ avg_time_to_best_secs = 0.0082110413
 avg_total_time_secs = 30.000054929199997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1496,6 +1556,7 @@ avg_time_to_best_secs = 0.7774852665
 avg_total_time_secs = 30.000001645699996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1517,6 +1578,7 @@ avg_time_to_best_secs = 11.5923831793
 avg_total_time_secs = 30.0000379625
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1540,6 +1602,7 @@ avg_time_to_best_secs = 0.0322824835
 avg_total_time_secs = 1.9822615916
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1563,6 +1626,7 @@ avg_time_to_best_secs = 1.298747621
 avg_total_time_secs = 30.0000403919
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1596,6 +1660,7 @@ avg_time_to_best_secs = 0.0018936831999999998
 avg_total_time_secs = 30.000274245999996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1631,6 +1696,7 @@ avg_time_to_best_secs = 0.11388910830000001
 avg_total_time_secs = 30.000271733300004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0102.cnf"
 
 [results.heuristic]
@@ -1664,6 +1730,7 @@ avg_time_to_best_secs = 0.0017077084999999998
 avg_total_time_secs = 30.0543135833
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1684,6 +1751,7 @@ avg_time_to_best_secs = 5.219599999999999e-05
 avg_total_time_secs = 5.2224999999999995e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1704,6 +1772,7 @@ avg_time_to_best_secs = 0.0009038875
 avg_total_time_secs = 0.0009820208
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1728,6 +1797,7 @@ avg_time_to_best_secs = 0.0003933166
 avg_total_time_secs = 30.000002691500004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1752,6 +1822,7 @@ avg_time_to_best_secs = 0.0052283917
 avg_total_time_secs = 30.000068429199995
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1773,6 +1844,7 @@ avg_time_to_best_secs = 0.1965248751
 avg_total_time_secs = 30.0000014082
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1794,6 +1866,7 @@ avg_time_to_best_secs = 7.6775550707999995
 avg_total_time_secs = 30.000045229
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1817,6 +1890,7 @@ avg_time_to_best_secs = 0.034068504099999994
 avg_total_time_secs = 3.3579906291
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1840,6 +1914,7 @@ avg_time_to_best_secs = 1.4544159832
 avg_total_time_secs = 30.000033421
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1873,6 +1948,7 @@ avg_time_to_best_secs = 0.0017841667000000002
 avg_total_time_secs = 30.000469016800004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1908,6 +1984,7 @@ avg_time_to_best_secs = 0.026184929200000002
 avg_total_time_secs = 30.0002305666
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0103.cnf"
 
 [results.heuristic]
@@ -1941,6 +2018,7 @@ avg_time_to_best_secs = 0.0005662665
 avg_total_time_secs = 30.0894203331
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -1961,6 +2039,7 @@ avg_time_to_best_secs = 5.2491700000000004e-05
 avg_total_time_secs = 5.250010000000001e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -1981,6 +2060,7 @@ avg_time_to_best_secs = 0.0008088125
 avg_total_time_secs = 0.0008889334000000001
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2005,6 +2085,7 @@ avg_time_to_best_secs = 0.0011706457
 avg_total_time_secs = 30.0000136
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2029,6 +2110,7 @@ avg_time_to_best_secs = 0.014709758299999997
 avg_total_time_secs = 30.000030645800003
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2050,6 +2132,7 @@ avg_time_to_best_secs = 0.958459425
 avg_total_time_secs = 30.000001116599996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2071,6 +2154,7 @@ avg_time_to_best_secs = 16.883571962500003
 avg_total_time_secs = 30.000034429200003
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2094,6 +2178,7 @@ avg_time_to_best_secs = 0.0318145
 avg_total_time_secs = 2.0884881250000005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2117,6 +2202,7 @@ avg_time_to_best_secs = 2.8988324997999997
 avg_total_time_secs = 30.0000251585
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2150,6 +2236,7 @@ avg_time_to_best_secs = 0.0023712163000000003
 avg_total_time_secs = 30.000297675099993
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2185,6 +2272,7 @@ avg_time_to_best_secs = 0.361445879
 avg_total_time_secs = 30.000331887599998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0104.cnf"
 
 [results.heuristic]
@@ -2218,6 +2306,7 @@ avg_time_to_best_secs = 0.0016990666000000001
 avg_total_time_secs = 30.111125725100003
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2238,6 +2327,7 @@ avg_time_to_best_secs = 6.00084e-05
 avg_total_time_secs = 6.00416e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2258,6 +2348,7 @@ avg_time_to_best_secs = 0.0008773542000000001
 avg_total_time_secs = 0.0009665998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2282,6 +2373,7 @@ avg_time_to_best_secs = 0.0008605957
 avg_total_time_secs = 30.000001329000003
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2306,6 +2398,7 @@ avg_time_to_best_secs = 0.0061274751
 avg_total_time_secs = 30.000071583200004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2327,6 +2420,7 @@ avg_time_to_best_secs = 0.22742999989999996
 avg_total_time_secs = 30.000001142000002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2348,6 +2442,7 @@ avg_time_to_best_secs = 8.7762588541
 avg_total_time_secs = 30.0000444667
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2371,6 +2466,7 @@ avg_time_to_best_secs = 0.035512204199999994
 avg_total_time_secs = 2.1174425416
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2394,6 +2490,7 @@ avg_time_to_best_secs = 1.3676839123
 avg_total_time_secs = 30.0000256208
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2427,6 +2524,7 @@ avg_time_to_best_secs = 0.0017662416
 avg_total_time_secs = 30.0005247833
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2462,6 +2560,7 @@ avg_time_to_best_secs = 0.11366685410000002
 avg_total_time_secs = 30.0002581085
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0105.cnf"
 
 [results.heuristic]
@@ -2495,6 +2594,7 @@ avg_time_to_best_secs = 0.0006960458999999999
 avg_total_time_secs = 30.0948805624
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2515,6 +2615,7 @@ avg_time_to_best_secs = 4.92583e-05
 avg_total_time_secs = 4.928739999999999e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2535,6 +2636,7 @@ avg_time_to_best_secs = 0.0009535460000000001
 avg_total_time_secs = 0.0010274498
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2559,6 +2661,7 @@ avg_time_to_best_secs = 0.0077960666
 avg_total_time_secs = 30.000003195799998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2583,6 +2686,7 @@ avg_time_to_best_secs = 0.0758458084
 avg_total_time_secs = 30.000064212700003
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2604,6 +2708,7 @@ avg_time_to_best_secs = 1.7794788374
 avg_total_time_secs = 30.000001004199998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2625,6 +2730,7 @@ avg_time_to_best_secs = 8.8182875625
 avg_total_time_secs = 30.0000559915
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2648,6 +2754,7 @@ avg_time_to_best_secs = 0.3260584667
 avg_total_time_secs = 1.6516238877000002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2671,6 +2778,7 @@ avg_time_to_best_secs = 3.7691730958000003
 avg_total_time_secs = 30.000044183500002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2704,6 +2812,7 @@ avg_time_to_best_secs = 0.009610375100000002
 avg_total_time_secs = 30.0003393959
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2739,6 +2848,7 @@ avg_time_to_best_secs = 0.937547629
 avg_total_time_secs = 30.0002614167
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf50-218/uf50-0106.cnf"
 
 [results.heuristic]
@@ -2772,6 +2882,7 @@ avg_time_to_best_secs = 0.0047532791000000005
 avg_total_time_secs = 30.091518245899998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2792,6 +2903,7 @@ avg_time_to_best_secs = 8.77999e-05
 avg_total_time_secs = 8.787080000000001e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2812,6 +2924,7 @@ avg_time_to_best_secs = 0.0019339208999999999
 avg_total_time_secs = 0.0020430875
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2836,6 +2949,7 @@ avg_time_to_best_secs = 0.0011903791000000001
 avg_total_time_secs = 30.000003774899994
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2860,6 +2974,7 @@ avg_time_to_best_secs = 0.022350787599999998
 avg_total_time_secs = 30.0000954999
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2881,6 +2996,7 @@ avg_time_to_best_secs = 2.2677090914999996
 avg_total_time_secs = 30.0000013169
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2902,6 +3018,7 @@ avg_time_to_best_secs = 20.1952238334
 avg_total_time_secs = 30.0000510749
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2925,6 +3042,7 @@ avg_time_to_best_secs = 0.03604934180000001
 avg_total_time_secs = 2.408233025
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2948,6 +3066,7 @@ avg_time_to_best_secs = 2.7183390377
 avg_total_time_secs = 30.0000614373
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -2981,6 +3100,7 @@ avg_time_to_best_secs = 0.0025937916
 avg_total_time_secs = 30.0004197167
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -3016,6 +3136,7 @@ avg_time_to_best_secs = 1.2275902499
 avg_total_time_secs = 30.0002215333
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
 
 [results.heuristic]
@@ -3049,6 +3170,7 @@ avg_time_to_best_secs = 0.0011470291
 avg_total_time_secs = 30.0946199959
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3069,6 +3191,7 @@ avg_time_to_best_secs = 8.78249e-05
 avg_total_time_secs = 8.788740000000001e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3089,6 +3212,7 @@ avg_time_to_best_secs = 0.0019124540000000003
 avg_total_time_secs = 0.0020345291
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3113,6 +3237,7 @@ avg_time_to_best_secs = 0.0019950834
 avg_total_time_secs = 30.000002533400004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3137,6 +3262,7 @@ avg_time_to_best_secs = 0.0148124126
 avg_total_time_secs = 30.0000842875
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3158,6 +3284,7 @@ avg_time_to_best_secs = 3.5304013080000005
 avg_total_time_secs = 30.000001416899998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3179,6 +3306,7 @@ avg_time_to_best_secs = 21.239962941699996
 avg_total_time_secs = 30.000069616499996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3202,6 +3330,7 @@ avg_time_to_best_secs = 0.03699046260000001
 avg_total_time_secs = 2.7505100375
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3225,6 +3354,7 @@ avg_time_to_best_secs = 2.53895255
 avg_total_time_secs = 30.000046929399996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3258,6 +3388,7 @@ avg_time_to_best_secs = 0.0025776668000000004
 avg_total_time_secs = 30.0003576083
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3293,6 +3424,7 @@ avg_time_to_best_secs = 0.23544782920000001
 avg_total_time_secs = 30.000149424700005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
 
 [results.heuristic]
@@ -3326,6 +3458,7 @@ avg_time_to_best_secs = 0.0019940833000000003
 avg_total_time_secs = 30.1197815458
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3346,6 +3479,7 @@ avg_time_to_best_secs = 6.990440000000001e-05
 avg_total_time_secs = 6.99583e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3366,6 +3500,7 @@ avg_time_to_best_secs = 0.0019527999999999998
 avg_total_time_secs = 0.0021589501000000002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3390,6 +3525,7 @@ avg_time_to_best_secs = 0.013236316500000001
 avg_total_time_secs = 30.0000041502
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3414,6 +3550,7 @@ avg_time_to_best_secs = 0.0823579915
 avg_total_time_secs = 30.000105000200005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3435,6 +3572,7 @@ avg_time_to_best_secs = 13.7662971083
 avg_total_time_secs = 30.000000908300002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3456,6 +3594,7 @@ avg_time_to_best_secs = 17.610129220700003
 avg_total_time_secs = 30.000076112399995
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3479,6 +3618,7 @@ avg_time_to_best_secs = 0.03660861669999999
 avg_total_time_secs = 2.8647118542
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3502,6 +3642,7 @@ avg_time_to_best_secs = 3.540716896
 avg_total_time_secs = 30.0000649833
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3535,6 +3676,7 @@ avg_time_to_best_secs = 0.0082187586
 avg_total_time_secs = 30.0004462665
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3570,6 +3712,7 @@ avg_time_to_best_secs = 2.4632338375
 avg_total_time_secs = 30.000242812499994
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 
 [results.heuristic]
@@ -3603,6 +3746,7 @@ avg_time_to_best_secs = 0.0053910791
 avg_total_time_secs = 30.111159266600005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3623,6 +3767,7 @@ avg_time_to_best_secs = 9.090420000000001e-05
 avg_total_time_secs = 9.096660000000001e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3643,6 +3788,7 @@ avg_time_to_best_secs = 0.0017235751
 avg_total_time_secs = 0.001838679
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3667,6 +3813,7 @@ avg_time_to_best_secs = 0.0039321166
 avg_total_time_secs = 30.000002133200002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3691,6 +3838,7 @@ avg_time_to_best_secs = 0.05163902099999999
 avg_total_time_secs = 30.0001058832
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3712,6 +3860,7 @@ avg_time_to_best_secs = 11.1395010168
 avg_total_time_secs = 30.0000019918
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3733,6 +3882,7 @@ avg_time_to_best_secs = 20.4413401752
 avg_total_time_secs = 30.000077670900005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3756,6 +3906,7 @@ avg_time_to_best_secs = 0.0470561621
 avg_total_time_secs = 2.2944432415
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3779,6 +3930,7 @@ avg_time_to_best_secs = 4.3149429917
 avg_total_time_secs = 30.0000780418
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3812,6 +3964,7 @@ avg_time_to_best_secs = 0.0041381126
 avg_total_time_secs = 30.000693612599996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3847,6 +4000,7 @@ avg_time_to_best_secs = 5.7986068875
 avg_total_time_secs = 30.000245220800007
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-011.cnf"
 
 [results.heuristic]
@@ -3880,6 +4034,7 @@ avg_time_to_best_secs = 0.0028736417000000004
 avg_total_time_secs = 30.142219587299998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -3900,6 +4055,7 @@ avg_time_to_best_secs = 7.925e-05
 avg_total_time_secs = 7.93082e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -3920,6 +4076,7 @@ avg_time_to_best_secs = 0.001591646
 avg_total_time_secs = 0.0017023502
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -3944,6 +4101,7 @@ avg_time_to_best_secs = 0.0077227252
 avg_total_time_secs = 30.000002270699998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -3968,6 +4126,7 @@ avg_time_to_best_secs = 0.24061848749999998
 avg_total_time_secs = 30.000081321
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -3989,6 +4148,7 @@ avg_time_to_best_secs = 8.931501645800001
 avg_total_time_secs = 30.000002316699998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -4010,6 +4170,7 @@ avg_time_to_best_secs = 24.1238753125
 avg_total_time_secs = 30.000070366699997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -4033,6 +4194,7 @@ avg_time_to_best_secs = 0.0391139751
 avg_total_time_secs = 2.0993752667
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -4056,6 +4218,7 @@ avg_time_to_best_secs = 2.4049599041
 avg_total_time_secs = 30.000068591599995
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -4089,6 +4252,7 @@ avg_time_to_best_secs = 0.008102745599999999
 avg_total_time_secs = 30.000397029100004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -4124,6 +4288,7 @@ avg_time_to_best_secs = 3.525575445700001
 avg_total_time_secs = 30.000337366699995
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-012.cnf"
 
 [results.heuristic]
@@ -4157,6 +4322,7 @@ avg_time_to_best_secs = 0.0090223749
 avg_total_time_secs = 30.111622937499998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4177,6 +4343,7 @@ avg_time_to_best_secs = 8.26709e-05
 avg_total_time_secs = 8.27168e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4197,6 +4364,7 @@ avg_time_to_best_secs = 0.0016465752
 avg_total_time_secs = 0.0017903042
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4221,6 +4389,7 @@ avg_time_to_best_secs = 0.0012614998
 avg_total_time_secs = 30.000002141799996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4245,6 +4414,7 @@ avg_time_to_best_secs = 0.014319104199999998
 avg_total_time_secs = 30.000102629199993
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4266,6 +4436,7 @@ avg_time_to_best_secs = 2.6574667168999997
 avg_total_time_secs = 30.000000987600004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4287,6 +4458,7 @@ avg_time_to_best_secs = 16.5547575378
 avg_total_time_secs = 30.000090179299995
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4310,6 +4482,7 @@ avg_time_to_best_secs = 0.03936337489999999
 avg_total_time_secs = 2.7070044789999996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4333,6 +4506,7 @@ avg_time_to_best_secs = 3.3076811833999997
 avg_total_time_secs = 30.000066716499997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4366,6 +4540,7 @@ avg_time_to_best_secs = 0.0042333666
 avg_total_time_secs = 30.0003556916
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4401,6 +4576,7 @@ avg_time_to_best_secs = 1.534508346
 avg_total_time_secs = 30.0003376252
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-013.cnf"
 
 [results.heuristic]
@@ -4434,6 +4610,7 @@ avg_time_to_best_secs = 0.0013872664
 avg_total_time_secs = 30.0741148751
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4454,6 +4631,7 @@ avg_time_to_best_secs = 8.57043e-05
 avg_total_time_secs = 8.577899999999999e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4474,6 +4652,7 @@ avg_time_to_best_secs = 0.0015938249999999997
 avg_total_time_secs = 0.001737775
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4498,6 +4677,7 @@ avg_time_to_best_secs = 0.0022972792000000002
 avg_total_time_secs = 30.000009229199996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4522,6 +4702,7 @@ avg_time_to_best_secs = 0.0371866292
 avg_total_time_secs = 30.000097658399994
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4543,6 +4724,7 @@ avg_time_to_best_secs = 10.5091863209
 avg_total_time_secs = 30.000008537300005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4564,6 +4746,7 @@ avg_time_to_best_secs = 18.333104808300003
 avg_total_time_secs = 30.000074041700003
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4587,6 +4770,7 @@ avg_time_to_best_secs = 0.0441902082
 avg_total_time_secs = 2.5196611627
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4610,6 +4794,7 @@ avg_time_to_best_secs = 4.5503855791
 avg_total_time_secs = 30.0000838917
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4643,6 +4828,7 @@ avg_time_to_best_secs = 0.005027616800000001
 avg_total_time_secs = 30.000458099899998
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4678,6 +4864,7 @@ avg_time_to_best_secs = 2.8164775916
 avg_total_time_secs = 30.0003093627
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-014.cnf"
 
 [results.heuristic]
@@ -4711,6 +4898,7 @@ avg_time_to_best_secs = 0.0049521876
 avg_total_time_secs = 30.074297874900005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4731,6 +4919,7 @@ avg_time_to_best_secs = 7.216270000000001e-05
 avg_total_time_secs = 7.221650000000001e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4751,6 +4940,7 @@ avg_time_to_best_secs = 0.0016749336
 avg_total_time_secs = 0.0018211793000000001
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4775,6 +4965,7 @@ avg_time_to_best_secs = 0.0073022248
 avg_total_time_secs = 30.000001683299995
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4799,6 +4990,7 @@ avg_time_to_best_secs = 0.0396197875
 avg_total_time_secs = 30.0000494373
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4820,6 +5012,7 @@ avg_time_to_best_secs = 7.843173129300001
 avg_total_time_secs = 30.000001562600005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4841,6 +5034,7 @@ avg_time_to_best_secs = 19.2878615333
 avg_total_time_secs = 30.00008005
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4864,6 +5058,7 @@ avg_time_to_best_secs = 0.06244030410000001
 avg_total_time_secs = 1.7517106043
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4887,6 +5082,7 @@ avg_time_to_best_secs = 3.6214032793
 avg_total_time_secs = 30.000071053999996
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4920,6 +5116,7 @@ avg_time_to_best_secs = 0.012373349899999999
 avg_total_time_secs = 30.0003425541
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4955,6 +5152,7 @@ avg_time_to_best_secs = 14.1700207499
 avg_total_time_secs = 30.000334304
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-015.cnf"
 
 [results.heuristic]
@@ -4988,6 +5186,7 @@ avg_time_to_best_secs = 0.0043256705999999995
 avg_total_time_secs = 30.085849891800002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5008,6 +5207,7 @@ avg_time_to_best_secs = 8.02958e-05
 avg_total_time_secs = 8.035e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5028,6 +5228,7 @@ avg_time_to_best_secs = 0.002247304
 avg_total_time_secs = 0.0023864043
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5052,6 +5253,7 @@ avg_time_to_best_secs = 0.0040242251
 avg_total_time_secs = 30.0000025833
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5076,6 +5278,7 @@ avg_time_to_best_secs = 0.0955706084
 avg_total_time_secs = 30.000103058399997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5097,6 +5300,7 @@ avg_time_to_best_secs = 10.6260199375
 avg_total_time_secs = 30.0000008333
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5118,6 +5322,7 @@ avg_time_to_best_secs = 24.335578225
 avg_total_time_secs = 30.0000680542
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5141,6 +5346,7 @@ avg_time_to_best_secs = 0.0404053335
 avg_total_time_secs = 2.4271767665999997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5164,6 +5370,7 @@ avg_time_to_best_secs = 2.5255573751
 avg_total_time_secs = 30.000089791900002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5197,6 +5404,7 @@ avg_time_to_best_secs = 0.0050932709
 avg_total_time_secs = 30.0003348834
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5232,6 +5440,7 @@ avg_time_to_best_secs = 7.7926277373
 avg_total_time_secs = 30.0002338166
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-016.cnf"
 
 [results.heuristic]
@@ -5265,6 +5474,7 @@ avg_time_to_best_secs = 0.0051266917
 avg_total_time_secs = 30.082464612600006
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5285,6 +5495,7 @@ avg_time_to_best_secs = 8.72252e-05
 avg_total_time_secs = 8.73082e-05
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5305,6 +5516,7 @@ avg_time_to_best_secs = 0.0021684626000000005
 avg_total_time_secs = 0.0022955959
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5329,6 +5541,7 @@ avg_time_to_best_secs = 0.0033495959000000007
 avg_total_time_secs = 30.0000018542
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5353,6 +5566,7 @@ avg_time_to_best_secs = 0.0314197623
 avg_total_time_secs = 30.000127758300003
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5374,6 +5588,7 @@ avg_time_to_best_secs = 11.9201461583
 avg_total_time_secs = 30.000001875100004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5395,6 +5610,7 @@ avg_time_to_best_secs = 20.9945245836
 avg_total_time_secs = 30.000084916500004
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5418,6 +5634,7 @@ avg_time_to_best_secs = 0.0403132625
 avg_total_time_secs = 2.6308919625
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5441,6 +5658,7 @@ avg_time_to_best_secs = 3.8949045292
 avg_total_time_secs = 30.0000499543
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5474,6 +5692,7 @@ avg_time_to_best_secs = 0.0026280332999999998
 avg_total_time_secs = 30.000428954199997
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]
@@ -5509,6 +5728,7 @@ avg_time_to_best_secs = 0.8577238792999999
 avg_total_time_secs = 30.000303124800002
 
 [[results]]
+problem = "Sat"
 instance_path = "data/instances/sat/satlib/uf75-325/uf75-017.cnf"
 
 [results.heuristic]

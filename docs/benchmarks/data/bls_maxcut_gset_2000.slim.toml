@@ -2,6 +2,7 @@ timestamp = "20260505_223800"
 config_file = "data/benchmark_gset_2000.toml"
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G22"
 
 [results.heuristic]
@@ -29,6 +30,7 @@ avg_time_to_best_secs = 193.4018903667
 avg_total_time_secs = 504.2578950541999
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G23"
 
 [results.heuristic]
@@ -56,6 +58,7 @@ avg_time_to_best_secs = 204.5398174792
 avg_total_time_secs = 505.65509542930005
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G24"
 
 [results.heuristic]
@@ -83,6 +86,7 @@ avg_time_to_best_secs = 120.84851589150003
 avg_total_time_secs = 502.6066971876
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G25"
 
 [results.heuristic]
@@ -110,6 +114,7 @@ avg_time_to_best_secs = 102.14115597080001
 avg_total_time_secs = 507.75681348750004
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G26"
 
 [results.heuristic]
@@ -137,6 +142,7 @@ avg_time_to_best_secs = 124.5303692126
 avg_total_time_secs = 505.05066562490003
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G27"
 
 [results.heuristic]
@@ -164,6 +170,7 @@ avg_time_to_best_secs = 177.64409227069999
 avg_total_time_secs = 507.26141488739995
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G28"
 
 [results.heuristic]
@@ -191,6 +198,7 @@ avg_time_to_best_secs = 123.9233386627
 avg_total_time_secs = 507.6954435793
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G29"
 
 [results.heuristic]
@@ -218,6 +226,7 @@ avg_time_to_best_secs = 100.22619309580001
 avg_total_time_secs = 505.7578882417
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G30"
 
 [results.heuristic]
@@ -245,6 +254,7 @@ avg_time_to_best_secs = 102.0026493458
 avg_total_time_secs = 508.3164539042
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G31"
 
 [results.heuristic]
@@ -272,6 +282,7 @@ avg_time_to_best_secs = 255.07081490410002
 avg_total_time_secs = 507.3915990169001
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G32"
 
 [results.heuristic]
@@ -299,6 +310,7 @@ avg_time_to_best_secs = 153.9840152959
 avg_total_time_secs = 502.84788077080003
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G33"
 
 [results.heuristic]
@@ -326,6 +338,7 @@ avg_time_to_best_secs = 319.3083495291
 avg_total_time_secs = 501.5418941625
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G34"
 
 [results.heuristic]
@@ -353,6 +366,7 @@ avg_time_to_best_secs = 243.05148913349998
 avg_total_time_secs = 502.391377079
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G35"
 
 [results.heuristic]
@@ -380,6 +394,7 @@ avg_time_to_best_secs = 287.07118099179996
 avg_total_time_secs = 536.3880741959999
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G36"
 
 [results.heuristic]
@@ -407,6 +422,7 @@ avg_time_to_best_secs = 356.3128646793
 avg_total_time_secs = 537.3453405375001
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G37"
 
 [results.heuristic]
@@ -434,6 +450,7 @@ avg_time_to_best_secs = 178.89147998750002
 avg_total_time_secs = 535.0839510749
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G38"
 
 [results.heuristic]
@@ -461,6 +478,7 @@ avg_time_to_best_secs = 264.16835368730005
 avg_total_time_secs = 536.0602194999
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G39"
 
 [results.heuristic]
@@ -488,6 +506,7 @@ avg_time_to_best_secs = 183.23377959980002
 avg_total_time_secs = 541.1104386249001
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G40"
 
 [results.heuristic]
@@ -515,6 +534,7 @@ avg_time_to_best_secs = 208.24468700839998
 avg_total_time_secs = 530.3484363376
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G41"
 
 [results.heuristic]
@@ -542,6 +562,7 @@ avg_time_to_best_secs = 228.8071334334
 avg_total_time_secs = 540.444556575
 
 [[results]]
+problem = "MaxCut"
 instance_path = "data/instances/max_cut/G42"
 
 [results.heuristic]

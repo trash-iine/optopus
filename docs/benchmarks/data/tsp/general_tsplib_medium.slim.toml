@@ -2,6 +2,7 @@ timestamp = "20260517_192121"
 config_file = "data/benchmarks/tsp/general_medium.toml"
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -22,6 +23,7 @@ avg_time_to_best_secs = 0.03400436679999999
 avg_total_time_secs = 0.034169020700000004
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -42,6 +44,7 @@ avg_time_to_best_secs = 0.0331082208
 avg_total_time_secs = 0.0332495416
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -66,6 +69,7 @@ avg_time_to_best_secs = 46.496054408199996
 avg_total_time_secs = 120.00018622500002
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -90,6 +94,7 @@ avg_time_to_best_secs = 20.2788574375
 avg_total_time_secs = 120.00031975419999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -111,6 +116,7 @@ avg_time_to_best_secs = 80.6652450497
 avg_total_time_secs = 120.00006331670002
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -132,6 +138,7 @@ avg_time_to_best_secs = 83.1932466666
 avg_total_time_secs = 120.00008651670001
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -155,6 +162,7 @@ avg_time_to_best_secs = 8.147467129099999
 avg_total_time_secs = 120.00007531659999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -178,6 +186,7 @@ avg_time_to_best_secs = 29.616565820699996
 avg_total_time_secs = 120.00006337929999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -211,6 +220,7 @@ avg_time_to_best_secs = 25.849114116699997
 avg_total_time_secs = 120.026354646
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -246,6 +256,7 @@ avg_time_to_best_secs = 62.436251491799986
 avg_total_time_secs = 120.0177157542
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
@@ -279,6 +290,7 @@ avg_time_to_best_secs = 67.1071234625
 avg_total_time_secs = 129.43121839580002
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -299,6 +311,7 @@ avg_time_to_best_secs = 0.1196516168
 avg_total_time_secs = 0.11997643739999997
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -319,6 +332,7 @@ avg_time_to_best_secs = 0.1213171542
 avg_total_time_secs = 0.12162817919999998
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -343,6 +357,7 @@ avg_time_to_best_secs = 44.5084978042
 avg_total_time_secs = 120.0003504418
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -367,6 +382,7 @@ avg_time_to_best_secs = 30.822255020900002
 avg_total_time_secs = 120.0004260957
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -388,6 +404,7 @@ avg_time_to_best_secs = 119.39049265009999
 avg_total_time_secs = 120.00018664160002
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -409,6 +426,7 @@ avg_time_to_best_secs = 119.37732459170002
 avg_total_time_secs = 120.00022249589999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -432,6 +450,7 @@ avg_time_to_best_secs = 33.934604400000005
 avg_total_time_secs = 120.00016707079999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -455,6 +474,7 @@ avg_time_to_best_secs = 98.0349538164
 avg_total_time_secs = 120.00020981669999
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -488,6 +508,7 @@ avg_time_to_best_secs = 81.31410122899999
 avg_total_time_secs = 120.06816841680002
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
@@ -523,6 +544,7 @@ avg_time_to_best_secs = 47.1302305957
 avg_total_time_secs = 120.02443904590002
 
 [[results]]
+problem = "Tsp"
 instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
