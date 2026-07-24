@@ -19,15 +19,6 @@
 //! [`Sat`] / [`SatSolution`](crate::problem::SatSolution) untouched. Multi-restart
 //! is composed externally via [`Restart`](crate::heuristic::Restart) /
 //! [`Iterated`](crate::heuristic::Iterated).
-//!
-//! # References
-//!
-//! - B. Selman, H. A. Kautz, and B. Cohen, "Noise Strategies for Improving Local
-//!   Search," *Proc. AAAI-94*, pp. 337–343, 1994. — the WalkSAT/SKC clause-focused
-//!   move and break-count-with-noise selection rule implemented here.
-//! - H. H. Hoos, "An Adaptive Noise Mechanism for WalkSAT," *Proc. AAAI-02*,
-//!   pp. 655–660, 2002. — the automatic noise-adjustment schedule used when
-//!   `adaptive_noise` is enabled (see [`ADAPT_THETA`] / [`ADAPT_PHI`]).
 
 use super::super::{Heuristic, StopCondition};
 use crate::error::OptError;
@@ -38,7 +29,7 @@ use rand::Rng;
 /// Sentinel for "clause not currently in the unsatisfied list".
 const NOT_IN_UNSAT: usize = usize::MAX;
 
-// Adaptive-noise schedule (Hoos 2002; see the module-level References).
+// Adaptive-noise schedule (Hoos 2002; see [`WalkSatForSat`] References).
 /// Fraction of the clause count that may pass without improvement before the
 /// noise is raised.
 const ADAPT_THETA: f64 = 1.0 / 6.0;
@@ -167,6 +158,13 @@ impl WalkSatScratch {
 ///
 /// See the [module docs](self) for the algorithm. Construct with [`new`](Self::new);
 /// wire it into the benchmark via `kind = "WalkSat"` (SAT only).
+///
+/// # References
+///
+/// - Selman, B., Kautz, H. A., and Cohen, B. "Noise Strategies for Improving
+///   Local Search." *Proc. AAAI-94*, 337-343, 1994.
+/// - Hoos, H. H. "An Adaptive Noise Mechanism for WalkSAT." *Proc. AAAI-02*,
+///   655-660, 2002.
 pub struct WalkSatForSat {
     stop_condition: StopCondition,
     /// The configured noise probability (the working noise resets to this).
