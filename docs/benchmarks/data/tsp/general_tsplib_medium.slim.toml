@@ -1,4 +1,4 @@
-timestamp = "20260517_192121"
+timestamp = "20260717_143815"
 config_file = "data/benchmarks/tsp/general_medium.toml"
 
 [[results]]
@@ -14,13 +14,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 667.0
-avg_objective = 682.2
+best_objective = 665.0
+avg_objective = 678.9
 worst_objective = 697.0
-std_objective = 9.631199302267605
-best_time_to_best_secs = 0.027683959
-avg_time_to_best_secs = 0.03400436679999999
-avg_total_time_secs = 0.034169020700000004
+std_objective = 8.791473141629906
+best_time_to_best_secs = 0.002138042
+avg_time_to_best_secs = 0.0028293416999999998
+avg_total_time_secs = 0.0028424917
+avg_initial_objective = 3512.8
+avg_improvement = 2833.9
+avg_n_accepted = 92.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9892689762713195
+avg_n_best_updates = 92.3
 
 [[results]]
 problem = "Tsp"
@@ -35,13 +41,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 715.0
-avg_objective = 773.4
-worst_objective = 838.0
-std_objective = 39.85021957279533
-best_time_to_best_secs = 0.029328833
-avg_time_to_best_secs = 0.0331082208
-avg_total_time_secs = 0.0332495416
+best_objective = 744.0
+avg_objective = 801.4
+worst_objective = 877.0
+std_objective = 45.40528603587913
+best_time_to_best_secs = 0.006820833
+avg_time_to_best_secs = 0.0102415292
+avg_total_time_secs = 0.0102856833
+avg_initial_objective = 3512.8
+avg_improvement = 2711.4
+avg_n_accepted = 116.9
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9914424507015301
+avg_n_best_updates = 116.9
 
 [[results]]
 problem = "Tsp"
@@ -60,13 +72,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 630.0
-avg_objective = 636.6
+best_objective = 632.0
+avg_objective = 635.5
 worst_objective = 642.0
-std_objective = 3.352610922848042
-best_time_to_best_secs = 0.412974875
-avg_time_to_best_secs = 46.496054408199996
-avg_total_time_secs = 120.00018622500002
+std_objective = 2.6551836094703507
+best_time_to_best_secs = 0.172437542
+avg_time_to_best_secs = 37.9445936668
+avg_total_time_secs = 120.0000859875
+avg_initial_objective = 3512.8
+avg_improvement = 2877.3
+avg_n_accepted = 897672.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 117.7
 
 [[results]]
 problem = "Tsp"
@@ -85,13 +103,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 679.0
-avg_objective = 704.0
-worst_objective = 732.0
-std_objective = 15.588457268119896
-best_time_to_best_secs = 0.102122167
-avg_time_to_best_secs = 20.2788574375
-avg_total_time_secs = 120.00031975419999
+best_objective = 651.0
+avg_objective = 705.6
+worst_objective = 760.0
+std_objective = 31.680277776559976
+best_time_to_best_secs = 1.328967792
+avg_time_to_best_secs = 32.7345572789
+avg_total_time_secs = 120.0001299753
+avg_initial_objective = 3512.8
+avg_improvement = 2807.2
+avg_n_accepted = 427645.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 156.3
 
 [[results]]
 problem = "Tsp"
@@ -107,13 +131,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 635.0
-avg_objective = 657.7
-worst_objective = 669.0
-std_objective = 8.92244361147774
-best_time_to_best_secs = 74.621144416
-avg_time_to_best_secs = 80.6652450497
-avg_total_time_secs = 120.00006331670002
+best_objective = 642.0
+avg_objective = 653.5
+worst_objective = 665.0
+std_objective = 7.172865536171719
+best_time_to_best_secs = 0.011333542
+avg_time_to_best_secs = 0.018883524999999998
+avg_total_time_secs = 119.99999970420001
+avg_initial_objective = 3512.8
+avg_improvement = 2859.3
+avg_n_accepted = 2287369.6
+avg_n_rejected = 3082199789.0
+avg_acceptance_rate = 0.0007441095447219395
+avg_n_best_updates = 328.2
 
 [[results]]
 problem = "Tsp"
@@ -129,13 +159,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 653.0
-avg_objective = 665.9
-worst_objective = 681.0
-std_objective = 8.360023923410745
-best_time_to_best_secs = 77.853522584
-avg_time_to_best_secs = 83.1932466666
-avg_total_time_secs = 120.00008651670001
+best_objective = 652.0
+avg_objective = 665.6
+worst_objective = 675.0
+std_objective = 7.82559901860554
+best_time_to_best_secs = 0.011736417
+avg_time_to_best_secs = 0.0232603417
+avg_total_time_secs = 119.99999886669998
+avg_initial_objective = 3512.8
+avg_improvement = 2847.2
+avg_n_accepted = 2401952.6
+avg_n_rejected = 2884798764.7
+avg_acceptance_rate = 0.0008298665245346625
+avg_n_best_updates = 320.0
 
 [[results]]
 problem = "Tsp"
@@ -154,12 +190,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 668.0
-avg_objective = 681.5
-worst_objective = 697.0
-std_objective = 8.188406438373708
-best_time_to_best_secs = 6.409833084
-avg_time_to_best_secs = 8.147467129099999
-avg_total_time_secs = 120.00007531659999
+avg_objective = 679.8
+worst_objective = 703.0
+std_objective = 8.964373932405985
+best_time_to_best_secs = 0.000963458
+avg_time_to_best_secs = 0.0028811957
+avg_total_time_secs = 2.094019425
+avg_initial_objective = 3512.8
+avg_improvement = 2833.0
+avg_n_accepted = 36568.6
+avg_n_rejected = 49963431.4
+avg_acceptance_rate = 0.000731372
+avg_n_best_updates = 310.7
 
 [[results]]
 problem = "Tsp"
@@ -177,13 +219,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 697.0
-avg_objective = 731.1
-worst_objective = 798.0
-std_objective = 28.17250432602682
-best_time_to_best_secs = 12.775558958
-avg_time_to_best_secs = 29.616565820699996
-avg_total_time_secs = 120.00006337929999
+best_objective = 669.0
+avg_objective = 721.9
+worst_objective = 762.0
+std_objective = 31.011127035307826
+best_time_to_best_secs = 0.002882292
+avg_time_to_best_secs = 0.008657095799999999
+avg_total_time_secs = 1.9155392249999998
+avg_initial_objective = 3512.8
+avg_improvement = 2790.9
+avg_n_accepted = 59530.6
+avg_n_rejected = 49940469.4
+avg_acceptance_rate = 0.0011906120000000002
+avg_n_best_updates = 316.6
 
 [[results]]
 problem = "Tsp"
@@ -195,9 +243,6 @@ population_size = 100
 crossover_kind = "Order"
 parent_selection = "Tournament"
 
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
 [[results.heuristic.steps]]
 kind = "TabuSearch"
 neighbor = "TwoOpt"
@@ -208,6 +253,51 @@ tabu_tenure = [
 
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 629.0
+avg_objective = 629.1
+worst_objective = 630.0
+std_objective = 0.3
+best_time_to_best_secs = 6.606201667
+avg_time_to_best_secs = 9.3318132249
+avg_total_time_secs = 120.0086223836
+avg_initial_objective = 3512.8
+avg_improvement = 2883.7
+avg_n_accepted = 896159.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 14555.4
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/eil101.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "TwoOpt"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -215,45 +305,15 @@ best_objective = 629.0
 avg_objective = 629.0
 worst_objective = 629.0
 std_objective = 0.0
-best_time_to_best_secs = 13.372433709
-avg_time_to_best_secs = 25.849114116699997
-avg_total_time_secs = 120.026354646
-
-[[results]]
-problem = "Tsp"
-instance_path = "data/instances/tsp/eil101.tsp"
-
-[results.heuristic]
-kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[[results.heuristic.steps]]
-kind = "LocalSearch"
-neighbor = "TwoOpt"
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 1
-
-[[results.heuristic.steps]]
-kind = "SimulatedAnnealing"
-neighbor = "TwoOpt"
-initial_temperature = 5.0
-cooling_rate = 0.99
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 200
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 630.0
-avg_objective = 636.7
-worst_objective = 641.0
-std_objective = 3.6619666847201113
-best_time_to_best_secs = 36.474934542
-avg_time_to_best_secs = 62.436251491799986
-avg_total_time_secs = 120.0177157542
+best_time_to_best_secs = 0.256626167
+avg_time_to_best_secs = 0.6914151000000001
+avg_total_time_secs = 120.00004811230001
+avg_initial_objective = 3512.8
+avg_improvement = 2883.8
+avg_n_accepted = 4267837.3
+avg_n_rejected = 349078496.6
+avg_acceptance_rate = 0.01207830205113973
+avg_n_best_updates = 1949090.0
 
 [[results]]
 problem = "Tsp"
@@ -261,9 +321,6 @@ instance_path = "data/instances/tsp/eil101.tsp"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -279,15 +336,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = 630.0
-avg_objective = 633.8
-worst_objective = 641.0
-std_objective = 3.249615361854384
-best_time_to_best_secs = 2.9486211669999998
-avg_time_to_best_secs = 67.1071234625
-avg_total_time_secs = 129.43121839580002
+avg_objective = 631.3
+worst_objective = 634.0
+std_objective = 1.4866068747318504
+best_time_to_best_secs = 26.29117975
+avg_time_to_best_secs = 80.2420402791
+avg_total_time_secs = 122.44907562910001
+avg_initial_objective = 3512.8
+avg_improvement = 2881.5
+avg_n_accepted = 925000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2114.8
 
 [[results]]
 problem = "Tsp"
@@ -302,13 +368,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 6896.0
-avg_objective = 7141.0
-worst_objective = 7491.0
-std_objective = 151.48069183892713
-best_time_to_best_secs = 0.103940959
-avg_time_to_best_secs = 0.1196516168
-avg_total_time_secs = 0.11997643739999997
+best_objective = 6854.0
+avg_objective = 7148.3
+worst_objective = 7403.0
+std_objective = 168.9509100301031
+best_time_to_best_secs = 0.008015125
+avg_time_to_best_secs = 0.0108397165
+avg_total_time_secs = 0.010877445900000001
+avg_initial_objective = 54051.7
+avg_improvement = 46903.4
+avg_n_accepted = 160.2
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9937880329832571
+avg_n_best_updates = 160.2
 
 [[results]]
 problem = "Tsp"
@@ -323,13 +395,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 7935.0
-avg_objective = 9087.8
-worst_objective = 10392.0
-std_objective = 738.80536002387
-best_time_to_best_secs = 0.095808875
-avg_time_to_best_secs = 0.1213171542
-avg_total_time_secs = 0.12162817919999998
+best_objective = 8548.0
+avg_objective = 9165.3
+worst_objective = 10420.0
+std_objective = 528.9705190272894
+best_time_to_best_secs = 0.038415083
+avg_time_to_best_secs = 0.0449488584
+avg_total_time_secs = 0.045075028899999994
+avg_initial_objective = 54051.7
+avg_improvement = 44886.4
+avg_n_accepted = 227.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9955959762127581
+avg_n_best_updates = 227.0
 
 [[results]]
 problem = "Tsp"
@@ -348,13 +426,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 6548.0
-avg_objective = 6622.6
-worst_objective = 6812.0
-std_objective = 80.66622589411259
-best_time_to_best_secs = 2.5771253339999998
-avg_time_to_best_secs = 44.5084978042
-avg_total_time_secs = 120.0003504418
+best_objective = 6532.0
+avg_objective = 6627.1
+worst_objective = 6959.0
+std_objective = 115.33988902370245
+best_time_to_best_secs = 0.279721417
+avg_time_to_best_secs = 28.223491266599996
+avg_total_time_secs = 120.00018734990002
+avg_initial_objective = 54051.7
+avg_improvement = 47424.6
+avg_n_accepted = 395449.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 217.9
 
 [[results]]
 problem = "Tsp"
@@ -373,13 +457,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 7532.0
-avg_objective = 8275.2
-worst_objective = 9163.0
-std_objective = 518.5749319047344
-best_time_to_best_secs = 1.069759959
-avg_time_to_best_secs = 30.822255020900002
-avg_total_time_secs = 120.0004260957
+best_objective = 8124.0
+avg_objective = 8661.4
+worst_objective = 9359.0
+std_objective = 356.257547288475
+best_time_to_best_secs = 0.222062375
+avg_time_to_best_secs = 22.0429384667
+avg_total_time_secs = 120.0003269876
+avg_initial_objective = 54051.7
+avg_improvement = 45390.3
+avg_n_accepted = 174458.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 262.1
 
 [[results]]
 problem = "Tsp"
@@ -395,13 +485,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 15151.0
-avg_objective = 15537.0
-worst_objective = 16131.0
-std_objective = 282.24811779709
-best_time_to_best_secs = 117.259998042
-avg_time_to_best_secs = 119.39049265009999
-avg_total_time_secs = 120.00018664160002
+best_objective = 6717.0
+avg_objective = 6830.5
+worst_objective = 6996.0
+std_objective = 80.99166623795314
+best_time_to_best_secs = 0.018472875
+avg_time_to_best_secs = 0.029903129100000002
+avg_total_time_secs = 119.99999957909999
+avg_initial_objective = 54051.7
+avg_improvement = 47221.2
+avg_n_accepted = 235216.8
+avg_n_rejected = 2717368624.8
+avg_acceptance_rate = 8.917006500831832e-05
+avg_n_best_updates = 582.6
 
 [[results]]
 problem = "Tsp"
@@ -417,13 +513,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 12679.0
-avg_objective = 13042.3
-worst_objective = 13664.0
-std_objective = 305.73028963450776
-best_time_to_best_secs = 117.790001625
-avg_time_to_best_secs = 119.37732459170002
-avg_total_time_secs = 120.00022249589999
+best_objective = 6889.0
+avg_objective = 7247.1
+worst_objective = 7648.0
+std_objective = 190.5321232758403
+best_time_to_best_secs = 0.01955925
+avg_time_to_best_secs = 0.030722829099999998
+avg_total_time_secs = 119.99999734999999
+avg_initial_objective = 54051.7
+avg_improvement = 46804.6
+avg_n_accepted = 314488.9
+avg_n_rejected = 2755728755.3
+avg_acceptance_rate = 0.0001119585742634433
+avg_n_best_updates = 570.9
 
 [[results]]
 problem = "Tsp"
@@ -441,13 +543,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 6936.0
-avg_objective = 7348.1
-worst_objective = 7586.0
-std_objective = 168.0615661000456
-best_time_to_best_secs = 28.429804083
-avg_time_to_best_secs = 33.934604400000005
-avg_total_time_secs = 120.00016707079999
+best_objective = 6924.0
+avg_objective = 7216.6
+worst_objective = 7468.0
+std_objective = 197.53288333844569
+best_time_to_best_secs = 0.002097375
+avg_time_to_best_secs = 0.0051041417
+avg_total_time_secs = 2.0211435917
+avg_initial_objective = 54051.7
+avg_improvement = 46835.1
+avg_n_accepted = 5397.2
+avg_n_rejected = 49994602.8
+avg_acceptance_rate = 0.00010794399999999998
+avg_n_best_updates = 536.8
 
 [[results]]
 problem = "Tsp"
@@ -465,13 +573,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 7875.0
-avg_objective = 8653.6
-worst_objective = 9808.0
-std_objective = 617.8846494290015
-best_time_to_best_secs = 68.005563666
-avg_time_to_best_secs = 98.0349538164
-avg_total_time_secs = 120.00020981669999
+best_objective = 8089.0
+avg_objective = 8378.2
+worst_objective = 8779.0
+std_objective = 237.889806423058
+best_time_to_best_secs = 0.00538825
+avg_time_to_best_secs = 0.0118477709
+avg_total_time_secs = 2.1022086207
+avg_initial_objective = 54051.7
+avg_improvement = 45673.5
+avg_n_accepted = 9001.0
+avg_n_rejected = 49990999.0
+avg_acceptance_rate = 0.00018002
+avg_n_best_updates = 596.8
 
 [[results]]
 problem = "Tsp"
@@ -482,9 +596,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Order"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -497,15 +608,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = 6528.0
-avg_objective = 6536.6
-worst_objective = 6557.0
-std_objective = 10.239140588936163
-best_time_to_best_secs = 40.22877675
-avg_time_to_best_secs = 81.31410122899999
-avg_total_time_secs = 120.06816841680002
+avg_objective = 6530.6
+worst_objective = 6549.0
+std_objective = 6.3118935352238
+best_time_to_best_secs = 20.609654292
+avg_time_to_best_secs = 42.3867307877
+avg_total_time_secs = 120.0199907333
+avg_initial_objective = 54051.7
+avg_improvement = 47521.1
+avg_n_accepted = 393182.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 13030.9
 
 [[results]]
 problem = "Tsp"
@@ -513,9 +633,6 @@ instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -533,15 +650,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = 6948.0
-avg_objective = 7026.8
-worst_objective = 7134.0
-std_objective = 63.89491372558539
-best_time_to_best_secs = 0.149090125
-avg_time_to_best_secs = 47.1302305957
-avg_total_time_secs = 120.02443904590002
+best_objective = 6633.0
+avg_objective = 6793.6
+worst_objective = 6995.0
+std_objective = 123.2876311719874
+best_time_to_best_secs = 3.722014292
+avg_time_to_best_secs = 45.1353900126
+avg_total_time_secs = 120.0000185667
+avg_initial_objective = 54051.7
+avg_improvement = 47258.1
+avg_n_accepted = 77619.8
+avg_n_rejected = 313252784.8
+avg_acceptance_rate = 0.0002480330490590975
+avg_n_best_updates = 27201.8
 
 [[results]]
 problem = "Tsp"
@@ -549,9 +675,6 @@ instance_path = "data/instances/tsp/ch150.tsp"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -567,12 +690,21 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = 6532.0
-avg_objective = 6588.5
-worst_objective = 6661.0
-std_objective = 36.576631884305584
-best_time_to_best_secs = 2.5587705
-avg_time_to_best_secs = 63.11206714609999
-avg_total_time_secs = 142.2529545874
+best_objective = 6542.0
+avg_objective = 6561.6
+worst_objective = 6601.0
+std_objective = 18.521339044464362
+best_time_to_best_secs = 3.2118400830000002
+avg_time_to_best_secs = 56.2693778415
+avg_total_time_secs = 125.81431633359998
+avg_initial_objective = 54051.7
+avg_improvement = 47490.1
+avg_n_accepted = 425000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1688.5

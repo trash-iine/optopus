@@ -1,0 +1,30 @@
+timestamp = "20260724_235525"
+config_file = "data/benchmarks/tsp/lkh_large.toml"
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/dsj1000.tsp"
+
+[results.heuristic]
+kind = "LinKernighanHelsgaun"
+num_neighbors = 5
+max_depth = 5
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 19538031.0
+avg_objective = 20547905.3
+worst_objective = 21533344.0
+std_objective = 556848.2629122677
+best_time_to_best_secs = 3.651031708
+avg_time_to_best_secs = 5.6158464041
+avg_total_time_secs = 5.6386135208
+avg_initial_objective = 557846241.3
+avg_improvement = 537298336.0
+avg_n_accepted = 0.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 1748.0

@@ -22,14 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install deps
-        run: pip install tomli-w
-      - name: Regenerate viewer data (slim TOML + index)
-        run: python3 docs/benchmarks/render.py
-      - name: Stage site (drop the heavy raw benchmark TOMLs)
+      - name: Stage site
+        # The committed *.slim.toml + index.json are the viewer's data source
+        # (regenerated locally by docs/benchmarks/render.py). Raw result TOMLs
+        # are gitignored, so nothing heavy needs pruning here.
         run: |
           cp -r docs _site
           find _site/benchmarks/data -name '*.toml' ! -name '*.slim.toml' -delete

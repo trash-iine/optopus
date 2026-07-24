@@ -1,4 +1,4 @@
-timestamp = "20260517_195759"
+timestamp = "20260717_143815"
 config_file = "data/benchmarks/qubo/general_medium.toml"
 
 [[results]]
@@ -14,13 +14,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -22041.0
-avg_objective = -21674.5
-worst_objective = -21103.0
-std_objective = 281.17263380350516
-best_time_to_best_secs = 3.4708e-05
-avg_time_to_best_secs = 7.300009999999999e-05
-avg_total_time_secs = 7.30958e-05
+best_objective = -22037.0
+avg_objective = -21718.4
+worst_objective = -21277.0
+std_objective = 183.3445935935936
+best_time_to_best_secs = 5.5958e-05
+avg_time_to_best_secs = 0.00013643340000000001
+avg_total_time_secs = 0.0001356458
+avg_initial_objective = -710.2
+avg_improvement = 21008.2
+avg_n_accepted = 116.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9914281375480167
+avg_n_best_updates = 116.8
 
 [[results]]
 problem = "Qubo"
@@ -35,13 +41,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21359.0
-avg_objective = -19882.4
-worst_objective = -18533.0
-std_objective = 714.1411905218744
-best_time_to_best_secs = 0.017559667
-avg_time_to_best_secs = 0.024803675199999996
-avg_total_time_secs = 0.025078629199999997
+best_objective = -20922.0
+avg_objective = -20010.6
+worst_objective = -18637.0
+std_objective = 672.0655027599616
+best_time_to_best_secs = 0.022239542
+avg_time_to_best_secs = 0.0269471128
+avg_total_time_secs = 0.027207512499999996
+avg_initial_objective = -710.2
+avg_improvement = 19300.4
+avg_n_accepted = 66.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9849156751708413
+avg_n_best_updates = 66.6
 
 [[results]]
 problem = "Qubo"
@@ -64,9 +76,15 @@ best_objective = -22303.0
 avg_objective = -22303.0
 worst_objective = -22303.0
 std_objective = 0.0
-best_time_to_best_secs = 0.000981417
-avg_time_to_best_secs = 19.248479754399998
-avg_total_time_secs = 120.0000022417
+best_time_to_best_secs = 0.011542875
+avg_time_to_best_secs = 5.996064916700001
+avg_total_time_secs = 120.0000007002
+avg_initial_objective = -710.2
+avg_improvement = 21592.8
+avg_n_accepted = 33749224.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 143.2
 
 [[results]]
 problem = "Qubo"
@@ -85,13 +103,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21634.0
-avg_objective = -20332.2
-worst_objective = -19026.0
-std_objective = 795.8781062449199
-best_time_to_best_secs = 0.06416475
-avg_time_to_best_secs = 43.451818
-avg_total_time_secs = 120.0003662332
+best_objective = -21138.0
+avg_objective = -20419.9
+worst_objective = -19656.0
+std_objective = 480.6207340512891
+best_time_to_best_secs = 0.091197292
+avg_time_to_best_secs = 48.35487288330001
+avg_total_time_secs = 120.0003225167
+avg_initial_objective = -710.2
+avg_improvement = 19709.7
+avg_n_accepted = 154405.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 80.9
 
 [[results]]
 problem = "Qubo"
@@ -108,12 +132,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -22303.0
-avg_objective = -22241.9
-worst_objective = -22072.0
-std_objective = 69.32164164241928
-best_time_to_best_secs = 0.017192084
-avg_time_to_best_secs = 0.0237151584
-avg_total_time_secs = 120.0000000918
+avg_objective = -22261.8
+worst_objective = -22122.0
+std_objective = 54.29880293339808
+best_time_to_best_secs = 0.005571792
+avg_time_to_best_secs = 0.010170896000000002
+avg_total_time_secs = 119.99999851260002
+avg_initial_objective = -710.2
+avg_improvement = 21551.6
+avg_n_accepted = 44204.8
+avg_n_rejected = 3334499988.8
+avg_acceptance_rate = 1.364424747799114e-05
+avg_n_best_updates = 239.4
 
 [[results]]
 problem = "Qubo"
@@ -129,13 +159,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21199.0
-avg_objective = -20510.9
-worst_objective = -19539.0
-std_objective = 462.59992434067686
-best_time_to_best_secs = 59.235838166
-avg_time_to_best_secs = 68.2653804749
-avg_total_time_secs = 120.00018550450002
+best_objective = -21138.0
+avg_objective = -20361.9
+worst_objective = -19502.0
+std_objective = 513.3596107992914
+best_time_to_best_secs = 0.219520959
+avg_time_to_best_secs = 0.2508813708
+avg_total_time_secs = 120.0000001292
+avg_initial_objective = -710.2
+avg_improvement = 19651.7
+avg_n_accepted = 30846.4
+avg_n_rejected = 105947895.2
+avg_acceptance_rate = 0.0002912990528092907
+avg_n_best_updates = 185.2
 
 [[results]]
 problem = "Qubo"
@@ -153,13 +189,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -22267.0
-avg_objective = -22084.6
-worst_objective = -21946.0
-std_objective = 86.13036630596667
-best_time_to_best_secs = 0.000528792
-avg_time_to_best_secs = 0.0010917333
-avg_total_time_secs = 6.9363261417
+best_objective = -22141.0
+avg_objective = -21973.6
+worst_objective = -21809.0
+std_objective = 100.2538777304898
+best_time_to_best_secs = 0.000388875
+avg_time_to_best_secs = 0.0006659418
+avg_total_time_secs = 1.5550806875999998
+avg_initial_objective = -710.2
+avg_improvement = 21263.4
+avg_n_accepted = 60742.9
+avg_n_rejected = 49939257.1
+avg_acceptance_rate = 0.001214858
+avg_n_best_updates = 204.5
 
 [[results]]
 problem = "Qubo"
@@ -177,13 +219,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21432.0
-avg_objective = -20401.6
-worst_objective = -19064.0
-std_objective = 674.8370469972733
-best_time_to_best_secs = 6.014200833
-avg_time_to_best_secs = 15.093760558299996
-avg_total_time_secs = 120.00024853750001
+best_objective = -20948.0
+avg_objective = -20138.1
+worst_objective = -18926.0
+std_objective = 619.8650578956682
+best_time_to_best_secs = 0.012443959
+avg_time_to_best_secs = 0.035563358
+avg_total_time_secs = 52.096189887499996
+avg_initial_objective = -710.2
+avg_improvement = 19427.9
+avg_n_accepted = 380.8
+avg_n_rejected = 49999238.4
+avg_acceptance_rate = 7.616058235407161e-06
+avg_n_best_updates = 162.7
 
 [[results]]
 problem = "Qubo"
@@ -194,9 +242,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -209,15 +254,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -22303.0
 avg_objective = -22303.0
 worst_objective = -22303.0
 std_objective = 0.0
-best_time_to_best_secs = 0.005447667
-avg_time_to_best_secs = 0.028572875000000005
-avg_total_time_secs = 120.0004895418
+best_time_to_best_secs = 0.004593042
+avg_time_to_best_secs = 0.04240118750000001
+avg_total_time_secs = 120.0003542126
+avg_initial_objective = -710.2
+avg_improvement = 21592.8
+avg_n_accepted = 34778672.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 5317.5
 
 [[results]]
 problem = "Qubo"
@@ -225,9 +279,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -245,15 +296,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -22303.0
-avg_objective = -22191.6
-worst_objective = -21992.0
-std_objective = 95.83652748300098
-best_time_to_best_secs = 0.013790791
-avg_time_to_best_secs = 9.134775570799999
-avg_total_time_secs = 120.00000985019999
+avg_objective = -22155.9
+worst_objective = -22045.0
+std_objective = 93.32036219389636
+best_time_to_best_secs = 0.522545709
+avg_time_to_best_secs = 32.7372700668
+avg_total_time_secs = 119.9999859792
+avg_initial_objective = -710.2
+avg_improvement = 21445.7
+avg_n_accepted = 9528138.6
+avg_n_rejected = 6415868252.0
+avg_acceptance_rate = 0.0015103643552055958
+avg_n_best_updates = 2258409.4
 
 [[results]]
 problem = "Qubo"
@@ -261,9 +321,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_1.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -279,15 +336,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -22303.0
 avg_objective = -22303.0
 worst_objective = -22303.0
 std_objective = 0.0
-best_time_to_best_secs = 0.001223959
-avg_time_to_best_secs = 1.2503394918
-avg_total_time_secs = 120.10372955839998
+best_time_to_best_secs = 0.027636166
+avg_time_to_best_secs = 0.4734334042
+avg_total_time_secs = 120.0630958082
+avg_initial_objective = -710.2
+avg_improvement = 21592.8
+avg_n_accepted = 35990000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 101210.1
 
 [[results]]
 problem = "Qubo"
@@ -302,13 +368,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19645.0
-avg_objective = -19359.3
-worst_objective = -19121.0
-std_objective = 167.96133483632474
-best_time_to_best_secs = 3.1583e-05
-avg_time_to_best_secs = 4.787070000000001e-05
-avg_total_time_secs = 4.8024899999999995e-05
+best_objective = -19680.0
+avg_objective = -19168.0
+worst_objective = -18667.0
+std_objective = 326.79228877071137
+best_time_to_best_secs = 4.1625e-05
+avg_time_to_best_secs = 0.0002677917
+avg_total_time_secs = 0.0002664707
+avg_initial_objective = -491.3
+avg_improvement = 18676.7
+avg_n_accepted = 111.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9910809376603688
+avg_n_best_updates = 111.4
 
 [[results]]
 problem = "Qubo"
@@ -323,13 +395,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19187.0
-avg_objective = -18590.1
-worst_objective = -17606.0
-std_objective = 441.6807557501232
-best_time_to_best_secs = 0.020502125
-avg_time_to_best_secs = 0.026599875000000002
-avg_total_time_secs = 0.026900399900000004
+best_objective = -18513.0
+avg_objective = -18040.0
+worst_objective = -17627.0
+std_objective = 309.25846795197054
+best_time_to_best_secs = 0.02232625
+avg_time_to_best_secs = 0.025187395799999995
+avg_total_time_secs = 0.0254623999
+avg_initial_objective = -491.3
+avg_improvement = 17548.7
+avg_n_accepted = 60.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9835250766420959
+avg_n_best_updates = 60.0
 
 [[results]]
 problem = "Qubo"
@@ -349,12 +427,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -19946.0
-avg_objective = -19946.0
-worst_objective = -19946.0
-std_objective = 0.0
-best_time_to_best_secs = 0.373747417
-avg_time_to_best_secs = 22.8730861834
-avg_total_time_secs = 120.0000019583
+avg_objective = -19945.1
+worst_objective = -19940.0
+std_objective = 1.9209372712298545
+best_time_to_best_secs = 0.035216834
+avg_time_to_best_secs = 31.6169176042
+avg_total_time_secs = 120.00000118339999
+avg_initial_objective = -491.3
+avg_improvement = 19453.8
+avg_n_accepted = 33790122.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 147.5
 
 [[results]]
 problem = "Qubo"
@@ -373,13 +457,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19668.0
-avg_objective = -18849.0
+best_objective = -18979.0
+avg_objective = -18586.4
 worst_objective = -18087.0
-std_objective = 374.3671994178977
-best_time_to_best_secs = 0.076293875
-avg_time_to_best_secs = 35.830276420699995
-avg_total_time_secs = 120.00047399999998
+std_objective = 268.7951636469674
+best_time_to_best_secs = 1.7698954580000001
+avg_time_to_best_secs = 34.92792475430001
+avg_total_time_secs = 120.00040943730001
+avg_initial_objective = -491.3
+avg_improvement = 18095.1
+avg_n_accepted = 152092.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 77.3
 
 [[results]]
 problem = "Qubo"
@@ -395,13 +485,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19946.0
-avg_objective = -19885.1
-worst_objective = -19794.0
-std_objective = 53.791170279145256
-best_time_to_best_secs = 0.020131459
-avg_time_to_best_secs = 0.023707775000000004
-avg_total_time_secs = 120.0000003206
+best_objective = -19904.0
+avg_objective = -19853.7
+worst_objective = -19745.0
+std_objective = 41.53323970026899
+best_time_to_best_secs = 0.005204666
+avg_time_to_best_secs = 0.0099646459
+avg_total_time_secs = 119.99999534970001
+avg_initial_objective = -491.3
+avg_improvement = 19362.4
+avg_n_accepted = 1290243.1
+avg_n_rejected = 3334457164.2
+avg_acceptance_rate = 0.0004132399259405975
+avg_n_best_updates = 234.6
 
 [[results]]
 problem = "Qubo"
@@ -417,13 +513,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19324.0
-avg_objective = -18439.8
-worst_objective = -17100.0
-std_objective = 730.8719176435773
-best_time_to_best_secs = 56.807311417
-avg_time_to_best_secs = 64.8452887959
-avg_total_time_secs = 120.0001786
+best_objective = -18903.0
+avg_objective = -18511.9
+worst_objective = -17977.0
+std_objective = 268.82315748461855
+best_time_to_best_secs = 0.184388958
+avg_time_to_best_secs = 0.22747542089999997
+avg_total_time_secs = 119.9999996583
+avg_initial_objective = -491.3
+avg_improvement = 18020.6
+avg_n_accepted = 28921.8
+avg_n_rejected = 110240428.9
+avg_acceptance_rate = 0.0002632838899648132
+avg_n_best_updates = 189.1
 
 [[results]]
 problem = "Qubo"
@@ -441,13 +543,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19806.0
-avg_objective = -19657.7
-worst_objective = -19367.0
-std_objective = 119.89666384015862
-best_time_to_best_secs = 0.000518959
-avg_time_to_best_secs = 0.0010104124
-avg_total_time_secs = 6.989914320800001
+best_objective = -19887.0
+avg_objective = -19723.7
+worst_objective = -19508.0
+std_objective = 113.59669889569855
+best_time_to_best_secs = 0.000356709
+avg_time_to_best_secs = 0.0006880332
+avg_total_time_secs = 1.6500307497999998
+avg_initial_objective = -491.3
+avg_improvement = 19232.4
+avg_n_accepted = 20743.4
+avg_n_rejected = 49979256.6
+avg_acceptance_rate = 0.000414868
+avg_n_best_updates = 209.6
 
 [[results]]
 problem = "Qubo"
@@ -465,13 +573,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19597.0
-avg_objective = -18565.1
-worst_objective = -17270.0
-std_objective = 605.4077056001188
-best_time_to_best_secs = 9.026562084
-avg_time_to_best_secs = 16.632765150100003
-avg_total_time_secs = 120.0001573043
+best_objective = -18684.0
+avg_objective = -18185.2
+worst_objective = -17699.0
+std_objective = 343.544407609846
+best_time_to_best_secs = 0.014679291
+avg_time_to_best_secs = 0.0565764041
+avg_total_time_secs = 55.661866654200004
+avg_initial_objective = -491.3
+avg_improvement = 17693.9
+avg_n_accepted = 731.6
+avg_n_rejected = 49998536.8
+avg_acceptance_rate = 1.4632585253899883e-05
+avg_n_best_updates = 163.0
 
 [[results]]
 problem = "Qubo"
@@ -482,9 +596,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -497,15 +608,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19946.0
 avg_objective = -19946.0
 worst_objective = -19946.0
 std_objective = 0.0
-best_time_to_best_secs = 0.030233833
-avg_time_to_best_secs = 0.0882990335
-avg_total_time_secs = 120.00028930820001
+best_time_to_best_secs = 0.017760542
+avg_time_to_best_secs = 0.0646280833
+avg_total_time_secs = 120.00038703319998
+avg_initial_objective = -491.3
+avg_improvement = 19454.7
+avg_n_accepted = 34701236.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 6087.5
 
 [[results]]
 problem = "Qubo"
@@ -513,9 +633,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -533,15 +650,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19946.0
-avg_objective = -19813.1
-worst_objective = -19615.0
-std_objective = 115.33295279320652
-best_time_to_best_secs = 0.012751542
-avg_time_to_best_secs = 21.6921645667
-avg_total_time_secs = 120.00000865010001
+avg_objective = -19908.7
+worst_objective = -19860.0
+std_objective = 38.28851002585502
+best_time_to_best_secs = 2.993648167
+avg_time_to_best_secs = 6.524656200000001
+avg_total_time_secs = 119.9999970208
+avg_initial_objective = -491.3
+avg_improvement = 19417.4
+avg_n_accepted = 8125213.4
+avg_n_rejected = 6057847388.9
+avg_acceptance_rate = 0.0013228810436685572
+avg_n_best_updates = 2158618.3
 
 [[results]]
 problem = "Qubo"
@@ -549,9 +675,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_10.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -567,15 +690,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19946.0
 avg_objective = -19946.0
 worst_objective = -19946.0
 std_objective = 0.0
-best_time_to_best_secs = 0.067283291
-avg_time_to_best_secs = 2.9213687958000003
-avg_total_time_secs = 120.0881315334
+best_time_to_best_secs = 0.519010792
+avg_time_to_best_secs = 1.7064388252
+avg_total_time_secs = 120.08841822500001
+avg_initial_objective = -491.3
+avg_improvement = 19454.7
+avg_n_accepted = 35010000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 100977.4
 
 [[results]]
 problem = "Qubo"
@@ -590,13 +722,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19756.0
-avg_objective = -19622.9
-worst_objective = -19335.0
-std_objective = 134.98329526278428
-best_time_to_best_secs = 3.4125e-05
-avg_time_to_best_secs = 5.17082e-05
-avg_total_time_secs = 5.1833200000000004e-05
+best_objective = -19835.0
+avg_objective = -19489.9
+worst_objective = -19145.0
+std_objective = 207.61572676461674
+best_time_to_best_secs = 9.4333e-05
+avg_time_to_best_secs = 0.0002325165
+avg_total_time_secs = 0.00022848760000000002
+avg_initial_objective = 820.3
+avg_improvement = 20310.2
+avg_n_accepted = 118.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9915476028023675
+avg_n_best_updates = 118.0
 
 [[results]]
 problem = "Qubo"
@@ -611,13 +749,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19865.0
-avg_objective = -19102.7
-worst_objective = -18473.0
-std_objective = 430.7454120475342
-best_time_to_best_secs = 0.020808958
-avg_time_to_best_secs = 0.027993399599999996
-avg_total_time_secs = 0.0282456417
+best_objective = -19683.0
+avg_objective = -18616.4
+worst_objective = -17412.0
+std_objective = 601.7948487649259
+best_time_to_best_secs = 0.021841416
+avg_time_to_best_secs = 0.0263579791
+avg_total_time_secs = 0.0266317877
+avg_initial_objective = 820.3
+avg_improvement = 19436.7
+avg_n_accepted = 64.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9847023496257294
+avg_n_best_updates = 64.7
 
 [[results]]
 problem = "Qubo"
@@ -637,12 +781,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -20065.0
-avg_objective = -20064.4
+avg_objective = -20064.6
 worst_objective = -20063.0
-std_objective = 0.9165151389911681
-best_time_to_best_secs = 0.416569083
-avg_time_to_best_secs = 47.8363836918
-avg_total_time_secs = 120.00000173779999
+std_objective = 0.7999999999999999
+best_time_to_best_secs = 0.047403833
+avg_time_to_best_secs = 36.8750638624
+avg_total_time_secs = 120.00000089179998
+avg_initial_objective = 820.3
+avg_improvement = 20884.9
+avg_n_accepted = 34310702.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 145.4
 
 [[results]]
 problem = "Qubo"
@@ -661,13 +811,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19813.0
-avg_objective = -19459.7
-worst_objective = -18677.0
-std_objective = 365.173944853682
-best_time_to_best_secs = 1.9116968330000002
-avg_time_to_best_secs = 24.8291497959
-avg_total_time_secs = 120.00052613739999
+best_objective = -20046.0
+avg_objective = -19223.0
+worst_objective = -18595.0
+std_objective = 395.14301208549796
+best_time_to_best_secs = 0.448165959
+avg_time_to_best_secs = 15.7758881545
+avg_total_time_secs = 120.000380408
+avg_initial_objective = 820.3
+avg_improvement = 20043.3
+avg_n_accepted = 154120.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 81.3
 
 [[results]]
 problem = "Qubo"
@@ -684,12 +840,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -20046.0
-avg_objective = -19945.8
-worst_objective = -19770.0
-std_objective = 77.39353978207743
-best_time_to_best_secs = 0.020420209
-avg_time_to_best_secs = 0.0226748167
-avg_total_time_secs = 120.000003629
+avg_objective = -19957.7
+worst_objective = -19842.0
+std_objective = 63.34990134167535
+best_time_to_best_secs = 0.005327833
+avg_time_to_best_secs = 0.009604850100000001
+avg_total_time_secs = 119.99999834590001
+avg_initial_objective = 820.3
+avg_improvement = 20778.0
+avg_n_accepted = 1496356.2
+avg_n_rejected = 3335541453.2
+avg_acceptance_rate = 0.00041326546869212743
+avg_n_best_updates = 242.6
 
 [[results]]
 problem = "Qubo"
@@ -705,13 +867,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19873.0
-avg_objective = -19291.4
-worst_objective = -18392.0
-std_objective = 492.8716262882253
-best_time_to_best_secs = 55.723093708
-avg_time_to_best_secs = 70.4136132541
-avg_total_time_secs = 120.00015782519999
+best_objective = -19984.0
+avg_objective = -19160.6
+worst_objective = -18524.0
+std_objective = 410.5803697207162
+best_time_to_best_secs = 0.21987925
+avg_time_to_best_secs = 0.25494564989999996
+avg_total_time_secs = 119.99999940400001
+avg_initial_objective = 820.3
+avg_improvement = 19980.9
+avg_n_accepted = 28638.3
+avg_n_rejected = 99577981.5
+avg_acceptance_rate = 0.00028774908935702917
+avg_n_best_updates = 193.1
 
 [[results]]
 problem = "Qubo"
@@ -729,13 +897,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19973.0
-avg_objective = -19857.9
-worst_objective = -19750.0
-std_objective = 67.92267662570433
-best_time_to_best_secs = 0.000458167
-avg_time_to_best_secs = 0.0009413958999999999
-avg_total_time_secs = 6.8820113748999985
+best_objective = -19984.0
+avg_objective = -19852.6
+worst_objective = -19622.0
+std_objective = 105.06302870182262
+best_time_to_best_secs = 0.0003885
+avg_time_to_best_secs = 0.0006593707999999999
+avg_total_time_secs = 1.6772522040000002
+avg_initial_objective = 820.3
+avg_improvement = 20672.9
+avg_n_accepted = 20771.5
+avg_n_rejected = 49979228.5
+avg_acceptance_rate = 0.00041542999999999994
+avg_n_best_updates = 216.9
 
 [[results]]
 problem = "Qubo"
@@ -753,13 +927,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19676.0
-avg_objective = -19142.2
-worst_objective = -18131.0
-std_objective = 503.2311198644217
-best_time_to_best_secs = 4.582709042
-avg_time_to_best_secs = 17.5362384249
-avg_total_time_secs = 120.0001720126
+best_objective = -19942.0
+avg_objective = -19006.6
+worst_objective = -18397.0
+std_objective = 412.0522296991001
+best_time_to_best_secs = 0.01566975
+avg_time_to_best_secs = 0.045829849900000004
+avg_total_time_secs = 59.30181890419999
+avg_initial_objective = 820.3
+avg_improvement = 19826.9
+avg_n_accepted = 714.6
+avg_n_rejected = 49998570.8
+avg_acceptance_rate = 1.4292559678952944e-05
+avg_n_best_updates = 172.2
 
 [[results]]
 problem = "Qubo"
@@ -770,9 +950,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -785,15 +962,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -20065.0
 avg_objective = -20065.0
 worst_objective = -20065.0
 std_objective = 0.0
-best_time_to_best_secs = 0.008336
-avg_time_to_best_secs = 0.1110887542
-avg_total_time_secs = 120.0002688499
+best_time_to_best_secs = 0.026949208
+avg_time_to_best_secs = 6.186258949799999
+avg_total_time_secs = 120.00035906240001
+avg_initial_objective = 820.3
+avg_improvement = 20885.3
+avg_n_accepted = 34098178.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 6272.2
 
 [[results]]
 problem = "Qubo"
@@ -801,9 +987,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -821,15 +1004,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -20065.0
-avg_objective = -19966.0
-worst_objective = -19773.0
-std_objective = 97.82228784893553
-best_time_to_best_secs = 0.000451708
-avg_time_to_best_secs = 7.780371633200001
-avg_total_time_secs = 120.00001097510001
+avg_objective = -19971.5
+worst_objective = -19844.0
+std_objective = 76.41629407397352
+best_time_to_best_secs = 0.008874792
+avg_time_to_best_secs = 2.5385302375999994
+avg_total_time_secs = 119.99999842499999
+avg_initial_objective = 820.3
+avg_improvement = 20791.8
+avg_n_accepted = 17293108.6
+avg_n_rejected = 6213627254.0
+avg_acceptance_rate = 0.002783934285494072
+avg_n_best_updates = 4886026.2
 
 [[results]]
 problem = "Qubo"
@@ -837,9 +1029,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_2.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -855,15 +1044,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -20065.0
 avg_objective = -20065.0
 worst_objective = -20065.0
 std_objective = 0.0
-best_time_to_best_secs = 0.406411208
-avg_time_to_best_secs = 4.2139498417
-avg_total_time_secs = 120.06397976649998
+best_time_to_best_secs = 0.037842125
+avg_time_to_best_secs = 3.1963062624000003
+avg_total_time_secs = 120.02630409590002
+avg_initial_objective = 820.3
+avg_improvement = 20885.3
+avg_n_accepted = 35240000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 98576.6
 
 [[results]]
 problem = "Qubo"
@@ -878,13 +1076,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -16861.0
-avg_objective = -16370.2
-worst_objective = -15780.0
-std_objective = 321.4504005286041
-best_time_to_best_secs = 3.6875e-05
-avg_time_to_best_secs = 4.97542e-05
-avg_total_time_secs = 4.98832e-05
+best_objective = -16809.0
+avg_objective = -16397.0
+worst_objective = -15977.0
+std_objective = 265.29455327993446
+best_time_to_best_secs = 0.000159834
+avg_time_to_best_secs = 0.0002839502
+avg_total_time_secs = 0.0002780248
+avg_initial_objective = 2231.2
+avg_improvement = 18628.2
+avg_n_accepted = 117.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9914696897207038
+avg_n_best_updates = 117.8
 
 [[results]]
 problem = "Qubo"
@@ -899,13 +1103,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -16648.0
-avg_objective = -16048.1
-worst_objective = -15509.0
-std_objective = 317.89194705119536
-best_time_to_best_secs = 0.022355625
-avg_time_to_best_secs = 0.025908962599999995
-avg_total_time_secs = 0.026188912400000004
+best_objective = -16900.0
+avg_objective = -16256.0
+worst_objective = -15409.0
+std_objective = 554.1265198490323
+best_time_to_best_secs = 0.020562333
+avg_time_to_best_secs = 0.025486370999999997
+avg_total_time_secs = 0.025782745899999997
+avg_initial_objective = 2231.2
+avg_improvement = 18487.2
+avg_n_accepted = 63.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9844190751121037
+avg_n_best_updates = 63.7
 
 [[results]]
 problem = "Qubo"
@@ -928,9 +1138,15 @@ best_objective = -17072.0
 avg_objective = -17072.0
 worst_objective = -17072.0
 std_objective = 0.0
-best_time_to_best_secs = 0.250540416
-avg_time_to_best_secs = 23.141471308299998
-avg_total_time_secs = 120.0000055625
+best_time_to_best_secs = 1.8240453749999999
+avg_time_to_best_secs = 15.3024684001
+avg_total_time_secs = 120.0000005501
+avg_initial_objective = 2231.2
+avg_improvement = 19303.2
+avg_n_accepted = 33385506.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 148.4
 
 [[results]]
 problem = "Qubo"
@@ -949,13 +1165,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -16972.0
-avg_objective = -16632.7
-worst_objective = -15993.0
-std_objective = 240.45126325307592
-best_time_to_best_secs = 0.351292
-avg_time_to_best_secs = 55.15058697479999
-avg_total_time_secs = 120.00038972930001
+best_objective = -17001.0
+avg_objective = -16623.0
+worst_objective = -15858.0
+std_objective = 366.1679942321557
+best_time_to_best_secs = 0.195517916
+avg_time_to_best_secs = 17.4787924499
+avg_total_time_secs = 120.00030742059998
+avg_initial_objective = 2231.2
+avg_improvement = 18854.2
+avg_n_accepted = 154914.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 75.7
 
 [[results]]
 problem = "Qubo"
@@ -971,13 +1193,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -17013.0
-avg_objective = -16937.5
-worst_objective = -16834.0
-std_objective = 60.640333112541526
-best_time_to_best_secs = 0.018216084
-avg_time_to_best_secs = 0.0234101583
-avg_total_time_secs = 120.00000004160002
+best_objective = -17005.0
+avg_objective = -16985.8
+worst_objective = -16964.0
+std_objective = 16.648123017325407
+best_time_to_best_secs = 0.005203875
+avg_time_to_best_secs = 0.0085503291
+avg_total_time_secs = 120.00000203340001
+avg_initial_objective = 2231.2
+avg_improvement = 19217.0
+avg_n_accepted = 43050.5
+avg_n_rejected = 4253019766.8
+avg_acceptance_rate = 1.019235324541151e-05
+avg_n_best_updates = 242.7
 
 [[results]]
 problem = "Qubo"
@@ -993,13 +1221,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -16939.0
-avg_objective = -16592.6
-worst_objective = -15801.0
-std_objective = 399.9797994899243
-best_time_to_best_secs = 55.918354875
-avg_time_to_best_secs = 69.90465278759999
-avg_total_time_secs = 120.0001816334
+best_objective = -16985.0
+avg_objective = -16560.3
+worst_objective = -15762.0
+std_objective = 375.56998016348433
+best_time_to_best_secs = 0.181270708
+avg_time_to_best_secs = 0.22955244979999997
+avg_total_time_secs = 119.99999928770004
+avg_initial_objective = 2231.2
+avg_improvement = 18791.5
+avg_n_accepted = 28630.1
+avg_n_rejected = 101205775.7
+avg_acceptance_rate = 0.0002834999376628354
+avg_n_best_updates = 193.5
 
 [[results]]
 problem = "Qubo"
@@ -1017,13 +1251,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -17035.0
-avg_objective = -16879.2
-worst_objective = -16729.0
-std_objective = 118.21996447301107
-best_time_to_best_secs = 0.000495041
-avg_time_to_best_secs = 0.001003308
-avg_total_time_secs = 6.997773175000001
+best_objective = -16907.0
+avg_objective = -16735.5
+worst_objective = -16330.0
+std_objective = 150.0854756463796
+best_time_to_best_secs = 0.000341
+avg_time_to_best_secs = 0.0006320666999999999
+avg_total_time_secs = 1.9217150626
+avg_initial_objective = 2231.2
+avg_improvement = 18966.7
+avg_n_accepted = 40791.6
+avg_n_rejected = 49959208.4
+avg_acceptance_rate = 0.0008158320000000001
+avg_n_best_updates = 210.5
 
 [[results]]
 problem = "Qubo"
@@ -1041,13 +1281,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -16713.0
-avg_objective = -16332.4
-worst_objective = -16093.0
-std_objective = 175.03439661963588
-best_time_to_best_secs = 5.790442292
-avg_time_to_best_secs = 19.0130678501
-avg_total_time_secs = 120.00013073730001
+best_objective = -16968.0
+avg_objective = -16410.5
+worst_objective = -15346.0
+std_objective = 496.0534749399504
+best_time_to_best_secs = 0.03457075
+avg_time_to_best_secs = 0.058644612400000004
+avg_total_time_secs = 61.288115383299996
+avg_initial_objective = 2231.2
+avg_improvement = 18641.7
+avg_n_accepted = 402.5
+avg_n_rejected = 49999195.0
+avg_acceptance_rate = 8.05006545145755e-06
+avg_n_best_updates = 164.7
 
 [[results]]
 problem = "Qubo"
@@ -1058,9 +1304,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -1073,15 +1316,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -17072.0
-avg_objective = -17068.7
+avg_objective = -17062.1
 worst_objective = -17039.0
-std_objective = 9.9
-best_time_to_best_secs = 0.021171041
-avg_time_to_best_secs = 4.650345841700001
-avg_total_time_secs = 120.0004279167
+std_objective = 15.122499793354274
+best_time_to_best_secs = 0.01133175
+avg_time_to_best_secs = 2.5838239709
+avg_total_time_secs = 120.0211304916
+avg_initial_objective = 2231.2
+avg_improvement = 19293.3
+avg_n_accepted = 33341516.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 7968.4
 
 [[results]]
 problem = "Qubo"
@@ -1089,9 +1341,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -1109,15 +1358,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -17039.0
-avg_objective = -16953.2
-worst_objective = -16568.0
-std_objective = 131.5171471710058
-best_time_to_best_secs = 0.0446355
-avg_time_to_best_secs = 30.951184016600003
-avg_total_time_secs = 120.00001189999998
+best_objective = -17072.0
+avg_objective = -16978.3
+worst_objective = -16902.0
+std_objective = 52.12494604313754
+best_time_to_best_secs = 0.00130575
+avg_time_to_best_secs = 28.356497566799995
+avg_total_time_secs = 120.0000011708
+avg_initial_objective = 2231.2
+avg_improvement = 19209.5
+avg_n_accepted = 12888319.7
+avg_n_rejected = 6329513355.3
+avg_acceptance_rate = 0.0020975093525307576
+avg_n_best_updates = 3686359.3
 
 [[results]]
 problem = "Qubo"
@@ -1125,9 +1383,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_3.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -1142,6 +1397,9 @@ max_iteration = 50000
 
 [results.heuristic.restart_condition]
 max_failed_update = 10000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -1149,9 +1407,15 @@ best_objective = -17072.0
 avg_objective = -17072.0
 worst_objective = -17072.0
 std_objective = 0.0
-best_time_to_best_secs = 0.226305083
-avg_time_to_best_secs = 1.8697057788999998
-avg_total_time_secs = 120.11257645010001
+best_time_to_best_secs = 0.163462167
+avg_time_to_best_secs = 3.1053824998
+avg_total_time_secs = 120.05937214180001
+avg_initial_objective = 2231.2
+avg_improvement = 19303.2
+avg_n_accepted = 34085000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 97178.2
 
 [[results]]
 problem = "Qubo"
@@ -1166,13 +1430,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21821.0
-avg_objective = -21576.9
-worst_objective = -21223.0
-std_objective = 203.30590252129917
-best_time_to_best_secs = 3.2167e-05
-avg_time_to_best_secs = 4.27582e-05
-avg_total_time_secs = 4.28999e-05
+best_objective = -22167.0
+avg_objective = -21505.8
+worst_objective = -21080.0
+std_objective = 357.2603532439613
+best_time_to_best_secs = 5.3625e-05
+avg_time_to_best_secs = 0.00019095809999999998
+avg_total_time_secs = 0.0001899794
+avg_initial_objective = -281.7
+avg_improvement = 21224.1
+avg_n_accepted = 115.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.991366534640276
+avg_n_best_updates = 115.4
 
 [[results]]
 problem = "Qubo"
@@ -1187,13 +1457,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -20550.0
-avg_objective = -19552.6
-worst_objective = -18671.0
-std_objective = 563.6653617173935
-best_time_to_best_secs = 0.023689875
-avg_time_to_best_secs = 0.026675100100000005
-avg_total_time_secs = 0.026956921000000002
+best_objective = -20293.0
+avg_objective = -19445.0
+worst_objective = -17969.0
+std_objective = 773.0393262958878
+best_time_to_best_secs = 0.017896292
+avg_time_to_best_secs = 0.025000971
+avg_total_time_secs = 0.0252598957
+avg_initial_objective = -281.7
+avg_improvement = 19163.3
+avg_n_accepted = 61.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.983831289444679
+avg_n_best_updates = 61.6
 
 [[results]]
 problem = "Qubo"
@@ -1216,9 +1492,15 @@ best_objective = -22305.0
 avg_objective = -22305.0
 worst_objective = -22305.0
 std_objective = 0.0
-best_time_to_best_secs = 0.038598458
-avg_time_to_best_secs = 5.118722816499999
-avg_total_time_secs = 120.00000217089999
+best_time_to_best_secs = 0.00085575
+avg_time_to_best_secs = 3.4646631918000006
+avg_total_time_secs = 120.00000278769998
+avg_initial_objective = -281.7
+avg_improvement = 22023.3
+avg_n_accepted = 33643375.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 148.9
 
 [[results]]
 problem = "Qubo"
@@ -1237,13 +1519,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21130.0
-avg_objective = -20512.7
-worst_objective = -19668.0
-std_objective = 543.7144563095596
-best_time_to_best_secs = 0.075631292
-avg_time_to_best_secs = 17.6760438961
-avg_total_time_secs = 120.00035427899998
+best_objective = -21491.0
+avg_objective = -20319.7
+worst_objective = -18801.0
+std_objective = 805.6958545257634
+best_time_to_best_secs = 0.072435916
+avg_time_to_best_secs = 30.867587520900003
+avg_total_time_secs = 120.00029275839998
+avg_initial_objective = -281.7
+avg_improvement = 20038.0
+avg_n_accepted = 151146.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 86.4
 
 [[results]]
 problem = "Qubo"
@@ -1260,12 +1548,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -22305.0
-avg_objective = -22231.0
-worst_objective = -22119.0
-std_objective = 62.37788069500277
-best_time_to_best_secs = 0.014943583
-avg_time_to_best_secs = 0.023369562400000002
-avg_total_time_secs = 120.00000070840001
+avg_objective = -22243.0
+worst_objective = -22138.0
+std_objective = 55.96248743578148
+best_time_to_best_secs = 0.00518225
+avg_time_to_best_secs = 0.0092593377
+avg_total_time_secs = 120.0000004875
+avg_initial_objective = -281.7
+avg_improvement = 21961.3
+avg_n_accepted = 1744910.3
+avg_n_rejected = 3713886034.9
+avg_acceptance_rate = 0.0004123540397971199
+avg_n_best_updates = 244.0
 
 [[results]]
 problem = "Qubo"
@@ -1281,13 +1575,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -20897.0
-avg_objective = -20417.6
-worst_objective = -19969.0
-std_objective = 310.8588747325706
-best_time_to_best_secs = 62.739772083
-avg_time_to_best_secs = 72.72037185820001
-avg_total_time_secs = 120.00017959979998
+best_objective = -21491.0
+avg_objective = -20271.7
+worst_objective = -18810.0
+std_objective = 820.1336537418764
+best_time_to_best_secs = 0.191155041
+avg_time_to_best_secs = 0.2569467999
+avg_total_time_secs = 120.000000004
+avg_initial_objective = -281.7
+avg_improvement = 19990.0
+avg_n_accepted = 27957.2
+avg_n_rejected = 97656197.5
+avg_acceptance_rate = 0.00028670710772914963
+avg_n_best_updates = 193.2
 
 [[results]]
 problem = "Qubo"
@@ -1306,12 +1606,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -22305.0
-avg_objective = -22050.5
-worst_objective = -21576.0
-std_objective = 199.89409696136602
-best_time_to_best_secs = 0.000581792
-avg_time_to_best_secs = 0.0009626751000000001
-avg_total_time_secs = 7.0782652542
+avg_objective = -22056.6
+worst_objective = -21728.0
+std_objective = 176.65854069362172
+best_time_to_best_secs = 0.000500292
+avg_time_to_best_secs = 0.0007173625
+avg_total_time_secs = 1.5409927708
+avg_initial_objective = -281.7
+avg_improvement = 21774.9
+avg_n_accepted = 784.3
+avg_n_rejected = 49999215.7
+avg_acceptance_rate = 1.5686000000000002e-05
+avg_n_best_updates = 214.7
 
 [[results]]
 problem = "Qubo"
@@ -1329,13 +1635,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21259.0
-avg_objective = -19935.8
-worst_objective = -18297.0
-std_objective = 889.8145649515972
-best_time_to_best_secs = 5.322769125
-avg_time_to_best_secs = 14.6984388124
-avg_total_time_secs = 120.00021342510001
+best_objective = -20852.0
+avg_objective = -19967.6
+worst_objective = -18446.0
+std_objective = 760.644752824865
+best_time_to_best_secs = 0.013103417
+avg_time_to_best_secs = 0.0535588956
+avg_total_time_secs = 58.1716042208
+avg_initial_objective = -281.7
+avg_improvement = 19685.9
+avg_n_accepted = 425.9
+avg_n_rejected = 49999148.2
+avg_acceptance_rate = 8.518073162833675e-06
+avg_n_best_updates = 175.5
 
 [[results]]
 problem = "Qubo"
@@ -1346,9 +1658,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -1361,15 +1670,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -22305.0
 avg_objective = -22305.0
 worst_objective = -22305.0
 std_objective = 0.0
-best_time_to_best_secs = 0.007365583
-avg_time_to_best_secs = 0.035653670699999994
-avg_total_time_secs = 120.0003958961
+best_time_to_best_secs = 0.009553042
+avg_time_to_best_secs = 0.033773104100000007
+avg_total_time_secs = 120.00031315429999
+avg_initial_objective = -281.7
+avg_improvement = 22023.3
+avg_n_accepted = 33803917.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 5988.0
 
 [[results]]
 problem = "Qubo"
@@ -1377,9 +1695,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -1397,15 +1712,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -22212.0
-avg_objective = -22125.5
-worst_objective = -21935.0
-std_objective = 93.15068437751812
-best_time_to_best_secs = 0.001936
-avg_time_to_best_secs = 38.696683579200005
-avg_total_time_secs = 120.000013571
+best_objective = -22305.0
+avg_objective = -22079.1
+worst_objective = -21686.0
+std_objective = 237.7904329446414
+best_time_to_best_secs = 0.00097075
+avg_time_to_best_secs = 16.9686415625
+avg_total_time_secs = 119.9999981959
+avg_initial_objective = -281.7
+avg_improvement = 21797.4
+avg_n_accepted = 18609850.3
+avg_n_rejected = 5919833921.3
+avg_acceptance_rate = 0.003119763323932379
+avg_n_best_updates = 5297448.5
 
 [[results]]
 problem = "Qubo"
@@ -1413,9 +1737,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_4.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -1431,15 +1752,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -22305.0
 avg_objective = -22305.0
 worst_objective = -22305.0
 std_objective = 0.0
-best_time_to_best_secs = 0.001103542
-avg_time_to_best_secs = 0.5498024083999999
-avg_total_time_secs = 120.06981425430001
+best_time_to_best_secs = 0.000873292
+avg_time_to_best_secs = 0.2673564251
+avg_total_time_secs = 120.0563746833
+avg_initial_objective = -281.7
+avg_improvement = 22023.3
+avg_n_accepted = 34640000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 99483.3
 
 [[results]]
 problem = "Qubo"
@@ -1454,13 +1784,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21138.0
-avg_objective = -20682.2
-worst_objective = -19588.0
-std_objective = 452.421882759886
-best_time_to_best_secs = 3.7042e-05
-avg_time_to_best_secs = 5.275410000000001e-05
-avg_total_time_secs = 5.2850100000000004e-05
+best_objective = -21311.0
+avg_objective = -20809.0
+worst_objective = -20187.0
+std_objective = 319.3897305800548
+best_time_to_best_secs = 5.7667e-05
+avg_time_to_best_secs = 0.00023838750000000001
+avg_total_time_secs = 0.0002350043
+avg_initial_objective = -125.6
+avg_improvement = 20683.4
+avg_n_accepted = 121.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9917888643525291
+avg_n_best_updates = 121.8
 
 [[results]]
 problem = "Qubo"
@@ -1475,13 +1811,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -20887.0
-avg_objective = -19704.4
-worst_objective = -18066.0
-std_objective = 707.2223412760658
-best_time_to_best_secs = 0.020318833
-avg_time_to_best_secs = 0.027749125000000003
-avg_total_time_secs = 0.028098150100000004
+best_objective = -20422.0
+avg_objective = -19552.4
+worst_objective = -18446.0
+std_objective = 587.9129527404546
+best_time_to_best_secs = 0.020848542
+avg_time_to_best_secs = 0.0263995749
+avg_total_time_secs = 0.026657616800000006
+avg_initial_objective = -125.6
+avg_improvement = 19426.8
+avg_n_accepted = 65.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9847687149645447
+avg_n_best_updates = 65.4
 
 [[results]]
 problem = "Qubo"
@@ -1501,12 +1843,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -21328.0
-avg_objective = -21326.7
-worst_objective = -21315.0
-std_objective = 3.9000000000000017
-best_time_to_best_secs = 0.000352458
-avg_time_to_best_secs = 13.551995216499998
-avg_total_time_secs = 120.00000291670001
+avg_objective = -21328.0
+worst_objective = -21328.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000403417
+avg_time_to_best_secs = 27.0745347043
+avg_total_time_secs = 119.9999997583
+avg_initial_objective = -125.6
+avg_improvement = 21202.4
+avg_n_accepted = 34013481.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 141.0
 
 [[results]]
 problem = "Qubo"
@@ -1525,13 +1873,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -20787.0
-avg_objective = -19961.9
-worst_objective = -18888.0
-std_objective = 647.0963529490798
-best_time_to_best_secs = 0.056511917
-avg_time_to_best_secs = 26.5929335499
-avg_total_time_secs = 120.000447971
+best_objective = -20638.0
+avg_objective = -19856.6
+worst_objective = -19099.0
+std_objective = 453.2434665828069
+best_time_to_best_secs = 0.056490167
+avg_time_to_best_secs = 15.6110356792
+avg_total_time_secs = 120.0003223249
+avg_initial_objective = -125.6
+avg_improvement = 19731.0
+avg_n_accepted = 152515.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 76.3
 
 [[results]]
 problem = "Qubo"
@@ -1548,12 +1902,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -21328.0
-avg_objective = -21281.5
-worst_objective = -21111.0
-std_objective = 60.12029607378859
-best_time_to_best_secs = 0.016419
-avg_time_to_best_secs = 0.026020899999999996
-avg_total_time_secs = 120.00000007490003
+avg_objective = -21305.0
+worst_objective = -21261.0
+std_objective = 21.2179169571379
+best_time_to_best_secs = 0.005651041
+avg_time_to_best_secs = 0.0089485665
+avg_total_time_secs = 119.99999835420003
+avg_initial_objective = -125.6
+avg_improvement = 21179.4
+avg_n_accepted = 43916.2
+avg_n_rejected = 4145827072.9
+avg_acceptance_rate = 1.0711461656815555e-05
+avg_n_best_updates = 233.4
 
 [[results]]
 problem = "Qubo"
@@ -1569,13 +1929,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21045.0
-avg_objective = -19611.5
-worst_objective = -17505.0
-std_objective = 1006.9945630439124
-best_time_to_best_secs = 53.224509917
-avg_time_to_best_secs = 69.987002671
-avg_total_time_secs = 120.0002455416
+best_objective = -20618.0
+avg_objective = -19809.5
+worst_objective = -19120.0
+std_objective = 445.61984919884344
+best_time_to_best_secs = 0.195977791
+avg_time_to_best_secs = 0.2479621458
+avg_total_time_secs = 119.99999902929999
+avg_initial_objective = -125.6
+avg_improvement = 19683.9
+avg_n_accepted = 28990.2
+avg_n_rejected = 109849033.7
+avg_acceptance_rate = 0.00026522823455406736
+avg_n_best_updates = 189.0
 
 [[results]]
 problem = "Qubo"
@@ -1593,13 +1959,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21302.0
-avg_objective = -21233.4
-worst_objective = -21172.0
-std_objective = 50.6185736661949
-best_time_to_best_secs = 0.000488125
-avg_time_to_best_secs = 0.001000225
-avg_total_time_secs = 7.0976800956999995
+best_objective = -21328.0
+avg_objective = -21193.6
+worst_objective = -20796.0
+std_objective = 165.23752600423427
+best_time_to_best_secs = 0.000497833
+avg_time_to_best_secs = 0.0007985624
+avg_total_time_secs = 1.7445597831999997
+avg_initial_objective = -125.6
+avg_improvement = 21068.0
+avg_n_accepted = 706.0
+avg_n_rejected = 49999294.0
+avg_acceptance_rate = 1.4119999999999999e-05
+avg_n_best_updates = 209.5
 
 [[results]]
 problem = "Qubo"
@@ -1617,13 +1989,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21093.0
-avg_objective = -20023.0
-worst_objective = -19390.0
-std_objective = 632.0499980223084
-best_time_to_best_secs = 4.566740125
-avg_time_to_best_secs = 18.190181291699997
-avg_total_time_secs = 120.00019874590001
+best_objective = -20436.0
+avg_objective = -19709.2
+worst_objective = -18977.0
+std_objective = 458.1104233697373
+best_time_to_best_secs = 0.038223833
+avg_time_to_best_secs = 0.0666164918
+avg_total_time_secs = 55.684668083400005
+avg_initial_objective = -125.6
+avg_improvement = 19583.6
+avg_n_accepted = 707.2
+avg_n_rejected = 49998585.6
+avg_acceptance_rate = 1.4144573500194398e-05
+avg_n_best_updates = 177.0
 
 [[results]]
 problem = "Qubo"
@@ -1634,9 +2012,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -1649,15 +2024,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -21328.0
 avg_objective = -21328.0
 worst_objective = -21328.0
 std_objective = 0.0
-best_time_to_best_secs = 0.005702166
-avg_time_to_best_secs = 0.029968708200000006
-avg_total_time_secs = 120.00045377490001
+best_time_to_best_secs = 0.003695792
+avg_time_to_best_secs = 0.0151862001
+avg_total_time_secs = 120.0002208292
+avg_initial_objective = -125.6
+avg_improvement = 21202.4
+avg_n_accepted = 35009398.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 5094.5
 
 [[results]]
 problem = "Qubo"
@@ -1665,9 +2049,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -1685,15 +2066,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -21328.0
-avg_objective = -21309.7
-worst_objective = -21197.0
-std_objective = 38.063236856578555
-best_time_to_best_secs = 0.060187125
-avg_time_to_best_secs = 12.139939095799999
-avg_total_time_secs = 120.0000080334
+avg_objective = -21312.5
+worst_objective = -21270.0
+std_objective = 21.982947936980608
+best_time_to_best_secs = 0.000789042
+avg_time_to_best_secs = 1.3170801332
+avg_total_time_secs = 119.9999985333
+avg_initial_objective = -125.6
+avg_improvement = 21186.9
+avg_n_accepted = 20696081.2
+avg_n_rejected = 6476730938.1
+avg_acceptance_rate = 0.00323716482088027
+avg_n_best_updates = 5991302.3
 
 [[results]]
 problem = "Qubo"
@@ -1701,9 +2091,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_5.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -1719,15 +2106,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -21328.0
 avg_objective = -21328.0
 worst_objective = -21328.0
 std_objective = 0.0
-best_time_to_best_secs = 0.000398166
-avg_time_to_best_secs = 1.9155464249
-avg_total_time_secs = 120.08821504580001
+best_time_to_best_secs = 0.000405083
+avg_time_to_best_secs = 0.9015002457999998
+avg_total_time_secs = 120.07588678339998
+avg_initial_objective = -125.6
+avg_improvement = 21202.4
+avg_n_accepted = 36150000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 104202.1
 
 [[results]]
 problem = "Qubo"
@@ -1742,13 +2138,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -22016.0
-avg_objective = -21679.1
-worst_objective = -21414.0
-std_objective = 172.89849623406212
-best_time_to_best_secs = 3.0583e-05
-avg_time_to_best_secs = 4.82874e-05
-avg_total_time_secs = 4.8396e-05
+best_objective = -21911.0
+avg_objective = -21514.3
+worst_objective = -20788.0
+std_objective = 320.174343131988
+best_time_to_best_secs = 0.000205792
+avg_time_to_best_secs = 0.0003147125
+avg_total_time_secs = 0.00031323760000000005
+avg_initial_objective = -1395.0
+avg_improvement = 20119.3
+avg_n_accepted = 118.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9915409574540878
+avg_n_best_updates = 118.8
 
 [[results]]
 problem = "Qubo"
@@ -1763,13 +2165,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21278.0
-avg_objective = -19691.1
-worst_objective = -17637.0
-std_objective = 1208.5973233463658
-best_time_to_best_secs = 0.025370916
-avg_time_to_best_secs = 0.0299691247
-avg_total_time_secs = 0.0302962835
+best_objective = -21585.0
+avg_objective = -19845.6
+worst_objective = -17666.0
+std_objective = 1136.8989576914914
+best_time_to_best_secs = 0.021155375
+avg_time_to_best_secs = 0.026024212400000003
+avg_total_time_secs = 0.0263164376
+avg_initial_objective = -1395.0
+avg_improvement = 18450.6
+avg_n_accepted = 64.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9842709675371009
+avg_n_best_updates = 64.4
 
 [[results]]
 problem = "Qubo"
@@ -1789,12 +2197,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -22067.0
-avg_objective = -22067.0
-worst_objective = -22067.0
-std_objective = 0.0
-best_time_to_best_secs = 0.353127917
-avg_time_to_best_secs = 29.8868586459
-avg_total_time_secs = 120.0000026166
+avg_objective = -22064.9
+worst_objective = -22046.0
+std_objective = 6.3
+best_time_to_best_secs = 0.449119917
+avg_time_to_best_secs = 13.871764462600002
+avg_total_time_secs = 120.0000013332
+avg_initial_objective = -1395.0
+avg_improvement = 20669.9
+avg_n_accepted = 34381604.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 141.6
 
 [[results]]
 problem = "Qubo"
@@ -1813,13 +2227,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -21619.0
-avg_objective = -20622.7
-worst_objective = -19463.0
-std_objective = 640.3377312012778
-best_time_to_best_secs = 0.068290208
-avg_time_to_best_secs = 16.153005070600003
-avg_total_time_secs = 120.00026335840002
+best_objective = -21661.0
+avg_objective = -20323.2
+worst_objective = -18507.0
+std_objective = 946.1820966389081
+best_time_to_best_secs = 0.065469042
+avg_time_to_best_secs = 21.0861483168
+avg_total_time_secs = 120.00028961659996
+avg_initial_objective = -1395.0
+avg_improvement = 18928.2
+avg_n_accepted = 152611.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 78.0
 
 [[results]]
 problem = "Qubo"
@@ -1836,152 +2256,188 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -22067.0
-avg_objective = -22029.6
-worst_objective = -21977.0
-std_objective = 30.968370961353457
-best_time_to_best_secs = 0.019425125
-avg_time_to_best_secs = 0.024000983400000002
-avg_total_time_secs = 120.0000000708
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Swap"
-history_length = 500
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -21313.0
-avg_objective = -20707.6
-worst_objective = -20041.0
-std_objective = 421.6605743960419
-best_time_to_best_secs = 57.923683667
-avg_time_to_best_secs = 65.70074609580001
-avg_total_time_secs = 120.00019381679999
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Flip"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 50000000
-max_duration_secs = 120.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -22059.0
-avg_objective = -21973.2
-worst_objective = -21781.0
-std_objective = 90.48624204816996
-best_time_to_best_secs = 0.000490334
-avg_time_to_best_secs = 0.0007816666999999999
-avg_total_time_secs = 7.0864568417000005
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 50000000
-max_duration_secs = 120.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -21553.0
-avg_objective = -20726.0
-worst_objective = -20012.0
-std_objective = 483.19333604676297
-best_time_to_best_secs = 4.817668417
-avg_time_to_best_secs = 11.483544212300002
-avg_total_time_secs = 120.00013268759999
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
-
-[results.heuristic]
-kind = "GeneticAlgorithm"
-population_size = 100
-crossover_kind = "Uniform"
-parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Flip"
-tabu_tenure = [
-    3,
-    100,
-]
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 200
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -22067.0
-avg_objective = -22067.0
-worst_objective = -22067.0
-std_objective = 0.0
-best_time_to_best_secs = 0.00456275
-avg_time_to_best_secs = 0.04053679590000001
-avg_total_time_secs = 120.0005151251
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
-
-[results.heuristic]
-kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[[results.heuristic.steps]]
-kind = "LocalSearch"
-neighbor = "Flip"
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 1
-
-[[results.heuristic.steps]]
-kind = "SimulatedAnnealing"
-neighbor = "Flip"
-initial_temperature = 5.0
-cooling_rate = 0.99
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 200
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -22067.0
-avg_objective = -22034.0
+avg_objective = -22020.3
 worst_objective = -21987.0
-std_objective = 31.865341673988056
-best_time_to_best_secs = 0.090157875
-avg_time_to_best_secs = 16.798542799899998
-avg_total_time_secs = 120.00000857079999
+std_objective = 22.746648104720837
+best_time_to_best_secs = 0.005648208
+avg_time_to_best_secs = 0.0097267458
+avg_total_time_secs = 119.99999642069997
+avg_initial_objective = -1395.0
+avg_improvement = 20625.3
+avg_n_accepted = 43720.9
+avg_n_rejected = 3540805712.8
+avg_acceptance_rate = 1.2851788372474765e-05
+avg_n_best_updates = 232.2
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 500
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -21609.0
+avg_objective = -20303.9
+worst_objective = -18469.0
+std_objective = 932.7077194920175
+best_time_to_best_secs = 0.203356792
+avg_time_to_best_secs = 0.2203170249
+avg_total_time_secs = 120.0000005418
+avg_initial_objective = -1395.0
+avg_improvement = 18908.9
+avg_n_accepted = 29065.2
+avg_n_rejected = 101959121.6
+avg_acceptance_rate = 0.00028506145682505606
+avg_n_best_updates = 191.1
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 50000000
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -22022.0
+avg_objective = -21953.4
+worst_objective = -21763.0
+std_objective = 76.27476646965235
+best_time_to_best_secs = 0.000553583
+avg_time_to_best_secs = 0.0008763833
+avg_total_time_secs = 1.9132423958000004
+avg_initial_objective = -1395.0
+avg_improvement = 20558.4
+avg_n_accepted = 717.0
+avg_n_rejected = 49999283.0
+avg_acceptance_rate = 1.4340000000000002e-05
+avg_n_best_updates = 200.8
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 50000000
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -21657.0
+avg_objective = -20199.3
+worst_objective = -18468.0
+std_objective = 1036.63417366012
+best_time_to_best_secs = 0.0302215
+avg_time_to_best_secs = 0.0534186959
+avg_total_time_secs = 58.20711757069999
+avg_initial_objective = -1395.0
+avg_improvement = 18804.3
+avg_n_accepted = 713.8
+avg_n_rejected = 49998572.4
+avg_acceptance_rate = 1.4276569432629366e-05
+avg_n_best_updates = 170.4
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 100
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -22067.0
+avg_objective = -22067.0
+worst_objective = -22067.0
+std_objective = 0.0
+best_time_to_best_secs = 0.005168791
+avg_time_to_best_secs = 11.4941978125
+avg_total_time_secs = 120.0002317293
+avg_initial_objective = -1395.0
+avg_improvement = 20672.0
+avg_n_accepted = 34861362.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 5384.8
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -22067.0
+avg_objective = -22035.4
+worst_objective = -22003.0
+std_objective = 22.63271967749347
+best_time_to_best_secs = 0.002136625
+avg_time_to_best_secs = 18.175851454100002
+avg_total_time_secs = 119.9999989376
+avg_initial_objective = -1395.0
+avg_improvement = 20640.4
+avg_n_accepted = 10564541.7
+avg_n_rejected = 6569816895.7
+avg_acceptance_rate = 0.0016183340164760789
+avg_n_best_updates = 2964509.6
 
 [[results]]
 problem = "Qubo"
@@ -1989,9 +2445,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_6.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -2007,15 +2460,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -22067.0
 avg_objective = -22067.0
 worst_objective = -22067.0
 std_objective = 0.0
-best_time_to_best_secs = 0.862557833
-avg_time_to_best_secs = 1.9235274333999999
-avg_total_time_secs = 120.09573468319999
+best_time_to_best_secs = 0.18072575
+avg_time_to_best_secs = 0.8216524166999999
+avg_total_time_secs = 120.06888105839998
+avg_initial_objective = -1395.0
+avg_improvement = 20672.0
+avg_n_accepted = 36015000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 100359.6
 
 [[results]]
 problem = "Qubo"
@@ -2030,13 +2492,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19173.0
-avg_objective = -18878.1
-worst_objective = -18468.0
-std_objective = 208.93656932188776
-best_time_to_best_secs = 3.0459e-05
-avg_time_to_best_secs = 4.67291e-05
-avg_total_time_secs = 4.6841499999999995e-05
+best_objective = -19192.0
+avg_objective = -18854.5
+worst_objective = -18129.0
+std_objective = 313.2373700566393
+best_time_to_best_secs = 0.000287667
+avg_time_to_best_secs = 0.00034749580000000013
+avg_total_time_secs = 0.00034477910000000006
+avg_initial_objective = 847.1
+avg_improvement = 19701.6
+avg_n_accepted = 116.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9914419268292992
+avg_n_best_updates = 116.8
 
 [[results]]
 problem = "Qubo"
@@ -2051,13 +2519,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19055.0
-avg_objective = -17931.1
-worst_objective = -17002.0
-std_objective = 571.4106141821309
-best_time_to_best_secs = 0.01899725
-avg_time_to_best_secs = 0.025833704199999995
-avg_total_time_secs = 0.0261172707
+best_objective = -18528.0
+avg_objective = -17633.8
+worst_objective = -16632.0
+std_objective = 570.2464028821225
+best_time_to_best_secs = 0.017638208
+avg_time_to_best_secs = 0.0251176668
+avg_total_time_secs = 0.025397425
+avg_initial_objective = 847.1
+avg_improvement = 18480.9
+avg_n_accepted = 62.5
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9839704019144419
+avg_n_best_updates = 62.5
 
 [[results]]
 problem = "Qubo"
@@ -2077,12 +2551,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -19413.0
-avg_objective = -19411.2
-worst_objective = -19404.0
-std_objective = 3.6
-best_time_to_best_secs = 0.015796416
-avg_time_to_best_secs = 23.015749941499998
-avg_total_time_secs = 120.00001972920002
+avg_objective = -19413.0
+worst_objective = -19413.0
+std_objective = 0.0
+best_time_to_best_secs = 0.004890291
+avg_time_to_best_secs = 33.378097687300006
+avg_total_time_secs = 119.999999121
+avg_initial_objective = 847.1
+avg_improvement = 20260.1
+avg_n_accepted = 33193395.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 144.5
 
 [[results]]
 problem = "Qubo"
@@ -2101,13 +2581,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19068.0
-avg_objective = -18382.2
-worst_objective = -17563.0
-std_objective = 472.09973522551354
-best_time_to_best_secs = 0.069872917
-avg_time_to_best_secs = 25.6816122124
-avg_total_time_secs = 120.0003339207
+best_objective = -19024.0
+avg_objective = -18131.8
+worst_objective = -17242.0
+std_objective = 579.4597138714649
+best_time_to_best_secs = 0.071675417
+avg_time_to_best_secs = 21.4916162249
+avg_total_time_secs = 120.00035791659998
+avg_initial_objective = 847.1
+avg_improvement = 18978.9
+avg_n_accepted = 154306.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 78.7
 
 [[results]]
 problem = "Qubo"
@@ -2124,12 +2610,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -19413.0
-avg_objective = -19340.5
-worst_objective = -19165.0
-std_objective = 73.94896889071543
-best_time_to_best_secs = 0.019440416
-avg_time_to_best_secs = 0.023702412500000002
-avg_total_time_secs = 120.0000020668
+avg_objective = -19393.3
+worst_objective = -19362.0
+std_objective = 19.380660463462025
+best_time_to_best_secs = 0.00550475
+avg_time_to_best_secs = 0.0093807832
+avg_total_time_secs = 119.99999689159999
+avg_initial_objective = 847.1
+avg_improvement = 20240.4
+avg_n_accepted = 43575.8
+avg_n_rejected = 4085344761.6
+avg_acceptance_rate = 1.0943125495755687e-05
+avg_n_best_updates = 242.8
 
 [[results]]
 problem = "Qubo"
@@ -2145,13 +2637,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -18765.0
-avg_objective = -18042.7
-worst_objective = -17099.0
-std_objective = 606.1316771131501
-best_time_to_best_secs = 58.586594833
-avg_time_to_best_secs = 67.6677409165
-avg_total_time_secs = 120.0001995501
+best_objective = -18921.0
+avg_objective = -18021.1
+worst_objective = -17060.0
+std_objective = 612.683352148563
+best_time_to_best_secs = 0.197988
+avg_time_to_best_secs = 0.24343232499999998
+avg_total_time_secs = 119.99999932109999
+avg_initial_objective = 847.1
+avg_improvement = 18868.2
+avg_n_accepted = 28190.2
+avg_n_rejected = 106928001.4
+avg_acceptance_rate = 0.00026378802959303987
+avg_n_best_updates = 186.1
 
 [[results]]
 problem = "Qubo"
@@ -2170,12 +2668,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -19403.0
-avg_objective = -19243.5
-worst_objective = -19086.0
-std_objective = 85.57248389523352
-best_time_to_best_secs = 0.000496958
-avg_time_to_best_secs = 0.0011191125
-avg_total_time_secs = 6.9847897957
+avg_objective = -19223.0
+worst_objective = -18928.0
+std_objective = 139.31905827990656
+best_time_to_best_secs = 0.000439166
+avg_time_to_best_secs = 0.0007910371999999999
+avg_total_time_secs = 1.6843938752
+avg_initial_objective = 847.1
+avg_improvement = 20070.1
+avg_n_accepted = 764.2
+avg_n_rejected = 49999235.8
+avg_acceptance_rate = 1.5284e-05
+avg_n_best_updates = 210.1
 
 [[results]]
 problem = "Qubo"
@@ -2193,13 +2697,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -18877.0
-avg_objective = -18133.1
-worst_objective = -17635.0
-std_objective = 421.31875106622067
-best_time_to_best_secs = 12.115221167
-avg_time_to_best_secs = 20.901768179199998
-avg_total_time_secs = 120.0001502126
+best_objective = -18733.0
+avg_objective = -17781.9
+worst_objective = -16907.0
+std_objective = 569.7189570305696
+best_time_to_best_secs = 0.013338583
+avg_time_to_best_secs = 0.06534084139999999
+avg_total_time_secs = 58.3426235999
+avg_initial_objective = 847.1
+avg_improvement = 18629.0
+avg_n_accepted = 755.4
+avg_n_rejected = 49998489.2
+avg_acceptance_rate = 1.5108593045571378e-05
+avg_n_best_updates = 176.0
 
 [[results]]
 problem = "Qubo"
@@ -2210,9 +2720,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -2225,15 +2732,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19413.0
 avg_objective = -19413.0
 worst_objective = -19413.0
 std_objective = 0.0
-best_time_to_best_secs = 0.003841333
-avg_time_to_best_secs = 0.0438021
-avg_total_time_secs = 120.00034007480001
+best_time_to_best_secs = 0.013464125
+avg_time_to_best_secs = 0.041889753999999994
+avg_total_time_secs = 120.0002862209
+avg_initial_objective = 847.1
+avg_improvement = 20260.1
+avg_n_accepted = 34866755.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 5573.5
 
 [[results]]
 problem = "Qubo"
@@ -2241,9 +2757,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -2261,15 +2774,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19413.0
-avg_objective = -19380.7
-worst_objective = -19276.0
-std_objective = 49.18139892276348
-best_time_to_best_secs = 3.974124375
-avg_time_to_best_secs = 42.1096469044
-avg_total_time_secs = 120.00000858320001
+avg_objective = -19400.9
+worst_objective = -19314.0
+std_objective = 29.700000000000003
+best_time_to_best_secs = 0.0324395
+avg_time_to_best_secs = 8.5345208792
+avg_total_time_secs = 119.99999337909999
+avg_initial_objective = 847.1
+avg_improvement = 20248.0
+avg_n_accepted = 29845437.9
+avg_n_rejected = 6257100877.1
+avg_acceptance_rate = 0.004761577912705503
+avg_n_best_updates = 8219898.9
 
 [[results]]
 problem = "Qubo"
@@ -2277,9 +2799,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_7.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -2295,15 +2814,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19413.0
 avg_objective = -19413.0
 worst_objective = -19413.0
 std_objective = 0.0
-best_time_to_best_secs = 0.000360041
-avg_time_to_best_secs = 1.1507693372999999
-avg_total_time_secs = 120.0820783333
+best_time_to_best_secs = 0.179895792
+avg_time_to_best_secs = 1.0455347291
+avg_total_time_secs = 120.06513762930001
+avg_initial_objective = 847.1
+avg_improvement = 20260.1
+avg_n_accepted = 34900000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 100103.0
 
 [[results]]
 problem = "Qubo"
@@ -2318,13 +2846,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -23802.0
-avg_objective = -23591.5
-worst_objective = -23312.0
-std_objective = 157.415532905746
-best_time_to_best_secs = 2.875e-05
-avg_time_to_best_secs = 4.63083e-05
-avg_total_time_secs = 4.64166e-05
+best_objective = -23952.0
+avg_objective = -23640.7
+worst_objective = -23013.0
+std_objective = 253.0035770498117
+best_time_to_best_secs = 5.9833e-05
+avg_time_to_best_secs = 0.0002026626
+avg_total_time_secs = 0.0001947706
+avg_initial_objective = -1812.3
+avg_improvement = 21828.4
+avg_n_accepted = 122.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9918726800777818
+avg_n_best_updates = 122.8
 
 [[results]]
 problem = "Qubo"
@@ -2339,13 +2873,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -22781.0
-avg_objective = -21750.2
-worst_objective = -20903.0
-std_objective = 561.457353678799
-best_time_to_best_secs = 0.023760333
-avg_time_to_best_secs = 0.028158625
-avg_total_time_secs = 0.028441579099999996
+best_objective = -22677.0
+avg_objective = -21570.3
+worst_objective = -19604.0
+std_objective = 866.3456642703303
+best_time_to_best_secs = 0.020945667
+avg_time_to_best_secs = 0.026144695799999996
+avg_total_time_secs = 0.0264460709
+avg_initial_objective = -1812.3
+avg_improvement = 19758.0
+avg_n_accepted = 65.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9847531290802511
+avg_n_best_updates = 65.6
 
 [[results]]
 problem = "Qubo"
@@ -2365,199 +2905,247 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -23987.0
-avg_objective = -23984.4
-worst_objective = -23974.0
-std_objective = 5.2
-best_time_to_best_secs = 0.001032709
-avg_time_to_best_secs = 41.114036574699995
-avg_total_time_secs = 120.0000024167
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    100,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -22929.0
-avg_objective = -21804.3
-worst_objective = -20216.0
-std_objective = 700.2796655622666
-best_time_to_best_secs = 0.054636667
-avg_time_to_best_secs = 33.70367402070001
-avg_total_time_secs = 120.0003446584
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Flip"
-history_length = 500
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -23987.0
-avg_objective = -23969.2
-worst_objective = -23936.0
-std_objective = 17.092688495377196
-best_time_to_best_secs = 0.017801542
-avg_time_to_best_secs = 0.022991349799999998
-avg_total_time_secs = 120.000000025
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Swap"
-history_length = 500
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -22946.0
-avg_objective = -21914.9
-worst_objective = -20860.0
-std_objective = 694.2896297655611
-best_time_to_best_secs = 56.744578833
-avg_time_to_best_secs = 73.70567879160001
-avg_total_time_secs = 120.00009686669998
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Flip"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 50000000
-max_duration_secs = 120.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -23974.0
-avg_objective = -23936.4
-worst_objective = -23874.0
-std_objective = 37.70994563772269
-best_time_to_best_secs = 0.000434833
-avg_time_to_best_secs = 0.0010196460000000001
-avg_total_time_secs = 6.8706498876
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 50000000
-max_duration_secs = 120.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -23191.0
-avg_objective = -21834.5
-worst_objective = -19980.0
-std_objective = 954.4246696308724
-best_time_to_best_secs = 3.229561166
-avg_time_to_best_secs = 14.700738474900001
-avg_total_time_secs = 120.0001613166
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
-
-[results.heuristic]
-kind = "GeneticAlgorithm"
-population_size = 100
-crossover_kind = "Uniform"
-parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Flip"
-tabu_tenure = [
-    3,
-    100,
-]
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 200
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -23987.0
-avg_objective = -23987.0
-worst_objective = -23987.0
-std_objective = 0.0
-best_time_to_best_secs = 0.005137
-avg_time_to_best_secs = 0.0278932084
-avg_total_time_secs = 120.00027062090001
-
-[[results]]
-problem = "Qubo"
-instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
-
-[results.heuristic]
-kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
-[[results.heuristic.steps]]
-kind = "LocalSearch"
-neighbor = "Flip"
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 1
-
-[[results.heuristic.steps]]
-kind = "SimulatedAnnealing"
-neighbor = "Flip"
-initial_temperature = 5.0
-cooling_rate = 0.99
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 200
-
-[results.summary]
-num_successful_runs = 10
-best_objective = -23987.0
-avg_objective = -23977.9
+avg_objective = -23983.1
 worst_objective = -23974.0
 std_objective = 5.957348403442592
-best_time_to_best_secs = 0.000194625
-avg_time_to_best_secs = 9.4042639667
-avg_total_time_secs = 120.00000977510001
+best_time_to_best_secs = 0.000413125
+avg_time_to_best_secs = 28.725362320799995
+avg_total_time_secs = 119.99999735829999
+avg_initial_objective = -1812.3
+avg_improvement = 22170.8
+avg_n_accepted = 34515142.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 142.2
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -22978.0
+avg_objective = -21851.9
+worst_objective = -20169.0
+std_objective = 882.9544099215996
+best_time_to_best_secs = 0.051608792
+avg_time_to_best_secs = 7.792385941700002
+avg_total_time_secs = 120.0003481583
+avg_initial_objective = -1812.3
+avg_improvement = 20039.6
+avg_n_accepted = 153250.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 75.1
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 500
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -23987.0
+avg_objective = -23960.7
+worst_objective = -23890.0
+std_objective = 26.419878879359
+best_time_to_best_secs = 0.005115708
+avg_time_to_best_secs = 0.009012533299999998
+avg_total_time_secs = 119.9999956957
+avg_initial_objective = -1812.3
+avg_improvement = 22148.4
+avg_n_accepted = 3489044.7
+avg_n_rejected = 4177347157.8
+avg_acceptance_rate = 0.0008106067662437445
+avg_n_best_updates = 243.4
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 500
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -22902.0
+avg_objective = -21804.9
+worst_objective = -20216.0
+std_objective = 820.8726393296344
+best_time_to_best_secs = 0.227998083
+avg_time_to_best_secs = 0.28175781260000005
+avg_total_time_secs = 119.9999949459
+avg_initial_objective = -1812.3
+avg_improvement = 19992.6
+avg_n_accepted = 29147.1
+avg_n_rejected = 100254158.6
+avg_acceptance_rate = 0.0002915258815166051
+avg_n_best_updates = 199.5
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 50000000
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -23973.0
+avg_objective = -23906.8
+worst_objective = -23784.0
+std_objective = 62.089934772070755
+best_time_to_best_secs = 0.000419375
+avg_time_to_best_secs = 0.0007701625
+avg_total_time_secs = 1.7398403083000002
+avg_initial_objective = -1812.3
+avg_improvement = 22094.5
+avg_n_accepted = 721.6
+avg_n_rejected = 49999278.4
+avg_acceptance_rate = 1.4432000000000003e-05
+avg_n_best_updates = 218.9
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 50000000
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -22942.0
+avg_objective = -21714.2
+worst_objective = -20130.0
+std_objective = 845.1529802349395
+best_time_to_best_secs = 0.029488292
+avg_time_to_best_secs = 0.0772728375
+avg_total_time_secs = 59.2725790791
+avg_initial_objective = -1812.3
+avg_improvement = 19901.9
+avg_n_accepted = 382.3
+avg_n_rejected = 49999235.4
+avg_acceptance_rate = 7.646058521208374e-06
+avg_n_best_updates = 173.3
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 100
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -23987.0
+avg_objective = -23987.0
+worst_objective = -23987.0
+std_objective = 0.0
+best_time_to_best_secs = 0.006129375
+avg_time_to_best_secs = 0.025455887299999997
+avg_total_time_secs = 120.00023752079998
+avg_initial_objective = -1812.3
+avg_improvement = 22174.7
+avg_n_accepted = 35001123.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 4872.8
+
+[[results]]
+problem = "Qubo"
+instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = -23987.0
+avg_objective = -23980.5
+worst_objective = -23974.0
+std_objective = 6.5
+best_time_to_best_secs = 0.019859125
+avg_time_to_best_secs = 9.3375005249
+avg_total_time_secs = 119.99999545829999
+avg_initial_objective = -1812.3
+avg_improvement = 22168.2
+avg_n_accepted = 46392536.9
+avg_n_rejected = 6146570493.3
+avg_acceptance_rate = 0.007472219133522929
+avg_n_best_updates = 10134192.8
 
 [[results]]
 problem = "Qubo"
@@ -2566,9 +3154,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_8.txt"
 [results.heuristic]
 kind = "Restart"
 
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
 [[results.heuristic.steps]]
 kind = "TabuSearch"
 neighbor = "Flip"
@@ -2582,6 +3167,9 @@ max_iteration = 50000
 
 [results.heuristic.restart_condition]
 max_failed_update = 10000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -2589,9 +3177,15 @@ best_objective = -23987.0
 avg_objective = -23987.0
 worst_objective = -23987.0
 std_objective = 0.0
-best_time_to_best_secs = 0.000401667
-avg_time_to_best_secs = 1.7940805418
-avg_total_time_secs = 120.06795066679999
+best_time_to_best_secs = 0.115010584
+avg_time_to_best_secs = 3.4494609877
+avg_total_time_secs = 120.0730937
+avg_initial_objective = -1812.3
+avg_improvement = 22174.7
+avg_n_accepted = 34245000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 94072.0
 
 [[results]]
 problem = "Qubo"
@@ -2606,13 +3200,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19372.0
-avg_objective = -18870.0
-worst_objective = -18332.0
-std_objective = 322.7949813736267
-best_time_to_best_secs = 2.8084e-05
-avg_time_to_best_secs = 5.0771000000000006e-05
-avg_total_time_secs = 5.08917e-05
+best_objective = -19375.0
+avg_objective = -19042.9
+worst_objective = -18529.0
+std_objective = 239.59234127993324
+best_time_to_best_secs = 0.000132583
+avg_time_to_best_secs = 0.00022049590000000003
+avg_total_time_secs = 0.00021210819999999998
+avg_initial_objective = 1482.4
+avg_improvement = 20525.3
+avg_n_accepted = 116.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9914697505749863
+avg_n_best_updates = 116.8
 
 [[results]]
 problem = "Qubo"
@@ -2627,13 +3227,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -18574.0
-avg_objective = -17964.0
-worst_objective = -17511.0
-std_objective = 355.1740418442767
-best_time_to_best_secs = 0.023480417
-avg_time_to_best_secs = 0.027748887499999996
-avg_total_time_secs = 0.0280112792
+best_objective = -18994.0
+avg_objective = -18107.1
+worst_objective = -15739.0
+std_objective = 906.3335423562344
+best_time_to_best_secs = 0.0150225
+avg_time_to_best_secs = 0.026240670900000002
+avg_total_time_secs = 0.0265637958
+avg_initial_objective = 1482.4
+avg_improvement = 19589.5
+avg_n_accepted = 60.2
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9834622923465881
+avg_n_best_updates = 60.2
 
 [[results]]
 problem = "Qubo"
@@ -2653,12 +3259,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -19627.0
-avg_objective = -19626.1
-worst_objective = -19618.0
-std_objective = 2.6999999999999997
-best_time_to_best_secs = 0.000448917
-avg_time_to_best_secs = 1.4253758083999999
-avg_total_time_secs = 120.00000167929997
+avg_objective = -19627.0
+worst_objective = -19627.0
+std_objective = 0.0
+best_time_to_best_secs = 0.001083041
+avg_time_to_best_secs = 4.1849680706
+avg_total_time_secs = 120.0000037001
+avg_initial_objective = 1482.4
+avg_improvement = 21109.4
+avg_n_accepted = 31593847.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 141.9
 
 [[results]]
 problem = "Qubo"
@@ -2677,13 +3289,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19439.0
-avg_objective = -18282.1
-worst_objective = -17078.0
-std_objective = 600.7422825138914
-best_time_to_best_secs = 0.078698542
-avg_time_to_best_secs = 42.0745621084
-avg_total_time_secs = 120.00036445420001
+best_objective = -19260.0
+avg_objective = -18567.7
+worst_objective = -16415.0
+std_objective = 814.0110625783902
+best_time_to_best_secs = 0.079131292
+avg_time_to_best_secs = 26.2020176332
+avg_total_time_secs = 120.0003378457
+avg_initial_objective = 1482.4
+avg_improvement = 20050.1
+avg_n_accepted = 142771.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 74.7
 
 [[results]]
 problem = "Qubo"
@@ -2700,12 +3318,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -19627.0
-avg_objective = -19575.8
-worst_objective = -19505.0
-std_objective = 42.95765356720499
-best_time_to_best_secs = 0.018391584
-avg_time_to_best_secs = 0.0267300708
-avg_total_time_secs = 120.00002964999999
+avg_objective = -19600.5
+worst_objective = -19524.0
+std_objective = 41.661132965871204
+best_time_to_best_secs = 0.00559
+avg_time_to_best_secs = 0.0101966457
+avg_total_time_secs = 119.9999974833
+avg_initial_objective = 1482.4
+avg_improvement = 21082.9
+avg_n_accepted = 43910.9
+avg_n_rejected = 3221447897.7
+avg_acceptance_rate = 1.3978309153479747e-05
+avg_n_best_updates = 239.6
 
 [[results]]
 problem = "Qubo"
@@ -2721,13 +3345,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19491.0
-avg_objective = -18668.8
-worst_objective = -17419.0
-std_objective = 606.2500804123658
-best_time_to_best_secs = 58.049470792
-avg_time_to_best_secs = 70.516731754
-avg_total_time_secs = 120.0001935042
+best_objective = -19232.0
+avg_objective = -18478.2
+worst_objective = -16281.0
+std_objective = 823.0596333194819
+best_time_to_best_secs = 0.185725542
+avg_time_to_best_secs = 0.2365580832
+avg_total_time_secs = 119.99999977489999
+avg_initial_objective = 1482.4
+avg_improvement = 19960.6
+avg_n_accepted = 28309.6
+avg_n_rejected = 95867941.5
+avg_acceptance_rate = 0.0002955879503776592
+avg_n_best_updates = 191.3
 
 [[results]]
 problem = "Qubo"
@@ -2745,13 +3375,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19627.0
-avg_objective = -19433.4
-worst_objective = -19308.0
-std_objective = 94.21698360699094
-best_time_to_best_secs = 0.000476375
-avg_time_to_best_secs = 0.0016157457
-avg_total_time_secs = 6.948120833500001
+best_objective = -19562.0
+avg_objective = -19408.4
+worst_objective = -19200.0
+std_objective = 123.57443101224462
+best_time_to_best_secs = 0.00042175
+avg_time_to_best_secs = 0.0007209416000000001
+avg_total_time_secs = 1.9243691751
+avg_initial_objective = 1482.4
+avg_improvement = 20890.8
+avg_n_accepted = 736.5
+avg_n_rejected = 49999263.5
+avg_acceptance_rate = 1.4730000000000003e-05
+avg_n_best_updates = 210.4
 
 [[results]]
 problem = "Qubo"
@@ -2769,13 +3405,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -19235.0
-avg_objective = -18577.5
-worst_objective = -17756.0
-std_objective = 359.5884453093564
-best_time_to_best_secs = 5.717391083
-avg_time_to_best_secs = 10.539828008299999
-avg_total_time_secs = 120.00016714149999
+best_objective = -19114.0
+avg_objective = -18375.3
+worst_objective = -16136.0
+std_objective = 806.515970083668
+best_time_to_best_secs = 0.022636625
+avg_time_to_best_secs = 0.062323616699999994
+avg_total_time_secs = 60.1778188169
+avg_initial_objective = 1482.4
+avg_improvement = 19857.7
+avg_n_accepted = 388.2
+avg_n_rejected = 49999223.6
+avg_acceptance_rate = 7.76406081280078e-06
+avg_n_best_updates = 177.0
 
 [[results]]
 problem = "Qubo"
@@ -2786,9 +3428,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -2801,15 +3440,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19627.0
 avg_objective = -19627.0
 worst_objective = -19627.0
 std_objective = 0.0
-best_time_to_best_secs = 0.005623166
-avg_time_to_best_secs = 0.0140032085
-avg_total_time_secs = 120.0003365625
+best_time_to_best_secs = 0.004223458
+avg_time_to_best_secs = 0.012545295900000003
+avg_total_time_secs = 120.00030164590001
+avg_initial_objective = 1482.4
+avg_improvement = 21109.4
+avg_n_accepted = 32814794.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 5077.0
 
 [[results]]
 problem = "Qubo"
@@ -2817,9 +3465,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -2837,15 +3482,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19627.0
-avg_objective = -19511.9
-worst_objective = -19238.0
-std_objective = 127.58796965231478
-best_time_to_best_secs = 8.5542e-05
-avg_time_to_best_secs = 9.767815529300002
-avg_total_time_secs = 120.0000078416
+avg_objective = -19586.6
+worst_objective = -19429.0
+std_objective = 61.0085239946026
+best_time_to_best_secs = 0.009108
+avg_time_to_best_secs = 17.189089879
+avg_total_time_secs = 119.9999934669
+avg_initial_objective = 1482.4
+avg_improvement = 21069.0
+avg_n_accepted = 10029464.7
+avg_n_rejected = 6008904819.8
+avg_acceptance_rate = 0.0016660351112803302
+avg_n_best_updates = 2746961.0
 
 [[results]]
 problem = "Qubo"
@@ -2853,9 +3507,6 @@ instance_path = "data/instances/qubo/bqp/bqp250_9.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -2871,15 +3522,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -19627.0
 avg_objective = -19627.0
 worst_objective = -19627.0
 std_objective = 0.0
-best_time_to_best_secs = 0.000375375
-avg_time_to_best_secs = 0.18991880840000003
-avg_total_time_secs = 120.0913951624
+best_time_to_best_secs = 0.000417334
+avg_time_to_best_secs = 0.4815283209
+avg_total_time_secs = 120.0569640167
+avg_initial_objective = 1482.4
+avg_improvement = 21109.4
+avg_n_accepted = 33680000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 98014.2
 
 [[results]]
 problem = "Qubo"
@@ -2894,13 +3554,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -60507.0
-avg_objective = -60042.0
-worst_objective = -58831.0
-std_objective = 472.55539357836136
-best_time_to_best_secs = 0.0001225
-avg_time_to_best_secs = 0.0001466959
-avg_total_time_secs = 0.0001469086
+best_objective = -60533.0
+avg_objective = -59567.3
+worst_objective = -58780.0
+std_objective = 567.8158240133855
+best_time_to_best_secs = 0.00016925
+avg_time_to_best_secs = 0.000230275
+avg_total_time_secs = 0.00022942910000000005
+avg_initial_objective = -803.0
+avg_improvement = 58764.3
+avg_n_accepted = 252.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9960364486083904
+avg_n_best_updates = 252.4
 
 [[results]]
 problem = "Qubo"
@@ -2915,13 +3581,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -57651.0
-avg_objective = -55064.2
-worst_objective = -53411.0
-std_objective = 1416.360038973142
-best_time_to_best_secs = 0.292390125
-avg_time_to_best_secs = 0.3261647833
-avg_total_time_secs = 0.3277356916
+best_objective = -56906.0
+avg_objective = -55007.1
+worst_objective = -49882.0
+std_objective = 1797.978834691888
+best_time_to_best_secs = 0.27043825
+avg_time_to_best_secs = 0.33865109169999996
+avg_total_time_secs = 0.3404158916
+avg_initial_objective = -803.0
+avg_improvement = 54204.1
+avg_n_accepted = 138.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9927544367110762
+avg_n_best_updates = 138.6
 
 [[results]]
 problem = "Qubo"
@@ -2941,12 +3613,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -60672.0
-avg_objective = -60670.4
+avg_objective = -60671.2
 worst_objective = -60664.0
-std_objective = 2.65329983228432
-best_time_to_best_secs = 1.904750458
-avg_time_to_best_secs = 22.864191387199998
-avg_total_time_secs = 120.00000607939998
+std_objective = 2.3999999999999995
+best_time_to_best_secs = 9.006285916
+avg_time_to_best_secs = 42.3272372125
+avg_total_time_secs = 120.0000016875
+avg_initial_objective = -803.0
+avg_improvement = 59868.2
+avg_n_accepted = 17620676.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 296.4
 
 [[results]]
 problem = "Qubo"
@@ -2965,13 +3643,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -58407.0
-avg_objective = -56253.6
-worst_objective = -53858.0
-std_objective = 1231.079136367764
-best_time_to_best_secs = 0.676562166
-avg_time_to_best_secs = 37.6171703999
-avg_total_time_secs = 120.0023531417
+best_objective = -57454.0
+avg_objective = -56170.3
+worst_objective = -52392.0
+std_objective = 1385.8201939645705
+best_time_to_best_secs = 0.715246834
+avg_time_to_best_secs = 12.1880128627
+avg_total_time_secs = 120.0020968582
+avg_initial_objective = -803.0
+avg_improvement = 55367.3
+avg_n_accepted = 26884.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 170.5
 
 [[results]]
 problem = "Qubo"
@@ -2987,13 +3671,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -60648.0
-avg_objective = -60569.3
-worst_objective = -60384.0
-std_objective = 78.460244710299
-best_time_to_best_secs = 0.065503833
-avg_time_to_best_secs = 0.07645054159999999
-avg_total_time_secs = 120.00000320840002
+best_objective = -60629.0
+avg_objective = -60577.0
+worst_objective = -60468.0
+std_objective = 47.34765041688975
+best_time_to_best_secs = 0.015771
+avg_time_to_best_secs = 0.025017245799999997
+avg_total_time_secs = 120.0000037042
+avg_initial_objective = -803.0
+avg_improvement = 59774.0
+avg_n_accepted = 1478171.3
+avg_n_rejected = 3584115699.1
+avg_acceptance_rate = 0.00042486060638023524
+avg_n_best_updates = 481.2
 
 [[results]]
 problem = "Qubo"
@@ -3009,13 +3699,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -35074.0
-avg_objective = -33535.1
-worst_objective = -32165.0
-std_objective = 820.9499923868688
-best_time_to_best_secs = 111.363046083
-avg_time_to_best_secs = 117.10968198329999
-avg_total_time_secs = 120.00093362080001
+best_objective = -57471.0
+avg_objective = -56104.2
+worst_objective = -52320.0
+std_objective = 1381.6875768421744
+best_time_to_best_secs = 0.760948208
+avg_time_to_best_secs = 1.0129608458000001
+avg_total_time_secs = 120.00000004169999
+avg_initial_objective = -803.0
+avg_improvement = 55301.2
+avg_n_accepted = 56956.3
+avg_n_rejected = 68969885.7
+avg_acceptance_rate = 0.0008262172305701654
+avg_n_best_updates = 385.0
 
 [[results]]
 problem = "Qubo"
@@ -3033,13 +3729,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -60469.0
-avg_objective = -60146.3
-worst_objective = -59417.0
-std_objective = 277.9629651590298
-best_time_to_best_secs = 0.001012
-avg_time_to_best_secs = 0.0015406543000000001
-avg_total_time_secs = 10.428262333100001
+best_objective = -60363.0
+avg_objective = -60124.1
+worst_objective = -59538.0
+std_objective = 243.46393983504007
+best_time_to_best_secs = 0.000338583
+avg_time_to_best_secs = 0.0007241416
+avg_total_time_secs = 2.0028449917
+avg_initial_objective = -803.0
+avg_improvement = 59321.1
+avg_n_accepted = 20642.1
+avg_n_rejected = 49979357.9
+avg_acceptance_rate = 0.00041284199999999996
+avg_n_best_updates = 408.0
 
 [[results]]
 problem = "Qubo"
@@ -3057,13 +3759,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -57954.0
-avg_objective = -55353.0
-worst_objective = -51898.0
-std_objective = 1839.8250460301927
-best_time_to_best_secs = 91.750446958
-avg_time_to_best_secs = 107.41647474579997
-avg_total_time_secs = 120.00071033319998
+best_objective = -57280.0
+avg_objective = -55695.8
+worst_objective = -51440.0
+std_objective = 1531.9103629129218
+best_time_to_best_secs = 0.0903395
+avg_time_to_best_secs = 0.46635772079999993
+avg_total_time_secs = 86.00467142900001
+avg_initial_objective = -803.0
+avg_improvement = 54892.8
+avg_n_accepted = 527.6
+avg_n_rejected = 49998944.8
+avg_acceptance_rate = 1.055211179902933e-05
+avg_n_best_updates = 378.5
 
 [[results]]
 problem = "Qubo"
@@ -3075,9 +3783,6 @@ population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
 
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
 [[results.heuristic.steps]]
 kind = "TabuSearch"
 neighbor = "Flip"
@@ -3088,6 +3793,9 @@ tabu_tenure = [
 
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -3095,9 +3803,15 @@ best_objective = -60672.0
 avg_objective = -60672.0
 worst_objective = -60672.0
 std_objective = 0.0
-best_time_to_best_secs = 0.041467666
-avg_time_to_best_secs = 0.2070815208
-avg_total_time_secs = 120.0006603626
+best_time_to_best_secs = 0.014939583
+avg_time_to_best_secs = 0.30876563749999997
+avg_total_time_secs = 120.00061688340001
+avg_initial_objective = -803.0
+avg_improvement = 59869.0
+avg_n_accepted = 16573957.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 12278.7
 
 [[results]]
 problem = "Qubo"
@@ -3105,9 +3819,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -3125,15 +3836,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -60647.0
-avg_objective = -60515.8
-worst_objective = -60113.0
-std_objective = 149.4682574997113
-best_time_to_best_secs = 0.029896791
-avg_time_to_best_secs = 28.463764787400002
-avg_total_time_secs = 120.00001552500001
+best_objective = -60649.0
+avg_objective = -60566.2
+worst_objective = -60293.0
+std_objective = 111.22571645082803
+best_time_to_best_secs = 0.000360708
+avg_time_to_best_secs = 18.367266225
+avg_total_time_secs = 120.0000437207
+avg_initial_objective = -803.0
+avg_improvement = 59763.2
+avg_n_accepted = 6565520.2
+avg_n_rejected = 5184115817.6
+avg_acceptance_rate = 0.0012721870003845135
+avg_n_best_updates = 2466345.1
 
 [[results]]
 problem = "Qubo"
@@ -3141,9 +3861,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_1.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -3158,6 +3875,9 @@ max_iteration = 50000
 
 [results.heuristic.restart_condition]
 max_failed_update = 10000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -3165,9 +3885,15 @@ best_objective = -60672.0
 avg_objective = -60672.0
 worst_objective = -60672.0
 std_objective = 0.0
-best_time_to_best_secs = 0.390966375
-avg_time_to_best_secs = 5.701489666700001
-avg_total_time_secs = 120.1303811833
+best_time_to_best_secs = 0.199860916
+avg_time_to_best_secs = 10.465776695399999
+avg_total_time_secs = 120.11227020430002
+avg_initial_objective = -803.0
+avg_improvement = 59869.0
+avg_n_accepted = 18355000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 106663.6
 
 [[results]]
 problem = "Qubo"
@@ -3182,13 +3908,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -56888.0
-avg_objective = -56120.5
-worst_objective = -55240.0
-std_objective = 426.3764182034462
-best_time_to_best_secs = 0.000115
-avg_time_to_best_secs = 0.0001598418
-avg_total_time_secs = 0.0001600835
+best_objective = -56588.0
+avg_objective = -56009.5
+worst_objective = -54470.0
+std_objective = 596.5062028177075
+best_time_to_best_secs = 0.000197334
+avg_time_to_best_secs = 0.00029619179999999996
+avg_total_time_secs = 0.0002928583
+avg_initial_objective = 2059.5
+avg_improvement = 58069.0
+avg_n_accepted = 243.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9958876374024708
+avg_n_best_updates = 243.7
 
 [[results]]
 problem = "Qubo"
@@ -3203,13 +3935,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55009.0
-avg_objective = -52851.7
-worst_objective = -50427.0
-std_objective = 1283.7880705163138
-best_time_to_best_secs = 0.257573208
-avg_time_to_best_secs = 0.319054925
-avg_total_time_secs = 0.320617475
+best_objective = -54770.0
+avg_objective = -53034.4
+worst_objective = -51277.0
+std_objective = 1168.8471414175594
+best_time_to_best_secs = 0.286143167
+avg_time_to_best_secs = 0.3110859334
+avg_total_time_secs = 0.3128822791
+avg_initial_objective = 2059.5
+avg_improvement = 55093.9
+avg_n_accepted = 127.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9921936156106803
+avg_n_best_updates = 127.4
 
 [[results]]
 problem = "Qubo"
@@ -3229,12 +3967,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -57343.0
-avg_objective = -57343.0
-worst_objective = -57343.0
-std_objective = 0.0
-best_time_to_best_secs = 0.1844095
-avg_time_to_best_secs = 42.738197675100004
-avg_total_time_secs = 120.00000487920002
+avg_objective = -57342.6
+worst_objective = -57339.0
+std_objective = 1.1999999999999997
+best_time_to_best_secs = 1.8186063749999999
+avg_time_to_best_secs = 20.022991600300003
+avg_total_time_secs = 120.0000019375
+avg_initial_objective = 2059.5
+avg_improvement = 59402.1
+avg_n_accepted = 17715799.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 291.4
 
 [[results]]
 problem = "Qubo"
@@ -3253,13 +3997,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55628.0
-avg_objective = -53928.1
-worst_objective = -52841.0
-std_objective = 881.3239415788045
-best_time_to_best_secs = 0.712295708
-avg_time_to_best_secs = 18.5321862959
-avg_total_time_secs = 120.00199467479999
+best_objective = -56497.0
+avg_objective = -54325.3
+worst_objective = -52706.0
+std_objective = 1074.4569837829713
+best_time_to_best_secs = 0.93723325
+avg_time_to_best_secs = 37.14348407090001
+avg_total_time_secs = 120.0015651749
+avg_initial_objective = 2059.5
+avg_improvement = 56384.8
+avg_n_accepted = 27025.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 162.9
 
 [[results]]
 problem = "Qubo"
@@ -3276,12 +4026,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -57343.0
-avg_objective = -57262.7
-worst_objective = -57165.0
-std_objective = 54.82526789720228
-best_time_to_best_secs = 0.067427125
-avg_time_to_best_secs = 0.0752425624
-avg_total_time_secs = 120.000000129
+avg_objective = -57277.8
+worst_objective = -57170.0
+std_objective = 44.21945273293191
+best_time_to_best_secs = 0.017526916
+avg_time_to_best_secs = 0.025926662400000005
+avg_total_time_secs = 119.9999987124
+avg_initial_objective = 2059.5
+avg_improvement = 59337.3
+avg_n_accepted = 86588.6
+avg_n_rejected = 3483171580.8
+avg_acceptance_rate = 2.5724274061243002e-05
+avg_n_best_updates = 487.4
 
 [[results]]
 problem = "Qubo"
@@ -3297,13 +4053,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -31062.0
-avg_objective = -30383.9
-worst_objective = -29827.0
-std_objective = 374.4896393760447
-best_time_to_best_secs = 111.072464458
-avg_time_to_best_secs = 118.02101430420001
-avg_total_time_secs = 120.00077604159999
+best_objective = -56039.0
+avg_objective = -54097.3
+worst_objective = -52521.0
+std_objective = 1035.154099639276
+best_time_to_best_secs = 0.617480458
+avg_time_to_best_secs = 0.8313075415
+avg_total_time_secs = 120.0000002877
+avg_initial_objective = 2059.5
+avg_improvement = 56156.8
+avg_n_accepted = 56722.5
+avg_n_rejected = 70199750.9
+avg_acceptance_rate = 0.0008085120921837089
+avg_n_best_updates = 376.9
 
 [[results]]
 problem = "Qubo"
@@ -3321,13 +4083,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -57171.0
-avg_objective = -56410.4
-worst_objective = -55717.0
-std_objective = 442.71123771596314
-best_time_to_best_secs = 0.000921834
-avg_time_to_best_secs = 0.0022165125
-avg_total_time_secs = 10.3382979665
+best_objective = -56609.0
+avg_objective = -56390.5
+worst_objective = -55967.0
+std_objective = 199.869582478175
+best_time_to_best_secs = 0.000358542
+avg_time_to_best_secs = 0.0006832042
+avg_total_time_secs = 1.7497442999000001
+avg_initial_objective = 2059.5
+avg_improvement = 58450.0
+avg_n_accepted = 10648.8
+avg_n_rejected = 49989351.2
+avg_acceptance_rate = 0.000212976
+avg_n_best_updates = 394.8
 
 [[results]]
 problem = "Qubo"
@@ -3345,13 +4113,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -54998.0
-avg_objective = -53039.2
-worst_objective = -50928.0
-std_objective = 1134.3367930204856
-best_time_to_best_secs = 42.476876792
-avg_time_to_best_secs = 102.67863737079999
-avg_total_time_secs = 120.0008623291
+best_objective = -56425.0
+avg_objective = -53463.4
+worst_objective = -51686.0
+std_objective = 1461.0124024114239
+best_time_to_best_secs = 0.20765075
+avg_time_to_best_secs = 0.44351140399999994
+avg_total_time_secs = 84.5012034044
+avg_initial_objective = 2059.5
+avg_improvement = 55522.9
+avg_n_accepted = 582.1
+avg_n_rejected = 49998835.8
+avg_acceptance_rate = 1.1642162415323295e-05
+avg_n_best_updates = 359.0
 
 [[results]]
 problem = "Qubo"
@@ -3362,9 +4136,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -3377,15 +4148,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -57343.0
 avg_objective = -57343.0
 worst_objective = -57343.0
 std_objective = 0.0
-best_time_to_best_secs = 0.041293625
-avg_time_to_best_secs = 0.1258971709
-avg_total_time_secs = 120.0010372376
+best_time_to_best_secs = 0.016108625
+avg_time_to_best_secs = 0.1319743333
+avg_total_time_secs = 120.00064851249999
+avg_initial_objective = 2059.5
+avg_improvement = 59402.5
+avg_n_accepted = 16913181.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 12429.2
 
 [[results]]
 problem = "Qubo"
@@ -3393,9 +4173,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -3413,15 +4190,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -57343.0
-avg_objective = -57115.7
-worst_objective = -56250.0
-std_objective = 301.7585292912199
-best_time_to_best_secs = 1.435245833
-avg_time_to_best_secs = 15.735615700299999
-avg_total_time_secs = 120.0000169249
+avg_objective = -57122.3
+worst_objective = -56636.0
+std_objective = 265.36278940348814
+best_time_to_best_secs = 0.002951542
+avg_time_to_best_secs = 43.70973646670001
+avg_total_time_secs = 119.99999809609999
+avg_initial_objective = 2059.5
+avg_improvement = 59181.8
+avg_n_accepted = 8578286.0
+avg_n_rejected = 5368085622.0
+avg_acceptance_rate = 0.0016042718065510417
+avg_n_best_updates = 3165971.1
 
 [[results]]
 problem = "Qubo"
@@ -3429,9 +4215,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_10.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -3447,15 +4230,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -57343.0
 avg_objective = -57343.0
 worst_objective = -57343.0
 std_objective = 0.0
-best_time_to_best_secs = 1.641382208
-avg_time_to_best_secs = 5.6806071167
-avg_total_time_secs = 120.11492490419998
+best_time_to_best_secs = 0.113221667
+avg_time_to_best_secs = 1.3266449501
+avg_total_time_secs = 120.1695423958
+avg_initial_objective = 2059.5
+avg_improvement = 59402.5
+avg_n_accepted = 18240000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 109909.6
 
 [[results]]
 problem = "Qubo"
@@ -3470,13 +4262,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -57627.0
-avg_objective = -56930.8
-worst_objective = -55975.0
-std_objective = 501.71143100391885
-best_time_to_best_secs = 0.00010575
-avg_time_to_best_secs = 0.0001515502
-avg_total_time_secs = 0.0001517583
+best_objective = -57779.0
+avg_objective = -57218.7
+worst_objective = -56271.0
+std_objective = 523.739448581067
+best_time_to_best_secs = 0.000150917
+avg_time_to_best_secs = 0.0002639374
+avg_total_time_secs = 0.0002628001
+avg_initial_objective = 2593.0
+avg_improvement = 59811.7
+avg_n_accepted = 256.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9961054225525924
+avg_n_best_updates = 256.3
 
 [[results]]
 problem = "Qubo"
@@ -3491,13 +4289,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -56096.0
-avg_objective = -53470.6
-worst_objective = -51474.0
-std_objective = 1448.4819087582696
-best_time_to_best_secs = 0.268501291
-avg_time_to_best_secs = 0.30988064569999996
-avg_total_time_secs = 0.31156372920000003
+best_objective = -55132.0
+avg_objective = -53281.8
+worst_objective = -51068.0
+std_objective = 1255.5440892298445
+best_time_to_best_secs = 0.312976084
+avg_time_to_best_secs = 0.338282571
+avg_total_time_secs = 0.33993572949999995
+avg_initial_objective = 2593.0
+avg_improvement = 55874.8
+avg_n_accepted = 137.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9927277605248512
+avg_n_best_updates = 137.1
 
 [[results]]
 problem = "Qubo"
@@ -3517,12 +4321,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -58306.0
-avg_objective = -58303.8
-worst_objective = -58284.0
-std_objective = 6.6
-best_time_to_best_secs = 0.036566334
-avg_time_to_best_secs = 35.047294495900005
-avg_total_time_secs = 120.0000066999
+avg_objective = -58305.6
+worst_objective = -58302.0
+std_objective = 1.2
+best_time_to_best_secs = 0.0935985
+avg_time_to_best_secs = 28.610877712500002
+avg_total_time_secs = 120.0000016874
+avg_initial_objective = 2593.0
+avg_improvement = 60898.6
+avg_n_accepted = 17287095.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 302.6
 
 [[results]]
 problem = "Qubo"
@@ -3541,13 +4351,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -56439.0
-avg_objective = -53904.0
-worst_objective = -50970.0
-std_objective = 1453.9251012345858
-best_time_to_best_secs = 2.403346959
-avg_time_to_best_secs = 56.32276087519999
-avg_total_time_secs = 120.00204773310001
+best_objective = -56622.0
+avg_objective = -54413.8
+worst_objective = -52884.0
+std_objective = 1071.7287716582027
+best_time_to_best_secs = 0.87467025
+avg_time_to_best_secs = 29.440329725000005
+avg_total_time_secs = 120.00200674999999
+avg_initial_objective = 2593.0
+avg_improvement = 57006.8
+avg_n_accepted = 27752.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 174.3
 
 [[results]]
 problem = "Qubo"
@@ -3563,13 +4379,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -58207.0
-avg_objective = -58096.2
-worst_objective = -58022.0
-std_objective = 65.49473261263076
-best_time_to_best_secs = 0.052103209
-avg_time_to_best_secs = 0.0800829751
-avg_total_time_secs = 120.00000867470001
+best_objective = -58251.0
+avg_objective = -58156.3
+worst_objective = -58012.0
+std_objective = 82.66081296479004
+best_time_to_best_secs = 0.020280292
+avg_time_to_best_secs = 0.025580608300000002
+avg_total_time_secs = 119.99999915829999
+avg_initial_objective = 2593.0
+avg_improvement = 60749.3
+avg_n_accepted = 1912491.7
+avg_n_rejected = 3336046251.4
+avg_acceptance_rate = 0.0006265774613266899
+avg_n_best_updates = 491.8
 
 [[results]]
 problem = "Qubo"
@@ -3585,13 +4407,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -34529.0
-avg_objective = -32123.4
-worst_objective = -30730.0
-std_objective = 1357.483937289867
-best_time_to_best_secs = 115.356348959
-avg_time_to_best_secs = 118.2884441208
-avg_total_time_secs = 120.0009038167
+best_objective = -56248.0
+avg_objective = -54258.4
+worst_objective = -52560.0
+std_objective = 1089.5436843009095
+best_time_to_best_secs = 0.563865208
+avg_time_to_best_secs = 0.8669343249999999
+avg_total_time_secs = 119.99999967080001
+avg_initial_objective = 2593.0
+avg_improvement = 56851.4
+avg_n_accepted = 55637.1
+avg_n_rejected = 69363145.6
+avg_acceptance_rate = 0.0008027146512363801
+avg_n_best_updates = 396.0
 
 [[results]]
 problem = "Qubo"
@@ -3609,13 +4437,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -57893.0
-avg_objective = -57624.5
-worst_objective = -56725.0
-std_objective = 337.71622703092015
-best_time_to_best_secs = 0.000992458
-avg_time_to_best_secs = 0.0019687960000000005
-avg_total_time_secs = 10.4096406083
+best_objective = -58098.0
+avg_objective = -57866.7
+worst_objective = -57421.0
+std_objective = 202.80387077173847
+best_time_to_best_secs = 0.000395792
+avg_time_to_best_secs = 0.0006668334999999999
+avg_total_time_secs = 1.822691304
+avg_initial_objective = 2593.0
+avg_improvement = 60459.7
+avg_n_accepted = 718.1
+avg_n_rejected = 49999281.9
+avg_acceptance_rate = 1.4361999999999999e-05
+avg_n_best_updates = 409.4
 
 [[results]]
 problem = "Qubo"
@@ -3633,13 +4467,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -56092.0
-avg_objective = -53462.4
-worst_objective = -51592.0
-std_objective = 1518.83805588351
-best_time_to_best_secs = 58.831140708
-avg_time_to_best_secs = 100.0803514332
-avg_total_time_secs = 120.0008837333
+best_objective = -56244.0
+avg_objective = -53911.7
+worst_objective = -51829.0
+std_objective = 1148.7051884622094
+best_time_to_best_secs = 0.15557025
+avg_time_to_best_secs = 0.4452121374000001
+avg_total_time_secs = 87.57180640010002
+avg_initial_objective = 2593.0
+avg_improvement = 56504.7
+avg_n_accepted = 513.0
+avg_n_rejected = 49998974.0
+avg_acceptance_rate = 1.0260105498127229e-05
+avg_n_best_updates = 362.7
 
 [[results]]
 problem = "Qubo"
@@ -3651,9 +4491,6 @@ population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
 
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
-
 [[results.heuristic.steps]]
 kind = "TabuSearch"
 neighbor = "Flip"
@@ -3664,6 +4501,9 @@ tabu_tenure = [
 
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -3671,9 +4511,15 @@ best_objective = -58306.0
 avg_objective = -58306.0
 worst_objective = -58306.0
 std_objective = 0.0
-best_time_to_best_secs = 0.029984708
-avg_time_to_best_secs = 0.26958146689999996
-avg_total_time_secs = 120.00093446659999
+best_time_to_best_secs = 0.077662209
+avg_time_to_best_secs = 0.731081221
+avg_total_time_secs = 120.00051364589999
+avg_initial_objective = 2593.0
+avg_improvement = 60899.0
+avg_n_accepted = 16561262.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 15651.9
 
 [[results]]
 problem = "Qubo"
@@ -3681,9 +4527,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -3701,15 +4544,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -58259.0
-avg_objective = -58114.3
-worst_objective = -57947.0
-std_objective = 81.34254729229961
-best_time_to_best_secs = 0.113489542
-avg_time_to_best_secs = 19.4633647873
-avg_total_time_secs = 120.00001314600001
+best_objective = -58239.0
+avg_objective = -58092.9
+worst_objective = -57406.0
+std_objective = 232.1191288972109
+best_time_to_best_secs = 0.000511959
+avg_time_to_best_secs = 4.855605208399999
+avg_total_time_secs = 119.99999882920001
+avg_initial_objective = 2593.0
+avg_improvement = 60685.9
+avg_n_accepted = 5769635.4
+avg_n_rejected = 5544187395.6
+avg_acceptance_rate = 0.001043859054853676
+avg_n_best_updates = 1619940.6
 
 [[results]]
 problem = "Qubo"
@@ -3717,9 +4569,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_2.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -3734,6 +4583,9 @@ max_iteration = 50000
 
 [results.heuristic.restart_condition]
 max_failed_update = 10000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -3741,9 +4593,15 @@ best_objective = -58306.0
 avg_objective = -58306.0
 worst_objective = -58306.0
 std_objective = 0.0
-best_time_to_best_secs = 2.17594825
-avg_time_to_best_secs = 7.6998308751
-avg_total_time_secs = 120.16496795420001
+best_time_to_best_secs = 0.070622333
+avg_time_to_best_secs = 3.739658495799999
+avg_total_time_secs = 120.10454662109998
+avg_initial_objective = 2593.0
+avg_improvement = 60899.0
+avg_n_accepted = 18275000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 107682.7
 
 [[results]]
 problem = "Qubo"
@@ -3758,13 +4616,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -54815.0
-avg_objective = -53936.3
-worst_objective = -52753.0
-std_objective = 595.867946780157
-best_time_to_best_secs = 0.00012575
-avg_time_to_best_secs = 0.0001785251
-avg_total_time_secs = 0.0001787291
+best_objective = -54480.0
+avg_objective = -54141.4
+worst_objective = -53766.0
+std_objective = 258.0671230513488
+best_time_to_best_secs = 0.000161292
+avg_time_to_best_secs = 0.0002725543
+avg_total_time_secs = 0.00026867510000000005
+avg_initial_objective = 2328.1
+avg_improvement = 56469.5
+avg_n_accepted = 245.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9959222102486521
+avg_n_best_updates = 245.3
 
 [[results]]
 problem = "Qubo"
@@ -3779,13 +4643,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -52969.0
-avg_objective = -50614.1
-worst_objective = -46694.0
-std_objective = 1809.3923538027898
-best_time_to_best_secs = 0.286376875
-avg_time_to_best_secs = 0.3252138125
-avg_total_time_secs = 0.3268391667
+best_objective = -53259.0
+avg_objective = -51225.7
+worst_objective = -48926.0
+std_objective = 1408.0304719713988
+best_time_to_best_secs = 0.282215875
+avg_time_to_best_secs = 0.3332133959
+avg_total_time_secs = 0.3346854082
+avg_initial_objective = 2328.1
+avg_improvement = 53553.8
+avg_n_accepted = 137.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9927160612282735
+avg_n_best_updates = 137.3
 
 [[results]]
 problem = "Qubo"
@@ -3805,12 +4675,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -55376.0
-avg_objective = -55370.5
-worst_objective = -55360.0
-std_objective = 6.469157595854347
-best_time_to_best_secs = 0.043959625
-avg_time_to_best_secs = 31.231866370800002
-avg_total_time_secs = 120.0000189207
+avg_objective = -55371.4
+worst_objective = -55366.0
+std_objective = 4.054626986542659
+best_time_to_best_secs = 0.044579208
+avg_time_to_best_secs = 62.6344881624
+avg_total_time_secs = 120.0000073834
+avg_initial_objective = 2328.1
+avg_improvement = 57699.5
+avg_n_accepted = 17060814.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 301.4
 
 [[results]]
 problem = "Qubo"
@@ -3829,13 +4705,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -53674.0
-avg_objective = -52539.3
-worst_objective = -51423.0
-std_objective = 787.3280193159646
-best_time_to_best_secs = 0.660617708
-avg_time_to_best_secs = 32.822543895799996
-avg_total_time_secs = 120.0023027124
+best_objective = -53743.0
+avg_objective = -52338.4
+worst_objective = -50504.0
+std_objective = 1029.0073080401326
+best_time_to_best_secs = 1.60646625
+avg_time_to_best_secs = 28.8796320333
+avg_total_time_secs = 120.0018240334
+avg_initial_objective = 2328.1
+avg_improvement = 54666.5
+avg_n_accepted = 27323.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 169.8
 
 [[results]]
 problem = "Qubo"
@@ -3851,13 +4733,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55366.0
-avg_objective = -55260.5
-worst_objective = -55176.0
-std_objective = 65.9427782247609
-best_time_to_best_secs = 0.05851
-avg_time_to_best_secs = 0.07570728330000001
-avg_total_time_secs = 120.0000006082
+best_objective = -55373.0
+avg_objective = -55276.0
+worst_objective = -55180.0
+std_objective = 65.55913361233506
+best_time_to_best_secs = 0.020503459
+avg_time_to_best_secs = 0.026298654400000003
+avg_total_time_secs = 119.99999733779998
+avg_initial_objective = 2328.1
+avg_improvement = 57604.1
+avg_n_accepted = 591774.5
+avg_n_rejected = 3221411256.0
+avg_acceptance_rate = 0.00022717100957333805
+avg_n_best_updates = 480.2
 
 [[results]]
 problem = "Qubo"
@@ -3873,13 +4761,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -31636.0
-avg_objective = -30112.8
-worst_objective = -28821.0
-std_objective = 759.5142921630903
-best_time_to_best_secs = 113.333016416
-avg_time_to_best_secs = 117.29159428329999
-avg_total_time_secs = 120.0009233541
+best_objective = -53613.0
+avg_objective = -52195.1
+worst_objective = -50280.0
+std_objective = 974.8651650356577
+best_time_to_best_secs = 0.661949
+avg_time_to_best_secs = 0.8736648251
+avg_total_time_secs = 119.99999910849999
+avg_initial_objective = 2328.1
+avg_improvement = 54523.2
+avg_n_accepted = 55911.0
+avg_n_rejected = 68693625.8
+avg_acceptance_rate = 0.0008145806415979426
+avg_n_best_updates = 391.6
 
 [[results]]
 problem = "Qubo"
@@ -3897,13 +4791,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55178.0
-avg_objective = -54824.9
-worst_objective = -54546.0
-std_objective = 176.68415322263624
-best_time_to_best_secs = 0.001069459
-avg_time_to_best_secs = 0.0018674833000000002
-avg_total_time_secs = 10.684757012499999
+best_objective = -55289.0
+avg_objective = -54841.3
+worst_objective = -54396.0
+std_objective = 294.0224651280919
+best_time_to_best_secs = 0.000355875
+avg_time_to_best_secs = 0.0005748208999999998
+avg_total_time_secs = 1.6628057875000004
+avg_initial_objective = 2328.1
+avg_improvement = 57169.4
+avg_n_accepted = 10721.6
+avg_n_rejected = 49989278.4
+avg_acceptance_rate = 0.000214432
+avg_n_best_updates = 414.7
 
 [[results]]
 problem = "Qubo"
@@ -3921,13 +4821,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -53400.0
-avg_objective = -52462.9
-worst_objective = -51035.0
-std_objective = 642.8109286563196
-best_time_to_best_secs = 91.160958125
-avg_time_to_best_secs = 108.34809551240001
-avg_total_time_secs = 120.0008993834
+best_objective = -52945.0
+avg_objective = -51424.6
+worst_objective = -49534.0
+std_objective = 1219.2054953944391
+best_time_to_best_secs = 0.098032417
+avg_time_to_best_secs = 0.24941097920000002
+avg_total_time_secs = 89.46170816680001
+avg_initial_objective = 2328.1
+avg_improvement = 53752.7
+avg_n_accepted = 582.4
+avg_n_rejected = 49998835.2
+avg_acceptance_rate = 1.1648161119368294e-05
+avg_n_best_updates = 355.5
 
 [[results]]
 problem = "Qubo"
@@ -3938,9 +4844,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -3953,15 +4856,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -55376.0
 avg_objective = -55376.0
 worst_objective = -55376.0
 std_objective = 0.0
-best_time_to_best_secs = 0.019894792
-avg_time_to_best_secs = 0.3292034085
-avg_total_time_secs = 120.00106352499999
+best_time_to_best_secs = 0.033924791
+avg_time_to_best_secs = 0.19166882910000002
+avg_total_time_secs = 120.0004532419
+avg_initial_objective = 2328.1
+avg_improvement = 57704.1
+avg_n_accepted = 16596011.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 12263.1
 
 [[results]]
 problem = "Qubo"
@@ -3969,9 +4881,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -3989,15 +4898,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -55274.0
-avg_objective = -55141.4
-worst_objective = -54982.0
-std_objective = 104.84483773653332
-best_time_to_best_secs = 0.004690875
-avg_time_to_best_secs = 30.869672958400002
-avg_total_time_secs = 120.0000116208
+best_objective = -55315.0
+avg_objective = -55153.3
+worst_objective = -54722.0
+std_objective = 174.05519239597538
+best_time_to_best_secs = 0.072176458
+avg_time_to_best_secs = 3.9162858001
+avg_total_time_secs = 120.00002198729999
+avg_initial_objective = 2328.1
+avg_improvement = 57481.4
+avg_n_accepted = 5191803.8
+avg_n_rejected = 5400824133.4
+avg_acceptance_rate = 0.001010274589971509
+avg_n_best_updates = 1938132.7
 
 [[results]]
 problem = "Qubo"
@@ -4005,9 +4923,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_3.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -4023,15 +4938,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -55376.0
 avg_objective = -55376.0
 worst_objective = -55376.0
 std_objective = 0.0
-best_time_to_best_secs = 0.08952975
-avg_time_to_best_secs = 6.905297162399999
-avg_total_time_secs = 120.163474196
+best_time_to_best_secs = 0.077768
+avg_time_to_best_secs = 6.777248437299998
+avg_total_time_secs = 120.14613406659998
+avg_initial_objective = 2328.1
+avg_improvement = 57704.1
+avg_n_accepted = 18180000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 107416.4
 
 [[results]]
 problem = "Qubo"
@@ -4046,13 +4970,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -49780.0
-avg_objective = -48806.6
-worst_objective = -47711.0
-std_objective = 731.8912760786263
-best_time_to_best_secs = 0.000117334
-avg_time_to_best_secs = 0.00015566670000000002
-avg_total_time_secs = 0.00015585810000000002
+best_objective = -50006.0
+avg_objective = -49137.1
+worst_objective = -48254.0
+std_objective = 575.6768972262132
+best_time_to_best_secs = 0.00018325
+avg_time_to_best_secs = 0.00024947479999999996
+avg_total_time_secs = 0.00024714150000000005
+avg_initial_objective = 6427.9
+avg_improvement = 55565.0
+avg_n_accepted = 249.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9959964309328189
+avg_n_best_updates = 249.6
 
 [[results]]
 problem = "Qubo"
@@ -4067,13 +4997,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -48701.0
-avg_objective = -47018.0
-worst_objective = -45200.0
-std_objective = 1127.7630956898706
-best_time_to_best_secs = 0.255896542
-avg_time_to_best_secs = 0.3299977916
-avg_total_time_secs = 0.33146222519999996
+best_objective = -49739.0
+avg_objective = -48220.1
+worst_objective = -46801.0
+std_objective = 819.2370169859271
+best_time_to_best_secs = 0.298938417
+avg_time_to_best_secs = 0.32986731659999996
+avg_total_time_secs = 0.3315796918
+avg_initial_objective = 6427.9
+avg_improvement = 54648.0
+avg_n_accepted = 135.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9926261027858757
+avg_n_best_updates = 135.1
 
 [[results]]
 problem = "Qubo"
@@ -4093,12 +5029,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -50554.0
-avg_objective = -50551.4
-worst_objective = -50535.0
-std_objective = 5.589275444992848
-best_time_to_best_secs = 2.160242625
-avg_time_to_best_secs = 33.713659224900006
-avg_total_time_secs = 120.0000037498
+avg_objective = -50543.4
+worst_objective = -50524.0
+std_objective = 10.141005867269776
+best_time_to_best_secs = 0.100639125
+avg_time_to_best_secs = 27.008528625299995
+avg_total_time_secs = 120.00000529180002
+avg_initial_objective = 6427.9
+avg_improvement = 56971.3
+avg_n_accepted = 17212621.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 306.9
 
 [[results]]
 problem = "Qubo"
@@ -4117,13 +5059,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -50289.0
-avg_objective = -49379.0
-worst_objective = -48706.0
-std_objective = 560.094991943331
-best_time_to_best_secs = 0.696976542
-avg_time_to_best_secs = 22.107563608200003
-avg_total_time_secs = 120.0019362457
+best_objective = -50408.0
+avg_objective = -49356.5
+worst_objective = -48253.0
+std_objective = 661.0369505557159
+best_time_to_best_secs = 0.783656916
+avg_time_to_best_secs = 20.857256562499998
+avg_total_time_secs = 120.0017557919
+avg_initial_objective = 6427.9
+avg_improvement = 55784.4
+avg_n_accepted = 25655.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 168.1
 
 [[results]]
 problem = "Qubo"
@@ -4139,13 +5087,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -50475.0
-avg_objective = -50406.5
-worst_objective = -50313.0
-std_objective = 63.36757846091327
-best_time_to_best_secs = 0.061391833
-avg_time_to_best_secs = 0.07447807079999999
-avg_total_time_secs = 120.00000011249999
+best_objective = -50531.0
+avg_objective = -50442.9
+worst_objective = -50252.0
+std_objective = 76.83287056982837
+best_time_to_best_secs = 0.019603666
+avg_time_to_best_secs = 0.0250223957
+avg_total_time_secs = 119.99999897920002
+avg_initial_objective = 6427.9
+avg_improvement = 56870.8
+avg_n_accepted = 1942311.0
+avg_n_rejected = 3236324924.8
+avg_acceptance_rate = 0.0006268902379405758
+avg_n_best_updates = 479.8
 
 [[results]]
 problem = "Qubo"
@@ -4161,13 +5115,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -28484.0
-avg_objective = -27347.4
-worst_objective = -26330.0
-std_objective = 648.6120874606023
-best_time_to_best_secs = 110.34677575
-avg_time_to_best_secs = 117.25017736260001
-avg_total_time_secs = 120.00125798329998
+best_objective = -50381.0
+avg_objective = -49161.1
+worst_objective = -48118.0
+std_objective = 731.433585501787
+best_time_to_best_secs = 0.655790458
+avg_time_to_best_secs = 0.8756823293000002
+avg_total_time_secs = 119.99999844999999
+avg_initial_objective = 6427.9
+avg_improvement = 55589.0
+avg_n_accepted = 55775.9
+avg_n_rejected = 66684799.0
+avg_acceptance_rate = 0.0008400389797374472
+avg_n_best_updates = 384.1
 
 [[results]]
 problem = "Qubo"
@@ -4185,13 +5145,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -49994.0
-avg_objective = -49292.8
-worst_objective = -48470.0
-std_objective = 491.53652966997277
-best_time_to_best_secs = 0.001123375
-avg_time_to_best_secs = 0.0020113582
-avg_total_time_secs = 10.422464208399997
+best_objective = -50171.0
+avg_objective = -49409.7
+worst_objective = -48591.0
+std_objective = 544.2808190631009
+best_time_to_best_secs = 0.000360625
+avg_time_to_best_secs = 0.0007611790000000001
+avg_total_time_secs = 1.9980110040999999
+avg_initial_objective = 6427.9
+avg_improvement = 55837.6
+avg_n_accepted = 10727.6
+avg_n_rejected = 49989272.4
+avg_acceptance_rate = 0.00021455200000000002
+avg_n_best_updates = 417.9
 
 [[results]]
 problem = "Qubo"
@@ -4209,13 +5175,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -49080.0
-avg_objective = -47929.5
-worst_objective = -45562.0
-std_objective = 1038.8633451999353
-best_time_to_best_secs = 91.782129542
-avg_time_to_best_secs = 110.85428382939999
-avg_total_time_secs = 120.000605004
+best_objective = -49756.0
+avg_objective = -48462.7
+worst_objective = -46991.0
+std_objective = 833.7368949494798
+best_time_to_best_secs = 0.126365458
+avg_time_to_best_secs = 0.3868338791
+avg_total_time_secs = 86.53519808739999
+avg_initial_objective = 6427.9
+avg_improvement = 54890.6
+avg_n_accepted = 603.0
+avg_n_rejected = 49998794.0
+avg_acceptance_rate = 1.2060165985937471e-05
+avg_n_best_updates = 373.7
 
 [[results]]
 problem = "Qubo"
@@ -4226,9 +5198,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -4241,15 +5210,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -50554.0
 avg_objective = -50554.0
 worst_objective = -50554.0
 std_objective = 0.0
-best_time_to_best_secs = 0.102865791
-avg_time_to_best_secs = 0.2221397873
-avg_total_time_secs = 120.00062336280003
+best_time_to_best_secs = 0.144091792
+avg_time_to_best_secs = 0.37425338340000003
+avg_total_time_secs = 120.00063062929999
+avg_initial_objective = 6427.9
+avg_improvement = 56981.9
+avg_n_accepted = 17032146.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 17283.7
 
 [[results]]
 problem = "Qubo"
@@ -4257,9 +5235,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -4277,15 +5252,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -50423.0
-avg_objective = -50260.6
-worst_objective = -49985.0
-std_objective = 121.59210500686301
-best_time_to_best_secs = 0.007695542
-avg_time_to_best_secs = 37.1686772336
-avg_total_time_secs = 120.0000152585
+best_objective = -50442.0
+avg_objective = -50300.1
+worst_objective = -49924.0
+std_objective = 153.64273494051062
+best_time_to_best_secs = 0.148983833
+avg_time_to_best_secs = 25.6447810126
+avg_total_time_secs = 120.00000049580001
+avg_initial_objective = 6427.9
+avg_improvement = 56728.0
+avg_n_accepted = 7560606.9
+avg_n_rejected = 5171346687.0
+avg_acceptance_rate = 0.001477327707670506
+avg_n_best_updates = 2212821.7
 
 [[results]]
 problem = "Qubo"
@@ -4293,9 +5277,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_4.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -4311,15 +5292,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -50554.0
 avg_objective = -50554.0
 worst_objective = -50554.0
 std_objective = 0.0
-best_time_to_best_secs = 0.428095084
-avg_time_to_best_secs = 14.168822183400001
-avg_total_time_secs = 120.15586094170003
+best_time_to_best_secs = 0.892727083
+avg_time_to_best_secs = 16.7475691459
+avg_total_time_secs = 120.10820008339999
+avg_initial_objective = 6427.9
+avg_improvement = 56981.9
+avg_n_accepted = 18025000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 113426.4
 
 [[results]]
 problem = "Qubo"
@@ -4334,13 +5324,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -61279.0
-avg_objective = -60861.9
-worst_objective = -60181.0
-std_objective = 335.3876712104963
-best_time_to_best_secs = 0.000114708
-avg_time_to_best_secs = 0.0001693624
-avg_total_time_secs = 0.0001695831
+best_objective = -61578.0
+avg_objective = -61003.4
+worst_objective = -60428.0
+std_objective = 351.5819107974698
+best_time_to_best_secs = 0.000315833
+avg_time_to_best_secs = 0.00036792490000000003
+avg_total_time_secs = 0.0003641957
+avg_initial_objective = -713.4
+avg_improvement = 60290.0
+avg_n_accepted = 252.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9960315911629184
+avg_n_best_updates = 252.0
 
 [[results]]
 problem = "Qubo"
@@ -4355,13 +5351,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -58933.0
-avg_objective = -56259.8
-worst_objective = -53521.0
-std_objective = 1943.1214475683191
-best_time_to_best_secs = 0.281365167
-avg_time_to_best_secs = 0.31653973329999996
-avg_total_time_secs = 0.3181322332
+best_objective = -57858.0
+avg_objective = -57237.4
+worst_objective = -55925.0
+std_objective = 651.2328615787136
+best_time_to_best_secs = 0.262021916
+avg_time_to_best_secs = 0.32012567900000005
+avg_total_time_secs = 0.32188925020000003
+avg_initial_objective = -713.4
+avg_improvement = 56524.0
+avg_n_accepted = 128.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9922123528175758
+avg_n_best_updates = 128.1
 
 [[results]]
 problem = "Qubo"
@@ -4381,12 +5383,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -61830.0
-avg_objective = -61828.6
+avg_objective = -61829.1
 worst_objective = -61825.0
-std_objective = 1.9595917942265426
-best_time_to_best_secs = 0.04986825
-avg_time_to_best_secs = 20.640985883200003
-avg_total_time_secs = 120.0000025834
+std_objective = 1.5779733838059504
+best_time_to_best_secs = 0.099326875
+avg_time_to_best_secs = 31.837839220599996
+avg_total_time_secs = 120.00000181249997
+avg_initial_objective = -713.4
+avg_improvement = 61115.7
+avg_n_accepted = 18153770.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 289.9
 
 [[results]]
 problem = "Qubo"
@@ -4405,13 +5413,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -59168.0
-avg_objective = -57132.9
-worst_objective = -55307.0
-std_objective = 1319.9651093873656
-best_time_to_best_secs = 4.678209
-avg_time_to_best_secs = 36.182534921
-avg_total_time_secs = 120.00144251239999
+best_objective = -59046.0
+avg_objective = -58131.1
+worst_objective = -56389.0
+std_objective = 820.402882735062
+best_time_to_best_secs = 1.688396625
+avg_time_to_best_secs = 27.2772661251
+avg_total_time_secs = 120.00205832900001
+avg_initial_objective = -713.4
+avg_improvement = 57417.7
+avg_n_accepted = 26872.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 153.9
 
 [[results]]
 problem = "Qubo"
@@ -4427,13 +5441,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -61815.0
-avg_objective = -61716.4
-worst_objective = -61608.0
-std_objective = 64.48596746579832
-best_time_to_best_secs = 0.056395834
-avg_time_to_best_secs = 0.0735888168
-avg_total_time_secs = 120.00000008329998
+best_objective = -61825.0
+avg_objective = -61746.1
+worst_objective = -61684.0
+std_objective = 53.03857087064092
+best_time_to_best_secs = 0.016751541
+avg_time_to_best_secs = 0.026283245900000002
+avg_total_time_secs = 120.0001074166
+avg_initial_objective = -713.4
+avg_improvement = 61032.7
+avg_n_accepted = 724562.0
+avg_n_rejected = 3233558051.3
+avg_acceptance_rate = 0.00022755052212699857
+avg_n_best_updates = 479.2
 
 [[results]]
 problem = "Qubo"
@@ -4449,13 +5469,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -35202.0
-avg_objective = -33985.2
-worst_objective = -33181.0
-std_objective = 571.395449754371
-best_time_to_best_secs = 113.159658166
-avg_time_to_best_secs = 117.3024761001
-avg_total_time_secs = 120.00084906679999
+best_objective = -58727.0
+avg_objective = -57723.7
+worst_objective = -56114.0
+std_objective = 782.782862612615
+best_time_to_best_secs = 0.634565875
+avg_time_to_best_secs = 0.9265811625
+avg_total_time_secs = 120.00000306669999
+avg_initial_objective = -713.4
+avg_improvement = 57010.3
+avg_n_accepted = 56718.3
+avg_n_rejected = 68036912.1
+avg_acceptance_rate = 0.000834529918068133
+avg_n_best_updates = 390.4
 
 [[results]]
 problem = "Qubo"
@@ -4473,13 +5499,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -61774.0
-avg_objective = -61434.9
-worst_objective = -60908.0
-std_objective = 228.56047339817968
-best_time_to_best_secs = 0.001009
-avg_time_to_best_secs = 0.0019580126000000005
-avg_total_time_secs = 10.4217846043
+best_objective = -61609.0
+avg_objective = -61429.8
+worst_objective = -60896.0
+std_objective = 188.35700146264804
+best_time_to_best_secs = 0.000357375
+avg_time_to_best_secs = 0.0006208793
+avg_total_time_secs = 1.875490025
+avg_initial_objective = -713.4
+avg_improvement = 60716.4
+avg_n_accepted = 10691.3
+avg_n_rejected = 49989308.7
+avg_acceptance_rate = 0.000213826
+avg_n_best_updates = 394.2
 
 [[results]]
 problem = "Qubo"
@@ -4497,13 +5529,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -58059.0
-avg_objective = -56076.2
-worst_objective = -53105.0
-std_objective = 1599.585871405471
-best_time_to_best_secs = 56.870698083
-avg_time_to_best_secs = 105.32422676230001
-avg_total_time_secs = 120.0010657459
+best_objective = -58329.0
+avg_objective = -57561.5
+worst_objective = -55756.0
+std_objective = 770.1980589432825
+best_time_to_best_secs = 0.177189792
+avg_time_to_best_secs = 0.3482670957999999
+avg_total_time_secs = 86.95523107079998
+avg_initial_objective = -713.4
+avg_improvement = 56848.1
+avg_n_accepted = 499.6
+avg_n_rejected = 49999000.8
+avg_acceptance_rate = 9.992100197968392e-06
+avg_n_best_updates = 355.0
 
 [[results]]
 problem = "Qubo"
@@ -4514,9 +5552,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -4529,15 +5564,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -61830.0
 avg_objective = -61830.0
 worst_objective = -61830.0
 std_objective = 0.0
-best_time_to_best_secs = 0.075421125
-avg_time_to_best_secs = 2.1658399626000002
-avg_total_time_secs = 120.0009066499
+best_time_to_best_secs = 0.042017083
+avg_time_to_best_secs = 1.4894590418
+avg_total_time_secs = 120.00058936269997
+avg_initial_objective = -713.4
+avg_improvement = 61116.6
+avg_n_accepted = 16964793.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 12895.5
 
 [[results]]
 problem = "Qubo"
@@ -4545,9 +5589,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -4565,15 +5606,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -61830.0
-avg_objective = -61665.7
-worst_objective = -61396.0
-std_objective = 158.58187159949904
-best_time_to_best_secs = 0.002362916
-avg_time_to_best_secs = 32.758365525
-avg_total_time_secs = 120.000018
+best_objective = -61811.0
+avg_objective = -61687.3
+worst_objective = -61441.0
+std_objective = 119.70969050164652
+best_time_to_best_secs = 0.274959416
+avg_time_to_best_secs = 15.1458262209
+avg_total_time_secs = 120.00000482080002
+avg_initial_objective = -713.4
+avg_improvement = 60973.9
+avg_n_accepted = 8038519.0
+avg_n_rejected = 5313657045.8
+avg_acceptance_rate = 0.0015390573420228048
+avg_n_best_updates = 2973986.5
 
 [[results]]
 problem = "Qubo"
@@ -4581,9 +5631,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_5.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -4599,15 +5646,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -61830.0
 avg_objective = -61830.0
 worst_objective = -61830.0
 std_objective = 0.0
-best_time_to_best_secs = 0.079535042
-avg_time_to_best_secs = 9.3067880291
-avg_total_time_secs = 120.15034982480002
+best_time_to_best_secs = 0.682993083
+avg_time_to_best_secs = 6.872258008299999
+avg_total_time_secs = 120.1137353334
+avg_initial_objective = -713.4
+avg_improvement = 61116.6
+avg_n_accepted = 18345000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 105333.8
 
 [[results]]
 problem = "Qubo"
@@ -4622,13 +5678,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -57376.0
-avg_objective = -56740.2
-worst_objective = -55465.0
-std_objective = 502.9717288277742
-best_time_to_best_secs = 0.000121375
-avg_time_to_best_secs = 0.00014942939999999997
-avg_total_time_secs = 0.00014964569999999998
+best_objective = -57560.0
+avg_objective = -56738.3
+worst_objective = -55626.0
+std_objective = 490.96497838440575
+best_time_to_best_secs = 0.000166042
+avg_time_to_best_secs = 0.0002595166
+avg_total_time_secs = 0.0002580750000000001
+avg_initial_objective = 886.5
+avg_improvement = 57624.8
+avg_n_accepted = 242.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9958829067889037
+avg_n_best_updates = 242.6
 
 [[results]]
 problem = "Qubo"
@@ -4643,13 +5705,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55372.0
-avg_objective = -53135.6
-worst_objective = -51013.0
-std_objective = 1397.5380638823403
-best_time_to_best_secs = 0.254660625
-avg_time_to_best_secs = 0.3043322666
-avg_total_time_secs = 0.30595697099999997
+best_objective = -54178.0
+avg_objective = -52711.3
+worst_objective = -50489.0
+std_objective = 1259.7776033887887
+best_time_to_best_secs = 0.289030417
+avg_time_to_best_secs = 0.33870901249999996
+avg_total_time_secs = 0.3402799038
+avg_initial_objective = 886.5
+avg_improvement = 53597.8
+avg_n_accepted = 129.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9922636740749387
+avg_n_best_updates = 129.3
 
 [[results]]
 problem = "Qubo"
@@ -4669,12 +5737,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -58205.0
-avg_objective = -58201.4
-worst_objective = -58195.0
-std_objective = 4.454211490264018
-best_time_to_best_secs = 0.0899265
-avg_time_to_best_secs = 35.925122370699995
-avg_total_time_secs = 120.00000169579998
+avg_objective = -58199.6
+worst_objective = -58184.0
+std_objective = 7.2
+best_time_to_best_secs = 0.633806958
+avg_time_to_best_secs = 31.911933179200002
+avg_total_time_secs = 120.000005175
+avg_initial_objective = 886.5
+avg_improvement = 59086.1
+avg_n_accepted = 17135139.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 306.1
 
 [[results]]
 problem = "Qubo"
@@ -4693,13 +5767,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -56232.0
-avg_objective = -54436.4
-worst_objective = -53152.0
-std_objective = 1096.2529999958952
-best_time_to_best_secs = 1.366764125
-avg_time_to_best_secs = 33.8173744081
-avg_total_time_secs = 120.00210165000001
+best_objective = -55929.0
+avg_objective = -54438.4
+worst_objective = -52220.0
+std_objective = 1071.571948121077
+best_time_to_best_secs = 1.832004
+avg_time_to_best_secs = 30.7504810416
+avg_total_time_secs = 120.00267362899999
+avg_initial_objective = 886.5
+avg_improvement = 55324.9
+avg_n_accepted = 27853.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 177.7
 
 [[results]]
 problem = "Qubo"
@@ -4715,13 +5795,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -58101.0
-avg_objective = -58002.0
-worst_objective = -57706.0
-std_objective = 113.15476127852509
-best_time_to_best_secs = 0.060217417
-avg_time_to_best_secs = 0.0733902417
-avg_total_time_secs = 120.00000063750001
+best_objective = -58205.0
+avg_objective = -58024.7
+worst_objective = -57913.0
+std_objective = 89.35552585039159
+best_time_to_best_secs = 0.017457625
+avg_time_to_best_secs = 0.0266332458
+avg_total_time_secs = 119.99999907530002
+avg_initial_objective = 886.5
+avg_improvement = 58911.2
+avg_n_accepted = 1604290.8
+avg_n_rejected = 3627214612.9
+avg_acceptance_rate = 0.0004244231259390908
+avg_n_best_updates = 469.2
 
 [[results]]
 problem = "Qubo"
@@ -4737,13 +5823,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -35494.0
-avg_objective = -32867.9
-worst_objective = -31266.0
-std_objective = 1155.3453552942515
-best_time_to_best_secs = 114.440106125
-avg_time_to_best_secs = 117.89346312080002
-avg_total_time_secs = 120.0009737959
+best_objective = -55391.0
+avg_objective = -54136.7
+worst_objective = -51857.0
+std_objective = 1044.3791505004301
+best_time_to_best_secs = 0.655822708
+avg_time_to_best_secs = 0.8812853792
+avg_total_time_secs = 120.00000055410001
+avg_initial_objective = 886.5
+avg_improvement = 55023.2
+avg_n_accepted = 55524.7
+avg_n_rejected = 69502139.6
+avg_acceptance_rate = 0.0007993761164273635
+avg_n_best_updates = 386.0
 
 [[results]]
 problem = "Qubo"
@@ -4761,13 +5853,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -57513.0
-avg_objective = -57252.5
-worst_objective = -56650.0
-std_objective = 244.63493209270013
-best_time_to_best_secs = 0.001182041
-avg_time_to_best_secs = 0.0020208999000000004
-avg_total_time_secs = 10.3109714166
+best_objective = -57913.0
+avg_objective = -57415.7
+worst_objective = -56762.0
+std_objective = 288.91799874704935
+best_time_to_best_secs = 0.000338458
+avg_time_to_best_secs = 0.0005984291000000001
+avg_total_time_secs = 1.6897424706000002
+avg_initial_objective = 886.5
+avg_improvement = 58302.2
+avg_n_accepted = 20775.1
+avg_n_rejected = 49979224.9
+avg_acceptance_rate = 0.00041550200000000005
+avg_n_best_updates = 404.7
 
 [[results]]
 problem = "Qubo"
@@ -4785,13 +5883,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55136.0
-avg_objective = -52928.6
-worst_objective = -49738.0
-std_objective = 1782.7642132374094
-best_time_to_best_secs = 86.005166417
-avg_time_to_best_secs = 110.4596730084
-avg_total_time_secs = 120.00103044989996
+best_objective = -55167.0
+avg_objective = -53527.4
+worst_objective = -51606.0
+std_objective = 1052.4851732922416
+best_time_to_best_secs = 0.098286959
+avg_time_to_best_secs = 0.31800689160000006
+avg_total_time_secs = 85.50408231669999
+avg_initial_objective = 886.5
+avg_improvement = 54413.9
+avg_n_accepted = 492.9
+avg_n_rejected = 49999014.2
+avg_acceptance_rate = 9.858097515487968e-06
+avg_n_best_updates = 354.1
 
 [[results]]
 problem = "Qubo"
@@ -4802,9 +5906,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -4817,15 +5918,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -58205.0
-avg_objective = -58205.0
-worst_objective = -58205.0
-std_objective = 0.0
-best_time_to_best_secs = 0.025570291
-avg_time_to_best_secs = 0.2639063083
-avg_total_time_secs = 120.0007075961
+avg_objective = -58200.6
+worst_objective = -58171.0
+std_objective = 10.307278981380103
+best_time_to_best_secs = 0.035429667
+avg_time_to_best_secs = 0.32235722099999997
+avg_total_time_secs = 120.0005888374
+avg_initial_objective = 886.5
+avg_improvement = 59087.1
+avg_n_accepted = 16818419.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 14078.9
 
 [[results]]
 problem = "Qubo"
@@ -4833,9 +5943,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -4853,15 +5960,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -58173.0
-avg_objective = -57945.5
-worst_objective = -57497.0
-std_objective = 189.30887459387634
-best_time_to_best_secs = 0.183640833
-avg_time_to_best_secs = 54.995297171100006
-avg_total_time_secs = 120.0000207456
+best_objective = -58056.0
+avg_objective = -57736.2
+worst_objective = -57334.0
+std_objective = 253.05050879221722
+best_time_to_best_secs = 0.106339583
+avg_time_to_best_secs = 30.409666079199997
+avg_total_time_secs = 120.00013435010001
+avg_initial_objective = 886.5
+avg_improvement = 58622.7
+avg_n_accepted = 6450745.4
+avg_n_rejected = 5511810415.8
+avg_acceptance_rate = 0.0011792888897896527
+avg_n_best_updates = 2384762.9
 
 [[results]]
 problem = "Qubo"
@@ -4869,9 +5985,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_6.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -4887,15 +6000,24 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -58205.0
 avg_objective = -58205.0
 worst_objective = -58205.0
 std_objective = 0.0
-best_time_to_best_secs = 0.438353292
-avg_time_to_best_secs = 15.9880934625
-avg_total_time_secs = 120.14336834170001
+best_time_to_best_secs = 2.5736850000000002
+avg_time_to_best_secs = 8.1307175043
+avg_total_time_secs = 120.1154171748
+avg_initial_objective = 886.5
+avg_improvement = 59091.5
+avg_n_accepted = 18045000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 106903.0
 
 [[results]]
 problem = "Qubo"
@@ -4910,13 +6032,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -62362.0
-avg_objective = -61709.1
-worst_objective = -61192.0
-std_objective = 390.4365377369285
-best_time_to_best_secs = 0.000104792
-avg_time_to_best_secs = 0.0001756082
-avg_total_time_secs = 0.0001758293
+best_objective = -62261.0
+avg_objective = -61680.8
+worst_objective = -61214.0
+std_objective = 278.7478430409821
+best_time_to_best_secs = 0.000227625
+avg_time_to_best_secs = 0.0002979416
+avg_total_time_secs = 0.00029610009999999997
+avg_initial_objective = -298.5
+avg_improvement = 61382.3
+avg_n_accepted = 253.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9960629583431277
+avg_n_best_updates = 253.7
 
 [[results]]
 problem = "Qubo"
@@ -4931,13 +6059,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -58635.0
-avg_objective = -56754.6
-worst_objective = -54580.0
-std_objective = 1132.1629034728173
-best_time_to_best_secs = 0.293548458
-avg_time_to_best_secs = 0.327627225
-avg_total_time_secs = 0.32923491229999996
+best_objective = -58917.0
+avg_objective = -56624.8
+worst_objective = -53459.0
+std_objective = 1419.2949517277937
+best_time_to_best_secs = 0.307886167
+avg_time_to_best_secs = 0.34308527099999997
+avg_total_time_secs = 0.34467029169999996
+avg_initial_objective = -298.5
+avg_improvement = 56326.3
+avg_n_accepted = 133.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9925213382810357
+avg_n_best_updates = 133.4
 
 [[results]]
 problem = "Qubo"
@@ -4959,10 +6093,16 @@ num_successful_runs = 10
 best_objective = -62728.0
 avg_objective = -62726.7
 worst_objective = -62724.0
-std_objective = 1.4177446878757827
-best_time_to_best_secs = 0.002785208
-avg_time_to_best_secs = 19.391997037499998
-avg_total_time_secs = 120.00000513350001
+std_objective = 1.676305461424021
+best_time_to_best_secs = 0.020629416
+avg_time_to_best_secs = 31.556370141500004
+avg_total_time_secs = 120.00000186680002
+avg_initial_objective = -298.5
+avg_improvement = 62428.2
+avg_n_accepted = 18132604.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 295.6
 
 [[results]]
 problem = "Qubo"
@@ -4981,13 +6121,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -60864.0
-avg_objective = -58100.2
-worst_objective = -55240.0
-std_objective = 1445.9712168642916
-best_time_to_best_secs = 0.834648334
-avg_time_to_best_secs = 38.563152724999995
-avg_total_time_secs = 120.0018824791
+best_objective = -59517.0
+avg_objective = -57618.3
+worst_objective = -54667.0
+std_objective = 1299.9139240734366
+best_time_to_best_secs = 0.706670583
+avg_time_to_best_secs = 25.2218934665
+avg_total_time_secs = 120.0019881374
+avg_initial_objective = -298.5
+avg_improvement = 57319.8
+avg_n_accepted = 27182.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 162.7
 
 [[results]]
 problem = "Qubo"
@@ -5004,12 +6150,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -62725.0
-avg_objective = -62602.4
-worst_objective = -62465.0
-std_objective = 90.97054468343036
-best_time_to_best_secs = 0.067413458
-avg_time_to_best_secs = 0.0750054291
-avg_total_time_secs = 120.00000017079999
+avg_objective = -62620.2
+worst_objective = -62478.0
+std_objective = 86.02418264650935
+best_time_to_best_secs = 0.021766958
+avg_time_to_best_secs = 0.024676158399999995
+avg_total_time_secs = 119.9999992709
+avg_initial_objective = -298.5
+avg_improvement = 62321.7
+avg_n_accepted = 86856.3
+avg_n_rejected = 3710201550.3
+avg_acceptance_rate = 2.42073949599759e-05
+avg_n_best_updates = 495.6
 
 [[results]]
 problem = "Qubo"
@@ -5025,13 +6177,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -35409.0
-avg_objective = -34015.0
-worst_objective = -30661.0
-std_objective = 1321.6208987451735
-best_time_to_best_secs = 117.324232333
-avg_time_to_best_secs = 118.8541980667
-avg_total_time_secs = 120.00071572489999
+best_objective = -59376.0
+avg_objective = -57389.6
+worst_objective = -54515.0
+std_objective = 1311.5646533816011
+best_time_to_best_secs = 0.589041792
+avg_time_to_best_secs = 0.8130215333999999
+avg_total_time_secs = 120.00000089979999
+avg_initial_objective = -298.5
+avg_improvement = 57091.1
+avg_n_accepted = 56434.5
+avg_n_rejected = 71748008.7
+avg_acceptance_rate = 0.0007876759669415171
+avg_n_best_updates = 383.4
 
 [[results]]
 problem = "Qubo"
@@ -5049,13 +6207,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -62373.0
-avg_objective = -62048.9
-worst_objective = -61471.0
-std_objective = 248.355571711206
-best_time_to_best_secs = 0.000884
-avg_time_to_best_secs = 0.0017462207
-avg_total_time_secs = 10.5127317458
+best_objective = -62431.0
+avg_objective = -62044.7
+worst_objective = -61545.0
+std_objective = 286.86339954758955
+best_time_to_best_secs = 0.00034
+avg_time_to_best_secs = 0.000615425
+avg_total_time_secs = 1.7136244834000003
+avg_initial_objective = -298.5
+avg_improvement = 61746.2
+avg_n_accepted = 20749.1
+avg_n_rejected = 49979250.9
+avg_acceptance_rate = 0.00041498200000000005
+avg_n_best_updates = 410.3
 
 [[results]]
 problem = "Qubo"
@@ -5073,13 +6237,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -59412.0
-avg_objective = -56978.2
-worst_objective = -55219.0
-std_objective = 1179.8104763054105
-best_time_to_best_secs = 74.757224833
-avg_time_to_best_secs = 102.9303141417
-avg_total_time_secs = 120.00104371240002
+best_objective = -59110.0
+avg_objective = -56838.9
+worst_objective = -53201.0
+std_objective = 1570.452638572714
+best_time_to_best_secs = 0.094804625
+avg_time_to_best_secs = 0.2515770252
+avg_total_time_secs = 87.9455018459
+avg_initial_objective = -298.5
+avg_improvement = 56540.4
+avg_n_accepted = 564.1
+avg_n_rejected = 49998871.8
+avg_acceptance_rate = 1.128215118898951e-05
+avg_n_best_updates = 348.7
 
 [[results]]
 problem = "Qubo"
@@ -5090,9 +6260,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -5105,15 +6272,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -62728.0
-avg_objective = -62727.6
+avg_objective = -62727.4
 worst_objective = -62726.0
-std_objective = 0.8
-best_time_to_best_secs = 0.06059925
-avg_time_to_best_secs = 0.17500711680000003
-avg_total_time_secs = 120.0007370168
+std_objective = 0.9165151389911681
+best_time_to_best_secs = 0.054703666
+avg_time_to_best_secs = 17.9129450249
+avg_total_time_secs = 120.00059605010001
+avg_initial_objective = -298.5
+avg_improvement = 62428.9
+avg_n_accepted = 16862332.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 14331.9
 
 [[results]]
 problem = "Qubo"
@@ -5121,9 +6297,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -5141,15 +6314,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -62728.0
-avg_objective = -62554.8
-worst_objective = -62307.0
-std_objective = 139.41291188408627
-best_time_to_best_secs = 0.128680542
-avg_time_to_best_secs = 28.008921362499997
-avg_total_time_secs = 120.0000204458
+avg_objective = -62565.0
+worst_objective = -62288.0
+std_objective = 154.04739530417254
+best_time_to_best_secs = 0.069126792
+avg_time_to_best_secs = 21.0954790542
+avg_total_time_secs = 119.9999941666
+avg_initial_objective = -298.5
+avg_improvement = 62266.5
+avg_n_accepted = 9126255.3
+avg_n_rejected = 5380904297.3
+avg_acceptance_rate = 0.0017193776115821298
+avg_n_best_updates = 3180157.2
 
 [[results]]
 problem = "Qubo"
@@ -5157,9 +6339,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_7.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -5174,6 +6353,9 @@ max_iteration = 50000
 
 [results.heuristic.restart_condition]
 max_failed_update = 10000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -5181,9 +6363,15 @@ best_objective = -62728.0
 avg_objective = -62728.0
 worst_objective = -62728.0
 std_objective = 0.0
-best_time_to_best_secs = 2.469824584
-avg_time_to_best_secs = 21.6508636502
-avg_total_time_secs = 120.139636029
+best_time_to_best_secs = 1.475449708
+avg_time_to_best_secs = 20.0411281959
+avg_total_time_secs = 120.12972014989998
+avg_initial_objective = -298.5
+avg_improvement = 62429.5
+avg_n_accepted = 18420000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 106683.6
 
 [[results]]
 problem = "Qubo"
@@ -5198,13 +6386,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -49497.0
-avg_objective = -48918.7
-worst_objective = -47324.0
-std_objective = 601.8195825993035
-best_time_to_best_secs = 0.000103042
-avg_time_to_best_secs = 0.00013791670000000002
-avg_total_time_secs = 0.0001381458
+best_objective = -49680.0
+avg_objective = -48945.4
+worst_objective = -47635.0
+std_objective = 650.6295720300454
+best_time_to_best_secs = 0.00018925
+avg_time_to_best_secs = 0.0002645791
+avg_total_time_secs = 0.00026266669999999996
+avg_initial_objective = 3739.7
+avg_improvement = 52685.1
+avg_n_accepted = 247.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9959538547586947
+avg_n_best_updates = 247.3
 
 [[results]]
 problem = "Qubo"
@@ -5219,13 +6413,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -49339.0
-avg_objective = -48083.9
-worst_objective = -46275.0
-std_objective = 1107.5151872547845
-best_time_to_best_secs = 0.269005125
-avg_time_to_best_secs = 0.31164316249999996
-avg_total_time_secs = 0.31322592479999994
+best_objective = -49186.0
+avg_objective = -48426.3
+worst_objective = -47614.0
+std_objective = 565.2813547252377
+best_time_to_best_secs = 0.296875625
+avg_time_to_best_secs = 0.33256231659999996
+avg_total_time_secs = 0.33418511659999994
+avg_initial_objective = 3739.7
+avg_improvement = 52166.0
+avg_n_accepted = 137.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9927408261899002
+avg_n_best_updates = 137.8
 
 [[results]]
 problem = "Qubo"
@@ -5245,12 +6445,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -50565.0
-avg_objective = -50533.5
-worst_objective = -50504.0
-std_objective = 28.848743473503312
-best_time_to_best_secs = 0.055772375
-avg_time_to_best_secs = 69.4690945833
-avg_total_time_secs = 120.0000035
+avg_objective = -50540.9
+worst_objective = -50480.0
+std_objective = 31.468873510184633
+best_time_to_best_secs = 0.752580833
+avg_time_to_best_secs = 21.5232375915
+avg_total_time_secs = 119.9991993542
+avg_initial_objective = 3739.7
+avg_improvement = 54280.6
+avg_n_accepted = 16977818.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 311.0
 
 [[results]]
 problem = "Qubo"
@@ -5269,13 +6475,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -50215.0
-avg_objective = -49632.7
-worst_objective = -48868.0
-std_objective = 415.8326706741547
-best_time_to_best_secs = 0.777464333
-avg_time_to_best_secs = 35.7484832832
-avg_total_time_secs = 120.00224515840003
+best_objective = -50087.0
+avg_objective = -49640.5
+worst_objective = -48833.0
+std_objective = 455.1666178444988
+best_time_to_best_secs = 0.837935458
+avg_time_to_best_secs = 15.8407924041
+avg_total_time_secs = 120.00184964980001
+avg_initial_objective = 3739.7
+avg_improvement = 53380.2
+avg_n_accepted = 27264.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 175.1
 
 [[results]]
 problem = "Qubo"
@@ -5291,13 +6503,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -50462.0
-avg_objective = -50348.3
-worst_objective = -50216.0
-std_objective = 74.05005064144116
-best_time_to_best_secs = 0.057425083
-avg_time_to_best_secs = 0.0787255833
-avg_total_time_secs = 120.00000006240002
+best_objective = -50448.0
+avg_objective = -50349.0
+worst_objective = -50242.0
+std_objective = 68.74881817166023
+best_time_to_best_secs = 0.020561125
+avg_time_to_best_secs = 0.024474829400000002
+avg_total_time_secs = 119.9999999209
+avg_initial_objective = 3739.7
+avg_improvement = 54088.7
+avg_n_accepted = 700469.0
+avg_n_rejected = 3609917774.6
+avg_acceptance_rate = 0.00022472114291709368
+avg_n_best_updates = 472.6
 
 [[results]]
 problem = "Qubo"
@@ -5313,13 +6531,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -29181.0
-avg_objective = -28133.6
-worst_objective = -27475.0
-std_objective = 461.0275913652024
-best_time_to_best_secs = 115.010244458
-avg_time_to_best_secs = 118.10322513329997
-avg_total_time_secs = 120.0009616583
+best_objective = -49839.0
+avg_objective = -49304.3
+worst_objective = -48383.0
+std_objective = 511.4211669456007
+best_time_to_best_secs = 0.658654959
+avg_time_to_best_secs = 0.8389637667999998
+avg_total_time_secs = 119.99999901669999
+avg_initial_objective = 3739.7
+avg_improvement = 53044.0
+avg_n_accepted = 55277.7
+avg_n_rejected = 71435742.7
+avg_acceptance_rate = 0.0007747634719217639
+avg_n_best_updates = 386.0
 
 [[results]]
 problem = "Qubo"
@@ -5337,13 +6561,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -49820.0
-avg_objective = -49391.7
-worst_objective = -48822.0
-std_objective = 299.2828261026683
-best_time_to_best_secs = 0.001160291
-avg_time_to_best_secs = 0.0022195124000000004
-avg_total_time_secs = 10.360876262400001
+best_objective = -50070.0
+avg_objective = -49597.1
+worst_objective = -47816.0
+std_objective = 662.4754259593332
+best_time_to_best_secs = 0.000409667
+avg_time_to_best_secs = 0.0008355122999999999
+avg_total_time_secs = 1.84219665
+avg_initial_objective = 3739.7
+avg_improvement = 53336.8
+avg_n_accepted = 20700.8
+avg_n_rejected = 49979299.2
+avg_acceptance_rate = 0.0004140160000000001
+avg_n_best_updates = 406.2
 
 [[results]]
 problem = "Qubo"
@@ -5361,13 +6591,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -49396.0
-avg_objective = -48321.8
-worst_objective = -45622.0
-std_objective = 1076.11874809428
-best_time_to_best_secs = 61.388556041
-avg_time_to_best_secs = 103.24805482050002
-avg_total_time_secs = 120.00061674180002
+best_objective = -49377.0
+avg_objective = -48776.6
+worst_objective = -46809.0
+std_objective = 718.4219094654616
+best_time_to_best_secs = 0.138030708
+avg_time_to_best_secs = 0.29018668319999996
+avg_total_time_secs = 83.1891009623
+avg_initial_objective = 3739.7
+avg_improvement = 52516.3
+avg_n_accepted = 501.8
+avg_n_rejected = 49998996.4
+avg_acceptance_rate = 1.0036101480713954e-05
+avg_n_best_updates = 348.4
 
 [[results]]
 problem = "Qubo"
@@ -5378,9 +6614,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -5393,15 +6626,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -50565.0
-avg_objective = -50541.3
+avg_objective = -50526.2
 worst_objective = -50496.0
-std_objective = 29.243973738190917
-best_time_to_best_secs = 0.186364833
-avg_time_to_best_secs = 4.2082797585
-avg_total_time_secs = 120.0006030001
+std_objective = 32.0337322208949
+best_time_to_best_secs = 0.143597916
+avg_time_to_best_secs = 3.3486380417999997
+avg_total_time_secs = 120.0005322668
+avg_initial_objective = 3739.7
+avg_improvement = 54265.9
+avg_n_accepted = 16733912.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 19919.9
 
 [[results]]
 problem = "Qubo"
@@ -5409,9 +6651,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -5429,15 +6668,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -50231.0
-avg_objective = -49827.9
-worst_objective = -49240.0
-std_objective = 260.9691361061687
-best_time_to_best_secs = 0.012672166
-avg_time_to_best_secs = 21.992405479000002
-avg_total_time_secs = 120.0000080124
+best_objective = -50394.0
+avg_objective = -50204.7
+worst_objective = -49950.0
+std_objective = 137.12188009212824
+best_time_to_best_secs = 0.003451459
+avg_time_to_best_secs = 13.829607312500002
+avg_total_time_secs = 120.00004822500003
+avg_initial_objective = 3739.7
+avg_improvement = 53944.4
+avg_n_accepted = 9136973.4
+avg_n_rejected = 5396453339.1
+avg_acceptance_rate = 0.001711179768778303
+avg_n_best_updates = 3064749.4
 
 [[results]]
 problem = "Qubo"
@@ -5445,9 +6693,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_8.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -5462,6 +6707,9 @@ max_iteration = 50000
 
 [results.heuristic.restart_condition]
 max_failed_update = 10000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
@@ -5469,9 +6717,15 @@ best_objective = -50565.0
 avg_objective = -50565.0
 worst_objective = -50565.0
 std_objective = 0.0
-best_time_to_best_secs = 0.167697125
-avg_time_to_best_secs = 20.353151645900002
-avg_total_time_secs = 120.2000751331
+best_time_to_best_secs = 0.348236792
+avg_time_to_best_secs = 7.138920429200001
+avg_total_time_secs = 120.14193711260002
+avg_initial_objective = 3739.7
+avg_improvement = 54304.7
+avg_n_accepted = 17760000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 109701.9
 
 [[results]]
 problem = "Qubo"
@@ -5486,13 +6740,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55323.0
-avg_objective = -54737.3
-worst_objective = -54105.0
-std_objective = 451.4295183082294
-best_time_to_best_secs = 0.000100416
-avg_time_to_best_secs = 0.00017730000000000003
-avg_total_time_secs = 0.00017761249999999996
+best_objective = -55595.0
+avg_objective = -55104.2
+worst_objective = -54265.0
+std_objective = 460.13841395823493
+best_time_to_best_secs = 0.00014875
+avg_time_to_best_secs = 0.0002352748
+avg_total_time_secs = 0.00023430410000000002
+avg_initial_objective = 1134.1
+avg_improvement = 56238.3
+avg_n_accepted = 250.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9959875427690538
+avg_n_best_updates = 250.1
 
 [[results]]
 problem = "Qubo"
@@ -5507,13 +6767,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -53218.0
-avg_objective = -51303.1
-worst_objective = -49748.0
-std_objective = 1033.579648599952
-best_time_to_best_secs = 0.263501833
-avg_time_to_best_secs = 0.3054401624
-avg_total_time_secs = 0.30704438340000006
+best_objective = -53634.0
+avg_objective = -51825.6
+worst_objective = -49675.0
+std_objective = 1358.3757359434833
+best_time_to_best_secs = 0.271455208
+avg_time_to_best_secs = 0.30765714189999993
+avg_total_time_secs = 0.3093640083
+avg_initial_objective = 1134.1
+avg_improvement = 52959.7
+avg_n_accepted = 126.5
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9921007130062997
+avg_n_best_updates = 126.5
 
 [[results]]
 problem = "Qubo"
@@ -5533,12 +6799,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = -56212.0
-avg_objective = -56207.4
-worst_objective = -56198.0
-std_objective = 5.986651818838306
-best_time_to_best_secs = 0.039536416
-avg_time_to_best_secs = 24.3729890457
-avg_total_time_secs = 120.00000449190001
+avg_objective = -56209.5
+worst_objective = -56199.0
+std_objective = 4.224926034855522
+best_time_to_best_secs = 0.127981
+avg_time_to_best_secs = 38.722668321
+avg_total_time_secs = 119.99999825009999
+avg_initial_objective = 1134.1
+avg_improvement = 57343.6
+avg_n_accepted = 16997587.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 294.8
 
 [[results]]
 problem = "Qubo"
@@ -5557,13 +6829,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55065.0
-avg_objective = -53306.5
-worst_objective = -51917.0
-std_objective = 1088.5757897362957
-best_time_to_best_secs = 0.691852209
-avg_time_to_best_secs = 32.917900616699995
-avg_total_time_secs = 120.00182690820002
+best_objective = -54770.0
+avg_objective = -53219.4
+worst_objective = -51397.0
+std_objective = 992.0819724196181
+best_time_to_best_secs = 0.905202417
+avg_time_to_best_secs = 33.23176823749999
+avg_total_time_secs = 120.00160894979999
+avg_initial_objective = 1134.1
+avg_improvement = 54353.5
+avg_n_accepted = 28129.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 168.9
 
 [[results]]
 problem = "Qubo"
@@ -5579,13 +6857,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -56112.0
-avg_objective = -56001.6
-worst_objective = -55878.0
-std_objective = 80.5347130124644
-best_time_to_best_secs = 0.063169458
-avg_time_to_best_secs = 0.07387530010000001
-avg_total_time_secs = 120.000000075
+best_objective = -56149.0
+avg_objective = -55952.3
+worst_objective = -55735.0
+std_objective = 114.62639312130517
+best_time_to_best_secs = 0.019847792
+avg_time_to_best_secs = 0.024451571
+avg_total_time_secs = 119.99999624979998
+avg_initial_objective = 1134.1
+avg_improvement = 57086.4
+avg_n_accepted = 626012.7
+avg_n_rejected = 3588952902.2
+avg_acceptance_rate = 0.00022437130922083994
+avg_n_best_updates = 468.0
 
 [[results]]
 problem = "Qubo"
@@ -5601,13 +6885,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -32355.0
-avg_objective = -31003.1
-worst_objective = -29713.0
-std_objective = 815.2926407125235
-best_time_to_best_secs = 111.135161916
-avg_time_to_best_secs = 117.4449773039
-avg_total_time_secs = 120.0009376458
+best_objective = -54334.0
+avg_objective = -52962.7
+worst_objective = -51098.0
+std_objective = 966.3553228497269
+best_time_to_best_secs = 0.672673458
+avg_time_to_best_secs = 0.9449063499000001
+avg_total_time_secs = 120.00000008330002
+avg_initial_objective = 1134.1
+avg_improvement = 54096.8
+avg_n_accepted = 55818.2
+avg_n_rejected = 68927210.4
+avg_acceptance_rate = 0.0008123629966414334
+avg_n_best_updates = 383.5
 
 [[results]]
 problem = "Qubo"
@@ -5625,13 +6915,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -55943.0
-avg_objective = -55654.8
-worst_objective = -54720.0
-std_objective = 365.4530886447671
-best_time_to_best_secs = 0.001106625
-avg_time_to_best_secs = 0.0021068625000000003
-avg_total_time_secs = 10.5046740999
+best_objective = -55957.0
+avg_objective = -55607.7
+worst_objective = -55136.0
+std_objective = 221.15336307639546
+best_time_to_best_secs = 0.000341958
+avg_time_to_best_secs = 0.0007401458
+avg_total_time_secs = 1.6564351248999998
+avg_initial_objective = 1134.1
+avg_improvement = 56741.8
+avg_n_accepted = 719.9
+avg_n_rejected = 49999280.1
+avg_acceptance_rate = 1.4397999999999998e-05
+avg_n_best_updates = 406.7
 
 [[results]]
 problem = "Qubo"
@@ -5649,13 +6945,19 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = -53476.0
-avg_objective = -51746.6
-worst_objective = -50784.0
-std_objective = 807.9893811183413
-best_time_to_best_secs = 95.037072625
-avg_time_to_best_secs = 110.82951101659998
-avg_total_time_secs = 120.0006794918
+best_objective = -54327.0
+avg_objective = -52508.0
+worst_objective = -50894.0
+std_objective = 1126.204066765877
+best_time_to_best_secs = 0.197410875
+avg_time_to_best_secs = 0.40641639990000006
+avg_total_time_secs = 86.92689587480001
+avg_initial_objective = 1134.1
+avg_improvement = 53642.1
+avg_n_accepted = 512.0
+avg_n_rejected = 49998976.0
+avg_acceptance_rate = 1.0240105126281993e-05
+avg_n_best_updates = 359.3
 
 [[results]]
 problem = "Qubo"
@@ -5666,9 +6968,6 @@ kind = "GeneticAlgorithm"
 population_size = 100
 crossover_kind = "Uniform"
 parent_selection = "Tournament"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -5681,15 +6980,24 @@ tabu_tenure = [
 [results.heuristic.steps.stop_condition]
 max_failed_update = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -56212.0
 avg_objective = -56212.0
 worst_objective = -56212.0
 std_objective = 0.0
-best_time_to_best_secs = 0.157355417
-avg_time_to_best_secs = 0.362610546
-avg_total_time_secs = 120.0006859625
+best_time_to_best_secs = 0.102578708
+avg_time_to_best_secs = 0.24363572930000005
+avg_total_time_secs = 120.0008281209
+avg_initial_objective = 1134.1
+avg_improvement = 57346.1
+avg_n_accepted = 16740300.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 13259.3
 
 [[results]]
 problem = "Qubo"
@@ -5697,9 +7005,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
 kind = "Iterated"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "LocalSearch"
@@ -5717,15 +7022,24 @@ cooling_rate = 0.99
 [results.heuristic.steps.stop_condition]
 max_iteration = 200
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
-best_objective = -56145.0
-avg_objective = -55887.1
-worst_objective = -55490.0
-std_objective = 186.62821330120482
-best_time_to_best_secs = 0.203265042
-avg_time_to_best_secs = 18.224975320899993
-avg_total_time_secs = 120.0000148499
+best_objective = -56159.0
+avg_objective = -55917.6
+worst_objective = -55645.0
+std_objective = 153.3630985602469
+best_time_to_best_secs = 0.014288542
+avg_time_to_best_secs = 25.3697825835
+avg_total_time_secs = 119.9999982543
+avg_initial_objective = 1134.1
+avg_improvement = 57051.7
+avg_n_accepted = 6727767.4
+avg_n_rejected = 5431012847.2
+avg_acceptance_rate = 0.0012435518712019561
+avg_n_best_updates = 1430030.7
 
 [[results]]
 problem = "Qubo"
@@ -5733,9 +7047,6 @@ instance_path = "data/instances/qubo/bqp/bqp500_9.txt"
 
 [results.heuristic]
 kind = "Restart"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 120.0
 
 [[results.heuristic.steps]]
 kind = "TabuSearch"
@@ -5751,12 +7062,21 @@ max_iteration = 50000
 [results.heuristic.restart_condition]
 max_failed_update = 10000
 
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
 [results.summary]
 num_successful_runs = 10
 best_objective = -56212.0
 avg_objective = -56212.0
 worst_objective = -56212.0
 std_objective = 0.0
-best_time_to_best_secs = 0.639298041
-avg_time_to_best_secs = 15.9040614665
-avg_total_time_secs = 120.21558536669997
+best_time_to_best_secs = 1.584542583
+avg_time_to_best_secs = 15.404970345699999
+avg_total_time_secs = 120.16151984169998
+avg_initial_objective = 1134.1
+avg_improvement = 57346.1
+avg_n_accepted = 18020000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 105588.3
