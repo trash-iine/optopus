@@ -19,6 +19,15 @@
 //! [`Sat`] / [`SatSolution`](crate::problem::SatSolution) untouched. Multi-restart
 //! is composed externally via [`Restart`](crate::heuristic::Restart) /
 //! [`Iterated`](crate::heuristic::Iterated).
+//!
+//! # References
+//!
+//! - B. Selman, H. A. Kautz, and B. Cohen, "Noise Strategies for Improving Local
+//!   Search," *Proc. AAAI-94*, pp. 337–343, 1994. — the WalkSAT/SKC clause-focused
+//!   move and break-count-with-noise selection rule implemented here.
+//! - H. H. Hoos, "An Adaptive Noise Mechanism for WalkSAT," *Proc. AAAI-02*,
+//!   pp. 655–660, 2002. — the automatic noise-adjustment schedule used when
+//!   `adaptive_noise` is enabled (see [`ADAPT_THETA`] / [`ADAPT_PHI`]).
 
 use super::super::{Heuristic, StopCondition};
 use crate::error::OptError;
@@ -29,7 +38,7 @@ use rand::Rng;
 /// Sentinel for "clause not currently in the unsatisfied list".
 const NOT_IN_UNSAT: usize = usize::MAX;
 
-// Adaptive-noise schedule (Hoos, "An adaptive noise mechanism for WalkSAT", 2002).
+// Adaptive-noise schedule (Hoos 2002; see the module-level References).
 /// Fraction of the clause count that may pass without improvement before the
 /// noise is raised.
 const ADAPT_THETA: f64 = 1.0 / 6.0;
