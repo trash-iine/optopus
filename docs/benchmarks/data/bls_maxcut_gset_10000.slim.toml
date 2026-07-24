@@ -1,0 +1,104 @@
+timestamp = "20260724_235625"
+config_file = "data/benchmarks/maxcut/gset_bls/n10000.toml"
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    1000,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 2000000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6922.0
+avg_objective = 6911.6
+worst_objective = 6906.0
+std_objective = 5.276362383309167
+best_time_to_best_secs = 1899.912156417
+avg_time_to_best_secs = 7432.412601200001
+avg_total_time_secs = 10492.8169240043
+avg_initial_objective = -37.4
+avg_improvement = 6949.0
+avg_n_accepted = 1567748070.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2882.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    1000,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 2000000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9583.0
+avg_objective = 9577.1
+worst_objective = 9568.0
+std_objective = 4.52658811910251
+best_time_to_best_secs = 6491.02467225
+avg_time_to_best_secs = 8222.0471599666
+avg_total_time_secs = 9077.971005933301
+avg_initial_objective = 5006.2
+avg_improvement = 4570.9
+avg_n_accepted = 1583982477.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 3063.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "BreakoutLocalSearch"
+tabu_tenure = [
+    3,
+    1000,
+]
+t = 1000
+l0 = 80
+p0 = 0.8
+q = 0.5
+
+[results.heuristic.stop_condition]
+max_iteration = 2000000000
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6972.0
+avg_objective = 6964.4
+worst_objective = 6956.0
+std_objective = 4.2708313008125245
+best_time_to_best_secs = 3962.794548166
+avg_time_to_best_secs = 6873.6317288167
+avg_total_time_secs = 10392.2529644208
+avg_initial_objective = -6.8
+avg_improvement = 6971.2
+avg_n_accepted = 1566738901.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2888.1

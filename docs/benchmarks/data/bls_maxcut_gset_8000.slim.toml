@@ -1,5 +1,5 @@
-timestamp = "20260509_115010"
-config_file = "data/benchmark_gset_8000.toml"
+timestamp = "20260724_235625"
+config_file = "data/benchmarks/maxcut/gset_bls/n8000.toml"
 
 [[results]]
 problem = "MaxCut"
@@ -21,10 +21,16 @@ max_iteration = 1600000000
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 5536.0
-avg_objective = 5529.4
-worst_objective = 5524.0
-std_objective = 3.6932370625238775
-best_time_to_best_secs = 1957.908566167
-avg_time_to_best_secs = 4077.362058929101
-avg_total_time_secs = 7388.0688134458005
+best_objective = 5538.0
+avg_objective = 5532.6
+worst_objective = 5530.0
+std_objective = 2.2
+best_time_to_best_secs = 1993.713530792
+avg_time_to_best_secs = 4638.127408929299
+avg_total_time_secs = 6929.221374966701
+avg_initial_objective = -56.0
+avg_improvement = 5588.6
+avg_n_accepted = 1248679885.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2318.7

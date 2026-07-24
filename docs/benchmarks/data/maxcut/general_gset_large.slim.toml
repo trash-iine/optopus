@@ -1,0 +1,6020 @@
+timestamp = "20260724_235525"
+config_file = "data/benchmarks/maxcut/general_large.toml"
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9474.0
+avg_objective = 9419.0
+worst_objective = 9367.0
+std_objective = 30.14299255216708
+best_time_to_best_secs = 0.007810541
+avg_time_to_best_secs = 0.0111085708
+avg_total_time_secs = 0.0111048544
+avg_initial_objective = 6254.6
+avg_improvement = 3164.4
+avg_n_accepted = 1349.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9992589958778109
+avg_n_best_updates = 1349.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9795.0
+avg_objective = 9762.5
+worst_objective = 9715.0
+std_objective = 27.947271780980696
+best_time_to_best_secs = 98.200375
+avg_time_to_best_secs = 101.7949989664
+avg_total_time_secs = 101.8188348541
+avg_initial_objective = 6254.6
+avg_improvement = 3507.9
+avg_n_accepted = 889.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9988761570581399
+avg_n_best_updates = 889.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9980.0
+avg_objective = 9940.8
+worst_objective = 9886.0
+std_objective = 30.6
+best_time_to_best_secs = 17.347819708
+avg_time_to_best_secs = 263.8173304625
+avg_total_time_secs = 599.9995753126999
+avg_initial_objective = 6254.6
+avg_improvement = 3686.2
+avg_n_accepted = 9245033.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1797.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10054.0
+avg_objective = 10006.7
+worst_objective = 9982.0
+std_objective = 20.61577066228668
+best_time_to_best_secs = 568.726052709
+avg_time_to_best_secs = 593.4680592959
+avg_total_time_secs = 600.1040122708
+avg_initial_objective = 6254.6
+avg_improvement = 3752.1
+avg_n_accepted = 2080.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1102.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9829.0
+avg_objective = 9822.6
+worst_objective = 9819.0
+std_objective = 2.7276363393971716
+best_time_to_best_secs = 522.033907375
+avg_time_to_best_secs = 569.7734967833001
+avg_total_time_secs = 599.9999927499999
+avg_initial_objective = 6254.6
+avg_improvement = 3568.0
+avg_n_accepted = 2610659951.5
+avg_n_rejected = 12974351535.1
+avg_acceptance_rate = 0.16758018700835778
+avg_n_best_updates = 2235.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9649.0
+avg_objective = 9634.6
+worst_objective = 9624.0
+std_objective = 6.974238309665076
+best_time_to_best_secs = 588.408762459
+avg_time_to_best_secs = 595.3419008
+avg_total_time_secs = 599.9999931750999
+avg_initial_objective = 6254.6
+avg_improvement = 3380.0
+avg_n_accepted = 6815939.0
+avg_n_rejected = 40660216.2
+avg_acceptance_rate = 0.1435664074550196
+avg_n_best_updates = 1824.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9941.0
+avg_objective = 9921.1
+worst_objective = 9892.0
+std_objective = 15.610573339887296
+best_time_to_best_secs = 0.00782825
+avg_time_to_best_secs = 0.0232712124
+avg_total_time_secs = 6.8309622916
+avg_initial_objective = 6254.6
+avg_improvement = 3666.5
+avg_n_accepted = 9386891.3
+avg_n_rejected = 190613108.7
+avg_acceptance_rate = 0.046934456500000006
+avg_n_best_updates = 2240.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10094.0
+avg_objective = 10074.8
+worst_objective = 10045.0
+std_objective = 13.151425778218876
+best_time_to_best_secs = 524.404255375
+avg_time_to_best_secs = 569.4518705292
+avg_total_time_secs = 599.9999955834002
+avg_initial_objective = 6254.6
+avg_improvement = 3820.2
+avg_n_accepted = 92220.7
+avg_n_rejected = 48019244.9
+avg_acceptance_rate = 0.0019168387976501277
+avg_n_best_updates = 2183.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10245.0
+avg_objective = 10231.4
+worst_objective = 10214.0
+std_objective = 9.499473669630335
+best_time_to_best_secs = 144.439839167
+avg_time_to_best_secs = 194.23597268729998
+avg_total_time_secs = 600.0076901249001
+avg_initial_objective = 6254.6
+avg_improvement = 3976.8
+avg_n_accepted = 8957602.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 866422.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10282.0
+avg_objective = 10270.1
+worst_objective = 10258.0
+std_objective = 7.515982969645422
+best_time_to_best_secs = 133.011269584
+avg_time_to_best_secs = 452.6704793333
+avg_total_time_secs = 600.0002912834001
+avg_initial_objective = 6254.6
+avg_improvement = 4015.5
+avg_n_accepted = 148970895.5
+avg_n_rejected = 197182236.3
+avg_acceptance_rate = 0.43036182224901837
+avg_n_best_updates = 66416610.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10042.0
+avg_objective = 10021.2
+worst_objective = 10009.0
+std_objective = 10.952625256074452
+best_time_to_best_secs = 114.500604208
+avg_time_to_best_secs = 360.7453383999
+avg_total_time_secs = 601.509556108
+avg_initial_objective = 6254.6
+avg_improvement = 3766.6
+avg_n_accepted = 9050000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 303234.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3194.0
+avg_objective = 3137.3
+worst_objective = 3098.0
+std_objective = 27.324165129057466
+best_time_to_best_secs = 0.007972833
+avg_time_to_best_secs = 0.0110272335
+avg_total_time_secs = 0.0110253957
+avg_initial_objective = -40.8
+avg_improvement = 3178.1
+avg_n_accepted = 1357.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9992638586414909
+avg_n_best_updates = 1357.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3432.0
+avg_objective = 3356.4
+worst_objective = 3316.0
+std_objective = 34.85168575549825
+best_time_to_best_secs = 89.251501959
+avg_time_to_best_secs = 93.2421048083
+avg_total_time_secs = 93.2684022334
+avg_initial_objective = -40.8
+avg_improvement = 3397.2
+avg_n_accepted = 808.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.998763960989967
+avg_n_best_updates = 808.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3713.0
+avg_objective = 3661.1
+worst_objective = 3589.0
+std_objective = 37.86145797509652
+best_time_to_best_secs = 26.576827875
+avg_time_to_best_secs = 303.9035512957
+avg_total_time_secs = 600.0000252626999
+avg_initial_objective = -40.8
+avg_improvement = 3701.9
+avg_n_accepted = 8920626.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1810.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3710.0
+avg_objective = 3661.5
+worst_objective = 3605.0
+std_objective = 30.865028754238995
+best_time_to_best_secs = 587.828866459
+avg_time_to_best_secs = 596.0717728249
+avg_total_time_secs = 600.0638471999999
+avg_initial_objective = -40.8
+avg_improvement = 3702.3
+avg_n_accepted = 2043.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1055.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3542.0
+avg_objective = 3537.8
+worst_objective = 3534.0
+std_objective = 2.3579652245103193
+best_time_to_best_secs = 498.521511167
+avg_time_to_best_secs = 556.1937449083001
+avg_total_time_secs = 599.9999911542
+avg_initial_objective = -40.8
+avg_improvement = 3578.6
+avg_n_accepted = 2490264175.3
+avg_n_rejected = 12189551712.9
+avg_acceptance_rate = 0.16970838859692647
+avg_n_best_updates = 2260.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3363.0
+avg_objective = 3350.6
+worst_objective = 3334.0
+std_objective = 7.310266752998826
+best_time_to_best_secs = 591.435026042
+avg_time_to_best_secs = 597.3207049626999
+avg_total_time_secs = 599.9999965374001
+avg_initial_objective = -40.8
+avg_improvement = 3391.4
+avg_n_accepted = 6749851.6
+avg_n_rejected = 39349269.9
+avg_acceptance_rate = 0.1464203875583801
+avg_n_best_updates = 1819.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3680.0
+avg_objective = 3645.5
+worst_objective = 3597.0
+std_objective = 25.75752317285185
+best_time_to_best_secs = 0.008869125
+avg_time_to_best_secs = 0.023189474800000002
+avg_total_time_secs = 8.203435395800001
+avg_initial_objective = -40.8
+avg_improvement = 3686.3
+avg_n_accepted = 9291383.2
+avg_n_rejected = 190708616.8
+avg_acceptance_rate = 0.046456916
+avg_n_best_updates = 2242.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3808.0
+avg_objective = 3768.4
+worst_objective = 3704.0
+std_objective = 28.334431351272958
+best_time_to_best_secs = 246.8539775
+avg_time_to_best_secs = 480.1875016542999
+avg_total_time_secs = 599.9999969833001
+avg_initial_objective = -40.8
+avg_improvement = 3809.2
+avg_n_accepted = 105598.8
+avg_n_rejected = 47348098.3
+avg_acceptance_rate = 0.0022252096693252607
+avg_n_best_updates = 2157.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3970.0
+avg_objective = 3952.0
+worst_objective = 3931.0
+std_objective = 11.974973903938164
+best_time_to_best_secs = 141.149625375
+avg_time_to_best_secs = 188.6956955625
+avg_total_time_secs = 600.0090902750001
+avg_initial_objective = -40.8
+avg_improvement = 3992.8
+avg_n_accepted = 8810897.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 858841.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4004.0
+avg_objective = 3991.7
+worst_objective = 3978.0
+std_objective = 7.576938695805847
+best_time_to_best_secs = 58.462937292
+avg_time_to_best_secs = 293.9220882252
+avg_total_time_secs = 600.0001950333
+avg_initial_objective = -40.8
+avg_improvement = 4032.5
+avg_n_accepted = 151719811.7
+avg_n_rejected = 200706648.7
+avg_acceptance_rate = 0.43050169834907537
+avg_n_best_updates = 67612375.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G56"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3759.0
+avg_objective = 3735.8
+worst_objective = 3713.0
+std_objective = 15.490642336585015
+best_time_to_best_secs = 24.540557583000002
+avg_time_to_best_secs = 331.3768376248
+avg_total_time_secs = 600.9206898499999
+avg_initial_objective = -40.8
+avg_improvement = 3776.6
+avg_n_accepted = 9020000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 309402.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2604.0
+avg_objective = 2572.2
+worst_objective = 2528.0
+std_objective = 28.459796204470614
+best_time_to_best_secs = 0.005844709
+avg_time_to_best_secs = 0.0082974585
+avg_total_time_secs = 0.0082941337
+avg_initial_objective = -15.6
+avg_improvement = 2587.8
+avg_n_accepted = 1020.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9990207817314021
+avg_n_best_updates = 1020.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2822.0
+avg_objective = 2801.2
+worst_objective = 2758.0
+std_objective = 19.43604898121015
+best_time_to_best_secs = 64.91887925
+avg_time_to_best_secs = 66.16493423339999
+avg_total_time_secs = 66.1875815626
+avg_initial_objective = -15.6
+avg_improvement = 2816.8
+avg_n_accepted = 621.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9983940360583272
+avg_n_best_updates = 621.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3090.0
+avg_objective = 3029.2
+worst_objective = 2980.0
+std_objective = 33.44488002669467
+best_time_to_best_secs = 124.138993958
+avg_time_to_best_secs = 400.9830213793
+avg_total_time_secs = 600.0000339165999
+avg_initial_objective = -15.6
+avg_improvement = 3044.8
+avg_n_accepted = 8898831.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1249.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3082.0
+avg_objective = 3033.2
+worst_objective = 3000.0
+std_objective = 24.235511135521776
+best_time_to_best_secs = 513.021273833
+avg_time_to_best_secs = 573.8764148584
+avg_total_time_secs = 600.09183065
+avg_initial_objective = -15.6
+avg_improvement = 3048.8
+avg_n_accepted = 2406.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 736.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1754.0
+avg_objective = 1748.8
+worst_objective = 1746.0
+std_objective = 2.5612496949731396
+best_time_to_best_secs = 119.118596459
+avg_time_to_best_secs = 337.9900604335
+avg_total_time_secs = 599.9999915376
+avg_initial_objective = -15.6
+avg_improvement = 1764.4
+avg_n_accepted = 6823670670.4
+avg_n_rejected = 6865070438.1
+avg_acceptance_rate = 0.49851147482579633
+avg_n_best_updates = 785.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1664.0
+avg_objective = 1654.4
+worst_objective = 1644.0
+std_objective = 5.043808085167397
+best_time_to_best_secs = 554.81611175
+avg_time_to_best_secs = 574.0125531582
+avg_total_time_secs = 599.9999932001
+avg_initial_objective = -15.6
+avg_improvement = 1670.0
+avg_n_accepted = 18543831.1
+avg_n_rejected = 30066257.3
+avg_acceptance_rate = 0.38148138664064163
+avg_n_best_updates = 651.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3416.0
+avg_objective = 3403.0
+worst_objective = 3390.0
+std_objective = 6.826419266350405
+best_time_to_best_secs = 0.117901541
+avg_time_to_best_secs = 0.7262216957
+avg_total_time_secs = 7.7593344875
+avg_initial_objective = -15.6
+avg_improvement = 3418.6
+avg_n_accepted = 15734973.4
+avg_n_rejected = 184265026.6
+avg_acceptance_rate = 0.07867486700000001
+avg_n_best_updates = 1563.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3416.0
+avg_objective = 3406.0
+worst_objective = 3396.0
+std_objective = 8.899438184514796
+best_time_to_best_secs = 138.856368375
+avg_time_to_best_secs = 391.2253817875
+avg_total_time_secs = 600.0000000416001
+avg_initial_objective = -15.6
+avg_improvement = 3421.6
+avg_n_accepted = 334021.2
+avg_n_rejected = 48747207.4
+avg_acceptance_rate = 0.006805641099207399
+avg_n_best_updates = 1433.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3424.0
+avg_objective = 3408.2
+worst_objective = 3392.0
+std_objective = 10.524257693538296
+best_time_to_best_secs = 189.811675875
+avg_time_to_best_secs = 315.1143677878
+avg_total_time_secs = 600.0145355666001
+avg_initial_objective = -15.6
+avg_improvement = 3423.8
+avg_n_accepted = 9439987.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1196141.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3442.0
+avg_objective = 3435.2
+worst_objective = 3432.0
+std_objective = 3.124099870362662
+best_time_to_best_secs = 18.668592083
+avg_time_to_best_secs = 189.85245111659998
+avg_total_time_secs = 600.0001478625001
+avg_initial_objective = -15.6
+avg_improvement = 3450.8
+avg_n_accepted = 175506121.1
+avg_n_rejected = 213721100.3
+avg_acceptance_rate = 0.4509091963757303
+avg_n_best_updates = 69897400.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G57"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3122.0
+avg_objective = 3099.6
+worst_objective = 3070.0
+std_objective = 20.155396299750592
+best_time_to_best_secs = 78.04632075
+avg_time_to_best_secs = 253.49901594149998
+avg_total_time_secs = 601.2538163208
+avg_initial_objective = -15.6
+avg_improvement = 3115.2
+avg_n_accepted = 9345000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 214480.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 18449.0
+avg_objective = 18370.9
+worst_objective = 18326.0
+std_objective = 38.65604739235506
+best_time_to_best_secs = 0.006747
+avg_time_to_best_secs = 0.0109970833
+avg_total_time_secs = 0.0109852293
+avg_initial_objective = 14784.7
+avg_improvement = 3586.2
+avg_n_accepted = 1194.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9991631033761499
+avg_n_best_updates = 1194.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 18752.0
+avg_objective = 18715.1
+worst_objective = 18668.0
+std_objective = 27.053465582065453
+best_time_to_best_secs = 80.295243292
+avg_time_to_best_secs = 82.46439048330001
+avg_total_time_secs = 82.4894242166
+avg_initial_objective = 14784.7
+avg_improvement = 3930.4
+avg_n_accepted = 817.9
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9987782077492277
+avg_n_best_updates = 817.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 18961.0
+avg_objective = 18842.2
+worst_objective = 18723.0
+std_objective = 89.72714193598279
+best_time_to_best_secs = 8.469350417
+avg_time_to_best_secs = 356.7164013792
+avg_total_time_secs = 600.0000235083
+avg_initial_objective = 14784.7
+avg_improvement = 4057.5
+avg_n_accepted = 9352766.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1578.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 18933.0
+avg_objective = 18902.1
+worst_objective = 18867.0
+std_objective = 17.874283202411224
+best_time_to_best_secs = 584.503939208
+avg_time_to_best_secs = 593.6644227749
+avg_total_time_secs = 600.1151087376
+avg_initial_objective = 14784.7
+avg_improvement = 4117.4
+avg_n_accepted = 2255.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 980.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 18710.0
+avg_objective = 18699.0
+worst_objective = 18693.0
+std_objective = 4.959838707054898
+best_time_to_best_secs = 490.930806042
+avg_time_to_best_secs = 546.0215563667
+avg_total_time_secs = 599.9999836208001
+avg_initial_objective = 14784.7
+avg_improvement = 3914.3
+avg_n_accepted = 2922173550.7
+avg_n_rejected = 12766759434.1
+avg_acceptance_rate = 0.18629715525400145
+avg_n_best_updates = 2115.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 18577.0
+avg_objective = 18563.4
+worst_objective = 18546.0
+std_objective = 9.210863151735564
+best_time_to_best_secs = 586.713631417
+avg_time_to_best_secs = 595.9103425084002
+avg_total_time_secs = 599.9999896374
+avg_initial_objective = 14784.7
+avg_improvement = 3778.7
+avg_n_accepted = 6556000.7
+avg_n_rejected = 43500027.7
+avg_acceptance_rate = 0.13097374090053898
+avg_n_best_updates = 1727.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 18930.0
+avg_objective = 18915.4
+worst_objective = 18885.0
+std_objective = 13.610290224679268
+best_time_to_best_secs = 0.0170955
+avg_time_to_best_secs = 0.054015225
+avg_total_time_secs = 7.954716274899999
+avg_initial_objective = 14784.7
+avg_improvement = 4130.7
+avg_n_accepted = 10216327.9
+avg_n_rejected = 189783672.1
+avg_acceptance_rate = 0.0510816395
+avg_n_best_updates = 2217.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 19053.0
+avg_objective = 19015.5
+worst_objective = 18981.0
+std_objective = 17.77779513888041
+best_time_to_best_secs = 398.487759083
+avg_time_to_best_secs = 543.0999724706
+avg_total_time_secs = 599.999988821
+avg_initial_objective = 14784.7
+avg_improvement = 4230.8
+avg_n_accepted = 133536.1
+avg_n_rejected = 49986109.6
+avg_acceptance_rate = 0.0026642450676612863
+avg_n_best_updates = 2101.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 19190.0
+avg_objective = 19180.1
+worst_objective = 19166.0
+std_objective = 6.920260110718383
+best_time_to_best_secs = 235.830232792
+avg_time_to_best_secs = 303.30320423349997
+avg_total_time_secs = 600.0063502499
+avg_initial_objective = 14784.7
+avg_improvement = 4395.4
+avg_n_accepted = 9191187.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1032023.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 19236.0
+avg_objective = 19226.2
+worst_objective = 19214.0
+std_objective = 6.27375485654325
+best_time_to_best_secs = 212.300721875
+avg_time_to_best_secs = 437.6996506832999
+avg_total_time_secs = 600.0002947290999
+avg_initial_objective = 14784.7
+avg_improvement = 4441.5
+avg_n_accepted = 167619012.7
+avg_n_rejected = 218520548.1
+avg_acceptance_rate = 0.4340889878920956
+avg_n_best_updates = 73638394.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G58"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 19005.0
+avg_objective = 18954.6
+worst_objective = 18912.0
+std_objective = 26.76639684380399
+best_time_to_best_secs = 11.542701333
+avg_time_to_best_secs = 173.18213060840003
+avg_total_time_secs = 601.0049847208999
+avg_initial_objective = 14784.7
+avg_improvement = 4169.9
+avg_n_accepted = 9090000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 255737.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5079.0
+avg_objective = 4997.4
+worst_objective = 4901.0
+std_objective = 53.462510229131595
+best_time_to_best_secs = 0.009586708
+avg_time_to_best_secs = 0.012464654
+avg_total_time_secs = 0.012449612500000002
+avg_initial_objective = 26.0
+avg_improvement = 4971.4
+avg_n_accepted = 1522.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.999343149204823
+avg_n_best_updates = 1522.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5317.0
+avg_objective = 5233.0
+worst_objective = 5131.0
+std_objective = 54.38749856354859
+best_time_to_best_secs = 88.243555042
+avg_time_to_best_secs = 92.12475087520001
+avg_total_time_secs = 92.1495070334
+avg_initial_objective = 26.0
+avg_improvement = 5207.0
+avg_n_accepted = 880.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9988643163450425
+avg_n_best_updates = 880.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5657.0
+avg_objective = 5584.0
+worst_objective = 5517.0
+std_objective = 34.931361267491425
+best_time_to_best_secs = 2.322952375
+avg_time_to_best_secs = 261.7132189874
+avg_total_time_secs = 600.0000384125
+avg_initial_objective = 26.0
+avg_improvement = 5558.0
+avg_n_accepted = 9741477.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1975.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5565.0
+avg_objective = 5533.8
+worst_objective = 5436.0
+std_objective = 42.915731381394394
+best_time_to_best_secs = 559.027411125
+avg_time_to_best_secs = 584.3938438624
+avg_total_time_secs = 600.0981170541
+avg_initial_objective = 26.0
+avg_improvement = 5507.8
+avg_n_accepted = 2296.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1092.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5824.0
+avg_objective = 5802.0
+worst_objective = 5791.0
+std_objective = 9.989994994993742
+best_time_to_best_secs = 330.626467791
+avg_time_to_best_secs = 473.01298203720006
+avg_total_time_secs = 599.9999826041
+avg_initial_objective = 26.0
+avg_improvement = 5776.0
+avg_n_accepted = 1923874854.9
+avg_n_rejected = 14608220120.5
+avg_acceptance_rate = 0.11658487341051674
+avg_n_best_updates = 2860.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5708.0
+avg_objective = 5691.0
+worst_objective = 5675.0
+std_objective = 9.654014708917737
+best_time_to_best_secs = 594.702350208
+avg_time_to_best_secs = 597.6796369622
+avg_total_time_secs = 599.9999931375
+avg_initial_objective = 26.0
+avg_improvement = 5665.0
+avg_n_accepted = 4996603.0
+avg_n_rejected = 44827692.2
+avg_acceptance_rate = 0.10028528773101901
+avg_n_best_updates = 2399.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5585.0
+avg_objective = 5548.4
+worst_objective = 5490.0
+std_objective = 31.296006134968728
+best_time_to_best_secs = 0.00973425
+avg_time_to_best_secs = 0.028379721000000007
+avg_total_time_secs = 8.3619589042
+avg_initial_objective = 26.0
+avg_improvement = 5522.4
+avg_n_accepted = 9829832.4
+avg_n_rejected = 190170167.6
+avg_acceptance_rate = 0.049149162
+avg_n_best_updates = 2573.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5737.0
+avg_objective = 5675.3
+worst_objective = 5617.0
+std_objective = 35.28469923352047
+best_time_to_best_secs = 237.79002775
+avg_time_to_best_secs = 468.39783502499995
+avg_total_time_secs = 599.9999930957
+avg_initial_objective = 26.0
+avg_improvement = 5649.3
+avg_n_accepted = 123648.1
+avg_n_rejected = 48158701.4
+avg_acceptance_rate = 0.002560668487116362
+avg_n_best_updates = 2479.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6012.0
+avg_objective = 5985.2
+worst_objective = 5955.0
+std_objective = 17.92093747547823
+best_time_to_best_secs = 162.546980125
+avg_time_to_best_secs = 206.1943570415
+avg_total_time_secs = 600.0056253792001
+avg_initial_objective = 26.0
+avg_improvement = 5959.2
+avg_n_accepted = 9444745.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 936051.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6048.0
+avg_objective = 6000.2
+worst_objective = 5981.0
+std_objective = 19.405153954555477
+best_time_to_best_secs = 245.386093458
+avg_time_to_best_secs = 484.8157246872999
+avg_total_time_secs = 600.0001336416001
+avg_initial_objective = 26.0
+avg_improvement = 5974.2
+avg_n_accepted = 170235829.8
+avg_n_rejected = 304548364.8
+avg_acceptance_rate = 0.3585629105168703
+avg_n_best_updates = 73458271.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G59"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5688.0
+avg_objective = 5664.1
+worst_objective = 5630.0
+std_objective = 17.891059219621404
+best_time_to_best_secs = 43.400345084
+avg_time_to_best_secs = 273.82770256680004
+avg_total_time_secs = 601.8600900083
+avg_initial_objective = 26.0
+avg_improvement = 5638.1
+avg_n_accepted = 9565000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 347519.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13051.0
+avg_objective = 12992.7
+worst_objective = 12948.0
+std_objective = 34.266747730124614
+best_time_to_best_secs = 0.020875875
+avg_time_to_best_secs = 0.022146883299999996
+avg_total_time_secs = 0.0221306125
+avg_initial_objective = 8570.3
+avg_improvement = 4422.4
+avg_n_accepted = 1898.5
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9994734387248043
+avg_n_best_updates = 1898.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13476.0
+avg_objective = 13447.8
+worst_objective = 13400.0
+std_objective = 23.254246923949182
+best_time_to_best_secs = 251.161254833
+avg_time_to_best_secs = 256.75523656660005
+avg_total_time_secs = 256.80221875840004
+avg_initial_objective = 8570.3
+avg_improvement = 4877.5
+avg_n_accepted = 1218.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.999179998045809
+avg_n_best_updates = 1218.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13598.0
+avg_objective = 13514.9
+worst_objective = 13430.0
+std_objective = 49.96889032187928
+best_time_to_best_secs = 62.215965083
+avg_time_to_best_secs = 324.0308885583
+avg_total_time_secs = 600.0000418583999
+avg_initial_objective = 8570.3
+avg_improvement = 4944.6
+avg_n_accepted = 6685799.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2324.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13367.0
+avg_objective = 13327.0
+worst_objective = 13294.0
+std_objective = 25.187298386289864
+best_time_to_best_secs = 600.040382125
+avg_time_to_best_secs = 600.2331925499
+avg_total_time_secs = 600.2331767791
+avg_initial_objective = 8570.3
+avg_improvement = 4756.7
+avg_n_accepted = 1114.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1114.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13484.0
+avg_objective = 13481.6
+worst_objective = 13475.0
+std_objective = 2.5377155080899043
+best_time_to_best_secs = 459.905492792
+avg_time_to_best_secs = 535.6414165959001
+avg_total_time_secs = 599.9999858788999
+avg_initial_objective = 8570.3
+avg_improvement = 4911.3
+avg_n_accepted = 2525400629.5
+avg_n_rejected = 12130228950.1
+avg_acceptance_rate = 0.1723977655440702
+avg_n_best_updates = 3106.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 12974.0
+avg_objective = 12968.4
+worst_objective = 12958.0
+std_objective = 5.9363288318623315
+best_time_to_best_secs = 594.309445125
+avg_time_to_best_secs = 597.9888591834
+avg_total_time_secs = 599.9999939377001
+avg_initial_objective = 8570.3
+avg_improvement = 4398.1
+avg_n_accepted = 7372876.7
+avg_n_rejected = 30253470.4
+avg_acceptance_rate = 0.19594963465925425
+avg_n_best_updates = 2338.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13705.0
+avg_objective = 13654.2
+worst_objective = 13605.0
+std_objective = 30.278044851013743
+best_time_to_best_secs = 0.023194917
+avg_time_to_best_secs = 0.0448489709
+avg_total_time_secs = 7.4785576499
+avg_initial_objective = 8570.3
+avg_improvement = 5083.9
+avg_n_accepted = 9160398.0
+avg_n_rejected = 190839602.0
+avg_acceptance_rate = 0.04580199
+avg_n_best_updates = 3132.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13869.0
+avg_objective = 13848.3
+worst_objective = 13812.0
+std_objective = 16.36490146624782
+best_time_to_best_secs = 372.808636958
+avg_time_to_best_secs = 537.2659525707002
+avg_total_time_secs = 599.9999955791
+avg_initial_objective = 8570.3
+avg_improvement = 5278.0
+avg_n_accepted = 87540.2
+avg_n_rejected = 37850896.4
+avg_acceptance_rate = 0.002307559055569268
+avg_n_best_updates = 3001.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 14063.0
+avg_objective = 14052.7
+worst_objective = 14034.0
+std_objective = 9.317188417113824
+best_time_to_best_secs = 263.165414208
+avg_time_to_best_secs = 304.6557262792
+avg_total_time_secs = 600.0071678877
+avg_initial_objective = 8570.3
+avg_improvement = 5482.4
+avg_n_accepted = 6635018.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1049259.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 14155.0
+avg_objective = 14137.8
+worst_objective = 14116.0
+std_objective = 10.998181667894015
+best_time_to_best_secs = 192.495559208
+avg_time_to_best_secs = 446.21837779569995
+avg_total_time_secs = 600.0002812417999
+avg_initial_objective = 8570.3
+avg_improvement = 5567.5
+avg_n_accepted = 115497181.6
+avg_n_rejected = 152669678.8
+avg_acceptance_rate = 0.43069261371485884
+avg_n_best_updates = 52036565.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G60"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13669.0
+avg_objective = 13622.3
+worst_objective = 13574.0
+std_objective = 30.77027786679867
+best_time_to_best_secs = 94.235810708
+avg_time_to_best_secs = 260.0387751167
+avg_total_time_secs = 601.36613315
+avg_initial_objective = 8570.3
+avg_improvement = 5052.0
+avg_n_accepted = 6800000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 284300.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4627.0
+avg_objective = 4572.4
+worst_objective = 4522.0
+std_objective = 26.933993391251885
+best_time_to_best_secs = 0.019974958
+avg_time_to_best_secs = 0.021631445899999997
+avg_total_time_secs = 0.021617524899999997
+avg_initial_objective = 188.3
+avg_improvement = 4384.1
+avg_n_accepted = 1877.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.999467573815448
+avg_n_best_updates = 1877.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4907.0
+avg_objective = 4875.0
+worst_objective = 4852.0
+std_objective = 18.49324200890693
+best_time_to_best_secs = 232.432048292
+avg_time_to_best_secs = 238.51218167099995
+avg_total_time_secs = 238.56030181269998
+avg_initial_objective = 188.3
+avg_improvement = 4686.7
+avg_n_accepted = 1122.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.999109668339514
+avg_n_best_updates = 1122.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5201.0
+avg_objective = 5107.3
+worst_objective = 4993.0
+std_objective = 56.35432547728701
+best_time_to_best_secs = 9.098346666
+avg_time_to_best_secs = 368.6941446665
+avg_total_time_secs = 600.0000314456
+avg_initial_objective = 188.3
+avg_improvement = 4919.0
+avg_n_accepted = 6774553.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2314.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4896.0
+avg_objective = 4852.2
+worst_objective = 4822.0
+std_objective = 20.341091416145794
+best_time_to_best_secs = 598.544177291
+avg_time_to_best_secs = 600.0777032834001
+avg_total_time_secs = 600.2832466665
+avg_initial_objective = 188.3
+avg_improvement = 4663.9
+avg_n_accepted = 1103.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1102.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5112.0
+avg_objective = 5107.5
+worst_objective = 5104.0
+std_objective = 2.80178514522438
+best_time_to_best_secs = 375.255565834
+avg_time_to_best_secs = 533.7707769291999
+avg_total_time_secs = 599.9999818875
+avg_initial_objective = 188.3
+avg_improvement = 4919.2
+avg_n_accepted = 2592983385.4
+avg_n_rejected = 12583931302.9
+avg_acceptance_rate = 0.17092100624439502
+avg_n_best_updates = 3112.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4568.0
+avg_objective = 4555.6
+worst_objective = 4543.0
+std_objective = 7.812809993849844
+best_time_to_best_secs = 598.50201775
+avg_time_to_best_secs = 599.2730240875001
+avg_total_time_secs = 599.9999885083
+avg_initial_objective = 188.3
+avg_improvement = 4367.3
+avg_n_accepted = 7317429.8
+avg_n_rejected = 29751132.3
+avg_acceptance_rate = 0.19740274346156503
+avg_n_best_updates = 2307.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5301.0
+avg_objective = 5267.4
+worst_objective = 5251.0
+std_objective = 15.844241856270688
+best_time_to_best_secs = 0.027944375
+avg_time_to_best_secs = 0.0662485584
+avg_total_time_secs = 7.986840337399999
+avg_initial_objective = 188.3
+avg_improvement = 5079.1
+avg_n_accepted = 9229399.5
+avg_n_rejected = 190770600.5
+avg_acceptance_rate = 0.046146997499999995
+avg_n_best_updates = 3113.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5469.0
+avg_objective = 5431.2
+worst_objective = 5398.0
+std_objective = 20.301724064719235
+best_time_to_best_secs = 409.323222417
+avg_time_to_best_secs = 524.5177600251
+avg_total_time_secs = 599.999993225
+avg_initial_objective = 188.3
+avg_improvement = 5242.9
+avg_n_accepted = 86246.3
+avg_n_rejected = 37757502.3
+avg_acceptance_rate = 0.0022791925086887662
+avg_n_best_updates = 2999.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5682.0
+avg_objective = 5664.3
+worst_objective = 5637.0
+std_objective = 16.510905486980416
+best_time_to_best_secs = 256.179725667
+avg_time_to_best_secs = 331.9585647251
+avg_total_time_secs = 600.0086397752
+avg_initial_objective = 188.3
+avg_improvement = 5476.0
+avg_n_accepted = 6624145.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1015955.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5765.0
+avg_objective = 5752.4
+worst_objective = 5734.0
+std_objective = 9.404254356406998
+best_time_to_best_secs = 280.493159167
+avg_time_to_best_secs = 445.81870204590007
+avg_total_time_secs = 600.0003502543001
+avg_initial_objective = 188.3
+avg_improvement = 5564.1
+avg_n_accepted = 113376711.4
+avg_n_rejected = 150099335.4
+avg_acceptance_rate = 0.43031198088406
+avg_n_best_updates = 51113697.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G61"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5301.0
+avg_objective = 5232.2
+worst_objective = 5199.0
+std_objective = 32.08052368649864
+best_time_to_best_secs = 127.675995417
+avg_time_to_best_secs = 216.54364583359998
+avg_total_time_secs = 601.8344197042
+avg_initial_objective = 188.3
+avg_improvement = 5043.9
+avg_n_accepted = 6775000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 284015.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3642.0
+avg_objective = 3603.8
+worst_objective = 3574.0
+std_objective = 23.1594473163761
+best_time_to_best_secs = 0.013589167
+avg_time_to_best_secs = 0.0163772791
+avg_total_time_secs = 0.0163697503
+avg_initial_objective = -34.8
+avg_improvement = 3638.6
+avg_n_accepted = 1436.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9993038488459229
+avg_n_best_updates = 1436.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3988.0
+avg_objective = 3948.8
+worst_objective = 3906.0
+std_objective = 25.63123094976127
+best_time_to_best_secs = 168.793484583
+avg_time_to_best_secs = 173.5207307584
+avg_total_time_secs = 173.56212966680002
+avg_initial_objective = -34.8
+avg_improvement = 3983.6
+avg_n_accepted = 885.5
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9988716836223925
+avg_n_best_updates = 885.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4100.0
+avg_objective = 4017.2
+worst_objective = 3958.0
+std_objective = 37.386628625753346
+best_time_to_best_secs = 235.156081583
+avg_time_to_best_secs = 470.09074867479995
+avg_total_time_secs = 600.0000352211
+avg_initial_objective = -34.8
+avg_improvement = 4052.0
+avg_n_accepted = 6652929.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1642.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4088.0
+avg_objective = 4043.8
+worst_objective = 4002.0
+std_objective = 25.242028444639708
+best_time_to_best_secs = 595.683371875
+avg_time_to_best_secs = 597.7865260709999
+avg_total_time_secs = 600.1986449084
+avg_initial_objective = -34.8
+avg_improvement = 4078.6
+avg_n_accepted = 1199.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 932.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2428.0
+avg_objective = 2422.6
+worst_objective = 2418.0
+std_objective = 2.6907248094147422
+best_time_to_best_secs = 191.8382345
+avg_time_to_best_secs = 350.9043893207
+avg_total_time_secs = 599.9999834751001
+avg_initial_objective = -34.8
+avg_improvement = 2457.4
+avg_n_accepted = 6591245189.1
+avg_n_rejected = 6629640827.2
+avg_acceptance_rate = 0.49859419755792667
+avg_n_best_updates = 1098.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2256.0
+avg_objective = 2246.6
+worst_objective = 2240.0
+std_objective = 4.651881339845203
+best_time_to_best_secs = 578.90695325
+avg_time_to_best_secs = 588.3515310457999
+avg_total_time_secs = 599.9999928335
+avg_initial_objective = -34.8
+avg_improvement = 2281.4
+avg_n_accepted = 15176819.2
+avg_n_rejected = 22330962.6
+avg_acceptance_rate = 0.4046312199364663
+avg_n_best_updates = 886.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4768.0
+avg_objective = 4754.2
+worst_objective = 4744.0
+std_objective = 8.219489035213808
+best_time_to_best_secs = 0.590263166
+avg_time_to_best_secs = 2.7862804415999998
+avg_total_time_secs = 8.0924745042
+avg_initial_objective = -34.8
+avg_improvement = 4789.0
+avg_n_accepted = 15856850.7
+avg_n_rejected = 184143149.3
+avg_acceptance_rate = 0.07928425350000001
+avg_n_best_updates = 2185.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4768.0
+avg_objective = 4750.8
+worst_objective = 4726.0
+std_objective = 11.461239025515525
+best_time_to_best_secs = 370.866811291
+avg_time_to_best_secs = 491.66484778309996
+avg_total_time_secs = 599.9999991917
+avg_initial_objective = -34.8
+avg_improvement = 4785.6
+avg_n_accepted = 269900.9
+avg_n_rejected = 37578064.2
+avg_acceptance_rate = 0.007130895203775719
+avg_n_best_updates = 1995.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4724.0
+avg_objective = 4711.8
+worst_objective = 4678.0
+std_objective = 14.154857823376398
+best_time_to_best_secs = 313.973143875
+avg_time_to_best_secs = 460.8145181542001
+avg_total_time_secs = 600.0219618208001
+avg_initial_objective = -34.8
+avg_improvement = 4746.6
+avg_n_accepted = 6648913.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1134452.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4806.0
+avg_objective = 4797.0
+worst_objective = 4794.0
+std_objective = 3.605551275463989
+best_time_to_best_secs = 61.791701208
+avg_time_to_best_secs = 353.5194449791
+avg_total_time_secs = 600.0003433999999
+avg_initial_objective = -34.8
+avg_improvement = 4831.8
+avg_n_accepted = 121550211.9
+avg_n_rejected = 150218740.8
+avg_acceptance_rate = 0.4472555794555289
+avg_n_best_updates = 49293310.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4132.0
+avg_objective = 4096.6
+worst_objective = 4078.0
+std_objective = 16.420718620084813
+best_time_to_best_secs = 89.30479175
+avg_time_to_best_secs = 335.384443604
+avg_total_time_secs = 601.2822026166999
+avg_initial_objective = -34.8
+avg_improvement = 4131.4
+avg_n_accepted = 6865000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 205680.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 25832.0
+avg_objective = 25766.4
+worst_objective = 25720.0
+std_objective = 29.11082272969969
+best_time_to_best_secs = 0.016405875
+avg_time_to_best_secs = 0.019561466500000003
+avg_total_time_secs = 0.0195483584
+avg_initial_objective = 20709.9
+avg_improvement = 5056.5
+avg_n_accepted = 1683.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9994063242499616
+avg_n_best_updates = 1683.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26297.0
+avg_objective = 26234.0
+worst_objective = 26150.0
+std_objective = 40.50678955434508
+best_time_to_best_secs = 225.879325208
+avg_time_to_best_secs = 232.39228652510002
+avg_total_time_secs = 232.43998545
+avg_initial_objective = 20709.9
+avg_improvement = 5524.1
+avg_n_accepted = 1138.2
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9991219331827912
+avg_n_best_updates = 1138.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26147.0
+avg_objective = 26105.1
+worst_objective = 26040.0
+std_objective = 36.66183301473073
+best_time_to_best_secs = 45.299458
+avg_time_to_best_secs = 320.7456430666999
+avg_total_time_secs = 600.0000410083999
+avg_initial_objective = 20709.9
+avg_improvement = 5395.2
+avg_n_accepted = 6542872.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1943.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26271.0
+avg_objective = 26227.3
+worst_objective = 26170.0
+std_objective = 33.09395715232617
+best_time_to_best_secs = 598.515194084
+avg_time_to_best_secs = 599.7140643499
+avg_total_time_secs = 600.1436243497001
+avg_initial_objective = 20709.9
+avg_improvement = 5517.4
+avg_n_accepted = 1139.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1132.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26214.0
+avg_objective = 26204.2
+worst_objective = 26194.0
+std_objective = 6.44670458451448
+best_time_to_best_secs = 463.935507167
+avg_time_to_best_secs = 541.6437424916
+avg_total_time_secs = 599.9999874457
+avg_initial_objective = 20709.9
+avg_improvement = 5494.3
+avg_n_accepted = 2634254068.6
+avg_n_rejected = 11396703186.5
+avg_acceptance_rate = 0.1877885687627299
+avg_n_best_updates = 2976.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 25832.0
+avg_objective = 25815.8
+worst_objective = 25801.0
+std_objective = 8.726969691708572
+best_time_to_best_secs = 595.91558
+avg_time_to_best_secs = 598.8364047832999
+avg_total_time_secs = 599.9999972375001
+avg_initial_objective = 20709.9
+avg_improvement = 5105.9
+avg_n_accepted = 6690982.1
+avg_n_rejected = 30813949.4
+avg_acceptance_rate = 0.17840349889186216
+avg_n_best_updates = 2293.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26569.0
+avg_objective = 26515.5
+worst_objective = 26473.0
+std_objective = 24.900803199896984
+best_time_to_best_secs = 0.036335667
+avg_time_to_best_secs = 0.14079320010000002
+avg_total_time_secs = 8.360674524900002
+avg_initial_objective = 20709.9
+avg_improvement = 5805.6
+avg_n_accepted = 10274500.7
+avg_n_rejected = 189725499.3
+avg_acceptance_rate = 0.0513725035
+avg_n_best_updates = 3107.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26663.0
+avg_objective = 26646.6
+worst_objective = 26597.0
+std_objective = 18.746733048720785
+best_time_to_best_secs = 525.005746375
+avg_time_to_best_secs = 579.2796181043001
+avg_total_time_secs = 599.9999940207999
+avg_initial_objective = 20709.9
+avg_improvement = 5936.7
+avg_n_accepted = 104808.0
+avg_n_rejected = 37211438.5
+avg_acceptance_rate = 0.0028084181786811376
+avg_n_best_updates = 2942.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26864.0
+avg_objective = 26841.4
+worst_objective = 26826.0
+std_objective = 10.688311372709911
+best_time_to_best_secs = 308.945067708
+avg_time_to_best_secs = 367.2728422624
+avg_total_time_secs = 600.0126953457
+avg_initial_objective = 20709.9
+avg_improvement = 6131.5
+avg_n_accepted = 6592388.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1194612.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26979.0
+avg_objective = 26939.6
+worst_objective = 26911.0
+std_objective = 19.037857022259622
+best_time_to_best_secs = 291.427478125
+avg_time_to_best_secs = 462.74023696239993
+avg_total_time_secs = 600.0003057705001
+avg_initial_objective = 20709.9
+avg_improvement = 6229.7
+avg_n_accepted = 115779800.2
+avg_n_rejected = 152668292.5
+avg_acceptance_rate = 0.4312937169371661
+avg_n_best_updates = 51543003.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G63"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 26216.0
+avg_objective = 26183.9
+worst_objective = 26158.0
+std_objective = 15.984054554461455
+best_time_to_best_secs = 33.762316417
+avg_time_to_best_secs = 331.9727894417
+avg_total_time_secs = 602.5753288543001
+avg_initial_objective = 20709.9
+avg_improvement = 5474.0
+avg_n_accepted = 6660000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 233678.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7250.0
+avg_objective = 7191.3
+worst_objective = 7123.0
+std_objective = 38.05272657773684
+best_time_to_best_secs = 0.020775792
+avg_time_to_best_secs = 0.024370546
+avg_total_time_secs = 0.024358120700000003
+avg_initial_objective = 270.1
+avg_improvement = 6921.2
+avg_n_accepted = 2108.9
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9995259290684867
+avg_n_best_updates = 2108.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7579.0
+avg_objective = 7534.6
+worst_objective = 7455.0
+std_objective = 40.62560768776265
+best_time_to_best_secs = 248.842690708
+avg_time_to_best_secs = 253.16312428720002
+avg_total_time_secs = 253.2131167457
+avg_initial_objective = 270.1
+avg_improvement = 7264.5
+avg_n_accepted = 1228.5
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9991861820138734
+avg_n_best_updates = 1228.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7667.0
+avg_objective = 7599.6
+worst_objective = 7481.0
+std_objective = 64.80925859782691
+best_time_to_best_secs = 15.873718833
+avg_time_to_best_secs = 248.8271475208
+avg_total_time_secs = 600.0000380957999
+avg_initial_objective = 270.1
+avg_improvement = 7329.5
+avg_n_accepted = 6595739.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2405.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7475.0
+avg_objective = 7402.3
+worst_objective = 7352.0
+std_objective = 45.277036122078485
+best_time_to_best_secs = 600.052786334
+avg_time_to_best_secs = 600.185343975
+avg_total_time_secs = 600.1853293875
+avg_initial_objective = 270.1
+avg_improvement = 7132.2
+avg_n_accepted = 1132.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1132.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8380.0
+avg_objective = 8352.5
+worst_objective = 8328.0
+std_objective = 15.298692754611421
+best_time_to_best_secs = 502.18785075
+avg_time_to_best_secs = 552.9307647500001
+avg_total_time_secs = 599.9999859751001
+avg_initial_objective = 270.1
+avg_improvement = 8082.4
+avg_n_accepted = 1824850197.3
+avg_n_rejected = 13987056098.2
+avg_acceptance_rate = 0.11549654137535723
+avg_n_best_updates = 4002.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7945.0
+avg_objective = 7922.5
+worst_objective = 7884.0
+std_objective = 19.340372281835734
+best_time_to_best_secs = 596.878872708
+avg_time_to_best_secs = 598.5404350666
+avg_total_time_secs = 600.000001325
+avg_initial_objective = 270.1
+avg_improvement = 7652.4
+avg_n_accepted = 5871656.1
+avg_n_rejected = 31835313.9
+avg_acceptance_rate = 0.1557187808193339
+avg_n_best_updates = 3173.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8108.0
+avg_objective = 7965.2
+worst_objective = 7812.0
+std_objective = 84.87378865114954
+best_time_to_best_secs = 0.026450875
+avg_time_to_best_secs = 0.06075599169999999
+avg_total_time_secs = 8.203962595799998
+avg_initial_objective = 270.1
+avg_improvement = 7695.1
+avg_n_accepted = 9780772.2
+avg_n_rejected = 190219227.8
+avg_acceptance_rate = 0.04890386100000001
+avg_n_best_updates = 3552.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8208.0
+avg_objective = 8131.2
+worst_objective = 8075.0
+std_objective = 44.44502221846672
+best_time_to_best_secs = 405.253243708
+avg_time_to_best_secs = 522.9952729375
+avg_total_time_secs = 599.9999933291999
+avg_initial_objective = 270.1
+avg_improvement = 7861.1
+avg_n_accepted = 104139.1
+avg_n_rejected = 37635287.0
+avg_acceptance_rate = 0.0027596997435381998
+avg_n_best_updates = 3426.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8592.0
+avg_objective = 8532.9
+worst_objective = 8468.0
+std_objective = 41.28062499526866
+best_time_to_best_secs = 211.629243333
+avg_time_to_best_secs = 260.8312681083
+avg_total_time_secs = 600.0079342416
+avg_initial_objective = 270.1
+avg_improvement = 8262.8
+avg_n_accepted = 6614183.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1029923.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8616.0
+avg_objective = 8586.5
+worst_objective = 8562.0
+std_objective = 16.261918705983007
+best_time_to_best_secs = 196.481766208
+avg_time_to_best_secs = 452.20175663320003
+avg_total_time_secs = 600.000188446
+avg_initial_objective = 270.1
+avg_improvement = 8316.4
+avg_n_accepted = 118214638.3
+avg_n_rejected = 212803216.6
+avg_acceptance_rate = 0.35713074317517496
+avg_n_best_updates = 51605323.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G64"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7815.0
+avg_objective = 7761.6
+worst_objective = 7733.0
+std_objective = 20.63104456880456
+best_time_to_best_secs = 55.223459333
+avg_time_to_best_secs = 378.11424349990006
+avg_total_time_secs = 602.0644866168001
+avg_initial_objective = 270.1
+avg_improvement = 7491.5
+avg_n_accepted = 6720000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 298805.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4168.0
+avg_objective = 4110.4
+worst_objective = 4060.0
+std_objective = 37.97683504453735
+best_time_to_best_secs = 0.020061708
+avg_time_to_best_secs = 0.0217433916
+avg_total_time_secs = 0.0217348249
+avg_initial_objective = -51.0
+avg_improvement = 4161.4
+avg_n_accepted = 1644.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9993920742852545
+avg_n_best_updates = 1644.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4518.0
+avg_objective = 4476.8
+worst_objective = 4412.0
+std_objective = 30.452586097078846
+best_time_to_best_secs = 253.638230833
+avg_time_to_best_secs = 260.42779255000005
+avg_total_time_secs = 260.480364325
+avg_initial_objective = -51.0
+avg_improvement = 4527.8
+avg_n_accepted = 1004.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.999005467319994
+avg_n_best_updates = 1004.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4592.0
+avg_objective = 4509.2
+worst_objective = 4442.0
+std_objective = 45.05285784498027
+best_time_to_best_secs = 82.449465584
+avg_time_to_best_secs = 359.1696414001
+avg_total_time_secs = 600.0000441042
+avg_initial_objective = -51.0
+avg_improvement = 4560.2
+avg_n_accepted = 5939911.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1843.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4278.0
+avg_objective = 4258.2
+worst_objective = 4190.0
+std_objective = 26.068371640745035
+best_time_to_best_secs = 600.051119209
+avg_time_to_best_secs = 600.2785128833
+avg_total_time_secs = 600.2785006581
+avg_initial_objective = -51.0
+avg_improvement = 4309.2
+avg_n_accepted = 897.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 897.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2772.0
+avg_objective = 2766.6
+worst_objective = 2760.0
+std_objective = 3.1048349392520045
+best_time_to_best_secs = 191.812564208
+avg_time_to_best_secs = 442.2856237039
+avg_total_time_secs = 600.0000011749
+avg_initial_objective = -51.0
+avg_improvement = 2817.6
+avg_n_accepted = 6479312726.7
+avg_n_rejected = 6500942510.3
+avg_acceptance_rate = 0.4992177806233549
+avg_n_best_updates = 1257.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2542.0
+avg_objective = 2531.8
+worst_objective = 2520.0
+std_objective = 6.289674077406554
+best_time_to_best_secs = 572.894755459
+avg_time_to_best_secs = 589.1426843585
+avg_total_time_secs = 600.0000008083
+avg_initial_objective = -51.0
+avg_improvement = 2582.8
+avg_n_accepted = 13701651.3
+avg_n_rejected = 19097228.6
+avg_acceptance_rate = 0.4177611267198504
+avg_n_best_updates = 996.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5430.0
+avg_objective = 5421.4
+worst_objective = 5408.0
+std_objective = 6.988562083862459
+best_time_to_best_secs = 0.468662
+avg_time_to_best_secs = 1.5737955874
+avg_total_time_secs = 7.8636643834
+avg_initial_objective = -51.0
+avg_improvement = 5472.4
+avg_n_accepted = 16119973.6
+avg_n_rejected = 183880026.4
+avg_acceptance_rate = 0.08059986799999999
+avg_n_best_updates = 2493.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5426.0
+avg_objective = 5417.4
+worst_objective = 5410.0
+std_objective = 4.983974317750845
+best_time_to_best_secs = 295.244175375
+avg_time_to_best_secs = 477.3783591041
+avg_total_time_secs = 599.9999966127
+avg_initial_objective = -51.0
+avg_improvement = 5468.4
+avg_n_accepted = 270275.6
+avg_n_rejected = 33942247.3
+avg_acceptance_rate = 0.007899258742551003
+avg_n_best_updates = 2286.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5390.0
+avg_objective = 5372.6
+worst_objective = 5350.0
+std_objective = 10.883014288330232
+best_time_to_best_secs = 388.086726875
+avg_time_to_best_secs = 479.3125287168999
+avg_total_time_secs = 600.0201071751
+avg_initial_objective = -51.0
+avg_improvement = 5423.6
+avg_n_accepted = 5752067.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1138731.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5482.0
+avg_objective = 5477.0
+worst_objective = 5474.0
+std_objective = 2.569046515733026
+best_time_to_best_secs = 83.037765542
+avg_time_to_best_secs = 308.05664925830007
+avg_total_time_secs = 600.0002212666
+avg_initial_objective = -51.0
+avg_improvement = 5528.0
+avg_n_accepted = 106950195.8
+avg_n_rejected = 132581377.4
+avg_acceptance_rate = 0.4464972097149392
+avg_n_best_updates = 43486846.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G65"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4600.0
+avg_objective = 4577.0
+worst_objective = 4552.0
+std_objective = 15.079787796915447
+best_time_to_best_secs = 41.271663583
+avg_time_to_best_secs = 217.70646805430002
+avg_total_time_secs = 602.7261040626
+avg_initial_objective = -51.0
+avg_improvement = 4628.0
+avg_n_accepted = 5845000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 195313.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4786.0
+avg_objective = 4737.2
+worst_objective = 4666.0
+std_objective = 36.58633624729319
+best_time_to_best_secs = 0.025225375
+avg_time_to_best_secs = 0.0293878376
+avg_total_time_secs = 0.029369546000000003
+avg_initial_objective = 10.4
+avg_improvement = 4726.8
+avg_n_accepted = 1866.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9994645247751333
+avg_n_best_updates = 1866.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5214.0
+avg_objective = 5153.6
+worst_objective = 5078.0
+std_objective = 35.324778838656584
+best_time_to_best_secs = 365.675682666
+avg_time_to_best_secs = 375.9618616750999
+avg_total_time_secs = 376.028568129
+avg_initial_objective = 10.4
+avg_improvement = 5143.2
+avg_n_accepted = 1136.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9991205986317363
+avg_n_best_updates = 1136.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5258.0
+avg_objective = 5169.8
+worst_objective = 5096.0
+std_objective = 50.9230792470369
+best_time_to_best_secs = 58.050648167
+avg_time_to_best_secs = 277.6133055168
+avg_total_time_secs = 600.0000361249
+avg_initial_objective = 10.4
+avg_improvement = 5159.4
+avg_n_accepted = 4862685.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2082.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3986.0
+avg_objective = 3908.0
+worst_objective = 3752.0
+std_objective = 62.6418390534633
+best_time_to_best_secs = 600.14860925
+avg_time_to_best_secs = 600.3518809125
+avg_total_time_secs = 600.3518624541
+avg_initial_objective = 10.4
+avg_improvement = 3897.6
+avg_n_accepted = 722.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 722.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3204.0
+avg_objective = 3198.8
+worst_objective = 3194.0
+std_objective = 2.9933259094191533
+best_time_to_best_secs = 223.992148667
+avg_time_to_best_secs = 460.96617173350006
+avg_total_time_secs = 599.9999939835001
+avg_initial_objective = 10.4
+avg_improvement = 3188.4
+avg_n_accepted = 6329288033.5
+avg_n_rejected = 6358699881.8
+avg_acceptance_rate = 0.49887525861461135
+avg_n_best_updates = 1418.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2850.0
+avg_objective = 2842.0
+worst_objective = 2836.0
+std_objective = 4.898979485566356
+best_time_to_best_secs = 585.733145
+avg_time_to_best_secs = 594.3924502668
+avg_total_time_secs = 600.0000075999999
+avg_initial_objective = 10.4
+avg_improvement = 2831.6
+avg_n_accepted = 10212141.1
+avg_n_rejected = 12770775.7
+avg_acceptance_rate = 0.44433611014197466
+avg_n_best_updates = 1092.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6228.0
+avg_objective = 6208.0
+worst_objective = 6192.0
+std_objective = 12.066482503198685
+best_time_to_best_secs = 0.985963292
+avg_time_to_best_secs = 3.7060771206
+avg_total_time_secs = 7.8214138957
+avg_initial_objective = 10.4
+avg_improvement = 6197.6
+avg_n_accepted = 15775981.3
+avg_n_rejected = 184224018.7
+avg_acceptance_rate = 0.07887990650000001
+avg_n_best_updates = 2820.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6210.0
+avg_objective = 6183.0
+worst_objective = 6164.0
+std_objective = 12.401612798341997
+best_time_to_best_secs = 289.473574458
+avg_time_to_best_secs = 498.77144203759997
+avg_total_time_secs = 599.9999750623999
+avg_initial_objective = 10.4
+avg_improvement = 6172.6
+avg_n_accepted = 189108.7
+avg_n_rejected = 22818221.7
+avg_acceptance_rate = 0.008219307180862709
+avg_n_best_updates = 2570.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6154.0
+avg_objective = 6128.2
+worst_objective = 6112.0
+std_objective = 11.00727032465361
+best_time_to_best_secs = 463.472399666
+avg_time_to_best_secs = 529.4791965750001
+avg_total_time_secs = 600.0303144373
+avg_initial_objective = 10.4
+avg_improvement = 6117.8
+avg_n_accepted = 4998990.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1156146.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6278.0
+avg_objective = 6261.4
+worst_objective = 6250.0
+std_objective = 7.158212067269312
+best_time_to_best_secs = 155.215487709
+avg_time_to_best_secs = 339.1439486835
+avg_total_time_secs = 600.0001977500999
+avg_initial_objective = 10.4
+avg_improvement = 6251.0
+avg_n_accepted = 90147307.2
+avg_n_rejected = 112481300.5
+avg_acceptance_rate = 0.44488928012197226
+avg_n_best_updates = 36913393.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G66"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5312.0
+avg_objective = 5257.0
+worst_objective = 5222.0
+std_objective = 24.580480060405655
+best_time_to_best_secs = 61.881741625
+avg_time_to_best_secs = 239.99807745009997
+avg_total_time_secs = 602.3857668043001
+avg_initial_objective = 10.4
+avg_improvement = 5246.6
+avg_n_accepted = 5155000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 189412.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5192.0
+avg_objective = 5120.0
+worst_objective = 5082.0
+std_objective = 29.516097302997224
+best_time_to_best_secs = 0.030705375
+avg_time_to_best_secs = 0.0354221126
+avg_total_time_secs = 0.0354056292
+avg_initial_objective = -85.8
+avg_improvement = 5205.8
+avg_n_accepted = 2042.2
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.999510375159435
+avg_n_best_updates = 2042.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5624.0
+avg_objective = 5589.4
+worst_objective = 5564.0
+std_objective = 19.840362899906847
+best_time_to_best_secs = 502.119158
+avg_time_to_best_secs = 511.39196600820003
+avg_total_time_secs = 511.4727382581001
+avg_initial_objective = -85.8
+avg_improvement = 5675.2
+avg_n_accepted = 1246.9
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9991984783451493
+avg_n_best_updates = 1246.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5660.0
+avg_objective = 5561.2
+worst_objective = 5528.0
+std_objective = 39.407613477601
+best_time_to_best_secs = 198.202574292
+avg_time_to_best_secs = 415.67881906250005
+avg_total_time_secs = 600.0001093918
+avg_initial_objective = -85.8
+avg_improvement = 5647.0
+avg_n_accepted = 4103362.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2262.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3520.0
+avg_objective = 3394.8
+worst_objective = 3272.0
+std_objective = 67.6650574521296
+best_time_to_best_secs = 600.004115042
+avg_time_to_best_secs = 600.3940442125
+avg_total_time_secs = 600.3940289498998
+avg_initial_objective = -85.8
+avg_improvement = 3480.6
+avg_n_accepted = 588.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 588.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3438.0
+avg_objective = 3432.0
+worst_objective = 3426.0
+std_objective = 4.0
+best_time_to_best_secs = 250.144138208
+avg_time_to_best_secs = 519.3934463830001
+avg_total_time_secs = 599.9999782085
+avg_initial_objective = -85.8
+avg_improvement = 3517.8
+avg_n_accepted = 6362835485.6
+avg_n_rejected = 6381415140.0
+avg_acceptance_rate = 0.49930846059694434
+avg_n_best_updates = 1572.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2996.0
+avg_objective = 2987.8
+worst_objective = 2980.0
+std_objective = 4.6000000000000005
+best_time_to_best_secs = 588.313862792
+avg_time_to_best_secs = 596.3701315791999
+avg_total_time_secs = 599.9999904540001
+avg_initial_objective = -85.8
+avg_improvement = 3073.6
+avg_n_accepted = 9779695.2
+avg_n_rejected = 11691239.5
+avg_acceptance_rate = 0.4554855717101405
+avg_n_best_updates = 1189.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6796.0
+avg_objective = 6782.0
+worst_objective = 6766.0
+std_objective = 10.079682534683322
+best_time_to_best_secs = 0.688499792
+avg_time_to_best_secs = 1.5942790958000002
+avg_total_time_secs = 8.198470279000002
+avg_initial_objective = -85.8
+avg_improvement = 6867.8
+avg_n_accepted = 15800868.0
+avg_n_rejected = 184199132.0
+avg_acceptance_rate = 0.07900433999999999
+avg_n_best_updates = 3128.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6782.0
+avg_objective = 6761.6
+worst_objective = 6736.0
+std_objective = 13.290598180668917
+best_time_to_best_secs = 398.345833292
+avg_time_to_best_secs = 493.7441974333
+avg_total_time_secs = 599.9999936541001
+avg_initial_objective = -85.8
+avg_improvement = 6847.4
+avg_n_accepted = 175925.6
+avg_n_rejected = 21464369.3
+avg_acceptance_rate = 0.008129009276921928
+avg_n_best_updates = 2855.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6712.0
+avg_objective = 6692.8
+worst_objective = 6650.0
+std_objective = 20.123617964968428
+best_time_to_best_secs = 502.010865583
+avg_time_to_best_secs = 567.9970511708
+avg_total_time_secs = 600.0284451582
+avg_initial_objective = -85.8
+avg_improvement = 6778.6
+avg_n_accepted = 4482387.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1160925.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6860.0
+avg_objective = 6853.6
+worst_objective = 6850.0
+std_objective = 2.65329983228432
+best_time_to_best_secs = 301.533491917
+avg_time_to_best_secs = 419.55163755409995
+avg_total_time_secs = 600.0005392752001
+avg_initial_objective = -85.8
+avg_improvement = 6939.4
+avg_n_accepted = 80695612.8
+avg_n_rejected = 101255638.5
+avg_acceptance_rate = 0.44350123448926465
+avg_n_best_updates = 33168638.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G67"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5692.0
+avg_objective = 5653.8
+worst_objective = 5614.0
+std_objective = 26.114363863590476
+best_time_to_best_secs = 37.615221
+avg_time_to_best_secs = 253.82708467899997
+avg_total_time_secs = 602.4125812501001
+avg_initial_objective = -85.8
+avg_improvement = 5739.6
+avg_n_accepted = 4330000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 173457.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8644.0
+avg_objective = 8603.2
+worst_objective = 8573.0
+std_objective = 23.73941869549463
+best_time_to_best_secs = 0.030204667
+avg_time_to_best_secs = 0.03383348330000001
+avg_total_time_secs = 0.033814662499999995
+avg_initial_objective = 5014.7
+avg_improvement = 3588.5
+avg_n_accepted = 2187.5
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9995428093439191
+avg_n_best_updates = 2187.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9039.0
+avg_objective = 9006.5
+worst_objective = 8969.0
+std_objective = 19.67358635328089
+best_time_to_best_secs = 429.470361292
+avg_time_to_best_secs = 445.64223843770003
+avg_total_time_secs = 445.70764957089995
+avg_initial_objective = 5014.7
+avg_improvement = 3991.8
+avg_n_accepted = 1386.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9992789752354257
+avg_n_best_updates = 1386.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8972.0
+avg_objective = 8940.1
+worst_objective = 8902.0
+std_objective = 24.201033035802418
+best_time_to_best_secs = 63.632457041
+avg_time_to_best_secs = 357.7652084459
+avg_total_time_secs = 600.0000642749001
+avg_initial_objective = 5014.7
+avg_improvement = 3925.4
+avg_n_accepted = 5247313.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2473.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8047.0
+avg_objective = 7946.7
+worst_objective = 7899.0
+std_objective = 43.744828265750456
+best_time_to_best_secs = 600.003834
+avg_time_to_best_secs = 600.3185484708999
+avg_total_time_secs = 600.3185287749999
+avg_initial_objective = 5014.7
+avg_improvement = 2932.0
+avg_n_accepted = 739.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 739.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 8065.0
+avg_objective = 8062.1
+worst_objective = 8059.0
+std_objective = 1.9723082923316022
+best_time_to_best_secs = 332.924145416
+avg_time_to_best_secs = 502.86318779170006
+avg_total_time_secs = 599.9999764876
+avg_initial_objective = 5014.7
+avg_improvement = 3047.4
+avg_n_accepted = 4181815205.5
+avg_n_rejected = 9235370086.8
+avg_acceptance_rate = 0.3117210137543664
+avg_n_best_updates = 2347.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7625.0
+avg_objective = 7617.2
+worst_objective = 7611.0
+std_objective = 4.331281565541543
+best_time_to_best_secs = 590.558097125
+avg_time_to_best_secs = 597.5881695250001
+avg_total_time_secs = 599.9999943999
+avg_initial_objective = 5014.7
+avg_improvement = 2602.5
+avg_n_accepted = 8128661.3
+avg_n_rejected = 15814499.5
+avg_acceptance_rate = 0.33949864367564186
+avg_n_best_updates = 1638.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9189.0
+avg_objective = 9161.2
+worst_objective = 9138.0
+std_objective = 16.086018774078315
+best_time_to_best_secs = 0.053342083
+avg_time_to_best_secs = 0.0770975502
+avg_total_time_secs = 8.2305365332
+avg_initial_objective = 5014.7
+avg_improvement = 4146.5
+avg_n_accepted = 7841935.8
+avg_n_rejected = 192158064.2
+avg_acceptance_rate = 0.039209679000000004
+avg_n_best_updates = 3209.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9336.0
+avg_objective = 9313.9
+worst_objective = 9290.0
+std_objective = 14.652303573158727
+best_time_to_best_secs = 457.410355167
+avg_time_to_best_secs = 548.1647788084999
+avg_total_time_secs = 599.9999933000001
+avg_initial_objective = 5014.7
+avg_improvement = 4299.2
+avg_n_accepted = 47247.8
+avg_n_rejected = 23476846.2
+avg_acceptance_rate = 0.002008611580743564
+avg_n_best_updates = 2962.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9500.0
+avg_objective = 9486.5
+worst_objective = 9478.0
+std_objective = 6.902897942168926
+best_time_to_best_secs = 400.46649825
+avg_time_to_best_secs = 454.692760929
+avg_total_time_secs = 600.0210901581999
+avg_initial_objective = 5014.7
+avg_improvement = 4471.8
+avg_n_accepted = 5240314.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1402800.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9555.0
+avg_objective = 9547.1
+worst_objective = 9528.0
+std_objective = 7.105631569396206
+best_time_to_best_secs = 292.163093958
+avg_time_to_best_secs = 475.1860576
+avg_total_time_secs = 600.0007815083002
+avg_initial_objective = 5014.7
+avg_improvement = 4532.4
+avg_n_accepted = 80801333.0
+avg_n_rejected = 65305699.0
+avg_acceptance_rate = 0.5530286550096194
+avg_n_best_updates = 38117409.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9081.0
+avg_objective = 9021.1
+worst_objective = 8996.0
+std_objective = 25.141400120120597
+best_time_to_best_secs = 49.394806875
+avg_time_to_best_secs = 274.67619214169997
+avg_total_time_secs = 602.8018844457999
+avg_initial_objective = 5014.7
+avg_improvement = 4006.4
+avg_n_accepted = 5370000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 235189.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5262.0
+avg_objective = 5205.0
+worst_objective = 5152.0
+std_objective = 33.79053121807942
+best_time_to_best_secs = 0.02899675
+avg_time_to_best_secs = 0.0349253751
+avg_total_time_secs = 0.034908570900000005
+avg_initial_objective = 38.6
+avg_improvement = 5166.4
+avg_n_accepted = 2029.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9995073212466525
+avg_n_best_updates = 2029.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5716.0
+avg_objective = 5673.6
+worst_objective = 5578.0
+std_objective = 38.32283914325764
+best_time_to_best_secs = 494.684031792
+avg_time_to_best_secs = 508.9111461043
+avg_total_time_secs = 508.98969290429994
+avg_initial_objective = 38.6
+avg_improvement = 5635.0
+avg_n_accepted = 1240.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9991941813967615
+avg_n_best_updates = 1240.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5652.0
+avg_objective = 5590.8
+worst_objective = 5542.0
+std_objective = 38.26434371578846
+best_time_to_best_secs = 181.580010416
+avg_time_to_best_secs = 406.81286567510006
+avg_total_time_secs = 600.0000820583
+avg_initial_objective = 38.6
+avg_improvement = 5552.2
+avg_n_accepted = 4244900.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2222.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3542.0
+avg_objective = 3467.6
+worst_objective = 3396.0
+std_objective = 45.332549012823
+best_time_to_best_secs = 600.111312583
+avg_time_to_best_secs = 600.4261581499001
+avg_total_time_secs = 600.4261371749
+avg_initial_objective = 38.6
+avg_improvement = 3429.0
+avg_n_accepted = 583.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 583.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3504.0
+avg_objective = 3499.0
+worst_objective = 3492.0
+std_objective = 3.714835124201342
+best_time_to_best_secs = 223.836554791
+avg_time_to_best_secs = 429.8355020333
+avg_total_time_secs = 599.9999724209
+avg_initial_objective = 38.6
+avg_improvement = 3460.4
+avg_n_accepted = 6342398640.7
+avg_n_rejected = 6358623604.1
+avg_acceptance_rate = 0.49937809275928896
+avg_n_best_updates = 1538.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3066.0
+avg_objective = 3060.4
+worst_objective = 3052.0
+std_objective = 4.5431266766402185
+best_time_to_best_secs = 584.96528225
+avg_time_to_best_secs = 595.3385513708
+avg_total_time_secs = 599.999991425
+avg_initial_objective = 38.6
+avg_improvement = 3021.8
+avg_n_accepted = 9786352.3
+avg_n_rejected = 11705729.1
+avg_acceptance_rate = 0.45534674681118703
+avg_n_best_updates = 1171.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6858.0
+avg_objective = 6834.2
+worst_objective = 6814.0
+std_objective = 12.913558765886345
+best_time_to_best_secs = 0.598990666
+avg_time_to_best_secs = 1.7385918916
+avg_total_time_secs = 8.2019128166
+avg_initial_objective = 38.6
+avg_improvement = 6795.6
+avg_n_accepted = 16304915.5
+avg_n_rejected = 183695084.5
+avg_acceptance_rate = 0.0815245775
+avg_n_best_updates = 3089.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6840.0
+avg_objective = 6814.6
+worst_objective = 6788.0
+std_objective = 17.089177862027185
+best_time_to_best_secs = 428.089318709
+avg_time_to_best_secs = 555.4731539251
+avg_total_time_secs = 599.9999976583999
+avg_initial_objective = 38.6
+avg_improvement = 6776.0
+avg_n_accepted = 183641.1
+avg_n_rejected = 21616757.1
+avg_acceptance_rate = 0.008423749085945799
+avg_n_best_updates = 2831.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6788.0
+avg_objective = 6737.8
+worst_objective = 6702.0
+std_objective = 27.076927447552098
+best_time_to_best_secs = 516.169394667
+avg_time_to_best_secs = 568.0770603540001
+avg_total_time_secs = 600.0302729625
+avg_initial_objective = 38.6
+avg_improvement = 6699.2
+avg_n_accepted = 4509098.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1195299.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6918.0
+avg_objective = 6907.0
+worst_objective = 6896.0
+std_objective = 6.826419266350405
+best_time_to_best_secs = 159.413861209
+avg_time_to_best_secs = 359.0089652833
+avg_total_time_secs = 600.0004140752
+avg_initial_objective = 38.6
+avg_improvement = 6868.4
+avg_n_accepted = 82002998.5
+avg_n_rejected = 102544554.9
+avg_acceptance_rate = 0.44434607267042275
+avg_n_best_updates = 33641094.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G72"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5720.0
+avg_objective = 5694.8
+worst_objective = 5664.0
+std_objective = 18.24719156473127
+best_time_to_best_secs = 100.875970708
+avg_time_to_best_secs = 265.8139755582
+avg_total_time_secs = 602.4434917834
+avg_initial_objective = 38.6
+avg_improvement = 5656.2
+avg_n_accepted = 4525000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 174505.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7464.0
+avg_objective = 7365.2
+worst_objective = 7270.0
+std_objective = 49.929550368494205
+best_time_to_best_secs = 0.063137041
+avg_time_to_best_secs = 0.0681608166
+avg_total_time_secs = 0.0681511001
+avg_initial_objective = 94.6
+avg_improvement = 7270.6
+avg_n_accepted = 2872.2
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9996519153146947
+avg_n_best_updates = 2872.2
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4440.0
+avg_objective = 4378.4
+worst_objective = 4280.0
+std_objective = 55.26517891041338
+best_time_to_best_secs = 600.0611005
+avg_time_to_best_secs = 600.2694874127
+avg_total_time_secs = 600.2694597083
+avg_initial_objective = 94.6
+avg_improvement = 4283.8
+avg_n_accepted = 690.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 690.8
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7898.0
+avg_objective = 7785.4
+worst_objective = 7718.0
+std_objective = 46.37283687677518
+best_time_to_best_secs = 160.223203833
+avg_time_to_best_secs = 395.38530279149995
+avg_total_time_secs = 600.0001070331999
+avg_initial_objective = 94.6
+avg_improvement = 7690.8
+avg_n_accepted = 3011862.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 3082.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2560.0
+avg_objective = 2470.6
+worst_objective = 2354.0
+std_objective = 63.44793140836035
+best_time_to_best_secs = 600.041797958
+avg_time_to_best_secs = 600.8276065666
+avg_total_time_secs = 600.8275786914
+avg_initial_objective = 94.6
+avg_improvement = 2376.0
+avg_n_accepted = 297.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 297.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4998.0
+avg_objective = 4990.2
+worst_objective = 4984.0
+std_objective = 3.8418745424597094
+best_time_to_best_secs = 306.207232458
+avg_time_to_best_secs = 493.9670986458999
+avg_total_time_secs = 599.9999801248
+avg_initial_objective = 94.6
+avg_improvement = 4895.6
+avg_n_accepted = 5956402853.5
+avg_n_rejected = 5958550515.5
+avg_acceptance_rate = 0.4999470058749937
+avg_n_best_updates = 2178.1
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 4158.0
+avg_objective = 4142.6
+worst_objective = 4134.0
+std_objective = 7.4859869088851605
+best_time_to_best_secs = 590.412569875
+avg_time_to_best_secs = 597.0663861167
+avg_total_time_secs = 600.0000093
+avg_initial_objective = 94.6
+avg_improvement = 4048.0
+avg_n_accepted = 8638711.8
+avg_n_rejected = 8879263.5
+avg_acceptance_rate = 0.4931345812805262
+avg_n_best_updates = 1549.3
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9716.0
+avg_objective = 9697.2
+worst_objective = 9678.0
+std_objective = 13.181805642627264
+best_time_to_best_secs = 0.856353625
+avg_time_to_best_secs = 3.0642817749000004
+avg_total_time_secs = 8.4149143416
+avg_initial_objective = 94.6
+avg_improvement = 9602.6
+avg_n_accepted = 15788074.8
+avg_n_rejected = 184211925.2
+avg_acceptance_rate = 0.078940374
+avg_n_best_updates = 4367.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9690.0
+avg_objective = 9664.6
+worst_objective = 9616.0
+std_objective = 23.031283073246264
+best_time_to_best_secs = 525.451455417
+avg_time_to_best_secs = 570.3265234124999
+avg_total_time_secs = 599.9999976124001
+avg_initial_objective = 94.6
+avg_improvement = 9570.0
+avg_n_accepted = 156606.7
+avg_n_rejected = 17475559.6
+avg_acceptance_rate = 0.00888211323143703
+avg_n_best_updates = 3985.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9494.0
+avg_objective = 9388.0
+worst_objective = 9288.0
+std_objective = 60.31915118766179
+best_time_to_best_secs = 591.368321125
+avg_time_to_best_secs = 596.3819094417
+avg_total_time_secs = 600.0842188001
+avg_initial_objective = 94.6
+avg_improvement = 9293.4
+avg_n_accepted = 3086694.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1317805.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 9816.0
+avg_objective = 9804.4
+worst_objective = 9792.0
+std_objective = 7.255342858886822
+best_time_to_best_secs = 378.786746875
+avg_time_to_best_secs = 500.4807214708
+avg_total_time_secs = 600.0047538166
+avg_initial_objective = 94.6
+avg_improvement = 9709.8
+avg_n_accepted = 59760258.7
+avg_n_rejected = 75590834.1
+avg_acceptance_rate = 0.44152031545370357
+avg_n_best_updates = 24840809.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G77"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7944.0
+avg_objective = 7908.2
+worst_objective = 7858.0
+std_objective = 24.140422531513405
+best_time_to_best_secs = 73.910083083
+avg_time_to_best_secs = 225.05771975000002
+avg_total_time_secs = 604.5904373665
+avg_initial_objective = 94.6
+avg_improvement = 7813.6
+avg_n_accepted = 3090000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 159570.6
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10548.0
+avg_objective = 10446.6
+worst_objective = 10350.0
+std_objective = 59.49151199961218
+best_time_to_best_secs = 0.119804417
+avg_time_to_best_secs = 0.1376772917
+avg_total_time_secs = 0.13765045410000004
+avg_initial_objective = 26.8
+avg_improvement = 10419.8
+avg_n_accepted = 4108.9
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9997566476121911
+avg_n_best_updates = 4108.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2650.0
+avg_objective = 2552.4
+worst_objective = 2364.0
+std_objective = 101.84615849407379
+best_time_to_best_secs = 600.0937055
+avg_time_to_best_secs = 600.6664819916998
+avg_total_time_secs = 600.6664495083999
+avg_initial_objective = 26.8
+avg_improvement = 2525.6
+avg_n_accepted = 315.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 315.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 11016.0
+avg_objective = 10879.6
+worst_objective = 10798.0
+std_objective = 61.75953367699598
+best_time_to_best_secs = 163.820661125
+avg_time_to_best_secs = 386.83642203750003
+avg_total_time_secs = 600.0001442626001
+avg_initial_objective = 26.8
+avg_improvement = 10852.8
+avg_n_accepted = 1920788.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 4325.4
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1270.0
+avg_objective = 1178.8
+worst_objective = 996.0
+std_objective = 96.99567000644926
+best_time_to_best_secs = 600.364349458
+avg_time_to_best_secs = 602.1752478999
+avg_total_time_secs = 602.1752148001
+avg_initial_objective = 26.8
+avg_improvement = 1152.0
+avg_n_accepted = 144.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 144.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6988.0
+avg_objective = 6985.0
+worst_objective = 6974.0
+std_objective = 4.123105625617661
+best_time_to_best_secs = 393.74870025
+avg_time_to_best_secs = 491.2496553584
+avg_total_time_secs = 599.9999587874998
+avg_initial_objective = 26.8
+avg_improvement = 6958.2
+avg_n_accepted = 6155248406.7
+avg_n_rejected = 6150652928.9
+avg_acceptance_rate = 0.5002240644568295
+avg_n_best_updates = 3105.9
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5134.0
+avg_objective = 5127.8
+worst_objective = 5120.0
+std_objective = 5.325410782277739
+best_time_to_best_secs = 595.066641708
+avg_time_to_best_secs = 598.2288282166
+avg_total_time_secs = 599.9999931419
+avg_initial_objective = 26.8
+avg_improvement = 5101.0
+avg_n_accepted = 6226689.4
+avg_n_rejected = 4940672.8
+avg_acceptance_rate = 0.5575795276308635
+avg_n_best_updates = 1927.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13748.0
+avg_objective = 13720.2
+worst_objective = 13692.0
+std_objective = 18.79255171603899
+best_time_to_best_secs = 2.830734958
+avg_time_to_best_secs = 5.4956333083999995
+avg_total_time_secs = 8.435544825
+avg_initial_objective = 26.8
+avg_improvement = 13693.4
+avg_n_accepted = 16073011.3
+avg_n_rejected = 183926988.7
+avg_acceptance_rate = 0.0803650565
+avg_n_best_updates = 6210.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13630.0
+avg_objective = 13601.2
+worst_objective = 13578.0
+std_objective = 15.236797563792726
+best_time_to_best_secs = 570.156976084
+avg_time_to_best_secs = 590.0747107043
+avg_total_time_secs = 600.0000225002001
+avg_initial_objective = 26.8
+avg_improvement = 13574.4
+avg_n_accepted = 129176.2
+avg_n_rejected = 10992781.3
+avg_acceptance_rate = 0.011614676563733401
+avg_n_best_updates = 5648.5
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 12376.0
+avg_objective = 12201.4
+worst_objective = 12020.0
+std_objective = 88.95864207596696
+best_time_to_best_secs = 562.821050291
+avg_time_to_best_secs = 580.6323557706
+avg_total_time_secs = 600.3699931374
+avg_initial_objective = 26.8
+avg_improvement = 12174.6
+avg_n_accepted = 2105887.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1205185.7
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 13860.0
+avg_objective = 13843.2
+worst_objective = 13828.0
+std_objective = 12.237646832622683
+best_time_to_best_secs = 441.932741084
+avg_time_to_best_secs = 554.6384532165999
+avg_total_time_secs = 600.0011448917
+avg_initial_objective = 26.8
+avg_improvement = 13816.4
+avg_n_accepted = 42550705.4
+avg_n_rejected = 53909658.9
+avg_acceptance_rate = 0.4411215820769261
+avg_n_best_updates = 17743457.0
+
+[[results]]
+problem = "MaxCut"
+instance_path = "data/instances/max_cut/G81"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 11050.0
+avg_objective = 10971.0
+worst_objective = 10938.0
+std_objective = 32.2893171188243
+best_time_to_best_secs = 40.411509
+avg_time_to_best_secs = 298.5710085666
+avg_total_time_secs = 606.0935350000999
+avg_initial_objective = 26.8
+avg_improvement = 10944.2
+avg_n_accepted = 2040000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 143968.9

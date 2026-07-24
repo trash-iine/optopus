@@ -4,3 +4,10 @@
 /profile.json.gz
 .DS_Store
 .claude/
+
+# Raw benchmark result TOMLs carry full per-run solution vectors and are huge
+# (100s of MB per large-band file). Only the slim summaries + index.json are
+# version-controlled and served by the viewer; regenerate slims locally with
+# `python3 docs/benchmarks/render.py`.
+docs/benchmarks/data/**/*.toml
+!docs/benchmarks/data/**/*.slim.toml

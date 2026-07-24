@@ -1,0 +1,3542 @@
+timestamp = "20260724_235525"
+config_file = "data/benchmarks/sat/general_large.toml"
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 848.0
+avg_objective = 837.6
+worst_objective = 832.0
+std_objective = 4.82078831727758
+best_time_to_best_secs = 0.000178292
+avg_time_to_best_secs = 0.0002491042
+avg_total_time_secs = 0.00024448739999999997
+avg_initial_objective = 750.3
+avg_improvement = 87.3
+avg_n_accepted = 44.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9775821398429821
+avg_n_best_updates = 44.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 849.0
+avg_objective = 846.4
+worst_objective = 840.0
+std_objective = 2.973213749463701
+best_time_to_best_secs = 0.005359666
+avg_time_to_best_secs = 0.008811541699999998
+avg_total_time_secs = 0.0090505459
+avg_initial_objective = 750.3
+avg_improvement = 96.1
+avg_n_accepted = 30.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9673628277852415
+avg_n_best_updates = 30.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.9
+worst_objective = 859.0
+std_objective = 0.3
+best_time_to_best_secs = 0.737951
+avg_time_to_best_secs = 204.8273452208
+avg_total_time_secs = 600.0000029043
+avg_initial_objective = 750.3
+avg_improvement = 109.6
+avg_n_accepted = 90520779.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 66.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 859.0
+worst_objective = 859.0
+std_objective = 0.0
+best_time_to_best_secs = 0.02280875
+avg_time_to_best_secs = 8.0782570708
+avg_total_time_secs = 600.000177871
+avg_initial_objective = 750.3
+avg_improvement = 108.7
+avg_n_accepted = 1704177.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 42.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 842.8
+worst_objective = 842.0
+std_objective = 0.7483314773547882
+best_time_to_best_secs = 89.658124
+avg_time_to_best_secs = 324.2806788626
+avg_total_time_secs = 599.9999908581001
+avg_initial_objective = 750.3
+avg_improvement = 92.5
+avg_n_accepted = 154709308.7
+avg_n_rejected = 276433731.8
+avg_acceptance_rate = 0.35884423137122096
+avg_n_best_updates = 67.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 843.0
+worst_objective = 842.0
+std_objective = 0.4472135954999579
+best_time_to_best_secs = 11.033195167
+avg_time_to_best_secs = 174.59903895
+avg_total_time_secs = 600.0000042332001
+avg_initial_objective = 750.3
+avg_improvement = 92.7
+avg_n_accepted = 60401690.6
+avg_n_rejected = 307941189.7
+avg_acceptance_rate = 0.16398778897932192
+avg_n_best_updates = 59.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 857.7
+worst_objective = 856.0
+std_objective = 1.1
+best_time_to_best_secs = 0.035911125
+avg_time_to_best_secs = 0.0730847457
+avg_total_time_secs = 37.1070197581
+avg_initial_objective = 750.3
+avg_improvement = 107.4
+avg_n_accepted = 18891202.6
+avg_n_rejected = 181108797.4
+avg_acceptance_rate = 0.09445601299999999
+avg_n_best_updates = 80.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 858.6
+worst_objective = 857.0
+std_objective = 0.6633249580710799
+best_time_to_best_secs = 0.080311833
+avg_time_to_best_secs = 0.2738206709
+avg_total_time_secs = 41.827155778999995
+avg_initial_objective = 750.3
+avg_improvement = 108.3
+avg_n_accepted = 1594337.3
+avg_n_rejected = 196811325.4
+avg_acceptance_rate = 0.008041130539500774
+avg_n_best_updates = 71.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.60905675
+avg_time_to_best_secs = 24.0222339502
+avg_total_time_secs = 600.0005596874
+avg_initial_objective = 750.3
+avg_improvement = 109.7
+avg_n_accepted = 93829059.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 206875.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 857.0
+avg_objective = 856.8
+worst_objective = 856.0
+std_objective = 0.4
+best_time_to_best_secs = 0.468425208
+avg_time_to_best_secs = 221.4480389835
+avg_total_time_secs = 600.0002256708001
+avg_initial_objective = 750.3
+avg_improvement = 106.5
+avg_n_accepted = 138556706.6
+avg_n_rejected = 68770938.8
+avg_acceptance_rate = 0.6682982590640233
+avg_n_best_updates = 21038225.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.9
+worst_objective = 859.0
+std_objective = 0.3
+best_time_to_best_secs = 0.242242958
+avg_time_to_best_secs = 73.7019451459
+avg_total_time_secs = 600.1127616458
+avg_initial_objective = 750.3
+avg_improvement = 109.6
+avg_n_accepted = 91045000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 117160.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 837.9
+worst_objective = 834.0
+std_objective = 2.6248809496813377
+best_time_to_best_secs = 0.000169875
+avg_time_to_best_secs = 0.0002581668
+avg_total_time_secs = 0.00025606239999999996
+avg_initial_objective = 749.9
+avg_improvement = 88.0
+avg_n_accepted = 45.9
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9785739639922516
+avg_n_best_updates = 45.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 854.0
+avg_objective = 847.6
+worst_objective = 842.0
+std_objective = 3.8
+best_time_to_best_secs = 0.005513709
+avg_time_to_best_secs = 0.009752487600000002
+avg_total_time_secs = 0.0100294293
+avg_initial_objective = 749.9
+avg_improvement = 97.7
+avg_n_accepted = 32.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9694115137865138
+avg_n_best_updates = 32.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 4.456793291
+avg_time_to_best_secs = 147.32049192479997
+avg_total_time_secs = 599.9999940127
+avg_initial_objective = 749.9
+avg_improvement = 110.1
+avg_n_accepted = 87414961.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 68.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.3
+worst_objective = 859.0
+std_objective = 0.45825756949558405
+best_time_to_best_secs = 2.16551625
+avg_time_to_best_secs = 83.41120876650001
+avg_total_time_secs = 600.0001648582
+avg_initial_objective = 749.9
+avg_improvement = 109.4
+avg_n_accepted = 1654865.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 43.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 842.5
+worst_objective = 842.0
+std_objective = 0.6708203932499369
+best_time_to_best_secs = 32.120013959
+avg_time_to_best_secs = 322.76252212919997
+avg_total_time_secs = 599.9999984999
+avg_initial_objective = 749.9
+avg_improvement = 92.6
+avg_n_accepted = 153482581.4
+avg_n_rejected = 277308794.3
+avg_acceptance_rate = 0.35629082311798776
+avg_n_best_updates = 66.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 842.6
+worst_objective = 842.0
+std_objective = 0.48989794855663565
+best_time_to_best_secs = 51.649624041
+avg_time_to_best_secs = 146.08860883740002
+avg_total_time_secs = 600.0000036208
+avg_initial_objective = 749.9
+avg_improvement = 92.7
+avg_n_accepted = 60063243.7
+avg_n_rejected = 310194954.3
+avg_acceptance_rate = 0.16222835755562942
+avg_n_best_updates = 58.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 858.8
+worst_objective = 858.0
+std_objective = 0.6000000000000001
+best_time_to_best_secs = 0.0408165
+avg_time_to_best_secs = 0.1238467875
+avg_total_time_secs = 36.20955545
+avg_initial_objective = 749.9
+avg_improvement = 108.9
+avg_n_accepted = 17186773.2
+avg_n_rejected = 182813226.8
+avg_acceptance_rate = 0.08593386600000001
+avg_n_best_updates = 82.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 858.3
+worst_objective = 857.0
+std_objective = 0.8999999999999999
+best_time_to_best_secs = 0.074212084
+avg_time_to_best_secs = 4.2620855333000005
+avg_total_time_secs = 42.303133108400004
+avg_initial_objective = 749.9
+avg_improvement = 108.4
+avg_n_accepted = 1640858.5
+avg_n_rejected = 196718283.0
+avg_acceptance_rate = 0.008277987231148407
+avg_n_best_updates = 72.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.9
+worst_objective = 859.0
+std_objective = 0.30000000000000004
+best_time_to_best_secs = 0.514340583
+avg_time_to_best_secs = 25.744044237700002
+avg_total_time_secs = 600.0010035084999
+avg_initial_objective = 749.9
+avg_improvement = 110.0
+avg_n_accepted = 89490847.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 594406.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 857.0
+worst_objective = 856.0
+std_objective = 0.7745966692414834
+best_time_to_best_secs = 8.432401834
+avg_time_to_best_secs = 288.7553895167
+avg_total_time_secs = 600.0003043331999
+avg_initial_objective = 749.9
+avg_improvement = 107.1
+avg_n_accepted = 136695933.1
+avg_n_rejected = 68021950.0
+avg_acceptance_rate = 0.6677283421835372
+avg_n_best_updates = 21072794.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 5.942400125
+avg_time_to_best_secs = 41.171797621
+avg_total_time_secs = 600.1039412834001
+avg_initial_objective = 749.9
+avg_improvement = 110.1
+avg_n_accepted = 88485000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 113919.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 837.8
+worst_objective = 833.0
+std_objective = 3.3105890714493698
+best_time_to_best_secs = 0.000189958
+avg_time_to_best_secs = 0.0002651291
+avg_total_time_secs = 0.0002596874
+avg_initial_objective = 750.6
+avg_improvement = 87.2
+avg_n_accepted = 45.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.978256272584753
+avg_n_best_updates = 45.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 851.0
+avg_objective = 845.9
+worst_objective = 840.0
+std_objective = 3.144837038703278
+best_time_to_best_secs = 0.00559675
+avg_time_to_best_secs = 0.0089564
+avg_total_time_secs = 0.0092075584
+avg_initial_objective = 750.6
+avg_improvement = 95.3
+avg_n_accepted = 30.5
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9681050470800112
+avg_n_best_updates = 30.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.003136208
+avg_time_to_best_secs = 59.24061789990001
+avg_total_time_secs = 599.9999968458
+avg_initial_objective = 750.6
+avg_improvement = 109.4
+avg_n_accepted = 86416567.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 67.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.1
+worst_objective = 859.0
+std_objective = 0.3
+best_time_to_best_secs = 2.425450416
+avg_time_to_best_secs = 50.5740518874
+avg_total_time_secs = 600.0002426291001
+avg_initial_objective = 750.6
+avg_improvement = 108.5
+avg_n_accepted = 1671428.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 43.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 841.2
+worst_objective = 840.0
+std_objective = 0.7483314773547881
+best_time_to_best_secs = 62.840706875
+avg_time_to_best_secs = 270.6325721085
+avg_total_time_secs = 599.9999950209
+avg_initial_objective = 750.6
+avg_improvement = 90.6
+avg_n_accepted = 147789283.9
+avg_n_rejected = 268813553.5
+avg_acceptance_rate = 0.35474842731590134
+avg_n_best_updates = 68.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 841.0
+avg_objective = 840.9
+worst_objective = 840.0
+std_objective = 0.30000000000000004
+best_time_to_best_secs = 23.051816417
+avg_time_to_best_secs = 235.5402400375
+avg_total_time_secs = 600.0000028375
+avg_initial_objective = 750.6
+avg_improvement = 90.3
+avg_n_accepted = 59421306.2
+avg_n_rejected = 299067868.1
+avg_acceptance_rate = 0.16577959497765654
+avg_n_best_updates = 58.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 858.2
+worst_objective = 854.0
+std_objective = 1.5999999999999996
+best_time_to_best_secs = 0.039112208
+avg_time_to_best_secs = 0.9027442333
+avg_total_time_secs = 26.6050624708
+avg_initial_objective = 750.6
+avg_improvement = 107.6
+avg_n_accepted = 13083921.0
+avg_n_rejected = 186916079.0
+avg_acceptance_rate = 0.065419605
+avg_n_best_updates = 81.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 857.9
+worst_objective = 856.0
+std_objective = 1.374772708486752
+best_time_to_best_secs = 0.079715208
+avg_time_to_best_secs = 0.12099387099999999
+avg_total_time_secs = 38.1164308125
+avg_initial_objective = 750.6
+avg_improvement = 107.3
+avg_n_accepted = 1192475.4
+avg_n_rejected = 197615049.2
+avg_acceptance_rate = 0.006000587509416378
+avg_n_best_updates = 72.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.306578166
+avg_time_to_best_secs = 6.018481899899999
+avg_total_time_secs = 600.0006102209999
+avg_initial_objective = 750.6
+avg_improvement = 109.4
+avg_n_accepted = 92440099.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 188959.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 857.0
+avg_objective = 855.8
+worst_objective = 855.0
+std_objective = 0.6000000000000001
+best_time_to_best_secs = 21.917143084
+avg_time_to_best_secs = 140.12024287089997
+avg_total_time_secs = 600.0002991749001
+avg_initial_objective = 750.6
+avg_improvement = 105.2
+avg_n_accepted = 137379619.7
+avg_n_rejected = 67913238.3
+avg_acceptance_rate = 0.6691885100733976
+avg_n_best_updates = 21187391.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 6.979925916
+avg_time_to_best_secs = 43.692560283300004
+avg_total_time_secs = 600.1851566959001
+avg_initial_objective = 750.6
+avg_improvement = 109.4
+avg_n_accepted = 85030000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 110047.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 845.0
+avg_objective = 840.2
+worst_objective = 834.0
+std_objective = 3.1559467676119
+best_time_to_best_secs = 0.000186125
+avg_time_to_best_secs = 0.0002448
+avg_total_time_secs = 0.00023867080000000005
+avg_initial_objective = 758.9
+avg_improvement = 81.3
+avg_n_accepted = 42.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9764097911003535
+avg_n_best_updates = 42.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 853.0
+avg_objective = 848.0
+worst_objective = 844.0
+std_objective = 2.8284271247461903
+best_time_to_best_secs = 0.005666916
+avg_time_to_best_secs = 0.008758854299999999
+avg_total_time_secs = 0.009024391699999999
+avg_initial_objective = 758.9
+avg_improvement = 89.1
+avg_n_accepted = 29.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9671238592374495
+avg_n_best_updates = 29.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 24.283446541
+avg_time_to_best_secs = 117.42849014590001
+avg_total_time_secs = 600.0000001208998
+avg_initial_objective = 758.9
+avg_improvement = 101.1
+avg_n_accepted = 88358549.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 62.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.1
+worst_objective = 859.0
+std_objective = 0.3
+best_time_to_best_secs = 0.111702292
+avg_time_to_best_secs = 60.532456724999996
+avg_total_time_secs = 600.0001453502001
+avg_initial_objective = 758.9
+avg_improvement = 100.2
+avg_n_accepted = 1679710.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 40.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 842.1
+worst_objective = 841.0
+std_objective = 0.7
+best_time_to_best_secs = 9.66219675
+avg_time_to_best_secs = 149.9987424333
+avg_total_time_secs = 599.9999955956999
+avg_initial_objective = 758.9
+avg_improvement = 83.2
+avg_n_accepted = 150181872.5
+avg_n_rejected = 267761931.5
+avg_acceptance_rate = 0.35933518704834244
+avg_n_best_updates = 64.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 842.7
+worst_objective = 842.0
+std_objective = 0.6403124237432849
+best_time_to_best_secs = 49.494518459
+avg_time_to_best_secs = 276.8155644001
+avg_total_time_secs = 600.0000026874
+avg_initial_objective = 758.9
+avg_improvement = 83.8
+avg_n_accepted = 59557999.8
+avg_n_rejected = 303377948.3
+avg_acceptance_rate = 0.16410891851376158
+avg_n_best_updates = 55.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 858.1
+worst_objective = 857.0
+std_objective = 0.8306623862918073
+best_time_to_best_secs = 0.038494917
+avg_time_to_best_secs = 0.10478561270000002
+avg_total_time_secs = 36.3831144581
+avg_initial_objective = 758.9
+avg_improvement = 99.2
+avg_n_accepted = 17808525.4
+avg_n_rejected = 182191474.6
+avg_acceptance_rate = 0.08904262700000001
+avg_n_best_updates = 78.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 858.4
+worst_objective = 856.0
+std_objective = 1.0198039027185568
+best_time_to_best_secs = 0.078590875
+avg_time_to_best_secs = 2.1479722955
+avg_total_time_secs = 39.2253317416
+avg_initial_objective = 758.9
+avg_improvement = 99.5
+avg_n_accepted = 1448944.3
+avg_n_rejected = 197102111.4
+avg_acceptance_rate = 0.007304163101717849
+avg_n_best_updates = 68.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.276982666
+avg_time_to_best_secs = 1.3541028000000002
+avg_total_time_secs = 600.0006357
+avg_initial_objective = 758.9
+avg_improvement = 101.1
+avg_n_accepted = 90627090.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 599589.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 857.0
+avg_objective = 856.2
+worst_objective = 856.0
+std_objective = 0.4000000000000001
+best_time_to_best_secs = 32.3735105
+avg_time_to_best_secs = 192.8076418041
+avg_total_time_secs = 600.0001963331999
+avg_initial_objective = 758.9
+avg_improvement = 97.3
+avg_n_accepted = 137281316.4
+avg_n_rejected = 68103478.2
+avg_acceptance_rate = 0.6684103345507587
+avg_n_best_updates = 21067945.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-011.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 1.995114
+avg_time_to_best_secs = 27.4886826123
+avg_total_time_secs = 600.1135514335999
+avg_initial_objective = 758.9
+avg_improvement = 101.1
+avg_n_accepted = 87975000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 113337.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 842.0
+avg_objective = 836.7
+worst_objective = 829.0
+std_objective = 3.4655446902326914
+best_time_to_best_secs = 0.000173042
+avg_time_to_best_secs = 0.0002559166
+avg_total_time_secs = 0.00024887909999999995
+avg_initial_objective = 749.0
+avg_improvement = 87.7
+avg_n_accepted = 44.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9778335746937751
+avg_n_best_updates = 44.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 851.0
+avg_objective = 847.3
+worst_objective = 843.0
+std_objective = 2.4103941586387903
+best_time_to_best_secs = 0.005819917
+avg_time_to_best_secs = 0.0091936667
+avg_total_time_secs = 0.0094361582
+avg_initial_objective = 749.0
+avg_improvement = 98.3
+avg_n_accepted = 32.2
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9697490204107853
+avg_n_best_updates = 32.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.351474875
+avg_time_to_best_secs = 6.2529920498
+avg_total_time_secs = 599.9999991249001
+avg_initial_objective = 749.0
+avg_improvement = 111.0
+avg_n_accepted = 89332718.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 68.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 3.8777065
+avg_time_to_best_secs = 74.23917115420001
+avg_total_time_secs = 600.0002654876
+avg_initial_objective = 749.0
+avg_improvement = 111.0
+avg_n_accepted = 1668048.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 44.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 842.0
+worst_objective = 841.0
+std_objective = 0.6324555320336759
+best_time_to_best_secs = 12.715439375
+avg_time_to_best_secs = 170.46882805829995
+avg_total_time_secs = 599.9999997418001
+avg_initial_objective = 749.0
+avg_improvement = 93.0
+avg_n_accepted = 144836557.5
+avg_n_rejected = 258055051.2
+avg_acceptance_rate = 0.35951244574448676
+avg_n_best_updates = 65.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 842.5
+worst_objective = 842.0
+std_objective = 0.6708203932499369
+best_time_to_best_secs = 44.921369417
+avg_time_to_best_secs = 185.47536657930002
+avg_total_time_secs = 600.0000016417999
+avg_initial_objective = 749.0
+avg_improvement = 93.5
+avg_n_accepted = 60298101.7
+avg_n_rejected = 307405977.4
+avg_acceptance_rate = 0.16398731730681584
+avg_n_best_updates = 62.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 858.3
+worst_objective = 857.0
+std_objective = 0.9
+best_time_to_best_secs = 0.039349875
+avg_time_to_best_secs = 0.051945649999999996
+avg_total_time_secs = 33.9728951292
+avg_initial_objective = 749.0
+avg_improvement = 109.3
+avg_n_accepted = 16238044.9
+avg_n_rejected = 183761955.1
+avg_acceptance_rate = 0.08119022449999999
+avg_n_best_updates = 82.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.1
+worst_objective = 858.0
+std_objective = 0.5385164807134504
+best_time_to_best_secs = 0.081030833
+avg_time_to_best_secs = 0.2079395375
+avg_total_time_secs = 40.4151925835
+avg_initial_objective = 749.0
+avg_improvement = 110.1
+avg_n_accepted = 1516515.1
+avg_n_rejected = 196966969.8
+avg_acceptance_rate = 0.0076455558868605555
+avg_n_best_updates = 72.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.080140791
+avg_time_to_best_secs = 0.6392974539
+avg_total_time_secs = 600.0007861709
+avg_initial_objective = 749.0
+avg_improvement = 111.0
+avg_n_accepted = 90589760.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 991275.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 858.0
+avg_objective = 856.9
+worst_objective = 856.0
+std_objective = 0.7
+best_time_to_best_secs = 25.457294459
+avg_time_to_best_secs = 150.5866760419
+avg_total_time_secs = 600.0002409625001
+avg_initial_objective = 749.0
+avg_improvement = 107.9
+avg_n_accepted = 138734559.7
+avg_n_rejected = 68868167.1
+avg_acceptance_rate = 0.6682694643844268
+avg_n_best_updates = 21314965.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-012.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.994944166
+avg_time_to_best_secs = 6.523047249799999
+avg_total_time_secs = 600.1756903877001
+avg_initial_objective = 749.0
+avg_improvement = 111.0
+avg_n_accepted = 88275000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 113556.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 838.8
+worst_objective = 833.0
+std_objective = 3.2802438933713454
+best_time_to_best_secs = 0.000160167
+avg_time_to_best_secs = 0.0002599128
+avg_total_time_secs = 0.00025737920000000003
+avg_initial_objective = 751.0
+avg_improvement = 87.8
+avg_n_accepted = 44.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9776537777427331
+avg_n_best_updates = 44.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 851.0
+avg_objective = 846.8
+worst_objective = 840.0
+std_objective = 3.5721142198983507
+best_time_to_best_secs = 0.004996667
+avg_time_to_best_secs = 0.0087781708
+avg_total_time_secs = 0.009039762400000002
+avg_initial_objective = 751.0
+avg_improvement = 95.8
+avg_n_accepted = 30.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9675054790244543
+avg_n_best_updates = 30.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.010003334
+avg_time_to_best_secs = 1.5874279001
+avg_total_time_secs = 600.0000000167
+avg_initial_objective = 751.0
+avg_improvement = 109.0
+avg_n_accepted = 87175963.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 65.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.228560583
+avg_time_to_best_secs = 27.5990508249
+avg_total_time_secs = 600.0002372583
+avg_initial_objective = 751.0
+avg_improvement = 109.0
+avg_n_accepted = 1650254.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 43.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 842.0
+worst_objective = 841.0
+std_objective = 0.6324555320336759
+best_time_to_best_secs = 11.904218292
+avg_time_to_best_secs = 107.03737187920001
+avg_total_time_secs = 599.9999990958
+avg_initial_objective = 751.0
+avg_improvement = 91.0
+avg_n_accepted = 147922815.6
+avg_n_rejected = 257183071.7
+avg_acceptance_rate = 0.3651459800536465
+avg_n_best_updates = 65.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 842.4
+worst_objective = 841.0
+std_objective = 0.6633249580710799
+best_time_to_best_secs = 33.747536375
+avg_time_to_best_secs = 246.28772693319996
+avg_total_time_secs = 600.0000021251001
+avg_initial_objective = 751.0
+avg_improvement = 91.4
+avg_n_accepted = 59703063.8
+avg_n_rejected = 292716368.4
+avg_acceptance_rate = 0.16942413409669993
+avg_n_best_updates = 58.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 858.2
+worst_objective = 857.0
+std_objective = 0.9797958971132712
+best_time_to_best_secs = 0.039673958
+avg_time_to_best_secs = 0.088471004
+avg_total_time_secs = 36.6081391957
+avg_initial_objective = 751.0
+avg_improvement = 107.2
+avg_n_accepted = 16839431.9
+avg_n_rejected = 183160568.1
+avg_acceptance_rate = 0.0841971595
+avg_n_best_updates = 81.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 858.5
+worst_objective = 855.0
+std_objective = 1.4317821063276353
+best_time_to_best_secs = 0.0834295
+avg_time_to_best_secs = 0.1346127417
+avg_total_time_secs = 42.642994437599995
+avg_initial_objective = 751.0
+avg_improvement = 107.5
+avg_n_accepted = 1685098.2
+avg_n_rejected = 196629803.6
+avg_acceptance_rate = 0.008502972150679015
+avg_n_best_updates = 69.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.052134542
+avg_time_to_best_secs = 0.24413715419999998
+avg_total_time_secs = 600.0006646751001
+avg_initial_objective = 751.0
+avg_improvement = 109.0
+avg_n_accepted = 91023087.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1179509.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 858.0
+avg_objective = 856.4
+worst_objective = 856.0
+std_objective = 0.66332495807108
+best_time_to_best_secs = 68.302527041
+avg_time_to_best_secs = 222.57777193340002
+avg_total_time_secs = 600.0003907708
+avg_initial_objective = 751.0
+avg_improvement = 105.4
+avg_n_accepted = 135820458.9
+avg_n_rejected = 66619372.7
+avg_acceptance_rate = 0.670917646545009
+avg_n_best_updates = 20406150.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-013.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.060693542
+avg_time_to_best_secs = 0.8073592083
+avg_total_time_secs = 600.1530906125
+avg_initial_objective = 751.0
+avg_improvement = 109.0
+avg_n_accepted = 89145000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 115039.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 834.9
+worst_objective = 828.0
+std_objective = 4.459820624195551
+best_time_to_best_secs = 0.000166834
+avg_time_to_best_secs = 0.0002406291
+avg_total_time_secs = 0.00023377089999999993
+avg_initial_objective = 754.5
+avg_improvement = 80.4
+avg_n_accepted = 42.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.976782166246452
+avg_n_best_updates = 42.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 852.0
+avg_objective = 846.9
+worst_objective = 841.0
+std_objective = 3.3301651610693423
+best_time_to_best_secs = 0.005211458
+avg_time_to_best_secs = 0.0088775669
+avg_total_time_secs = 0.0091116294
+avg_initial_objective = 754.5
+avg_improvement = 92.4
+avg_n_accepted = 30.7
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9682290350894356
+avg_n_best_updates = 30.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.023021917
+avg_time_to_best_secs = 3.5499440625
+avg_total_time_secs = 600.0000020165
+avg_initial_objective = 754.5
+avg_improvement = 105.5
+avg_n_accepted = 88534852.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 67.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 1.6973695420000001
+avg_time_to_best_secs = 77.7949634917
+avg_total_time_secs = 600.0002479499999
+avg_initial_objective = 754.5
+avg_improvement = 105.5
+avg_n_accepted = 1684518.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 43.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 843.1
+worst_objective = 842.0
+std_objective = 0.5385164807134505
+best_time_to_best_secs = 34.262378625
+avg_time_to_best_secs = 262.7957609792
+avg_total_time_secs = 600.0000007123
+avg_initial_objective = 754.5
+avg_improvement = 88.6
+avg_n_accepted = 151874838.4
+avg_n_rejected = 278454209.6
+avg_acceptance_rate = 0.3529275136055944
+avg_n_best_updates = 66.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 845.0
+avg_objective = 844.1
+worst_objective = 843.0
+std_objective = 0.8306623862918073
+best_time_to_best_secs = 51.268164041
+avg_time_to_best_secs = 270.20282897510003
+avg_total_time_secs = 599.9999996127
+avg_initial_objective = 754.5
+avg_improvement = 89.6
+avg_n_accepted = 60871851.5
+avg_n_rejected = 315757254.9
+avg_acceptance_rate = 0.1616306856998865
+avg_n_best_updates = 58.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 858.8
+worst_objective = 857.0
+std_objective = 0.9797958971132713
+best_time_to_best_secs = 0.041953667
+avg_time_to_best_secs = 0.0780091835
+avg_total_time_secs = 34.493076941700004
+avg_initial_objective = 754.5
+avg_improvement = 104.3
+avg_n_accepted = 17033871.3
+avg_n_rejected = 182966128.7
+avg_acceptance_rate = 0.08516935649999999
+avg_n_best_updates = 79.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.3
+worst_objective = 857.0
+std_objective = 0.8999999999999999
+best_time_to_best_secs = 0.087189208
+avg_time_to_best_secs = 0.4001396999
+avg_total_time_secs = 41.1232670959
+avg_initial_objective = 754.5
+avg_improvement = 104.8
+avg_n_accepted = 1474888.5
+avg_n_rejected = 197050223.0
+avg_acceptance_rate = 0.0074305059102972625
+avg_n_best_updates = 71.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.092128
+avg_time_to_best_secs = 0.4419959628
+avg_total_time_secs = 600.0007824500999
+avg_initial_objective = 754.5
+avg_improvement = 105.5
+avg_n_accepted = 90519004.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 806479.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 858.0
+avg_objective = 857.8
+worst_objective = 857.0
+std_objective = 0.4000000000000001
+best_time_to_best_secs = 18.705597083
+avg_time_to_best_secs = 199.4731001125
+avg_total_time_secs = 600.0002572623
+avg_initial_objective = 754.5
+avg_improvement = 103.3
+avg_n_accepted = 137526405.0
+avg_n_rejected = 68538161.4
+avg_acceptance_rate = 0.6673947002436649
+avg_n_best_updates = 21131916.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-014.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.05187575
+avg_time_to_best_secs = 4.4421417876
+avg_total_time_secs = 600.176375675
+avg_initial_objective = 754.5
+avg_improvement = 105.5
+avg_n_accepted = 90200000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 117471.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 837.0
+worst_objective = 828.0
+std_objective = 4.560701700396552
+best_time_to_best_secs = 0.000152708
+avg_time_to_best_secs = 0.00025630410000000004
+avg_total_time_secs = 0.00025292079999999996
+avg_initial_objective = 752.3
+avg_improvement = 84.7
+avg_n_accepted = 42.9
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9768607719260807
+avg_n_best_updates = 42.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 849.0
+avg_objective = 844.6
+worst_objective = 839.0
+std_objective = 3.0724582991474434
+best_time_to_best_secs = 0.005894667
+avg_time_to_best_secs = 0.009007375100000001
+avg_total_time_secs = 0.0092534375
+avg_initial_objective = 752.3
+avg_improvement = 92.3
+avg_n_accepted = 29.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9670925428227252
+avg_n_best_updates = 29.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 3.688824416
+avg_time_to_best_secs = 66.53965439589999
+avg_total_time_secs = 599.999997871
+avg_initial_objective = 752.3
+avg_improvement = 107.7
+avg_n_accepted = 89139578.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 65.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.3
+worst_objective = 859.0
+std_objective = 0.45825756949558405
+best_time_to_best_secs = 2.217564833
+avg_time_to_best_secs = 79.3254500333
+avg_total_time_secs = 600.0002240957999
+avg_initial_objective = 752.3
+avg_improvement = 107.0
+avg_n_accepted = 1663533.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 44.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 842.2
+worst_objective = 841.0
+std_objective = 0.8717797887081347
+best_time_to_best_secs = 16.772832667
+avg_time_to_best_secs = 179.2436552543
+avg_total_time_secs = 599.9999994126
+avg_initial_objective = 752.3
+avg_improvement = 89.9
+avg_n_accepted = 152726544.5
+avg_n_rejected = 274227670.7
+avg_acceptance_rate = 0.35771177345523675
+avg_n_best_updates = 65.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 842.4
+worst_objective = 841.0
+std_objective = 0.6633249580710799
+best_time_to_best_secs = 66.571134125
+avg_time_to_best_secs = 288.7165329917
+avg_total_time_secs = 600.0000028832
+avg_initial_objective = 752.3
+avg_improvement = 90.1
+avg_n_accepted = 59333822.0
+avg_n_rejected = 306514038.1
+avg_acceptance_rate = 0.16220813122609862
+avg_n_best_updates = 56.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 858.5
+worst_objective = 857.0
+std_objective = 0.6708203932499369
+best_time_to_best_secs = 0.043395583
+avg_time_to_best_secs = 0.07467451250000001
+avg_total_time_secs = 37.4325377456
+avg_initial_objective = 752.3
+avg_improvement = 106.2
+avg_n_accepted = 18522419.1
+avg_n_rejected = 181477580.9
+avg_acceptance_rate = 0.09261209550000002
+avg_n_best_updates = 80.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 858.6
+worst_objective = 858.0
+std_objective = 0.4898979485566357
+best_time_to_best_secs = 0.079370916
+avg_time_to_best_secs = 0.3781326041
+avg_total_time_secs = 41.9606868417
+avg_initial_objective = 752.3
+avg_improvement = 106.3
+avg_n_accepted = 1676922.3
+avg_n_rejected = 196646155.4
+avg_acceptance_rate = 0.00846890280683231
+avg_n_best_updates = 72.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.692597208
+avg_time_to_best_secs = 23.9478281207
+avg_total_time_secs = 600.0007208415999
+avg_initial_objective = 752.3
+avg_improvement = 107.7
+avg_n_accepted = 90080385.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 288704.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 857.0
+avg_objective = 856.6
+worst_objective = 856.0
+std_objective = 0.4898979485566357
+best_time_to_best_secs = 12.918355084
+avg_time_to_best_secs = 189.04198002070004
+avg_total_time_secs = 600.0003227917001
+avg_initial_objective = 752.3
+avg_improvement = 104.3
+avg_n_accepted = 136173845.3
+avg_n_rejected = 67129105.9
+avg_acceptance_rate = 0.6698075194786143
+avg_n_best_updates = 20822886.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-015.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 2.755907042
+avg_time_to_best_secs = 55.242507320799994
+avg_total_time_secs = 600.1569833749002
+avg_initial_objective = 752.3
+avg_improvement = 107.7
+avg_n_accepted = 88550000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 114173.6
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 846.0
+avg_objective = 838.6
+worst_objective = 830.0
+std_objective = 4.608687448721165
+best_time_to_best_secs = 0.000156792
+avg_time_to_best_secs = 0.0002654668
+avg_total_time_secs = 0.0002618043
+avg_initial_objective = 749.7
+avg_improvement = 88.9
+avg_n_accepted = 45.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9780504174264891
+avg_n_best_updates = 45.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 852.0
+avg_objective = 846.9
+worst_objective = 842.0
+std_objective = 3.1128764832546763
+best_time_to_best_secs = 0.006146875
+avg_time_to_best_secs = 0.0091884667
+avg_total_time_secs = 0.0094408458
+avg_initial_objective = 749.7
+avg_improvement = 97.2
+avg_n_accepted = 31.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9685166780114598
+avg_n_best_updates = 31.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.156410125
+avg_time_to_best_secs = 3.7365744001000003
+avg_total_time_secs = 600.0000004665001
+avg_initial_objective = 749.7
+avg_improvement = 110.3
+avg_n_accepted = 88666538.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 66.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 3.736679333
+avg_time_to_best_secs = 222.92581479550003
+avg_total_time_secs = 600.0001740128
+avg_initial_objective = 749.7
+avg_improvement = 110.3
+avg_n_accepted = 1675867.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 44.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 845.0
+avg_objective = 843.7
+worst_objective = 842.0
+std_objective = 0.7810249675906653
+best_time_to_best_secs = 17.901639333
+avg_time_to_best_secs = 238.53369852080004
+avg_total_time_secs = 599.9999986209
+avg_initial_objective = 749.7
+avg_improvement = 94.0
+avg_n_accepted = 153815541.6
+avg_n_rejected = 274699441.0
+avg_acceptance_rate = 0.3589607958749489
+avg_n_best_updates = 70.4
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 843.9
+worst_objective = 843.0
+std_objective = 0.30000000000000004
+best_time_to_best_secs = 13.40401275
+avg_time_to_best_secs = 282.6214158001
+avg_total_time_secs = 600.0000033416
+avg_initial_objective = 749.7
+avg_improvement = 94.2
+avg_n_accepted = 57877935.1
+avg_n_rejected = 296526628.6
+avg_acceptance_rate = 0.16333742483319022
+avg_n_best_updates = 59.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.1
+worst_objective = 858.0
+std_objective = 0.5385164807134505
+best_time_to_best_secs = 0.041955625
+avg_time_to_best_secs = 0.2855942292
+avg_total_time_secs = 39.6556441916
+avg_initial_objective = 749.7
+avg_improvement = 109.4
+avg_n_accepted = 19386262.4
+avg_n_rejected = 180613737.6
+avg_acceptance_rate = 0.09693131199999999
+avg_n_best_updates = 85.1
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.5
+worst_objective = 857.0
+std_objective = 0.9219544457292888
+best_time_to_best_secs = 0.083019584
+avg_time_to_best_secs = 1.5630047917999996
+avg_total_time_secs = 37.8238149126
+avg_initial_objective = 749.7
+avg_improvement = 109.8
+avg_n_accepted = 1233995.3
+avg_n_rejected = 197532009.4
+avg_acceptance_rate = 0.006211689671449501
+avg_n_best_updates = 74.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.079440542
+avg_time_to_best_secs = 0.47872837079999997
+avg_total_time_secs = 600.0010292833
+avg_initial_objective = 749.7
+avg_improvement = 110.3
+avg_n_accepted = 91509582.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1179069.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 858.0
+avg_objective = 857.8
+worst_objective = 857.0
+std_objective = 0.4
+best_time_to_best_secs = 31.802408666
+avg_time_to_best_secs = 176.32159014579997
+avg_total_time_secs = 600.0001901210001
+avg_initial_objective = 749.7
+avg_improvement = 108.1
+avg_n_accepted = 137786029.2
+avg_n_rejected = 68269770.1
+avg_acceptance_rate = 0.6686830689820107
+avg_n_best_updates = 20996289.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-016.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 2.063690084
+avg_time_to_best_secs = 5.579816920800001
+avg_total_time_secs = 600.1243823959
+avg_initial_objective = 749.7
+avg_improvement = 110.3
+avg_n_accepted = 90415000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 116237.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 846.0
+avg_objective = 839.7
+worst_objective = 830.0
+std_objective = 4.920365840057018
+best_time_to_best_secs = 0.000153625
+avg_time_to_best_secs = 0.00025919990000000003
+avg_total_time_secs = 0.0002552792
+avg_initial_objective = 753.6
+avg_improvement = 86.1
+avg_n_accepted = 45.0
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9779637485956689
+avg_n_best_updates = 45.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 852.0
+avg_objective = 848.9
+worst_objective = 845.0
+std_objective = 2.2561028345356955
+best_time_to_best_secs = 0.005816792
+avg_time_to_best_secs = 0.0092393958
+avg_total_time_secs = 0.0094794499
+avg_initial_objective = 753.6
+avg_improvement = 95.3
+avg_n_accepted = 31.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9692975886725886
+avg_n_best_updates = 31.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.259147333
+avg_time_to_best_secs = 92.660020304
+avg_total_time_secs = 599.9999963542
+avg_initial_objective = 753.6
+avg_improvement = 106.4
+avg_n_accepted = 88256140.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 65.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 859.0
+worst_objective = 859.0
+std_objective = 0.0
+best_time_to_best_secs = 0.998772667
+avg_time_to_best_secs = 5.639469450199999
+avg_total_time_secs = 600.0001607499
+avg_initial_objective = 753.6
+avg_improvement = 105.4
+avg_n_accepted = 1660146.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 41.9
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 844.0
+avg_objective = 842.6
+worst_objective = 841.0
+std_objective = 0.8
+best_time_to_best_secs = 33.703394834
+avg_time_to_best_secs = 216.1890068418
+avg_total_time_secs = 599.9999986665
+avg_initial_objective = 753.6
+avg_improvement = 89.0
+avg_n_accepted = 153623930.2
+avg_n_rejected = 270671439.2
+avg_acceptance_rate = 0.36207268030422024
+avg_n_best_updates = 65.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 843.0
+avg_objective = 842.5
+worst_objective = 842.0
+std_objective = 0.5
+best_time_to_best_secs = 17.186192209
+avg_time_to_best_secs = 193.21528722099998
+avg_total_time_secs = 600.0000017876
+avg_initial_objective = 753.6
+avg_improvement = 88.9
+avg_n_accepted = 60580106.7
+avg_n_rejected = 306540947.3
+avg_acceptance_rate = 0.16502774754962413
+avg_n_best_updates = 56.3
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 858.1
+worst_objective = 856.0
+std_objective = 1.044030650891055
+best_time_to_best_secs = 0.038752834
+avg_time_to_best_secs = 0.0722422417
+avg_total_time_secs = 38.4807173541
+avg_initial_objective = 753.6
+avg_improvement = 104.5
+avg_n_accepted = 19752210.1
+avg_n_rejected = 180247789.9
+avg_acceptance_rate = 0.09876105049999999
+avg_n_best_updates = 79.5
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 859.0
+avg_objective = 858.6
+worst_objective = 857.0
+std_objective = 0.6633249580710799
+best_time_to_best_secs = 0.075294916
+avg_time_to_best_secs = 0.1036270208
+avg_total_time_secs = 44.2482492418
+avg_initial_objective = 753.6
+avg_improvement = 105.0
+avg_n_accepted = 1881420.9
+avg_n_rejected = 196237158.2
+avg_acceptance_rate = 0.009500991943143388
+avg_n_best_updates = 73.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 859.9
+worst_objective = 859.0
+std_objective = 0.3
+best_time_to_best_secs = 0.129230042
+avg_time_to_best_secs = 41.386250437700006
+avg_total_time_secs = 600.0006635376001
+avg_initial_objective = 753.6
+avg_improvement = 106.3
+avg_n_accepted = 91893339.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 571836.7
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 858.0
+avg_objective = 857.1
+worst_objective = 857.0
+std_objective = 0.3
+best_time_to_best_secs = 0.484219208
+avg_time_to_best_secs = 108.61988159169998
+avg_total_time_secs = 600.0002370499
+avg_initial_objective = 753.6
+avg_improvement = 103.5
+avg_n_accepted = 137483544.0
+avg_n_rejected = 67968470.4
+avg_acceptance_rate = 0.6691759438513102
+avg_n_best_updates = 20826710.0
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-017.cnf"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    100,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 2.251380292
+avg_time_to_best_secs = 48.0108529708
+avg_total_time_secs = 600.1520017333
+avg_initial_objective = 753.6
+avg_improvement = 106.4
+avg_n_accepted = 87635000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 111986.5
