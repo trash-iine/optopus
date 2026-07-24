@@ -11,7 +11,7 @@ use crate::error::OptError;
 use crate::heuristic::{
     BreakoutLocalSearchForMaxCut, Heuristic, LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES,
     PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut, StopCondition,
-    SubProblemBasedCrossover,
+    SubProblemBasedCrossover, WalkSatForSat,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -373,6 +373,35 @@ impl ConfigurableProblem for Sat {
             NeighborKind::Flip => Ok(visitor.visit::<SatFlipNeighbor>()),
             NeighborKind::Swap => Ok(visitor.visit::<SatSwapNeighbor>()),
             other => Err(invalid_neighbor::<Self>(other)),
+        }
+    }
+
+    fn build_special_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        match config {
+            HeuristicConfig::WalkSat {
+                noise,
+                adaptive_noise,
+                ..
+            } => {
+                let noise = noise.unwrap_or(0.3);
+                if !(0.0..=1.0).contains(&noise) {
+                    return Err(OptError::Config(
+                        "'noise' must be within [0, 1]".to_string(),
+                    ));
+                }
+                Ok(Box::new(WalkSatForSat::new(
+                    cond,
+                    noise,
+                    adaptive_noise.unwrap_or(false),
+                )))
+            }
+            _ => Err(OptError::Config(format!(
+                "heuristic '{}' is not supported for Sat",
+                config.kind_name()
+            ))),
         }
     }
 

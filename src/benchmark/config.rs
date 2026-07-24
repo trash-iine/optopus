@@ -201,6 +201,17 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// WalkSAT/SKC stochastic local search (SAT/MaxSAT only).
+    WalkSat {
+        /// Random-walk probability within the chosen unsatisfied clause. Default: 0.3.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        noise: Option<f64>,
+        /// Enable Hoos' adaptive noise adjustment (uses `noise` as the start). Default: false.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        adaptive_noise: Option<bool>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Repeats its `steps` cycle until `stop_condition` is met.
     Sequential {
         steps: Vec<HeuristicConfig>,
@@ -255,6 +266,7 @@ impl HeuristicConfig {
             Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
             Self::RlBreakoutLocalSearch { .. } => "RlBreakoutLocalSearch",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
+            Self::WalkSat { .. } => "WalkSat",
             Self::Sequential { .. } => "Sequential",
             Self::Iterated { .. } => "Iterated",
             Self::Restart { .. } => "Restart",
@@ -297,6 +309,7 @@ impl HeuristicConfig {
             | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
             | Self::RlBreakoutLocalSearch { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
+            | Self::WalkSat { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
             | Self::Iterated { stop_condition, .. }
             | Self::Restart { stop_condition, .. }
@@ -516,6 +529,36 @@ cooling_rate = 0.99
         assert_eq!(h.kind_name(), "Iterated");
         assert_eq!(h.steps().len(), 2);
         assert_eq!(h.steps()[1].kind_name(), "SimulatedAnnealing");
+    }
+
+    #[test]
+    fn parses_walksat_toml() {
+        // All WalkSat fields are optional; a bare kind must parse.
+        let bare: HeuristicConfig = toml::from_str(r#"kind = "WalkSat""#).expect("bare WalkSat");
+        assert_eq!(bare.kind_name(), "WalkSat");
+        assert!(bare.neighbor().is_none());
+
+        let h: HeuristicConfig = toml::from_str(
+            r#"
+kind = "WalkSat"
+noise = 0.4
+adaptive_noise = true
+[stop_condition]
+max_duration_secs = 30.0
+"#,
+        )
+        .expect("WalkSat TOML parses");
+        match h {
+            HeuristicConfig::WalkSat {
+                noise,
+                adaptive_noise,
+                ..
+            } => {
+                assert_eq!(noise, Some(0.4));
+                assert_eq!(adaptive_noise, Some(true));
+            }
+            _ => panic!("expected WalkSat"),
+        }
     }
 
     #[test]
