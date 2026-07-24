@@ -106,6 +106,7 @@ fn derive_run_seed(
 struct InstanceVisitor<'a> {
     config: &'a BenchmarkConfig,
     instance_path: &'a str,
+    problem_kind: &'a ProblemKind,
 }
 
 impl ProblemVisitor for InstanceVisitor<'_> {
@@ -167,6 +168,7 @@ impl ProblemVisitor for InstanceVisitor<'_> {
             );
             results.push(InstanceHeuristicResult {
                 instance_path: self.instance_path.to_string(),
+                problem: self.problem_kind.clone(),
                 heuristic: heuristic_cfg.clone(),
                 summary,
                 runs,
@@ -336,6 +338,7 @@ impl Benchmark {
                     InstanceVisitor {
                         config: &config,
                         instance_path,
+                        problem_kind,
                     },
                 )
             })

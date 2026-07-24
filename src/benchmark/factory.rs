@@ -335,7 +335,8 @@ where
         HeuristicConfig::BreakoutLocalSearch { .. }
         | HeuristicConfig::PopulationAnnealingForMaxCut { .. }
         | HeuristicConfig::RlBreakoutLocalSearch { .. }
-        | HeuristicConfig::LinKernighanHelsgaun { .. } => P::build_special_heuristic(config, cond),
+        | HeuristicConfig::LinKernighanHelsgaun { .. }
+        | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::LocalSearch { neighbor, .. }
         | HeuristicConfig::TabuSearch { neighbor, .. }
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }

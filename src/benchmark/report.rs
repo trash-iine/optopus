@@ -82,6 +82,7 @@ pub struct Summary {
 #[derive(Serialize)]
 pub struct InstanceHeuristicResult {
     pub instance_path: String,
+    pub problem: crate::benchmark::config::ProblemKind,
     pub heuristic: HeuristicConfig,
     pub summary: Summary,
     pub runs: Vec<SingleRunResult>,
