@@ -11,6 +11,6 @@ pub use binary::{
     uniform_binary_crossover,
 };
 pub use gain_index::GainIndex;
-pub use graph::Graph;
+pub use graph::{Graph, seeded_rng};
 pub use parse::InstanceLines;
 pub use tabu::{VarTabuMap, add_var_to_tabu, is_var_enabled};
