@@ -250,6 +250,7 @@ dependencies = [
  "chrono",
  "glob",
  "rand",
+ "rand_chacha",
  "rayon",
  "serde",
  "thiserror",

@@ -52,7 +52,10 @@ src/
 │   ├── tabu.rs               EnabledTabu
 │   └── binary.rs             BinaryProblem (unlocks the shared binary machinery)
 ├── common/                   shared data structures & helpers (put new shared code here)
-│   ├── graph.rs              Graph (used by MaxCut / VertexCover)
+│   ├── graph/                Graph (used by MaxCut / VertexCover); mod.rs = Graph
+│   │                         + load_from_file / write_to_file, generator.rs =
+│   │                         Graph::{erdos_renyi, barabasi_albert, watts_strogatz}
+│   │                         (unweighted) + .with_random_weights() + seeded_rng
 │   ├── binary.rs             uniform_binary_crossover, hamming_distance,
 │   │                         lift_binary_solution / lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips

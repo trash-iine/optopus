@@ -7,7 +7,7 @@
 //! ```
 
 // Common types
-pub use crate::common::Graph;
+pub use crate::common::{Graph, seeded_rng};
 
 // Error type
 pub use crate::error::OptError;
