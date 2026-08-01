@@ -73,9 +73,15 @@ src/
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
 │   ├── reinforcement_learning/  RlSearch<N> (REINFORCE policy over move features)
-│   └── specific/
-│       ├── bls_for_max_cut.rs   BreakoutLocalSearchForMaxCut
-│       └── lkh_for_tsp.rs       LinKernighanHelsgaunForTsp
+│   └── specific/            one directory per problem once it has several
+│       ├── max_cut/
+│       │   ├── ops.rs           MaxCutSearchOps: the shared engine (tabu map +
+│       │   │                    gain-indexed descent + 5 perturbations)
+│       │   ├── bls.rs           BreakoutLocalSearchForMaxCut (+ its BlsSchedule)
+│       │   ├── rl_bls.rs        RlBreakoutLocalSearchForMaxCut
+│       │   └── population_annealing.rs  PopulationAnnealingForMaxCut
+│       ├── lkh_for_tsp.rs       LinKernighanHelsgaunForTsp
+│       └── walksat_for_sat.rs   WalkSatForSat
 └── problem/
     ├── max_cut/              MaxCut, MaxCutSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── qubo/                 Qubo, QuboSolution, {Flip,Swap}Neighbor, UniformCrossover
@@ -178,8 +184,10 @@ StopCondition::iterations(1_000_000)
 - `TspOrderCrossover` (OX) for TSP; `JobShopPpxCrossover` for JobShop.
 
 ### Problem-specific
-- `BreakoutLocalSearchForMaxCut` (`specific/bls_for_max_cut.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances.
-- `RlBreakoutLocalSearchForMaxCut` (`specific/rl_bls_for_max_cut.rs`): same `BlsOps` machinery, but a contextual softmax bandit picks perturbation type (5 ops incl. both plateau variants) × strength; weights persist across `Restart`/`Iterated` episodes.
+MaxCut has its own directory (`specific/max_cut/`) because its heuristics share an engine rather than merely a problem type: `MaxCutSearchOps` (`ops.rs`, private to that directory) owns one tabu map and the operators that read and write it — the gain-indexed descent and the five perturbations. Both MaxCut search heuristics below drive it; neither owns it, which is why it is not named after either. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
+
+- `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances. Reproduces Benlic & Hao (2013); `docs/heuristics/breakout_local_search.md` records where it does and does not, and why.
+- `RlBreakoutLocalSearchForMaxCut` (`specific/max_cut/rl_bls.rs`): same `MaxCutSearchOps` machinery, but a contextual softmax bandit picks perturbation type (5 ops incl. both plateau variants) × strength; weights persist across `Restart`/`Iterated` episodes.
 - `LinKernighanHelsgaunForTsp` (`specific/lkh_for_tsp.rs`): LK-style variable-depth moves with candidate lists; stops at a local optimum.
 
 ## Problem Types (`src/problem/`)

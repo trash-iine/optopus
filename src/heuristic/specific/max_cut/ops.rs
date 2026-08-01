@@ -1,4 +1,11 @@
-use super::super::{Heuristic, StopCondition};
+//! The MaxCut search engine shared by every heuristic in this directory.
+//!
+//! [`MaxCutSearchOps`] bundles a flat `Vec`-based tabu map with the operators
+//! that read and write it: the gain-indexed greedy descent, the tabu walk, and
+//! the five perturbations. They live together because they share that tabu
+//! state — the entries the descent writes are the entries the weak
+//! perturbations consume — not because any one heuristic owns them.
+
 use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
@@ -11,7 +18,7 @@ use rand::rngs::SmallRng;
 // phase skip the O(n) neighborhood scan: any improving flip must be a vertex
 // with strictly positive gain, so we only need to iterate `positive_gain`.
 
-/// Perturbation type used inside Breakout Local Search.
+/// One of the perturbation operators [`MaxCutSearchOps`] can apply.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum PerturbationType {
     /// Strong perturbation: apply `l` random flip moves.
@@ -28,12 +35,16 @@ pub(super) enum PerturbationType {
     PlateauIndependent,
 }
 
-/// The BLS machinery shared by [`BreakoutLocalSearch`] and the RL-driven
-/// variant: a flat `Vec`-based tabu map plus the fast greedy descent and the
-/// three perturbation operators. The tabu state written during descent is the
-/// same state consumed by the weak perturbations, which is why these operators
-/// live together rather than as independent heuristics.
-pub(super) struct BlsOps {
+/// The vertex-level search operators for MaxCut, sharing one tabu map: a
+/// gain-indexed greedy descent, a tabu walk, and five perturbations.
+///
+/// The tabu state written during descent is the same state consumed by the
+/// weak perturbations, which is why these operators live together rather than
+/// as independent heuristics. Both heuristics in this directory drive them —
+/// [`BreakoutLocalSearch`](super::bls::BreakoutLocalSearch) and
+/// [`RlBreakoutLocalSearch`](super::rl_bls::RlBreakoutLocalSearch) — so the
+/// name deliberately does not mention either of them.
+pub(super) struct MaxCutSearchOps {
     /// Tabu tenure range `(min, max)` in iterations.
     tabu_tenure: (u64, u64),
     /// Vec-based tabu map indexed by vertex ID. Value = expiry iteration (0 = not tabu).
@@ -46,7 +57,7 @@ pub(super) struct BlsOps {
     queue: Vec<usize>,
 }
 
-impl BlsOps {
+impl MaxCutSearchOps {
     pub(super) fn new(tabu_tenure: (u64, u64)) -> Self {
         Self {
             tabu_tenure,
@@ -434,205 +445,9 @@ impl BlsOps {
     }
 }
 
-/// Breakout Local Search (BLS) for the MaxCut problem.
-///
-/// BLS alternates between a greedy local search phase (with tabu updates) and a
-/// perturbation phase. The perturbation type is chosen probabilistically based on
-/// the `omega` counter (number of consecutive non-improving iterations). With
-/// `p = max(exp(−omega / t), p0)` the probability of a **weak** (directed)
-/// perturbation:
-///
-/// - `omega == 0` (after an improvement, so `p = 1`): always a **weak**
-///   perturbation — `flip` with probability `q`, `swap` with probability `1 − q` —
-///   to gently exploit the freshly found region.
-/// - `0 < omega <= t` (stuck): **weak** perturbation with probability `p * q`
-///   (flip) or `p * (1 − q)` (swap), and **strong** (random) otherwise; `p`
-///   decays toward `p0` as `omega` grows, so strong perturbations become more
-///   likely.
-/// - `omega > t`: the strongest **random** perturbation is forced and `omega`
-///   is reset to 0.
-///
-/// The perturbation length `l` increases by 1 each time the solution does not change,
-/// resetting to `l0` whenever the solution changes.
-///
-/// # References
-///
-/// - Benlic, U. and Hao, J.-K. "Breakout Local Search for the Max-Cut problem." *Engineering
-///   Applications of Artificial Intelligence*, 26(3), 1162-1173, 2013.
-///   [DOI](https://doi.org/10.1016/j.engappai.2012.09.001)
-///
-/// # Parameters
-///
-/// - `tabu_tenure` — tabu tenure range `(min, max)` in iterations
-/// - `t` — period of the `omega` counter before it resets
-/// - `l0` — initial perturbation length
-/// - `p0` — minimum perturbation probability
-/// - `q` — fraction of weak perturbations that use the flip strategy (vs. swap)
-/// - `plateau_prob` — probability that a weak perturbation flips a connected
-///   cluster of zero-gain vertices instead (objective-preserving plateau
-///   traversal; useful on large sparse instances with wide plateaus). `0.0`
-///   reproduces the original Benlic & Hao scheme exactly.
-pub struct BreakoutLocalSearch {
-    ops: BlsOps,
-    stop_condition: StopCondition,
-    t: u64,
-    l0: u64,
-    p0: f64,
-    q: f64,
-    plateau_prob: f64,
-    omega: u64,
-    l: u64,
-    prev_best_objective: Option<f32>,
-    /// Objective value of the previous solution, used for cheap change detection
-    /// instead of cloning the entire solution.
-    prev_solution_objective: Option<f32>,
-}
-
-impl BreakoutLocalSearch {
-    /// # Panics
-    ///
-    /// Panics if `plateau_prob` is not within `[0.0, 1.0]`.
-    pub fn new(
-        stop_condition: StopCondition,
-        tabu_tenure: (u64, u64),
-        t: u64,
-        l0: u64,
-        p0: f64,
-        q: f64,
-        plateau_prob: f64,
-    ) -> Self {
-        assert!(
-            (0.0..=1.0).contains(&plateau_prob),
-            "plateau_prob must be within [0.0, 1.0], got {plateau_prob}"
-        );
-        Self {
-            ops: BlsOps::new(tabu_tenure),
-            stop_condition,
-            t,
-            l0,
-            p0,
-            q,
-            plateau_prob,
-            omega: 0,
-            l: l0,
-            prev_best_objective: None,
-            prev_solution_objective: None,
-        }
-    }
-
-    /// Updates the `omega` counter based on whether the best objective improved.
-    fn update_omega(&mut self, state: &SearchState<'_, MaxCut>) {
-        if let Some(prev_best_objective) = self.prev_best_objective
-            && prev_best_objective >= state.solution.objective
-        {
-            self.omega += 1;
-        } else {
-            self.omega = 0;
-        }
-
-        self.prev_best_objective = Some(state.best_solution.objective);
-    }
-
-    /// Updates the perturbation length `l` based on whether the solution changed.
-    /// Uses objective comparison instead of full solution clone for O(1) check.
-    fn update_l(&mut self, state: &SearchState<'_, MaxCut>) {
-        if let Some(prev_obj) = self.prev_solution_objective
-            && prev_obj == state.solution.objective
-        {
-            self.l += 1;
-        } else {
-            self.l = self.l0;
-        }
-
-        self.prev_solution_objective = Some(state.solution.objective);
-    }
-
-    /// Determines the perturbation type for the current iteration.
-    ///
-    /// Follows the adaptive scheme of Benlic & Hao: the probability of a
-    /// directed (weak) perturbation is `p = max(exp(−omega / t), p0)`, so when
-    /// the search just improved (`omega == 0`, hence `p = 1`) it always applies
-    /// a directed perturbation to gently exploit the freshly found region, and
-    /// as `omega` grows the random (strong) perturbation becomes more likely.
-    /// Only when `omega` exceeds the threshold `t` is the strongest random
-    /// perturbation forced (and `omega` reset).
-    fn get_perturbation_type(&mut self, rng: &mut SmallRng) -> PerturbationType {
-        if self.omega > self.t {
-            self.omega = 0;
-            return PerturbationType::Strong;
-        }
-
-        let p = (-(self.omega as f64 / self.t as f64)).exp().max(self.p0);
-
-        let prob: f64 = rng.random_range(0.0..=1.0);
-        if prob <= p {
-            // Weak (directed) branch: optionally traverse the plateau instead.
-            // The extra draw only happens when plateau_prob > 0, so runs with
-            // plateau_prob == 0.0 consume the same RNG stream as before.
-            if self.plateau_prob > 0.0 && rng.random_range(0.0..=1.0) <= self.plateau_prob {
-                return PerturbationType::PlateauCluster;
-            }
-            if prob <= p * self.q {
-                PerturbationType::WeakFlip
-            } else {
-                PerturbationType::WeakSwap
-            }
-        } else {
-            PerturbationType::Strong
-        }
-    }
-}
-
-impl Heuristic<MaxCut> for BreakoutLocalSearch {
-    fn clear(&mut self) {
-        self.omega = 0;
-        self.l = self.l0;
-        self.prev_best_objective = None;
-        self.prev_solution_objective = None;
-        self.ops.clear();
-    }
-
-    fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        self.ops.ensure_capacity(state.instance.graph.len());
-
-        tracing::debug!(
-            iteration = state.iteration,
-            omega = self.omega,
-            l = self.l,
-            "BLS: local search phase start"
-        );
-
-        self.ops.descent(state)?;
-
-        self.update_omega(state);
-        self.update_l(state);
-
-        let perturbation_type = self.get_perturbation_type(&mut state.rng);
-        tracing::debug!(
-            iteration = state.iteration,
-            omega = self.omega,
-            l = self.l,
-            perturbation = ?perturbation_type,
-            "BLS: perturbation selected"
-        );
-
-        self.ops.perturb(perturbation_type, self.l, state)?;
-
-        // Update best once after the perturbation phase completes.
-        state.update_best();
-
-        Ok(())
-    }
-
-    fn stop_condition(&self) -> &StopCondition {
-        &self.stop_condition
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::heuristic::Heuristic;
     use crate::problem::MaxCut;
     use crate::search_state::SearchState;
 
@@ -648,74 +463,13 @@ mod tests {
         MaxCut::from_edges(edges)
     }
 
-    /// Regression test: BLS must run to completion without erroring.
-    ///
-    /// The weak-swap perturbation previously returned `Err("No tabu v1")` when a
-    /// partition side had no tabu vertex yet — a path that is hit frequently now
-    /// that directed (weak) perturbations run at `omega == 0`. Running the full
-    /// loop many times exercises all three perturbation types and the swap
-    /// fallback; it must never error and must find a non-trivial cut.
-    #[test]
-    fn bls_runs_without_error_and_improves() {
-        let mc = small_instance();
-        for _ in 0..10 {
-            let mut state = SearchState::new(&mc);
-            let mut bls = BreakoutLocalSearch::new(
-                StopCondition::iterations(5_000),
-                (3, 15),
-                1_000,
-                5,
-                0.8,
-                0.5,
-                0.0,
-            );
-            bls.run(&mut state).expect("BLS must not error");
-            assert!(
-                state.best_solution.objective > 0.0,
-                "BLS should find a positive cut, got {}",
-                state.best_solution.objective
-            );
-        }
-    }
-
-    /// BLS with plateau perturbations enabled must also run cleanly and find a
-    /// non-trivial cut (exercises PlateauCluster through the full loop).
-    #[test]
-    fn bls_with_plateau_runs_without_error_and_improves() {
-        let mc = small_instance();
-        for seed in 0..10 {
-            let mut state = SearchState::new_with_seed(&mc, seed);
-            let mut bls = BreakoutLocalSearch::new(
-                StopCondition::iterations(5_000),
-                (3, 15),
-                1_000,
-                5,
-                0.8,
-                0.5,
-                0.5,
-            );
-            bls.run(&mut state).expect("BLS+plateau must not error");
-            assert!(state.best_solution.objective > 0.0);
-        }
-    }
-
-    #[test]
-    #[should_panic(expected = "plateau_prob must be within [0.0, 1.0]")]
-    fn bls_rejects_invalid_plateau_prob() {
-        let _ = BreakoutLocalSearch::new(
-            StopCondition::iterations(1),
-            (3, 15),
-            1_000,
-            5,
-            0.8,
-            0.5,
-            1.5,
-        );
-    }
-
     /// Descends to a local optimum first so that the plateau (zero-gain set)
     /// is non-trivial, mirroring where the operators run in the real loop.
-    fn descended_state<'a>(mc: &'a MaxCut, seed: u64, ops: &mut BlsOps) -> SearchState<'a, MaxCut> {
+    fn descended_state<'a>(
+        mc: &'a MaxCut,
+        seed: u64,
+        ops: &mut MaxCutSearchOps,
+    ) -> SearchState<'a, MaxCut> {
         let mut state = SearchState::new_with_seed(mc, seed);
         ops.ensure_capacity(mc.graph.len());
         ops.descent(&mut state).unwrap();
@@ -730,7 +484,7 @@ mod tests {
         let mc = small_instance();
         let mut moved = false;
         for seed in 0..20 {
-            let mut ops = BlsOps::new((3, 15));
+            let mut ops = MaxCutSearchOps::new((3, 15));
             let mut state = descended_state(&mc, seed, &mut ops);
             state.solution.enable_zero_gain_index();
             if state.solution.zero_gain_count() == 0 {
@@ -756,7 +510,7 @@ mod tests {
         let mc = small_instance();
         let mut moved = false;
         for seed in 0..20 {
-            let mut ops = BlsOps::new((3, 15));
+            let mut ops = MaxCutSearchOps::new((3, 15));
             let mut state = descended_state(&mc, seed, &mut ops);
             state.solution.enable_zero_gain_index();
             if state.solution.zero_gain_count() == 0 {
@@ -781,7 +535,7 @@ mod tests {
     fn mixed_perturbations_keep_gains_and_indexes_consistent() {
         use PerturbationType::*;
         let mc = small_instance();
-        let mut ops = BlsOps::new((3, 15));
+        let mut ops = MaxCutSearchOps::new((3, 15));
         let mut state = SearchState::new_with_seed(&mc, 7);
         ops.ensure_capacity(mc.graph.len());
         state.solution.enable_positive_gain_index();
@@ -832,7 +586,7 @@ mod tests {
     fn plateau_falls_back_to_strong_when_no_zero_gain() {
         let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 4.0)]);
         for seed in 0..5 {
-            let mut ops = BlsOps::new((3, 15));
+            let mut ops = MaxCutSearchOps::new((3, 15));
             let mut state = SearchState::new_with_seed(&mc, seed);
             ops.ensure_capacity(mc.graph.len());
             let iter_before = state.iteration;
@@ -852,13 +606,11 @@ mod tests {
     /// On a graph with no edged vertices — as produced by
     /// `SubProblemBasedCrossover` when the two parents disagree only on an
     /// independent set — the perturbations must advance iterations without
-    /// panicking (`random_neighbor` samples an empty range), and a full BLS run
-    /// must terminate cleanly via its stop condition.
+    /// panicking (`random_neighbor` samples an empty range).
     #[test]
-    fn bls_terminates_on_edgeless_graph() {
+    fn perturbations_progress_on_edgeless_graph() {
         let mc = MaxCut::new(crate::common::Graph::new());
-        // Direct operator check: strong perturbation must progress, not panic.
-        let mut ops = BlsOps::new((3, 15));
+        let mut ops = MaxCutSearchOps::new((3, 15));
         let mut state = SearchState::new_with_seed(&mc, 0);
         ops.ensure_capacity(mc.graph.len());
         let before = state.iteration;
@@ -866,46 +618,5 @@ mod tests {
         assert_eq!(state.iteration - before, 5);
         ops.plateau_cluster_perturbation(5, &mut state).unwrap();
         ops.plateau_independent_perturbation(5, &mut state).unwrap();
-
-        // Full run: the failed-updates stop condition must fire and return.
-        let mut state = SearchState::new_with_seed(&mc, 0);
-        let mut bls = BreakoutLocalSearch::new(
-            StopCondition::iterations(10_000).with_failed_updates(500),
-            (3, 15),
-            1_000,
-            5,
-            0.8,
-            0.5,
-            0.5,
-        );
-        bls.run(&mut state)
-            .expect("BLS must terminate on an edgeless graph");
-    }
-
-    /// Seeded regression guard for the selection-rule refactor: with
-    /// `plateau_prob = 0.0` no extra RNG draw happens, so a seeded run must be
-    /// deterministic and identical across repetitions.
-    #[test]
-    fn bls_plateau_prob_zero_is_deterministic() {
-        let mc = small_instance();
-        let run = || {
-            let mut state = SearchState::new_with_seed(&mc, 42);
-            let mut bls = BreakoutLocalSearch::new(
-                StopCondition::iterations(3_000),
-                (3, 15),
-                1_000,
-                5,
-                0.8,
-                0.5,
-                0.0,
-            );
-            bls.run(&mut state).unwrap();
-            (
-                state.best_solution.objective,
-                state.best_iteration,
-                state.best_solution.x.clone(),
-            )
-        };
-        assert_eq!(run(), run());
     }
 }

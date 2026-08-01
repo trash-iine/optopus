@@ -1,6 +1,6 @@
-use super::super::simulated_annealing::boltzmann_accept;
-use super::super::{Heuristic, StopCondition};
 use crate::error::OptError;
+use crate::heuristic::simulated_annealing::boltzmann_accept;
+use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSolution};
 use crate::search_state::SearchState;

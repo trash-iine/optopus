@@ -1,7 +1,7 @@
-use super::super::{Heuristic, StopCondition};
-use super::bls_for_max_cut::{BlsOps, PerturbationType};
+use super::ops::{MaxCutSearchOps, PerturbationType};
 use crate::error::OptError;
 use crate::heuristic::reinforcement_learning::bandit::SoftmaxBandit;
+use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::MaxCut;
 use crate::search_state::SearchState;
 
@@ -34,7 +34,7 @@ struct PendingDecision {
 /// Breakout Local Search with a *learned* perturbation policy for MaxCut.
 ///
 /// Shares the exact descent / perturbation machinery of
-/// [`BreakoutLocalSearch`](super::bls_for_max_cut::BreakoutLocalSearch)
+/// [`BreakoutLocalSearch`](super::bls::BreakoutLocalSearch)
 /// (positive-gain-indexed greedy descent, flat tabu map, weak-flip /
 /// weak-swap / strong operators), but replaces the hand-crafted
 /// `omega`-based perturbation rule *and* the strength schedule with a
@@ -65,7 +65,7 @@ struct PendingDecision {
 /// - `exploration` — ε-uniform exploration floor in `[0, 1]`
 pub struct RlBreakoutLocalSearch {
     stop_condition: StopCondition,
-    ops: BlsOps,
+    ops: MaxCutSearchOps,
     bandit: SoftmaxBandit,
     t: u64,
     l0: u64,
@@ -112,7 +112,7 @@ impl RlBreakoutLocalSearch {
         );
         Self {
             stop_condition,
-            ops: BlsOps::new(tabu_tenure),
+            ops: MaxCutSearchOps::new(tabu_tenure),
             bandit,
             t,
             l0,
