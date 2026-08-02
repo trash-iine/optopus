@@ -60,6 +60,9 @@ src/
 │   │                         lift_binary_solution / lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips
 │   ├── tabu.rs               VarTabuMap, is_var_enabled, add_var_to_tabu
+│   ├── elite_pool.rs         ElitePool<T> (quality-and-distance elite population)
+│   ├── epoch_marks.rs        EpochMarks (index set with an O(1) clear, for
+│   │                         neighborhood walks that need a fresh "seen" set per call)
 │   ├── gain_index.rs         GainIndex (improving-move index)
 │   └── parse.rs              InstanceLines (file-loader scaffold with FileLoad errors)
 ├── heuristic/
@@ -75,8 +78,9 @@ src/
 │   ├── reinforcement_learning/  RlSearch<N> (REINFORCE policy over move features)
 │   └── specific/            one directory per problem once it has several
 │       ├── max_cut/
-│       │   ├── ops.rs           MaxCutSearchOps: the shared engine (tabu map +
-│       │   │                    gain-indexed descent + 5 perturbations)
+│       │   ├── ops.rs           MaxCutSearchOps: the shared engine (gain-indexed
+│       │   │                    descent + tabu walk + 5 perturbations) over a
+│       │   │                    private VertexTabuMap (Vec-backed) + common::EpochMarks
 │       │   ├── bls.rs           BreakoutLocalSearchForMaxCut (+ its BlsSchedule)
 │       │   ├── rl_bls.rs        RlBreakoutLocalSearchForMaxCut
 │       │   └── population_annealing.rs  PopulationAnnealingForMaxCut
@@ -186,7 +190,11 @@ StopCondition::iterations(1_000_000)
 ### Problem-specific
 MaxCut has its own directory (`specific/max_cut/`) because its heuristics share an engine rather than merely a problem type: `MaxCutSearchOps` (`ops.rs`, private to that directory) owns one tabu map and the operators that read and write it — the gain-indexed descent and the five perturbations. Both MaxCut search heuristics below drive it; neither owns it, which is why it is not named after either. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
 
-- `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances. Reproduces Benlic & Hao (2013); `docs/heuristics/breakout_local_search.md` records where it does and does not, and why.
+MaxCut has its own directory (`specific/max_cut/`) because its heuristics share an engine rather than merely a problem type: `MaxCutSearchOps` (`ops.rs`, private to that directory) owns one tabu map and the operators that read and write it — the gain-indexed descent, the tabu walk that returns its *best visited* point, and the five perturbations. All three MaxCut search heuristics below drive it; none of them owns it, which is why it is not named after any of them. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
+
+Its two pieces of scratch state are split out rather than kept as loose fields, because each has an invariant worth enforcing in one place: `VertexTabuMap` (private to `ops.rs`) is the `Vec`-backed tabu map for a dense `0..n` vertex space — the counterpart of the `HashMap`-based `common::VarTabuMap` that serves the generic `EnabledTabu` machinery — and `common::EpochMarks` is the "already seen" set for the plateau operators, whose epoch stamping is also what `PopulationAnnealingForMaxCut`'s cluster move uses.
+
+- `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances.
 - `RlBreakoutLocalSearchForMaxCut` (`specific/max_cut/rl_bls.rs`): same `MaxCutSearchOps` machinery, but a contextual softmax bandit picks perturbation type (5 ops incl. both plateau variants) × strength; weights persist across `Restart`/`Iterated` episodes.
 - `LinKernighanHelsgaunForTsp` (`specific/lkh_for_tsp.rs`): LK-style variable-depth moves with candidate lists; stops at a local optimum.
 
