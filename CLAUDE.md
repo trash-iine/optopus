@@ -59,7 +59,8 @@ src/
 │   ├── binary.rs             uniform_binary_crossover, hamming_distance,
 │   │                         lift_binary_solution / lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips
-│   ├── tabu.rs               VarTabuMap, is_var_enabled, add_var_to_tabu
+│   ├── tabu.rs               VarTabuMap (hashed) + VecTabuMap (dense 0..n, what every
+│   │                         binary problem uses), is_var_enabled, add_var_to_tabu
 │   ├── elite_pool.rs         ElitePool<T> (quality-and-distance elite population)
 │   ├── epoch_marks.rs        EpochMarks (index set with an O(1) clear, for
 │   │                         neighborhood walks that need a fresh "seen" set per call)
@@ -79,8 +80,8 @@ src/
 │   └── specific/            one directory per problem once it has several
 │       ├── max_cut/
 │       │   ├── ops.rs           MaxCutSearchOps: the shared engine (gain-indexed
-│       │   │                    descent + tabu walk + 5 perturbations) over a
-│       │   │                    private VertexTabuMap (Vec-backed) + common::EpochMarks
+│       │   │                    descent + tabu walk + 5 perturbations) over one
+│       │   │                    common::VecTabuMap + common::EpochMarks
 │       │   ├── bls.rs           BreakoutLocalSearchForMaxCut (+ its BlsSchedule)
 │       │   ├── rl_bls.rs        RlBreakoutLocalSearchForMaxCut
 │       │   └── population_annealing.rs  PopulationAnnealingForMaxCut
@@ -192,7 +193,7 @@ MaxCut has its own directory (`specific/max_cut/`) because its heuristics share 
 
 MaxCut has its own directory (`specific/max_cut/`) because its heuristics share an engine rather than merely a problem type: `MaxCutSearchOps` (`ops.rs`, private to that directory) owns one tabu map and the operators that read and write it — the gain-indexed descent, the tabu walk that returns its *best visited* point, and the five perturbations. All three MaxCut search heuristics below drive it; none of them owns it, which is why it is not named after any of them. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
 
-Its two pieces of scratch state are split out rather than kept as loose fields, because each has an invariant worth enforcing in one place: `VertexTabuMap` (private to `ops.rs`) is the `Vec`-backed tabu map for a dense `0..n` vertex space — the counterpart of the `HashMap`-based `common::VarTabuMap` that serves the generic `EnabledTabu` machinery — and `common::EpochMarks` is the "already seen" set for the plateau operators, whose epoch stamping is also what `PopulationAnnealingForMaxCut`'s cluster move uses.
+What the engine does **not** own is what "tabu" means. Every operator marks and tests moves through `MaxCutFlipNeighbor`'s and `MaxCutSwapNeighbor`'s own `EnabledTabu` impls, so it forbids exactly what a generic `TabuSearch` over the same neighborhood would; the engine only decides *which* moves to try. Its state is two shared structures — one `common::VecTabuMap` and one `common::EpochMarks` (the "already seen" set for the plateau operators, whose epoch stamping is also what `PopulationAnnealingForMaxCut`'s cluster move uses). The single query `EnabledTabu` cannot answer is "which vertex has been forbidden longest", which the weak-swap breakout needs; that goes to `VecTabuMap::blocked_until` directly rather than widening the trait.
 
 - `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances.
 - `RlBreakoutLocalSearchForMaxCut` (`specific/max_cut/rl_bls.rs`): same `MaxCutSearchOps` machinery, but a contextual softmax bandit picks perturbation type (5 ops incl. both plateau variants) × strength; weights persist across `Restart`/`Iterated` episodes.

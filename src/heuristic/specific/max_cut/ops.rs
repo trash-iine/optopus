@@ -1,19 +1,22 @@
 //! The MaxCut search engine shared by every heuristic in this directory.
 //!
-//! [`MaxCutSearchOps`] bundles a flat `Vec`-based tabu map with the operators
-//! that read and write it: the gain-indexed greedy descent, the tabu walk, and
-//! the five perturbations. They live together because they share that tabu
-//! state — the entries the descent writes are the entries the weak
-//! perturbations consume — not because any one heuristic owns them.
+//! [`MaxCutSearchOps`] bundles one tabu map with the operators that read and
+//! write it: the gain-indexed greedy descent, the tabu walk, and the five
+//! perturbations. They live together because they share that tabu state — the
+//! entries the descent writes are the entries the weak perturbations consume —
+//! not because any one heuristic owns them.
+//!
+//! What "tabu" *means* is not decided here. Every operator marks and tests
+//! moves through the moves' own `EnabledTabu` impls, so the engine forbids
+//! exactly what a generic `TabuSearch` over the same neighborhood would.
 
-use crate::common::EpochMarks;
+use crate::common::{EpochMarks, VecTabuMap};
 use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::SearchState;
-use crate::trait_defs::MoveToNeighbor;
+use crate::trait_defs::{EnabledTabu, MoveToNeighbor};
 use rand::Rng;
-use rand::rngs::SmallRng;
 
 // The positive-gain index attached to `MaxCutSolution` lets the local-search
 // phase skip the O(n) neighborhood scan: any improving flip must be a vertex
@@ -49,76 +52,25 @@ pub(super) struct MaxCutSearchOps {
     /// Which vertices the operators must currently leave alone, and for how
     /// long. Every operator reads or writes it — that sharing is the reason
     /// they are one type.
-    tabu: VertexTabuMap,
+    ///
+    /// The policy on it is not defined here: the operators go through
+    /// [`MaxCutFlipNeighbor`]'s and [`MaxCutSwapNeighbor`]'s own
+    /// [`EnabledTabu`] impls, which is the same policy a generic
+    /// [`TabuSearch`](crate::heuristic::TabuSearch) over MaxCut applies.
+    tabu: VecTabuMap,
+    /// Tenure range handed to those impls on every move.
+    tenure: (u64, u64),
     /// "Already visited" set for the plateau operators, reset per call.
     marks: EpochMarks,
     /// Scratch vertex list for the plateau operators (BFS queue / selection).
     queue: Vec<usize>,
 }
 
-/// Tabu map over vertex IDs, backed by a flat `Vec` of expiry iterations
-/// (0 = never tabu).
-///
-/// MaxCut vertices are a dense `0..n` index space and the operators probe the
-/// map once per neighbor per move, so this is the `HashMap`-free counterpart of
-/// [`common::tabu`](crate::common::tabu), whose [`VarTabuMap`](crate::common::VarTabuMap)
-/// serves the generic `EnabledTabu` machinery instead.
-struct VertexTabuMap {
-    /// Tabu tenure range `(min, max)` in iterations.
-    tenure: (u64, u64),
-    /// Expiry iteration per vertex ID.
-    expiry: Vec<u64>,
-}
-
-impl VertexTabuMap {
-    fn new(tenure: (u64, u64)) -> Self {
-        Self {
-            tenure,
-            expiry: Vec::new(),
-        }
-    }
-
-    /// Clears every entry, keeping the allocation (for a new episode).
-    fn clear(&mut self) {
-        self.expiry.fill(0);
-    }
-
-    /// Grows the map to hold vertices `0..n`. Never shrinks.
-    fn ensure_capacity(&mut self, n: usize) {
-        if self.expiry.len() < n {
-            self.expiry.resize(n, 0);
-        }
-    }
-
-    /// Returns whether moving `vertex` is allowed at `iteration`. Vertices
-    /// beyond the current capacity are always allowed.
-    #[inline]
-    fn is_enabled(&self, vertex: usize, iteration: u64) -> bool {
-        self.expiry.get(vertex).is_none_or(|&exp| iteration >= exp)
-    }
-
-    /// The iteration `vertex` becomes movable again; 0 if it never was tabu.
-    #[inline]
-    fn expiry_of(&self, vertex: usize) -> u64 {
-        self.expiry.get(vertex).copied().unwrap_or(0)
-    }
-
-    /// Marks `vertex` tabu for a tenure sampled from `rng`. Vertices beyond
-    /// the current capacity are ignored — but the draw still happens, so the
-    /// RNG stream does not depend on the capacity.
-    #[inline]
-    fn add(&mut self, vertex: usize, iteration: u64, rng: &mut SmallRng) {
-        let tabu_duration = rng.random_range(self.tenure.0..=self.tenure.1);
-        if vertex < self.expiry.len() {
-            self.expiry[vertex] = iteration + tabu_duration;
-        }
-    }
-}
-
 impl MaxCutSearchOps {
     pub(super) fn new(tabu_tenure: (u64, u64)) -> Self {
         Self {
-            tabu: VertexTabuMap::new(tabu_tenure),
+            tabu: VecTabuMap::new(),
+            tenure: tabu_tenure,
             marks: EpochMarks::new(),
             queue: Vec::new(),
         }
@@ -158,7 +110,12 @@ impl MaxCutSearchOps {
             }
 
             if let Some(best_move) = best_move_option {
-                self.tabu.add(best_move.i, state.iteration, &mut state.rng);
+                best_move.add_to_tabu_map(
+                    &mut self.tabu,
+                    state.iteration,
+                    self.tenure,
+                    &mut state.rng,
+                );
                 state.apply(&best_move)?;
             } else {
                 return Ok(());
@@ -194,7 +151,7 @@ impl MaxCutSearchOps {
                 &mut state.rng,
             );
 
-            self.tabu.add(neighbor.i, state.iteration, &mut state.rng);
+            neighbor.add_to_tabu_map(&mut self.tabu, state.iteration, self.tenure, &mut state.rng);
             state.apply_move_only(&neighbor)?;
         }
         Ok(())
@@ -214,7 +171,7 @@ impl MaxCutSearchOps {
         while state.iteration < end_iter {
             let mut best: Option<MaxCutFlipNeighbor> = None;
             for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
-                let enabled = self.tabu.is_enabled(neighbor.i, state.iteration);
+                let enabled = neighbor.is_move_enabled(&self.tabu, state.iteration);
                 // Aspiration: accept a tabu move if it improves the global best.
                 if !enabled
                     && neighbor.gain + state.solution.objective <= state.best_solution.objective
@@ -229,7 +186,12 @@ impl MaxCutSearchOps {
                 best = Some(neighbor);
             }
             if let Some(best_move) = best {
-                self.tabu.add(best_move.i, state.iteration, &mut state.rng);
+                best_move.add_to_tabu_map(
+                    &mut self.tabu,
+                    state.iteration,
+                    self.tenure,
+                    &mut state.rng,
+                );
                 state.apply_move_only(&best_move)?;
             } else {
                 state.progress_iteration();
@@ -252,7 +214,8 @@ impl MaxCutSearchOps {
             // Best vertex per partition side (by flip gain).
             let mut best_v0: Option<MaxCutFlipNeighbor> = None;
             let mut best_v1: Option<MaxCutFlipNeighbor> = None;
-            // Oldest-tabu vertex per side for the fallback path (vertex, tabu_expiry).
+            // Longest-blocked vertex per side for the fallback path, as
+            // `(vertex, blocked_until)`.
             let mut oldest_tabu_v0: Option<(usize, u64)> = None;
             let mut oldest_tabu_v1: Option<(usize, u64)> = None;
 
@@ -265,16 +228,19 @@ impl MaxCutSearchOps {
                     *best_ref = Some(neighbor);
                 }
 
-                // Track oldest-tabu (smallest expiry) vertex per side for fallback.
-                if !self.tabu.is_enabled(neighbor.i, state.iteration) {
-                    let expiry = self.tabu.expiry_of(neighbor.i);
+                // Track the vertex whose block expires soonest — the one
+                // forbidden longest ago — per side, for the fallback. This is
+                // the one query `EnabledTabu` cannot answer: it reports whether
+                // a move is tabu, not how long it has been.
+                if !neighbor.is_move_enabled(&self.tabu, state.iteration) {
+                    let until = self.tabu.blocked_until(neighbor.i);
                     let oldest_ref = if on_side0 {
                         &mut oldest_tabu_v0
                     } else {
                         &mut oldest_tabu_v1
                     };
-                    if oldest_ref.as_ref().is_none_or(|&(_, e)| expiry < e) {
-                        *oldest_ref = Some((neighbor.i, expiry));
+                    if oldest_ref.as_ref().is_none_or(|&(_, u)| until < u) {
+                        *oldest_ref = Some((neighbor.i, until));
                     }
                 }
             }
@@ -301,8 +267,7 @@ impl MaxCutSearchOps {
                     j: v1.i,
                     gain: swap_gain,
                 };
-                self.tabu.add(v0.i, state.iteration, &mut state.rng);
-                self.tabu.add(v1.i, state.iteration, &mut state.rng);
+                swap.add_to_tabu_map(&mut self.tabu, state.iteration, self.tenure, &mut state.rng);
                 state.apply_move_only(&swap)?;
             } else {
                 // Fallback: swap the oldest-tabu vertex on each side to force a
@@ -320,8 +285,7 @@ impl MaxCutSearchOps {
                     j,
                     gain: fallback_gain,
                 };
-                self.tabu.add(i, state.iteration, &mut state.rng);
-                self.tabu.add(j, state.iteration, &mut state.rng);
+                swap.add_to_tabu_map(&mut self.tabu, state.iteration, self.tenure, &mut state.rng);
                 state.apply_move_only(&swap)?;
             }
         }
@@ -373,8 +337,14 @@ impl MaxCutSearchOps {
                 // Earlier flips in this cluster may have moved v off the
                 // plateau; only flip while its gain is still exactly zero.
                 if state.solution.gain[v] == 0.0 {
-                    self.tabu.add(v, state.iteration, &mut state.rng);
-                    state.apply_move_only(&MaxCutFlipNeighbor { i: v, gain: 0.0 })?;
+                    let flip = MaxCutFlipNeighbor { i: v, gain: 0.0 };
+                    flip.add_to_tabu_map(
+                        &mut self.tabu,
+                        state.iteration,
+                        self.tenure,
+                        &mut state.rng,
+                    );
+                    state.apply_move_only(&flip)?;
                     flips += 1;
                 }
                 for &(j, _) in state.instance.graph.iter_on_adjacency(v) {
@@ -442,8 +412,9 @@ impl MaxCutSearchOps {
                 state.solution.gain[v], 0.0,
                 "independence must keep gains zero"
             );
-            self.tabu.add(v, state.iteration, &mut state.rng);
-            state.apply_move_only(&MaxCutFlipNeighbor { i: v, gain: 0.0 })?;
+            let flip = MaxCutFlipNeighbor { i: v, gain: 0.0 };
+            flip.add_to_tabu_map(&mut self.tabu, state.iteration, self.tenure, &mut state.rng);
+            state.apply_move_only(&flip)?;
         }
         #[cfg(debug_assertions)]
         debug_assert_eq!(objective_before, state.solution.objective);
