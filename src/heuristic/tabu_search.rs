@@ -172,6 +172,8 @@ mod tests {
         TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (5, 1), None);
     }
 
+    /// `clear` must free every move, not merely drop the map's storage — the
+    /// observable property a new episode depends on.
     #[test]
     fn tabu_search_clear_resets_tabu_map() {
         let mc = small_maxcut();
@@ -179,7 +181,20 @@ mod tests {
         let mut ts =
             TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (5, 10), None);
         ts.run(&mut state).unwrap();
+
+        let blocked = (0..mc.graph.len()).any(|i| {
+            !MaxCutFlipNeighbor { i, gain: 0.0 }
+                .is_move_enabled(ts.borrow_tabu_map(), state.iteration)
+        });
+        assert!(blocked, "the run must leave at least one vertex tabu");
+
         ts.clear();
-        assert!(ts.borrow_tabu_map().is_empty());
+        for i in 0..mc.graph.len() {
+            assert!(
+                MaxCutFlipNeighbor { i, gain: 0.0 }
+                    .is_move_enabled(ts.borrow_tabu_map(), state.iteration),
+                "vertex {i} still tabu after clear"
+            );
+        }
     }
 }

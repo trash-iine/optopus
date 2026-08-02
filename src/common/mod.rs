@@ -15,4 +15,4 @@ pub use epoch_marks::EpochMarks;
 pub use gain_index::GainIndex;
 pub use graph::{Graph, seeded_rng};
 pub use parse::InstanceLines;
-pub use tabu::{VarTabuMap, add_var_to_tabu, is_var_enabled};
+pub use tabu::{VarTabuMap, VecTabuMap, add_var_to_tabu, is_var_enabled};

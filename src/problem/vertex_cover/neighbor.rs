@@ -2,6 +2,7 @@
 
 use super::VertexCover;
 use crate::{
+    common::VecTabuMap,
     error::OptError,
     problem::vertex_cover::problem::VertexCoverSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
@@ -49,13 +50,10 @@ impl Evaluate for VertexCoverFlipNeighbor {
 }
 
 impl EnabledTabu for VertexCoverFlipNeighbor {
-    /// Vec indexed by vertex ID. Value = expiry iteration (0 = never tabu).
-    type TabuMap = Vec<u64>;
+    type TabuMap = VecTabuMap;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map
-            .get(self.i)
-            .is_none_or(|&tabu_tenure| iteration > tabu_tenure)
+        tabu_map.is_enabled(self.i, iteration)
     }
 
     fn add_to_tabu_map(
@@ -65,11 +63,7 @@ impl EnabledTabu for VertexCoverFlipNeighbor {
         tabu_tenure: (u64, u64),
         rng: &mut rand::rngs::SmallRng,
     ) {
-        let tabu_duration = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
-        if self.i >= tabu_map.len() {
-            tabu_map.resize(self.i + 1, 0);
-        }
-        tabu_map[self.i] = iteration + tabu_duration;
+        tabu_map.add(self.i, iteration, tabu_tenure, rng);
     }
 }
 
@@ -211,16 +205,10 @@ impl Evaluate for VertexCoverSwapNeighbor {
 }
 
 impl EnabledTabu for VertexCoverSwapNeighbor {
-    type TabuMap = Vec<u64>;
+    type TabuMap = VecTabuMap;
 
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        let enabled_i = tabu_map
-            .get(self.i)
-            .is_none_or(|&tenure| iteration > tenure);
-        let enabled_j = tabu_map
-            .get(self.j)
-            .is_none_or(|&tenure| iteration > tenure);
-        enabled_i && enabled_j
+        tabu_map.is_enabled(self.i, iteration) && tabu_map.is_enabled(self.j, iteration)
     }
 
     fn add_to_tabu_map(
@@ -230,14 +218,8 @@ impl EnabledTabu for VertexCoverSwapNeighbor {
         tabu_tenure: (u64, u64),
         rng: &mut rand::rngs::SmallRng,
     ) {
-        let max_v = self.i.max(self.j);
-        if max_v >= tabu_map.len() {
-            tabu_map.resize(max_v + 1, 0);
-        }
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map[self.i] = iteration + d;
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map[self.j] = iteration + d;
+        tabu_map.add(self.i, iteration, tabu_tenure, rng);
+        tabu_map.add(self.j, iteration, tabu_tenure, rng);
     }
 }
 

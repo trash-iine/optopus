@@ -17,7 +17,7 @@
 
 use super::{MaxCut, MaxCutSolution};
 use crate::{
-    common::{VarTabuMap, add_var_to_tabu, is_var_enabled},
+    common::VecTabuMap,
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
@@ -56,11 +56,15 @@ impl Rankable for MaxCutFlipNeighbor {
 }
 
 impl EnabledTabu for MaxCutFlipNeighbor {
-    type TabuMap = VarTabuMap;
+    /// Vertices are a dense `0..n` space and the search probes the map once per
+    /// neighbor per iteration, so this is the `Vec`-backed map rather than the
+    /// hashed [`VarTabuMap`](crate::common::VarTabuMap). It is also the map the
+    /// MaxCut-specific engine shares between its own operators.
+    type TabuMap = VecTabuMap;
 
-    /// A flip move is tabu if the vertex `i` is in the tabu map with a tenure greater than the current iteration.
+    /// A flip move is tabu while vertex `i` is still blocked at the current iteration.
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        is_var_enabled(tabu_map, self.i, iteration)
+        tabu_map.is_enabled(self.i, iteration)
     }
 
     /// When a flip move is applied,
@@ -73,7 +77,7 @@ impl EnabledTabu for MaxCutFlipNeighbor {
         tabu_tenure: (u64, u64),
         rng: &mut rand::rngs::SmallRng,
     ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
+        tabu_map.add(self.i, iteration, tabu_tenure, rng);
     }
 }
 
@@ -300,12 +304,13 @@ impl Evaluate for MaxCutSwapNeighbor {
 }
 
 impl EnabledTabu for MaxCutSwapNeighbor {
-    type TabuMap = VarTabuMap;
+    /// The same map as [`MaxCutFlipNeighbor`], so a search that mixes the two
+    /// move types keeps one tabu memory over the vertices.
+    type TabuMap = VecTabuMap;
 
-    /// A swap move is tabu if either vertex `i` or `j` is in the tabu map with a tenure
-    /// greater than the current iteration.
+    /// A swap move is tabu while either vertex `i` or `j` is still blocked.
     fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        is_var_enabled(tabu_map, self.i, iteration) && is_var_enabled(tabu_map, self.j, iteration)
+        tabu_map.is_enabled(self.i, iteration) && tabu_map.is_enabled(self.j, iteration)
     }
 
     /// Adds both vertices `i` and `j` to the tabu map, each with an independently
@@ -317,8 +322,8 @@ impl EnabledTabu for MaxCutSwapNeighbor {
         tabu_tenure: (u64, u64),
         rng: &mut rand::rngs::SmallRng,
     ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
-        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure, rng);
+        tabu_map.add(self.i, iteration, tabu_tenure, rng);
+        tabu_map.add(self.j, iteration, tabu_tenure, rng);
     }
 }
 
