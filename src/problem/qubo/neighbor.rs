@@ -125,10 +125,8 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
 
     /// Returns a lazy iterator over all possible flip moves (one per variable).
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
-        prob.iter_on_variables().map(move |&i| QuboFlipNeighbor {
-            i,
-            gain: sol.gain[i],
-        })
+        prob.iter_on_variables()
+            .map(move |&i| QuboFlipNeighbor::new(prob, sol, i))
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
@@ -145,14 +143,36 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
             return None;
         }
         let i = prob.variables[rng.random_range(0..prob.variables.len())];
-        Some(Self {
-            i,
-            gain: sol.gain[i],
-        })
+        Some(Self::new(prob, sol, i))
     }
 }
 
 impl QuboFlipNeighbor {
+    /// Builds the flip of variable `i`, reading its cached gain.
+    ///
+    /// A flip's gain needs no correction — it is exactly the value the solution
+    /// already maintains — so this only exists to keep every construction site
+    /// on one path, the way [`QuboSwapNeighbor::new`] does. `prob` is unused for
+    /// that reason and taken only so the two constructors read alike at the call
+    /// site.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let qubo = Qubo::from_entries([(0, 0, -1), (1, 1, -1), (0, 1, 3)]);
+    /// let sol = QuboSolution::new_from_assignment(&qubo, vec![true, false]);
+    /// let flip = QuboFlipNeighbor::new(&qubo, &sol, 0);
+    /// assert_eq!(flip.gain, sol.gain[0]);
+    /// ```
+    pub fn new(_prob: &Qubo, sol: &QuboSolution, i: usize) -> Self {
+        Self {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+
     /// Generates a random flip neighbor by uniformly selecting a variable from the problem.
     ///
     /// Useful as a perturbation step (e.g., in [`RandomWalk`](crate::heuristic::RandomWalk)).
@@ -173,10 +193,7 @@ impl QuboFlipNeighbor {
         rng: &mut rand::rngs::SmallRng,
     ) -> Self {
         let i = prob.variables[rng.random_range(0..prob.variables.len())];
-        Self {
-            i,
-            gain: sol.gain[i],
-        }
+        Self::new(prob, sol, i)
     }
 }
 
@@ -209,6 +226,33 @@ pub struct QuboSwapNeighbor {
     pub j: usize,
     /// Combined change in objective value when both variables are flipped (negative = improvement).
     pub gain: Coefficient,
+}
+
+impl QuboSwapNeighbor {
+    /// Builds the swap of `i` and `j`, computing the combined gain.
+    ///
+    /// The gain is `gain[i] + gain[j] − Q(i, j)`: the two flip gains, minus the
+    /// interaction term that both flips would otherwise count. Every
+    /// construction site goes through here so the correction cannot be
+    /// forgotten at one of them.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let qubo = Qubo::from_entries([(0, 0, -1), (1, 1, -1), (0, 1, 3)]);
+    /// let sol = QuboSolution::new_from_assignment(&qubo, vec![true, false]);
+    /// let swap = QuboSwapNeighbor::new(&qubo, &sol, 0, 1);
+    /// assert_eq!(swap.gain, sol.gain[0] + sol.gain[1] - qubo.get_q(0, 1));
+    /// ```
+    pub fn new(prob: &Qubo, sol: &QuboSolution, i: usize, j: usize) -> Self {
+        Self {
+            i,
+            j,
+            gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
+        }
+    }
 }
 
 impl Rankable for QuboSwapNeighbor {
@@ -259,11 +303,7 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
         prob.iter_on_variables().flat_map(move |&i| {
             prob.iter_on_variables()
                 .filter(move |&&j| j < i && (sol.x[i] ^ sol.x[j]))
-                .map(move |&j| Self {
-                    i,
-                    j,
-                    gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
-                })
+                .map(move |&j| Self::new(prob, sol, i, j))
         })
     }
 
@@ -294,11 +334,7 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
         let a = zeros[rng.random_range(0..zeros.len())];
         let b = ones[rng.random_range(0..ones.len())];
         let (i, j) = (a.max(b), a.min(b));
-        Some(Self {
-            i,
-            j,
-            gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
-        })
+        Some(Self::new(prob, sol, i, j))
     }
 }
 

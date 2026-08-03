@@ -18,6 +18,22 @@ pub struct SatFlipNeighbor {
     pub gain: i64,
 }
 
+impl SatFlipNeighbor {
+    /// Builds the flip of variable `i`, reading its cached gain.
+    ///
+    /// A flip's gain needs no correction — it is exactly the value the solution
+    /// already maintains — so this only exists to keep every construction site
+    /// on one path, the way [`SatSwapNeighbor::new`] does. `prob` is unused for
+    /// that reason and taken only so the two constructors read alike at the call
+    /// site.
+    pub fn new(_prob: &Sat, sol: &SatSolution, i: usize) -> Self {
+        Self {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+}
+
 impl Rankable for SatFlipNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain > other.gain
@@ -69,10 +85,7 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
 
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
         let n = prob.n_vars();
-        (0..n).map(move |i| SatFlipNeighbor {
-            i,
-            gain: sol.gain[i],
-        })
+        (0..n).map(move |i| SatFlipNeighbor::new(prob, sol, i))
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
@@ -90,10 +103,7 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
             return None;
         }
         let i = rng.random_range(0..n);
-        Some(Self {
-            i,
-            gain: sol.gain[i],
-        })
+        Some(Self::new(prob, sol, i))
     }
 }
 
@@ -110,6 +120,24 @@ pub struct SatSwapNeighbor {
     pub j: usize,
     /// Combined change in satisfied-clause count (positive = improvement).
     pub gain: i64,
+}
+
+impl SatSwapNeighbor {
+    /// Builds the swap of `i` and `j`, computing the combined gain.
+    ///
+    /// The gain is `gain[i]` plus `j`'s gain *after* `i` has been flipped, not
+    /// the two standalone gains: the swap applies the flips in order, and when
+    /// the two variables share a clause the second flip sees a different
+    /// clause state. Every construction site goes through here so the
+    /// virtual flip cannot be skipped at one of them.
+    pub fn new(prob: &Sat, sol: &SatSolution, i: usize, j: usize) -> Self {
+        let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&sol.x, i, j);
+        Self {
+            i,
+            j,
+            gain: sol.gain[i] + gain_j_after_flip_i,
+        }
+    }
 }
 
 impl Rankable for SatSwapNeighbor {
@@ -156,15 +184,9 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
     /// Iterates the precomputed clause-sharing pairs lazily (no per-call
     /// allocation); the pair list itself is cached on the problem.
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
-        prob.clause_sharing_pairs().iter().map(move |&(i, j)| {
-            // gain_swap = gain_i + gain_j_after_flip_i
-            let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&sol.x, i, j);
-            SatSwapNeighbor {
-                i,
-                j,
-                gain: sol.gain[i] + gain_j_after_flip_i,
-            }
-        })
+        prob.clause_sharing_pairs()
+            .iter()
+            .map(move |&(i, j)| Self::new(prob, sol, i, j))
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
@@ -183,12 +205,7 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
             return None;
         }
         let (i, j) = pairs[rng.random_range(0..pairs.len())];
-        let gain_j_after_flip_i = prob.calc_gain_with_virtual_flip(&sol.x, i, j);
-        Some(Self {
-            i,
-            j,
-            gain: sol.gain[i] + gain_j_after_flip_i,
-        })
+        Some(Self::new(prob, sol, i, j))
     }
 }
 
