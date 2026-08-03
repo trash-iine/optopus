@@ -155,6 +155,39 @@ pub struct VertexCoverSwapNeighbor {
     pub gain: i32,
 }
 
+impl VertexCoverSwapNeighbor {
+    /// Builds the swap of `i` and `j`, computing the combined gain.
+    ///
+    /// The gain is `gain[i] + gain[j]`, minus one `penalty_weight` when `(i, j)`
+    /// is an edge: flipping both ends toggles that edge's coverage twice, so
+    /// each flip gain counts it once and one of the two has to be cancelled.
+    /// Every construction site goes through here so the correction cannot be
+    /// forgotten at one of them.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let vc = VertexCover::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0)]));
+    /// let sol = vc.solution_from_assignment(&[true, false, false]);
+    /// let swap = VertexCoverSwapNeighbor::new(&vc, &sol, 1, 0);
+    /// assert_eq!(swap.gain, sol.gain[1] + sol.gain[0] - vc.penalty_weight());
+    /// ```
+    pub fn new(prob: &VertexCover, sol: &VertexCoverSolution, i: usize, j: usize) -> Self {
+        let edge_correction = if prob.graph.has_edge(i, j) {
+            prob.penalty_weight()
+        } else {
+            0
+        };
+        Self {
+            i,
+            j,
+            gain: sol.gain[i] + sol.gain[j] - edge_correction,
+        }
+    }
+}
+
 impl Rankable for VertexCoverSwapNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
@@ -212,22 +245,11 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
     }
 
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
-        let pw = prob.penalty_weight();
         prob.graph.iter_on_vertices().flat_map(move |&i| {
             prob.graph
                 .iter_on_vertices()
                 .filter(move |&&j| j < i && (sol.x[i] != sol.x[j]))
-                .map(move |&j| {
-                    // Combined Δobjective for flipping i then j (cover_size unchanged):
-                    //   gain[i] + gain[j] - pw if (i, j) is an edge, else gain[i] + gain[j].
-                    // The -pw term cancels the double-counted toggle of edge (i, j).
-                    let edge_correction = if prob.graph.has_edge(i, j) { pw } else { 0 };
-                    Self {
-                        i,
-                        j,
-                        gain: sol.gain[i] + sol.gain[j] - edge_correction,
-                    }
-                })
+                .map(move |&j| Self::new(prob, sol, i, j))
         })
     }
 
@@ -263,16 +285,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
         let a = ins[rng.random_range(0..ins.len())];
         let b = outs[rng.random_range(0..outs.len())];
         let (i, j) = (a.max(b), a.min(b));
-        let edge_correction = if prob.graph.has_edge(i, j) {
-            prob.penalty_weight()
-        } else {
-            0
-        };
-        Some(Self {
-            i,
-            j,
-            gain: sol.gain[i] + sol.gain[j] - edge_correction,
-        })
+        Some(Self::new(prob, sol, i, j))
     }
 }
 

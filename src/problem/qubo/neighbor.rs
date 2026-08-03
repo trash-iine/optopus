@@ -211,6 +211,33 @@ pub struct QuboSwapNeighbor {
     pub gain: Coefficient,
 }
 
+impl QuboSwapNeighbor {
+    /// Builds the swap of `i` and `j`, computing the combined gain.
+    ///
+    /// The gain is `gain[i] + gain[j] − Q(i, j)`: the two flip gains, minus the
+    /// interaction term that both flips would otherwise count. Every
+    /// construction site goes through here so the correction cannot be
+    /// forgotten at one of them.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let qubo = Qubo::from_entries([(0, 0, -1), (1, 1, -1), (0, 1, 3)]);
+    /// let sol = QuboSolution::new_from_assignment(&qubo, vec![true, false]);
+    /// let swap = QuboSwapNeighbor::new(&qubo, &sol, 0, 1);
+    /// assert_eq!(swap.gain, sol.gain[0] + sol.gain[1] - qubo.get_q(0, 1));
+    /// ```
+    pub fn new(prob: &Qubo, sol: &QuboSolution, i: usize, j: usize) -> Self {
+        Self {
+            i,
+            j,
+            gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
+        }
+    }
+}
+
 impl Rankable for QuboSwapNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
@@ -259,11 +286,7 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
         prob.iter_on_variables().flat_map(move |&i| {
             prob.iter_on_variables()
                 .filter(move |&&j| j < i && (sol.x[i] ^ sol.x[j]))
-                .map(move |&j| Self {
-                    i,
-                    j,
-                    gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
-                })
+                .map(move |&j| Self::new(prob, sol, i, j))
         })
     }
 
@@ -294,11 +317,7 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
         let a = zeros[rng.random_range(0..zeros.len())];
         let b = ones[rng.random_range(0..ones.len())];
         let (i, j) = (a.max(b), a.min(b));
-        Some(Self {
-            i,
-            j,
-            gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
-        })
+        Some(Self::new(prob, sol, i, j))
     }
 }
 

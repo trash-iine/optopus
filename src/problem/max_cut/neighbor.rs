@@ -232,6 +232,42 @@ pub struct MaxCutSwapNeighbor {
     pub gain: f32,
 }
 
+impl MaxCutSwapNeighbor {
+    /// Builds the swap of `i` and `j`, computing the combined gain.
+    ///
+    /// The gain is `gain[i] + gain[j] + 2·w(i, j)`: the two flip gains plus a
+    /// correction for the edge between the vertices, which each flip alone
+    /// would count with the wrong sign. Every construction site goes through
+    /// here so the correction cannot be forgotten at one of them.
+    ///
+    /// `i` and `j` are expected to sit on opposite sides — that is what makes
+    /// the move a swap — but nothing here depends on it, so a caller that
+    /// deliberately builds a same-side pair still gets a correctly evaluated
+    /// move.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0)]));
+    /// let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, true, false]);
+    /// let swap = MaxCutSwapNeighbor::new(&mc, &sol, 1, 0);
+    /// assert_eq!(swap.gain, sol.gain[1] + sol.gain[0] + 2.0 * mc.graph.get_weight(1, 0));
+    /// ```
+    /// Non-adjacent pairs need no correction, and
+    /// [`get_weight`](crate::common::Graph::get_weight) already returns `0.0`
+    /// for them, so this does not pay for a separate `has_edge` lookup — the
+    /// perturbation operators call it once per move.
+    pub fn new(prob: &MaxCut, sol: &MaxCutSolution, i: usize, j: usize) -> Self {
+        Self {
+            i,
+            j,
+            gain: sol.gain[i] + sol.gain[j] + 2.0 * prob.graph.get_weight(i, j),
+        }
+    }
+}
+
 impl Rankable for MaxCutSwapNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain > other.gain
@@ -292,17 +328,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
             prob.graph
                 .iter_on_vertices()
                 .filter(move |&&j| j < i && (sol.x[i] ^ sol.x[j]))
-                .map(move |&j| Self {
-                    i,
-                    j,
-                    gain: sol.gain[i]
-                        + sol.gain[j]
-                        + if prob.graph.has_edge(i, j) {
-                            2.0 * prob.graph.get_weight(i, j)
-                        } else {
-                            0.0
-                        },
-                })
+                .map(move |&j| Self::new(prob, sol, i, j))
         })
     }
 
@@ -340,17 +366,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
         let a = side0[rng.random_range(0..side0.len())];
         let b = side1[rng.random_range(0..side1.len())];
         let (i, j) = (a.max(b), a.min(b));
-        Some(Self {
-            i,
-            j,
-            gain: sol.gain[i]
-                + sol.gain[j]
-                + if prob.graph.has_edge(i, j) {
-                    2.0 * prob.graph.get_weight(i, j)
-                } else {
-                    0.0
-                },
-        })
+        Some(Self::new(prob, sol, i, j))
     }
 }
 
