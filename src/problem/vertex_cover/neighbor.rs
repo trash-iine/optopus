@@ -20,6 +20,22 @@ pub struct VertexCoverFlipNeighbor {
     pub gain: i32,
 }
 
+impl VertexCoverFlipNeighbor {
+    /// Builds the flip of vertex `i`, reading its cached gain.
+    ///
+    /// A flip's gain needs no correction — it is exactly the value the solution
+    /// already maintains — so this only exists to keep every construction site
+    /// on one path, the way [`VertexCoverSwapNeighbor::new`] does. `prob` is
+    /// unused for that reason and taken only so the two constructors read alike
+    /// at the call site.
+    pub fn new(_prob: &VertexCover, sol: &VertexCoverSolution, i: usize) -> Self {
+        Self {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+}
+
 impl Rankable for VertexCoverFlipNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
@@ -112,10 +128,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
         prob.graph
             .iter_on_vertices()
-            .map(|&i| VertexCoverFlipNeighbor {
-                i,
-                gain: sol.gain[i],
-            })
+            .map(|&i| VertexCoverFlipNeighbor::new(prob, sol, i))
     }
 
     fn move_to_be_better_than(
@@ -137,10 +150,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
             return None;
         }
         let i = prob.graph.vertices[rng.random_range(0..prob.graph.vertices.len())];
-        Some(Self {
-            i,
-            gain: sol.gain[i],
-        })
+        Some(Self::new(prob, sol, i))
     }
 }
 

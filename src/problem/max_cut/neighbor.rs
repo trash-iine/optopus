@@ -125,10 +125,9 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
     ///
     /// The iterator yields `n` moves where `n` is the number of vertices with edges.
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
-        prob.graph.iter_on_vertices().map(|&i| MaxCutFlipNeighbor {
-            i,
-            gain: sol.gain[i],
-        })
+        prob.graph
+            .iter_on_vertices()
+            .map(|&i| MaxCutFlipNeighbor::new(prob, sol, i))
     }
 
     /// Returns `true` if applying this move to `src` would produce a solution
@@ -152,10 +151,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
             return None;
         }
         let i = prob.graph.vertices[rng.random_range(0..prob.graph.vertices.len())];
-        Some(Self {
-            i,
-            gain: sol.gain[i],
-        })
+        Some(Self::new(prob, sol, i))
     }
 }
 
@@ -171,6 +167,31 @@ impl Evaluate for MaxCutFlipNeighbor {
 }
 
 impl MaxCutFlipNeighbor {
+    /// Builds the flip of vertex `i`, reading its cached gain.
+    ///
+    /// A flip's gain needs no correction — it is exactly the value the solution
+    /// already maintains — so this only exists to keep every construction site
+    /// on one path, the way [`MaxCutSwapNeighbor::new`] does. `prob` is unused
+    /// for that reason and taken only so the two constructors read alike at the
+    /// call site.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0)]));
+    /// let sol = MaxCutSolution::new_from_assignment(&mc, vec![false, true, false]);
+    /// let flip = MaxCutFlipNeighbor::new(&mc, &sol, 1);
+    /// assert_eq!(flip.gain, sol.gain[1]);
+    /// ```
+    pub fn new(_prob: &MaxCut, sol: &MaxCutSolution, i: usize) -> Self {
+        Self {
+            i,
+            gain: sol.gain[i],
+        }
+    }
+
     /// Generates a random flip neighbor by uniformly selecting a vertex from the graph.
     ///
     /// Useful as a perturbation step (e.g., in [`RandomWalk`](crate::heuristic::RandomWalk)).
@@ -192,10 +213,7 @@ impl MaxCutFlipNeighbor {
         rng: &mut rand::rngs::SmallRng,
     ) -> Self {
         let i = prob.graph.vertices[rng.random_range(0..prob.graph.vertices.len())];
-        Self {
-            i,
-            gain: sol.gain[i],
-        }
+        Self::new(prob, sol, i)
     }
 }
 
