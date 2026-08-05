@@ -10,8 +10,8 @@ use super::problems::{BenchmarkProblem, BenchmarkSolution};
 use crate::error::OptError;
 use crate::heuristic::{
     GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
-    ParentSelection, Restart, RewardShaping, RlSearch, Sequential, SimulatedAnnealing,
-    StopCondition, TabuSearch,
+    ParentSelection, RandomWalk, Restart, RewardShaping, RlSearch, Sequential, SimulatedAnnealing,
+    StopCondition, TabuSearch, VariableNeighborhoodSearch,
 };
 use crate::search_state::{Crossover, Distance, MoveToNeighbor, ProblemTrait};
 use crate::trait_defs::{EnabledTabu, Evaluate, Rankable};
@@ -151,6 +151,7 @@ where
                     *history_length,
                 )))
             }
+            HeuristicConfig::RandomWalk { .. } => Ok(Box::new(RandomWalk::<N>::new(self.cond))),
             HeuristicConfig::RlSearch { .. } => build_rl_search::<P, N>(self.config, self.cond),
             _ => unreachable!("non-neighbor kinds are dispatched before with_neighbor"),
         }
@@ -257,6 +258,20 @@ where
             let perturbation = build_heuristic::<P>(&steps[1])?;
             Ok(Box::new(Iterated::new(cond, search, perturbation)))
         }
+        HeuristicConfig::VariableNeighborhoodSearch { steps, .. } => {
+            if steps.len() < 2 {
+                return Err(OptError::Config(format!(
+                    "VariableNeighborhoodSearch requires at least 2 steps (steps[0] = search, steps[1..] = shakes), but got {}",
+                    steps.len()
+                )));
+            }
+            let search = build_heuristic::<P>(&steps[0])?;
+            let shakes: Result<Vec<Box<dyn Heuristic<P>>>, OptError> =
+                steps[1..].iter().map(build_heuristic::<P>).collect();
+            Ok(Box::new(VariableNeighborhoodSearch::new(
+                cond, search, shakes?,
+            )))
+        }
         HeuristicConfig::Restart {
             steps,
             restart_condition,
@@ -341,6 +356,7 @@ where
         | HeuristicConfig::TabuSearch { neighbor, .. }
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
         | HeuristicConfig::LateAcceptanceHillClimbing { neighbor, .. }
+        | HeuristicConfig::RandomWalk { neighbor, .. }
         | HeuristicConfig::RlSearch { neighbor, .. } => {
             P::with_neighbor(neighbor, BaseBuilder { config, cond })?
         }
@@ -404,6 +420,10 @@ mod factory_tests {
                 history_length: 10,
                 stop_condition: sc(),
             },
+            HeuristicConfig::RandomWalk {
+                neighbor: neighbor.clone(),
+                stop_condition: sc(),
+            },
             HeuristicConfig::RlSearch {
                 neighbor,
                 learning_rate: None,
@@ -432,6 +452,41 @@ mod factory_tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn vns_requires_at_least_two_steps() {
+        let local_search = || HeuristicConfig::LocalSearch {
+            neighbor: NeighborKind::Flip,
+            stop_condition: StopConditionConfig::default(),
+        };
+        let random_walk = || HeuristicConfig::RandomWalk {
+            neighbor: NeighborKind::Flip,
+            stop_condition: StopConditionConfig {
+                max_iteration: Some(5),
+                max_duration_secs: None,
+                max_failed_update: None,
+            },
+        };
+        let vns = |steps| HeuristicConfig::VariableNeighborhoodSearch {
+            steps,
+            stop_condition: StopConditionConfig::default(),
+        };
+
+        let err = try_build(&ProblemKind::MaxCut, &vns(vec![local_search()]))
+            .expect_err("VNS with a single step must fail");
+        assert!(err.to_string().contains("at least 2 steps"), "{err}");
+
+        try_build(
+            &ProblemKind::MaxCut,
+            &vns(vec![local_search(), random_walk()]),
+        )
+        .expect("VNS with one shake builds");
+        try_build(
+            &ProblemKind::MaxCut,
+            &vns(vec![local_search(), random_walk(), random_walk()]),
+        )
+        .expect("VNS with two shakes builds");
     }
 
     #[test]

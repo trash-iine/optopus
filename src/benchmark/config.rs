@@ -97,6 +97,14 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Uniform random walk with unconditional acceptance; useful as a shake /
+    /// perturbation step inside a meta-heuristic. Always give it a
+    /// `stop_condition` (e.g. `max_iteration`) — an empty one never terminates.
+    RandomWalk {
+        neighbor: NeighborKind,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// REINFORCE policy-gradient move selection.
     RlSearch {
         neighbor: NeighborKind,
@@ -224,6 +232,13 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Basic VNS: `steps[0]` = local search, `steps[1..]` = shake
+    /// neighborhoods N_1..N_kmax in order of growing strength.
+    VariableNeighborhoodSearch {
+        steps: Vec<HeuristicConfig>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Runs `steps[0]`, resetting to a fresh random solution whenever
     /// `restart_condition` is met.
     Restart {
@@ -261,6 +276,7 @@ impl HeuristicConfig {
             Self::TabuSearch { .. } => "TabuSearch",
             Self::SimulatedAnnealing { .. } => "SimulatedAnnealing",
             Self::LateAcceptanceHillClimbing { .. } => "LateAcceptanceHillClimbing",
+            Self::RandomWalk { .. } => "RandomWalk",
             Self::RlSearch { .. } => "RlSearch",
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
             Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
@@ -269,6 +285,7 @@ impl HeuristicConfig {
             Self::WalkSat { .. } => "WalkSat",
             Self::Sequential { .. } => "Sequential",
             Self::Iterated { .. } => "Iterated",
+            Self::VariableNeighborhoodSearch { .. } => "VariableNeighborhoodSearch",
             Self::Restart { .. } => "Restart",
             Self::GeneticAlgorithm { .. } => "GeneticAlgorithm",
         }
@@ -281,6 +298,7 @@ impl HeuristicConfig {
             | Self::TabuSearch { neighbor, .. }
             | Self::SimulatedAnnealing { neighbor, .. }
             | Self::LateAcceptanceHillClimbing { neighbor, .. }
+            | Self::RandomWalk { neighbor, .. }
             | Self::RlSearch { neighbor, .. } => Some(neighbor),
             _ => None,
         }
@@ -291,6 +309,7 @@ impl HeuristicConfig {
         match self {
             Self::Sequential { steps, .. }
             | Self::Iterated { steps, .. }
+            | Self::VariableNeighborhoodSearch { steps, .. }
             | Self::Restart { steps, .. }
             | Self::GeneticAlgorithm { steps, .. } => steps,
             _ => &[],
@@ -304,6 +323,7 @@ impl HeuristicConfig {
             | Self::TabuSearch { stop_condition, .. }
             | Self::SimulatedAnnealing { stop_condition, .. }
             | Self::LateAcceptanceHillClimbing { stop_condition, .. }
+            | Self::RandomWalk { stop_condition, .. }
             | Self::RlSearch { stop_condition, .. }
             | Self::BreakoutLocalSearch { stop_condition, .. }
             | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
@@ -312,6 +332,7 @@ impl HeuristicConfig {
             | Self::WalkSat { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
             | Self::Iterated { stop_condition, .. }
+            | Self::VariableNeighborhoodSearch { stop_condition, .. }
             | Self::Restart { stop_condition, .. }
             | Self::GeneticAlgorithm { stop_condition, .. } => stop_condition,
         }
@@ -341,8 +362,8 @@ pub struct BenchmarkConfig {
 }
 
 /// Recursively validates that every `neighbor` field in `h` (including in
-/// nested `steps` from Sequential / Iterated / Restart / GeneticAlgorithm)
-/// is supported by `problem`.
+/// nested `steps` from Sequential / Iterated / VariableNeighborhoodSearch /
+/// Restart / GeneticAlgorithm) is supported by `problem`.
 fn validate_heuristic_neighbors(
     h: &HeuristicConfig,
     problem: &ProblemKind,
@@ -559,6 +580,65 @@ max_duration_secs = 30.0
             }
             _ => panic!("expected WalkSat"),
         }
+    }
+
+    #[test]
+    fn parses_random_walk_toml() {
+        let h: HeuristicConfig = toml::from_str(
+            r#"
+kind = "RandomWalk"
+neighbor = "Swap"
+
+[stop_condition]
+max_iteration = 5
+"#,
+        )
+        .expect("RandomWalk TOML parses");
+        match &h {
+            HeuristicConfig::RandomWalk {
+                neighbor,
+                stop_condition,
+            } => {
+                assert_eq!(*neighbor, NeighborKind::Swap);
+                assert_eq!(stop_condition.max_iteration, Some(5));
+            }
+            other => panic!("wrong variant: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_vns_nested_steps_toml() {
+        let h: HeuristicConfig = toml::from_str(
+            r#"
+kind = "VariableNeighborhoodSearch"
+
+[stop_condition]
+max_iteration = 100
+
+[[steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[[steps]]
+kind = "RandomWalk"
+neighbor = "Flip"
+
+[steps.stop_condition]
+max_iteration = 1
+
+[[steps]]
+kind = "RandomWalk"
+neighbor = "Swap"
+
+[steps.stop_condition]
+max_iteration = 2
+"#,
+        )
+        .expect("VariableNeighborhoodSearch TOML parses");
+        assert_eq!(h.kind_name(), "VariableNeighborhoodSearch");
+        assert_eq!(h.steps().len(), 3);
+        assert_eq!(h.steps()[1].kind_name(), "RandomWalk");
+        assert_eq!(h.steps()[2].neighbor(), Some(&NeighborKind::Swap));
     }
 
     #[test]

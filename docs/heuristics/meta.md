@@ -1,6 +1,6 @@
-# Sequential / Iterated / Restart
+# Sequential / Iterated / VariableNeighborhoodSearch / Restart
 
-Three meta-heuristics that compose other heuristics via the **sub-run
+Four meta-heuristics that compose other heuristics via the **sub-run
 clone/merge pattern**:
 
 ```rust
@@ -47,6 +47,25 @@ Both phases run on `ClearBest` clones; the global best survives.
 
 A typical pairing: `search = LocalSearch`, `perturbation = RandomWalk` for a
 few iterations.
+
+## VariableNeighborhoodSearch
+
+Basic Variable Neighborhood Search (VNS). Keeps an ordered list of shake
+heuristics `N_1..N_kmax` (typically `RandomWalk` with growing budgets) and a
+local `search`:
+
+```rust
+VariableNeighborhoodSearch::<P>::new(
+    stop_condition: StopCondition,
+    search: Box<dyn Heuristic<P>>,
+    shakes: Vec<Box<dyn Heuristic<P>>>,   // must be non-empty
+) -> Self
+```
+
+Cycle: snapshot the incumbent → shake in `N_k` → `search` → if the result
+improves the incumbent, keep it and reset `k`; otherwise restore the incumbent
+and advance `k` (wrapping around after the last neighborhood). The global best
+survives either way.
 
 ## Restart
 

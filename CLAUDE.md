@@ -68,6 +68,7 @@ src/
 │   ├── late_acceptance.rs    LateAcceptanceHillClimbing<N>
 │   ├── beam_search.rs / random_walk.rs
 │   ├── sequential.rs         Sequential<P>, Iterated<P>  ← ILS lives here too
+│   ├── variable_neighborhood_search.rs  VariableNeighborhoodSearch<P> (basic VNS)
 │   ├── restart.rs            Restart<P>
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
@@ -167,6 +168,7 @@ StopCondition::iterations(1_000_000)
 |---|---|
 | `Sequential<P>` | Runs a `Vec<Box<dyn Heuristic<P>>>` in order (each step on a `ClearBest` clone) |
 | `Iterated<P>` | ILS: alternates `search` and `perturbation` (`Box<dyn Heuristic<P>>`); lives in `sequential.rs` |
+| `VariableNeighborhoodSearch<P>` | Basic VNS: shake in `N_k` → local `search`; improvement resets `k`, failure restores the incumbent and advances `k` (wrap-around) |
 | `Restart<P>` | Runs the inner heuristic; when `restart_condition` triggers, replaces `solution` with a fresh random one (best is preserved) |
 | `GeneticAlgorithm<P, C>` | 2-parent selection (`Tournament` or `DistantTopK`) → `Crossover<P>` → mutation (`Heuristic<P>`) → worst-replacement; tracks `best_idx` incrementally |
 
@@ -215,7 +217,7 @@ max_iteration = 100000         # max_duration_secs / max_failed_update also supp
 
 `HeuristicConfig` is an internally-tagged enum (`#[serde(tag = "kind")]`), so each `kind` declares exactly its own required fields; missing fields and unknown kinds fail at parse time.
 
-**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`, optional `plateau_prob`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), and the meta-heuristics `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
+**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RandomWalk` (give it a `stop_condition` — an empty one never terminates), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`, optional `plateau_prob`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), and the meta-heuristics `Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `VariableNeighborhoodSearch` uses `steps[0] = search, steps[1..] = shakes N_1..N_kmax`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
 
 **`Summary` fields**: `num_successful_runs`, `best/avg/worst/std_objective`, `best/avg_time_to_best_secs`, `avg_total_time_secs`, plus averaged `initial_objective` / `improvement` / acceptance counters. Each `SingleRunResult` carries `best_objective: f64`, `best_iteration: u64`, timing, the per-run `seed`, and `solution: Vec<usize>` (0-indexed encoding).
 

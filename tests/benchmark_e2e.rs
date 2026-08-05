@@ -375,6 +375,44 @@ max_iteration = 10
     );
 }
 
+/// VNS forks the RNG across three sub-heuristics (search + two shakes) and
+/// exercises the incumbent-restore path on failed cycles.
+#[test]
+fn variable_neighborhood_search_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_vns",
+        r#"
+[[heuristics]]
+kind = "VariableNeighborhoodSearch"
+
+[heuristics.stop_condition]
+max_iteration = 300
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [2, 5]
+
+[heuristics.steps.stop_condition]
+max_iteration = 50
+
+[[heuristics.steps]]
+kind = "RandomWalk"
+neighbor = "Flip"
+
+[heuristics.steps.stop_condition]
+max_iteration = 5
+
+[[heuristics.steps]]
+kind = "RandomWalk"
+neighbor = "Flip"
+
+[heuristics.steps.stop_condition]
+max_iteration = 15
+"#,
+    );
+}
+
 #[test]
 fn run_from_config_rejects_empty_glob() {
     let config_toml = r#"
