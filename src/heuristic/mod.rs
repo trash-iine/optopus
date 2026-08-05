@@ -12,6 +12,7 @@ mod sequential;
 mod simulated_annealing;
 mod specific;
 mod tabu_search;
+mod variable_neighborhood_search;
 
 pub use beam_search::BeamSearch;
 pub use crossover::SubProblemBasedCrossover;
@@ -28,8 +29,10 @@ pub use specific::BreakoutLocalSearchForMaxCut;
 pub use specific::LinKernighanHelsgaunForTsp;
 pub use specific::PopulationAnnealingForMaxCut;
 pub use specific::RlBreakoutLocalSearchForMaxCut;
+pub use specific::WalkSatForSat;
 pub use specific::{NUM_CONTEXT_FEATURES, NUM_PERTURBATION_TYPES};
 pub use tabu_search::TabuSearch;
+pub use variable_neighborhood_search::VariableNeighborhoodSearch;
 
 use crate::error::OptError;
 use crate::search_state::{ProblemTrait, SearchState};

@@ -1,5 +1,8 @@
 //! An undirected weighted graph stored as sorted adjacency lists.
 
+mod generator;
+pub use generator::seeded_rng;
+
 /// Shared zero constant returned by `Index` for non-existent edges.
 static ZERO_WEIGHT: f32 = 0.0;
 
@@ -477,6 +480,35 @@ impl Graph {
         Ok(g)
     }
 
+    /// Writes the graph to `path` in the format read by
+    /// [`load_from_file`](Self::load_from_file): the header `N M` followed by
+    /// one `i j w` line per edge with **1-based** vertex indices.
+    ///
+    /// The header `N` is [`len`](Self::len), the graph's vertex index space, so
+    /// isolated (edge-free) vertices are still accounted for -- not
+    /// [`num_vertices`](Self::num_vertices), which counts only vertices *with*
+    /// edges. Weights are written in full precision, so a write / load round trip
+    /// preserves both the vertex count and the weights bit-for-bit.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OptError::Io`](crate::error::OptError::Io) if the file cannot
+    /// be created or written.
+    pub fn write_to_file(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<(), crate::error::OptError> {
+        use std::io::Write;
+
+        let mut writer = std::io::BufWriter::new(std::fs::File::create(path)?);
+        writeln!(writer, "{} {}", self.len(), self.num_edges())?;
+        for (i, j, w) in self.edges() {
+            writeln!(writer, "{} {} {}", i + 1, j + 1, w)?;
+        }
+        writer.flush()?;
+        Ok(())
+    }
+
     fn ensure_capacity(&mut self, n: usize) {
         if self.adj.len() < n {
             self.adj.resize_with(n, Vec::new);
@@ -564,9 +596,8 @@ impl std::fmt::Display for Graph {
 mod tests {
     use super::*;
 
-    /// Writes `content` to a unique temp file and returns its path.
-    fn write_temp_file(tag: &str, content: &str) -> std::path::PathBuf {
-        use std::io::Write;
+    /// Returns a unique temp file path tagged with `tag`.
+    fn temp_path(tag: &str) -> std::path::PathBuf {
         let mut path = std::env::temp_dir();
         path.push(format!(
             "optopus_graph_{tag}_{}_{}.txt",
@@ -576,9 +607,52 @@ mod tests {
                 .unwrap()
                 .as_nanos()
         ));
+        path
+    }
+
+    /// Writes `content` to a unique temp file and returns its path.
+    fn write_temp_file(tag: &str, content: &str) -> std::path::PathBuf {
+        use std::io::Write;
+        let path = temp_path(tag);
         let mut f = std::fs::File::create(&path).unwrap();
         f.write_all(content.as_bytes()).unwrap();
         path
+    }
+
+    /// Collects a graph's undirected edges as a set of `(i, j, weight_bits)`.
+    fn edge_set(g: &Graph) -> std::collections::HashSet<(usize, usize, u32)> {
+        g.edges().map(|(i, j, w)| (i, j, w.to_bits())).collect()
+    }
+
+    #[test]
+    fn test_write_round_trip_preserves_edges_and_isolated_vertices() {
+        // p is small enough that some vertex almost surely ends up edge-free,
+        // so the round trip also has to carry the vertex count.
+        let n = 40;
+        let mut rng = seeded_rng(2026);
+        let g = Graph::erdos_renyi(n, 0.05, &mut rng).with_random_weights((1, 9), &mut rng);
+        assert!(g.num_vertices() < n, "test needs an isolated vertex");
+
+        let path = temp_path("roundtrip");
+        g.write_to_file(&path).unwrap();
+        let loaded = Graph::load_from_file(&path).unwrap();
+        let _ = std::fs::remove_file(&path);
+
+        assert_eq!(edge_set(&g), edge_set(&loaded));
+        assert_eq!(loaded.len(), n);
+    }
+
+    #[test]
+    fn test_write_preserves_fractional_weights() {
+        let g = Graph::from_edges([(0, 1, 0.5), (1, 2, -1.25)]);
+        let path = temp_path("frac");
+        g.write_to_file(&path).unwrap();
+        let loaded = Graph::load_from_file(&path).unwrap();
+        let _ = std::fs::remove_file(&path);
+
+        assert_eq!(edge_set(&g), edge_set(&loaded));
+        assert_eq!(loaded.get_weight(0, 1), 0.5);
+        assert_eq!(loaded.get_weight(1, 2), -1.25);
     }
 
     #[test]

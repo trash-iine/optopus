@@ -5,138 +5,269 @@
 <title>Optopus benchmark viewer</title>
 <style>
 :root {
-  --bg: #ffffff;
-  --fg: #1a1a1a;
-  --muted: #6b6b6b;
-  --border: #d4d4d4;
-  --chip-bg: #f3f3f3;
-  --chip-on: #1a73e8;
-  --chip-on-fg: #ffffff;
-  --best-bg: #c8e6c9;
-  --best-fg: #1b5e20;
-  --header-bg: #f8f8f8;
-  --row-alt: #fafafa;
-  --section-bg: #eef2ff;
+  --bg: #f4f5f8;
+  --card: #ffffff;
+  --fg: #1c2333;
+  --muted: #697085;
+  --faint: #98a0b3;
+  --border: #e4e6ee;
+  --border-strong: #d3d6e0;
+  --accent: oklch(50% 0.13 262);
+  --accent-soft: oklch(95% 0.025 262);
+  --accent-softer: oklch(97.5% 0.012 262);
+  --good: oklch(46% 0.11 152);
+  --good-soft: oklch(94% 0.05 152);
+  --bad: oklch(48% 0.13 25);
+  --header-bg: #f8f9fc;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(18, 25, 48, 0.05), 0 1px 6px rgba(18, 25, 48, 0.04);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", Roboto, sans-serif;
   font-size: 13px;
   color: var(--fg);
   background: var(--bg);
 }
+a { color: var(--accent); }
+a:hover { color: oklch(40% 0.13 262); }
+
+/* ---------- header ---------- */
 header {
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-  z-index: 10;
+  flex-wrap: wrap;
 }
 header h1 {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+header h1 .logo {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.view-toggle {
+  display: flex;
+  background: #e9ebf2;
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
 }
 .view-toggle button {
-  border: 1px solid var(--border);
-  background: var(--chip-bg);
-  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  padding: 5px 16px;
   cursor: pointer;
   font: inherit;
-}
-.view-toggle button.on {
-  background: var(--chip-on);
-  color: var(--chip-on-fg);
-  border-color: var(--chip-on);
-}
-.view-toggle button:first-child { border-radius: 4px 0 0 4px; }
-.view-toggle button:last-child { border-radius: 0 4px 4px 0; }
-.filters {
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  row-gap: 6px;
-  column-gap: 8px;
-  align-items: center;
-  background: var(--header-bg);
-}
-.filters label.row-label {
   font-weight: 600;
   color: var(--muted);
+  border-radius: 7px;
 }
-.chips {
+.view-toggle button.on {
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(18,25,48,.12);
+}
+
+/* ---------- layout ---------- */
+main {
+  padding: 0 24px 240px 24px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-direction: column;
+  gap: 12px;
 }
-.chip {
+.card {
+  background: var(--card);
   border: 1px solid var(--border);
-  background: var(--chip-bg);
-  padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ---------- disclaimer ---------- */
+.disclaimer {
+  padding: 8px 14px;
+  background: var(--accent-softer);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.disclaimer strong { color: var(--fg); }
+
+/* ---------- filters ---------- */
+.filters {
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  row-gap: 10px;
+  column-gap: 12px;
+  align-items: start;
+}
+.filters .row-label { padding-top: 6px; }
+.filters .row-label {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.chip {
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  color: var(--muted);
+  padding: 3px 11px;
+  border-radius: 999px;
   cursor: pointer;
   user-select: none;
   font-size: 12px;
+  line-height: 1.5;
+  transition: background .1s, color .1s, border-color .1s;
 }
+.chip:hover { border-color: var(--accent); }
 .chip.on {
-  background: var(--chip-on);
-  color: var(--chip-on-fg);
-  border-color: var(--chip-on);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: oklch(75% 0.08 262);
+  font-weight: 600;
+}
+.chip.all { font-weight: 700; letter-spacing: 0.04em; font-size: 11px; }
+.chip.all.some { background: var(--card); color: var(--accent); border-color: oklch(75% 0.08 262); }
+.chip-group {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 3px;
+  max-width: 100%;
+  background: #edeff5; border: 1px solid var(--border);
+  border-radius: 14px; padding: 2px;
+}
+.chip-group .group-label {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 5px 2px 10px; cursor: pointer; user-select: none;
+  font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap;
+}
+.chip-group .group-label:hover { color: var(--accent); }
+.chip-group.on-all .group-label { color: var(--accent); }
+.chip-group .group-label .g-count { font-weight: 500; color: var(--faint); font-variant-numeric: tabular-nums; }
+.chip-group .chip { padding: 2px 9px; font-size: 11px; }
+.chips-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.chips.collapsed { max-height: 68px; overflow: hidden; }
+.expand-toggle {
+  border: none; background: none; padding: 0; cursor: pointer;
+  font: inherit; font-size: 11px; font-weight: 600; color: var(--accent);
+}
+.expand-toggle:hover { text-decoration: underline; }
+.row-label .count {
+  display: block; font-weight: 500; letter-spacing: 0; text-transform: none;
+  font-size: 10px; color: var(--faint); font-variant-numeric: tabular-nums; margin-top: 1px;
 }
 .filters input[type=text] {
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
   font: inherit;
   width: 240px;
+  background: var(--card);
 }
-.filters select {
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font: inherit;
+.filters input[type=text]:focus,
+select:focus {
+  outline: 2px solid oklch(80% 0.08 262);
+  outline-offset: 0;
+  border-color: var(--accent);
 }
-.filters .reset {
+.reset {
   margin-left: 8px;
-  border: 1px solid var(--border);
-  background: var(--chip-bg);
-  padding: 3px 10px;
-  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  color: var(--muted);
+  padding: 4px 12px;
+  border-radius: 8px;
   cursor: pointer;
   font: inherit;
-}
-main {
-  padding: 8px 16px 240px 16px;
-}
-.summary-bar {
-  padding: 6px 0;
-  color: var(--muted);
   font-size: 12px;
 }
+.reset:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- controls bar ---------- */
+.controls {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.control > label {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+select {
+  padding: 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  background: var(--card);
+  color: var(--fg);
+  max-width: 320px;
+}
+.vs { font-weight: 700; color: var(--faint); font-size: 11px; }
+
+/* ---------- summary ---------- */
+.summary-bar {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 0 2px;
+}
+
+/* ---------- table ---------- */
 .table-wrap {
   overflow: auto;
-  border: 1px solid var(--border);
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 300px);
+  border-radius: var(--radius);
 }
 table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 12px;
   width: max-content;
   min-width: 100%;
 }
 th, td {
-  border: 1px solid var(--border);
-  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 5px 10px;
   text-align: right;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
+th:last-child, td:last-child { border-right: none; }
 th {
   background: var(--header-bg);
   font-weight: 600;
@@ -144,60 +275,120 @@ th {
   position: sticky;
   top: 0;
   z-index: 2;
+  color: var(--muted);
 }
+th .h-kind { display: block; color: var(--fg); font-weight: 700; }
+th .h-sub { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }
+th .h-params {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--faint);
+  font-family: var(--mono);
+  max-width: 170px;
+  margin: 1px auto 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+th.confable { cursor: pointer; }
+th.confable:hover .h-kind { color: var(--accent); }
+th.baseline-col { box-shadow: inset 0 -2px 0 var(--accent); color: var(--accent); }
+th.baseline-col .h-kind { color: var(--accent); }
+td.num { font-family: var(--mono); font-size: 11.5px; }
+td .sub-delta {
+  display: block;
+  font-size: 10.5px;
+  line-height: 1.3;
+  color: var(--faint);
+}
+td .sub-delta.good { color: var(--good); }
+td .sub-delta.bad { color: var(--bad); }
 th.section, td.section {
-  background: var(--section-bg);
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   position: sticky;
   left: 0;
   z-index: 3;
+  background: var(--card);
+  color: var(--accent);
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 td.instance {
   text-align: left;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--mono);
+  font-size: 11.5px;
   position: sticky;
-  left: 0;
-  background: var(--bg);
+  left: 110px;
+  background: var(--card);
   z-index: 1;
+  border-right: 1px solid var(--border-strong);
 }
-tr:nth-child(even) td.instance { background: var(--row-alt); }
-tr:nth-child(even) td:not(.instance) { background: var(--row-alt); }
+tbody tr:hover td { background-color: var(--accent-softer); }
+tbody tr:hover td.instance, tbody tr:hover td.section { background-color: var(--accent-softer); }
 td.best {
-  background: var(--best-bg) !important;
-  color: var(--best-fg);
   font-weight: 700;
+  color: var(--good);
 }
-td.empty { color: var(--muted); font-style: italic; text-align: center; }
+td.best::before {
+  content: "●";
+  font-size: 7px;
+  vertical-align: 2px;
+  margin-right: 5px;
+  color: var(--good);
+}
+td.empty { color: var(--faint); text-align: center; }
 td.clickable { cursor: pointer; }
-td.clickable:hover { outline: 2px solid var(--chip-on); outline-offset: -2px; }
 th.sortable { cursor: pointer; }
-th.sortable.sort-asc::after { content: " \25B2"; }
-th.sortable.sort-desc::after { content: " \25BC"; }
+th.sortable:hover { color: var(--accent); }
+th.sortable.sort-asc::after { content: " \25B2"; font-size: 9px; }
+th.sortable.sort-desc::after { content: " \25BC"; font-size: 9px; }
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #eef0f5;
+  color: var(--muted);
+}
+.badge.small { background: oklch(94% 0.04 240); color: oklch(42% 0.1 240); }
+.badge.medium { background: oklch(94% 0.05 70); color: oklch(45% 0.1 60); }
+.badge.large { background: oklch(94% 0.04 350); color: oklch(45% 0.12 350); }
+.empty-state {
+  padding: 48px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ---------- detail panel ---------- */
 .detail {
   position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  padding: 12px 16px;
-  max-height: 220px;
+  bottom: 16px; right: 16px;
+  width: min(560px, calc(100vw - 32px));
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 30px rgba(18,25,48,.18);
+  padding: 14px 18px;
+  max-height: 300px;
   overflow: auto;
   font-size: 12px;
-  z-index: 9;
+  z-index: 20;
 }
 .detail.hidden { display: none; }
-.detail h2 {
-  margin: 0 0 6px 0;
-  font-size: 13px;
-}
+.detail h2 { margin: 0 0 8px 0; font-size: 13px; }
 .detail dl {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 2px 16px;
+  gap: 3px 16px;
   margin: 0;
 }
 .detail dt { color: var(--muted); }
-.detail dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.detail dd { margin: 0; font-family: var(--mono); }
 .detail .close {
   float: right;
   cursor: pointer;
@@ -206,61 +397,68 @@ th.sortable.sort-desc::after { content: " \25BC"; }
   font-size: 16px;
   color: var(--muted);
 }
-.badge {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 8px;
-  font-size: 11px;
-  background: var(--chip-bg);
-  color: var(--muted);
-  margin-left: 4px;
-}
-.badge.small { background: #e3f2fd; color: #1565c0; }
-.badge.medium { background: #fff3e0; color: #ef6c00; }
-.badge.large { background: #fce4ec; color: #ad1457; }
-.empty-state {
-  padding: 40px;
-  text-align: center;
-  color: var(--muted);
-}
 </style>
 </head>
 <body>
 <header>
-  <h1>Optopus benchmark viewer</h1>
+  <h1><span class="logo">Op</span>Optopus benchmark viewer</h1>
   <div class="view-toggle">
     <button id="view-comparison" class="on">Comparison</button>
     <button id="view-flat">Flat</button>
   </div>
 </header>
 
-<section class="filters" id="filter-bar">
-  <label class="row-label">Problem</label><div class="chips" data-axis="problems"></div>
-  <label class="row-label">Heuristic</label><div class="chips" data-axis="kinds"></div>
-  <label class="row-label">Neighbor</label><div class="chips" data-axis="neighbors"></div>
-  <label class="row-label">Band</label><div class="chips" data-axis="bands"></div>
-  <label class="row-label">Instance</label>
-  <div>
-    <input type="text" id="instance-filter" placeholder="substring (case-insensitive)">
-    <button class="reset" id="reset-filters">Reset filters</button>
-  </div>
-  <label class="row-label">Metric</label>
-  <div>
-    <select id="metric">
-      <option value="best_objective">best objective</option>
-      <option value="avg_objective">avg objective</option>
-      <option value="worst_objective">worst objective</option>
-      <option value="std_objective">std objective (lower better)</option>
-      <option value="best_time_to_best_secs">best time-to-best [s] (lower better)</option>
-      <option value="avg_time_to_best_secs">avg time-to-best [s] (lower better)</option>
-      <option value="avg_total_time_secs">avg total time [s] (lower better)</option>
-    </select>
-  </div>
-</section>
-
 <main>
+  <div class="disclaimer" role="note">
+    ⚠️ <strong>Reference values only.</strong> Collected in a non-isolated
+    environment, and some code paths are deliberately generalized (flexibility
+    over raw speed), so these numbers do not reflect each algorithm's true
+    performance — read them as indicative, not a rigorous ranking.
+  </div>
+  <section class="card filters" id="filter-bar">
+    <label class="row-label">Problem<span class="count" id="count-problems"></span></label>
+    <div class="chips" data-axis="problems"></div>
+    <label class="row-label">Heuristic<span class="count" id="count-kinds"></span></label>
+    <div class="chips-cell">
+      <div class="chips" data-axis="kinds"></div>
+      <button class="expand-toggle" id="kinds-expand" hidden>Show all ▾</button>
+    </div>
+    <label class="row-label">Instance</label>
+    <div>
+      <input type="text" id="instance-filter" placeholder="substring (case-insensitive)">
+      <button class="reset" id="reset-filters">Reset filters</button>
+    </div>
+  </section>
+
+  <section class="card controls" id="controls">
+    <div class="control">
+      <label for="metric">Metric</label>
+      <select id="metric">
+        <option value="best_objective">best objective</option>
+        <option value="avg_objective">avg objective</option>
+        <option value="worst_objective">worst objective</option>
+        <option value="std_objective">std objective (lower better)</option>
+        <option value="best_time_to_best_secs">best time-to-best [s] (lower better)</option>
+        <option value="avg_time_to_best_secs">avg time-to-best [s] (lower better)</option>
+        <option value="avg_total_time_secs">avg total time [s] (lower better)</option>
+      </select>
+    </div>
+    <div class="control" data-view="comparison">
+      <label for="baseline">Baseline</label>
+      <select id="baseline"></select>
+    </div>
+    <div class="control" data-view="comparison">
+      <label for="delta-mode">Show</label>
+      <select id="delta-mode">
+        <option value="pct">value + Δ%</option>
+        <option value="abs">value + Δ</option>
+        <option value="none">value only</option>
+      </select>
+    </div>
+  </section>
+
   <div class="summary-bar" id="summary"></div>
-  <div class="table-wrap" id="table-wrap"></div>
+  <section class="card table-wrap" id="table-wrap"></section>
 </main>
 
 <aside class="detail hidden" id="detail">
@@ -274,15 +472,22 @@ th.sortable.sort-desc::after { content: " \25BC"; }
 
 import { parse as parseToml } from "./vendor/smol-toml.js";
 
-// Objective direction per problem (mirrors PROBLEM_DIRECTION in render.py).
+// Objective direction per problem. Keys are the Rust `ProblemKind` spelling
+// (see `src/benchmark/config.rs`), matching each result's `problem` field and
+// PROBLEM_DIRECTION in render.py.
 const PROBLEM_DIRECTION = {
   MaxCut: "max",
-  SAT: "max",
-  QUBO: "min",
-  TSP: "min",
-  JobShopScheduling: "min",
+  Sat: "max",
+  Qubo: "min",
+  Tsp: "min",
+  JobShop: "min",
   VertexCover: "min",
 };
+
+// Display labels: internal keys stay in the Rust spelling; only the UI text is
+// prettified.
+const PROBLEM_LABEL = { Qubo: "QUBO", Sat: "SAT", Tsp: "TSP" };
+const problemLabel = (p) => PROBLEM_LABEL[p] ?? p;
 
 // Populated by loadData() before the UI is bootstrapped.
 let DATA = null;
@@ -304,36 +509,58 @@ function deriveBand(source) {
   return null;
 }
 
-// Mirror of fmt_hyperparams() in render.py: same field order and formatting.
-function fmtHyperparams(heuristic) {
-  const parts = [];
-  for (const key of ["tabu_tenure", "t", "l0", "p0", "q"]) {
-    let v = heuristic[key];
-    if (v === undefined || v === null) continue;
-    if (Array.isArray(v)) v = "(" + v.join(", ") + ")";
-    parts.push(`${key}=${v}`);
-  }
-  const sc = heuristic.stop_condition || {};
-  for (const key of ["max_iteration", "max_duration_secs", "max_failed_update"]) {
-    if (sc[key] !== undefined && sc[key] !== null) parts.push(`${key}=${sc[key]}`);
-  }
-  return parts.join(", ");
+// Generic hyperparameter extraction: every field on the heuristic except
+// kind/neighbor, plus stop_condition entries and nested steps (Iterated,
+// Restart, ...) recursively.
+function fmtParamVal(v) {
+  if (Array.isArray(v)) return "(" + v.join(", ") + ")";
+  if (v && typeof v === "object") return JSON.stringify(v);
+  return String(v);
 }
 
-// Fetch manifest.json, then each slim TOML in parallel; parse client-side and
-// flatten into the { problem_direction, rows } shape the UI expects.
+function heurEntries(h, prefix = "") {
+  const out = [];
+  if (!h || typeof h !== "object") return out;
+  for (const [k, v] of Object.entries(h)) {
+    if (k === "kind" || k === "neighbor" || k === "stop_condition" || k === "steps") continue;
+    if (v === undefined || v === null) continue;
+    out.push([prefix + k, fmtParamVal(v)]);
+  }
+  const sc = h.stop_condition || {};
+  for (const [k, v] of Object.entries(sc)) {
+    if (v === undefined || v === null) continue;
+    out.push([prefix + "stop." + k, fmtParamVal(v)]);
+  }
+  if (Array.isArray(h.steps)) {
+    h.steps.forEach((s, i) => {
+      const label = `${prefix}step${i + 1}`;
+      out.push([label, s.kind + (s.neighbor ? ` (${s.neighbor})` : "")]);
+      out.push(...heurEntries(s, label + "."));
+    });
+  }
+  return out;
+}
+
+function fmtHyperparams(heuristic) {
+  return heurEntries(heuristic).map(([k, v]) => `${k}=${v}`).join(", ");
+}
+
+// Fetch index.json, then each slim TOML in parallel; parse client-side and
+// flatten into the { problem_direction, rows } shape the UI expects. The
+// problem type is sourced from each result's own `problem` field (the index
+// mirrors it only as a lazy-load / discovery hint).
 async function loadData() {
-  const manifestResp = await fetch("data/manifest.json");
-  if (!manifestResp.ok) throw new Error(`manifest.json (HTTP ${manifestResp.status})`);
-  const manifest = await manifestResp.json();
-  const perFile = await Promise.all(manifest.map(async (entry) => {
+  const indexResp = await fetch("data/index.json");
+  if (!indexResp.ok) throw new Error(`index.json (HTTP ${indexResp.status})`);
+  const index = await indexResp.json();
+  const perFile = await Promise.all(index.map(async (entry) => {
     const resp = await fetch(`data/${entry.path}`);
     if (!resp.ok) throw new Error(`${entry.path} (HTTP ${resp.status})`);
     const doc = parseToml(await resp.text());
     const source = sourceFromPath(entry.path);
     const band = deriveBand(source);
     return (doc.results || []).map((r) => ({
-      problem: entry.problem,
+      problem: r.problem ?? entry.problem,
       instance: instanceStem(r.instance_path),
       instance_path: r.instance_path,
       heuristic_kind: r.heuristic.kind,
@@ -341,6 +568,7 @@ async function loadData() {
       source,
       band,
       summary: r.summary,
+      heuristic: r.heuristic,
       hyperparams: fmtHyperparams(r.heuristic),
     }));
   }));
@@ -374,18 +602,17 @@ const STATE = {
   bands: new Set(),
   instance: "",
   metric: "best_objective",
+  baseline: "",        // "" = best-in-row
+  deltaMode: "pct",    // pct | abs | none
   flatSortKey: "instance",
   flatSortDir: "asc",
 };
 
 function bootstrapState() {
   if (!DATA || !DATA.rows) return;
-  // Initialize all chips to active.
   for (const row of DATA.rows) {
     STATE.problems.add(row.problem);
-    STATE.kinds.add(row.heuristic_kind);
-    if (row.neighbor) STATE.neighbors.add(row.neighbor);
-    if (row.band) STATE.bands.add(row.band);
+    STATE.kinds.add(colKey(row));
   }
 }
 
@@ -393,47 +620,245 @@ function allValues(axis) {
   const set = new Set();
   for (const row of DATA.rows) {
     if (axis === "problems") set.add(row.problem);
-    else if (axis === "kinds") set.add(row.heuristic_kind);
-    else if (axis === "neighbors") { if (row.neighbor) set.add(row.neighbor); }
-    else if (axis === "bands") { if (row.band) set.add(row.band); }
+    else if (axis === "kinds") set.add(colKey(row));
   }
   return Array.from(set).sort();
 }
 
+const UI = { kindsExpanded: false };
+
+function refreshFilters() {
+  renderChips();
+  fillMethodSelects();
+  syncControls();
+  updateHash();
+  render();
+}
+
+function toggleVal(axis, v) {
+  if (STATE[axis].has(v)) STATE[axis].delete(v);
+  else STATE[axis].add(v);
+  refreshFilters();
+}
+
+function makeChip(label, on, axis, v, extraTitle) {
+  const chip = document.createElement("span");
+  chip.className = "chip" + (on ? " on" : "");
+  chip.textContent = label;
+  chip.title = (extraTitle ? extraTitle + "\n" : "") + "Click: toggle \u00b7 Double-click: only this";
+  chip.addEventListener("click", () => toggleVal(axis, v));
+  chip.addEventListener("dblclick", () => {
+    STATE[axis] = new Set([v]);
+    refreshFilters();
+  });
+  return chip;
+}
+
+function makeAllChip(axis, all) {
+  const nOn = all.filter(v => STATE[axis].has(v)).length;
+  const chip = document.createElement("span");
+  chip.className = "chip all" + (nOn === all.length ? " on" : nOn > 0 ? " some" : "");
+  chip.textContent = "ALL";
+  chip.title = nOn === all.length ? "Deselect all" : "Select all";
+  chip.addEventListener("click", () => {
+    const on = nOn !== all.length;
+    for (const v of all) {
+      if (on) STATE[axis].add(v); else STATE[axis].delete(v);
+    }
+    refreshFilters();
+  });
+  return chip;
+}
+
+// Heuristics that have at least one result for the selected problems —
+// keeps the filter short as more heuristics get benchmarked.
+function visibleKinds() {
+  const set = new Set();
+  for (const r of DATA.rows) {
+    if (STATE.problems.size && !STATE.problems.has(r.problem)) continue;
+    set.add(colKey(r));
+  }
+  return Array.from(set).sort(instanceCompare);
+}
+
+// Group heuristic columns by kind so long lists stay scannable.
+function kindGroups(kinds) {
+  const groups = new Map();
+  for (const c of kinds) {
+    const meta = COLMETA.get(c);
+    const base = meta ? meta.kind : c;
+    if (!groups.has(base)) groups.set(base, []);
+    groups.get(base).push(c);
+  }
+  return groups;
+}
+
+function memberLabel(meta, fallback) {
+  if (!meta) return fallback;
+  return meta.neighbor || meta.kind;
+}
+
+function setCount(id, axis, all) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const n = all.filter(v => STATE[axis].has(v)).length;
+  el.textContent = `${n}/${all.length}`;
+}
+
 function renderChips() {
-  for (const axis of ["problems", "kinds", "neighbors", "bands"]) {
-    const el = document.querySelector(`.chips[data-axis="${axis}"]`);
-    el.innerHTML = "";
-    for (const v of allValues(axis)) {
-      const chip = document.createElement("span");
-      chip.className = "chip" + (STATE[axis].has(v) ? " on" : "");
-      chip.textContent = v;
-      chip.addEventListener("click", () => {
-        if (STATE[axis].has(v)) STATE[axis].delete(v);
-        else STATE[axis].add(v);
-        chip.classList.toggle("on");
-        updateHash();
-        render();
+  const pEl = document.querySelector('.chips[data-axis="problems"]');
+  pEl.innerHTML = "";
+  pEl.appendChild(makeAllChip("problems", allValues("problems")));
+  for (const v of allValues("problems")) {
+    pEl.appendChild(makeChip(problemLabel(v), STATE.problems.has(v), "problems", v));
+  }
+
+  const kinds = visibleKinds();
+  const kEl = document.querySelector('.chips[data-axis="kinds"]');
+  kEl.innerHTML = "";
+  kEl.appendChild(makeAllChip("kinds", kinds));
+  for (const [base, members] of kindGroups(kinds)) {
+    if (members.length === 1) {
+      const c = members[0];
+      const meta = COLMETA.get(c);
+      const lbl = meta && meta.neighbor ? `${base} (${meta.neighbor})` : base;
+      kEl.appendChild(makeChip(lbl, STATE.kinds.has(c), "kinds", c,
+        meta && meta.variants > 1 ? `best of ${meta.variants} variations` : (meta && meta.hyperparams ? meta.hyperparams : "")));
+    } else {
+      const nOn = members.filter(m => STATE.kinds.has(m)).length;
+      const g = document.createElement("span");
+      g.className = "chip-group" + (nOn === members.length ? " on-all" : "");
+      const lbl = document.createElement("span");
+      lbl.className = "group-label";
+      const name = document.createElement("span");
+      name.textContent = base;
+      const cnt = document.createElement("span");
+      cnt.className = "g-count";
+      cnt.textContent = `${nOn}/${members.length}`;
+      lbl.appendChild(name);
+      lbl.appendChild(cnt);
+      lbl.title = nOn === members.length ? `Deselect all ${base}` : `Select all ${base}`;
+      lbl.addEventListener("click", () => {
+        const on = nOn !== members.length;
+        for (const m of members) {
+          if (on) STATE.kinds.add(m); else STATE.kinds.delete(m);
+        }
+        refreshFilters();
       });
-      el.appendChild(chip);
+      g.appendChild(lbl);
+      for (const c of members) {
+        const meta = COLMETA.get(c);
+        g.appendChild(makeChip(memberLabel(meta, c), STATE.kinds.has(c), "kinds", c,
+          c + (meta && meta.variants > 1 ? `\nbest of ${meta.variants} variations` : "")));
+      }
+      kEl.appendChild(g);
     }
   }
+
+  setCount("count-problems", "problems", allValues("problems"));
+  setCount("count-kinds", "kinds", kinds);
+
+  kEl.classList.toggle("collapsed", !UI.kindsExpanded);
+  const btn = document.getElementById("kinds-expand");
+  btn.textContent = UI.kindsExpanded ? "Show less \u25b4" : "Show all \u25be";
+  requestAnimationFrame(() => {
+    const overflowing = kEl.scrollHeight > kEl.clientHeight + 4;
+    btn.hidden = !(overflowing || UI.kindsExpanded);
+  });
 }
 
 function filteredRows() {
   const needle = STATE.instance.trim().toLowerCase();
   return DATA.rows.filter(r => {
     if (!STATE.problems.has(r.problem)) return false;
-    if (!STATE.kinds.has(r.heuristic_kind)) return false;
-    if (r.neighbor && !STATE.neighbors.has(r.neighbor)) return false;
-    if (r.band && !STATE.bands.has(r.band)) return false;
+    if (!STATE.kinds.has(colKey(r))) return false;
     if (needle && !r.instance.toLowerCase().includes(needle)) return false;
     return true;
   });
 }
 
-function colKey(row) {
+function baseKey(row) {
   return row.neighbor ? `${row.heuristic_kind} (${row.neighbor})` : row.heuristic_kind;
+}
+
+// Parameter variations of the same kind+neighbor are folded into ONE column;
+// each cell shows the best result across variations (see bestRow).
+let VARIANTS = new Map(); // baseKey -> sorted array of hyperparams signatures
+let SHARED = new Map();   // baseKey -> Set of param entries common to all variations
+let COLMETA = new Map();  // colKey -> { kind, neighbor, variants, hyperparams, heuristic }
+
+// Split a hyperparams signature only before `key=` tokens so tuple values
+// like tabu_tenure=(3, 100) stay intact.
+function sigEntries(sig) {
+  return sig ? sig.split(/, (?=[\w.]+=)/) : [];
+}
+
+function computeVariants() {
+  VARIANTS = new Map();
+  for (const r of DATA.rows) {
+    const b = baseKey(r);
+    if (!VARIANTS.has(b)) VARIANTS.set(b, new Set());
+    VARIANTS.get(b).add(r.hyperparams);
+  }
+  SHARED = new Map();
+  for (const [b, set] of VARIANTS) {
+    const sigs = Array.from(set).sort();
+    VARIANTS.set(b, sigs);
+    const lists = sigs.map(sigEntries);
+    SHARED.set(b, new Set(lists[0].filter(e => lists.every(l => l.includes(e)))));
+  }
+  COLMETA = new Map();
+  for (const r of DATA.rows) {
+    const k = colKey(r);
+    if (COLMETA.has(k)) continue;
+    COLMETA.set(k, {
+      kind: r.heuristic_kind,
+      neighbor: r.neighbor,
+      variants: VARIANTS.get(k).length,
+      hyperparams: r.hyperparams,
+      heuristic: r.heuristic,
+    });
+  }
+}
+
+function colKey(row) {
+  return baseKey(row);
+}
+
+// Params of this signature that differ between the variations of baseKey b.
+function sigDiff(b, sig) {
+  const shared = SHARED.get(b) || new Set();
+  return sigEntries(sig).filter(e => !shared.has(e)).join(", ");
+}
+
+function variantInfo(r) {
+  const b = baseKey(r);
+  const sigs = VARIANTS.get(b) || [];
+  if (sigs.length <= 1) return null;
+  return { n: sigs.indexOf(r.hyperparams) + 1, total: sigs.length, diff: sigDiff(b, r.hyperparams) };
+}
+
+function cellTitle(r) {
+  const vi = variantInfo(r);
+  return vi
+    ? `variation #${vi.n}/${vi.total}: ${vi.diff || "(defaults)"}\n(click for details)`
+    : "(click for details)";
+}
+
+// Of two rows for the same column+instance, keep the better one for the
+// current metric (null-valued rows lose).
+function bestRow(a, b) {
+  if (!b) return a;
+  const va = metricValue(a), vb = metricValue(b);
+  if (vb === null) return a;
+  if (va === null) return b;
+  return betterness(va, vb, rowBetterDirection(a.problem)) > 0 ? a : b;
+}
+
+function allColKeys() {
+  const set = new Set();
+  for (const r of DATA.rows) set.add(colKey(r));
+  return Array.from(set).sort();
 }
 
 function metricValue(row) {
@@ -442,7 +867,6 @@ function metricValue(row) {
 }
 
 function rowBetterDirection(problem) {
-  // For objective-type metrics use problem direction; otherwise min.
   if (LOWER_BETTER_METRICS.has(STATE.metric)) return "min";
   return DATA.problem_direction[problem] || "max";
 }
@@ -456,6 +880,50 @@ function fmtNum(x) {
   return x.toPrecision(3);
 }
 
+function fmtPct(x) {
+  const s = x > 0 ? "+" : "";
+  return s + x.toFixed(Math.abs(x) < 10 ? 2 : 1) + "%";
+}
+
+function fmtDelta(x) {
+  const s = x > 0 ? "+" : "";
+  return s + fmtNum(x);
+}
+
+// Signed "goodness": positive means v is better than ref for this direction.
+function betterness(v, ref, direction) {
+  return direction === "max" ? v - ref : ref - v;
+}
+
+function makeColHeader(c) {
+  const th = document.createElement("th");
+  const meta = COLMETA.get(c);
+  const kind = document.createElement("span");
+  kind.className = "h-kind";
+  kind.textContent = meta ? meta.kind : c;
+  th.appendChild(kind);
+  if (meta && meta.neighbor) {
+    const sub = document.createElement("span");
+    sub.className = "h-sub";
+    sub.textContent = meta.neighbor;
+    th.appendChild(sub);
+  }
+  if (meta && meta.variants > 1) {
+    const params = document.createElement("span");
+    params.className = "h-params";
+    params.textContent = `best of ${meta.variants} variations`;
+    th.appendChild(params);
+  }
+  if (meta) {
+    th.title = meta.variants > 1
+      ? `${c}\n${meta.variants} parameter variations — each cell shows the best one\n(click for the variation list)`
+      : (meta.hyperparams ? `${c}\n${meta.hyperparams}\n(click for configuration)` : c);
+    th.classList.add("confable");
+    th.addEventListener("click", () => showConfig(c));
+  }
+  return th;
+}
+
 function renderComparison() {
   const rows = filteredRows();
   const wrap = document.getElementById("table-wrap");
@@ -464,32 +932,36 @@ function renderComparison() {
     return;
   }
 
-  // Collect column keys (sorted by kind then neighbor).
   const colSet = new Set();
   for (const r of rows) colSet.add(colKey(r));
-  const cols = Array.from(colSet).sort();
+  const cols = Array.from(colSet).sort(instanceCompare);
 
-  // Group rows by (problem, instance).
   const byPI = new Map();
   for (const r of rows) {
     const k = `${r.problem}\t${r.instance}`;
     if (!byPI.has(k)) byPI.set(k, { problem: r.problem, instance: r.instance, cells: new Map() });
-    byPI.get(k).cells.set(colKey(r), r);
+    const cells = byPI.get(k).cells;
+    const ck = colKey(r);
+    cells.set(ck, bestRow(r, cells.get(ck)));
   }
 
-  // Sort: by problem, then instance natural-ish order.
   const groups = Array.from(byPI.values()).sort((a, b) => {
     if (a.problem !== b.problem) return a.problem.localeCompare(b.problem);
     return instanceCompare(a.instance, b.instance);
   });
 
-  // Build HTML.
+  const baseline = cols.includes(STATE.baseline) ? STATE.baseline : "";
+
   const t = document.createElement("table");
   const thead = document.createElement("thead");
   const trh = document.createElement("tr");
   trh.appendChild(makeTh("Problem"));
   trh.appendChild(makeTh("Instance"));
-  for (const c of cols) trh.appendChild(makeTh(c));
+  for (const c of cols) {
+    const th = makeColHeader(c);
+    if (c === baseline) th.classList.add("baseline-col");
+    trh.appendChild(th);
+  }
   thead.appendChild(trh);
   t.appendChild(thead);
 
@@ -497,10 +969,9 @@ function renderComparison() {
   let lastProblem = null;
   for (const g of groups) {
     const tr = document.createElement("tr");
-    // Problem cell (only show once per group; merged visually via class)
     const tdP = document.createElement("td");
     tdP.className = "section";
-    tdP.textContent = (g.problem !== lastProblem) ? g.problem : "";
+    tdP.textContent = (g.problem !== lastProblem) ? problemLabel(g.problem) : "";
     tr.appendChild(tdP);
     lastProblem = g.problem;
 
@@ -509,7 +980,6 @@ function renderComparison() {
     tdI.textContent = g.instance;
     tr.appendChild(tdI);
 
-    // Determine best value among present cells.
     const direction = rowBetterDirection(g.problem);
     let best = null;
     for (const c of cols) {
@@ -518,6 +988,13 @@ function renderComparison() {
       const v = metricValue(r);
       if (v === null) continue;
       if (best === null || (direction === "max" ? v > best : v < best)) best = v;
+    }
+    // Reference value for deltas: baseline column if chosen, else best-in-row.
+    let refVal = best;
+    if (baseline) {
+      const br = g.cells.get(baseline);
+      const bv = br ? metricValue(br) : null;
+      refVal = bv;
     }
 
     for (const c of cols) {
@@ -528,10 +1005,34 @@ function renderComparison() {
         td.textContent = "-";
       } else {
         const v = metricValue(r);
-        td.className = "clickable";
+        td.className = "clickable num";
         if (v !== null && v === best) td.classList.add("best");
         td.textContent = fmtNum(v);
+
+        // Delta annotation + heat tint
+        if (STATE.deltaMode !== "none" && v !== null && refVal !== null && refVal !== undefined) {
+          const isRefCell = baseline ? (c === baseline) : (v === best);
+          if (!isRefCell) {
+            const good = betterness(v, refVal, direction);
+            const pct = refVal !== 0 ? (good / Math.abs(refVal)) * 100 : 0;
+            const sub = document.createElement("span");
+            sub.className = "sub-delta " + (good > 0 ? "good" : good < 0 ? "bad" : "");
+            const signedRaw = direction === "max" ? v - refVal : v - refVal; // raw delta for abs mode
+            sub.textContent = STATE.deltaMode === "pct" ? fmtPct(pct) : fmtDelta(signedRaw);
+            td.appendChild(sub);
+            // background tint scaled by |pct|, capped
+            const a = Math.min(Math.abs(pct) / 8, 1) * 0.22;
+            if (a > 0.01) {
+              td.style.backgroundColor = good > 0
+                ? `oklch(93% 0.07 152 / ${a + 0.15})`
+                : `oklch(94% 0.07 25 / ${a + 0.1})`;
+            }
+          } else if (baseline) {
+            td.style.backgroundColor = "var(--accent-softer)";
+          }
+        }
         td.addEventListener("click", () => showDetail(r));
+        td.title = cellTitle(r);
       }
       tr.appendChild(td);
     }
@@ -544,7 +1045,6 @@ function renderComparison() {
 }
 
 function instanceCompare(a, b) {
-  // Numeric-aware: split into chunks of (digit, non-digit).
   const ra = a.match(/(\d+|\D+)/g) || [a];
   const rb = b.match(/(\d+|\D+)/g) || [b];
   for (let i = 0; i < Math.min(ra.length, rb.length); i++) {
@@ -574,6 +1074,7 @@ function makeTh(text, sortKey) {
         STATE.flatSortKey = sortKey;
         STATE.flatSortDir = "asc";
       }
+      updateHash();
       render();
     });
   }
@@ -583,9 +1084,7 @@ function makeTh(text, sortKey) {
 const FLAT_COLS = [
   ["problem", "Problem"],
   ["instance", "Instance"],
-  ["heuristic_kind", "Heuristic"],
-  ["neighbor", "Neighbor"],
-  ["band", "Band"],
+  ["heuristic", "Heuristic"],
   ["best_objective", "Best"],
   ["avg_objective", "Avg"],
   ["worst_objective", "Worst"],
@@ -599,7 +1098,8 @@ const FLAT_COLS = [
 ];
 
 function flatField(row, key) {
-  if (["problem", "instance", "heuristic_kind", "neighbor", "band", "source", "hyperparams"].includes(key)) {
+  if (key === "heuristic") return colKey(row);
+  if (["problem", "instance", "source", "hyperparams"].includes(key)) {
     return row[key];
   }
   return row.summary[key];
@@ -638,17 +1138,13 @@ function renderFlat() {
     for (const [k] of FLAT_COLS) {
       const td = document.createElement("td");
       const v = flatField(r, k);
-      if (k === "band" && v) {
-        const span = document.createElement("span");
-        span.className = `badge ${v}`;
-        span.textContent = v;
-        td.appendChild(span);
-        td.style.textAlign = "left";
-      } else if (k === "problem" || k === "instance" || k === "heuristic_kind" || k === "neighbor" || k === "source" || k === "hyperparams") {
+      if (["problem", "instance", "heuristic", "source", "hyperparams"].includes(k)) {
         td.textContent = v ?? "-";
         td.style.textAlign = "left";
+        if (k === "instance") td.style.fontFamily = "var(--mono)";
       } else {
         td.textContent = fmtNum(v);
+        td.classList.add("num");
       }
       td.classList.add("clickable");
       td.addEventListener("click", () => showDetail(r));
@@ -662,18 +1158,52 @@ function renderFlat() {
   wrap.appendChild(t);
 }
 
+function showConfig(c) {
+  const meta = COLMETA.get(c);
+  if (!meta) return;
+  const detail = document.getElementById("detail");
+  detail.classList.remove("hidden");
+  const dl = document.getElementById("detail-body");
+  dl.innerHTML = "";
+  let fields;
+  if (meta.variants > 1) {
+    document.getElementById("detail-title").textContent = `${c} — ${meta.variants} variations (cells show the best)`;
+    const shared = Array.from(SHARED.get(c) || []);
+    fields = [
+      ["kind", meta.kind],
+      ...(meta.neighbor ? [["neighbor", meta.neighbor]] : []),
+      ...(shared.length ? [["shared", shared.join(", ")]] : []),
+      ...VARIANTS.get(c).map((sig, i) => [`#${i + 1}`, sigDiff(c, sig) || "(defaults)"]),
+    ];
+  } else {
+    document.getElementById("detail-title").textContent = `${c} — configuration`;
+    fields = [
+      ["kind", meta.kind],
+      ...(meta.neighbor ? [["neighbor", meta.neighbor]] : []),
+      ...heurEntries(meta.heuristic),
+    ];
+    if (fields.length <= (meta.neighbor ? 2 : 1)) fields.push(["params", "(none)"]);
+  }
+  for (const [k, v] of fields) {
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd"); dd.textContent = v;
+    dl.appendChild(dt); dl.appendChild(dd);
+  }
+}
+
 function showDetail(r) {
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
   document.getElementById("detail-title").textContent =
-    `${r.problem} / ${r.instance} — ${colKey(r)}`;
+    `${problemLabel(r.problem)} / ${r.instance} — ${colKey(r)}`;
   const dl = document.getElementById("detail-body");
   dl.innerHTML = "";
+  const vi = variantInfo(r);
   const fields = [
     ["instance_path", r.instance_path],
-    ["band", r.band ?? "-"],
     ["source", r.source],
-    ["hyperparams", r.hyperparams || "-"],
+    ...(vi ? [["variation", `#${vi.n} of ${vi.total}${vi.diff ? " — " + vi.diff : ""}`]] : []),
+    ...heurEntries(r.heuristic),
     ...SUMMARY_FIELDS.map(([k, label]) => [label, fmtNum(r.summary[k])]),
   ];
   for (const [k, v] of fields) {
@@ -690,6 +1220,11 @@ function render() {
     document.getElementById("summary").textContent = "";
     return;
   }
+  // toggle per-view controls
+  for (const el of document.querySelectorAll('[data-view]')) {
+    el.style.display = el.dataset.view === STATE.view ? "" : "none";
+  }
+
   const filtered = filteredRows();
   const problems = new Set(filtered.map(r => r.problem));
   const instances = new Set(filtered.map(r => `${r.problem}/${r.instance}`));
@@ -709,10 +1244,10 @@ function updateHash() {
   };
   dumpSet("problem", "problems");
   dumpSet("kind", "kinds");
-  dumpSet("neighbor", "neighbors");
-  dumpSet("band", "bands");
   if (STATE.instance) parts.push(`instance=${encodeURIComponent(STATE.instance)}`);
   if (STATE.metric !== "best_objective") parts.push(`metric=${STATE.metric}`);
+  if (STATE.baseline) parts.push(`baseline=${encodeURIComponent(STATE.baseline)}`);
+  if (STATE.deltaMode !== "pct") parts.push(`delta=${STATE.deltaMode}`);
   if (STATE.view === "flat") {
     if (STATE.flatSortKey !== "instance") parts.push(`sort=${STATE.flatSortKey}`);
     if (STATE.flatSortDir !== "asc") parts.push(`dir=${STATE.flatSortDir}`);
@@ -732,12 +1267,30 @@ function loadHash() {
   if (params.has("view")) STATE.view = params.get("view");
   setAxis("problem", "problems");
   setAxis("kind", "kinds");
-  setAxis("neighbor", "neighbors");
-  setAxis("band", "bands");
   if (params.has("instance")) STATE.instance = params.get("instance");
   if (params.has("metric")) STATE.metric = params.get("metric");
+  if (params.has("baseline")) STATE.baseline = params.get("baseline");
+  if (params.has("delta")) STATE.deltaMode = params.get("delta");
   if (params.has("sort")) STATE.flatSortKey = params.get("sort");
   if (params.has("dir")) STATE.flatSortDir = params.get("dir");
+}
+
+function fillMethodSelects() {
+  const cols = visibleKinds();
+  const baseSel = document.getElementById("baseline");
+  baseSel.innerHTML = "";
+  const optBest = document.createElement("option");
+  optBest.value = "";
+  optBest.textContent = "best in row";
+  baseSel.appendChild(optBest);
+  for (const c of cols) {
+    const o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    baseSel.appendChild(o);
+  }
+
+  // keep selection valid when the visible set shrinks
+  if (STATE.baseline && !cols.includes(STATE.baseline)) STATE.baseline = "";
 }
 
 function syncControls() {
@@ -745,32 +1298,43 @@ function syncControls() {
   document.getElementById("view-flat").classList.toggle("on", STATE.view === "flat");
   document.getElementById("instance-filter").value = STATE.instance;
   document.getElementById("metric").value = STATE.metric;
+  document.getElementById("baseline").value = STATE.baseline;
+  document.getElementById("delta-mode").value = STATE.deltaMode;
 }
 
 function attachListeners() {
-  document.getElementById("view-comparison").addEventListener("click", () => {
-    STATE.view = "comparison"; syncControls(); updateHash(); render();
-  });
-  document.getElementById("view-flat").addEventListener("click", () => {
-    STATE.view = "flat"; syncControls(); updateHash(); render();
-  });
+  const setView = (v) => () => {
+    STATE.view = v; syncControls(); updateHash(); render();
+  };
+  document.getElementById("view-comparison").addEventListener("click", setView("comparison"));
+  document.getElementById("view-flat").addEventListener("click", setView("flat"));
   document.getElementById("instance-filter").addEventListener("input", e => {
     STATE.instance = e.target.value; updateHash(); render();
   });
   document.getElementById("metric").addEventListener("change", e => {
     STATE.metric = e.target.value; updateHash(); render();
   });
+  document.getElementById("baseline").addEventListener("change", e => {
+    STATE.baseline = e.target.value; updateHash(); render();
+  });
+  document.getElementById("delta-mode").addEventListener("change", e => {
+    STATE.deltaMode = e.target.value; updateHash(); render();
+  });
   document.getElementById("reset-filters").addEventListener("click", () => {
     STATE.problems = new Set(allValues("problems"));
     STATE.kinds = new Set(allValues("kinds"));
-    STATE.neighbors = new Set(allValues("neighbors"));
-    STATE.bands = new Set(allValues("bands"));
     STATE.instance = "";
     STATE.metric = "best_objective";
+    STATE.baseline = "";
+    STATE.deltaMode = "pct";
     syncControls();
     renderChips();
     updateHash();
     render();
+  });
+  document.getElementById("kinds-expand").addEventListener("click", () => {
+    UI.kindsExpanded = !UI.kindsExpanded;
+    renderChips();
   });
   document.getElementById("detail-close").addEventListener("click", () => {
     document.getElementById("detail").classList.add("hidden");
@@ -790,11 +1354,13 @@ async function main() {
       ` This page must be served over HTTP — locally run ` +
       `<code>cd docs &amp;&amp; python3 -m http.server</code> then open ` +
       `<code>benchmarks/viewer.html</code>. Regenerate the data with ` +
-      `<code>python3 docs/benchmarks/render.py</code> if <code>data/manifest.json</code> is missing.</div>`;
+      `<code>python3 docs/benchmarks/render.py</code> if <code>data/index.json</code> is missing.</div>`;
     return;
   }
+  computeVariants();
   bootstrapState();
   loadHash();
+  fillMethodSelects();
   syncControls();
   renderChips();
   attachListeners();

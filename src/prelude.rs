@@ -7,7 +7,7 @@
 //! ```
 
 // Common types
-pub use crate::common::Graph;
+pub use crate::common::{Graph, seeded_rng};
 
 // Error type
 pub use crate::error::OptError;
@@ -21,7 +21,8 @@ pub use crate::heuristic::{
     BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic, Iterated,
     LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp, LocalSearch, ParentSelection,
     RandomWalk, Restart, RewardShaping, RlBreakoutLocalSearchForMaxCut, RlSearch, Sequential,
-    SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch, boltzmann_accept,
+    SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch,
+    VariableNeighborhoodSearch, WalkSatForSat, boltzmann_accept,
 };
 
 // Traits

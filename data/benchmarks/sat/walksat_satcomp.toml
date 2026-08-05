@@ -1,0 +1,70 @@
+# Large-scale MaxSAT: WalkSAT vs. generic SLS on SAT Competition 2026 instances.
+#
+# Instances: fetch first with
+#   bash data/instances/scripts/fetch_satcomp2026.sh
+# (unweighted DIMACS `p cnf`, 1.8e4 .. 2.5e6 clauses; see data/instances/README.md).
+#
+# WalkSat is the focused O(clause-length)/step heuristic; TabuSearch and Iterated
+# are the generic O(n)/step baselines, given the same wall-clock budget so the
+# speed/quality gap on large instances is visible in `best_objective`
+# (satisfied-clause count) and `avg_time_to_best_secs`.
+
+num_runs = 3
+seed = 42
+
+[[instances]]
+path = "data/instances/sat/satcomp2026/*.cnf"
+problem = "Sat"
+
+# --- Focused WalkSAT/SKC (the effective heuristic) ---
+[[heuristics]]
+kind = "WalkSat"
+noise = 0.3
+[heuristics.stop_condition]
+max_duration_secs = 15.0
+
+# Adaptive-noise variant.
+[[heuristics]]
+kind = "WalkSat"
+noise = 0.3
+adaptive_noise = true
+[heuristics.stop_condition]
+max_duration_secs = 15.0
+
+# WalkSAT with periodic restarts composed in TOML.
+[[heuristics]]
+kind = "Restart"
+[heuristics.stop_condition]
+max_duration_secs = 15.0
+[heuristics.restart_condition]
+max_failed_update = 100000
+[[heuristics.steps]]
+kind = "WalkSat"
+noise = 0.3
+[heuristics.steps.stop_condition]
+max_iteration = 100000000
+
+# --- Generic baselines (O(n)/step) at the same budget ---
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [5, 20]
+[heuristics.stop_condition]
+max_duration_secs = 15.0
+
+[[heuristics]]
+kind = "Iterated"
+[heuristics.stop_condition]
+max_duration_secs = 15.0
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+[heuristics.steps.stop_condition]
+max_failed_update = 1
+[[heuristics.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+[heuristics.steps.stop_condition]
+max_iteration = 200

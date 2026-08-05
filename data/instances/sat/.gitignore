@@ -3,3 +3,7 @@
 # reproduce script in data/instances/README.md. Local files are kept on disk
 # but excluded from version control.
 satlib/
+
+# SAT Competition 2026 instances (via GBD) are likewise not redistributed here;
+# fetch locally with scripts/fetch_satcomp2026.sh (see data/instances/README.md).
+satcomp2026/

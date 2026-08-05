@@ -42,12 +42,14 @@ takes the Cartesian product.
 | `TabuSearch` | all | `neighbor`, `tabu_tenure` | — |
 | `SimulatedAnnealing` | all | `neighbor`, `initial_temperature`, `cooling_rate` | — |
 | `LateAcceptanceHillClimbing` | all | `neighbor`, `history_length` | — |
+| `RandomWalk` | all | `neighbor` (give it a `stop_condition` — an empty one never terminates) | — |
 | `BreakoutLocalSearch` | MaxCut only | `tabu_tenure`, `t`, `l0`, `p0`, `q` | — |
 | `RlBreakoutLocalSearch` | MaxCut only | `tabu_tenure`, `t`, `l0` | `strength_bins` (`[1.0, 2.0, 4.0]`), `learning_rate` (0.1), `softmax_temperature` (1.0), `exploration` (0.05), `policy_weights` |
 | `LinKernighanHelsgaun` | TSP only | — | `num_neighbors` (default 5), `max_depth` (default 5) |
 | `RlSearch` | all | `neighbor` | `learning_rate` (0.01), `softmax_temperature` (1.0), `reward_shaping` (`Raw`\|`Normalized`\|`BestImprovement`, default `Normalized`), `policy_weights`, `max_candidates` |
 | `Sequential` | all | `steps` | — |
 | `Iterated` | all | `steps` (`[0]` = search, `[1]` = perturbation) | — |
+| `VariableNeighborhoodSearch` | all | `steps` (`[0]` = search, `[1..]` = shakes N_1..N_kmax) | — |
 | `Restart` | all | `steps` (single inner), `restart_condition` | — |
 | `GeneticAlgorithm` | all | `population_size` (≥ 2), `steps` (`[0]` = mutation, optional `[1]` = init_improvement) | `crossover_kind` (per-problem default: `Uniform`, `Order` for TSP, `Ppx` for JobShop), `parent_selection` (`Tournament` default \| `DistantTopK`), `parent_top_k` (required when `DistantTopK`) |
 
@@ -78,17 +80,14 @@ neighbor = "Flip"
 max_failed_update = 1
 
 [[heuristics.steps]]                   # perturbation phase
-kind = "SimulatedAnnealing"            # high temperature = randomizing kick
+kind = "RandomWalk"                    # unconditional random move = randomizing kick
 neighbor = "Flip"
-initial_temperature = 5.0
-cooling_rate = 0.99
 [heuristics.steps.stop_condition]
 max_iteration = 200
 ```
 
-> `RandomWalk` is exposed in the library API but does not currently have a CLI
-> `kind`. In TOML configs, a short high-temperature `SimulatedAnnealing` phase
-> (as above) serves as the perturbation.
+> `RandomWalk` never stops on its own, so always give it a `stop_condition`.
+> A short high-temperature `SimulatedAnnealing` phase works as a perturbation too.
 
 ## Output report
 

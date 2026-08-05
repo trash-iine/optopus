@@ -45,12 +45,25 @@ operations as `(machine, time)` pairs per row).
 | Set | Files | Variables × Clauses | Source |
 |---|---|---|---|
 | SATLIB uniform 3-SAT (sat) | `satlib/uf{50-218,75-325,100-430,150-645,200-860}/*.cnf` (10 each, 50 files) | 50/75/100/150/200 vars at phase-transition density | [SATLIB](https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html), H.H. Hoos & T. Stützle |
+| SAT Competition 2026 (large) | `satcomp2026/*.cnf` (7 files) | 303–115k vars, 1.8e4–2.5e6 clauses | [SAT Competition 2026](https://github.com/satcompetition/2026) selection, files via [GBD](https://benchmark-database.de/) |
 | Ad-hoc | `sample.cnf` | 20 vars | repo-local |
 
 Conversion: tarballs from SATLIB extracted, the first 10 lexically-sorted
 `.cnf` files per family copied. DIMACS CNF is directly compatible with
 `Sat::load_file`. The `uuf` (unsatisfiable) families are deliberately omitted —
 MaxSAT framing makes them equivalent to `uf` for this benchmark suite.
+
+The `satcomp2026/` set is a curated large-scale MaxSAT sample. The SAT
+Competition 2026 benchmark selection
+(`downloads/benchmark-compilation-script/selected_benchmarks.csv` in the repo
+above) lists instances by md5 hash; the actual `p cnf` files are fetched from
+the Global Benchmark Database (GBD) at `https://benchmark-database.de/file/<hash>?context=cnf`
+and xz-decompressed. Seven crafted/combinatorial instances spanning
+~1.8e4–2.5e6 clauses were chosen (families: quasigroup-completion, waerden,
+sliding-puzzle, hamiltonian-cycle, coloring-mycielski-graph, station-repacking,
+coloring). These are unweighted CNF; under the MaxSAT framing the objective is
+the number of satisfied clauses (an over-constrained/UNSAT instance simply has
+an optimum below its clause count).
 
 ## TSP — `tsp/`
 
@@ -103,9 +116,10 @@ idempotent (existing files are skipped) and write into the matching data
 directory. Run them from this directory (`data/instances/`):
 
 ```sh
-bash scripts/fetch_sat.sh     # SATLIB uniform random 3-SAT (uf*)
-bash scripts/fetch_tsp.sh     # TSPLIB symmetric instances
-bash scripts/fetch_maxcut.sh  # GSET graphs
+bash scripts/fetch_sat.sh          # SATLIB uniform random 3-SAT (uf*)
+bash scripts/fetch_satcomp2026.sh  # SAT Competition 2026 large instances (via GBD)
+bash scripts/fetch_tsp.sh          # TSPLIB symmetric instances
+bash scripts/fetch_maxcut.sh       # GSET graphs
 ```
 
 The downloaded files stay out of version control via each directory's
