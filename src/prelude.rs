@@ -21,7 +21,7 @@ pub use crate::heuristic::{
     Heuristic, Iterated, LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp, LocalSearch,
     ParentSelection, RandomWalk, Restart, RewardShaping, RlBreakoutLocalSearchForMaxCut, RlSearch,
     Sequential, SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch,
-    WalkSatForSat, boltzmann_accept,
+    VariableNeighborhoodSearch, WalkSatForSat, boltzmann_accept,
 };
 
 // Traits
