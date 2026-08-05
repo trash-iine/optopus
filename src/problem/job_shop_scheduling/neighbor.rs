@@ -28,6 +28,59 @@ pub struct JobShopSwapNeighbor {
     pub gain: f64,
 }
 
+impl JobShopSwapNeighbor {
+    /// Builds the swap of positions `i` and `i + 1`, decoding the swapped
+    /// sequence once to obtain the exact makespan delta.
+    ///
+    /// This is the single-move path, used by
+    /// [`random_neighbor`](MoveToNeighbor::random_neighbor) and by callers
+    /// building one specific move. [`iter`](MoveToNeighbor::iter) deliberately
+    /// does *not* go through here: it reuses one scratch buffer across the
+    /// whole neighborhood instead of cloning the sequence per candidate.
+    ///
+    /// Swapping two positions that hold the same job is an identity move; the
+    /// neighborhood scan skips those, but one built here is still evaluated
+    /// correctly (`gain == 0.0`) rather than rejected.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i + 1` is out of range for `sol.operations`, or if
+    /// `sol.operations` is not a valid operation sequence for `prob`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// // job 0: M0(2) → M1(3), job 1: M1(1) → M0(4)
+    /// let inst = JobShopScheduling::new(
+    ///     "tiny".to_string(),
+    ///     2,
+    ///     vec![vec![(0, 2), (1, 3)], vec![(1, 1), (0, 4)]],
+    /// );
+    /// let operations = vec![0, 1, 0, 1];
+    /// let (objective, completion_times) = inst.decode(&operations).unwrap();
+    /// let sol = JobShopSolution { operations, objective, completion_times };
+    ///
+    /// let m = JobShopSwapNeighbor::new(&inst, &sol, 1);
+    ///
+    /// let mut after = sol.clone();
+    /// m.apply_to_solution(&inst, &mut after).unwrap();
+    /// assert_eq!(after.objective as f64, sol.objective as f64 + m.gain);
+    /// ```
+    pub fn new(prob: &JobShopScheduling, sol: &JobShopSolution, i: usize) -> Self {
+        let mut tentative = sol.operations.clone();
+        tentative.swap(i, i + 1);
+        let makespan = prob
+            .compute_makespan(&tentative)
+            .expect("swap of valid sequence stays valid");
+        Self {
+            i,
+            gain: makespan as f64 - sol.objective as f64,
+        }
+    }
+}
+
 impl Rankable for JobShopSwapNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
@@ -142,15 +195,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
             return None;
         }
         let i = positions[rng.random_range(0..positions.len())];
-        let mut tentative = sol.operations.clone();
-        tentative.swap(i, i + 1);
-        let makespan = prob
-            .compute_makespan(&tentative)
-            .expect("swap of valid sequence stays valid");
-        Some(Self {
-            i,
-            gain: makespan as f64 - sol.objective as f64,
-        })
+        Some(Self::new(prob, sol, i))
     }
 }
 
@@ -164,6 +209,61 @@ pub struct JobShopRelocateNeighbor {
     pub from: usize,
     pub to: usize,
     pub gain: f64,
+}
+
+impl JobShopRelocateNeighbor {
+    /// Builds the relocation of `operations[from]` to position `to`, decoding
+    /// the resulting sequence once to obtain the exact makespan delta.
+    ///
+    /// This is the single-move path, used by
+    /// [`random_neighbor`](MoveToNeighbor::random_neighbor) and by callers
+    /// building one specific move. [`iter`](MoveToNeighbor::iter) deliberately
+    /// does *not* go through here: it reuses one scratch buffer across the
+    /// whole neighborhood instead of cloning the sequence per candidate.
+    ///
+    /// `to` is in post-removal indexing, so `to == from` is the identity move;
+    /// the neighborhood scan skips it, but one built here is still evaluated
+    /// correctly (`gain == 0.0`) rather than rejected.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `from` or `to` is out of range for `sol.operations`, or if
+    /// `sol.operations` is not a valid operation sequence for `prob`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// // job 0: M0(2) → M1(3), job 1: M1(1) → M0(4)
+    /// let inst = JobShopScheduling::new(
+    ///     "tiny".to_string(),
+    ///     2,
+    ///     vec![vec![(0, 2), (1, 3)], vec![(1, 1), (0, 4)]],
+    /// );
+    /// let operations = vec![0, 1, 0, 1];
+    /// let (objective, completion_times) = inst.decode(&operations).unwrap();
+    /// let sol = JobShopSolution { operations, objective, completion_times };
+    ///
+    /// let m = JobShopRelocateNeighbor::new(&inst, &sol, 3, 0);
+    ///
+    /// let mut after = sol.clone();
+    /// m.apply_to_solution(&inst, &mut after).unwrap();
+    /// assert_eq!(after.operations, vec![1, 0, 1, 0]);
+    /// assert_eq!(after.objective as f64, sol.objective as f64 + m.gain);
+    /// ```
+    pub fn new(prob: &JobShopScheduling, sol: &JobShopSolution, from: usize, to: usize) -> Self {
+        let mut tentative = sol.operations.clone();
+        relocate_in_place(&mut tentative, from, to);
+        let makespan = prob
+            .compute_makespan(&tentative)
+            .expect("relocate of valid sequence stays valid");
+        Self {
+            from,
+            to,
+            gain: makespan as f64 - sol.objective as f64,
+        }
+    }
 }
 
 impl Rankable for JobShopRelocateNeighbor {
@@ -287,16 +387,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
             let t = rng.random_range(0..n - 1);
             if t >= from { t + 1 } else { t }
         };
-        let mut tentative = sol.operations.clone();
-        relocate_in_place(&mut tentative, from, to);
-        let makespan = prob
-            .compute_makespan(&tentative)
-            .expect("relocate of valid sequence stays valid");
-        Some(Self {
-            from,
-            to,
-            gain: makespan as f64 - sol.objective as f64,
-        })
+        Some(Self::new(prob, sol, from, to))
     }
 }
 
@@ -356,6 +447,34 @@ mod tests {
         // Only i=1 (between job0 and job1) is a non-identity swap.
         assert_eq!(moves.len(), 1);
         assert_eq!(moves[0].i, 1);
+    }
+
+    #[test]
+    fn test_new_matches_iter() {
+        let inst = make_inst();
+        let sol = make_sol(&inst, vec![0, 1, 0, 1]);
+
+        for m in JobShopSwapNeighbor::iter(&inst, &sol) {
+            let rebuilt = JobShopSwapNeighbor::new(&inst, &sol, m.i);
+            assert_eq!(rebuilt.gain, m.gain, "swap i={}", m.i);
+        }
+        for m in JobShopRelocateNeighbor::iter(&inst, &sol) {
+            let rebuilt = JobShopRelocateNeighbor::new(&inst, &sol, m.from, m.to);
+            assert_eq!(
+                rebuilt.gain, m.gain,
+                "relocate (from={}, to={})",
+                m.from, m.to
+            );
+        }
+    }
+
+    #[test]
+    fn test_new_evaluates_identity_moves_as_zero_gain() {
+        let inst = make_inst();
+        let sol = make_sol(&inst, vec![0, 0, 1, 1]);
+        // i=0 swaps two operations of the same job; iter skips it.
+        assert_eq!(JobShopSwapNeighbor::new(&inst, &sol, 0).gain, 0.0);
+        assert_eq!(JobShopRelocateNeighbor::new(&inst, &sol, 2, 2).gain, 0.0);
     }
 
     #[test]

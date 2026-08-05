@@ -105,6 +105,16 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
   The two defaults are slow-but-correct and emit a one-shot `tracing::warn!` when hit;
   every built-in move overrides both (O(1) gain compare; direct O(1)/O(n) sampler used
   each step by SA / LAHC / RandomWalk).
+  Every built-in move except `FormulaProblem`'s also has an inherent
+  `new(prob, sol, indices…)` that computes the cached `gain` (and any other cached delta).
+  It is the only correct way to build a move by hand — `apply_to_solution` trusts those
+  caches and updates the solution's objective from them without recomputing — so
+  `iter` / `random_neighbor` route through it, with two documented exceptions where a
+  hot loop hoists shared work: TSP relocate (removal gain per `pos`) and JobShop
+  (one scratch buffer for the whole neighborhood scan). Moves whose contract cannot be
+  met are rejected with a panic (`# Panics`), not silently mis-evaluated: VRP relocate /
+  swap are inter-route only, VRP 2-opt needs `p < q`, TSP relocate rejects the two
+  no-op insertion points.
 - **`Evaluable<T>` / `Evaluate<T>`** (default `T = f64`): `Maximize(T)` / `Minimize(T)` carries the direction of an objective delta. `Evaluable<f64>::worsening_amount()` normalizes both directions to "positive = worse" (used by `boltzmann_accept`). Required for SA / LAHC / RlSearch. QUBO also exposes `Evaluate<Coefficient = i32>` for integer gains.
 - **`Crossover<P>`**: `crossover(&mut self, prob, sol1, sol2, rng) -> Result<Solution, OptError>` (exactly two parents; RNG passed in for reproducibility; `Err` only when the operator genuinely cannot produce an offspring, e.g. an inner sub-heuristic failed).
 - **`EnabledTabu`**: `type TabuMap: Default`, `is_move_enabled(map, iter)`, `add_to_tabu_map(map, iter, tenure, rng)`. The tenure is sampled from the passed RNG (`&mut state.rng`) so seeded runs are bit-reproducible. Required by TabuSearch.

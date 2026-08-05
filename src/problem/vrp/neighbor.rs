@@ -78,6 +78,68 @@ fn relocate_gain(
     (gain, od, c)
 }
 
+impl VrpRelocateNeighbor {
+    /// Builds the relocation of `routes[from_r][from_i]` to position `to_i` of
+    /// route `to_r`, computing the cached `(gain, overload_delta, customer)`.
+    ///
+    /// Every construction site goes through here. The three cached values are
+    /// what [`apply_to_solution`](MoveToNeighbor::apply_to_solution) trusts to
+    /// update `distance`, `overload` and `objective` without recomputing the
+    /// routes, so a hand-filled move would silently desynchronize all three.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `to_r == from_r` (the neighborhood is inter-route only: the
+    /// gain formula treats source and destination loads as independent, and
+    /// the remove-then-insert in `apply_to_solution` would shift the indices of
+    /// a single route), if the route indices are out of range, if
+    /// `from_i >= routes[from_r].len()`, or if `to_i > routes[to_r].len()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let prob = Vrp::new(
+    ///     "demo",
+    ///     vec![(0.0, 0.0), (1.0, 1.0), (2.0, 2.0), (-1.0, 1.0)],
+    ///     vec![0, 1, 1, 1],
+    ///     3,
+    ///     2,
+    /// );
+    /// let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3]]);
+    ///
+    /// // Move customer 2 to the front of the second route.
+    /// let m = VrpRelocateNeighbor::new(&prob, &sol, 0, 1, 1, 0);
+    /// assert_eq!(m.customer, 2);
+    ///
+    /// let mut after = sol.clone();
+    /// m.apply_to_solution(&prob, &mut after).unwrap();
+    /// assert_eq!(after.routes, vec![vec![1], vec![2, 3]]);
+    /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+    /// ```
+    pub fn new(
+        prob: &Vrp,
+        sol: &VrpSolution,
+        from_r: usize,
+        from_i: usize,
+        to_r: usize,
+        to_i: usize,
+    ) -> Self {
+        assert_ne!(from_r, to_r, "relocate is an inter-route move");
+        let (gain, overload_delta, customer) = relocate_gain(prob, sol, from_r, from_i, to_r, to_i);
+        Self {
+            from_r,
+            from_i,
+            to_r,
+            to_i,
+            customer,
+            gain,
+            overload_delta,
+        }
+    }
+}
+
 impl Rankable for VrpRelocateNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
@@ -131,19 +193,8 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
                 (0..v)
                     .filter(move |&to_r| to_r != from_r)
                     .flat_map(move |to_r| {
-                        (0..=sol.routes[to_r].len()).map(move |to_i| {
-                            let (gain, od, c) =
-                                relocate_gain(prob, sol, from_r, from_i, to_r, to_i);
-                            VrpRelocateNeighbor {
-                                from_r,
-                                from_i,
-                                to_r,
-                                to_i,
-                                customer: c,
-                                gain,
-                                overload_delta: od,
-                            }
-                        })
+                        (0..=sol.routes[to_r].len())
+                            .map(move |to_i| Self::new(prob, sol, from_r, from_i, to_r, to_i))
                     })
             })
         })
@@ -170,16 +221,7 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
             }
             let from_i = rng.random_range(0..len_from);
             let to_i = rng.random_range(0..=sol.routes[to_r].len());
-            let (gain, od, c) = relocate_gain(prob, sol, from_r, from_i, to_r, to_i);
-            return Some(Self {
-                from_r,
-                from_i,
-                to_r,
-                to_i,
-                customer: c,
-                gain,
-                overload_delta: od,
-            });
+            return Some(Self::new(prob, sol, from_r, from_i, to_r, to_i));
         }
         None
     }
@@ -254,6 +296,58 @@ fn swap_gain(
     (gain, od, c1, c2)
 }
 
+impl VrpSwapNeighbor {
+    /// Builds the exchange of `routes[r1][i1]` and `routes[r2][i2]`, computing
+    /// the cached `(gain, overload_delta, c1, c2)`.
+    ///
+    /// Every construction site goes through here, for the same reason as
+    /// [`VrpRelocateNeighbor::new`]: the cached deltas are applied to the
+    /// solution's `distance` / `overload` / `objective` without recomputation.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `r1 == r2` (the neighborhood is inter-route only: the gain
+    /// formula treats the two route loads as independent), if the route indices
+    /// are out of range, or if `i1` / `i2` is out of range for its route.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let prob = Vrp::new(
+    ///     "demo",
+    ///     vec![(0.0, 0.0), (1.0, 1.0), (2.0, 2.0), (-1.0, 1.0)],
+    ///     vec![0, 1, 1, 1],
+    ///     3,
+    ///     2,
+    /// );
+    /// let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3]]);
+    ///
+    /// let m = VrpSwapNeighbor::new(&prob, &sol, 0, 1, 1, 0);
+    /// assert_eq!((m.c1, m.c2), (2, 3));
+    ///
+    /// let mut after = sol.clone();
+    /// m.apply_to_solution(&prob, &mut after).unwrap();
+    /// assert_eq!(after.routes, vec![vec![1, 3], vec![2]]);
+    /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+    /// ```
+    pub fn new(prob: &Vrp, sol: &VrpSolution, r1: usize, i1: usize, r2: usize, i2: usize) -> Self {
+        assert_ne!(r1, r2, "swap is an inter-route move");
+        let (gain, overload_delta, c1, c2) = swap_gain(prob, sol, r1, i1, r2, i2);
+        Self {
+            r1,
+            i1,
+            r2,
+            i2,
+            c1,
+            c2,
+            gain,
+            overload_delta,
+        }
+    }
+}
+
 impl Rankable for VrpSwapNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
@@ -305,19 +399,7 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
         (0..v).flat_map(move |r1| {
             ((r1 + 1)..v).flat_map(move |r2| {
                 (0..sol.routes[r1].len()).flat_map(move |i1| {
-                    (0..sol.routes[r2].len()).map(move |i2| {
-                        let (gain, od, c1, c2) = swap_gain(prob, sol, r1, i1, r2, i2);
-                        VrpSwapNeighbor {
-                            r1,
-                            i1,
-                            r2,
-                            i2,
-                            c1,
-                            c2,
-                            gain,
-                            overload_delta: od,
-                        }
-                    })
+                    (0..sol.routes[r2].len()).map(move |i2| Self::new(prob, sol, r1, i1, r2, i2))
                 })
             })
         })
@@ -344,17 +426,7 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
             }
             let i1 = rng.random_range(0..len1);
             let i2 = rng.random_range(0..len2);
-            let (gain, od, c1, c2) = swap_gain(prob, sol, r1, i1, r2, i2);
-            return Some(Self {
-                r1,
-                i1,
-                r2,
-                i2,
-                c1,
-                c2,
-                gain,
-                overload_delta: od,
-            });
+            return Some(Self::new(prob, sol, r1, i1, r2, i2));
         }
         None
     }
@@ -386,6 +458,54 @@ fn two_opt_gain(prob: &Vrp, sol: &VrpSolution, r: usize, p: usize, q: usize) -> 
     prob.distance(before, route[q]) + prob.distance(route[p], after)
         - prob.distance(before, route[p])
         - prob.distance(route[q], after)
+}
+
+impl VrpTwoOptNeighbor {
+    /// Builds the reversal of `routes[r][p..=q]`, computing its distance delta.
+    ///
+    /// Every construction site goes through here: `gain` is applied to both
+    /// `distance` and `objective` without recomputing the route. The move is
+    /// intra-route, so loads — and therefore the overload penalty — are
+    /// unchanged.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `p >= q` (a segment of fewer than two customers has nothing to
+    /// reverse), if `r` is out of range, or if `q >= routes[r].len()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let prob = Vrp::new(
+    ///     "demo",
+    ///     vec![(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (3.0, 0.0)],
+    ///     vec![0, 1, 1, 1],
+    ///     3,
+    ///     1,
+    /// );
+    /// // Detour: depot → 2 → 1 → 3 → depot.
+    /// let sol = prob.solution_from_routes(vec![vec![2, 1, 3]]);
+    ///
+    /// // Reversing the first two customers straightens the route.
+    /// let m = VrpTwoOptNeighbor::new(&prob, &sol, 0, 0, 1);
+    /// assert!(m.gain < 0.0);
+    ///
+    /// let mut after = sol.clone();
+    /// m.apply_to_solution(&prob, &mut after).unwrap();
+    /// assert_eq!(after.routes, vec![vec![1, 2, 3]]);
+    /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+    /// ```
+    pub fn new(prob: &Vrp, sol: &VrpSolution, r: usize, p: usize, q: usize) -> Self {
+        assert!(p < q, "2-opt needs a segment of at least two customers");
+        Self {
+            r,
+            p,
+            q,
+            gain: two_opt_gain(prob, sol, r, p, q),
+        }
+    }
 }
 
 impl Rankable for VrpTwoOptNeighbor {
@@ -433,14 +553,7 @@ impl MoveToNeighbor<Vrp> for VrpTwoOptNeighbor {
         let v = sol.routes.len();
         (0..v).flat_map(move |r| {
             let len = sol.routes[r].len();
-            (0..len).flat_map(move |p| {
-                ((p + 1)..len).map(move |q| VrpTwoOptNeighbor {
-                    r,
-                    p,
-                    q,
-                    gain: two_opt_gain(prob, sol, r, p, q),
-                })
-            })
+            (0..len).flat_map(move |p| ((p + 1)..len).map(move |q| Self::new(prob, sol, r, p, q)))
         })
     }
 
@@ -463,12 +576,7 @@ impl MoveToNeighbor<Vrp> for VrpTwoOptNeighbor {
             return None;
         }
         let (p, q) = (a.min(b), a.max(b));
-        Some(Self {
-            r,
-            p,
-            q,
-            gain: two_opt_gain(prob, sol, r, p, q),
-        })
+        Some(Self::new(prob, sol, r, p, q))
     }
 }
 
@@ -589,5 +697,54 @@ mod tests {
         let has_empty_target =
             VrpRelocateNeighbor::iter(&prob, &sol).any(|m| m.to_r == 2 && m.to_i == 0);
         assert!(has_empty_target);
+    }
+
+    #[test]
+    fn new_matches_iter() {
+        let prob = vrp();
+        let sol = prob.solution_from_routes(vec![vec![1, 2, 5], vec![3, 4], vec![6]]);
+
+        for m in VrpRelocateNeighbor::iter(&prob, &sol) {
+            let rebuilt = VrpRelocateNeighbor::new(&prob, &sol, m.from_r, m.from_i, m.to_r, m.to_i);
+            assert_eq!(rebuilt.gain, m.gain);
+            assert_eq!(rebuilt.overload_delta, m.overload_delta);
+            assert_eq!(rebuilt.customer, m.customer);
+        }
+        for m in VrpSwapNeighbor::iter(&prob, &sol) {
+            let rebuilt = VrpSwapNeighbor::new(&prob, &sol, m.r1, m.i1, m.r2, m.i2);
+            assert_eq!(rebuilt.gain, m.gain);
+            assert_eq!(rebuilt.overload_delta, m.overload_delta);
+            assert_eq!((rebuilt.c1, rebuilt.c2), (m.c1, m.c2));
+        }
+        for m in VrpTwoOptNeighbor::iter(&prob, &sol) {
+            assert_eq!(
+                VrpTwoOptNeighbor::new(&prob, &sol, m.r, m.p, m.q).gain,
+                m.gain
+            );
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "inter-route")]
+    fn relocate_new_rejects_same_route() {
+        let prob = vrp();
+        let sol = prob.solution_from_routes(vec![vec![1, 2, 5], vec![3, 4], vec![6]]);
+        let _ = VrpRelocateNeighbor::new(&prob, &sol, 0, 0, 0, 2);
+    }
+
+    #[test]
+    #[should_panic(expected = "inter-route")]
+    fn swap_new_rejects_same_route() {
+        let prob = vrp();
+        let sol = prob.solution_from_routes(vec![vec![1, 2, 5], vec![3, 4], vec![6]]);
+        let _ = VrpSwapNeighbor::new(&prob, &sol, 0, 0, 0, 1);
+    }
+
+    #[test]
+    #[should_panic(expected = "at least two customers")]
+    fn two_opt_new_rejects_degenerate_segment() {
+        let prob = vrp();
+        let sol = prob.solution_from_routes(vec![vec![1, 2, 5], vec![3, 4], vec![6]]);
+        let _ = VrpTwoOptNeighbor::new(&prob, &sol, 0, 1, 1);
     }
 }

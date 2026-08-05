@@ -20,6 +20,58 @@ pub struct TspTwoOptNeighbor {
     pub gain: f64,
 }
 
+impl TspTwoOptNeighbor {
+    /// Builds the 2-opt move on `(i, j)`, computing its gain from the four
+    /// endpoint distances.
+    ///
+    /// Every construction site goes through here so the gain can never be
+    /// filled in by hand — a wrong value would silently corrupt
+    /// [`TspSolution::objective`], which [`apply_to_solution`](MoveToNeighbor::apply_to_solution)
+    /// updates from it without re-measuring the tour.
+    ///
+    /// `i < j` with `j >= i + 2` is what makes the move non-trivial;
+    /// degenerate pairs (`j == i + 1`, or `(0, n - 1)` which reverses the whole
+    /// tour) are consistently evaluated as zero-gain no-ops rather than
+    /// rejected, so a caller that builds one is not silently misled.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i` or `j` is out of range for `sol.tour`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// // Unit square; the tour 0 → 1 → 3 → 2 crosses itself.
+    /// let tsp = TspWithCoordinates::new(
+    ///     "square".to_string(),
+    ///     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
+    /// );
+    /// let tour = vec![0, 1, 3, 2];
+    /// let objective = tsp.calculate_tour_length(&tour).unwrap();
+    /// let sol = TspSolution { tour, objective };
+    ///
+    /// // Reversing tour[2..=3] uncrosses it.
+    /// let m = TspTwoOptNeighbor::new(&tsp, &sol, 1, 3);
+    /// assert!(m.gain < 0.0);
+    ///
+    /// let mut after = sol.clone();
+    /// m.apply_to_solution(&tsp, &mut after).unwrap();
+    /// assert_eq!(after.tour, vec![0, 1, 2, 3]);
+    /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+    /// ```
+    pub fn new(prob: &TspWithCoordinates, sol: &TspSolution, i: usize, j: usize) -> Self {
+        let e1 = prob.get_edge_from(&sol.tour, i);
+        let e2 = prob.get_edge_from(&sol.tour, j);
+        Self {
+            i,
+            j,
+            gain: prob.calc_2opt_gain_cities(e1, e2),
+        }
+    }
+}
+
 impl Rankable for TspTwoOptNeighbor {
     fn is_better_than(&self, other: &Self) -> bool {
         self.gain < other.gain
@@ -71,15 +123,7 @@ impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
             // When i=0, j=n-1 would reverse the entire tour (trivially equivalent for undirected),
             // so exclude that case to avoid redundant moves
             let max_j = if i == 0 { n - 1 } else { n };
-            let e1 = prob.get_edge_from(&sol.tour, i);
-            (i + 2..max_j).map(move |j| {
-                let e2 = prob.get_edge_from(&sol.tour, j);
-                TspTwoOptNeighbor {
-                    i,
-                    j,
-                    gain: prob.calc_2opt_gain_cities(e1, e2),
-                }
-            })
+            (i + 2..max_j).map(move |j| Self::new(prob, sol, i, j))
         })
     }
 
@@ -113,13 +157,7 @@ impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
             if j < i + 2 || (i == 0 && j == n - 1) {
                 continue;
             }
-            let e1 = prob.get_edge_from(&sol.tour, i);
-            let e2 = prob.get_edge_from(&sol.tour, j);
-            return Some(Self {
-                i,
-                j,
-                gain: prob.calc_2opt_gain_cities(e1, e2),
-            });
+            return Some(Self::new(prob, sol, i, j));
         }
         use rand::seq::IteratorRandom;
         Self::iter(prob, sol).choose(rng)
@@ -139,6 +177,85 @@ pub struct TspRelocateNeighbor {
     pub ins: usize,
     /// Change in tour length (negative = improvement).
     pub gain: f64,
+}
+
+/// Cost saved by splicing `tour[pos]` out from between its two tour neighbors.
+///
+/// Depends only on `pos`, so the neighborhood scan hoists it out of the inner
+/// loop over insertion points.
+fn removal_gain(prob: &TspWithCoordinates, sol: &TspSolution, pos: usize) -> f64 {
+    let n = sol.tour.len();
+    let prev = (pos + n - 1) % n;
+    let next = (pos + 1) % n;
+    prob.distance(sol.tour[prev], sol.tour[pos]) + prob.distance(sol.tour[pos], sol.tour[next])
+        - prob.distance(sol.tour[prev], sol.tour[next])
+}
+
+/// Cost of splicing `tour[pos]` back in between `tour[ins]` and its successor.
+fn insertion_cost(prob: &TspWithCoordinates, sol: &TspSolution, pos: usize, ins: usize) -> f64 {
+    let n = sol.tour.len();
+    let ins_next = (ins + 1) % n;
+    prob.distance(sol.tour[ins], sol.tour[pos]) + prob.distance(sol.tour[pos], sol.tour[ins_next])
+        - prob.distance(sol.tour[ins], sol.tour[ins_next])
+}
+
+impl TspRelocateNeighbor {
+    /// Builds the relocation of `tour[pos]` to just after `tour[ins]`,
+    /// computing its gain as `insertion_cost - removal_gain`.
+    ///
+    /// Every construction site goes through the same two gain helpers, so the
+    /// two halves of the delta can never be paired up wrongly — a bad `gain`
+    /// would silently corrupt [`TspSolution::objective`], which
+    /// [`apply_to_solution`](MoveToNeighbor::apply_to_solution) updates from it
+    /// without re-measuring the tour.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `pos` or `ins` is out of range for `sol.tour`, or if the move
+    /// is one of the two that leave the tour unchanged (`ins == pos` or `ins`
+    /// is the predecessor of `pos`). Those are rejected rather than evaluated:
+    /// the tour would not move but the gain would come out non-zero, so
+    /// applying one would desynchronize `objective` from the actual tour.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// // Unit square; the tour 0 → 1 → 3 → 2 crosses itself.
+    /// let tsp = TspWithCoordinates::new(
+    ///     "square".to_string(),
+    ///     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
+    /// );
+    /// let tour = vec![0, 1, 3, 2];
+    /// let objective = tsp.calculate_tour_length(&tour).unwrap();
+    /// let sol = TspSolution { tour, objective };
+    ///
+    /// // Move city 2 (at index 3) to just after city 1 (at index 1).
+    /// let m = TspRelocateNeighbor::new(&tsp, &sol, 3, 1);
+    /// assert!(m.gain < 0.0);
+    ///
+    /// let mut after = sol.clone();
+    /// m.apply_to_solution(&tsp, &mut after).unwrap();
+    /// assert_eq!(after.tour, vec![0, 1, 2, 3]);
+    /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+    /// ```
+    pub fn new(prob: &TspWithCoordinates, sol: &TspSolution, pos: usize, ins: usize) -> Self {
+        let n = sol.tour.len();
+        assert!(
+            pos < n && ins < n,
+            "relocate indices out of range: pos={pos}, ins={ins}, n={n}"
+        );
+        assert!(
+            ins != pos && ins != (pos + n - 1) % n,
+            "relocate would leave the tour unchanged: pos={pos}, ins={ins}"
+        );
+        Self {
+            pos,
+            ins,
+            gain: insertion_cost(prob, sol, pos, ins) - removal_gain(prob, sol, pos),
+        }
+    }
 }
 
 impl Rankable for TspRelocateNeighbor {
@@ -196,11 +313,8 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
         let n = prob.get_n();
         (0..n).flat_map(move |pos| {
             let prev = (pos + n - 1) % n;
-            let next = (pos + 1) % n;
-            // Cost saved by removing city pos from prev-pos-next
-            let removal_gain = prob.distance(sol.tour[prev], sol.tour[pos])
-                + prob.distance(sol.tour[pos], sol.tour[next])
-                - prob.distance(sol.tour[prev], sol.tour[next]);
+            // Hoisted out of the inner loop: the removal side depends only on pos.
+            let removal = removal_gain(prob, sol, pos);
 
             (0..n).filter_map(move |ins| {
                 // Inserting after pos itself or after its predecessor (prev) would
@@ -209,15 +323,10 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
                     return None;
                 }
 
-                let ins_next = (ins + 1) % n;
-                let insertion_cost = prob.distance(sol.tour[ins], sol.tour[pos])
-                    + prob.distance(sol.tour[pos], sol.tour[ins_next])
-                    - prob.distance(sol.tour[ins], sol.tour[ins_next]);
-
                 Some(TspRelocateNeighbor {
                     pos,
                     ins,
-                    gain: insertion_cost - removal_gain,
+                    gain: insertion_cost(prob, sol, pos, ins) - removal,
                 })
             })
         })
@@ -257,20 +366,7 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
             ins += 1;
         }
 
-        let next = (pos + 1) % n;
-        let removal_gain = prob.distance(sol.tour[prev], sol.tour[pos])
-            + prob.distance(sol.tour[pos], sol.tour[next])
-            - prob.distance(sol.tour[prev], sol.tour[next]);
-        let ins_next = (ins + 1) % n;
-        let insertion_cost = prob.distance(sol.tour[ins], sol.tour[pos])
-            + prob.distance(sol.tour[pos], sol.tour[ins_next])
-            - prob.distance(sol.tour[ins], sol.tour[ins_next]);
-
-        Some(Self {
-            pos,
-            ins,
-            gain: insertion_cost - removal_gain,
-        })
+        Some(Self::new(prob, sol, pos, ins))
     }
 }
 
@@ -422,6 +518,35 @@ mod tests {
                     .any(|r| r.pos == m.pos && r.ins == m.ins && r.gain == m.gain)
             );
         }
+    }
+
+    #[test]
+    fn test_new_matches_iter() {
+        let tsp = make_hex_tsp();
+        let sol = make_sol(&tsp, vec![0, 2, 4, 1, 5, 3]);
+
+        for m in TspTwoOptNeighbor::iter(&tsp, &sol) {
+            let rebuilt = TspTwoOptNeighbor::new(&tsp, &sol, m.i, m.j);
+            assert_eq!(rebuilt.gain, m.gain, "2-opt ({}, {})", m.i, m.j);
+        }
+        for m in TspRelocateNeighbor::iter(&tsp, &sol) {
+            let rebuilt = TspRelocateNeighbor::new(&tsp, &sol, m.pos, m.ins);
+            assert_eq!(
+                rebuilt.gain, m.gain,
+                "relocate (pos={}, ins={})",
+                m.pos, m.ins
+            );
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "leave the tour unchanged")]
+    fn test_relocate_new_rejects_identity_move() {
+        let tsp = make_hex_tsp();
+        let sol = make_sol(&tsp, vec![0, 2, 4, 1, 5, 3]);
+        // ins is the predecessor of pos: the tour would not move, but the gain
+        // would come out non-zero.
+        let _ = TspRelocateNeighbor::new(&tsp, &sol, 2, 1);
     }
 
     #[test]
