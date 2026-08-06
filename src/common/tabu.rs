@@ -97,16 +97,6 @@ impl VecTabuMap {
         self.until.get(i).is_none_or(|&until| iteration >= until)
     }
 
-    /// The first iteration at which `i` may move again; 0 if it is unrestricted.
-    ///
-    /// Diversification operators use this to find the *longest*-forbidden
-    /// variable, which the yes/no [`is_enabled`](Self::is_enabled) cannot
-    /// express.
-    #[inline]
-    pub fn blocked_until(&self, i: usize) -> u64 {
-        self.until.get(i).copied().unwrap_or(0)
-    }
-
     /// Forbids `i` for a tenure drawn from `tabu_tenure`, counted from
     /// `iteration`. Grows the map if `i` is beyond it.
     ///
@@ -188,7 +178,6 @@ mod tests {
 
         tabu.clear();
         assert!(tabu.is_enabled(1, 10));
-        assert_eq!(tabu.blocked_until(1), 0);
     }
 
     /// `add` must grow the map rather than silently dropping the entry, so a
@@ -199,17 +188,5 @@ mod tests {
         tabu.add(5, 0, (2, 2), &mut rng());
         assert!(!tabu.is_enabled(5, 1));
         assert!(tabu.is_enabled(4, 1), "growth must not block its neighbors");
-    }
-
-    /// `blocked_until` exposes the ordering the yes/no test hides: a later
-    /// boundary means the variable has been forbidden more recently.
-    #[test]
-    fn blocked_until_orders_by_recency() {
-        let mut tabu = VecTabuMap::new();
-        tabu.add(0, 0, (10, 10), &mut rng());
-        tabu.add(1, 5, (10, 10), &mut rng());
-
-        assert!(tabu.blocked_until(0) < tabu.blocked_until(1));
-        assert_eq!(tabu.blocked_until(2), 0, "unseen reads as unrestricted");
     }
 }
