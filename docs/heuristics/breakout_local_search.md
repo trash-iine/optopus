@@ -59,6 +59,37 @@ size bands is simultaneously ten times too strong at `n = 800` and 2.5 times too
 weak at `n = 20000`; on the toroidal instances the paper's rule reproduces its
 cut values exactly.
 
+### Deviations that remain
+
+**No bucket sort.** Section 2.2 of the paper keeps vertices in Fiduccia–Mattheyses
+buckets — one doubly linked list per gain value, per partition side, plus a
+`maxgain` pointer — so selecting the best move is O(1) and a move costs
+O(degree(v)) to apply *and* re-bucket. This implementation has no such
+structure. The descent narrows its scan with the optional `positive_gain` index
+on `MaxCutSolution` (an improving flip must have positive gain, so the set is a
+superset of the improving moves and shrinks near a local optimum), but it still
+scans that set linearly for the maximum, and the tabu walk and both weak
+perturbations scan **all n** flip neighbours on every move.
+
+The consequence is only speed, never solution quality — the same move is
+selected either way — but it is a large constant, and two things follow from it:
+
+- **Wall-clock comparisons against the paper are not meaningful in either
+  direction.** The published times are for a bucketed C++ implementation on a
+  2008 Xeon; ours are for a linear-scan implementation on modern hardware. Only
+  cut values compare.
+- **Iteration budgets do not mean the same work.** A budget in moves costs
+  `O(n)` per move here against `O(degree)` there, which is why the
+  MaxCut-specific heuristics that drive this engine bound their tabu phases by
+  *work* rather than by move count (see `CorrelationContractionSearch`'s
+  `tabu_steps`, clamped by `2·10⁷ / n`).
+
+**Swap iteration accounting.** A swap advances the iteration counter by 2
+(`MaxCutSwapNeighbor::apply_to_iteration`) where the paper counts every move as
+one iteration. That `+2` is a library-wide convention shared by every binary
+problem's swap — it models a swap as two flips' worth of work — so it is not
+changed here for one heuristic's sake.
+
 ## Constructor
 
 ```rust
