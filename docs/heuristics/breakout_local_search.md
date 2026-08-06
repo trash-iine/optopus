@@ -26,6 +26,34 @@ would beat the global best (aspiration). The weak swap is the paper's `M2`, so
 it picks one vertex per partition side and needs a per-side "best non-tabu"
 plus a per-side "best overall" for the aspiration test.
 
+## Reproducing the paper's numbers
+
+Two details of Benlic & Hao's description do not carry over literally and cost
+a lot when they are missed. Both were found by measuring against the cut values
+in the paper's Table 2 (sum of gaps over G22/G27/G33/G35/G39 at one tenth of
+the benchmark budget, five runs each):
+
+| | Σ gap to the paper |
+|---|---|
+| best non-tabu selection missing from the weak swap, single tenure | −76 |
+| both corrected | **−16** |
+
+- **The weak swap must select the best non-tabu move.** An earlier version
+  applied the best swap only when aspiration allowed it and otherwise forced a
+  swap of the longest-blocked vertex on each side. That is a diversification
+  move, not the paper's `A2`, and it degrades with vertex degree: on the
+  degree-20 random instances it left the perturbation supplying noise instead
+  of direction, so the search only improved when `l0` grew towards a random
+  restart (the measured optimum reached 64% of the graph). Correcting it also
+  removed the need for `VecTabuMap::blocked_until`.
+- **The tenure parameter is halved by the paper's own notation.** `H` holds
+  "the iteration when the vertex was last moved *plus γ*" while the eligibility
+  test asks for `(H_m + γ) < Iter`, so a vertex is really forbidden for `2γ`.
+  `VecTabuMap` stores one tenure, so `BreakoutLocalSearch` doubles the caller's
+  range on the way in (`paper_effective_tenure`) and `tabu_tenure` keeps the
+  paper's meaning, `rand[3, |V|/10]` on the G-set. Doubling only the upper
+  bound does not reproduce it — the whole range has to scale.
+
 ## Constructor
 
 ```rust

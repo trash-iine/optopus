@@ -194,11 +194,30 @@ impl BreakoutLocalSearch {
             "plateau_prob must be within [0.0, 1.0], got {plateau_prob}"
         );
         Self {
-            ops: MaxCutSearchOps::new(tabu_tenure),
+            ops: MaxCutSearchOps::new(paper_effective_tenure(tabu_tenure)),
             stop_condition,
             schedule: BlsSchedule::new(t, l0, p0, q, plateau_prob),
         }
     }
+}
+
+/// Converts Benlic & Hao's tenure parameter `γ` into the prohibition length the
+/// engine's tabu map actually stores.
+///
+/// The paper's tabu list `H` holds "the iteration when the vertex was last
+/// moved **plus γ**", and the eligibility predicate of the directed
+/// perturbations then asks for `(H_m + γ) < Iter` — so `γ` is counted twice and
+/// a vertex stays forbidden for `2γ`. [`VecTabuMap`](crate::common::VecTabuMap)
+/// stores the first iteration at which a move is allowed again, i.e. exactly
+/// one tenure, so reproducing the paper means handing it twice the caller's
+/// range. `tabu_tenure` therefore keeps the paper's meaning (`rand[3, |V|/10]`
+/// on the G-set) instead of silently meaning something else.
+///
+/// Doubling only the upper bound does not reproduce it — the whole range has to
+/// scale. The measurement record is in
+/// `docs/heuristics/breakout_local_search.md`.
+fn paper_effective_tenure((min, max): (u64, u64)) -> (u64, u64) {
+    (min * 2, max * 2)
 }
 
 impl Heuristic<MaxCut> for BreakoutLocalSearch {
