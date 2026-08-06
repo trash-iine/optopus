@@ -22,6 +22,16 @@ use rand::Rng;
 // phase skip the O(n) neighborhood scan: any improving flip must be a vertex
 // with strictly positive gain, so we only need to iterate `positive_gain`.
 
+/// Keeps `candidate` in `slot` when it beats what is already there.
+///
+/// Ties keep the incumbent, i.e. the first candidate the scan met, which on the
+/// G-set means the lowest vertex index.
+fn keep_best(slot: &mut Option<MaxCutFlipNeighbor>, candidate: MaxCutFlipNeighbor) {
+    if slot.is_none_or(|best| candidate.gain > best.gain) {
+        *slot = Some(candidate);
+    }
+}
+
 /// One of the perturbation operators [`MaxCutSearchOps`] can apply.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum PerturbationType {
@@ -98,15 +108,10 @@ impl MaxCutSearchOps {
     pub(super) fn descent(&mut self, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
         state.solution.enable_positive_gain_index();
         loop {
-            let mut best_move_option: Option<MaxCutFlipNeighbor> = None;
+            let mut best_move_option = None;
             for &v in state.solution.positive_gain.as_slice() {
-                let g = state.solution.gain[v];
-                if let Some(best) = best_move_option
-                    && best.gain >= g
-                {
-                    continue;
-                }
-                best_move_option = Some(MaxCutFlipNeighbor { i: v, gain: g });
+                let gain = state.solution.gain[v];
+                keep_best(&mut best_move_option, MaxCutFlipNeighbor { i: v, gain });
             }
 
             if let Some(best_move) = best_move_option {
@@ -169,7 +174,7 @@ impl MaxCutSearchOps {
     ) -> Result<(), OptError> {
         let end_iter = state.iteration + l;
         while state.iteration < end_iter {
-            let mut best: Option<MaxCutFlipNeighbor> = None;
+            let mut best = None;
             for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
                 let enabled = neighbor.is_move_enabled(&self.tabu, state.iteration);
                 // Aspiration: accept a tabu move if it improves the global best.
@@ -178,12 +183,7 @@ impl MaxCutSearchOps {
                 {
                     continue;
                 }
-                if let Some(ref b) = best
-                    && b.gain >= neighbor.gain
-                {
-                    continue;
-                }
-                best = Some(neighbor);
+                keep_best(&mut best, neighbor);
             }
             if let Some(best_move) = best {
                 best_move.add_to_tabu_map(
