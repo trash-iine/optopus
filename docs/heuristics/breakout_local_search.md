@@ -54,6 +54,11 @@ the benchmark budget, five runs each):
   paper's meaning, `rand[3, |V|/10]` on the G-set. Doubling only the upper
   bound does not reproduce it — the whole range has to scale.
 
+`l0` is the paper's `0.01 · |V|`, not a constant. A fixed `l0 = 80` across all
+size bands is simultaneously ten times too strong at `n = 800` and 2.5 times too
+weak at `n = 20000`; on the toroidal instances the paper's rule reproduces its
+cut values exactly.
+
 ## Constructor
 
 ```rust

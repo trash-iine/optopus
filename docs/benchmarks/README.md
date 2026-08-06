@@ -111,7 +111,7 @@ in the table.
 | Iterated | perturbation step | `SimulatedAnnealing` with `T0=5.0`, `α=0.99`, `max_iteration=200` |
 | Restart | inner | `TabuSearch` with `tabu_tenure=[3, 10]`, `max_iteration=50_000` |
 | Restart | `restart_condition` | `max_failed_update = max(5_000, n·5)` |
-| BLS (MaxCut) | `tabu_tenure`, `t`, `l0`, `p0`, `q` | Use existing per-size values from `bls_maxcut_gset_*.toml` |
+| BLS (MaxCut) | `tabu_tenure`, `t`, `l0`, `p0`, `q` | Benlic & Hao 2013 Table 1: `tabu_tenure = [3, n/10]`, `t = 1000`, **`l0 = 0.01·n`**, `p0 = 0.8`, `q = 0.5` |
 | LKH (TSP) | `num_neighbors`, `max_depth` | 5, 5 (library defaults) |
 
 ### Neighbor enumeration policy

@@ -20,7 +20,7 @@ problem = "MaxCut"
 kind = "BreakoutLocalSearch"
 tabu_tenure = [3, 700]
 t = 1000
-l0 = 80
+l0 = 70
 p0 = 0.8
 q = 0.5
 
