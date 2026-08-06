@@ -25,7 +25,9 @@ use rand::Rng;
 /// Keeps `candidate` in `slot` when it beats what is already there.
 ///
 /// Ties keep the incumbent, i.e. the first candidate the scan met, which on the
-/// G-set means the lowest vertex index.
+/// G-set means the lowest vertex index — see
+/// [`weak_swap_perturbation`](MaxCutSearchOps::weak_swap_perturbation) for why
+/// that is deliberate rather than an accident of iteration order.
 fn keep_best(slot: &mut Option<MaxCutFlipNeighbor>, candidate: MaxCutFlipNeighbor) {
     if slot.is_none_or(|best| candidate.gain > best.gain) {
         *slot = Some(candidate);
@@ -202,92 +204,70 @@ impl MaxCutSearchOps {
 
     /// Applies the weak swap perturbation: `l` swap moves guided by the tabu map.
     ///
-    /// Uses scalar best tracking per partition side instead of collecting
-    /// tied-best lists into Vecs. Also tracks the oldest-tabu vertex per side
-    /// during the same scan for the fallback path.
+    /// This is Benlic & Hao's set `A2` — the highest-gain move of the `M2`
+    /// operator that is *not tabu*, with a tabu move admitted only when the
+    /// resulting swap would beat the global best (aspiration). `M2` takes one
+    /// vertex per partition side, so a single scan tracks two candidates per
+    /// side: the best non-tabu vertex, which is what `A2` normally selects,
+    /// and the best vertex overall, which is consulted only for the aspiration
+    /// test and as the fallback for a side that has no non-tabu vertex left.
+    ///
+    /// Uses scalar best tracking per side instead of collecting tied-best
+    /// lists into Vecs.
+    ///
+    /// Ties keep the first candidate the scan meets, i.e. the lowest vertex
+    /// index. That looks like an arbitrary bias — every G-set weight is ±1, so
+    /// gains are small integers and the degree-4 toroidal instances admit only
+    /// five distinct values, putting hundreds of vertices in one tie — but
+    /// sampling the tie uniformly was **measured and rejected**: over
+    /// G11/G12/G13/G32-G34 it lost 6 cut points and turned three exact matches
+    /// of the paper's best into misses, while gaining only on one planar
+    /// instance. Index order on a toroidal grid tracks position, so taking the
+    /// lowest index walks the lattice coherently, which is the same reason the
+    /// plateau operators flip *connected* clusters rather than scattered
+    /// vertices. Randomising it scatters the perturbation instead.
     pub(super) fn weak_swap_perturbation(
         &mut self,
         l: u64,
         state: &mut SearchState<'_, MaxCut>,
     ) -> Result<(), OptError> {
         for _ in 0..l {
-            // Best vertex per partition side (by flip gain).
-            let mut best_v0: Option<MaxCutFlipNeighbor> = None;
-            let mut best_v1: Option<MaxCutFlipNeighbor> = None;
-            // Longest-blocked vertex per side for the fallback path, as
-            // `(vertex, blocked_until)`.
-            let mut oldest_tabu_v0: Option<(usize, u64)> = None;
-            let mut oldest_tabu_v1: Option<(usize, u64)> = None;
+            let mut free_v0 = None;
+            let mut free_v1 = None;
+            let mut any_v0 = None;
+            let mut any_v1 = None;
 
             for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
                 let on_side0 = state.solution.x[neighbor.i];
 
-                // Track best vertex per side (regardless of tabu status).
-                let best_ref = if on_side0 { &mut best_v0 } else { &mut best_v1 };
-                if best_ref.as_ref().is_none_or(|b| neighbor.gain > b.gain) {
-                    *best_ref = Some(neighbor);
-                }
+                keep_best(if on_side0 { &mut any_v0 } else { &mut any_v1 }, neighbor);
 
-                // Track the vertex whose block expires soonest — the one
-                // forbidden longest ago — per side, for the fallback. This is
-                // the one query `EnabledTabu` cannot answer: it reports whether
-                // a move is tabu, not how long it has been.
-                if !neighbor.is_move_enabled(&self.tabu, state.iteration) {
-                    let until = self.tabu.blocked_until(neighbor.i);
-                    let oldest_ref = if on_side0 {
-                        &mut oldest_tabu_v0
-                    } else {
-                        &mut oldest_tabu_v1
-                    };
-                    if oldest_ref.as_ref().is_none_or(|&(_, u)| until < u) {
-                        *oldest_ref = Some((neighbor.i, until));
-                    }
+                if neighbor.is_move_enabled(&self.tabu, state.iteration) {
+                    keep_best(if on_side0 { &mut free_v0 } else { &mut free_v1 }, neighbor);
                 }
             }
 
-            // Build the swap from the best vertex on each side.
-            let (v0, v1) = match (best_v0, best_v1) {
-                (Some(b0), Some(b1)) => (b0, b1),
-                _ => {
-                    // One side is empty — skip this swap iteration.
-                    state.progress_iteration();
-                    state.progress_iteration();
-                    continue;
-                }
+            let (Some(any0), Some(any1)) = (any_v0, any_v1) else {
+                // One side is empty — no swap move exists.
+                state.progress_iteration();
+                state.progress_iteration();
+                continue;
             };
 
-            let swap_gain = state.solution.gain[v0.i]
-                + state.solution.gain[v1.i]
-                + 2.0 * state.instance.graph.get_weight(v0.i, v1.i);
-
-            // Aspiration: accept the best swap if it improves the global best.
-            if swap_gain + state.solution.objective > state.best_solution.objective {
-                let swap = MaxCutSwapNeighbor {
-                    i: v0.i,
-                    j: v1.i,
-                    gain: swap_gain,
-                };
-                swap.add_to_tabu_map(&mut self.tabu, state.iteration, self.tenure, &mut state.rng);
-                state.apply_move_only(&swap)?;
+            // Aspiration is tested on the unrestricted best swap: that is the
+            // only way a tabu vertex may enter `A2`.
+            let aspiration =
+                MaxCutSwapNeighbor::new(state.instance, &state.solution, any0.i, any1.i);
+            let swap = if state.is_neighbor_better_than_best(&aspiration) {
+                aspiration
             } else {
-                // Fallback: swap the oldest-tabu vertex on each side to force a
-                // diversifying (breakout) move. If a side has no tabu vertex yet
-                // (common early in the search, when directed swaps run at
-                // `omega == 0`), fall back to its best vertex so the perturbation
-                // still makes progress instead of failing.
-                let i = oldest_tabu_v0.map_or(v0.i, |(v, _)| v);
-                let j = oldest_tabu_v1.map_or(v1.i, |(v, _)| v);
-                let fallback_gain = state.solution.gain[i]
-                    + state.solution.gain[j]
-                    + 2.0 * state.instance.graph.get_weight(i, j);
-                let swap = MaxCutSwapNeighbor {
-                    i,
-                    j,
-                    gain: fallback_gain,
-                };
-                swap.add_to_tabu_map(&mut self.tabu, state.iteration, self.tenure, &mut state.rng);
-                state.apply_move_only(&swap)?;
-            }
+                let i = free_v0.map_or(any0.i, |b| b.i);
+                let j = free_v1.map_or(any1.i, |b| b.i);
+                MaxCutSwapNeighbor::new(state.instance, &state.solution, i, j)
+            };
+
+            swap.add_to_tabu_map(&mut self.tabu, state.iteration, self.tenure, &mut state.rng);
+            state.apply_move_only(&swap)?;
         }
         Ok(())
     }

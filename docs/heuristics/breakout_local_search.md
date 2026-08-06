@@ -20,6 +20,12 @@ improving flips in O(|improving|).
 - The perturbation length `l` increases by 1 whenever the solution does not
   change, and resets to `l0` whenever it does.
 
+Both weak perturbations implement the paper's eligible sets literally: take the
+**highest-gain move that is not tabu**, and admit a tabu move only when it
+would beat the global best (aspiration). The weak swap is the paper's `M2`, so
+it picks one vertex per partition side and needs a per-side "best non-tabu"
+plus a per-side "best overall" for the aspiration test.
+
 ## Constructor
 
 ```rust
