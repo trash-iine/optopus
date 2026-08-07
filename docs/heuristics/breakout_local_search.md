@@ -9,16 +9,30 @@ improving flips in O(|improving|).
 
 - **Greedy phase**: repeatedly apply the strictly best improving flip,
   updating a tabu map.
-- **Perturbation phase**: choose between three perturbation types based on
-  the non-improvement counter `omega`:
-  - `omega == 0` (just improved or just started): **strong** — apply `l`
-    random flips.
-  - `omega > 0` (stuck): with probability `p · q` use **weak flip**
-    (tabu-guided flip moves), with probability `p · (1 − q)` use
-    **weak swap** (tabu-guided swaps), and **strong** otherwise.
-  - `p = max(exp(−omega / t), p0)` decays as `omega` grows.
-- The perturbation length `l` increases by 1 whenever the solution does not
-  change, and resets to `l0` whenever it does.
+- **Perturbation phase**: `p = max(exp(−omega / t), p0)` is the probability of
+  a *directed* (weak) perturbation, and it decays as the non-improvement
+  counter `omega` grows:
+  - `omega == 0` (the last descent improved the global best): `p = 1`, so a
+    **weak** perturbation always runs — **weak flip** with probability `q`,
+    **weak swap** with probability `1 − q`. This is the gentle end of the
+    schedule, not the strong one.
+  - `0 < omega <= t`: the same weak split with probability `p`, **strong**
+    (random flips) with probability `1 − p`. As `omega` grows `p` decays
+    toward `p0`, so strong perturbations become steadily more likely.
+  - `omega > t`: a **strong** perturbation is forced and `omega` resets to 0.
+- The perturbation length `l` increases by 1 whenever the descent lands on the
+  same local optimum as the previous round, and resets to `l0` whenever it
+  escapes.
+
+> The paper's Algorithm 2 reads `if ω = 0 then` *random* perturbation, which
+> taken literally means a random restart every time the search improves its
+> best — because Algorithm 1 line 19 also sets `ω ← 0` on improvement. That
+> contradicts both Formula (2) (`ω = 0` gives `P = 1`, i.e. directed for
+> certain) and Section 2.3.1 ("apply more often directed perturbations … as the
+> search progresses towards improved new local optima, the non-improving
+> consecutive counter ω is small"). The only self-consistent reading is that
+> Algorithm 2's `ω = 0` means "just reset by line 26", i.e. the `ω > T` branch,
+> which is what is implemented above.
 
 Both weak perturbations implement the paper's eligible sets literally: take the
 **highest-gain move that is not tabu**, and admit a tabu move only when it
