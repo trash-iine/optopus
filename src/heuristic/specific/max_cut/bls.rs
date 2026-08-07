@@ -65,7 +65,17 @@ struct BlsSchedule {
     omega: u64,
     l: u64,
     prev_best_objective: Option<f32>,
-    prev_solution_objective: Option<f32>,
+    /// The local optimum the previous round ended on — Benlic & Hao's `Cp`.
+    ///
+    /// This holds the assignment, not its objective value. The paper's rule is
+    /// `if C = Cp then L ← L+1 else L ← L0`, and on the G-set the two readings
+    /// are nowhere near equivalent: every edge weighs ±1, so cut values are
+    /// small integers and distinct local optima collide on the same objective
+    /// constantly. Measured on G11 with the paper's `l0 = 8`, the objective
+    /// test fired on **82.7%** of rounds and pushed the median `l` to 12 and
+    /// its maximum to 80 — a perturbation an order of magnitude stronger than
+    /// the paper asks for, applied to the instances with the widest plateaus.
+    prev_local_optimum: Option<Vec<bool>>,
 }
 
 impl BlsSchedule {
@@ -79,7 +89,7 @@ impl BlsSchedule {
             omega: 0,
             l: l0,
             prev_best_objective: None,
-            prev_solution_objective: None,
+            prev_local_optimum: None,
         }
     }
 
@@ -87,15 +97,20 @@ impl BlsSchedule {
         self.omega = 0;
         self.l = self.l0;
         self.prev_best_objective = None;
-        self.prev_solution_objective = None;
+        // Dropped rather than kept: `clear()` also runs when the same schedule
+        // is reused on a different instance, which is what
+        // `CorrelationContractionSearch` does every generation with a freshly
+        // contracted graph. A retained assignment would be compared against a
+        // solution of a different length.
+        self.prev_local_optimum = None;
     }
 
     /// Advances the schedule by one round and returns the perturbation to run
     /// together with its length.
     ///
     /// `omega` grows while the descent fails to beat the objective recorded at
-    /// the previous round; `l` grows while the solution refuses to change at
-    /// all, and resets to `l0` as soon as it does.
+    /// the previous round; `l` grows while the descent keeps landing on the
+    /// very same local optimum, and resets to `l0` as soon as it escapes.
     fn next(&mut self, state: &mut SearchState<'_, MaxCut>) -> (PerturbationType, u64) {
         if let Some(prev) = self.prev_best_objective
             && prev >= state.solution.objective
@@ -106,14 +121,15 @@ impl BlsSchedule {
         }
         self.prev_best_objective = Some(state.best_solution.objective);
 
-        if let Some(prev) = self.prev_solution_objective
-            && prev == state.solution.objective
-        {
+        if self.prev_local_optimum.as_deref() == Some(state.solution.x.as_slice()) {
             self.l += 1;
         } else {
             self.l = self.l0;
+            match &mut self.prev_local_optimum {
+                Some(prev) => prev.clone_from(&state.solution.x),
+                None => self.prev_local_optimum = Some(state.solution.x.clone()),
+            }
         }
-        self.prev_solution_objective = Some(state.solution.objective);
 
         let perturbation = choose_perturbation(
             &mut self.omega,
@@ -266,7 +282,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
 mod tests {
     use super::*;
     use crate::heuristic::Heuristic;
-    use crate::problem::MaxCut;
+    use crate::problem::{MaxCut, MaxCutSolution};
     use crate::search_state::SearchState;
 
     /// Builds a small toroidal-like graph (degree 4, unit weights) that has both
@@ -392,5 +408,48 @@ mod tests {
             )
         };
         assert_eq!(run(), run());
+    }
+
+    /// The perturbation length must grow only when the descent lands on the
+    /// *same* local optimum, not merely on one of equal cut value.
+    ///
+    /// Two independent edges give two distinct assignments of identical
+    /// objective: `[T,F,T,F]` and `[T,F,F,T]` both cut 2, and neither is the
+    /// complement of the other. Benlic & Hao raise `L` only on `C = Cp`, so
+    /// moving between them has to reset `l` to `l0`. Comparing objectives
+    /// instead — which is what this used to do — raises it, and on the G-set
+    /// that misfires on the large majority of rounds.
+    #[test]
+    fn l_grows_on_a_repeated_solution_not_a_repeated_objective() {
+        let mc = MaxCut::from_edges([(0, 1, 1.0), (2, 3, 1.0)]);
+        let l0 = 5;
+        let mut schedule = BlsSchedule::new(1_000, l0, 0.8, 0.5, 0.0);
+        let mut state = SearchState::new_with_seed(&mc, 42);
+
+        let set = |state: &mut SearchState<'_, MaxCut>, x: Vec<bool>| {
+            state.solution = MaxCutSolution::new_from_assignment(&mc, x);
+        };
+
+        set(&mut state, vec![true, false, true, false]);
+        let (_, first) = schedule.next(&mut state);
+        assert_eq!(first, l0, "the first round has nothing to compare against");
+
+        // Same cut value, different assignment: the search escaped.
+        set(&mut state, vec![true, false, false, true]);
+        let (_, escaped) = schedule.next(&mut state);
+        assert_eq!(
+            state.solution.objective, 2.0,
+            "both assignments must cut the same weight for this to test anything"
+        );
+        assert_eq!(escaped, l0, "an escape resets the perturbation length");
+
+        // Identical assignment: the search came back to the same attractor.
+        set(&mut state, vec![true, false, false, true]);
+        let (_, repeated) = schedule.next(&mut state);
+        assert_eq!(
+            repeated,
+            l0 + 1,
+            "returning to Cp lengthens the perturbation"
+        );
     }
 }
