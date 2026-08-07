@@ -187,6 +187,9 @@ impl MaxCutSearchOps {
                 }
                 keep_best(&mut best, neighbor);
             }
+            // No eligible move: every flip is tabu and none aspires. The paper
+            // leaves this open; see "Cases the paper does not specify" in
+            // docs/heuristics/breakout_local_search.md.
             if let Some(best_move) = best {
                 best_move.add_to_tabu_map(
                     &mut self.tabu,
@@ -248,7 +251,9 @@ impl MaxCutSearchOps {
             }
 
             let (Some(any0), Some(any1)) = (any_v0, any_v1) else {
-                // One side is empty — no swap move exists.
+                // One side is empty, so no swap exists. Two counter steps match
+                // the swap's `+2` accounting. Paper-undefined; see
+                // docs/heuristics/breakout_local_search.md.
                 state.progress_iteration();
                 state.progress_iteration();
                 continue;
@@ -261,6 +266,10 @@ impl MaxCutSearchOps {
             let swap = if state.is_neighbor_better_than_best(&aspiration) {
                 aspiration
             } else {
+                // A side with no non-tabu vertex falls back to its best one,
+                // breaking tabu without aspiration. Paper-undefined and
+                // unreachable on the G-set; see
+                // docs/heuristics/breakout_local_search.md.
                 let i = free_v0.map_or(any0.i, |b| b.i);
                 let j = free_v1.map_or(any1.i, |b| b.i);
                 MaxCutSwapNeighbor::new(state.instance, &state.solution, i, j)

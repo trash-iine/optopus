@@ -104,6 +104,32 @@ one iteration. That `+2` is a library-wide convention shared by every binary
 problem's swap — it models a swap as two flips' worth of work — so it is not
 changed here for one heuristic's sake.
 
+### Cases the paper does not specify
+
+Benlic & Hao define the eligible sets `A1` and `A2` but never say what a
+perturbation should do when one of them comes out empty. This file is the
+authority on the three answers chosen here; the code carries only a one-line
+note and a pointer back to this section, so the reasoning lives in exactly one
+place.
+
+All three are also **empirically dead on the G-set**. `progress_iteration` is
+the only thing that increments `n_rejected`, and every one of the 88 recorded
+BLS summaries reports `avg_n_rejected = 0.0` — so across all 71 instances these
+branches have never once been taken. That is what makes documenting them the
+right call rather than fixing them, and it doubles as a tripwire: if
+`n_rejected` ever stops being zero, one of these cases has started firing.
+
+| Case | Behaviour here | Why it cannot fire on the G-set |
+|---|---|---|
+| `A1` empty (every flip tabu, no aspiration) | advance the iteration and skip the move | see above |
+| `A2` empty because one partition side has no vertex at all | advance the iteration twice (matching the swap's `+2` accounting) and skip | a side empties only on a degenerate instance |
+| `A2` has no non-tabu vertex on one side | take that side's best vertex anyway, breaking tabu **without** aspiration | the effective tenure is capped at `2·(n/10) = 0.2n` while a side holds roughly `0.5n` vertices, so a whole side cannot be tabu |
+
+The third is the only one with real algorithmic content, and it *can* fire
+outside the G-set: `CorrelationContractionSearch` solves contracted instances
+whose cluster count is small and whose tenure is clamped to 25, which is the
+regime where a side can run out of free vertices.
+
 ## Constructor
 
 ```rust
