@@ -148,18 +148,6 @@ impl Sat {
         self.clauses.iter().map(|c| c.as_slice())
     }
 
-    /// Returns the indices of clauses that contain variable `i` (0-indexed).
-    pub fn clause_indices_of_var(&self, i: usize) -> &[usize] {
-        &self.clauses_per_var[i]
-    }
-
-    /// Returns an iterator over the literal slices of clauses that contain variable `i` (0-indexed).
-    pub fn clauses_of_var(&self, i: usize) -> impl Iterator<Item = &[i64]> {
-        self.clauses_per_var[i]
-            .iter()
-            .map(|&idx| self.clauses[idx].as_slice())
-    }
-
     /// Returns the sorted, deduplicated set of variables that share at least
     /// one clause with variable `i` (0-indexed), excluding `i` itself.
     ///
