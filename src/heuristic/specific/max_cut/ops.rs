@@ -123,8 +123,15 @@ impl MaxCutSearchOps {
                     self.tenure,
                     &mut state.rng,
                 );
-                state.apply(&best_move)?;
+                state.apply_move_only(&best_move)?;
             } else {
+                // The descent only ever takes strictly positive gains, so the
+                // point it stops at is the best it passed through: one update
+                // here is worth the same as one per move, and costs one clone
+                // instead of one per improving move. It has to happen before
+                // returning, because the weak perturbations read
+                // `best_solution.objective` for their aspiration test.
+                state.update_best();
                 return Ok(());
             }
         }
