@@ -61,7 +61,6 @@ src/
 │   │                         apply_swap_as_two_flips
 │   ├── tabu.rs               VarTabuMap (hashed) + VecTabuMap (dense 0..n, what every
 │   │                         binary problem uses), is_var_enabled, add_var_to_tabu
-│   ├── elite_pool.rs         ElitePool<T> (quality-and-distance elite population)
 │   ├── epoch_marks.rs        EpochMarks (index set with an O(1) clear, for
 │   │                         neighborhood walks that need a fresh "seen" set per call)
 │   ├── gain_index.rs         GainIndex (improving-move index)
@@ -80,7 +79,7 @@ src/
 │   └── specific/            one directory per problem once it has several
 │       ├── max_cut/
 │       │   ├── ops.rs           MaxCutSearchOps: the shared engine (gain-indexed
-│       │   │                    descent + tabu walk + 5 perturbations) over one
+│       │   │                    descent + 5 perturbations) over one
 │       │   │                    common::VecTabuMap + common::EpochMarks
 │       │   ├── bls.rs           BreakoutLocalSearchForMaxCut (+ its BlsSchedule)
 │       │   ├── rl_bls.rs        RlBreakoutLocalSearchForMaxCut
@@ -191,11 +190,9 @@ StopCondition::iterations(1_000_000)
 ### Problem-specific
 MaxCut has its own directory (`specific/max_cut/`) because its heuristics share an engine rather than merely a problem type: `MaxCutSearchOps` (`ops.rs`, private to that directory) owns one tabu map and the operators that read and write it — the gain-indexed descent and the five perturbations. Both MaxCut search heuristics below drive it; neither owns it, which is why it is not named after either. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
 
-MaxCut has its own directory (`specific/max_cut/`) because its heuristics share an engine rather than merely a problem type: `MaxCutSearchOps` (`ops.rs`, private to that directory) owns one tabu map and the operators that read and write it — the gain-indexed descent, the tabu walk that returns its *best visited* point, and the five perturbations. All three MaxCut search heuristics below drive it; none of them owns it, which is why it is not named after any of them. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
-
 What the engine does **not** own is what "tabu" means. Every operator marks and tests moves through `MaxCutFlipNeighbor`'s and `MaxCutSwapNeighbor`'s own `EnabledTabu` impls, so it forbids exactly what a generic `TabuSearch` over the same neighborhood would; the engine only decides *which* moves to try. Its state is two shared structures — one `common::VecTabuMap` and one `common::EpochMarks` (the "already seen" set for the plateau operators, whose epoch stamping is also what `PopulationAnnealingForMaxCut`'s cluster move uses).
 
-- `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances.
+- `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances. Reproduces Benlic & Hao (2013); `docs/heuristics/breakout_local_search.md` records where it does not and why.
 - `RlBreakoutLocalSearchForMaxCut` (`specific/max_cut/rl_bls.rs`): same `MaxCutSearchOps` machinery, but a contextual softmax bandit picks perturbation type (5 ops incl. both plateau variants) × strength; weights persist across `Restart`/`Iterated` episodes.
 - `LinKernighanHelsgaunForTsp` (`specific/lkh_for_tsp.rs`): LK-style variable-depth moves with candidate lists; stops at a local optimum.
 

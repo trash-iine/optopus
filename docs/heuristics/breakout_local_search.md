@@ -93,10 +93,11 @@ selected either way — but it is a large constant, and two things follow from i
   2008 Xeon; ours are for a linear-scan implementation on modern hardware. Only
   cut values compare.
 - **Iteration budgets do not mean the same work.** A budget in moves costs
-  `O(n)` per move here against `O(degree)` there, which is why the
-  MaxCut-specific heuristics that drive this engine bound their tabu phases by
-  *work* rather than by move count (see `CorrelationContractionSearch`'s
-  `tabu_steps`, clamped by `2·10⁷ / n`).
+  `O(n)` per move here against `O(degree)` there. A caller that hands this
+  engine a move budget is really handing it an `O(n)` multiple of one, so
+  anything driving it on large instances wants to bound the *work* — a budget
+  of `2n` moves is `O(n²)`, which at `n = 20000` is a different order of
+  magnitude from what the number suggests.
 
 **Swap iteration accounting.** A swap advances the iteration counter by 2
 (`MaxCutSwapNeighbor::apply_to_iteration`) where the paper counts every move as
@@ -126,9 +127,9 @@ right call rather than fixing them, and it doubles as a tripwire: if
 | `A2` has no non-tabu vertex on one side | take that side's best vertex anyway, breaking tabu **without** aspiration | the effective tenure is capped at `2·(n/10) = 0.2n` while a side holds roughly `0.5n` vertices, so a whole side cannot be tabu |
 
 The third is the only one with real algorithmic content, and it *can* fire
-outside the G-set: `CorrelationContractionSearch` solves contracted instances
-whose cluster count is small and whose tenure is clamped to 25, which is the
-regime where a side can run out of free vertices.
+away from the G-set: a caller that runs this engine on a small instance while
+keeping a tenure tuned for a large one puts the whole of one side inside the
+tabu window, which is precisely the regime the G-set never reaches.
 
 ## Constructor
 

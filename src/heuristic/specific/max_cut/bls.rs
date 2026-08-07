@@ -97,11 +97,11 @@ impl BlsSchedule {
         self.omega = 0;
         self.l = self.l0;
         self.prev_best_objective = None;
-        // Dropped rather than kept: `clear()` also runs when the same schedule
-        // is reused on a different instance, which is what
-        // `CorrelationContractionSearch` does every generation with a freshly
-        // contracted graph. A retained assignment would be compared against a
-        // solution of a different length.
+        // Dropped rather than kept: `clear()` also runs when the same
+        // schedule is reused on a different instance — a meta-heuristic that
+        // rebuilds its sub-problem every round does exactly that. A retained
+        // assignment would then be compared against a solution of a different
+        // length.
         self.prev_local_optimum = None;
     }
 
