@@ -33,7 +33,13 @@ and never knows what's stored. This lets QUBO/MaxCut/SAT key by variable
 index, TSP by edge pair, Job Shop by swap position, etc.
 
 `borrow_tabu_map`, `borrow_mut_tabu_map`, `take_tabu_map`, and `set_tabu_map`
-let you inspect or transfer state between runs.
+let you inspect or transfer state between runs; `tabu_tenure()` reads back the
+range.
+
+Internally the map and the tenure are one `common::TabuLedger<N::TabuMap>` —
+they are never useful apart, and the two verbs it exposes (`allows` / `record`)
+are what the MaxCut operators in `heuristic::specific::max_cut::ops` share when
+several of them must respect each other's prohibitions.
 
 ## Example
 

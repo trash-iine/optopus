@@ -10,7 +10,7 @@
 /// only maintains the membership bookkeeping.
 ///
 /// Standard heuristics do not need this index; it exists for problem-specific
-/// algorithms (such as [`BreakoutLocalSearch`](crate::heuristic::BreakoutLocalSearch))
+/// algorithms (such as [`BreakoutLocalSearchForMaxCut`](crate::heuristic::BreakoutLocalSearchForMaxCut))
 /// that iterate only over improving variables, reducing the inner-loop cost
 /// from O(n) to O(|improving moves|).
 #[derive(Debug, Clone, Default)]

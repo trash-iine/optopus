@@ -1,4 +1,4 @@
-timestamp = "20260724_235625"
+timestamp = "20260804_080506"
 config_file = "data/benchmarks/maxcut/gset_bls/n9000.toml"
 
 [[results]]
@@ -12,7 +12,7 @@ tabu_tenure = [
     900,
 ]
 t = 1000
-l0 = 80
+l0 = 90
 p0 = 0.8
 q = 0.5
 
@@ -21,16 +21,16 @@ max_iteration = 1800000000
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 6328.0
-avg_objective = 6322.2
-worst_objective = 6316.0
-std_objective = 3.627671429443411
-best_time_to_best_secs = 2622.344855542
-avg_time_to_best_secs = 5769.1763163375
-avg_total_time_secs = 8720.5849798585
-avg_initial_objective = 56.0
-avg_improvement = 6266.2
-avg_n_accepted = 1409409727.4
+best_objective = 6356.0
+avg_objective = 6351.2
+worst_objective = 6348.0
+std_objective = 3.249615361854384
+best_time_to_best_secs = 6529.361176083
+avg_time_to_best_secs = 12903.6841958999
+avg_total_time_secs = 22683.8355684377
+avg_initial_objective = 34.8
+avg_improvement = 6316.4
+avg_n_accepted = 1332063278.3
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 2599.8
+avg_n_best_updates = 2565.6

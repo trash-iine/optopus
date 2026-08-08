@@ -29,7 +29,7 @@ use rand::Rng;
 /// Sentinel for "clause not currently in the unsatisfied list".
 const NOT_IN_UNSAT: usize = usize::MAX;
 
-// Adaptive-noise schedule (Hoos 2002; see [`WalkSatForSat`] References).
+// Adaptive-noise schedule (Hoos 2002; see [`WalkSat`] References).
 /// Fraction of the clause count that may pass without improvement before the
 /// noise is raised.
 const ADAPT_THETA: f64 = 1.0 / 6.0;
@@ -165,7 +165,7 @@ impl WalkSatScratch {
 ///   Local Search." *Proc. AAAI-94*, 337-343, 1994.
 /// - Hoos, H. H. "An Adaptive Noise Mechanism for WalkSAT." *Proc. AAAI-02*,
 ///   655-660, 2002.
-pub struct WalkSatForSat {
+pub struct WalkSat {
     stop_condition: StopCondition,
     /// The configured noise probability (the working noise resets to this).
     base_noise: f64,
@@ -180,7 +180,7 @@ pub struct WalkSatForSat {
     flips_since_improve: u64,
 }
 
-impl WalkSatForSat {
+impl WalkSat {
     /// Creates a WalkSAT heuristic.
     ///
     /// `noise` is the probability of a random (non-greedy) walk step within the
@@ -261,7 +261,7 @@ impl WalkSatForSat {
     }
 }
 
-impl Heuristic<Sat> for WalkSatForSat {
+impl Heuristic<Sat> for WalkSat {
     fn clear(&mut self) {
         self.scratch = None;
         self.noise = self.base_noise;
@@ -397,7 +397,7 @@ mod tests {
     fn reaches_full_satisfaction_on_satisfiable_instance() {
         let sat = satisfiable_instance();
         let mut state = SearchState::new_with_seed(&sat, 7);
-        let mut walksat = WalkSatForSat::new(StopCondition::iterations(10_000), 0.3, false);
+        let mut walksat = WalkSat::new(StopCondition::iterations(10_000), 0.3, false);
         walksat.run(&mut state).unwrap();
         assert_eq!(
             state.best_solution.n_satisfied,
@@ -411,7 +411,7 @@ mod tests {
         let sat = satisfiable_instance();
         let run = |seed: u64| {
             let mut state = SearchState::new_with_seed(&sat, seed);
-            let mut w = WalkSatForSat::new(
+            let mut w = WalkSat::new(
                 StopCondition::iterations(500).with_duration(Duration::from_secs(5)),
                 0.4,
                 true,
@@ -430,7 +430,7 @@ mod tests {
         // The walk leaves gain[] stale; run() must restore it for composition.
         let sat = satisfiable_instance();
         let mut state = SearchState::new_with_seed(&sat, 9);
-        let mut walksat = WalkSatForSat::new(StopCondition::iterations(200), 0.3, false);
+        let mut walksat = WalkSat::new(StopCondition::iterations(200), 0.3, false);
         walksat.run(&mut state).unwrap();
         for (sol, label) in [
             (&state.solution, "solution"),
@@ -451,7 +451,7 @@ mod tests {
         let sat = satisfiable_instance();
         let mut state = SearchState::new_with_seed(&sat, 123);
         // Stop condition never fires within the manual loop below.
-        let mut walksat = WalkSatForSat::new(StopCondition::iterations(u64::MAX), 0.5, false);
+        let mut walksat = WalkSat::new(StopCondition::iterations(u64::MAX), 0.5, false);
         for _ in 0..50 {
             walksat.run_once(&mut state).unwrap();
             assert!(

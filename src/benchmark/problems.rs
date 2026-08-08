@@ -179,25 +179,15 @@ impl ConfigurableProblem for MaxCut {
                 l0,
                 p0,
                 q,
-                plateau_prob,
                 ..
-            } => {
-                let plateau = plateau_prob.unwrap_or(0.0);
-                if !(0.0..=1.0).contains(&plateau) {
-                    return Err(OptError::Config(
-                        "'plateau_prob' must be within [0, 1]".to_string(),
-                    ));
-                }
-                Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
-                    cond,
-                    *tabu_tenure,
-                    *t,
-                    *l0,
-                    *p0,
-                    *q,
-                    plateau,
-                )))
-            }
+            } => Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
+                cond,
+                *tabu_tenure,
+                *t,
+                *l0,
+                *p0,
+                *q,
+            ))),
             HeuristicConfig::RlBreakoutLocalSearch {
                 tabu_tenure,
                 t,
@@ -315,7 +305,7 @@ impl ConfigurableProblem for MaxCut {
             // Solves the sub-MaxCut formed by the variables the two parents
             // disagree on (TSHEA/MOH-style memetic recombination). The
             // sub-problem shrinks as the population converges, so a bounded
-            // plateau-BLS is enough to solve it well.
+            // BLS is enough to solve it well.
             "SubProblem" => Ok(Box::new(SubProblemBasedCrossover {
                 sub_heuristic: Box::new(BreakoutLocalSearchForMaxCut::new(
                     StopCondition::iterations(50_000).with_failed_updates(10_000),
@@ -323,7 +313,6 @@ impl ConfigurableProblem for MaxCut {
                     1_000,
                     20,
                     0.8,
-                    0.5,
                     0.5,
                 )),
             })),

@@ -59,7 +59,12 @@ src/
 │   ├── binary.rs             uniform_binary_crossover, hamming_distance,
 │   │                         lift_binary_solution / lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips
-│   ├── tabu.rs               VarTabuMap, is_var_enabled, add_var_to_tabu
+│   ├── tabu.rs               VarTabuMap (hashed) + VecTabuMap (dense 0..n, what every
+│   │                         binary problem uses), is_var_enabled, add_var_to_tabu,
+│   │                         TabuLedger<M> (map + tenure; allows/record — what
+│   │                         TabuSearch holds and what MaxCut's operators share)
+│   ├── epoch_marks.rs        EpochMarks (index set with an O(1) clear, for
+│   │                         neighborhood walks that need a fresh "seen" set per call)
 │   ├── gain_index.rs         GainIndex (improving-move index)
 │   └── parse.rs              InstanceLines (file-loader scaffold with FileLoad errors)
 ├── heuristic/
@@ -73,9 +78,18 @@ src/
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
 │   ├── reinforcement_learning/  RlSearch<N> (REINFORCE policy over move features)
-│   └── specific/
-│       ├── bls_for_max_cut.rs   BreakoutLocalSearchForMaxCut
-│       └── lkh_for_tsp.rs       LinKernighanHelsgaunForTsp
+│   └── specific/            one directory per problem once it has several
+│       ├── max_cut/
+│       │   ├── ops/            the shared operators, one module per role, each a
+│       │   │                    free fn over a common::TabuLedger<VecTabuMap>:
+│       │   │                    mod.rs (Ledger alias + the keep_best tie rule),
+│       │   │                    descent.rs, tabu_walk.rs, perturbation.rs
+│       │   │                    (PerturbationType, random_flips, best_swap)
+│       │   ├── bls.rs           BreakoutLocalSearchForMaxCut (+ its BlsSchedule)
+│       │   ├── rl_bls.rs        RlBreakoutLocalSearchForMaxCut
+│       │   └── population_annealing.rs  PopulationAnnealingForMaxCut
+│       ├── lkh_for_tsp.rs       LinKernighanHelsgaunForTsp
+│       └── walksat_for_sat.rs   WalkSatForSat
 └── problem/
     ├── max_cut/              MaxCut, MaxCutSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── qubo/                 Qubo, QuboSolution, {Flip,Swap}Neighbor, UniformCrossover
@@ -178,8 +192,14 @@ StopCondition::iterations(1_000_000)
 - `TspOrderCrossover` (OX) for TSP; `JobShopPpxCrossover` for JobShop.
 
 ### Problem-specific
-- `BreakoutLocalSearchForMaxCut` (`specific/bls_for_max_cut.rs`): greedy local search plus adaptive perturbation (strong / weak flip / swap / plateau cluster), with probabilities decaying via the non-improvement counter `omega`. The plateau operators flip zero-gain vertices (tracked by the opt-in `zero_gain` index) without changing the objective — key on large sparse Gset instances.
-- `RlBreakoutLocalSearchForMaxCut` (`specific/rl_bls_for_max_cut.rs`): same `BlsOps` machinery, but a contextual softmax bandit picks perturbation type (5 ops incl. both plateau variants) × strength; weights persist across `Restart`/`Iterated` episodes.
+MaxCut has its own directory (`specific/max_cut/`) because its heuristics share *operators* rather than merely a problem type. They live in `ops/` (private to that directory), one module per role, and each is a **free function taking a `&mut Ledger`** (= `common::TabuLedger<VecTabuMap>`): `descent` (gain-indexed, monotone), `tabu_walk`, and the two kicks in `perturbation.rs` (`random_flips`, `best_swap`, plus the `PerturbationType` vocabulary BLS and RL-BLS select with). `ops/mod.rs` holds only the `keep_best` tie rule they all select with.
+
+There is deliberately no engine object. What the operators share is exactly one ledger, and it is a parameter — so whoever passes the same ledger to two of them is the one deciding they should see each other's prohibitions (in BLS the entries the descent writes are the ones the weak perturbations must not undo; a caller wanting them isolated passes two ledgers). Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
+
+What no operator decides is what "tabu" *means*. Each marks and tests moves through `MaxCutFlipNeighbor`'s and `MaxCutSwapNeighbor`'s own `EnabledTabu` impls (via the ledger's `allows` / `record`), so they forbid exactly what a generic `TabuSearch` over the same neighborhood would; they only decide *which* moves to try. `TabuSearch` itself holds the same `TabuLedger`.
+
+- `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / weak swap), with probabilities decaying via the non-improvement counter `omega`. It selects exactly the three operators Benlic & Hao define, which are also the only three `ops` offers. Reproduces Benlic & Hao (2013); `docs/heuristics/breakout_local_search.md` records where it does not and why.
+- `RlBreakoutLocalSearchForMaxCut` (`specific/max_cut/rl_bls.rs`): the same `ops` operators, but a contextual softmax bandit picks perturbation type (3 ops) × strength; weights persist across `Restart`/`Iterated` episodes. Two objective-preserving *plateau* operators (flip connected clusters / an independent set of zero-gain vertices) used to be a fourth and fifth action, plus a `plateau_width` context feature. **They were removed knowing they paid**: the A/B at 30s x 5 runs costs this heuristic **-96.2 and -62.6 on G55 (two seeds), -110.4 on G60, -92.2 on G63**, against std 9-28, and is neutral on G70 (+5.8), G11 and G1 — with them it beat BLS on G55 (10200.4 against 10168.0), without them it does not. The removal was a deliberate trade of that objective for a smaller action space, one operator vocabulary and no second scratch structure; take it back if RL-BLS becomes the heuristic that has to win. The mechanism itself survives as `PopulationAnnealingForMaxCut`'s non-local cluster move, which owns its own implementation and keeps the opt-in `zero_gain` index alive.
 - `LinKernighanHelsgaunForTsp` (`specific/lkh_for_tsp.rs`): LK-style variable-depth moves with candidate lists; stops at a local optimum.
 
 ## Problem Types (`src/problem/`)
@@ -217,7 +237,7 @@ max_iteration = 100000         # max_duration_secs / max_failed_update also supp
 
 `HeuristicConfig` is an internally-tagged enum (`#[serde(tag = "kind")]`), so each `kind` declares exactly its own required fields; missing fields and unknown kinds fail at parse time.
 
-**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RandomWalk` (give it a `stop_condition` — an empty one never terminates), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`, optional `plateau_prob`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), and the meta-heuristics `Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `VariableNeighborhoodSearch` uses `steps[0] = search, steps[1..] = shakes N_1..N_kmax`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
+**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RandomWalk` (give it a `stop_condition` — an empty one never terminates), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), and the meta-heuristics `Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `VariableNeighborhoodSearch` uses `steps[0] = search, steps[1..] = shakes N_1..N_kmax`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
 
 **`Summary` fields**: `num_successful_runs`, `best/avg/worst/std_objective`, `best/avg_time_to_best_secs`, `avg_total_time_secs`, plus averaged `initial_objective` / `improvement` / acceptance counters. Each `SingleRunResult` carries `best_objective: f64`, `best_iteration: u64`, timing, the per-run `seed`, and `solution: Vec<usize>` (0-indexed encoding).
 

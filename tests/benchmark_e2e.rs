@@ -3,6 +3,7 @@
 //! (which must hold even though runs execute in parallel under rayon).
 
 use optopus::benchmark::{Benchmark, BenchmarkConfig, BenchmarkReport};
+use optopus::prelude::{Graph, MaxCut};
 
 /// Writes `content` to a unique temp file and returns its path.
 fn write_temp_file(tag: &str, content: &str) -> std::path::PathBuf {
@@ -62,8 +63,40 @@ max_iteration = 1000
         assert!(run.solution.iter().all(|&v| v < 4));
     }
     assert_eq!(result.summary.num_successful_runs, 3);
-    // Greedy local search always reaches the optimum on a 4-cycle.
-    assert_eq!(result.summary.best_objective, 4.0);
+
+    // Not `== 4.0`: the 4-cycle has a plateau. Its three-versus-one splits cut
+    // 2 and every flip out of them gains exactly zero, so a strictly improving
+    // descent stops there — measured, a single run reaches the optimal 4 about
+    // three times in four, which makes best-of-three a ~1.5% coin flip. (The
+    // config's `seed` cannot pin that down here: per-run seeds are derived
+    // from the instance *path*, and this instance is a temp file named after
+    // the process and the clock.) What every run does owe us is that it
+    // stopped at a local optimum, and that the objective the report carries is
+    // the cut the solution it carries actually makes.
+    let cycle = MaxCut::new(Graph::from_edges([
+        (0, 1, 1.0),
+        (1, 2, 1.0),
+        (2, 3, 1.0),
+        (3, 0, 1.0),
+    ]));
+    for run in &result.runs {
+        let mut x = vec![false; 4];
+        for &v in &run.solution {
+            x[v] = true;
+        }
+        assert_eq!(
+            f64::from(cycle.calculate_cut_size(&x)),
+            run.best_objective,
+            "the reported objective must be the cut the reported solution makes"
+        );
+        for v in 0..4 {
+            assert!(
+                cycle.calculate_gain(&x, v) <= 0.0,
+                "flipping {v} still improves, so the run stopped short of a local optimum"
+            );
+        }
+    }
+    assert!(result.summary.best_objective >= 2.0);
 }
 
 #[test]
@@ -257,12 +290,14 @@ max_iteration = 300
     );
 }
 
-/// The plateau-cluster perturbation adds RNG consumption for cluster seeding
-/// and the strong fallback; runs with `plateau_prob` set must be seed-stable.
+/// A config naming an option that no longer exists (`plateau_prob`, dropped
+/// with the plateau perturbations) must still load and still run
+/// reproducibly: the heuristic config enum does not deny unknown fields, so an
+/// old TOML degrades to the current defaults instead of failing to parse.
 #[test]
-fn breakout_local_search_with_plateau_is_bit_identical_across_reruns_with_seed() {
+fn breakout_local_search_ignores_a_removed_option_and_stays_reproducible() {
     assert_reproducible(
-        "repro_bls_plateau",
+        "repro_bls_removed_option",
         r#"
 [[heuristics]]
 kind = "BreakoutLocalSearch"
