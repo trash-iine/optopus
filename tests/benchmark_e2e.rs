@@ -257,12 +257,14 @@ max_iteration = 300
     );
 }
 
-/// The plateau-cluster perturbation adds RNG consumption for cluster seeding
-/// and the strong fallback; runs with `plateau_prob` set must be seed-stable.
+/// A config naming an option that no longer exists (`plateau_prob`, dropped
+/// with the plateau perturbations) must still load and still run
+/// reproducibly: the heuristic config enum does not deny unknown fields, so an
+/// old TOML degrades to the current defaults instead of failing to parse.
 #[test]
-fn breakout_local_search_with_plateau_is_bit_identical_across_reruns_with_seed() {
+fn breakout_local_search_ignores_a_removed_option_and_stays_reproducible() {
     assert_reproducible(
-        "repro_bls_plateau",
+        "repro_bls_removed_option",
         r#"
 [[heuristics]]
 kind = "BreakoutLocalSearch"

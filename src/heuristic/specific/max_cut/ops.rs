@@ -1,7 +1,7 @@
 //! The MaxCut search engine shared by every heuristic in this directory.
 //!
 //! [`MaxCutSearchOps`] bundles one tabu map with the operators that read and
-//! write it: the gain-indexed greedy descent, the tabu walk, and the five
+//! write it: the gain-indexed greedy descent, the tabu walk, and the three
 //! perturbations. They live together because they share that tabu state — the
 //! entries the descent writes are the entries the weak perturbations consume —
 //! not because any one heuristic owns them.
@@ -10,13 +10,12 @@
 //! moves through the moves' own `EnabledTabu` impls, so the engine forbids
 //! exactly what a generic `TabuSearch` over the same neighborhood would.
 
-use crate::common::{EpochMarks, VecTabuMap};
+use crate::common::VecTabuMap;
 use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::SearchState;
 use crate::trait_defs::{EnabledTabu, MoveToNeighbor};
-use rand::Rng;
 
 // The positive-gain index attached to `MaxCutSolution` lets the local-search
 // phase skip the O(n) neighborhood scan: any improving flip must be a vertex
@@ -43,16 +42,10 @@ pub(super) enum PerturbationType {
     WeakFlip,
     /// Weak swap perturbation: apply `l` swap moves guided by the tabu map.
     WeakSwap,
-    /// Plateau cluster perturbation: flip connected clusters of zero-gain
-    /// vertices (objective-preserving plateau traversal).
-    PlateauCluster,
-    /// Plateau independent-set perturbation: flip an independent set of
-    /// zero-gain vertices (objective-preserving plateau jump).
-    PlateauIndependent,
 }
 
 /// The vertex-level search operators for MaxCut, sharing one tabu map: a
-/// gain-indexed greedy descent, a tabu walk, and five perturbations.
+/// gain-indexed greedy descent, a tabu walk, and three perturbations.
 ///
 /// The tabu state written during descent is the same state consumed by the
 /// weak perturbations, which is why these operators live together rather than
@@ -72,10 +65,6 @@ pub(super) struct MaxCutSearchOps {
     tabu: VecTabuMap,
     /// Tenure range handed to those impls on every move.
     tenure: (u64, u64),
-    /// "Already visited" set for the plateau operators, reset per call.
-    marks: EpochMarks,
-    /// Scratch vertex list for the plateau operators (BFS queue / selection).
-    queue: Vec<usize>,
 }
 
 impl MaxCutSearchOps {
@@ -83,8 +72,6 @@ impl MaxCutSearchOps {
         Self {
             tabu: VecTabuMap::new(),
             tenure: tabu_tenure,
-            marks: EpochMarks::new(),
-            queue: Vec::new(),
         }
     }
 
@@ -233,9 +220,8 @@ impl MaxCutSearchOps {
     /// G11/G12/G13/G32-G34 it lost 6 cut points and turned three exact matches
     /// of the paper's best into misses, while gaining only on one planar
     /// instance. Index order on a toroidal grid tracks position, so taking the
-    /// lowest index walks the lattice coherently, which is the same reason the
-    /// plateau operators flip *connected* clusters rather than scattered
-    /// vertices. Randomising it scatters the perturbation instead.
+    /// lowest index walks the lattice coherently; randomising it scatters the
+    /// perturbation instead.
     pub(super) fn weak_swap_perturbation(
         &mut self,
         l: u64,
@@ -288,139 +274,6 @@ impl MaxCutSearchOps {
         Ok(())
     }
 
-    /// Applies the plateau-cluster perturbation: grows connected clusters of
-    /// zero-gain vertices via BFS and flips them one by one, so the objective
-    /// value is unchanged ("iso-site" cluster moves in the Ising-machine
-    /// literature — the mechanism behind the recent G-set best-known updates).
-    ///
-    /// Each vertex is re-checked to still have exactly zero gain at flip time,
-    /// because earlier flips in the same cluster change neighbouring gains.
-    /// Flipped vertices are added to the tabu map so the following descent and
-    /// weak perturbations do not immediately undo the traversal. When fewer
-    /// than `l` zero-gain flips are available, the remaining budget falls back
-    /// to [`strong_perturbation`](Self::strong_perturbation) so the requested
-    /// perturbation strength stays meaningful.
-    pub(super) fn plateau_cluster_perturbation(
-        &mut self,
-        l: u64,
-        state: &mut SearchState<'_, MaxCut>,
-    ) -> Result<(), OptError> {
-        state.solution.enable_zero_gain_index();
-        self.marks.ensure_capacity(state.instance.graph.len());
-        self.marks.next_epoch();
-
-        let mut flips: u64 = 0;
-        // Bound the reseed attempts so the loop terminates even when every
-        // remaining zero-gain vertex is already marked.
-        let mut attempts = 4 * l;
-        while flips < l && attempts > 0 {
-            attempts -= 1;
-            let members = state.solution.zero_gain.as_slice();
-            if members.is_empty() {
-                break;
-            }
-            let seed = members[state.rng.random_range(0..members.len())];
-            if self.marks.is_marked(seed) {
-                continue;
-            }
-            self.queue.clear();
-            self.queue.push(seed);
-            self.marks.mark(seed);
-            let mut head = 0;
-            while head < self.queue.len() && flips < l {
-                let v = self.queue[head];
-                head += 1;
-                // Earlier flips in this cluster may have moved v off the
-                // plateau; only flip while its gain is still exactly zero.
-                if state.solution.gain[v] == 0.0 {
-                    let flip = MaxCutFlipNeighbor { i: v, gain: 0.0 };
-                    flip.add_to_tabu_map(
-                        &mut self.tabu,
-                        state.iteration,
-                        self.tenure,
-                        &mut state.rng,
-                    );
-                    state.apply_move_only(&flip)?;
-                    flips += 1;
-                }
-                for &(j, _) in state.instance.graph.iter_on_adjacency(v) {
-                    if !self.marks.is_marked(j) && state.solution.zero_gain.contains(j) {
-                        self.marks.mark(j);
-                        self.queue.push(j);
-                    }
-                }
-            }
-        }
-
-        if flips < l {
-            self.strong_perturbation(l - flips, state)?;
-        }
-        Ok(())
-    }
-
-    /// Applies the plateau independent-set perturbation: samples zero-gain
-    /// vertices that are pairwise non-adjacent and flips them all. Independence
-    /// guarantees each selected vertex's gain is untouched by the other
-    /// selected flips, so every flip has exactly zero gain and the objective
-    /// value is unchanged.
-    ///
-    /// Compared to [`plateau_cluster_perturbation`](Self::plateau_cluster_perturbation)
-    /// this scatters the plateau move across the graph instead of walking one
-    /// region. Falls back to [`strong_perturbation`](Self::strong_perturbation)
-    /// for any unused budget.
-    pub(super) fn plateau_independent_perturbation(
-        &mut self,
-        l: u64,
-        state: &mut SearchState<'_, MaxCut>,
-    ) -> Result<(), OptError> {
-        state.solution.enable_zero_gain_index();
-        self.marks.ensure_capacity(state.instance.graph.len());
-        self.marks.next_epoch();
-
-        // Select an independent set of zero-gain vertices. Marks cover the
-        // selected vertices and their neighbourhoods, so a marked candidate is
-        // ineligible.
-        self.queue.clear();
-        let mut attempts = 4 * l;
-        while (self.queue.len() as u64) < l && attempts > 0 {
-            attempts -= 1;
-            let members = state.solution.zero_gain.as_slice();
-            if members.is_empty() {
-                break;
-            }
-            let v = members[state.rng.random_range(0..members.len())];
-            if self.marks.is_marked(v) {
-                continue;
-            }
-            self.marks.mark(v);
-            for &(j, _) in state.instance.graph.iter_on_adjacency(v) {
-                self.marks.mark(j);
-            }
-            self.queue.push(v);
-        }
-
-        #[cfg(debug_assertions)]
-        let objective_before = state.solution.objective;
-        let selected = self.queue.len() as u64;
-        for idx in 0..self.queue.len() {
-            let v = self.queue[idx];
-            debug_assert_eq!(
-                state.solution.gain[v], 0.0,
-                "independence must keep gains zero"
-            );
-            let flip = MaxCutFlipNeighbor { i: v, gain: 0.0 };
-            flip.add_to_tabu_map(&mut self.tabu, state.iteration, self.tenure, &mut state.rng);
-            state.apply_move_only(&flip)?;
-        }
-        #[cfg(debug_assertions)]
-        debug_assert_eq!(objective_before, state.solution.objective);
-
-        if selected < l {
-            self.strong_perturbation(l - selected, state)?;
-        }
-        Ok(())
-    }
-
     /// Applies the given perturbation type with strength `l`.
     pub(super) fn perturb(
         &mut self,
@@ -432,8 +285,6 @@ impl MaxCutSearchOps {
             PerturbationType::Strong => self.strong_perturbation(l, state),
             PerturbationType::WeakFlip => self.weak_flip_perturbation(l, state),
             PerturbationType::WeakSwap => self.weak_swap_perturbation(l, state),
-            PerturbationType::PlateauCluster => self.plateau_cluster_perturbation(l, state),
-            PerturbationType::PlateauIndependent => self.plateau_independent_perturbation(l, state),
         }
     }
 }
@@ -456,72 +307,7 @@ mod tests {
         MaxCut::from_edges(edges)
     }
 
-    /// Descends to a local optimum first so that the plateau (zero-gain set)
-    /// is non-trivial, mirroring where the operators run in the real loop.
-    fn descended_state<'a>(
-        mc: &'a MaxCut,
-        seed: u64,
-        ops: &mut MaxCutSearchOps,
-    ) -> SearchState<'a, MaxCut> {
-        let mut state = SearchState::new_with_seed(mc, seed);
-        ops.ensure_capacity(mc.graph.len());
-        ops.descent(&mut state).unwrap();
-        state
-    }
-
-    /// The plateau-cluster perturbation must preserve the objective value
-    /// bit-for-bit whenever the zero-gain set is non-empty (every applied flip
-    /// has exactly zero gain), and it must actually move the solution.
-    #[test]
-    fn plateau_cluster_preserves_objective() {
-        let mc = small_instance();
-        let mut moved = false;
-        for seed in 0..20 {
-            let mut ops = MaxCutSearchOps::new((3, 15));
-            let mut state = descended_state(&mc, seed, &mut ops);
-            state.solution.enable_zero_gain_index();
-            if state.solution.zero_gain_count() == 0 {
-                continue;
-            }
-            let objective_before = state.solution.objective;
-            let x_before = state.solution.x.clone();
-            // l small enough that the zero-gain set can absorb the full budget,
-            // so the strong fallback (which would change the objective) stays off.
-            ops.plateau_cluster_perturbation(1, &mut state).unwrap();
-            assert_eq!(
-                state.solution.objective, objective_before,
-                "plateau cluster flips must not change the objective (seed {seed})"
-            );
-            moved |= state.solution.x != x_before;
-        }
-        assert!(moved, "the operator must move the solution at least once");
-    }
-
-    /// Same objective-invariance property for the independent-set variant.
-    #[test]
-    fn plateau_independent_preserves_objective() {
-        let mc = small_instance();
-        let mut moved = false;
-        for seed in 0..20 {
-            let mut ops = MaxCutSearchOps::new((3, 15));
-            let mut state = descended_state(&mc, seed, &mut ops);
-            state.solution.enable_zero_gain_index();
-            if state.solution.zero_gain_count() == 0 {
-                continue;
-            }
-            let objective_before = state.solution.objective;
-            let x_before = state.solution.x.clone();
-            ops.plateau_independent_perturbation(1, &mut state).unwrap();
-            assert_eq!(
-                state.solution.objective, objective_before,
-                "independent-set plateau flips must not change the objective (seed {seed})"
-            );
-            moved |= state.solution.x != x_before;
-        }
-        assert!(moved, "the operator must move the solution at least once");
-    }
-
-    /// Property test: after hundreds of mixed perturbations of all five types,
+    /// Property test: after hundreds of mixed perturbations of all three types,
     /// the incrementally maintained gain vector and both gain indexes must
     /// agree with a from-scratch recomputation.
     #[test]
@@ -534,13 +320,7 @@ mod tests {
         state.solution.enable_positive_gain_index();
         state.solution.enable_zero_gain_index();
 
-        let schedule = [
-            Strong,
-            WeakFlip,
-            PlateauCluster,
-            WeakSwap,
-            PlateauIndependent,
-        ];
+        let schedule = [Strong, WeakFlip, WeakSwap];
         for round in 0..60 {
             for &ptype in &schedule {
                 ops.perturb(ptype, 3, &mut state).unwrap();
@@ -572,34 +352,10 @@ mod tests {
         }
     }
 
-    /// On an instance where no zero gain can ever arise (all-distinct powers
-    /// of two as weights), the plateau operators must consume the full budget
-    /// via the strong fallback instead of looping forever or under-perturbing.
-    #[test]
-    fn plateau_falls_back_to_strong_when_no_zero_gain() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 4.0)]);
-        for seed in 0..5 {
-            let mut ops = MaxCutSearchOps::new((3, 15));
-            let mut state = SearchState::new_with_seed(&mc, seed);
-            ops.ensure_capacity(mc.graph.len());
-            let iter_before = state.iteration;
-            ops.plateau_cluster_perturbation(4, &mut state).unwrap();
-            assert_eq!(
-                state.iteration - iter_before,
-                4,
-                "all 4 moves must be applied via the strong fallback"
-            );
-
-            let iter_before = state.iteration;
-            ops.plateau_independent_perturbation(4, &mut state).unwrap();
-            assert_eq!(state.iteration - iter_before, 4);
-        }
-    }
-
     /// On a graph with no edged vertices — as produced by
     /// `SubProblemBasedCrossover` when the two parents disagree only on an
-    /// independent set — the perturbations must advance iterations without
-    /// panicking (`random_neighbor` samples an empty range).
+    /// independent set — the strong perturbation must advance iterations
+    /// without panicking (`random_neighbor` samples an empty range).
     #[test]
     fn perturbations_progress_on_edgeless_graph() {
         let mc = MaxCut::new(crate::common::Graph::new());
@@ -609,7 +365,5 @@ mod tests {
         let before = state.iteration;
         ops.strong_perturbation(5, &mut state).unwrap();
         assert_eq!(state.iteration - before, 5);
-        ops.plateau_cluster_perturbation(5, &mut state).unwrap();
-        ops.plateau_independent_perturbation(5, &mut state).unwrap();
     }
 }

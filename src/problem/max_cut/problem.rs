@@ -204,9 +204,9 @@ impl MaxCutSolution {
     /// `gain` vector.
     ///
     /// The index tracks vertices whose flip gain is exactly `0.0` — "plateau"
-    /// moves that leave the objective unchanged. It powers the plateau
-    /// perturbations of [`BreakoutLocalSearchForMaxCut`](crate::heuristic::BreakoutLocalSearchForMaxCut)
-    /// and [`RlBreakoutLocalSearchForMaxCut`](crate::heuristic::RlBreakoutLocalSearchForMaxCut);
+    /// moves that leave the objective unchanged. It powers the non-local
+    /// cluster moves of
+    /// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut);
     /// standard heuristics do **not** need it.
     ///
     /// The `gain[v] == 0.0` test is exact on instances with integer edge

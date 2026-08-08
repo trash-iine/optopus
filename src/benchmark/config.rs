@@ -185,9 +185,10 @@ pub enum HeuristicConfig {
         #[serde(skip_serializing_if = "Option::is_none")]
         exploration: Option<f64>,
         /// Pre-trained bandit weights, row-major
-        /// `(5 × strength_bins.len()) × NUM_CONTEXT_FEATURES` elements.
-        /// Weights saved before the plateau operators were added (3 types ×
-        /// 7 features) are rejected at parse time with a size error.
+        /// `(3 × strength_bins.len()) × NUM_CONTEXT_FEATURES` elements.
+        /// Weights saved while the plateau operators were part of the action
+        /// space (5 types × 8 features) are rejected at parse time with a size
+        /// error.
         #[serde(skip_serializing_if = "Option::is_none")]
         policy_weights: Option<Vec<f64>>,
         #[serde(default)]
