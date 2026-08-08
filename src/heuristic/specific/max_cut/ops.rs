@@ -194,9 +194,9 @@ impl MaxCutSearchOps {
                 }
                 keep_best(&mut best, neighbor);
             }
-            // No eligible move: every flip is tabu and none aspires. The paper
-            // leaves this open; see "Cases the paper does not specify" in
-            // docs/heuristics/breakout_local_search.md.
+            // No eligible move: every flip is tabu and none aspires. BLS as
+            // published leaves this open; see "Cases the original scheme leaves
+            // open" in docs/heuristics/breakout_local_search.md.
             if let Some(best_move) = best {
                 best_move.add_to_tabu_map(
                     &mut self.tabu,
