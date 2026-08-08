@@ -1,4 +1,4 @@
-use super::ops::{MaxCutSearchOps, PerturbationType};
+use super::ops::{self, Ledger, PerturbationType};
 use crate::error::OptError;
 use crate::heuristic::reinforcement_learning::bandit::SoftmaxBandit;
 use crate::heuristic::{Heuristic, StopCondition};
@@ -64,7 +64,8 @@ struct PendingDecision {
 /// - `exploration` — ε-uniform exploration floor in `[0, 1]`
 pub struct RlBreakoutLocalSearch {
     stop_condition: StopCondition,
-    ops: MaxCutSearchOps,
+    /// The prohibitions the descent and the perturbations share.
+    tabu: Ledger,
     bandit: SoftmaxBandit,
     t: u64,
     l0: u64,
@@ -111,7 +112,7 @@ impl RlBreakoutLocalSearch {
         );
         Self {
             stop_condition,
-            ops: MaxCutSearchOps::new(tabu_tenure),
+            tabu: Ledger::new(tabu_tenure),
             bandit,
             t,
             l0,
@@ -197,16 +198,16 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
         self.pending = None;
         self.reward_scale = 0.0;
         self.reward_ema = 0.0;
-        self.ops.clear();
+        self.tabu.clear();
         // Bandit weights and baseline are intentionally preserved across episodes.
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        self.ops.ensure_capacity(state.instance.graph.len());
+        self.tabu.ensure_capacity(state.instance.graph.len());
 
         // 1. Greedy descent to a local optimum (same operator as BLS).
         let best_before_descent = state.best_solution.objective;
-        self.ops.descent(state)?;
+        ops::descent(&mut self.tabu, state)?;
         let descent_improved_best = state.best_solution.objective > best_before_descent;
 
         // 2. Update the stagnation counter (BLS omega rule: consecutive
@@ -258,7 +259,7 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
             l,
             "RL-BLS: perturbation selected"
         );
-        self.ops.perturb(ptype, l, state)?;
+        ops::apply(&mut self.tabu, ptype, l, state)?;
 
         // Update best once after the perturbation phase completes.
         state.update_best();

@@ -1,4 +1,4 @@
-use super::ops::{MaxCutSearchOps, PerturbationType};
+use super::ops::{self, Ledger, PerturbationType};
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::MaxCut;
@@ -15,9 +15,9 @@ use rand::rngs::SmallRng;
 /// strongest random perturbation is forced and `omega` is reset.
 ///
 /// This selection rule is specific to [`BreakoutLocalSearch`]; the operators it
-/// chooses between live in [`MaxCutSearchOps`], and the other heuristics in
-/// this directory drive those operators from their own schedules — including
-/// the plateau operators, which this schedule never selects.
+/// chooses between are the free functions in [`ops`](super::ops), and the other
+/// heuristics in this directory drive those same operators from their own
+/// schedules.
 fn choose_perturbation(
     omega: &mut u64,
     t: u64,
@@ -166,7 +166,9 @@ impl BlsSchedule {
 /// - `p0` — minimum perturbation probability
 /// - `q` — fraction of weak perturbations that use the flip strategy (vs. swap)
 pub struct BreakoutLocalSearch {
-    ops: MaxCutSearchOps,
+    /// The prohibitions the descent and the perturbations share — passing one
+    /// ledger to both is what stops a weak perturbation undoing the descent.
+    tabu: Ledger,
     stop_condition: StopCondition,
     schedule: BlsSchedule,
 }
@@ -181,7 +183,7 @@ impl BreakoutLocalSearch {
         q: f64,
     ) -> Self {
         Self {
-            ops: MaxCutSearchOps::new(paper_effective_tenure(tabu_tenure)),
+            tabu: Ledger::new(paper_effective_tenure(tabu_tenure)),
             stop_condition,
             schedule: BlsSchedule::new(t, l0, p0, q),
         }
@@ -210,11 +212,11 @@ fn paper_effective_tenure((min, max): (u64, u64)) -> (u64, u64) {
 impl Heuristic<MaxCut> for BreakoutLocalSearch {
     fn clear(&mut self) {
         self.schedule.reset();
-        self.ops.clear();
+        self.tabu.clear();
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        self.ops.ensure_capacity(state.instance.graph.len());
+        self.tabu.ensure_capacity(state.instance.graph.len());
 
         let (omega, l) = self.schedule.state();
         tracing::debug!(
@@ -224,7 +226,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
             "BLS: local search phase start"
         );
 
-        self.ops.descent(state)?;
+        ops::descent(&mut self.tabu, state)?;
 
         let (perturbation_type, l) = self.schedule.next(state);
         let (omega, _) = self.schedule.state();
@@ -236,7 +238,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
             "BLS: perturbation selected"
         );
 
-        self.ops.perturb(perturbation_type, l, state)?;
+        ops::apply(&mut self.tabu, perturbation_type, l, state)?;
 
         // Update best once after the perturbation phase completes.
         state.update_best();

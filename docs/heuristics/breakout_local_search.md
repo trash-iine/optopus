@@ -4,9 +4,10 @@ Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Alternates a
 greedy local search phase with an adaptive perturbation phase, using the
 optional `positive_gain` index on `MaxCutSolution` to enumerate only improving
 flips in O(|improving|). The descent, the tabu walk and the perturbations it
-drives live in `MaxCutSearchOps`, shared with the other MaxCut heuristics; what
-is BLS's own is the schedule below. Of the operators the engine offers, this
-schedule selects three — the strong perturbation and the two weak ones.
+drives are free functions in `heuristic::specific::max_cut::ops`, shared with
+the other MaxCut heuristics; what is BLS's own is the schedule below. All of
+them are handed the same `common::TabuLedger`, which is what stops a
+perturbation undoing the descent that just ran.
 
 ## Algorithm
 

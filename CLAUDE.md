@@ -60,7 +60,9 @@ src/
 │   │                         lift_binary_solution / lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips
 │   ├── tabu.rs               VarTabuMap (hashed) + VecTabuMap (dense 0..n, what every
-│   │                         binary problem uses), is_var_enabled, add_var_to_tabu
+│   │                         binary problem uses), is_var_enabled, add_var_to_tabu,
+│   │                         TabuLedger<M> (map + tenure; allows/record — what
+│   │                         TabuSearch holds and what MaxCut's operators share)
 │   ├── epoch_marks.rs        EpochMarks (index set with an O(1) clear, for
 │   │                         neighborhood walks that need a fresh "seen" set per call)
 │   ├── gain_index.rs         GainIndex (improving-move index)
@@ -78,9 +80,11 @@ src/
 │   ├── reinforcement_learning/  RlSearch<N> (REINFORCE policy over move features)
 │   └── specific/            one directory per problem once it has several
 │       ├── max_cut/
-│       │   ├── ops.rs           MaxCutSearchOps: the shared engine (gain-indexed
-│       │   │                    descent + tabu walk + 3 perturbations) over one
-│       │   │                    common::VecTabuMap
+│       │   ├── ops/            the shared operators, one module per role, each a
+│       │   │                    free fn over a common::TabuLedger<VecTabuMap>:
+│       │   │                    mod.rs (Ledger alias + the keep_best tie rule),
+│       │   │                    descent.rs, tabu_walk.rs, perturbation.rs
+│       │   │                    (PerturbationType, random_flips, best_swap)
 │       │   ├── bls.rs           BreakoutLocalSearchForMaxCut (+ its BlsSchedule)
 │       │   ├── rl_bls.rs        RlBreakoutLocalSearchForMaxCut
 │       │   └── population_annealing.rs  PopulationAnnealingForMaxCut
@@ -188,12 +192,14 @@ StopCondition::iterations(1_000_000)
 - `TspOrderCrossover` (OX) for TSP; `JobShopPpxCrossover` for JobShop.
 
 ### Problem-specific
-MaxCut has its own directory (`specific/max_cut/`) because its heuristics share an engine rather than merely a problem type: `MaxCutSearchOps` (`ops.rs`, private to that directory) owns one tabu map and the operators that read and write it — the gain-indexed descent and the three perturbations. Both MaxCut search heuristics below drive it; neither owns it, which is why it is not named after either. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
+MaxCut has its own directory (`specific/max_cut/`) because its heuristics share *operators* rather than merely a problem type. They live in `ops/` (private to that directory), one module per role, and each is a **free function taking a `&mut Ledger`** (= `common::TabuLedger<VecTabuMap>`): `descent` (gain-indexed, monotone), `tabu_walk`, and the two kicks in `perturbation.rs` (`random_flips`, `best_swap`, plus the `PerturbationType` vocabulary BLS and RL-BLS select with). `ops/mod.rs` holds only the `keep_best` tie rule they all select with.
 
-What the engine does **not** own is what "tabu" means. Every operator marks and tests moves through `MaxCutFlipNeighbor`'s and `MaxCutSwapNeighbor`'s own `EnabledTabu` impls, so it forbids exactly what a generic `TabuSearch` over the same neighborhood would; the engine only decides *which* moves to try. Its whole state is one `common::VecTabuMap` plus the tenure range handed to those impls.
+There is deliberately no engine object. What the operators share is exactly one ledger, and it is a parameter — so whoever passes the same ledger to two of them is the one deciding they should see each other's prohibitions (in BLS the entries the descent writes are the ones the weak perturbations must not undo; a caller wanting them isolated passes two ledgers). Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
 
-- `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / weak swap), with probabilities decaying via the non-improvement counter `omega`. It selects exactly the three operators Benlic & Hao define, which are also the only three the engine offers. Reproduces Benlic & Hao (2013); `docs/heuristics/breakout_local_search.md` records where it does not and why.
-- `RlBreakoutLocalSearchForMaxCut` (`specific/max_cut/rl_bls.rs`): the same `MaxCutSearchOps` machinery, but a contextual softmax bandit picks perturbation type (3 ops) × strength; weights persist across `Restart`/`Iterated` episodes. Two objective-preserving *plateau* operators (flip connected clusters / an independent set of zero-gain vertices) used to be a fourth and fifth action, plus a `plateau_width` context feature. **They were removed knowing they paid**: the A/B at 30s x 5 runs costs this heuristic **-96.2 and -62.6 on G55 (two seeds), -110.4 on G60, -92.2 on G63**, against std 9-28, and is neutral on G70 (+5.8), G11 and G1 — with them it beat BLS on G55 (10200.4 against 10168.0), without them it does not. The removal was a deliberate trade of that objective for a smaller action space, one operator vocabulary and no second scratch structure; take it back if RL-BLS becomes the heuristic that has to win. The mechanism itself survives as `PopulationAnnealingForMaxCut`'s non-local cluster move, which owns its own implementation and keeps the opt-in `zero_gain` index alive.
+What no operator decides is what "tabu" *means*. Each marks and tests moves through `MaxCutFlipNeighbor`'s and `MaxCutSwapNeighbor`'s own `EnabledTabu` impls (via the ledger's `allows` / `record`), so they forbid exactly what a generic `TabuSearch` over the same neighborhood would; they only decide *which* moves to try. `TabuSearch` itself holds the same `TabuLedger`.
+
+- `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / weak swap), with probabilities decaying via the non-improvement counter `omega`. It selects exactly the three operators Benlic & Hao define, which are also the only three `ops` offers. Reproduces Benlic & Hao (2013); `docs/heuristics/breakout_local_search.md` records where it does not and why.
+- `RlBreakoutLocalSearchForMaxCut` (`specific/max_cut/rl_bls.rs`): the same `ops` operators, but a contextual softmax bandit picks perturbation type (3 ops) × strength; weights persist across `Restart`/`Iterated` episodes. Two objective-preserving *plateau* operators (flip connected clusters / an independent set of zero-gain vertices) used to be a fourth and fifth action, plus a `plateau_width` context feature. **They were removed knowing they paid**: the A/B at 30s x 5 runs costs this heuristic **-96.2 and -62.6 on G55 (two seeds), -110.4 on G60, -92.2 on G63**, against std 9-28, and is neutral on G70 (+5.8), G11 and G1 — with them it beat BLS on G55 (10200.4 against 10168.0), without them it does not. The removal was a deliberate trade of that objective for a smaller action space, one operator vocabulary and no second scratch structure; take it back if RL-BLS becomes the heuristic that has to win. The mechanism itself survives as `PopulationAnnealingForMaxCut`'s non-local cluster move, which owns its own implementation and keeps the opt-in `zero_gain` index alive.
 - `LinKernighanHelsgaunForTsp` (`specific/lkh_for_tsp.rs`): LK-style variable-depth moves with candidate lists; stops at a local optimum.
 
 ## Problem Types (`src/problem/`)
