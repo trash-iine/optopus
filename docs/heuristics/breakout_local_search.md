@@ -106,9 +106,9 @@ BreakoutLocalSearchForMaxCut::new(
 
 | Parameter | Meaning |
 |---|---|
-| `tabu_tenure` | tabu tenure range `(min, max)` for the LS phase (doubled internally, see above) |
+| `tabu_tenure` | tabu tenure range `(min, max)` for the LS phase |
 | `t` | period of the `omega` counter before it resets |
-| `l0` | initial perturbation length; `0.01 · n` reproduces the published results |
+| `l0` | initial perturbation length |
 | `p0` | minimum perturbation probability |
 | `q` | fraction of weak perturbations using flip (vs. swap) |
 
