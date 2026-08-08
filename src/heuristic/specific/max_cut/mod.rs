@@ -9,7 +9,10 @@ mod ops;
 mod population_annealing;
 mod rl_bls;
 
-pub use bls::BreakoutLocalSearch as BreakoutLocalSearchForMaxCut;
-pub use population_annealing::PopulationAnnealing as PopulationAnnealingForMaxCut;
-pub use rl_bls::RlBreakoutLocalSearch as RlBreakoutLocalSearchForMaxCut;
+// Inside this directory the problem is implied, so the names stay bare; the
+// `ForMaxCut` suffix that disambiguates them crate-wide is attached one level
+// up, in `specific/mod.rs`, where heuristics for different problems meet.
+pub use bls::BreakoutLocalSearch;
+pub use population_annealing::PopulationAnnealing;
+pub use rl_bls::RlBreakoutLocalSearch;
 pub use rl_bls::{NUM_CONTEXT_FEATURES, NUM_PERTURBATION_TYPES};
