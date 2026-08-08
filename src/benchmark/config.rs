@@ -137,11 +137,6 @@ pub enum HeuristicConfig {
         l0: u64,
         p0: f64,
         q: f64,
-        /// Probability that a weak perturbation flips a connected cluster of
-        /// zero-gain vertices instead (plateau traversal). Default: 0.0
-        /// (original Benlic & Hao behavior).
-        #[serde(skip_serializing_if = "Option::is_none")]
-        plateau_prob: Option<f64>,
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },

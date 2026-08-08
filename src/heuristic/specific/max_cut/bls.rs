@@ -14,20 +14,15 @@ use rand::rngs::SmallRng;
 /// (strong) perturbation becomes more likely. Once `omega` exceeds `t` the
 /// strongest random perturbation is forced and `omega` is reset.
 ///
-/// `plateau_prob` is an extra draw *inside* the weak branch that switches to
-/// an objective-preserving plateau traversal. The draw only happens when
-/// `plateau_prob > 0`, so runs with `plateau_prob == 0.0` consume exactly the
-/// RNG stream of the original scheme.
-///
 /// This selection rule is specific to [`BreakoutLocalSearch`]; the operators it
 /// chooses between live in [`MaxCutSearchOps`], and the other heuristics in
-/// this directory drive those operators from their own schedules.
+/// this directory drive those operators from their own schedules — including
+/// the plateau operators, which this schedule never selects.
 fn choose_perturbation(
     omega: &mut u64,
     t: u64,
     p0: f64,
     q: f64,
-    plateau_prob: f64,
     rng: &mut SmallRng,
 ) -> PerturbationType {
     if *omega > t {
@@ -39,10 +34,6 @@ fn choose_perturbation(
 
     let prob: f64 = rng.random_range(0.0..=1.0);
     if prob <= p {
-        // Weak (directed) branch: optionally traverse the plateau instead.
-        if plateau_prob > 0.0 && rng.random_range(0.0..=1.0) <= plateau_prob {
-            return PerturbationType::PlateauCluster;
-        }
         if prob <= p * q {
             PerturbationType::WeakFlip
         } else {
@@ -60,7 +51,6 @@ struct BlsSchedule {
     t: u64,
     p0: f64,
     q: f64,
-    plateau_prob: f64,
     l0: u64,
     omega: u64,
     l: u64,
@@ -79,12 +69,11 @@ struct BlsSchedule {
 }
 
 impl BlsSchedule {
-    fn new(t: u64, l0: u64, p0: f64, q: f64, plateau_prob: f64) -> Self {
+    fn new(t: u64, l0: u64, p0: f64, q: f64) -> Self {
         Self {
             t,
             p0,
             q,
-            plateau_prob,
             l0,
             omega: 0,
             l: l0,
@@ -131,14 +120,8 @@ impl BlsSchedule {
             }
         }
 
-        let perturbation = choose_perturbation(
-            &mut self.omega,
-            self.t,
-            self.p0,
-            self.q,
-            self.plateau_prob,
-            &mut state.rng,
-        );
+        let perturbation =
+            choose_perturbation(&mut self.omega, self.t, self.p0, self.q, &mut state.rng);
         (perturbation, self.l)
     }
 
@@ -182,10 +165,6 @@ impl BlsSchedule {
 /// - `l0` — initial perturbation length
 /// - `p0` — minimum perturbation probability
 /// - `q` — fraction of weak perturbations that use the flip strategy (vs. swap)
-/// - `plateau_prob` — probability that a weak perturbation flips a connected
-///   cluster of zero-gain vertices instead (objective-preserving plateau
-///   traversal; useful on large sparse instances with wide plateaus). `0.0`
-///   reproduces the original Benlic & Hao scheme exactly.
 pub struct BreakoutLocalSearch {
     ops: MaxCutSearchOps,
     stop_condition: StopCondition,
@@ -193,9 +172,6 @@ pub struct BreakoutLocalSearch {
 }
 
 impl BreakoutLocalSearch {
-    /// # Panics
-    ///
-    /// Panics if `plateau_prob` is not within `[0.0, 1.0]`.
     pub fn new(
         stop_condition: StopCondition,
         tabu_tenure: (u64, u64),
@@ -203,16 +179,11 @@ impl BreakoutLocalSearch {
         l0: u64,
         p0: f64,
         q: f64,
-        plateau_prob: f64,
     ) -> Self {
-        assert!(
-            (0.0..=1.0).contains(&plateau_prob),
-            "plateau_prob must be within [0.0, 1.0], got {plateau_prob}"
-        );
         Self {
             ops: MaxCutSearchOps::new(paper_effective_tenure(tabu_tenure)),
             stop_condition,
-            schedule: BlsSchedule::new(t, l0, p0, q, plateau_prob),
+            schedule: BlsSchedule::new(t, l0, p0, q),
         }
     }
 }
@@ -316,7 +287,6 @@ mod tests {
                 5,
                 0.8,
                 0.5,
-                0.0,
             );
             bls.run(&mut state).expect("BLS must not error");
             assert!(
@@ -325,41 +295,6 @@ mod tests {
                 state.best_solution.objective
             );
         }
-    }
-
-    /// BLS with plateau perturbations enabled must also run cleanly and find a
-    /// non-trivial cut (exercises PlateauCluster through the full loop).
-    #[test]
-    fn bls_with_plateau_runs_without_error_and_improves() {
-        let mc = small_instance();
-        for seed in 0..10 {
-            let mut state = SearchState::new_with_seed(&mc, seed);
-            let mut bls = BreakoutLocalSearch::new(
-                StopCondition::iterations(5_000),
-                (3, 15),
-                1_000,
-                5,
-                0.8,
-                0.5,
-                0.5,
-            );
-            bls.run(&mut state).expect("BLS+plateau must not error");
-            assert!(state.best_solution.objective > 0.0);
-        }
-    }
-
-    #[test]
-    #[should_panic(expected = "plateau_prob must be within [0.0, 1.0]")]
-    fn bls_rejects_invalid_plateau_prob() {
-        let _ = BreakoutLocalSearch::new(
-            StopCondition::iterations(1),
-            (3, 15),
-            1_000,
-            5,
-            0.8,
-            0.5,
-            1.5,
-        );
     }
 
     /// On a graph with no edged vertices — as produced by
@@ -377,17 +312,15 @@ mod tests {
             5,
             0.8,
             0.5,
-            0.5,
         );
         bls.run(&mut state)
             .expect("BLS must terminate on an edgeless graph");
     }
 
-    /// Seeded regression guard for the selection-rule refactor: with
-    /// `plateau_prob = 0.0` no extra RNG draw happens, so a seeded run must be
-    /// deterministic and identical across repetitions.
+    /// Every draw in the schedule comes from `state.rng`, so a seeded run must
+    /// be identical across repetitions.
     #[test]
-    fn bls_plateau_prob_zero_is_deterministic() {
+    fn bls_seeded_run_is_deterministic() {
         let mc = small_instance();
         let run = || {
             let mut state = SearchState::new_with_seed(&mc, 42);
@@ -398,7 +331,6 @@ mod tests {
                 5,
                 0.8,
                 0.5,
-                0.0,
             );
             bls.run(&mut state).unwrap();
             (
@@ -423,7 +355,7 @@ mod tests {
     fn l_grows_on_a_repeated_solution_not_a_repeated_objective() {
         let mc = MaxCut::from_edges([(0, 1, 1.0), (2, 3, 1.0)]);
         let l0 = 5;
-        let mut schedule = BlsSchedule::new(1_000, l0, 0.8, 0.5, 0.0);
+        let mut schedule = BlsSchedule::new(1_000, l0, 0.8, 0.5);
         let mut state = SearchState::new_with_seed(&mc, 42);
 
         let set = |state: &mut SearchState<'_, MaxCut>, x: Vec<bool>| {

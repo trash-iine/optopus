@@ -3,9 +3,10 @@
 Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Alternates a
 greedy local search phase with an adaptive perturbation phase, using the
 optional `positive_gain` index on `MaxCutSolution` to enumerate only improving
-flips in O(|improving|). The descent, the tabu walk and the five perturbations
-it drives live in `MaxCutSearchOps`, shared with the other MaxCut heuristics;
-what is BLS's own is the schedule below.
+flips in O(|improving|). The descent, the tabu walk and the perturbations it
+drives live in `MaxCutSearchOps`, shared with the other MaxCut heuristics; what
+is BLS's own is the schedule below. Of the operators the engine offers, this
+schedule selects three — the strong perturbation and the two weak ones.
 
 ## Algorithm
 
@@ -54,11 +55,6 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
   weight is ±1, so distinct local optima collide on the same cut value
   constantly; comparing objectives fired on 82.7% of rounds on G11 (measurement
   in `BlsSchedule::prev_local_optimum`).
-- **`plateau_prob` is an addition.** An extra draw *inside* the weak branch
-  switches to an objective-preserving plateau traversal — flipping a connected
-  cluster of zero-gain vertices, which is what helps on large sparse instances.
-  The draw only happens when `plateau_prob > 0`, so `0.0` consumes exactly the
-  RNG stream of the original scheme.
 - **No bucket sort.** The descent narrows its scan with the optional
   `positive_gain` index on `MaxCutSolution`, but still scans that set linearly
   for the maximum, and the tabu walk and both weak perturbations scan **all n**
@@ -105,7 +101,6 @@ BreakoutLocalSearchForMaxCut::new(
     l0: u64,
     p0: f64,
     q: f64,
-    plateau_prob: f64,
 ) -> Self
 ```
 
@@ -116,9 +111,6 @@ BreakoutLocalSearchForMaxCut::new(
 | `l0` | initial perturbation length; `0.01 · n` reproduces the published results |
 | `p0` | minimum perturbation probability |
 | `q` | fraction of weak perturbations using flip (vs. swap) |
-| `plateau_prob` | probability that a weak perturbation traverses the plateau instead; `0.0` = original scheme |
-
-**Panics** if `plateau_prob` is outside `[0.0, 1.0]`.
 
 ## Benchmark config
 
@@ -130,7 +122,6 @@ t = 1000
 l0 = 80                   # 0.01 * |V|
 p0 = 0.8
 q = 0.5
-plateau_prob = 0.5        # optional (default 0.0)
 
 [heuristics.stop_condition]
 max_duration_secs = 30

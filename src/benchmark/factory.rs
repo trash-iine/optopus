@@ -510,7 +510,6 @@ mod factory_tests {
             l0: 5,
             p0: 0.8,
             q: 0.5,
-            plateau_prob: None,
             stop_condition: StopConditionConfig::default(),
         };
         try_build(&ProblemKind::MaxCut, &bls).expect("BLS builds for MaxCut");
