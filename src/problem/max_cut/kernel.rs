@@ -2,18 +2,13 @@
 //!
 //! Kernelization shrinks an instance by rules that are *provably* optimum
 //! preserving: whatever is removed can be re-derived from an optimal solution
-//! of what remains. This is the opposite trade-off from the heuristic
-//! contraction in
-//! [`CorrelationContractionSearchForMaxCut`](crate::heuristic::CorrelationContractionSearchForMaxCut),
-//! which shrinks the instance by *guessing* structure and therefore restricts
-//! the search space; a kernel restricts nothing.
+//! of what remains. This is the opposite trade-off from a heuristic
+//! contraction, which shrinks the instance by *guessing* structure and
+//! therefore restricts the search space; a kernel restricts nothing.
 //!
-//! The rules follow Ferizovic, Hespe, Lamm, Mnich, Schulz and Strash,
-//! *Engineering Kernelization for Maximum Cut* (ALENEX 2020,
-//! [arXiv:1905.10902](https://arxiv.org/abs/1905.10902)). They are stated here
-//! in raw cut-value space and each one is pinned down by an exhaustive
-//! small-graph test rather than by transcription, so the offsets can be
-//! trusted independently of how the paper accounts for them.
+//! The rules are stated here in raw cut-value space, and each one is pinned
+//! down by an exhaustive small-graph test rather than by transcription, so the
+//! offsets can be trusted independently of how the paper accounts for them.
 //!
 //! # What it does and does not do
 //!
@@ -23,6 +18,14 @@
 //! at all. On dense random graphs the rules never fire — the paper reports the
 //! same. [`MaxCutKernel::is_trivial`] makes that case free to detect, so a
 //! caller can fall back without paying for anything.
+//!
+//! # References
+//!
+//! - Ferizovic, D., Hespe, D., Lamm, S., Mnich, M., Schulz, C. and Strash, D.
+//!   "Engineering Kernelization for Maximum Cut." *ALENEX 2020*.
+//!   [arXiv:1905.10902](https://arxiv.org/abs/1905.10902)
+//!
+//! # Example
 //!
 //! ```
 //! use optopus::prelude::*;

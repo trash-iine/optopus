@@ -104,9 +104,8 @@ impl Heuristic<MaxCut> for KernelizedSearch {
         let mut sub_state = SearchState::with_solution_and_seed(kernel.kernel(), start, seed);
         self.inner.run(&mut sub_state)?;
         // The kernel is a separate instance, so `update_state` cannot be used;
-        // the counters are merged explicitly instead (same as the contracted
-        // solve in CorrelationContractionSearch). Only the solution crosses by
-        // hand, through the lifting below.
+        // the counters are merged explicitly instead. Only the solution crosses
+        // by hand, through the lifting below.
         state.merge_foreign_sub_run(&sub_state);
 
         // Apply the lifted assignment one flip at a time so the incremental
