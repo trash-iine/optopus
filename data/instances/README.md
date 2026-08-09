@@ -7,8 +7,9 @@ optimization problems (adjacency lists, processing times, CNF clauses, city
 coordinates). Paths below are relative to this directory unless noted.
 
 The OR-Library QUBO and JSSP sets are bundled directly in this repository. The
-SATLIB, TSPLIB, and GSET sets are **not bundled**; fetch them locally with the
-commands in [Obtaining instances not bundled](#obtaining-instances-not-bundled).
+SATLIB, TSPLIB, GSET, and CVRPLIB sets are **not bundled**; fetch them locally
+with the commands in
+[Obtaining instances not bundled](#obtaining-instances-not-bundled).
 
 ## QUBO — `qubo/`
 
@@ -74,6 +75,20 @@ an optimum below its clause count).
 | TSPLIB | `att48.tsp`, `berlin52.tsp`, `burma14.tsp`, `ch150.tsp`, `dsj1000.tsp`, `eil51.tsp`, `eil101.tsp` (7 files) | 14–1000 | [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/), G. Reinelt |
 | Ad-hoc | `sample.tsp`, `test_data.txt` | tiny | repo-local |
 
+## CVRP — `vrp/`
+
+**X set not bundled — fetch locally (see [Obtaining instances not bundled](#obtaining-instances-not-bundled)).**
+
+| Set | Files | Customers | Source |
+|---|---|---|---|
+| CVRPLIB "X" | `X-n101-k25` … `X-n1001-k43` (21 files, `.vrp` + `.sol`) | 100–1000 | [CVRPLIB](http://vrp.atd-lab.inf.puc-rio.br/), Uchoa et al. 2017 |
+| Ad-hoc | `demo16.vrp` | 15 | repo-local |
+
+The `.sol` files carry the best-known solutions and are used for reporting gaps
+only; the solvers never read them. X-set files have no `No of trucks: K`
+comment, so the fleet size falls back to `ceil(total demand / capacity)`, which
+matches the `k` in each file name.
+
 ## MaxCut & VertexCover — `max_cut/`
 
 **Not bundled — fetch locally (see [Obtaining instances not bundled](#obtaining-instances-not-bundled)).**
@@ -100,14 +115,14 @@ VertexCover reuses MaxCut graph files via `Graph::load_from_file`
   under the **MIT License** (© 2010 J E Beasley). Full license text is included
   in `qubo/NOTICE` and `jssp/NOTICE`.
   Source: <https://people.brunel.ac.uk/~mastjjb/jeb/orlib/legal.html>
-- The SATLIB, TSPLIB, and GSET instances are **not bundled** in this repository.
-  Obtain them from their original sites (see below) and follow each site's own
-  terms of use.
+- The SATLIB, TSPLIB, GSET, and CVRPLIB instances are **not bundled** in this
+  repository. Obtain them from their original sites (see below) and follow each
+  site's own terms of use.
 - The tiny `sample.*` / `test_data.*` files in each problem directory are
   original to this repository.
 - When publishing results, please also cite the originating libraries:
   Beasley 1990 (OR-Library), Hoos & Stützle 2000 (SATLIB), Reinelt 1991
-  (TSPLIB), Helmberg & Rendl 2000 (GSET).
+  (TSPLIB), Helmberg & Rendl 2000 (GSET), Uchoa et al. 2017 (CVRPLIB X).
 
 ## Obtaining instances not bundled
 
@@ -120,6 +135,7 @@ bash scripts/fetch_sat.sh          # SATLIB uniform random 3-SAT (uf*)
 bash scripts/fetch_satcomp2026.sh  # SAT Competition 2026 large instances (via GBD)
 bash scripts/fetch_tsp.sh          # TSPLIB symmetric instances
 bash scripts/fetch_maxcut.sh       # GSET graphs
+bash scripts/fetch_cvrp.sh         # CVRPLIB "X" instances (+ best-known .sol)
 ```
 
 The downloaded files stay out of version control via each directory's

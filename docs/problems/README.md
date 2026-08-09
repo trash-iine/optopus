@@ -11,6 +11,7 @@ to plug into every relevant heuristic.
 | [TSP 2D](tsp.md) | Minimize | `TspSolution` | TwoOpt / Relocate | `TspOrderCrossover` | `TspWithCoordinates::load_file` (TSPLIB) |
 | [Vertex Cover](vertex_cover.md) | Minimize | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `Graph::load_from_file` |
 | [Job Shop Scheduling](job_shop_scheduling.md) | Minimize | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
+| [CVRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB) |
 | [Formula](formula.md) | Configurable | `FormulaSolution` | Flip / Swap | `FormulaUniformCrossover` | (none — built from `Expr` AST) |
 
 Type names are exported from `optopus::prelude`. See each page for the
