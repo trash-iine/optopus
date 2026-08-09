@@ -11,8 +11,11 @@
 # older Augerat/Christofides sets (A/B/E/F/M/P) have no stable plain-text mirror
 # and must be fetched by hand from CVRPLIB if you want them.
 #
-# Note: these files have no "No of trucks: K" comment, so the fleet size falls
-# back to ceil(total demand / capacity) — which equals the k in each file name.
+# Note: these files carry no "No of trucks: K" comment, so the fleet size is
+# computed rather than read — first-fit-decreasing over the demands plus a 10%
+# margin (`default_fleet_size` in src/problem/vrp/problem.rs). It does not match
+# the k in the file name, which is the best-known solution's vehicle count:
+# first-fit-decreasing alone already needs 26 bins for X-n101-k25.
 set -u
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
