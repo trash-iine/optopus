@@ -314,6 +314,29 @@ max_iteration = 300
     );
 }
 
+/// Kernelization runs the nested heuristic on a different instance and lifts
+/// the result back, so seed stability has to survive that round trip.
+#[test]
+fn kernelize_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_kernelize",
+        r#"
+[[heuristics]]
+kind = "Kernelize"
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [2, 5]
+[heuristics.steps.stop_condition]
+max_iteration = 200
+
+[heuristics.stop_condition]
+max_iteration = 600
+"#,
+    );
+}
+
 /// Population Annealing consumes the RNG for population init, Metropolis
 /// sweeps, cluster-move independent-set selection, and resampling; all must be
 /// seed-stable.

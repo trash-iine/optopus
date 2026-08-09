@@ -210,8 +210,14 @@ impl<M: Default> TabuLedger<M> {
 
     /// Drops every prohibition by replacing the map with a fresh one.
     ///
-    /// [`TabuLedger<VecTabuMap>`] overrides this with a version that keeps the
-    /// allocation; see [`clear`](TabuLedger::clear).
+    /// This gives up the map's allocation, which is all a generic heuristic can
+    /// do: it knows only `M: Default`. It is called once per
+    /// [`Heuristic::clear`](crate::heuristic::Heuristic::clear), i.e. once per
+    /// run, so the re-grow is a per-run cost and not a per-move one. A ledger
+    /// over [`VecTabuMap`] additionally has
+    /// [`clear`](TabuLedger::<VecTabuMap>::clear), which empties the map in
+    /// place — it is a *different* method, not an override, and only code that
+    /// names the concrete map type can reach it.
     pub fn reset(&mut self) {
         self.map = M::default();
     }
@@ -246,6 +252,9 @@ impl TabuLedger<VecTabuMap> {
 
     /// Frees every variable, keeping the allocation — the reset a new episode
     /// of a long-running heuristic wants, since the instance has not changed.
+    ///
+    /// The allocation-dropping counterpart is [`reset`](TabuLedger::reset),
+    /// which is what a heuristic generic over the map type has to use.
     pub fn clear(&mut self) {
         self.map.clear();
     }

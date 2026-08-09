@@ -491,6 +491,27 @@ where
         })
     }
 
+    /// Merges the accounting of a sub-run that ran on a **different** instance
+    /// — an exact kernel, a contracted graph — into this state.
+    ///
+    /// Such a sub-run cannot go through [`update_state`](Self::update_state),
+    /// which requires the same instance and moves the solution across. Its
+    /// solution has to be carried over by the caller (through a lifting or a
+    /// projection); its *work*, on the other hand, is comparable and must not
+    /// be dropped, or a benchmark reports near-zero acceptance counters exactly
+    /// on the instances where the wrapper did something.
+    ///
+    /// The sub-state is assumed to start from zeroed counters, i.e. to have
+    /// been built with [`with_solution`](Self::with_solution) or
+    /// [`with_solution_and_seed`](Self::with_solution_and_seed) rather than
+    /// cloned.
+    pub fn merge_foreign_sub_run<Other: ProblemTrait>(&mut self, sub: &SearchState<'_, Other>) {
+        self.iteration += sub.iteration;
+        self.n_accepted += sub.n_accepted;
+        self.n_rejected += sub.n_rejected;
+        self.n_best_updates += sub.n_best_updates;
+    }
+
     /// Runs `heuristic` on a sub-state cloned with `clone_type`, then merges the
     /// result back — the standard `clone_for_new_run` → `run` → `update_state`
     /// triad used by meta-heuristics.
