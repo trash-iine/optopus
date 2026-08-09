@@ -1,6 +1,7 @@
-use super::super::simulated_annealing::boltzmann_accept;
-use super::super::{Heuristic, StopCondition};
+use crate::common::EpochMarks;
 use crate::error::OptError;
+use crate::heuristic::simulated_annealing::boltzmann_accept;
+use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSolution};
 use crate::search_state::SearchState;
@@ -65,9 +66,8 @@ pub struct PopulationAnnealing {
     beta: f64,
     step: u64,
     // ---- scratch (allocation-free NCM / resampling) ----
-    /// Epoch-stamped vertex marker for the cluster move.
-    mark_vec: Vec<u32>,
-    mark_epoch: u32,
+    /// "Already selected or adjacent to a selection" set for the cluster move.
+    marks: EpochMarks,
     /// Snapshot of the current zero-gain members during an NCM.
     members: Vec<usize>,
     /// The independent set selected by the current NCM.
@@ -107,8 +107,7 @@ impl PopulationAnnealing {
             population: Vec::new(),
             beta: initial_beta,
             step: 0,
-            mark_vec: Vec::new(),
-            mark_epoch: 0,
+            marks: EpochMarks::new(),
             members: Vec::new(),
             selected: Vec::new(),
             weights: Vec::new(),
@@ -124,19 +123,6 @@ impl PopulationAnnealing {
         for _ in 0..self.population_size {
             self.population
                 .push(state.instance.new_solution(&mut state.rng));
-        }
-    }
-
-    /// Starts a fresh mark generation for the cluster move, growing `mark_vec`
-    /// to `n` if needed. O(1) except on epoch wrap-around.
-    fn next_mark_epoch(&mut self, n: usize) {
-        if self.mark_vec.len() < n {
-            self.mark_vec.resize(n, 0);
-        }
-        self.mark_epoch = self.mark_epoch.wrapping_add(1);
-        if self.mark_epoch == 0 {
-            self.mark_vec.fill(0);
-            self.mark_epoch = 1;
         }
     }
 
@@ -172,7 +158,8 @@ impl PopulationAnnealing {
         if replica.zero_gain_count() == 0 {
             return;
         }
-        self.next_mark_epoch(prob.graph.len());
+        self.marks.ensure_capacity(prob.graph.len());
+        self.marks.next_epoch();
 
         // Snapshot the zero-gain members so we can mutate the replica while
         // building the independent set.
@@ -185,12 +172,12 @@ impl PopulationAnnealing {
         for off in 0..len {
             let v = self.members[(start + off) % len];
             // Ineligible if already selected or adjacent to a selected vertex.
-            if self.mark_vec[v] == self.mark_epoch {
+            if self.marks.is_marked(v) {
                 continue;
             }
-            self.mark_vec[v] = self.mark_epoch;
+            self.marks.mark(v);
             for &(j, _) in prob.graph.iter_on_adjacency(v) {
-                self.mark_vec[j] = self.mark_epoch;
+                self.marks.mark(j);
             }
             self.selected.push(v);
         }

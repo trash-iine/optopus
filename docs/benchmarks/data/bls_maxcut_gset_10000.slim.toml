@@ -1,4 +1,4 @@
-timestamp = "20260724_235625"
+timestamp = "20260806_091719"
 config_file = "data/benchmarks/maxcut/gset_bls/n10000.toml"
 
 [[results]]
@@ -12,7 +12,7 @@ tabu_tenure = [
     1000,
 ]
 t = 1000
-l0 = 80
+l0 = 100
 p0 = 0.8
 q = 0.5
 
@@ -21,19 +21,19 @@ max_iteration = 2000000000
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 6922.0
-avg_objective = 6911.6
-worst_objective = 6906.0
-std_objective = 5.276362383309167
-best_time_to_best_secs = 1899.912156417
-avg_time_to_best_secs = 7432.412601200001
-avg_total_time_secs = 10492.8169240043
-avg_initial_objective = -37.4
-avg_improvement = 6949.0
-avg_n_accepted = 1567748070.9
+best_objective = 6940.0
+avg_objective = 6934.4
+worst_objective = 6926.0
+std_objective = 3.5552777669262356
+best_time_to_best_secs = 11074.332349583
+avg_time_to_best_secs = 19324.568755112403
+avg_total_time_secs = 28033.4558057959
+avg_initial_objective = -20.6
+avg_improvement = 6955.0
+avg_n_accepted = 1479717933.1
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 2882.6
+avg_n_best_updates = 2819.0
 
 [[results]]
 problem = "MaxCut"
@@ -46,7 +46,7 @@ tabu_tenure = [
     1000,
 ]
 t = 1000
-l0 = 80
+l0 = 100
 p0 = 0.8
 q = 0.5
 
@@ -56,18 +56,18 @@ max_iteration = 2000000000
 [results.summary]
 num_successful_runs = 10
 best_objective = 9583.0
-avg_objective = 9577.1
-worst_objective = 9568.0
-std_objective = 4.52658811910251
-best_time_to_best_secs = 6491.02467225
-avg_time_to_best_secs = 8222.0471599666
-avg_total_time_secs = 9077.971005933301
-avg_initial_objective = 5006.2
-avg_improvement = 4570.9
-avg_n_accepted = 1583982477.7
+avg_objective = 9575.9
+worst_objective = 9569.0
+std_objective = 3.961060464067672
+best_time_to_best_secs = 5023.321643584
+avg_time_to_best_secs = 11819.040519433398
+avg_total_time_secs = 19146.756701545797
+avg_initial_objective = 5027.7
+avg_improvement = 4548.2
+avg_n_accepted = 1584936629.3
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 3063.2
+avg_n_best_updates = 2977.1
 
 [[results]]
 problem = "MaxCut"
@@ -80,7 +80,7 @@ tabu_tenure = [
     1000,
 ]
 t = 1000
-l0 = 80
+l0 = 100
 p0 = 0.8
 q = 0.5
 
@@ -89,16 +89,16 @@ max_iteration = 2000000000
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 6972.0
-avg_objective = 6964.4
-worst_objective = 6956.0
-std_objective = 4.2708313008125245
-best_time_to_best_secs = 3962.794548166
-avg_time_to_best_secs = 6873.6317288167
-avg_total_time_secs = 10392.2529644208
-avg_initial_objective = -6.8
-avg_improvement = 6971.2
-avg_n_accepted = 1566738901.9
+best_objective = 6994.0
+avg_objective = 6990.4
+worst_objective = 6988.0
+std_objective = 1.7435595774162693
+best_time_to_best_secs = 9201.281521875
+avg_time_to_best_secs = 17533.3737896749
+avg_total_time_secs = 27714.5687193666
+avg_initial_objective = 1.2
+avg_improvement = 6989.2
+avg_n_accepted = 1479685551.2
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 2888.1
+avg_n_best_updates = 2842.4

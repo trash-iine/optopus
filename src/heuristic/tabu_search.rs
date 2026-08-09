@@ -1,4 +1,5 @@
 use super::{Heuristic, StopCondition};
+use crate::common::TabuLedger;
 use crate::error::OptError;
 use crate::search_state::SearchState;
 use crate::trait_defs::{EnabledTabu, MoveToNeighbor, ProblemTrait, Rankable, rank_cmp};
@@ -26,51 +27,52 @@ where
     N: Clone + EnabledTabu,
 {
     pub stop_condition: StopCondition,
-    /// Tabu tenure range `(min, max)` in iterations.
-    pub tabu_tenure: (u64, u64),
-    tabu_map: N::TabuMap,
+    /// The tabu map and the tenure every write to it draws from — the two
+    /// always move together, so they are one field.
+    ledger: TabuLedger<N::TabuMap>,
 }
 
 impl<N> TabuSearch<N>
 where
     N: Clone + EnabledTabu,
 {
+    /// # Panics
+    ///
+    /// Panics if `tabu_tenure.0 > tabu_tenure.1` (an empty range).
     pub fn new(
         stop_condition: StopCondition,
         tabu_tenure: (u64, u64),
         tabu_map: Option<N::TabuMap>,
     ) -> Self {
-        if tabu_tenure.0 > tabu_tenure.1 {
-            panic!(
-                "Invalid tabu tenure range: left side should be smaller than or equal to the right side ({} <= {})",
-                tabu_tenure.0, tabu_tenure.1
-            );
-        }
         Self {
             stop_condition,
-            tabu_tenure,
-            tabu_map: tabu_map.unwrap_or(N::TabuMap::default()),
+            ledger: TabuLedger::with_map(tabu_map.unwrap_or_default(), tabu_tenure),
         }
+    }
+
+    /// Tabu tenure range `(min, max)` in iterations.
+    pub fn tabu_tenure(&self) -> (u64, u64) {
+        self.ledger.tenure()
     }
 
     /// Returns a shared reference to the tabu map.
     pub fn borrow_tabu_map(&self) -> &N::TabuMap {
-        &self.tabu_map
+        self.ledger.map()
     }
 
     /// Returns a mutable reference to the tabu map.
     pub fn borrow_mut_tabu_map(&mut self) -> &mut N::TabuMap {
-        &mut self.tabu_map
+        self.ledger.map_mut()
     }
 
     /// Takes ownership of the tabu map, replacing it with its default value.
     pub fn take_tabu_map(&mut self) -> N::TabuMap {
-        std::mem::take(&mut self.tabu_map)
+        self.ledger.take_map()
     }
 
     /// Replaces the tabu map with the given value.
     pub fn set_tabu_map(&mut self, tabu_map: N::TabuMap) {
-        self.tabu_map = tabu_map;
+        self.ledger.set_map(tabu_map);
     }
 }
 
@@ -80,7 +82,7 @@ where
     N: MoveToNeighbor<P> + Clone + EnabledTabu + Rankable,
 {
     fn clear(&mut self) {
-        self.tabu_map = N::TabuMap::default();
+        self.ledger.reset();
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -97,18 +99,13 @@ where
         let best_move = N::iter(state.instance, &state.solution)
             .filter(|n| {
                 // Accept a tabu move if it satisfies the aspiration criterion
-                n.is_move_enabled(&self.tabu_map, state.iteration)
-                    || state.is_neighbor_better_than_best(n)
+                self.ledger.allows(n, state.iteration) || state.is_neighbor_better_than_best(n)
             })
             .max_by(rank_cmp);
 
         if let Some(best_move) = best_move {
-            best_move.add_to_tabu_map(
-                &mut self.tabu_map,
-                state.iteration,
-                self.tabu_tenure,
-                &mut state.rng,
-            );
+            self.ledger
+                .record(&best_move, state.iteration, &mut state.rng);
             state.apply(&best_move)?;
         } else {
             tracing::warn!("No best move found");
@@ -172,6 +169,8 @@ mod tests {
         TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (5, 1), None);
     }
 
+    /// `clear` must free every move, not merely drop the map's storage — the
+    /// observable property a new episode depends on.
     #[test]
     fn tabu_search_clear_resets_tabu_map() {
         let mc = small_maxcut();
@@ -179,7 +178,20 @@ mod tests {
         let mut ts =
             TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (5, 10), None);
         ts.run(&mut state).unwrap();
+
+        let blocked = (0..mc.graph.len()).any(|i| {
+            !MaxCutFlipNeighbor { i, gain: 0.0 }
+                .is_move_enabled(ts.borrow_tabu_map(), state.iteration)
+        });
+        assert!(blocked, "the run must leave at least one vertex tabu");
+
         ts.clear();
-        assert!(ts.borrow_tabu_map().is_empty());
+        for i in 0..mc.graph.len() {
+            assert!(
+                MaxCutFlipNeighbor { i, gain: 0.0 }
+                    .is_move_enabled(ts.borrow_tabu_map(), state.iteration),
+                "vertex {i} still tabu after clear"
+            );
+        }
     }
 }

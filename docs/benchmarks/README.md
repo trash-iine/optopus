@@ -10,6 +10,21 @@ over 10 runs.
 > numbers therefore do **not** reflect each algorithm's true performance — treat
 > them as indicative reference values, not a rigorous ranking.
 
+> ℹ️ **Two caveats specific to the MaxCut BLS rows.**
+>
+> `best_iteration`, `time_to_best_secs` and `n_best_updates` changed meaning
+> when the descent stopped refreshing the incumbent on every improving move:
+> they now count *rounds that moved the incumbent* rather than steps inside a
+> descent, which is the same definition the other heuristics use. Objective
+> values are unaffected — verified bit-identical across that change — but these
+> three columns are not comparable against results recorded before it.
+>
+> These runs also predate the fix that made the perturbation length grow on a
+> repeated *solution* rather than a repeated objective value. That was measured
+> to be neutral (over the 30 instances with `n ≤ 1000` at full budget, the sum
+> of best cuts moves by +3 and only six instances move at all), so the cut
+> values here stand — but they are not bit-reproducible against current `HEAD`.
+
 ## Coverage
 
 Small (≤30s budget), medium (120s), and large (600s) bands are all complete.
@@ -112,7 +127,7 @@ in the table.
 | Iterated | perturbation step | `SimulatedAnnealing` with `T0=5.0`, `α=0.99`, `max_iteration=200` |
 | Restart | inner | `TabuSearch` with `tabu_tenure=[3, 10]`, `max_iteration=50_000` |
 | Restart | `restart_condition` | `max_failed_update = max(5_000, n·5)` |
-| BLS (MaxCut) | `tabu_tenure`, `t`, `l0`, `p0`, `q` | Use existing per-size values from `bls_maxcut_gset_*.toml` |
+| BLS (MaxCut) | `tabu_tenure`, `t`, `l0`, `p0`, `q` | Benlic & Hao 2013 Table 1: `tabu_tenure = [3, n/10]`, `t = 1000`, **`l0 = 0.01·n`**, `p0 = 0.8`, `q = 0.5` |
 | LKH (TSP) | `num_neighbors`, `max_depth` | 5, 5 (library defaults) |
 
 ### Neighbor enumeration policy

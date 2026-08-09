@@ -36,7 +36,8 @@ pub use job_shop_scheduling::{
     JobShopSwapNeighbor,
 };
 pub use max_cut::{
-    MaxCut, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, MaxCutUniformCrossover,
+    MaxCut, MaxCutFlipNeighbor, MaxCutKernel, MaxCutSolution, MaxCutSwapNeighbor,
+    MaxCutUniformCrossover,
 };
 pub use qubo::{Qubo, QuboFlipNeighbor, QuboSolution, QuboSwapNeighbor, QuboUniformCrossover};
 pub use sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor, SatUniformCrossover};

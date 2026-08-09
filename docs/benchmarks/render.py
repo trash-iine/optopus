@@ -80,6 +80,18 @@ def raw_toml_paths() -> list[Path]:
     )
 
 
+def slim_toml_paths() -> list[Path]:
+    """Every slim TOML under DATA_DIR — the viewer's actual data source.
+
+    Not every slim file still has its raw source in the repository: the raw
+    outputs carry the full per-run solution vectors and several were pruned
+    once their slim copies were published. Those bands are still live data, so
+    the index has to be built from what is on disk rather than from what this
+    run happened to regenerate.
+    """
+    return sorted(DATA_DIR.rglob(f"*{SLIM_SUFFIX}"))
+
+
 def slim_document(doc: dict, toml_path: Path) -> dict:
     """Strip the per-run `runs` arrays; keep only what the viewer needs.
 
@@ -109,14 +121,18 @@ def build_site_data() -> None:
     """Write slim TOMLs (viewer data source) + an index derived from them.
 
     GitHub Pages exposes no directory listing, so the viewer discovers the data
-    files through `index.json`. The index is a pure derivation of the slim TOMLs:
-    each entry lists a file's path and mirrors its `problem` (read from the slim
-    document, itself sourced from the runner's `problem` field). It is never
-    hand-maintained.
+    files through `index.json`. The index is a pure derivation of the slim TOMLs
+    **present on disk**, not of the ones this run regenerated: each entry lists
+    a file's path and mirrors its `problem` (read from the slim document, itself
+    sourced from the runner's `problem` field). It is never hand-maintained.
+
+    Regenerating from the raw sources and indexing from disk are two passes for
+    a reason. A slim file whose raw source has been pruned is still published
+    data; indexing only what was just rewritten silently drops it from the
+    viewer, and nothing about the resulting `index.json` looks wrong.
     """
     import tomli_w
 
-    index: list[dict] = []
     for toml_path in raw_toml_paths():
         with toml_path.open("rb") as f:
             doc = tomllib.load(f)
@@ -128,8 +144,18 @@ def build_site_data() -> None:
         with slim_path.open("wb") as f:
             tomli_w.dump(slim, f)
 
+    index: list[dict] = []
+    for slim_path in slim_toml_paths():
+        with slim_path.open("rb") as f:
+            slim = tomllib.load(f)
+        results = slim.get("results", [])
+        if not results:
+            continue
         rel = slim_path.relative_to(DATA_DIR).as_posix()
-        index.append({"path": rel, "problem": slim["results"][0]["problem"]})
+        problem = results[0].get("problem") or detect_problem(
+            slim_path, results[0]["instance_path"]
+        )
+        index.append({"path": rel, "problem": problem})
 
     index.sort(key=lambda e: e["path"])
     INDEX_PATH.write_text(

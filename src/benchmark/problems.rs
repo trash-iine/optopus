@@ -6,13 +6,13 @@
 //! [`ProblemKind`] variant.
 
 use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
-use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
+use super::factory::{ConfigurableProblem, NeighborVisitor, build_heuristic, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearchForVrp, BreakoutLocalSearchForMaxCut, Heuristic,
-    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES,
-    PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut, StopCondition,
-    SubProblemBasedCrossover, WalkSatForSat,
+    HybridGeneticSearchForVrp, KernelizedSearchForMaxCut, LinKernighanHelsgaunForTsp,
+    NUM_CONTEXT_FEATURES, PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut,
+    StopCondition, SubProblemBasedCrossover, WalkSatForSat,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -210,25 +210,15 @@ impl ConfigurableProblem for MaxCut {
                 l0,
                 p0,
                 q,
-                plateau_prob,
                 ..
-            } => {
-                let plateau = plateau_prob.unwrap_or(0.0);
-                if !(0.0..=1.0).contains(&plateau) {
-                    return Err(OptError::Config(
-                        "'plateau_prob' must be within [0, 1]".to_string(),
-                    ));
-                }
-                Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
-                    cond,
-                    *tabu_tenure,
-                    *t,
-                    *l0,
-                    *p0,
-                    *q,
-                    plateau,
-                )))
-            }
+            } => Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
+                cond,
+                *tabu_tenure,
+                *t,
+                *l0,
+                *p0,
+                *q,
+            ))),
             HeuristicConfig::RlBreakoutLocalSearch {
                 tabu_tenure,
                 t,
@@ -333,6 +323,16 @@ impl ConfigurableProblem for MaxCut {
                     cluster_moves.unwrap_or(true),
                 )))
             }
+            HeuristicConfig::Kernelize { steps, .. } => {
+                if steps.len() != 1 {
+                    return Err(OptError::Config(format!(
+                        "Kernelize requires exactly 1 step (the heuristic to run on the kernel), but got {}",
+                        steps.len()
+                    )));
+                }
+                let inner = build_heuristic::<Self>(&steps[0])?;
+                Ok(Box::new(KernelizedSearchForMaxCut::new(cond, inner)))
+            }
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for MaxCut",
                 config.kind_name()
@@ -346,7 +346,7 @@ impl ConfigurableProblem for MaxCut {
             // Solves the sub-MaxCut formed by the variables the two parents
             // disagree on (TSHEA/MOH-style memetic recombination). The
             // sub-problem shrinks as the population converges, so a bounded
-            // plateau-BLS is enough to solve it well.
+            // BLS is enough to solve it well.
             "SubProblem" => Ok(Box::new(SubProblemBasedCrossover {
                 sub_heuristic: Box::new(BreakoutLocalSearchForMaxCut::new(
                     StopCondition::iterations(50_000).with_failed_updates(10_000),
@@ -354,7 +354,6 @@ impl ConfigurableProblem for MaxCut {
                     1_000,
                     20,
                     0.8,
-                    0.5,
                     0.5,
                 )),
             })),

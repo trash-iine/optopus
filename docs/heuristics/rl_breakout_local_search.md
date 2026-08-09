@@ -72,7 +72,39 @@ exploration = 0.05               # optional (default 0.05)
 max_duration_secs = 30
 ```
 
-## Results vs BLS (Gset, 30 s × 10 seeded runs)
+## Measurement notes
 
-See `docs/benchmarks/rl_breakout_local_search.md` for the measured comparison
-against the tuned BLS baseline on G1 / G11 / G22 / G43.
+The action space was five operators rather than three until 2026-08-08: two
+objective-preserving *plateau* perturbations (flip a connected cluster / an
+independent set of zero-gain vertices) were extra bandit actions, together with
+a `plateau_width` context feature.
+
+They were removed, and the A/B says that costs objective. Same config
+(`tabu_tenure = [15, 300]`, `t = 1000`, `l0 = 20`), 30 s × 5 seeded runs, mean
+cut:
+
+| instance | 5 operators | 3 operators | Δ |
+|---|---|---|---|
+| G55 (n=5000, seed 42) | 10200.4 | 10104.2 | **−96.2** |
+| G55 (seed 7) | 10178.0 | 10115.4 | **−62.6** |
+| G60 (n=7000) | 14024.2 | 13913.8 | **−110.4** |
+| G63 (n=7000, deg 12) | 26750.2 | 26658.0 | **−92.2** |
+| G70 (n=10000) | 9362.0 | 9367.8 | +5.8 |
+| G11 (n=800) / G1 (n=800, dense) | 564.0 / 11624.0 | 564.0 / 11624.0 | 0 |
+
+Run-to-run std is 9–28, so the mid-size losses are real. For reference, BLS
+averages 10168.0 on G55 at the same budget: with the plateau operators this
+heuristic beat it, without them it does not.
+
+The trade taken was objective for structure: three operators instead of five,
+one vocabulary shared with BLS, and no "already seen" scratch set inside the
+engine. The mechanism is worth restoring if this heuristic ever has to win
+rather than to be simple. Bandit weights saved from that version
+(`5 × strength_bins.len()` actions × 8 features) no longer load:
+`policy_weights` is size-checked at parse time, so they fail loudly rather than
+silently misaligning.
+
+The plateau idea itself survives in
+[PopulationAnnealingForMaxCut](../../src/heuristic/specific/max_cut/population_annealing.rs)
+as its non-local cluster move, which has its own implementation.
+

@@ -1,19 +1,19 @@
-use super::super::{Heuristic, StopCondition};
-use super::bls_for_max_cut::{BlsOps, PerturbationType};
+use super::ops::{self, Ledger, PerturbationType};
 use crate::error::OptError;
 use crate::heuristic::reinforcement_learning::bandit::SoftmaxBandit;
+use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::MaxCut;
 use crate::search_state::SearchState;
 
 /// Number of context features fed to the perturbation-selection bandit.
 ///
 /// Layout: `[bias, min(ω/t, 1), exp(−ω/t), descent_improved_best,
-/// relative_gap, reward_ema, budget_progress, plateau_width]`.
-pub const NUM_CONTEXT_FEATURES: usize = 8;
+/// relative_gap, reward_ema, budget_progress]`.
+pub const NUM_CONTEXT_FEATURES: usize = 7;
 
 /// Number of perturbation operators the bandit chooses between
-/// (weak flip / weak swap / strong / plateau cluster / plateau independent).
-pub const NUM_PERTURBATION_TYPES: usize = 5;
+/// (weak flip / weak swap / strong).
+pub const NUM_PERTURBATION_TYPES: usize = 3;
 
 const REWARD_SCALE_FLOOR: f64 = 1e-6;
 /// EMA coefficient for the reward-magnitude scale.
@@ -34,15 +34,14 @@ struct PendingDecision {
 /// Breakout Local Search with a *learned* perturbation policy for MaxCut.
 ///
 /// Shares the exact descent / perturbation machinery of
-/// [`BreakoutLocalSearch`](super::bls_for_max_cut::BreakoutLocalSearch)
+/// [`BreakoutLocalSearch`](super::bls::BreakoutLocalSearch)
 /// (positive-gain-indexed greedy descent, flat tabu map, weak-flip /
 /// weak-swap / strong operators), but replaces the hand-crafted
 /// `omega`-based perturbation rule *and* the strength schedule with a
 /// contextual softmax bandit ([`SoftmaxBandit`]): each outer iteration the
 /// bandit observes search-state features and picks one of
-/// `5 × strength_bins.len()` actions — a perturbation type (weak flip, weak
-/// swap, strong, plateau cluster, or plateau independent-set) together with a
-/// strength multiplier applied to `l0`.
+/// `3 × strength_bins.len()` actions — a perturbation type (weak flip, weak
+/// swap or strong) together with a strength multiplier applied to `l0`.
 ///
 /// **Reward** (observed after the next descent): the change in local-optimum
 /// objective, normalized by an EMA of its own magnitude and clamped to
@@ -65,7 +64,8 @@ struct PendingDecision {
 /// - `exploration` — ε-uniform exploration floor in `[0, 1]`
 pub struct RlBreakoutLocalSearch {
     stop_condition: StopCondition,
-    ops: BlsOps,
+    /// The prohibitions the descent and the perturbations share.
+    tabu: Ledger,
     bandit: SoftmaxBandit,
     t: u64,
     l0: u64,
@@ -112,7 +112,7 @@ impl RlBreakoutLocalSearch {
         );
         Self {
             stop_condition,
-            ops: BlsOps::new(tabu_tenure),
+            tabu: Ledger::new(tabu_tenure),
             bandit,
             t,
             l0,
@@ -125,7 +125,7 @@ impl RlBreakoutLocalSearch {
         }
     }
 
-    /// Number of bandit actions (`5 × strength_bins.len()`).
+    /// Number of bandit actions (`3 × strength_bins.len()`).
     pub fn num_actions(&self) -> usize {
         NUM_PERTURBATION_TYPES * self.strength_bins.len()
     }
@@ -168,11 +168,6 @@ impl RlBreakoutLocalSearch {
             }
             (None, None) => 0.0,
         };
-        // Fraction of vertices sitting on the plateau (zero flip gain) — tells
-        // the bandit how much room the plateau operators have to work with.
-        let plateau_width = (state.solution.zero_gain_count() as f64
-            / state.solution.x.len().max(1) as f64)
-            .min(1.0);
         [
             1.0,
             (omega / t).min(1.0),
@@ -181,7 +176,6 @@ impl RlBreakoutLocalSearch {
             gap,
             self.reward_ema.clamp(-1.0, 1.0),
             progress,
-            plateau_width,
         ]
     }
 
@@ -189,9 +183,7 @@ impl RlBreakoutLocalSearch {
         let ptype = match action / self.strength_bins.len() {
             0 => PerturbationType::WeakFlip,
             1 => PerturbationType::WeakSwap,
-            2 => PerturbationType::Strong,
-            3 => PerturbationType::PlateauCluster,
-            _ => PerturbationType::PlateauIndependent,
+            _ => PerturbationType::Strong,
         };
         let mult = self.strength_bins[action % self.strength_bins.len()];
         let l = ((self.l0 as f64 * mult).round() as u64).max(1);
@@ -206,19 +198,16 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
         self.pending = None;
         self.reward_scale = 0.0;
         self.reward_ema = 0.0;
-        self.ops.clear();
+        self.tabu.clear();
         // Bandit weights and baseline are intentionally preserved across episodes.
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        self.ops.ensure_capacity(state.instance.graph.len());
-        // Keep the plateau-width feature defined even before the first
-        // plateau action (idempotent after the first call).
-        state.solution.enable_zero_gain_index();
+        self.tabu.ensure_capacity(state.instance.graph.len());
 
         // 1. Greedy descent to a local optimum (same operator as BLS).
         let best_before_descent = state.best_solution.objective;
-        self.ops.descent(state)?;
+        ops::descent(&mut self.tabu, state)?;
         let descent_improved_best = state.best_solution.objective > best_before_descent;
 
         // 2. Update the stagnation counter (BLS omega rule: consecutive
@@ -270,7 +259,7 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
             l,
             "RL-BLS: perturbation selected"
         );
-        self.ops.perturb(ptype, l, state)?;
+        ops::apply(&mut self.tabu, ptype, l, state)?;
 
         // Update best once after the perturbation phase completes.
         state.update_best();

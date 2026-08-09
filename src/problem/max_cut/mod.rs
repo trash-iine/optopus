@@ -148,9 +148,11 @@
 //! ```
 
 mod crossover;
+mod kernel;
 mod neighbor;
 mod problem;
 
 pub use crossover::MaxCutUniformCrossover;
+pub use kernel::MaxCutKernel;
 pub use neighbor::{MaxCutFlipNeighbor, MaxCutSwapNeighbor};
 pub use problem::{MaxCut, MaxCutSolution};

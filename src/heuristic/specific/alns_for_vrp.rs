@@ -6,8 +6,8 @@
 //! adaptively by a roulette wheel whose weights track recent performance, and
 //! accepting worse solutions with a simulated-annealing criterion.
 //!
-//! The operator machinery lives in [`AlnsOps`] (mirroring the `BlsOps` split of
-//! [`super::bls_for_max_cut`]); the outer [`AdaptiveLargeNeighborhoodSearch`]
+//! The operator machinery lives in [`AlnsOps`] (the same split MaxCut makes in
+//! [`super::max_cut::ops`]); the outer [`AdaptiveLargeNeighborhoodSearch`]
 //! drives the accept/score/cool loop, operating directly on `state.solution`
 //! (like [`super::lkh_for_tsp`]) since a destroy+repair step is not a single
 //! [`MoveToNeighbor`](crate::search_state::MoveToNeighbor).
