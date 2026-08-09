@@ -4,3 +4,6 @@ G*
 generated/
 #   cargo run --release --example generate_sparse_maxcut
 generated_sparse/
+#   cargo run --release --example generate_hard_maxcut
+#   (manifest.toml goes with them — it is derived from the same seeds)
+hard/

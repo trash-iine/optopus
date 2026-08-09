@@ -55,6 +55,9 @@ src/
 │   ├── graph/                Graph (used by MaxCut / VertexCover); mod.rs = Graph
 │   │                         + load_from_file / write_to_file, generator.rs =
 │   │                         Graph::{erdos_renyi, barabasi_albert, watts_strogatz}
+│   │                         + Graph::{grid_torus_2d, grid_torus_3d} (periodic
+│   │                         lattices, degree 4 / 6, deterministic — the topology
+│   │                         the planted tile instances live on)
 │   │                         (unweighted) + .with_random_weights() + seeded_rng
 │   ├── binary.rs             uniform_binary_crossover, hamming_distance,
 │   │                         lift_binary_solution / lift_compact_binary_solution,
@@ -93,7 +96,9 @@ src/
 │       └── walksat_for_sat.rs   WalkSatForSat
 └── problem/
     ├── max_cut/              MaxCut, MaxCutSolution, {Flip,Swap}Neighbor, UniformCrossover,
-    │                         MaxCutKernel (kernel.rs: exact data reduction)
+    │                         MaxCutKernel (kernel.rs: exact data reduction),
+    │                         PlantedMaxCut (planted.rs: instances whose optimum is
+    │                         exact by construction — tile / Wishart planting)
     ├── qubo/                 Qubo, QuboSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── sat/                  Sat, SatSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── tsp_2d/               TspWithCoordinates, TspSolution, {TwoOpt,Relocate}Neighbor, OrderCrossover
@@ -224,6 +229,8 @@ Binary solutions all name the assignment vector `x: Vec<bool>`.
 ## Benchmarking (`src/benchmark/`)
 
 TOML config → `BenchmarkConfig` → run each heuristic on each instance N times (rayon-parallel) → `BenchmarkReport` → timestamped TOML in `result/`.
+
+**MaxCut instance suites.** Besides the G-set, three suites are generated locally from fixed seeds (never committed — regenerating reproduces them byte for byte): `examples/generate_dense_maxcut.rs` (10–30% density, the band the G-set does not reach), `generate_sparse_maxcut.rs` (average degree 1–5, where `MaxCutKernel` fires), and `generate_hard_maxcut.rs` → `data/instances/max_cut/hard/`, whose **optimum is exact by construction** (`PlantedMaxCut`; tile planting on degree-4/6 lattice tori and Wishart planting on the complete graph, following `chook`, arXiv:2005.14344). The planted suite is the only one where a gap is measured against the answer rather than against another heuristic's best result; its optima live in `hard/manifest.toml`, which **nothing in the library reads** — same rule as best-known values, analysis only. Its hardness parameters were fixed by a sweep whose numbers are recorded in `generate_hard_maxcut.rs`; both families' peaks move with instance size, so published values do not transfer.
 
 ```toml
 num_runs = 10

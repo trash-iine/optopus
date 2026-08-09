@@ -242,6 +242,93 @@ impl Graph {
         unweighted_graph(n, pairs)
     }
 
+    /// Generates the 2D periodic square lattice (torus) on `l * l` vertices:
+    /// every vertex joins its right and lower neighbor, wrapping around both
+    /// axes, so the graph is 4-regular with `2 l²` edges.
+    ///
+    /// Vertices are numbered `m + l * n` for the lattice site `(m, n)` — `m`
+    /// varies fastest. This is the same convention the planted-instance
+    /// generators in
+    /// [`PlantedMaxCut`](crate::problem::PlantedMaxCut) index tiles with, and
+    /// the same 4-regular topology as the G-set `toroidal` group (G11, G32,
+    /// G48, G81, …), so a generated instance sits in the established
+    /// comparison band.
+    ///
+    /// Every edge gets weight `1.0`; chain
+    /// [`with_random_weights`](Self::with_random_weights) for random weights.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `l < 3`. At `l = 2` a site and its wrapped neighbor are the
+    /// same pair twice over, which would silently halve the edge count.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::common::Graph;
+    ///
+    /// let g = Graph::grid_torus_2d(10);
+    /// assert_eq!(g.len(), 100);
+    /// assert_eq!(g.num_edges(), 200);
+    /// assert!((0..100).all(|v| g.degree(v) == 4));
+    /// ```
+    pub fn grid_torus_2d(l: usize) -> Self {
+        assert!(l >= 3, "grid_torus_2d requires l >= 3, got {l}");
+
+        let idx = |m: usize, n: usize| m + l * n;
+        let mut pairs = Vec::with_capacity(2 * l * l);
+        for n in 0..l {
+            for m in 0..l {
+                pairs.push((idx(m, n), idx((m + 1) % l, n)));
+                pairs.push((idx(m, n), idx(m, (n + 1) % l)));
+            }
+        }
+        unweighted_graph(l * l, pairs)
+    }
+
+    /// Generates the 3D periodic cubic lattice (torus) on `l³` vertices: every
+    /// vertex joins its neighbor along each of the three axes, wrapping around
+    /// all of them, so the graph is 6-regular with `3 l³` edges.
+    ///
+    /// Vertices are numbered `m + l * n + l² * k` for the lattice site
+    /// `(m, n, k)` — `m` varies fastest, matching
+    /// [`grid_torus_2d`](Self::grid_torus_2d).
+    ///
+    /// Every edge gets weight `1.0`; chain
+    /// [`with_random_weights`](Self::with_random_weights) for random weights.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `l < 3`, for the same reason as
+    /// [`grid_torus_2d`](Self::grid_torus_2d).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::common::Graph;
+    ///
+    /// let g = Graph::grid_torus_3d(6);
+    /// assert_eq!(g.len(), 216);
+    /// assert_eq!(g.num_edges(), 3 * 216);
+    /// assert!((0..216).all(|v| g.degree(v) == 6));
+    /// ```
+    pub fn grid_torus_3d(l: usize) -> Self {
+        assert!(l >= 3, "grid_torus_3d requires l >= 3, got {l}");
+
+        let idx = |m: usize, n: usize, k: usize| m + l * n + l * l * k;
+        let mut pairs = Vec::with_capacity(3 * l * l * l);
+        for k in 0..l {
+            for n in 0..l {
+                for m in 0..l {
+                    pairs.push((idx(m, n, k), idx((m + 1) % l, n, k)));
+                    pairs.push((idx(m, n, k), idx(m, (n + 1) % l, k)));
+                    pairs.push((idx(m, n, k), idx(m, n, (k + 1) % l)));
+                }
+            }
+        }
+        unweighted_graph(l * l * l, pairs)
+    }
+
     /// Replaces every edge weight with a nonzero integer drawn uniformly from
     /// the inclusive range `weight_range = (min, max)`, leaving the structure
     /// untouched.
@@ -486,6 +573,42 @@ mod tests {
         let g = Graph::barabasi_albert(40, 2, &mut rng).with_random_weights((5, 5), &mut rng);
         for (_, _, w) in g.edges() {
             assert_eq!(w, 5.0);
+        }
+    }
+
+    #[test]
+    fn grid_torus_is_regular_with_the_expected_size() {
+        let g2 = Graph::grid_torus_2d(8);
+        assert_eq!(g2.len(), 64);
+        assert_eq!(g2.num_edges(), 2 * 64);
+        assert!((0..64).all(|v| g2.degree(v) == 4));
+
+        let g3 = Graph::grid_torus_3d(4);
+        assert_eq!(g3.len(), 64);
+        assert_eq!(g3.num_edges(), 3 * 64);
+        assert!((0..64).all(|v| g3.degree(v) == 6));
+    }
+
+    #[test]
+    fn grid_torus_wraps_around_every_axis() {
+        // The seam edges are the ones a non-periodic grid would be missing.
+        let l = 5;
+        let g = Graph::grid_torus_2d(l);
+        for i in 0..l {
+            // Last column to first, and last row to first.
+            assert!(g.has_edge(l - 1 + l * i, l * i), "row {i} does not wrap");
+            assert!(g.has_edge(i + l * (l - 1), i), "column {i} does not wrap");
+        }
+
+        let g = Graph::grid_torus_3d(l);
+        for n in 0..l {
+            for m in 0..l {
+                let top = m + l * n + l * l * (l - 1);
+                assert!(
+                    g.has_edge(top, m + l * n),
+                    "layer at ({m}, {n}) does not wrap"
+                );
+            }
         }
     }
 
