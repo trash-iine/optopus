@@ -1,0 +1,54 @@
+# Auto-generated. Profile: Vrp / small (bespoke CVRP heuristics).
+# See docs/benchmarks/README.md#profiles
+
+num_runs = 10
+seed = 42
+
+[[instances]]
+path = "data/instances/vrp/demo16.vrp"
+problem = "Vrp"
+
+[[instances]]
+path = "data/instances/vrp/X-n101-k25.vrp"
+problem = "Vrp"
+
+[[instances]]
+path = "data/instances/vrp/X-n110-k13.vrp"
+problem = "Vrp"
+
+[[instances]]
+path = "data/instances/vrp/X-n125-k30.vrp"
+problem = "Vrp"
+
+[[instances]]
+path = "data/instances/vrp/X-n139-k10.vrp"
+problem = "Vrp"
+
+[[instances]]
+path = "data/instances/vrp/X-n153-k22.vrp"
+problem = "Vrp"
+
+[[instances]]
+path = "data/instances/vrp/X-n176-k26.vrp"
+problem = "Vrp"
+
+[[instances]]
+path = "data/instances/vrp/X-n195-k51.vrp"
+problem = "Vrp"
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+
+[[heuristics]]
+kind = "HybridGeneticSearch"
+min_population_size = 25
+generation_size = 40
+granularity = 20
+target_feasible = 0.2
+restart_generations = 20000
+[heuristics.stop_condition]
+max_duration_secs = 30.0

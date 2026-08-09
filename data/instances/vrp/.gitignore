@@ -1,0 +1,4 @@
+# CVRPLIB X-set instances (and their best-known solutions) are fetched locally
+# with scripts/fetch_cvrp.sh, not redistributed here. See ../README.md.
+X-n*.vrp
+X-n*.sol

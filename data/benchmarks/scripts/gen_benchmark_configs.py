@@ -3,7 +3,7 @@
 Drives Phase 3 of the comprehensive benchmark plan (see
 `docs/benchmarks/README.md#profiles`). One TOML per (problem, band, track) where:
 
-    track ∈ {"general", "lkh"}
+    track ∈ {"general", "lkh", "vrp_special"}
     band  ∈ {"small", "medium", "large"}
 
 The `general` track always enumerates LocalSearch, TabuSearch,
@@ -35,6 +35,7 @@ NEIGHBORS = {
     "Tsp": ["TwoOpt", "Relocate"],
     "JobShop": ["Swap", "Relocate"],
     "VertexCover": ["Flip", "Swap"],
+    "Vrp": ["Relocate", "Swap", "TwoOpt"],
 }
 
 CROSSOVER = {
@@ -44,6 +45,7 @@ CROSSOVER = {
     "Tsp": "Order",
     "JobShop": "Ppx",
     "VertexCover": "Uniform",
+    "Vrp": "Order",
 }
 
 TABU_TENURE = {
@@ -53,10 +55,11 @@ TABU_TENURE = {
     "Tsp": {"small": [3, 30], "medium": [3, 100], "large": [3, 200]},
     "JobShop": {"small": [3, 30], "medium": [3, 80], "large": [3, 200]},
     "VertexCover": {"small": [3, 80], "medium": [3, 200], "large": [3, 500]},
+    "Vrp": {"small": [3, 30], "medium": [3, 80], "large": [3, 200]},
 }
 
 SA_T0 = {"MaxCut": 100.0, "Qubo": 100.0, "Sat": 100.0, "Tsp": 1000.0,
-         "JobShop": 100.0, "VertexCover": 100.0}
+         "JobShop": 100.0, "VertexCover": 100.0, "Vrp": 100.0}
 SA_COOLING = 0.9995
 
 # Instance globs per (problem, band). Lists become multiple [[instances]] blocks.
@@ -93,11 +96,22 @@ INSTANCES: dict[tuple[str, str], list[str]] = {
                                 (list(range(22, 43)) + list(range(48, 51)))],
     ("VertexCover", "large"):  [f"data/instances/max_cut/G{n}" for n in
                                 (list(range(55, 68)) + [70, 72, 77, 81])],
+    # CVRPLIB "X" set, banded by customer count (see data/instances/README.md).
+    ("Vrp", "small"):  ["data/instances/vrp/demo16.vrp",
+                        *[f"data/instances/vrp/X-n{n}-k{k}.vrp" for n, k in (
+                            (101, 25), (110, 13), (125, 30), (139, 10),
+                            (153, 22), (176, 26), (195, 51))]],
+    ("Vrp", "medium"): [f"data/instances/vrp/X-n{n}-k{k}.vrp" for n, k in (
+                            (214, 11), (242, 48), (270, 35), (303, 21),
+                            (344, 43), (401, 29), (459, 26))],
+    ("Vrp", "large"):  [f"data/instances/vrp/X-n{n}-k{k}.vrp" for n, k in (
+                            (502, 39), (561, 42), (627, 43), (701, 44),
+                            (801, 40), (895, 37), (1001, 43))],
 }
 
 PROBLEM_DIR = {
     "MaxCut": "maxcut", "Qubo": "qubo", "Sat": "sat", "Tsp": "tsp",
-    "JobShop": "jssp", "VertexCover": "vertex_cover",
+    "JobShop": "jssp", "VertexCover": "vertex_cover", "Vrp": "vrp",
 }
 
 
@@ -210,6 +224,21 @@ def lkh_toml(band: str) -> str:
             f"{stop_duration(band)}")
 
 
+def vrp_special_toml(band: str) -> str:
+    """The two bespoke CVRP heuristics, on equal budget so they can be compared."""
+    return (f"# Auto-generated. Profile: Vrp / {band} (bespoke CVRP heuristics).\n"
+            f"# See docs/benchmarks/README.md#profiles\n\n"
+            f"num_runs = {NUM_RUNS}\nseed = {SEED}\n\n"
+            f"{instance_blocks('Vrp', band)}\n"
+            f'[[heuristics]]\nkind = "AdaptiveLargeNeighborhoodSearch"\n'
+            f"removal_fraction = 0.15\ncooling_rate = 0.9995\n"
+            f"{stop_duration(band)}"
+            f'\n[[heuristics]]\nkind = "HybridGeneticSearch"\n'
+            f"min_population_size = 25\ngeneration_size = 40\ngranularity = 20\n"
+            f"target_feasible = 0.2\nrestart_generations = 20000\n"
+            f"{stop_duration(band)}")
+
+
 def main() -> int:
     written = 0
     for problem in NEIGHBORS:
@@ -223,6 +252,11 @@ def main() -> int:
     for band in ("small", "medium", "large"):
         path = OUT / "tsp" / f"lkh_{band}.toml"
         path.write_text(lkh_toml(band))
+        written += 1
+    # ALNS and HGS apply to VRP
+    for band in ("small", "medium", "large"):
+        path = OUT / "vrp" / f"hgs_{band}.toml"
+        path.write_text(vrp_special_toml(band))
         written += 1
     print(f"wrote {written} TOML configs under {OUT}")
     return 0
