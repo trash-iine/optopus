@@ -26,6 +26,7 @@ pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
 pub use specific::AdaptiveLargeNeighborhoodSearchForVrp;
 pub use specific::BreakoutLocalSearchForMaxCut;
+pub use specific::HybridGeneticSearchForVrp;
 pub use specific::LinKernighanHelsgaunForTsp;
 pub use specific::PopulationAnnealingForMaxCut;
 pub use specific::RlBreakoutLocalSearchForMaxCut;

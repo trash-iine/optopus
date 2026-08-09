@@ -10,6 +10,34 @@ pub(crate) fn overload_of(load: i64, capacity: i64) -> i64 {
     (load - capacity).max(0)
 }
 
+/// Fleet size to use when the caller does not specify one.
+///
+/// `ceil(total demand / capacity)` is only a *lower* bound — the bin-packing
+/// relaxation — and a fleet that small frequently cannot serve the customers at
+/// all: three demand-2 customers never fit into two capacity-3 vehicles, and
+/// CVRPLIB's `X-n101-k25` needs 26 vehicles despite the `k25` in its name.
+///
+/// So the fleet is sized by first-fit-decreasing, which always yields a feasible
+/// packing, plus a 10% margin: the *distance*-optimal solution routinely uses a
+/// few more vehicles than the minimum, because splitting a remote customer onto
+/// its own route can be cheaper than detouring to it. Idle vehicles are free
+/// (an empty route has distance `0`), so an overly generous fleet costs only a
+/// little search time, whereas too small a fleet makes the optimum unreachable.
+fn default_fleet_size(demands: &[i64], capacity: i64) -> usize {
+    let mut sorted: Vec<i64> = demands.iter().copied().filter(|&d| d > 0).collect();
+    sorted.sort_unstable_by(|a, b| b.cmp(a));
+    let mut bins: Vec<i64> = Vec::new();
+    for demand in sorted {
+        match bins.iter_mut().find(|load| **load + demand <= capacity) {
+            Some(load) => *load += demand,
+            // A customer larger than one vehicle still gets its own route.
+            None => bins.push(demand),
+        }
+    }
+    let packed = bins.len().max(1);
+    packed + (packed / 10).max(1)
+}
+
 /// A solution to the Capacitated Vehicle Routing Problem.
 ///
 /// The fleet is fixed at [`Vrp::num_vehicles`] routes; `routes.len()` therefore
@@ -170,8 +198,7 @@ impl Vrp {
         assert!(capacity > 0, "capacity must be positive");
 
         let num_vehicles = if num_vehicles == 0 {
-            let total: i64 = demands.iter().sum();
-            (total.max(0) as usize).div_ceil(capacity as usize).max(1)
+            default_fleet_size(&demands, capacity)
         } else {
             num_vehicles
         };
@@ -631,7 +658,7 @@ mod tests {
     }
 
     #[test]
-    fn num_vehicles_defaults_to_demand_over_capacity() {
+    fn num_vehicles_defaults_to_a_feasible_fleet() {
         let vrp = Vrp::new(
             "d",
             vec![(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (3.0, 0.0)],
@@ -639,8 +666,22 @@ mod tests {
             3,
             0,
         );
-        // total demand 6 / capacity 3 = 2 vehicles
-        assert_eq!(vrp.num_vehicles, 2);
+        // The bin-packing bound `ceil(6 / 3) = 2` is not achievable — only one
+        // demand-2 customer fits per capacity-3 vehicle — so the default is the
+        // 3 vehicles that actually pack, plus the margin.
+        assert_eq!(vrp.num_vehicles, 4);
+        let routes = vec![vec![1], vec![2], vec![3], vec![]];
+        assert_eq!(vrp.solution_from_routes(routes).overload, 0);
+    }
+
+    #[test]
+    fn default_fleet_size_packs_every_customer() {
+        // 10 unit demands, capacity 3: four vehicles pack them, plus the margin.
+        assert_eq!(default_fleet_size(&[0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 3), 5);
+        // A customer larger than a vehicle still gets a route of its own.
+        assert_eq!(default_fleet_size(&[0, 7], 3), 2);
+        // No customers at all still leaves one vehicle.
+        assert_eq!(default_fleet_size(&[0], 5), 2);
     }
 
     #[test]

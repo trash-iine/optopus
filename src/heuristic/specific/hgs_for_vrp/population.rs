@@ -1,0 +1,432 @@
+//! Diversity-aware population management for Hybrid Genetic Search.
+//!
+//! Individuals are ranked by *biased fitness*: a blend of how good a solution is
+//! and how much diversity it contributes. Selecting purely on cost collapses the
+//! population onto one basin within a few hundred generations; blending in a
+//! diversity rank is what lets HGS keep searching for millions of them.
+
+use rand::Rng;
+use rand::rngs::SmallRng;
+
+/// Number of nearest individuals averaged into a diversity contribution.
+const N_CLOSEST: usize = 5;
+
+/// Individuals whose cost rank alone guarantees survival.
+const N_ELITE: usize = 4;
+
+/// Added to a clone's fitness so duplicates are always evicted first. Biased
+/// fitness itself lies in `[0, 2]`, so any large constant separates the two.
+const CLONE_FITNESS_PENALTY: f64 = 100.0;
+
+/// A member of the population: a route partition plus the successor/predecessor
+/// view the diversity metric needs.
+///
+/// `succ` / `pred` describe each customer's neighbors along its route (the depot
+/// is `0`). They are invariant to relabeling the routes, which
+/// [`crate::problem::VrpSolution`]'s own [`crate::search_state::Distance`] is
+/// not — that one counts customers assigned to a different route *index*, so
+/// merely permuting the routes of a solution would read as maximally distant.
+#[derive(Debug, Clone)]
+pub(super) struct Individual {
+    pub routes: Vec<Vec<usize>>,
+    pub distance: f64,
+    pub excess: i64,
+    succ: Vec<usize>,
+    pred: Vec<usize>,
+}
+
+impl Individual {
+    /// Builds an individual from a route partition and its evaluated caches.
+    pub(super) fn new(n: usize, routes: Vec<Vec<usize>>, distance: f64, excess: i64) -> Self {
+        let mut succ = vec![0usize; n + 1];
+        let mut pred = vec![0usize; n + 1];
+        for route in &routes {
+            for (pos, &c) in route.iter().enumerate() {
+                pred[c] = if pos == 0 { 0 } else { route[pos - 1] };
+                succ[c] = if pos + 1 == route.len() {
+                    0
+                } else {
+                    route[pos + 1]
+                };
+            }
+        }
+        Self {
+            routes,
+            distance,
+            excess,
+            succ,
+            pred,
+        }
+    }
+
+    /// The penalized objective under the caller's current capacity penalty.
+    pub(super) fn cost(&self, penalty: f64) -> f64 {
+        self.distance + penalty * self.excess as f64
+    }
+
+    pub(super) fn is_feasible(&self) -> bool {
+        self.excess == 0
+    }
+
+    /// Flattens the routes into a giant tour (route boundaries are dropped).
+    pub(super) fn giant_tour(&self) -> Vec<usize> {
+        self.routes.iter().flatten().copied().collect()
+    }
+
+    /// Broken-pairs distance in `[0, 1]`: the fraction of customers whose route
+    /// neighbors differ between the two individuals.
+    ///
+    /// Orientation-agnostic — a reversed route is the same set of pairs — and
+    /// invariant to route relabeling, so two solutions are at distance `0`
+    /// exactly when they describe the same set of trips.
+    pub(super) fn broken_pairs_distance(&self, other: &Self) -> f64 {
+        let n = self.succ.len().saturating_sub(1);
+        if n == 0 {
+            return 0.0;
+        }
+        let mut broken = 0usize;
+        for c in 1..=n {
+            if self.succ[c] != other.succ[c] && self.succ[c] != other.pred[c] {
+                broken += 1;
+            }
+            // Losing or gaining a depot leg is a structural change too.
+            if self.pred[c] == 0 && other.pred[c] != 0 && other.succ[c] != 0 {
+                broken += 1;
+            }
+        }
+        broken as f64 / n as f64
+    }
+}
+
+/// One of the two sub-populations (feasible / infeasible), kept ranked by biased
+/// fitness.
+pub(super) struct Subpopulation {
+    members: Vec<Individual>,
+    fitness: Vec<f64>,
+}
+
+impl Subpopulation {
+    pub(super) fn new() -> Self {
+        Self {
+            members: Vec::new(),
+            fitness: Vec::new(),
+        }
+    }
+
+    pub(super) fn len(&self) -> usize {
+        self.members.len()
+    }
+
+    pub(super) fn is_empty(&self) -> bool {
+        self.members.is_empty()
+    }
+
+    pub(super) fn clear(&mut self) {
+        self.members.clear();
+        self.fitness.clear();
+    }
+
+    pub(super) fn members(&self) -> &[Individual] {
+        &self.members
+    }
+
+    /// Biased fitness of member `i`; lower is better. Falls back to `0.0` before
+    /// the first [`Subpopulation::refresh_fitness`].
+    pub(super) fn fitness(&self, i: usize) -> f64 {
+        self.fitness.get(i).copied().unwrap_or(0.0)
+    }
+
+    /// Adds an individual. Fitness is stale until the next refresh or trim.
+    pub(super) fn push(&mut self, individual: Individual) {
+        self.members.push(individual);
+        self.fitness.push(0.0);
+    }
+
+    /// The cheapest member under `penalty`.
+    pub(super) fn best(&self, penalty: f64) -> Option<&Individual> {
+        self.members
+            .iter()
+            .min_by(|a, b| a.cost(penalty).total_cmp(&b.cost(penalty)))
+    }
+
+    /// Recomputes biased fitness for every member.
+    pub(super) fn refresh_fitness(&mut self, penalty: f64) {
+        let n = self.members.len();
+        let distances = pairwise_distances(&self.members);
+        let alive = vec![true; n];
+        self.fitness = biased_fitness(&self.members, &distances, &alive, penalty).1;
+    }
+
+    /// Shrinks the sub-population to `target` members, evicting clones first and
+    /// otherwise the worst biased fitness.
+    ///
+    /// The pairwise distance matrix is computed once and masked as members are
+    /// removed, so the whole trim costs O(N²·n) once plus O(N²) per eviction
+    /// rather than recomputing distances every round.
+    pub(super) fn trim_to(&mut self, target: usize, penalty: f64) {
+        if self.members.len() <= target {
+            self.refresh_fitness(penalty);
+            return;
+        }
+        let n = self.members.len();
+        let distances = pairwise_distances(&self.members);
+        let mut alive = vec![true; n];
+        let mut alive_count = n;
+
+        while alive_count > target {
+            let (victim, _) = biased_fitness(&self.members, &distances, &alive, penalty);
+            let victim = victim.expect("a survivor must exist while alive_count > target");
+            alive[victim] = false;
+            alive_count -= 1;
+        }
+
+        let mut index = 0;
+        self.members.retain(|_| {
+            let keep = alive[index];
+            index += 1;
+            keep
+        });
+        self.refresh_fitness(penalty);
+    }
+}
+
+/// All pairwise broken-pairs distances, row-major.
+fn pairwise_distances(members: &[Individual]) -> Vec<f64> {
+    let n = members.len();
+    let mut distances = vec![0.0; n * n];
+    for i in 0..n {
+        for j in (i + 1)..n {
+            let d = members[i].broken_pairs_distance(&members[j]);
+            distances[i * n + j] = d;
+            distances[j * n + i] = d;
+        }
+    }
+    distances
+}
+
+/// Biased fitness of the living members, plus the index of the worst one.
+///
+/// `fitness = rank_cost / (N-1) + (1 - N_ELITE/N) · rank_diversity / (N-1)`,
+/// where `rank_diversity` orders members by decreasing contribution, so a
+/// solution earns its place either by being cheap or by being unlike the rest.
+/// Clones are pushed to the back of the queue outright.
+///
+/// The returned vector is indexed like `members`; dead entries hold `0.0`.
+fn biased_fitness(
+    members: &[Individual],
+    distances: &[f64],
+    alive: &[bool],
+    penalty: f64,
+) -> (Option<usize>, Vec<f64>) {
+    let n = members.len();
+    let living: Vec<usize> = (0..n).filter(|&i| alive[i]).collect();
+    let m = living.len();
+    let mut fitness = vec![0.0; n];
+    if m == 0 {
+        return (None, fitness);
+    }
+    if m == 1 {
+        return (Some(living[0]), fitness);
+    }
+
+    // Diversity contribution: mean distance to the N_CLOSEST living neighbors.
+    let mut contribution = vec![0.0; m];
+    let mut is_clone = vec![false; m];
+    let mut neighbor_distances: Vec<f64> = Vec::with_capacity(m);
+    for (a, &i) in living.iter().enumerate() {
+        neighbor_distances.clear();
+        neighbor_distances.extend(
+            living
+                .iter()
+                .filter(|&&j| j != i)
+                .map(|&j| distances[i * n + j]),
+        );
+        neighbor_distances.sort_by(f64::total_cmp);
+        let keep = N_CLOSEST.min(neighbor_distances.len());
+        is_clone[a] = neighbor_distances[0] <= f64::EPSILON;
+        contribution[a] = neighbor_distances[..keep].iter().sum::<f64>() / keep as f64;
+    }
+
+    let mut by_cost: Vec<usize> = (0..m).collect();
+    by_cost.sort_by(|&x, &y| {
+        members[living[x]]
+            .cost(penalty)
+            .total_cmp(&members[living[y]].cost(penalty))
+    });
+    let mut by_diversity: Vec<usize> = (0..m).collect();
+    by_diversity.sort_by(|&x, &y| contribution[y].total_cmp(&contribution[x]));
+
+    let mut rank_cost = vec![0usize; m];
+    let mut rank_diversity = vec![0usize; m];
+    for (rank, &x) in by_cost.iter().enumerate() {
+        rank_cost[x] = rank;
+    }
+    for (rank, &x) in by_diversity.iter().enumerate() {
+        rank_diversity[x] = rank;
+    }
+
+    let denominator = (m - 1) as f64;
+    let elite_weight = 1.0 - (N_ELITE as f64 / m as f64).min(1.0);
+    let mut worst = living[0];
+    let mut worst_fitness = f64::NEG_INFINITY;
+    for (a, &i) in living.iter().enumerate() {
+        let mut value = rank_cost[a] as f64 / denominator
+            + elite_weight * rank_diversity[a] as f64 / denominator;
+        fitness[i] = value;
+        if is_clone[a] {
+            value += CLONE_FITNESS_PENALTY;
+        }
+        if value > worst_fitness {
+            worst_fitness = value;
+            worst = i;
+        }
+    }
+    (Some(worst), fitness)
+}
+
+/// Picks the better of two uniformly drawn candidates (lower fitness wins).
+///
+/// `candidates` are `(sub-population, index)` pairs; the caller supplies the
+/// union of both sub-populations so selection can cross the feasibility border.
+pub(super) fn binary_tournament<T: Copy>(candidates: &[(T, f64)], rng: &mut SmallRng) -> Option<T> {
+    if candidates.is_empty() {
+        return None;
+    }
+    let a = rng.random_range(0..candidates.len());
+    let b = rng.random_range(0..candidates.len());
+    let winner = if candidates[a].1 <= candidates[b].1 {
+        a
+    } else {
+        b
+    };
+    Some(candidates[winner].0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand::SeedableRng;
+
+    fn individual(n: usize, routes: Vec<Vec<usize>>, distance: f64, excess: i64) -> Individual {
+        Individual::new(n, routes, distance, excess)
+    }
+
+    #[test]
+    fn broken_pairs_distance_properties() {
+        let n = 6;
+        let a = individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0);
+        let same = individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0);
+        let relabeled = individual(n, vec![vec![4, 5, 6], vec![1, 2, 3]], 10.0, 0);
+        let reversed = individual(n, vec![vec![3, 2, 1], vec![6, 5, 4]], 10.0, 0);
+        let other = individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 12.0, 0);
+
+        assert_eq!(a.broken_pairs_distance(&a), 0.0);
+        assert_eq!(a.broken_pairs_distance(&same), 0.0);
+        assert_eq!(
+            a.broken_pairs_distance(&relabeled),
+            0.0,
+            "route order must not count as a difference"
+        );
+        assert_eq!(
+            a.broken_pairs_distance(&reversed),
+            0.0,
+            "route orientation must not count as a difference"
+        );
+        assert!(a.broken_pairs_distance(&other) > 0.0);
+        assert_eq!(
+            a.broken_pairs_distance(&other),
+            other.broken_pairs_distance(&a),
+            "distance must be symmetric"
+        );
+    }
+
+    #[test]
+    fn survivor_selection_keeps_mu() {
+        let n = 6;
+        let mut pop = Subpopulation::new();
+        for k in 0..10 {
+            let routes = vec![vec![1, 2, 3], vec![4, 5, 6]];
+            pop.push(individual(n, routes, 10.0 + k as f64, 0));
+        }
+        pop.trim_to(4, 1.0);
+        assert_eq!(pop.len(), 4);
+    }
+
+    #[test]
+    fn survivor_selection_removes_clones_first() {
+        let n = 6;
+        let mut pop = Subpopulation::new();
+        // Three identical (but expensive-to-lose) individuals plus two distinct
+        // and strictly worse ones. Cost alone would evict the distinct pair.
+        for _ in 0..3 {
+            pop.push(individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0));
+        }
+        pop.push(individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 20.0, 0));
+        pop.push(individual(n, vec![vec![1, 3, 5], vec![2, 4, 6]], 21.0, 0));
+
+        pop.trim_to(3, 1.0);
+        assert_eq!(pop.len(), 3);
+        let clones = pop
+            .members()
+            .iter()
+            .filter(|m| m.routes == vec![vec![1, 2, 3], vec![4, 5, 6]])
+            .count();
+        assert_eq!(clones, 1, "duplicates should have been evicted first");
+    }
+
+    #[test]
+    fn biased_fitness_favors_cost_and_diversity() {
+        let n = 6;
+        let members = vec![
+            // Cheapest and structurally unique: must rank best.
+            individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0),
+            individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 20.0, 0),
+            individual(n, vec![vec![1, 4, 6], vec![2, 3, 5]], 21.0, 0),
+            individual(n, vec![vec![1, 5, 6], vec![2, 3, 4]], 22.0, 0),
+        ];
+        let distances = pairwise_distances(&members);
+        let alive = vec![true; members.len()];
+        let (worst, fitness) = biased_fitness(&members, &distances, &alive, 1.0);
+
+        assert_eq!(
+            fitness
+                .iter()
+                .enumerate()
+                .min_by(|a, b| a.1.total_cmp(b.1))
+                .map(|(i, _)| i),
+            Some(0),
+            "the cheapest, most distinct individual should rank best"
+        );
+        assert_ne!(worst, Some(0), "it must not be the eviction candidate");
+    }
+
+    #[test]
+    fn fitness_ranks_a_cheaper_clone_pair_by_cost() {
+        // With diversity tied, cost decides the order.
+        let n = 4;
+        let members = vec![
+            individual(n, vec![vec![1, 2], vec![3, 4]], 30.0, 0),
+            individual(n, vec![vec![1, 3], vec![2, 4]], 10.0, 0),
+        ];
+        let distances = pairwise_distances(&members);
+        let alive = vec![true; 2];
+        let (_, fitness) = biased_fitness(&members, &distances, &alive, 1.0);
+        assert!(fitness[1] < fitness[0]);
+    }
+
+    #[test]
+    fn binary_tournament_prefers_lower_fitness() {
+        let mut rng = SmallRng::seed_from_u64(3);
+        let candidates = [(0usize, 0.0), (1usize, 1.0)];
+        let mut wins = [0usize; 2];
+        for _ in 0..200 {
+            let winner = binary_tournament(&candidates, &mut rng).unwrap();
+            wins[winner] += 1;
+        }
+        assert!(
+            wins[0] > wins[1],
+            "the fitter candidate should win more often: {wins:?}"
+        );
+        assert!(binary_tournament::<usize>(&[], &mut rng).is_none());
+    }
+}

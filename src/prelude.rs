@@ -18,7 +18,7 @@ pub use crate::search_state::{SearchState, SearchStateCloneType, TrajectoryPoint
 // Heuristics
 pub use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearchForVrp, BangBangSimulatedAnnealing, BeamSearch,
-    BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic, Iterated,
+    BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic, HybridGeneticSearchForVrp, Iterated,
     LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp, LocalSearch, ParentSelection,
     RandomWalk, Restart, RewardShaping, RlBreakoutLocalSearchForMaxCut, RlSearch, Sequential,
     SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch,

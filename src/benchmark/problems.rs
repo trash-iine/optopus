@@ -10,8 +10,9 @@ use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearchForVrp, BreakoutLocalSearchForMaxCut, Heuristic,
-    LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES, PopulationAnnealingForMaxCut,
-    RlBreakoutLocalSearchForMaxCut, StopCondition, SubProblemBasedCrossover, WalkSatForSat,
+    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES,
+    PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut, StopCondition,
+    SubProblemBasedCrossover, WalkSatForSat,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -527,6 +528,21 @@ impl ConfigurableProblem for Vrp {
                 cond,
                 removal_fraction.unwrap_or(0.15),
                 cooling_rate.unwrap_or(0.9995),
+            ))),
+            HeuristicConfig::HybridGeneticSearch {
+                min_population_size,
+                generation_size,
+                granularity,
+                target_feasible,
+                restart_generations,
+                ..
+            } => Ok(Box::new(HybridGeneticSearchForVrp::new(
+                cond,
+                min_population_size.unwrap_or(25),
+                generation_size.unwrap_or(40),
+                granularity.unwrap_or(20),
+                target_feasible.unwrap_or(0.2),
+                Some(restart_generations.unwrap_or(20_000)),
             ))),
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for Vrp",

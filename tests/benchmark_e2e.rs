@@ -413,6 +413,106 @@ max_iteration = 15
     );
 }
 
+/// A CVRPLIB-format instance small enough for a fast test: a depot plus 8
+/// customers on a ring, capacity 3.
+fn write_temp_cvrp(tag: &str) -> std::path::PathBuf {
+    let mut body = String::from(
+        "NAME : e2e\nTYPE : CVRP\nDIMENSION : 9\nEDGE_WEIGHT_TYPE : EUC_2D\n\
+         CAPACITY : 3\nNODE_COORD_SECTION\n1 0 0\n",
+    );
+    for i in 0..8 {
+        let theta = 2.0 * std::f64::consts::PI * i as f64 / 8.0;
+        body.push_str(&format!(
+            "{} {} {}\n",
+            i + 2,
+            (10.0 * theta.cos()).round() as i64,
+            (10.0 * theta.sin()).round() as i64
+        ));
+    }
+    body.push_str("DEMAND_SECTION\n1 0\n");
+    for i in 0..8 {
+        body.push_str(&format!("{} 1\n", i + 2));
+    }
+    body.push_str("DEPOT_SECTION\n1\n-1\nEOF\n");
+    write_temp_file(tag, &body)
+}
+
+/// HGS threads every decision — initial tours, parent tournaments, crossover
+/// cut points, local-search move order, repair coin flips — through `state.rng`.
+#[test]
+fn hybrid_genetic_search_is_bit_identical_across_reruns_with_seed() {
+    let instance = write_temp_cvrp("repro_hgs");
+    let config_toml = format!(
+        r#"
+num_runs = 2
+seed = 4242
+
+[[instances]]
+path = "{}"
+problem = "Vrp"
+
+[[heuristics]]
+kind = "HybridGeneticSearch"
+min_population_size = 6
+generation_size = 8
+granularity = 4
+target_feasible = 0.2
+
+[heuristics.stop_condition]
+max_iteration = 200
+"#,
+        instance.display()
+    );
+
+    let first = run_benchmark(&config_toml);
+    let second = run_benchmark(&config_toml);
+    let _ = std::fs::remove_file(&instance);
+
+    for (a, b) in first.results[0].runs.iter().zip(&second.results[0].runs) {
+        assert_eq!(a.status, "success");
+        assert_eq!(a.best_objective, b.best_objective, "objective diverged");
+        assert_eq!(a.best_iteration, b.best_iteration, "iteration diverged");
+        assert_eq!(a.solution, b.solution, "run {} diverged", a.run_index);
+        // The encoding is `0, route…, 0, route…`: every customer exactly once.
+        let mut customers: Vec<usize> = a.solution.iter().copied().filter(|&c| c != 0).collect();
+        customers.sort_unstable();
+        assert_eq!(customers, (1..=8).collect::<Vec<_>>());
+    }
+}
+
+/// `HybridGeneticSearch` is registered only for `Vrp`; every other problem must
+/// reject it at build time rather than silently ignoring the config.
+#[test]
+fn hybrid_genetic_search_is_rejected_for_non_vrp_problems() {
+    let instance = write_temp_file("hgs_reject", "4 4\n1 2 1\n2 3 1\n3 4 1\n4 1 1\n");
+    let config_toml = format!(
+        r#"
+num_runs = 1
+
+[[instances]]
+path = "{}"
+problem = "MaxCut"
+
+[[heuristics]]
+kind = "HybridGeneticSearch"
+
+[heuristics.stop_condition]
+max_iteration = 10
+"#,
+        instance.display()
+    );
+    let report = run_benchmark(&config_toml);
+    let _ = std::fs::remove_file(&instance);
+    // An unsupported heuristic fails per run rather than aborting the benchmark.
+    for run in &report.results[0].runs {
+        assert!(
+            run.status.contains("not supported for MaxCut"),
+            "expected a config error, got {:?}",
+            run.status
+        );
+    }
+}
+
 #[test]
 fn run_from_config_rejects_empty_glob() {
     let config_toml = r#"

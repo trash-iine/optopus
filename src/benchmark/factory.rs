@@ -352,6 +352,7 @@ where
         | HeuristicConfig::RlBreakoutLocalSearch { .. }
         | HeuristicConfig::LinKernighanHelsgaun { .. }
         | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
+        | HeuristicConfig::HybridGeneticSearch { .. }
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::LocalSearch { neighbor, .. }
         | HeuristicConfig::TabuSearch { neighbor, .. }

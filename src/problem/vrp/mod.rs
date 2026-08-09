@@ -8,7 +8,9 @@
 mod crossover;
 mod neighbor;
 mod problem;
+mod split;
 
 pub use crossover::VrpOrderCrossover;
 pub use neighbor::{VrpRelocateNeighbor, VrpSwapNeighbor, VrpTwoOptNeighbor};
 pub use problem::{VRP_DIST_MATRIX_MAX_N, Vrp, VrpSolution};
+pub use split::split_giant_tour;

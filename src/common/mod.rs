@@ -4,6 +4,7 @@ pub mod binary;
 pub mod gain_index;
 pub mod graph;
 pub mod parse;
+pub mod permutation;
 pub mod tabu;
 
 pub use binary::{
@@ -13,4 +14,5 @@ pub use binary::{
 pub use gain_index::GainIndex;
 pub use graph::{Graph, seeded_rng};
 pub use parse::InstanceLines;
+pub use permutation::order_crossover;
 pub use tabu::{VarTabuMap, add_var_to_tabu, is_var_enabled};

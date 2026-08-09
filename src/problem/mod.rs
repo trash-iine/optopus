@@ -50,4 +50,5 @@ pub use vertex_cover::{
 };
 pub use vrp::{
     Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution, VrpSwapNeighbor, VrpTwoOptNeighbor,
+    split_giant_tour,
 };
