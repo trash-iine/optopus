@@ -1,1 +1,6 @@
 G*
+# Reproduced byte for byte by the generator examples:
+#   cargo run --release --example generate_dense_maxcut
+generated/
+#   cargo run --release --example generate_sparse_maxcut
+generated_sparse/

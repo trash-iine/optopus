@@ -132,6 +132,11 @@ pub enum HeuristicConfig {
     },
     /// Breakout Local Search (MaxCut only).
     BreakoutLocalSearch {
+        /// Tabu tenure range `(min, max)`, in Benlic & Hao's `γ` — a vertex
+        /// stays forbidden for `2γ` moves, because the paper counts the tenure
+        /// twice. **This is the one place the key is doubled**: the same range
+        /// under `TabuSearch` or `RlBreakoutLocalSearch` prohibits for half as
+        /// long, so the numbers are not interchangeable between them.
         tabu_tenure: (u64, u64),
         t: u64,
         l0: u64,
@@ -167,6 +172,9 @@ pub enum HeuristicConfig {
     /// Breakout Local Search with a learned (contextual-bandit) perturbation
     /// policy (MaxCut only).
     RlBreakoutLocalSearch {
+        /// Tabu tenure range `(min, max)` in moves, taken literally — unlike
+        /// [`BreakoutLocalSearch`](Self::BreakoutLocalSearch), which reads the
+        /// same key as the paper's `γ` and prohibits for `2γ`.
         tabu_tenure: (u64, u64),
         /// Omega normalization period for the stagnation features.
         t: u64,
@@ -191,6 +199,15 @@ pub enum HeuristicConfig {
         /// error.
         #[serde(skip_serializing_if = "Option::is_none")]
         policy_weights: Option<Vec<f64>>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// Exact kernelization preprocessing (MaxCut only): reduce the instance,
+    /// run the nested heuristic on the kernel, lift the result back.
+    Kernelize {
+        /// The heuristic to run on the kernel (exactly 1 entry).
+        #[serde(default)]
+        steps: Vec<HeuristicConfig>,
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
@@ -277,6 +294,7 @@ impl HeuristicConfig {
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
             Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
             Self::RlBreakoutLocalSearch { .. } => "RlBreakoutLocalSearch",
+            Self::Kernelize { .. } => "Kernelize",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::WalkSat { .. } => "WalkSat",
             Self::Sequential { .. } => "Sequential",
@@ -307,7 +325,8 @@ impl HeuristicConfig {
             | Self::Iterated { steps, .. }
             | Self::VariableNeighborhoodSearch { steps, .. }
             | Self::Restart { steps, .. }
-            | Self::GeneticAlgorithm { steps, .. } => steps,
+            | Self::GeneticAlgorithm { steps, .. }
+            | Self::Kernelize { steps, .. } => steps,
             _ => &[],
         }
     }
@@ -324,6 +343,7 @@ impl HeuristicConfig {
             | Self::BreakoutLocalSearch { stop_condition, .. }
             | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
             | Self::RlBreakoutLocalSearch { stop_condition, .. }
+            | Self::Kernelize { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::WalkSat { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
