@@ -624,6 +624,10 @@ impl BinaryProblem for Qubo {
         sol.x[i]
     }
 
+    fn assignment(sol: &QuboSolution) -> &[bool] {
+        &sol.x
+    }
+
     fn flip_move(sol: &QuboSolution, i: usize) -> Self::Flip {
         super::QuboFlipNeighbor {
             i,

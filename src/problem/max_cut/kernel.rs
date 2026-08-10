@@ -41,8 +41,9 @@
 
 use std::collections::BTreeMap;
 
-use super::problem::MaxCut;
+use super::problem::{MaxCut, MaxCutSolution};
 use crate::common::Graph;
+use crate::trait_defs::ProblemReduction;
 
 /// One applied reduction, replayed in reverse to restore a removed vertex.
 #[derive(Debug, Clone, PartialEq)]
@@ -273,6 +274,40 @@ impl MaxCutKernel {
     /// Panics if `full_x` is shorter than the original instance.
     pub fn project(&self, full_x: &[bool]) -> Vec<bool> {
         self.original_of.iter().map(|&v| full_x[v]).collect()
+    }
+}
+
+/// The kernel as a map between problem instances: source and target are both
+/// `MaxCut`, and the objective is preserved up to [`offset`](MaxCutKernel::offset).
+///
+/// Stating it as the trait is what lets
+/// [`KernelizedSearchForMaxCut`](crate::heuristic::KernelizedSearchForMaxCut)
+/// reach the kernel through shared search-state plumbing rather than its own
+/// copy of it. The inherent [`project`](MaxCutKernel::project) /
+/// [`lift`](MaxCutKernel::lift) stay: they work in raw assignments, which is
+/// what a caller holding an incrementally maintained solution actually wants.
+impl ProblemReduction for MaxCutKernel {
+    type Source = MaxCut;
+    type Target = MaxCut;
+
+    fn target(&self) -> &MaxCut {
+        self.kernel()
+    }
+
+    fn project(&self, sol: &MaxCutSolution) -> MaxCutSolution {
+        MaxCutSolution::new_from_assignment(self.kernel(), MaxCutKernel::project(self, &sol.x))
+    }
+
+    fn lift(&self, source: &MaxCut, base: &MaxCutSolution, sol: &MaxCutSolution) -> MaxCutSolution {
+        let lifted = MaxCutKernel::lift(self, &sol.x);
+        // Positions past the original vertex set — a caller whose index space
+        // is wider than this instance's — keep their value from `base`.
+        let mut x = base.x.clone();
+        if x.len() < lifted.len() {
+            x.resize(lifted.len(), false);
+        }
+        x[..lifted.len()].copy_from_slice(&lifted);
+        MaxCutSolution::new_from_assignment(source, x)
     }
 }
 

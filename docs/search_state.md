@@ -31,6 +31,8 @@ pub struct SearchState<'a, P: ProblemTrait> {
 | `get_best_move_par_chunks(iter, chunk_size)` | Parallel best-move scan via Rayon. |
 | `duration()` | Elapsed time since the current sub-run started. |
 | `clone_for_new_run(kind)` + `update_state(sub)` | Sub-run isolation pattern (see below). |
+| `open_reduction(&reduction)` | Opens a sub-state on a `ProblemReduction`'s target, warm-started from the current solution and seeded from this state's RNG. |
+| `close_reduction(&reduction, &sub)` | Folds that sub-run back: merges its counters, lifts its best solution and walks the current one onto it, refreshes best. |
 
 ## `SearchStateCloneType` variants
 

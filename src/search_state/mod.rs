@@ -491,27 +491,6 @@ where
         })
     }
 
-    /// Merges the accounting of a sub-run that ran on a **different** instance
-    /// — an exact kernel, a contracted graph — into this state.
-    ///
-    /// Such a sub-run cannot go through [`update_state`](Self::update_state),
-    /// which requires the same instance and moves the solution across. Its
-    /// solution has to be carried over by the caller (through a lifting or a
-    /// projection); its *work*, on the other hand, is comparable and must not
-    /// be dropped, or a benchmark reports near-zero acceptance counters exactly
-    /// on the instances where the wrapper did something.
-    ///
-    /// The sub-state is assumed to start from zeroed counters, i.e. to have
-    /// been built with [`with_solution`](Self::with_solution) or
-    /// [`with_solution_and_seed`](Self::with_solution_and_seed) rather than
-    /// cloned.
-    pub fn merge_foreign_sub_run<Other: ProblemTrait>(&mut self, sub: &SearchState<'_, Other>) {
-        self.iteration += sub.iteration;
-        self.n_accepted += sub.n_accepted;
-        self.n_rejected += sub.n_rejected;
-        self.n_best_updates += sub.n_best_updates;
-    }
-
     /// Runs `heuristic` on a sub-state cloned with `clone_type`, then merges the
     /// result back — the standard `clone_for_new_run` → `run` → `update_state`
     /// triad used by meta-heuristics.
@@ -524,6 +503,24 @@ where
         heuristic.run(&mut sub)?;
         self.update_state(sub);
         Ok(())
+    }
+
+    /// Opens a sub-state on a [`ProblemReduction`](crate::trait_defs::ProblemReduction)'s
+    /// target, warm-started from the current solution.
+    ///
+    /// The reduction is a pure map — it knows how to project a solution and
+    /// nothing about search state — so the *crossing* is this method: the seed
+    /// is drawn from this state's RNG, which is what keeps a seeded run
+    /// reproducible through a reduction, and the sub-state starts with zeroed
+    /// counters so [`close_foreign_sub_run`](Self::close_foreign_sub_run) can
+    /// merge it back.
+    pub fn open_reduction<'r, R>(&mut self, reduction: &'r R) -> SearchState<'r, R::Target>
+    where
+        R: crate::trait_defs::ProblemReduction<Source = Problem> + ?Sized,
+    {
+        let seed = rand::RngCore::next_u64(&mut self.rng);
+        let start = reduction.project(&self.solution);
+        SearchState::with_solution_and_seed(reduction.target(), start, seed)
     }
 
     /// Returns `true` if applying `m` to the current solution yields a solution
@@ -542,6 +539,67 @@ where
         Move: MoveToNeighbor<Problem>,
     {
         m.move_to_be_better_than(self.instance, &self.solution, &self.best_solution)
+    }
+}
+
+impl<'a, Problem> SearchState<'a, Problem>
+where
+    Problem: crate::trait_defs::BinaryProblem,
+{
+    /// Folds a sub-run that ran on a [`ProblemReduction`]'s target back into
+    /// this state — the closing half of
+    /// [`open_reduction`](Self::open_reduction).
+    ///
+    /// Three things happen, and the order is load-bearing:
+    ///
+    /// 1. **The sub-run's accounting is merged.** It ran on a *different*
+    ///    instance, so it cannot go through [`update_state`](Self::update_state),
+    ///    which requires the same instance. Its work, on the other hand, is
+    ///    comparable and must not be dropped, or a benchmark reports near-zero
+    ///    counters exactly on the instances where the reduction did something.
+    ///    The sub-state is assumed to start from zeroed counters, which
+    ///    `open_reduction` guarantees.
+    /// 2. **Its best solution is lifted and walked to**, one flip per variable
+    ///    that differs. Walking rather than assigning keeps the cached gains,
+    ///    objective and any improving-move index exact without an `O(m)`
+    ///    rebuild, and charges the write to `iteration` / `n_accepted` the same
+    ///    way every other move is charged. A wholesale assignment would be a
+    ///    silent discontinuity in both.
+    /// 3. **The best is updated**, once, after the walk.
+    ///
+    /// Merging after the walk instead would record a `best_iteration` that
+    /// omits the sub-run's work; walking from a rebuilt solution instead would
+    /// lose the caches. Both are invisible in the objective, which is why this
+    /// is one method rather than three a caller assembles.
+    ///
+    /// It is `sub.best_solution` that crosses, not `sub.solution`: a tabu-style
+    /// sub-run usually ends part-way out of a local optimum, so where it
+    /// stopped is not what it found.
+    ///
+    /// [`ProblemReduction`]: crate::trait_defs::ProblemReduction
+    pub fn close_reduction<R>(
+        &mut self,
+        reduction: &R,
+        sub: &SearchState<'_, R::Target>,
+    ) -> Result<(), crate::error::OptError>
+    where
+        R: crate::trait_defs::ProblemReduction<Source = Problem> + ?Sized,
+    {
+        self.iteration += sub.iteration;
+        self.n_accepted += sub.n_accepted;
+        self.n_rejected += sub.n_rejected;
+        self.n_best_updates += sub.n_best_updates;
+
+        let lifted = reduction.lift(self.instance, &self.solution, &sub.best_solution);
+        for (i, &side) in Problem::assignment(&lifted).iter().enumerate() {
+            if Problem::variable(&self.solution, i) != side {
+                let flip = Problem::flip_move(&self.solution, i);
+                self.apply_move_only(&flip)?;
+            }
+        }
+
+        self.update_best();
+        Ok(())
     }
 }
 
@@ -844,5 +902,129 @@ mod tests {
         assert_eq!(parent.n_best_updates, child_best);
         // initial_solution must NOT be overwritten by the child's
         assert_eq!(parent.initial_solution.x, parent_initial_before);
+    }
+
+    /// Crossing a [`ProblemReduction`](crate::trait_defs::ProblemReduction) is
+    /// a search-state operation, and these pin what "consistent" means for it.
+    /// `MaxCutKernel` is the one implementation the core library has.
+    mod reduction_crossing {
+        use super::*;
+        use crate::common::hamming_distance;
+        use crate::problem::MaxCutKernel;
+        use crate::trait_defs::ProblemReduction;
+        use rand::rngs::SmallRng;
+        use rand::{Rng, SeedableRng};
+
+        /// A sparse instance, i.e. one the kernel rules actually reduce.
+        fn reducible_instance(seed: u64, n: usize) -> MaxCut {
+            let mut rng = SmallRng::seed_from_u64(seed);
+            let mut edges = Vec::new();
+            for i in 0..n {
+                for j in (i + 1)..n {
+                    if rng.random_bool(2.5 / n as f64) {
+                        edges.push((i, j, 1.0));
+                    }
+                }
+            }
+            edges.push((n - 1, n - 2, 1.0));
+            MaxCut::from_edges(edges)
+        }
+
+        /// Closing must land on exactly the solution a from-scratch rebuild of
+        /// the lifted assignment would produce — caches included — and charge
+        /// exactly one move per changed variable.
+        ///
+        /// This is the whole justification for walking instead of assigning:
+        /// the result is the same, the cost is `O(changed · degree)` instead of
+        /// `O(m)`, and the accounting matches every other move the search makes.
+        #[test]
+        fn close_reduction_lands_on_the_lifted_solution_with_exact_caches() {
+            let mc = reducible_instance(11, 300);
+            let kernel = MaxCutKernel::reduce(&mc);
+            assert!(!kernel.is_trivial(), "the instance must actually reduce");
+
+            let mut state = SearchState::new_with_seed(&mc, 3);
+            let sub = state.open_reduction(&kernel);
+            let before_x = state.solution.x.clone();
+            let before_iteration = state.iteration;
+
+            state.close_reduction(&kernel, &sub).unwrap();
+
+            let target = kernel.lift(&sub.best_solution.x);
+            let rebuilt = MaxCutSolution::new_from_assignment(&mc, target.clone());
+            assert_eq!(state.solution.x, rebuilt.x, "assignments diverged");
+            assert_eq!(state.solution.gain, rebuilt.gain, "gain caches diverged");
+            assert_eq!(
+                state.solution.objective, rebuilt.objective,
+                "objectives diverged"
+            );
+            assert_eq!(
+                state.iteration - before_iteration,
+                hamming_distance(&before_x, &target) as u64,
+                "one move per changed variable, no more and no less"
+            );
+        }
+
+        /// A warm start opened on the target must reproduce the reduction's own
+        /// projection, and must consume exactly one draw from the parent's RNG
+        /// — the sub-run's whole trajectory hangs off that seed.
+        #[test]
+        fn open_reduction_projects_the_incumbent_and_draws_one_seed() {
+            let mc = reducible_instance(2, 200);
+            let kernel = MaxCutKernel::reduce(&mc);
+
+            let mut state = SearchState::new_with_seed(&mc, 5);
+            // A probe advanced by exactly one draw: `open_reduction` must leave
+            // the state's RNG in the same place.
+            let mut probe = state.rng.clone();
+            rand::RngCore::next_u64(&mut probe);
+
+            let sub = state.open_reduction(&kernel);
+            assert_eq!(
+                sub.solution.x,
+                ProblemReduction::project(&kernel, &state.solution).x,
+                "the warm start must be the reduction's projection"
+            );
+            assert_eq!(sub.iteration, 0, "a sub-state starts from zeroed counters");
+            assert_eq!(
+                rand::RngCore::next_u64(&mut state.rng),
+                rand::RngCore::next_u64(&mut probe),
+                "opening must consume exactly one draw"
+            );
+        }
+
+        /// `close_reduction` must account for the whole crossing: the sub-run's
+        /// iterations *and* the moves the lifting itself applied. Dropping
+        /// either is invisible in the objective and shows up as a benchmark
+        /// reporting near-zero counters exactly on the instances where the
+        /// reduction did something.
+        #[test]
+        fn close_reduction_charges_the_sub_run_and_the_lifting() {
+            let mc = reducible_instance(4, 250);
+            let kernel = MaxCutKernel::reduce(&mc);
+            let mut state = SearchState::new_with_seed(&mc, 1);
+
+            // A hand-rolled sub-run rather than a real heuristic: what is being
+            // pinned is the accounting of the crossing, and this module has no
+            // business knowing what a heuristic is.
+            let mut sub = state.open_reduction(&kernel);
+            for _ in 0..20 {
+                let m = first_flip(kernel.kernel(), &sub.solution);
+                sub.apply(&m).unwrap();
+            }
+            assert!(sub.iteration > 0, "the sub-run must have done something");
+
+            let before_iteration = state.iteration;
+            let before_x = state.solution.x.clone();
+            state.close_reduction(&kernel, &sub).unwrap();
+
+            let flips = hamming_distance(&before_x, &state.solution.x) as u64;
+            assert_eq!(state.iteration, before_iteration + sub.iteration + flips);
+            assert_eq!(
+                state.best_solution.objective,
+                mc.calculate_cut_size(&state.best_solution.x),
+                "the installed solution's cached objective must be exact"
+            );
+        }
     }
 }

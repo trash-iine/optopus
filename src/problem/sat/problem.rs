@@ -350,6 +350,10 @@ impl crate::trait_defs::BinaryProblem for Sat {
         sol.x[i]
     }
 
+    fn assignment(sol: &SatSolution) -> &[bool] {
+        &sol.x
+    }
+
     fn flip_move(sol: &SatSolution, i: usize) -> Self::Flip {
         super::SatFlipNeighbor {
             i,

@@ -1,10 +1,8 @@
 //! Runs any MaxCut heuristic on an exactly reduced instance.
 
-use rand::RngCore;
-
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
-use crate::problem::{MaxCut, MaxCutFlipNeighbor, MaxCutKernel, MaxCutSolution};
+use crate::problem::{MaxCut, MaxCutKernel};
 use crate::search_state::{SearchState, SearchStateCloneType};
 
 /// Kernelization wrapper: reduces the instance once with [`MaxCutKernel`],
@@ -96,31 +94,16 @@ impl Heuristic<MaxCut> for KernelizedSearch {
         }
         let kernel = self.kernel.as_ref().expect("built above");
 
-        // Warm-start the kernel from the incumbent so repeated cycles keep
-        // improving rather than restarting from scratch.
-        let seed = state.rng.next_u64();
-        let start =
-            MaxCutSolution::new_from_assignment(kernel.kernel(), kernel.project(&state.solution.x));
-        let mut sub_state = SearchState::with_solution_and_seed(kernel.kernel(), start, seed);
+        // The kernel is a separate instance, so `update_state` cannot carry the
+        // sub-run back. The two search-state methods below are that crossing:
+        // `open_reduction` warm-starts the kernel from the incumbent (so
+        // repeated cycles keep improving rather than restarting), and
+        // `close_reduction` merges the counters, lifts the result back and
+        // walks the solution onto it.
+        let mut sub_state = state.open_reduction(kernel);
         self.inner.run(&mut sub_state)?;
-        // The kernel is a separate instance, so `update_state` cannot be used;
-        // the counters are merged explicitly instead. Only the solution crosses
-        // by hand, through the lifting below.
-        state.merge_foreign_sub_run(&sub_state);
+        state.close_reduction(kernel, &sub_state)?;
 
-        // Apply the lifted assignment one flip at a time so the incremental
-        // gain cache and objective stay exact.
-        let lifted = kernel.lift(&sub_state.best_solution.x);
-        for (v, &target) in lifted.iter().enumerate() {
-            if state.solution.x[v] != target {
-                let flip = MaxCutFlipNeighbor {
-                    i: v,
-                    gain: state.solution.gain[v],
-                };
-                state.apply_move_only(&flip)?;
-            }
-        }
-        state.update_best();
         ensure_progress(state, before);
         Ok(())
     }
@@ -142,7 +125,7 @@ fn ensure_progress(state: &mut SearchState<'_, MaxCut>, before: u64) {
 mod tests {
     use super::*;
     use crate::heuristic::{LocalSearch, TabuSearch};
-    use crate::problem::MaxCutFlipNeighbor;
+    use crate::problem::{MaxCutFlipNeighbor, MaxCutSolution};
     use rand::rngs::SmallRng;
     use rand::{Rng, SeedableRng};
 
@@ -207,6 +190,45 @@ mod tests {
             "the test instance must actually reduce"
         );
         assert!(run(&mc, true).objective >= run(&mc, false).objective);
+    }
+
+    /// Exact trajectory pin for the path that actually reduces.
+    ///
+    /// The other tests here state properties — the objective stays exact, the
+    /// kernel is smaller, the trivial case falls through — and a refactor can
+    /// satisfy all of them while walking a different search. This asserts the
+    /// trajectory itself: the answer, when it was found, and the total the
+    /// wrapper charges once the kernel sub-run is merged and the lifting
+    /// applied.
+    ///
+    /// If it fails, the question is not "what is the new value" but "which RNG
+    /// draw or iteration count moved". The seed derivation
+    /// (`state.rng.next_u64()`), the warm-start projection, the counter merge
+    /// and the flip-by-flip lifting all land here.
+    #[test]
+    fn the_reducing_path_trajectory_is_pinned() {
+        let mc = sparse_instance(11, 300);
+        assert!(!MaxCutKernel::reduce(&mc).is_trivial());
+
+        let mut state = SearchState::new_with_seed(&mc, 3);
+        let mut search = KernelizedSearch::new(
+            StopCondition::iterations(20_000),
+            Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
+                StopCondition::iterations(2_000),
+                (2, 8),
+                None,
+            )),
+        );
+        search.run(&mut state).unwrap();
+
+        assert_eq!(
+            (
+                state.best_solution.objective,
+                state.best_iteration,
+                state.iteration,
+            ),
+            (344.0, 2119, 20119)
+        );
     }
 
     /// On an instance the rules cannot touch the wrapper must be inert, not

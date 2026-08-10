@@ -121,6 +121,36 @@ On a dense instance the wrapper is measurably inert: `is_trivial` fires before
 anything is allocated and the inner heuristic runs on the original state, so
 the two arms differ only by the per-run seed derivation, not by the search.
 
+## How the wrapper reaches the kernel
+
+`MaxCutKernel` states its reduction through
+[`ProblemReduction`](../../src/trait_defs/reduction.rs) — an instance map
+`Source -> Target` plus a solution map each way. The trait is *only* the map;
+the part worth sharing is the **crossing**, because a sub-run on a different
+instance cannot go back through `SearchState::update_state`. That is a
+search-state operation and lives on `SearchState`:
+
+```rust
+let mut sub = state.open_reduction(kernel);   // project the warm start, seed from the parent RNG
+self.inner.run(&mut sub)?;
+state.close_reduction(kernel, &sub)?;         // merge counters, lift, walk there, update best
+```
+
+What `close_reduction` does inside is three steps whose order is load-bearing,
+and every way of getting it wrong is invisible in the objective: merging the
+counters after the walk records a `best_iteration` that omits the sub-run's
+work, and assigning the lifted solution instead of walking to it one flip per
+changed vertex discards the incremental gain cache the outer state maintains
+and charges nothing to `iteration` / `n_accepted`. That is why it is one method
+rather than three a caller assembles.
+
+It is the sub-run's `best_solution` that crosses, not where it stopped: a
+tabu-style inner search usually ends part-way out of a local optimum.
+
+`Source` and `Target` are separate associated types rather than one because a
+reduction need not stay inside its problem — here they are both `MaxCut`, but a
+penalised objective whose penalty term is quadratic reduces into a QUBO.
+
 ## Correctness
 
 The reduction is only worth anything if it is exact, so that is what the tests

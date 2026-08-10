@@ -614,6 +614,10 @@ impl crate::trait_defs::BinaryProblem for FormulaProblem {
         sol.x[i]
     }
 
+    fn assignment(sol: &FormulaSolution) -> &[bool] {
+        &sol.x
+    }
+
     fn flip_move(sol: &FormulaSolution, i: usize) -> Self::Flip {
         super::FormulaFlipNeighbor {
             i,

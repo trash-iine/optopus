@@ -50,7 +50,11 @@ src/
 │   ├── evaluate.rs           Evaluable, Evaluate
 │   ├── crossover.rs          Crossover, SubProblemExtractable
 │   ├── tabu.rs               EnabledTabu
-│   └── binary.rs             BinaryProblem (unlocks the shared binary machinery)
+│   ├── binary.rs             BinaryProblem (unlocks the shared binary machinery)
+│   └── reduction.rs          ProblemReduction: P1 -> P2 instance map + the
+│                             solution map both ways. Pure — the crossing lives
+│                             on SearchState (open_reduction / move_to_assignment
+│                             / close_foreign_sub_run)
 ├── common/                   shared data structures & helpers (put new shared code here)
 │   ├── graph/                Graph (used by MaxCut / VertexCover); mod.rs = Graph
 │   │                         + load_from_file / write_to_file, generator.rs =
@@ -128,6 +132,16 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
 - **`Crossover<P>`**: `crossover(&mut self, prob, sol1, sol2, rng) -> Result<Solution, OptError>` (exactly two parents; RNG passed in for reproducibility; `Err` only when the operator genuinely cannot produce an offspring, e.g. an inner sub-heuristic failed).
 - **`EnabledTabu`**: `type TabuMap: Default`, `is_move_enabled(map, iter)`, `add_to_tabu_map(map, iter, tenure, rng)`. The tenure is sampled from the passed RNG (`&mut state.rng`) so seeded runs are bit-reproducible. Required by TabuSearch.
 - **`SubProblemExtractable`**: `extract_sub_problem(sol1, sol2) -> Self`, `lift_solution(sol1, sol2, sub_sol)`. Variables that agree in both parents are fixed; the disagreeing variables form the sub-problem. Binary problems delegate lifting to `common::lift_binary_solution` (shared index space: MaxCut, VertexCover) or `common::lift_compact_binary_solution` (compacted indices: SAT, Formula); QUBO keeps its own bias-folding variant.
+- **`ProblemReduction`**: a map from one problem instance to another, with solutions crossing both ways. **Pure — it never touches a `SearchState`.**
+  ```rust
+  type Source: ProblemTrait;  type Target: ProblemTrait;
+  fn target(&self) -> &Self::Target;                                      // P1 -> P2
+  fn project(&self, sol: &SourceSolution<Self>) -> TargetSolution<Self>;  // P1.Solution -> P2.Solution
+  fn lift(&self, source, base, sol) -> SourceSolution<Self>;              // P2.Solution -> P1.Solution
+  ```
+  `lift` takes `base` because the target need not cover the source's whole index space — uncovered positions keep `base`'s value; it takes `source` because `MaxCutKernel` is stored in a heuristic that outlives any one `run_once` and so cannot borrow the instance. Implemented by `MaxCutKernel` (`Source = Target = MaxCut`); the two associated types are separate because a reduction need not stay inside its problem. Exactness is **not** required by the trait — it is required by each user, and stated on the implementation (`MaxCutKernel`'s `kernel_cut(y) + offset == original_cut(lift(y))` for every `y`).
+
+  **Running a heuristic on the target and folding the result back is a SearchState operation**, and lives there (see below): `open_reduction` / `move_to_assignment` / `close_foreign_sub_run`.
 - **`BinaryProblem`**: `type Flip`, `variable_indices()`, `variable(sol, i)`, `flip_move(sol, i)` — implemented by all binary problems; unlocks the shared machinery in `src/common/binary.rs`.
 
 ## SearchState (`src/search_state/mod.rs`)
@@ -147,6 +161,12 @@ pub struct SearchState<'a, P: ProblemTrait> {
 ```
 
 **Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` / `with_solution_and_seed(problem, sol, seed)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `run_sub(heuristic, clone_type)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, `duration()`.
+
+**Crossing to another instance** — a sub-run on a *different* problem instance (an exact kernel) cannot go through `update_state`, so it has its own pair, and every heuristic that reduces uses them instead of hand-writing the steps:
+- `open_reduction(&reduction) -> SearchState<R::Target>` — projects the incumbent as the warm start and draws the sub-state's seed from this state's RNG (exactly one draw). Any `ProblemTrait`.
+- `close_reduction(&reduction, &sub)` — merges the sub-run's counters, lifts its **best** solution and walks the current solution onto it one flip per differing variable, then `update_best`. `BinaryProblem` only.
+
+The three steps inside `close_reduction` are deliberately not three methods. Their order is load-bearing and every way of getting it wrong is invisible in the objective: merging after the walk records a `best_iteration` that omits the sub-run's work, and assigning the lifted solution instead of walking to it discards the incremental gain cache and charges nothing to `iteration` / `n_accepted`.
 
 **Reproducibility**: all randomness (initial solutions, move selection, tabu tenures, BLS perturbations) flows through `state.rng`. `clone_for_new_run` forks the RNG so meta-heuristic composition stays deterministic under a fixed seed.
 

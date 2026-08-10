@@ -13,6 +13,7 @@ mod evaluate;
 mod neighbor;
 mod problem;
 mod rankable;
+mod reduction;
 mod tabu;
 
 pub use binary::BinaryProblem;
@@ -21,4 +22,5 @@ pub use evaluate::{Evaluable, Evaluate};
 pub use neighbor::MoveToNeighbor;
 pub use problem::ProblemTrait;
 pub use rankable::{Distance, Rankable, filter_best, rank_cmp};
+pub use reduction::{ProblemReduction, SourceSolution, TargetSolution};
 pub use tabu::EnabledTabu;
