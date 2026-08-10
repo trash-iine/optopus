@@ -78,10 +78,9 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for VariableNeighborhoodSearch<Pr
         let incumbent = state.solution.clone();
 
         // Shake phase in neighborhood N_k
-        state.run_sub(
-            self.shakes[self.k].as_mut(),
-            SearchStateCloneType::ClearBest,
-        )?;
+        let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+        self.shakes[self.k].run(&mut sub)?;
+        state.update_state(sub);
 
         if self.stop_condition.is_done(state) {
             state.solution = incumbent;
@@ -89,7 +88,9 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for VariableNeighborhoodSearch<Pr
         }
 
         // Local search phase
-        state.run_sub(self.search.as_mut(), SearchStateCloneType::ClearBest)?;
+        let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+        self.search.run(&mut sub)?;
+        state.update_state(sub);
 
         // Move-or-not: improvement restarts the neighborhood sequence,
         // failure restores the incumbent and tries the next neighborhood.

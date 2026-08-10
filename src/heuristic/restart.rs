@@ -42,7 +42,9 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Restart<Problem> {
         &mut self,
         state: &mut crate::search_state::SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
-        state.run_sub(self.heuristic.as_mut(), SearchStateCloneType::ClearBest)?;
+        let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+        self.heuristic.run(&mut sub)?;
+        state.update_state(sub);
 
         if self.restart_condition.is_done(state) {
             tracing::debug!("Restart triggered at iteration {}", state.iteration);

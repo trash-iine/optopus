@@ -160,7 +160,7 @@ pub struct SearchState<'a, P: ProblemTrait> {
 }
 ```
 
-**Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` / `with_solution_and_seed(problem, sol, seed)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `run_sub(heuristic, clone_type)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, `duration()`.
+**Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` / `with_solution_and_seed(problem, sol, seed)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `clone_for_new_run(kind)` / `update_state(sub)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, `duration()`.
 
 **Crossing to another instance** — a sub-run on a *different* problem instance (an exact kernel) cannot go through `update_state`, so it has its own pair, and every heuristic that reduces uses them instead of hand-writing the steps:
 - `open_reduction(&reduction) -> SearchState<R::Target>` — projects the incumbent as the warm start and draws the sub-state's seed from this state's RNG (exactly one draw). Any `ProblemTrait`.
@@ -172,7 +172,9 @@ The three steps inside `close_reduction` are deliberately not three methods. The
 
 **Sub-run clone/merge pattern** (used by every meta-heuristic to isolate phases):
 ```rust
-state.run_sub(inner_heuristic.as_mut(), SearchStateCloneType::ClearBest)?;
+let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+inner_heuristic.run(&mut sub)?;
+state.update_state(sub);
 // Simple    — keeps all counters and best (sets start_iteration to current)
 // ClearBest — resets best and timers to current state (iteration = 0)
 // StartBest — restarts from best_solution                (iteration = 0)
@@ -274,7 +276,7 @@ max_iteration = 100000         # max_duration_secs / max_failed_update also supp
 ## Key Design Patterns
 
 1. **Gain-based incremental updates** — binary/formula solutions cache per-variable `gain`; applying a move only refreshes the affected neighbors in O(degree). MaxCut and QUBO additionally offer optional `positive_gain` / `negative_gain` indexes (advanced) to enumerate only improving moves — used by problem-specific heuristics like BLS, not needed for standard use. TSP instead computes move gains on the fly from the lazily built distance matrix; JobShop re-decodes per candidate (and evaluates candidates with rayon on large instances, order-preserving so results are thread-count independent).
-2. **Sub-run clone/merge** — every meta-heuristic uses `state.run_sub(inner, clone_type)` (`clone_for_new_run` → run → `update_state`). The global iteration counter advances monotonically across all phases.
+2. **Sub-run clone/merge** — every meta-heuristic isolates a phase with `clone_for_new_run(kind)` → run it → `update_state(sub)`. The global iteration counter advances monotonically across all phases. There is deliberately no `run_sub` wrapper around the triad: both halves are public, every user-facing doc teaches this form, and a wrapper would have to name `Heuristic`, which `search_state` must not — nothing about cloning and merging a state needs to know what a heuristic is.
 3. **Seeded reproducibility** — all randomness flows through `state.rng` (`SmallRng`); `EnabledTabu::add_to_tabu_map` and `Crossover::crossover` take the RNG explicitly. With `seed` set in the benchmark config, reruns are bit-identical (enforced by e2e tests).
 4. **Tabu abstraction via trait** — `TabuSearch` is generic over `N: EnabledTabu`. Each move type owns its `TabuMap`; binary problems share `VarTabuMap` + helpers from `common/tabu.rs`.
 5. **Always-higher-is-better in `FormulaProblem`** — for `Maximize`, `score = objective − penalty`; for `Minimize`, `score = −objective − penalty`. Heuristics only need the higher-is-better convention.

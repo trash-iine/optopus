@@ -88,7 +88,9 @@ impl Heuristic<MaxCut> for KernelizedSearch {
         if self.kernel_for(instance).is_trivial() {
             // Nothing was reduced, so there is no point in solving a copy of
             // the same instance through an extra index mapping.
-            state.run_sub(self.inner.as_mut(), SearchStateCloneType::Simple)?;
+            let mut sub = state.clone_for_new_run(SearchStateCloneType::Simple);
+            self.inner.run(&mut sub)?;
+            state.update_state(sub);
             ensure_progress(state, before);
             return Ok(());
         }

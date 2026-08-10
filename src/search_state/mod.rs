@@ -491,20 +491,6 @@ where
         })
     }
 
-    /// Runs `heuristic` on a sub-state cloned with `clone_type`, then merges the
-    /// result back — the standard `clone_for_new_run` → `run` → `update_state`
-    /// triad used by meta-heuristics.
-    pub fn run_sub(
-        &mut self,
-        heuristic: &mut dyn crate::heuristic::Heuristic<Problem>,
-        clone_type: SearchStateCloneType,
-    ) -> Result<(), crate::error::OptError> {
-        let mut sub = self.clone_for_new_run(clone_type);
-        heuristic.run(&mut sub)?;
-        self.update_state(sub);
-        Ok(())
-    }
-
     /// Opens a sub-state on a [`ProblemReduction`](crate::trait_defs::ProblemReduction)'s
     /// target, warm-started from the current solution.
     ///
