@@ -3,6 +3,10 @@
 Partition the vertices of a weighted undirected graph into two sets so as to
 **maximize** the total weight of edges crossing the partition.
 
+Sparse instances can be shrunk first without giving anything up: see
+[MaxCutKernel](max_cut_kernel.md), an exact data reduction any heuristic can
+search through.
+
 ## Solution
 
 ```rust

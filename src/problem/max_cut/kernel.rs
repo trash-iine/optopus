@@ -280,10 +280,11 @@ impl MaxCutKernel {
 /// The kernel as a map between problem instances: source and target are both
 /// `MaxCut`, and the objective is preserved up to [`offset`](MaxCutKernel::offset).
 ///
-/// Stating it as the trait is what lets
-/// [`KernelizedSearchForMaxCut`](crate::heuristic::KernelizedSearchForMaxCut)
-/// reach the kernel through shared search-state plumbing rather than its own
-/// copy of it. The inherent [`project`](MaxCutKernel::project) /
+/// Stating it as the trait is what lets a caller reach the kernel through the
+/// shared search-state plumbing —
+/// [`open_reduction`](crate::search_state::SearchState::open_reduction) and
+/// [`close_reduction`](crate::search_state::SearchState::close_reduction) —
+/// rather than its own copy of it. The inherent [`project`](MaxCutKernel::project) /
 /// [`lift`](MaxCutKernel::lift) stay: they work in raw assignments, which is
 /// what a caller holding an incrementally maintained solution actually wants.
 impl ProblemReduction for MaxCutKernel {

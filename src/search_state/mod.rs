@@ -498,8 +498,8 @@ where
     /// nothing about search state — so the *crossing* is this method: the seed
     /// is drawn from this state's RNG, which is what keeps a seeded run
     /// reproducible through a reduction, and the sub-state starts with zeroed
-    /// counters so [`close_foreign_sub_run`](Self::close_foreign_sub_run) can
-    /// merge it back.
+    /// counters so [`close_reduction`](Self::close_reduction) can merge it
+    /// back.
     pub fn open_reduction<'r, R>(&mut self, reduction: &'r R) -> SearchState<'r, R::Target>
     where
         R: crate::trait_defs::ProblemReduction<Source = Problem> + ?Sized,

@@ -26,12 +26,13 @@ pub type TargetSolution<R> = <<R as ProblemReduction>::Target as ProblemTrait>::
 /// back is a *search-state* operation and lives there:
 /// [`SearchState::open_reduction`](crate::search_state::SearchState::open_reduction)
 /// draws the sub-state's seed and projects the warm start, and
-/// [`close_foreign_sub_run`](crate::search_state::SearchState::close_foreign_sub_run)
-/// merges the counters, walks the solution onto the lifted assignment and
-/// updates the best. Those steps in that order are where hand-written copies
-/// drift apart — silently, in `iteration` / `n_accepted` / `best_iteration`
-/// rather than in the objective — so they belong on the type that owns the
-/// state, not here.
+/// [`close_reduction`](crate::search_state::SearchState::close_reduction)
+/// merges the counters, lifts the result and walks the solution onto it. Those
+/// steps in that order are where hand-written copies drift apart — silently, in
+/// `iteration` / `n_accepted` / `best_iteration` rather than in the objective —
+/// so they belong on the type that owns the state, not here. `close_reduction`
+/// is where that reasoning is written down; it is not repeated at the call
+/// sites.
 ///
 /// # Exactness
 ///

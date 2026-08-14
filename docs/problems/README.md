@@ -16,3 +16,7 @@ to plug into every relevant heuristic.
 Type names are exported from `optopus::prelude`. See each page for the
 `Solution` struct fields, the file format, and which optional traits the
 problem implements.
+
+One problem also ships an exact **instance** reduction rather than a search:
+[MaxCutKernel](max_cut_kernel.md) shrinks a sparse MaxCut instance by rules
+that provably preserve the optimum, and any heuristic can search the result.

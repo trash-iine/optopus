@@ -14,7 +14,7 @@ Start here, then dive into the section that matches your task.
 ### Problems
 
 - [Overview](problems/README.md)
-- [MaxCut](problems/max_cut.md)
+- [MaxCut](problems/max_cut.md) — and its exact [kernelization](problems/max_cut_kernel.md)
 - [QUBO](problems/qubo.md)
 - [MaxSAT](problems/sat.md)
 - [TSP](problems/tsp.md)
@@ -36,7 +36,6 @@ Start here, then dive into the section that matches your task.
 - [Meta-heuristics](heuristics/meta.md) — Sequential, Iterated (ILS), Restart
 - [Breakout Local Search (MaxCut)](heuristics/breakout_local_search.md)
 - [RL Breakout Local Search (MaxCut)](heuristics/rl_breakout_local_search.md)
-- [Kernelized Search (MaxCut)](heuristics/kernelize.md)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
 
 ## Guides

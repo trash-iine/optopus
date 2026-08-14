@@ -1,14 +1,15 @@
-# KernelizedSearchForMaxCut
+# MaxCutKernel
 
-Exact data reduction (*kernelization*) for [MaxCut](../problems/max_cut.md),
-following Ferizovic, Hespe, Lamm, Mnich, Schulz and Strash, *Engineering
-Kernelization for Maximum Cut* (ALENEX 2020,
+Exact data reduction (*kernelization*) for [MaxCut](max_cut.md), following
+Ferizovic, Hespe, Lamm, Mnich, Schulz and Strash, *Engineering Kernelization
+for Maximum Cut* (ALENEX 2020,
 [arXiv:1905.10902](https://arxiv.org/abs/1905.10902)).
 
 `MaxCutKernel::reduce` shrinks an instance by rules that provably preserve the
 optimum, leaving a smaller instance, a constant offset, and a trace that
-re-derives every removed vertex. `KernelizedSearchForMaxCut` wraps any
-`Heuristic<MaxCut>` so it searches the kernel instead of the original.
+re-derives every removed vertex. It is not a heuristic and there is no
+heuristic wrapping it: it is a `ProblemReduction`, and any heuristic searches
+the kernel instead of the original by crossing to it — see *Usage*.
 
 A kernel is the opposite trade-off from a heuristic contraction, which also
 shrinks an instance but does so by *guessing* structure and therefore restricts
@@ -77,9 +78,9 @@ tuning. Measured (`kernelize: reduction finished` at `INFO`):
 
 A 4-regular graph has no vertex of degree ≤ 2 and no dominating edge, so the
 rules cannot fire — and neither can they on dense instances, which the paper
-also reports. `MaxCutKernel::is_trivial` detects that case, and the wrapper
-then hands the state straight to the inner heuristic, so leaving kernelization
-enabled costs nothing on instances it cannot help.
+also reports. `MaxCutKernel::is_trivial` detects that case in one comparison,
+so a caller can skip the crossing and search the original instance directly;
+leaving kernelization in a pipeline costs nothing on instances it cannot help.
 
 On a **tree the kernel is empty**: the reduction alone returns the exact
 optimum (every edge cut), which no local search reliably finds on 10000
@@ -90,6 +91,10 @@ vertices.
 60-second runs, 5 runs each, seed 42. Both the plain and the kernelized arm
 use the same inner heuristic, with size-dependent parameters scaled to the
 instance each one actually sees (see *Usage*). `K{X}` is `X` run on the kernel.
+
+The kernelized arm is the loop in *Usage* below —
+`tests/reduction_crossing.rs` pins its exact trajectory, so the search these
+numbers describe is the one that recipe walks.
 
 | instance | BLS | K{BLS} | delta |
 |---|---|---|---|
@@ -117,39 +122,9 @@ Two results are worth separating out:
   (9587) beats plain BLS's best (9506), and its best (9593) edges past the best
   value previously recorded here (9592).
 
-On a dense instance the wrapper is measurably inert: `is_trivial` fires before
-anything is allocated and the inner heuristic runs on the original state, so
-the two arms differ only by the per-run seed derivation, not by the search.
-
-## How the wrapper reaches the kernel
-
-`MaxCutKernel` states its reduction through
-[`ProblemReduction`](../../src/trait_defs/reduction.rs) — an instance map
-`Source -> Target` plus a solution map each way. The trait is *only* the map;
-the part worth sharing is the **crossing**, because a sub-run on a different
-instance cannot go back through `SearchState::update_state`. That is a
-search-state operation and lives on `SearchState`:
-
-```rust
-let mut sub = state.open_reduction(kernel);   // project the warm start, seed from the parent RNG
-self.inner.run(&mut sub)?;
-state.close_reduction(kernel, &sub)?;         // merge counters, lift, walk there, update best
-```
-
-What `close_reduction` does inside is three steps whose order is load-bearing,
-and every way of getting it wrong is invisible in the objective: merging the
-counters after the walk records a `best_iteration` that omits the sub-run's
-work, and assigning the lifted solution instead of walking to it one flip per
-changed vertex discards the incremental gain cache the outer state maintains
-and charges nothing to `iteration` / `n_accepted`. That is why it is one method
-rather than three a caller assembles.
-
-It is the sub-run's `best_solution` that crosses, not where it stopped: a
-tabu-style inner search usually ends part-way out of a local optimum.
-
-`Source` and `Target` are separate associated types rather than one because a
-reduction need not stay inside its problem — here they are both `MaxCut`, but a
-penalised objective whose penalty term is quadratic reduces into a QUBO.
+On a dense instance kernelizing is measurably inert: `is_trivial` fires before
+anything is allocated and the heuristic runs on the original state, so the two
+arms differ only by the per-run seed derivation, not by the search.
 
 ## Correctness
 
@@ -170,28 +145,43 @@ check — not the individual rules, but the property that matters:
 - **Index space**: the kernel graph covers every kernel vertex, so a solution
   sized from `graph.len()` — which is what `MaxCut::new_solution` gives any
   inner heuristic — can always be lifted.
-- **Inertness**: on a regular graph the wrapper produces bit-identical results
-  to running the inner heuristic alone.
+- **Inertness**: on a regular graph, skipping the crossing gives bit-identical
+  results to running the heuristic alone.
 
 ## Usage
 
-```toml
-[[heuristics]]
-kind = "Kernelize"
-[heuristics.stop_condition]
-max_duration_secs = 60
+`MaxCutKernel` implements [`ProblemReduction`](../traits.md#problemreduction),
+so a heuristic reaches the kernel through the two `SearchState` methods that
+own the crossing — nothing else is involved, and there is no benchmark `kind`
+for it:
 
-# Exactly one nested step: the heuristic that solves the kernel.
-[[heuristics.steps]]
-kind = "BreakoutLocalSearch"
-tabu_tenure = [3, 216]
-t = 1000
-l0 = 21
-p0 = 0.8
-q = 0.5
-[heuristics.steps.stop_condition]
-max_duration_secs = 60
+```rust
+let kernel = MaxCutKernel::reduce(&mc);       // run the rules once, not per cycle
+let mut state = SearchState::new_with_seed(&mc, seed);
+
+while !outer.is_done(&state) {
+    let before = state.iteration;
+
+    let mut sub = state.open_reduction(&kernel);   // project the warm start, seed from the parent RNG
+    inner.run(&mut sub)?;
+    state.close_reduction(&kernel, &sub)?;         // merge counters, lift, walk there, update best
+
+    if state.iteration == before {
+        state.progress_iteration();                // see "budgets" below
+    }
+}
 ```
+
+Three things are the caller's to get right, and
+`tests/reduction_crossing.rs` is that loop verbatim, pinned:
+
+- **Reduce once.** `MaxCutKernel::reduce` runs the rules to a fixpoint. Doing
+  it every cycle re-derives the same kernel.
+- **Skip the crossing when `is_trivial()`.** Otherwise a dense instance pays
+  an index mapping to search a copy of itself.
+- **Budgets.** A heuristic that halts at a local optimum (`LocalSearch`, LKH)
+  returns without consuming an iteration, so a cycle that changed nothing has
+  to be charged one or the outer loop never meets an iteration budget.
 
 Size-dependent parameters of the inner heuristic should be scaled to the
 **kernel**, not the original instance — `G70` reduces from 8646 to 2164
