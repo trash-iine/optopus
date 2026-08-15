@@ -42,7 +42,9 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Sequential<Problem> {
         state: &mut crate::search_state::SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
         for heuristic in self.heuristics.iter_mut() {
-            state.run_sub(heuristic.as_mut(), SearchStateCloneType::ClearBest)?;
+            let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+            heuristic.run(&mut sub)?;
+            state.update_state(sub);
 
             if self.stop_condition.is_done(state) {
                 return Ok(());
@@ -105,14 +107,18 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Iterated<Problem> {
         state: &mut crate::search_state::SearchState<'a, Problem>,
     ) -> Result<(), OptError> {
         // Search phase
-        state.run_sub(self.search.as_mut(), SearchStateCloneType::ClearBest)?;
+        let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+        self.search.run(&mut sub)?;
+        state.update_state(sub);
 
         if self.stop_condition.is_done(state) {
             return Ok(());
         }
 
         // Perturbation phase
-        state.run_sub(self.perturbation.as_mut(), SearchStateCloneType::ClearBest)?;
+        let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+        self.perturbation.run(&mut sub)?;
+        state.update_state(sub);
 
         Ok(())
     }
