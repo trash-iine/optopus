@@ -19,18 +19,6 @@ pub trait BinaryProblem: ProblemTrait + Sized {
     /// Returns the value of variable `i` in `sol`.
     fn variable(sol: &Self::Solution, i: usize) -> bool;
 
-    /// Returns the whole assignment as a slice.
-    ///
-    /// [`variable`](Self::variable) is `assignment(sol)[i]`; this exists
-    /// because a caller that has to *compare two whole solutions* needs the
-    /// length as much as the bits, and `variable` cannot supply it.
-    ///
-    /// The slice covers the variable *index space* `0..n`, which for problems
-    /// with sparse ids is wider than
-    /// [`variable_indices`](Self::variable_indices). Positions outside it carry
-    /// no meaning.
-    fn assignment(sol: &Self::Solution) -> &[bool];
-
     /// Returns the flip move for variable `i`, carrying the gain cached in `sol`.
     fn flip_move(sol: &Self::Solution, i: usize) -> Self::Flip;
 }

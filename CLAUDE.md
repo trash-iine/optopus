@@ -142,7 +142,7 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
   `lift` takes `base` because the target need not cover the source's whole index space — uncovered positions keep `base`'s value; it takes `source` because `MaxCutKernel` is stored in a heuristic that outlives any one `run_once` and so cannot borrow the instance. Implemented by `MaxCutKernel` (`Source = Target = MaxCut`); the two associated types are separate because a reduction need not stay inside its problem. Exactness is **not** required by the trait — it is required by each user, and stated on the implementation (`MaxCutKernel`'s `kernel_cut(y) + offset == original_cut(lift(y))` for every `y`).
 
   **Running a heuristic on the target and folding the result back is a SearchState operation**, and lives there (see below): `open_reduction` / `close_reduction`. There is deliberately **no heuristic wrapper** around that pair (see the kernelization entry below for why the one that existed was deleted); a caller writes the loop, and `tests/reduction_crossing.rs` is that loop with its trajectory pinned.
-- **`BinaryProblem`**: `type Flip`, `variable_indices()`, `variable(sol, i)`, `assignment(sol) -> &[bool]`, `flip_move(sol, i)` — implemented by all binary problems; unlocks the shared machinery in `src/common/binary.rs`. `assignment` exists because `close_reduction` has to compare two whole solutions, and needs the length as much as the bits.
+- **`BinaryProblem`**: `type Flip`, `variable_indices()`, `variable(sol, i)`, `flip_move(sol, i)` — implemented by all binary problems; unlocks the shared machinery in `src/common/binary.rs`.
 
 ## SearchState (`src/search_state/mod.rs`)
 
@@ -164,9 +164,9 @@ pub struct SearchState<'a, P: ProblemTrait> {
 
 **Crossing to another instance** — a sub-run on a *different* problem instance (an exact kernel) cannot go through `update_state`, so it has its own pair. A caller that wants to search a reduction writes the loop itself (`tests/reduction_crossing.rs` is that loop, pinned); these two methods are the part that must not be hand-written:
 - `open_reduction(&reduction) -> SearchState<R::Target>` — projects the incumbent as the warm start and draws the sub-state's seed from this state's RNG (exactly one draw). Any `ProblemTrait`.
-- `close_reduction(&reduction, &sub)` — merges the sub-run's counters, lifts its **best** solution and walks the current solution onto it one flip per differing variable, then `update_best`. `BinaryProblem` only.
+- `close_reduction(&reduction, &sub)` — merges the sub-run's counters, then installs `reduction.lift(..., &sub.best_solution)` as the current solution and `update_best`. Also any `ProblemTrait`; neither half needs to know the variables are binary.
 
-The three steps inside `close_reduction` are deliberately not three methods. Their order is load-bearing and every way of getting it wrong is invisible in the objective: merging after the walk records a `best_iteration` that omits the sub-run's work, and assigning the lifted solution instead of walking to it discards the incremental gain cache and charges nothing to `iteration` / `n_accepted`.
+The two steps inside `close_reduction` are one method because their **order** is load-bearing and getting it wrong is invisible in the objective: merging the counters after installing the solution records a `best_iteration` that omits the sub-run's work. Installing costs nothing and is not charged — `lift` returns a complete `Solution`, caches included. (It used to *walk* there one flip per differing variable, on the theory that this avoided an `O(m)` rebuild and preserved the improving-move index; both were false — `lift` already rebuilds, and `new_from_assignment` starts the optional indexes disabled — so all the walk did was charge `iteration` for moves no search made.)
 
 **Reproducibility**: all randomness (initial solutions, move selection, tabu tenures, BLS perturbations) flows through `state.rng`. `clone_for_new_run` forks the RNG so meta-heuristic composition stays deterministic under a fixed seed.
 

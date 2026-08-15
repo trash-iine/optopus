@@ -402,10 +402,6 @@ impl BinaryProblem for MaxCut {
         sol.x[i]
     }
 
-    fn assignment(sol: &MaxCutSolution) -> &[bool] {
-        &sol.x
-    }
-
     fn flip_move(sol: &MaxCutSolution, i: usize) -> Self::Flip {
         super::MaxCutFlipNeighbor {
             i,

@@ -509,6 +509,43 @@ where
         SearchState::with_solution_and_seed(reduction.target(), start, seed)
     }
 
+    /// Folds a sub-run that ran on a [`ProblemReduction`](crate::trait_defs::ProblemReduction)'s
+    /// target back into this state — the closing half of
+    /// [`open_reduction`](Self::open_reduction).
+    ///
+    /// **The counters are merged before the solution moves, and that order is
+    /// load-bearing.** The sub-run ran on a *different* instance, so it cannot
+    /// go through [`update_state`](Self::update_state), which requires the same
+    /// instance; but its work is comparable and must not be dropped, or a
+    /// benchmark reports near-zero counters exactly on the instances where the
+    /// reduction did something. Merging *after* installing the solution would
+    /// record a `best_iteration` that omits the sub-run entirely — invisible in
+    /// the objective, which is why this is one method rather than two a caller
+    /// assembles. The sub-state is assumed to start from zeroed counters, which
+    /// `open_reduction` guarantees.
+    ///
+    /// The lifted solution is then installed as-is. `lift` returns a complete
+    /// `Solution`, caches included, so there is nothing left to reconstruct;
+    /// the optional improving-move indexes (`positive_gain`, `zero_gain`) are
+    /// opt-in and rebuilt by whoever asks for them next.
+    ///
+    /// It is `sub.best_solution` that crosses, not `sub.solution`: a tabu-style
+    /// sub-run usually ends part-way out of a local optimum, so where it
+    /// stopped is not what it found.
+    pub fn close_reduction<R>(&mut self, reduction: &R, sub: &SearchState<'_, R::Target>)
+    where
+        R: crate::trait_defs::ProblemReduction<Source = Problem> + ?Sized,
+    {
+        self.iteration += sub.iteration;
+        self.n_accepted += sub.n_accepted;
+        self.n_rejected += sub.n_rejected;
+        self.n_best_updates += sub.n_best_updates;
+
+        self.solution = reduction.lift(self.instance, &self.solution, &sub.best_solution);
+
+        self.update_best();
+    }
+
     /// Returns `true` if applying `m` to the current solution yields a solution
     /// better than the current solution.
     pub fn is_neighbor_better_than_current<Move>(&self, m: &Move) -> bool
@@ -525,67 +562,6 @@ where
         Move: MoveToNeighbor<Problem>,
     {
         m.move_to_be_better_than(self.instance, &self.solution, &self.best_solution)
-    }
-}
-
-impl<'a, Problem> SearchState<'a, Problem>
-where
-    Problem: crate::trait_defs::BinaryProblem,
-{
-    /// Folds a sub-run that ran on a [`ProblemReduction`]'s target back into
-    /// this state — the closing half of
-    /// [`open_reduction`](Self::open_reduction).
-    ///
-    /// Three things happen, and the order is load-bearing:
-    ///
-    /// 1. **The sub-run's accounting is merged.** It ran on a *different*
-    ///    instance, so it cannot go through [`update_state`](Self::update_state),
-    ///    which requires the same instance. Its work, on the other hand, is
-    ///    comparable and must not be dropped, or a benchmark reports near-zero
-    ///    counters exactly on the instances where the reduction did something.
-    ///    The sub-state is assumed to start from zeroed counters, which
-    ///    `open_reduction` guarantees.
-    /// 2. **Its best solution is lifted and walked to**, one flip per variable
-    ///    that differs. Walking rather than assigning keeps the cached gains,
-    ///    objective and any improving-move index exact without an `O(m)`
-    ///    rebuild, and charges the write to `iteration` / `n_accepted` the same
-    ///    way every other move is charged. A wholesale assignment would be a
-    ///    silent discontinuity in both.
-    /// 3. **The best is updated**, once, after the walk.
-    ///
-    /// Merging after the walk instead would record a `best_iteration` that
-    /// omits the sub-run's work; walking from a rebuilt solution instead would
-    /// lose the caches. Both are invisible in the objective, which is why this
-    /// is one method rather than three a caller assembles.
-    ///
-    /// It is `sub.best_solution` that crosses, not `sub.solution`: a tabu-style
-    /// sub-run usually ends part-way out of a local optimum, so where it
-    /// stopped is not what it found.
-    ///
-    /// [`ProblemReduction`]: crate::trait_defs::ProblemReduction
-    pub fn close_reduction<R>(
-        &mut self,
-        reduction: &R,
-        sub: &SearchState<'_, R::Target>,
-    ) -> Result<(), crate::error::OptError>
-    where
-        R: crate::trait_defs::ProblemReduction<Source = Problem> + ?Sized,
-    {
-        self.iteration += sub.iteration;
-        self.n_accepted += sub.n_accepted;
-        self.n_rejected += sub.n_rejected;
-        self.n_best_updates += sub.n_best_updates;
-
-        let lifted = reduction.lift(self.instance, &self.solution, &sub.best_solution);
-        for (i, &side) in Problem::assignment(&lifted).iter().enumerate() {
-            if Problem::variable(&self.solution, i) != side {
-                let flip = Problem::flip_move(&self.solution, i);
-                self.apply_move_only(&flip)?;
-            }
-        }
-
-        self.update_best();
-        Ok(())
     }
 }
 
@@ -917,12 +893,15 @@ mod tests {
         }
 
         /// Closing must land on exactly the solution a from-scratch rebuild of
-        /// the lifted assignment would produce — caches included — and charge
-        /// exactly one move per changed variable.
+        /// the lifted assignment would produce, caches included — and must
+        /// charge nothing for landing there.
         ///
-        /// This is the whole justification for walking instead of assigning:
-        /// the result is the same, the cost is `O(changed · degree)` instead of
-        /// `O(m)`, and the accounting matches every other move the search makes.
+        /// `lift` returns a complete `Solution`, so installing it needs no
+        /// reconstruction and is not a move: the sub-run's own counters are the
+        /// whole cost of the crossing. (An earlier version walked to the lifted
+        /// assignment one flip at a time and charged each one, which paid for a
+        /// rebuild `lift` had already done and inflated `iteration` with moves
+        /// no search made.)
         #[test]
         fn close_reduction_lands_on_the_lifted_solution_with_exact_caches() {
             let mc = reducible_instance(11, 300);
@@ -934,7 +913,7 @@ mod tests {
             let before_x = state.solution.x.clone();
             let before_iteration = state.iteration;
 
-            state.close_reduction(&kernel, &sub).unwrap();
+            state.close_reduction(&kernel, &sub);
 
             let target = kernel.lift(&sub.best_solution.x);
             let rebuilt = MaxCutSolution::new_from_assignment(&mc, target.clone());
@@ -944,10 +923,13 @@ mod tests {
                 state.solution.objective, rebuilt.objective,
                 "objectives diverged"
             );
+            assert!(
+                hamming_distance(&before_x, &target) > 0,
+                "the lifted solution must actually differ, or this proves nothing"
+            );
             assert_eq!(
-                state.iteration - before_iteration,
-                hamming_distance(&before_x, &target) as u64,
-                "one move per changed variable, no more and no less"
+                state.iteration, before_iteration,
+                "installing the lifted solution is not a move and must cost nothing"
             );
         }
 
@@ -979,13 +961,12 @@ mod tests {
             );
         }
 
-        /// `close_reduction` must account for the whole crossing: the sub-run's
-        /// iterations *and* the moves the lifting itself applied. Dropping
-        /// either is invisible in the objective and shows up as a benchmark
-        /// reporting near-zero counters exactly on the instances where the
-        /// reduction did something.
+        /// `close_reduction` must carry the sub-run's accounting across —
+        /// exactly that, and nothing else. Dropping it is invisible in the
+        /// objective and shows up as a benchmark reporting near-zero counters
+        /// precisely on the instances where the reduction did something.
         #[test]
-        fn close_reduction_charges_the_sub_run_and_the_lifting() {
+        fn close_reduction_charges_the_sub_run() {
             let mc = reducible_instance(4, 250);
             let kernel = MaxCutKernel::reduce(&mc);
             let mut state = SearchState::new_with_seed(&mc, 1);
@@ -1002,10 +983,13 @@ mod tests {
 
             let before_iteration = state.iteration;
             let before_x = state.solution.x.clone();
-            state.close_reduction(&kernel, &sub).unwrap();
+            state.close_reduction(&kernel, &sub);
 
-            let flips = hamming_distance(&before_x, &state.solution.x) as u64;
-            assert_eq!(state.iteration, before_iteration + sub.iteration + flips);
+            assert!(
+                hamming_distance(&before_x, &state.solution.x) > 0,
+                "the crossing must have moved the solution"
+            );
+            assert_eq!(state.iteration, before_iteration + sub.iteration);
             assert_eq!(
                 state.best_solution.objective,
                 mc.calculate_cut_size(&state.best_solution.x),

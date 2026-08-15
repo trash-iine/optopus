@@ -164,7 +164,7 @@ while !outer.is_done(&state) {
 
     let mut sub = state.open_reduction(&kernel);   // project the warm start, seed from the parent RNG
     inner.run(&mut sub)?;
-    state.close_reduction(&kernel, &sub)?;         // merge counters, lift, walk there, update best
+    state.close_reduction(&kernel, &sub);          // merge counters, install the lifted solution, update best
 
     if state.iteration == before {
         state.progress_iteration();                // see "budgets" below

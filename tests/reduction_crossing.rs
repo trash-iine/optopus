@@ -57,7 +57,7 @@ fn solve_through_kernel<'a>(
         let before = state.iteration;
         let mut sub = state.open_reduction(&kernel);
         inner.run(&mut sub).unwrap();
-        state.close_reduction(&kernel, &sub).unwrap();
+        state.close_reduction(&kernel, &sub);
         if state.iteration == before {
             state.progress_iteration();
         }
@@ -71,14 +71,18 @@ fn solve_through_kernel<'a>(
 /// reduction is worth something, an unreducible instance is untouched — and a
 /// refactor can satisfy all of them while walking a different search. This
 /// asserts the trajectory itself: the answer, when it was found, and the total
-/// charged once the kernel sub-run is merged and the lifting applied.
+/// charged once the kernel sub-run is merged.
 ///
-/// The three values are inherited from the heuristic wrapper this recipe
-/// replaced, and are deliberately not re-baselined: matching them is what says
-/// deleting that wrapper changed no search. If this fails, the question is not
-/// "what is the new value" but "which RNG draw or iteration count moved" — the
-/// seed derivation in `open_reduction`, the warm-start projection, the counter
-/// merge or the flip-by-flip lifting.
+/// The answer is inherited from the heuristic wrapper this recipe replaced and
+/// is deliberately not re-baselined; the two counts are `119` lower than that
+/// wrapper's, which is exactly the phantom moves `close_reduction` used to
+/// charge for walking to the lifted solution one flip at a time. Nothing else
+/// moved when that walk became an assignment — same 10 cycles, same 300-bit
+/// solution, same `344.0`, because the walk never touched the RNG.
+///
+/// If this fails, the question is not "what is the new value" but "which RNG
+/// draw or iteration count moved" — the seed derivation in `open_reduction`,
+/// the warm-start projection, or the counter merge.
 #[test]
 fn the_reducing_path_trajectory_is_pinned() {
     let mc = sparse_instance(11, 300);
@@ -97,7 +101,7 @@ fn the_reducing_path_trajectory_is_pinned() {
             state.best_iteration,
             state.iteration,
         ),
-        (344.0, 2119, 20119)
+        (344.0, 2000, 20000)
     );
 }
 

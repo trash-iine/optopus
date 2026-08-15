@@ -164,10 +164,6 @@ impl crate::trait_defs::BinaryProblem for VertexCover {
         sol.x[i]
     }
 
-    fn assignment(sol: &VertexCoverSolution) -> &[bool] {
-        &sol.x
-    }
-
     fn flip_move(sol: &VertexCoverSolution, i: usize) -> Self::Flip {
         super::VertexCoverFlipNeighbor {
             i,
