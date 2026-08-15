@@ -101,6 +101,42 @@ matches the `k` in each file name.
 VertexCover reuses MaxCut graph files via `Graph::load_from_file`
 (see `src/benchmark/problems.rs`).
 
+### Generated locally — not bundled, not committed
+
+Three suites are produced by examples in this repository rather than fetched.
+Each comes from fixed seeds, so re-running reproduces the files byte for byte;
+that is why none of them are committed.
+
+| Directory | Generator | What it covers |
+|---|---|---|
+| `max_cut/generated/` | `cargo run --release --example generate_dense_maxcut` | 2000–5000 vertices at 10–30% density, all three random-graph models × three weight regimes. The G-set tops out near 6% density, so this is the band it does not reach. ~250 MB |
+| `max_cut/generated_sparse/` | `cargo run --release --example generate_sparse_maxcut` | Average degree 1–5, the regime where `MaxCutKernel` reduction fires |
+| `max_cut/hard/` | `cargo run --release --example generate_hard_maxcut` | **Planted-solution instances whose optimum is exact by construction** |
+
+The `hard/` suite is the only one whose correct answer is known. Two families,
+both from Perera et al.'s `chook` (arXiv:2005.14344):
+
+- **Tile planting** — square (`tp2d_*`, degree 4) and cubic (`tp3d_*`, degree 6)
+  lattice tori. The 2D set sits in the same degree band as the G-set `toroidal`
+  group, so results carry over to an existing comparison.
+  (arXiv:1907.10809)
+- **Wishart planting** — the complete graph (`wp_*`), with `alpha` tuning
+  ruggedness. Small by MaxCut standards and severe for its size.
+  (arXiv:1906.00275)
+
+`hard/manifest.toml` records each instance's exact optimum, seed and
+construction parameters. **Nothing in the library reads it** — it exists for
+analysing results, in the same way best-known values are kept out of heuristics
+and benchmark configs. Entries marked `exact_optimum = false` are real-weighted,
+where the `f32` objective cannot represent the cut value exactly and a run can
+only be scored against the optimum up to rounding.
+
+Parameters for the suite come from a hardness sweep that varies each family's
+knob and scores by how often a run reaches the planted optimum. Where each
+family becomes hard moves with instance size, so published values do not
+transfer — `generate_hard_maxcut.rs` records the measurement behind every value
+it bakes in.
+
 ## Excluded
 
 - `FormulaProblem` (`src/problem/binary_optimization/`) is not wired into

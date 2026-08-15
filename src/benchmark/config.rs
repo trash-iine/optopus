@@ -203,15 +203,6 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
-    /// Exact kernelization preprocessing (MaxCut only): reduce the instance,
-    /// run the nested heuristic on the kernel, lift the result back.
-    Kernelize {
-        /// The heuristic to run on the kernel (exactly 1 entry).
-        #[serde(default)]
-        steps: Vec<HeuristicConfig>,
-        #[serde(default)]
-        stop_condition: StopConditionConfig,
-    },
     /// Lin-Kernighan-Helsgaun (TSP only).
     LinKernighanHelsgaun {
         /// Candidate neighbors per city. Default: 5.
@@ -328,7 +319,6 @@ impl HeuristicConfig {
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
             Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
             Self::RlBreakoutLocalSearch { .. } => "RlBreakoutLocalSearch",
-            Self::Kernelize { .. } => "Kernelize",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
             Self::HybridGeneticSearch { .. } => "HybridGeneticSearch",
@@ -361,8 +351,7 @@ impl HeuristicConfig {
             | Self::Iterated { steps, .. }
             | Self::VariableNeighborhoodSearch { steps, .. }
             | Self::Restart { steps, .. }
-            | Self::GeneticAlgorithm { steps, .. }
-            | Self::Kernelize { steps, .. } => steps,
+            | Self::GeneticAlgorithm { steps, .. } => steps,
             _ => &[],
         }
     }
@@ -379,7 +368,6 @@ impl HeuristicConfig {
             | Self::BreakoutLocalSearch { stop_condition, .. }
             | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
             | Self::RlBreakoutLocalSearch { stop_condition, .. }
-            | Self::Kernelize { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
             | Self::HybridGeneticSearch { stop_condition, .. }

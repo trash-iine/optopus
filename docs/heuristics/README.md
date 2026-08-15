@@ -40,7 +40,6 @@ Used by `GeneticAlgorithm`:
 |---|---|---|
 | [BreakoutLocalSearchForMaxCut](breakout_local_search.md) | MaxCut | Greedy LS + adaptive perturbation. |
 | [RlBreakoutLocalSearchForMaxCut](rl_breakout_local_search.md) | MaxCut | BLS machinery + learned (contextual-bandit) perturbation policy. |
-| [KernelizedSearchForMaxCut](kernelize.md) | MaxCut | Exact data reduction (kernelization) → any inner heuristic solves the kernel; targets **sparse** instances. |
 | [LinKernighanHelsgaunForTsp](lkh.md) | TSP 2D | Variable-depth k-opt with candidate lists. |
 | [HybridGeneticSearchForVrp](hgs.md) | CVRP | Giant-tour GA + optimal Split + granular local search; biased fitness over feasible/infeasible sub-populations. |
 | `AdaptiveLargeNeighborhoodSearchForVrp` | CVRP | Ruin-and-recreate with adaptive operator weights and SA acceptance. |

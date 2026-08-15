@@ -6,13 +6,13 @@
 //! [`ProblemKind`] variant.
 
 use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
-use super::factory::{ConfigurableProblem, NeighborVisitor, build_heuristic, invalid_neighbor};
+use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearchForVrp, BreakoutLocalSearchForMaxCut, Heuristic,
-    HybridGeneticSearchForVrp, KernelizedSearchForMaxCut, LinKernighanHelsgaunForTsp,
-    NUM_CONTEXT_FEATURES, PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut,
-    StopCondition, SubProblemBasedCrossover, WalkSatForSat,
+    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES,
+    PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut, StopCondition,
+    SubProblemBasedCrossover, WalkSatForSat,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -322,16 +322,6 @@ impl ConfigurableProblem for MaxCut {
                     reset,
                     cluster_moves.unwrap_or(true),
                 )))
-            }
-            HeuristicConfig::Kernelize { steps, .. } => {
-                if steps.len() != 1 {
-                    return Err(OptError::Config(format!(
-                        "Kernelize requires exactly 1 step (the heuristic to run on the kernel), but got {}",
-                        steps.len()
-                    )));
-                }
-                let inner = build_heuristic::<Self>(&steps[0])?;
-                Ok(Box::new(KernelizedSearchForMaxCut::new(cond, inner)))
             }
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for MaxCut",

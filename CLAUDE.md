@@ -50,11 +50,17 @@ src/
 │   ├── evaluate.rs           Evaluable, Evaluate
 │   ├── crossover.rs          Crossover, SubProblemExtractable
 │   ├── tabu.rs               EnabledTabu
-│   └── binary.rs             BinaryProblem (unlocks the shared binary machinery)
+│   ├── binary.rs             BinaryProblem (unlocks the shared binary machinery)
+│   └── reduction.rs          ProblemReduction: P1 -> P2 instance map + the
+│                             solution map both ways. Pure — the crossing lives
+│                             on SearchState (open_reduction / close_reduction)
 ├── common/                   shared data structures & helpers (put new shared code here)
 │   ├── graph/                Graph (used by MaxCut / VertexCover); mod.rs = Graph
 │   │                         + load_from_file / write_to_file, generator.rs =
 │   │                         Graph::{erdos_renyi, barabasi_albert, watts_strogatz}
+│   │                         + Graph::{grid_torus_2d, grid_torus_3d} (periodic
+│   │                         lattices, degree 4 / 6, deterministic — the topology
+│   │                         the planted tile instances live on)
 │   │                         (unweighted) + .with_random_weights() + seeded_rng
 │   ├── binary.rs             uniform_binary_crossover, hamming_distance,
 │   │                         lift_binary_solution / lift_compact_binary_solution,
@@ -88,7 +94,6 @@ src/
 │       │   │                    (PerturbationType, random_flips, best_swap)
 │       │   ├── bls.rs           BreakoutLocalSearchForMaxCut (+ its BlsSchedule)
 │       │   ├── rl_bls.rs        RlBreakoutLocalSearchForMaxCut
-│       │   ├── kernelized.rs    KernelizedSearchForMaxCut (exact reduction wrapper)
 │       │   └── population_annealing.rs  PopulationAnnealingForMaxCut
 │       ├── lkh_for_tsp.rs       LinKernighanHelsgaunForTsp
 │       ├── walksat_for_sat.rs   WalkSatForSat
@@ -98,7 +103,11 @@ src/
 │                                in-place descent, population.rs = biased fitness)
 └── problem/
     ├── max_cut/              MaxCut, MaxCutSolution, {Flip,Swap}Neighbor, UniformCrossover,
-    │                         MaxCutKernel (kernel.rs: exact data reduction)
+    │                         MaxCutKernel (kernel.rs: exact data reduction; it is
+    │                         the library's one `ProblemReduction` impl, and is used
+    │                         by crossing to it, not by a heuristic wrapper),
+    │                         PlantedMaxCut (planted.rs: instances whose optimum is
+    │                         exact by construction — tile / Wishart planting)
     ├── qubo/                 Qubo, QuboSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── sat/                  Sat, SatSolution, {Flip,Swap}Neighbor, UniformCrossover
     ├── tsp_2d/               TspWithCoordinates, TspSolution, {TwoOpt,Relocate}Neighbor, OrderCrossover
@@ -140,6 +149,25 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
 - **`Crossover<P>`**: `crossover(&mut self, prob, sol1, sol2, rng) -> Result<Solution, OptError>` (exactly two parents; RNG passed in for reproducibility; `Err` only when the operator genuinely cannot produce an offspring, e.g. an inner sub-heuristic failed).
 - **`EnabledTabu`**: `type TabuMap: Default`, `is_move_enabled(map, iter)`, `add_to_tabu_map(map, iter, tenure, rng)`. The tenure is sampled from the passed RNG (`&mut state.rng`) so seeded runs are bit-reproducible. Required by TabuSearch.
 - **`SubProblemExtractable`**: `extract_sub_problem(sol1, sol2) -> Self`, `lift_solution(sol1, sol2, sub_sol)`. Variables that agree in both parents are fixed; the disagreeing variables form the sub-problem. Binary problems delegate lifting to `common::lift_binary_solution` (shared index space: MaxCut, VertexCover) or `common::lift_compact_binary_solution` (compacted indices: SAT, Formula); QUBO keeps its own bias-folding variant.
+- **`ProblemReduction`**: a map from one problem instance to another, with solutions crossing both ways. **Pure — it never touches a `SearchState`.**
+  ```rust
+  type Source: ProblemTrait;  type Target: ProblemTrait;
+  fn target(&self) -> &Self::Target;                                      // P1 -> P2
+  //                                         P1.Solution -> P2.Solution
+  fn project(&self, sol: &<Self::Source as ProblemTrait>::Solution)
+      -> <Self::Target as ProblemTrait>::Solution;
+  //                                         P2.Solution -> P1.Solution
+  fn lift(&self, source: &Self::Source,
+          base: &<Self::Source as ProblemTrait>::Solution,
+          sol: &<Self::Target as ProblemTrait>::Solution)
+      -> <Self::Source as ProblemTrait>::Solution;
+  ```
+  The qualified spelling is deliberate: an alias for it would be used at these
+  five positions and nowhere else — impls and callers name concrete types — so
+  it would be an exported name buying nothing.
+  `lift` takes `base` because the target need not cover the source's whole index space — uncovered positions keep `base`'s value; it takes `source` because `MaxCutKernel` is stored in a heuristic that outlives any one `run_once` and so cannot borrow the instance. Implemented by `MaxCutKernel` (`Source = Target = MaxCut`); the two associated types are separate because a reduction need not stay inside its problem. Exactness is **not** required by the trait — it is required by each user, and stated on the implementation (`MaxCutKernel`'s `kernel_cut(y) + offset == original_cut(lift(y))` for every `y`).
+
+  **Running a heuristic on the target and folding the result back is a SearchState operation**, and lives there (see below): `open_reduction` / `close_reduction`. There is deliberately **no heuristic wrapper** around that pair (see the kernelization entry below for why the one that existed was deleted); a caller writes the loop, and `tests/reduction_crossing.rs` is that loop with its trajectory pinned.
 - **`BinaryProblem`**: `type Flip`, `variable_indices()`, `variable(sol, i)`, `flip_move(sol, i)` — implemented by all binary problems; unlocks the shared machinery in `src/common/binary.rs`.
 
 ## SearchState (`src/search_state/mod.rs`)
@@ -158,13 +186,21 @@ pub struct SearchState<'a, P: ProblemTrait> {
 }
 ```
 
-**Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` / `with_solution_and_seed(problem, sol, seed)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `run_sub(heuristic, clone_type)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, `duration()`.
+**Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` / `with_solution_and_seed(problem, sol, seed)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `clone_for_new_run(kind)` / `update_state(sub)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, `duration()`.
+
+**Crossing to another instance** — a sub-run on a *different* problem instance (an exact kernel) cannot go through `update_state`, so it has its own pair. A caller that wants to search a reduction writes the loop itself (`tests/reduction_crossing.rs` is that loop, pinned); these two methods are the part that must not be hand-written:
+- `open_reduction(&reduction) -> SearchState<R::Target>` — projects the incumbent as the warm start and draws the sub-state's seed from this state's RNG (exactly one draw). Any `ProblemTrait`.
+- `close_reduction(&reduction, &sub)` — merges the sub-run's counters, then installs `reduction.lift(..., &sub.best_solution)` as the current solution and `update_best`. Also any `ProblemTrait`; neither half needs to know the variables are binary.
+
+The two steps inside `close_reduction` are one method because their **order** is load-bearing and getting it wrong is invisible in the objective: merging the counters after installing the solution records a `best_iteration` that omits the sub-run's work. Installing costs nothing and is not charged — `lift` returns a complete `Solution`, caches included. (It used to *walk* there one flip per differing variable, on the theory that this avoided an `O(m)` rebuild and preserved the improving-move index; both were false — `lift` already rebuilds, and `new_from_assignment` starts the optional indexes disabled — so all the walk did was charge `iteration` for moves no search made.)
 
 **Reproducibility**: all randomness (initial solutions, move selection, tabu tenures, BLS perturbations) flows through `state.rng`. `clone_for_new_run` forks the RNG so meta-heuristic composition stays deterministic under a fixed seed.
 
 **Sub-run clone/merge pattern** (used by every meta-heuristic to isolate phases):
 ```rust
-state.run_sub(inner_heuristic.as_mut(), SearchStateCloneType::ClearBest)?;
+let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+inner_heuristic.run(&mut sub)?;
+state.update_state(sub);
 // Simple    — keeps all counters and best (sets start_iteration to current)
 // ClearBest — resets best and timers to current state (iteration = 0)
 // StartBest — restarts from best_solution                (iteration = 0)
@@ -219,7 +255,7 @@ What no operator decides is what "tabu" *means*. Each marks and tests moves thro
 
 - `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / weak swap), with probabilities decaying via the non-improvement counter `omega`. It selects exactly the three operators Benlic & Hao define, which are also the only three `ops` offers. Reproduces Benlic & Hao (2013); `docs/heuristics/breakout_local_search.md` records where it does not and why.
 - `RlBreakoutLocalSearchForMaxCut` (`specific/max_cut/rl_bls.rs`): the same `ops` operators, but a contextual softmax bandit picks perturbation type (3 ops) × strength; weights persist across `Restart`/`Iterated` episodes. Two objective-preserving *plateau* operators (flip connected clusters / an independent set of zero-gain vertices) used to be a fourth and fifth action, plus a `plateau_width` context feature. **They were removed knowing they paid**: the A/B at 30s x 5 runs costs this heuristic **-96.2 and -62.6 on G55 (two seeds), -110.4 on G60, -92.2 on G63**, against std 9-28, and is neutral on G70 (+5.8), G11 and G1 — with them it beat BLS on G55 (10200.4 against 10168.0), without them it does not. The removal was a deliberate trade of that objective for a smaller action space, one operator vocabulary and no second scratch structure; take it back if RL-BLS becomes the heuristic that has to win. The mechanism itself survives as `PopulationAnnealingForMaxCut`'s non-local cluster move, which owns its own implementation and keeps the opt-in `zero_gain` index alive.
-- `KernelizedSearchForMaxCut` (`specific/max_cut/kernelized.rs`): wraps any `Heuristic<MaxCut>` so it searches an **exactly reduced** instance (`MaxCutKernel::reduce`, `problem/max_cut/kernel.rs`) — isolated / pendant / degree-2-path / weight-domination rules (arXiv:1905.10902), to a fixpoint, with a trace that lifts a kernel solution back. Reduction is a property of the instance, not of tuning: sparse graphs shrink (G70 8646→2164, a tree to **0** vertices = exactly solved), regular and dense graphs do not shrink at all and `is_trivial()` makes the wrapper fall through with zero overhead. Beats the same inner heuristic on 9/9 sparse instances (BLS +5673 total); rules are validated by exhaustive brute force on `n ≤ 9`, not transcribed from the paper.
+- **Kernelization is not a heuristic** and has no wrapper type: `MaxCutKernel::reduce` (`problem/max_cut/kernel.rs`) produces an **exactly reduced** instance — isolated / pendant / degree-2-path / weight-domination rules (arXiv:1905.10902), to a fixpoint, with a trace that lifts a kernel solution back — and any `Heuristic<MaxCut>` searches it through `open_reduction` / `close_reduction`. `KernelizedSearchForMaxCut` used to wrap that loop and was deleted once `ProblemReduction` existed: it held nothing else, which `tests/reduction_crossing.rs` shows by reproducing its exact trajectory. Reduction is a property of the instance, not of tuning: sparse graphs shrink (G70 8646→2164, a tree to **0** vertices = exactly solved), regular and dense graphs do not shrink at all and `is_trivial()` says so in one comparison, so the crossing can be skipped. Searching the kernel beats searching the original on 9/9 sparse instances (BLS +5673 total); rules are validated by exhaustive brute force on `n ≤ 9`, not transcribed from the paper. See `docs/problems/max_cut_kernel.md`.
 - `LinKernighanHelsgaunForTsp` (`specific/lkh_for_tsp.rs`): LK-style variable-depth moves with candidate lists; stops at a local optimum.
 - `AdaptiveLargeNeighborhoodSearchForVrp` (`specific/alns_for_vrp.rs`): ALNS ruin-and-recreate for CVRP. An `AlnsOps` bank (destroy: random / worst / Shaw removal; repair: greedy / regret-2 insertion) with adaptive roulette-wheel operator weights (segment-updated) and SA acceptance; operates directly on `state.solution` like LKH. VRP-only, via `build_special_heuristic`.
 - `HybridGeneticSearchForVrp` (`specific/hgs_for_vrp/`): the strongest CVRP option (beats ALNS by 0.6-2.5pp on CVRPLIB X at equal budget). Giant-tour GA: OX crossover → `split_giant_tour` (optimal decode) → granular local search (relocate / swap / 2-opt / 2-opt\*, restricted to the Γ nearest partners). Keeps **feasible and infeasible sub-populations** ranked by *biased fitness* (cost rank + broken-pairs diversity rank), with a capacity penalty retuned to hold the feasible share near `target_feasible`. It deliberately does **not** use the `Vrp*Neighbor` types or `Vrp::penalty_weight()` — those bake in a fixed enormous penalty, which is incompatible with a penalty the search adapts; `Vrp::solution_from_routes` converts back only when writing to the state.
@@ -245,6 +281,8 @@ Binary solutions all name the assignment vector `x: Vec<bool>`.
 
 TOML config → `BenchmarkConfig` → run each heuristic on each instance N times (rayon-parallel) → `BenchmarkReport` → timestamped TOML in `result/`.
 
+**MaxCut instance suites.** Besides the G-set, three suites are generated locally from fixed seeds (never committed — regenerating reproduces them byte for byte): `examples/generate_dense_maxcut.rs` (10–30% density, the band the G-set does not reach), `generate_sparse_maxcut.rs` (average degree 1–5, where `MaxCutKernel` fires), and `generate_hard_maxcut.rs` → `data/instances/max_cut/hard/`, whose **optimum is exact by construction** (`PlantedMaxCut`; tile planting on degree-4/6 lattice tori and Wishart planting on the complete graph, following `chook`, arXiv:2005.14344). The planted suite is the only one where a gap is measured against the answer rather than against another heuristic's best result; its optima live in `hard/manifest.toml`, which **nothing in the library reads** — same rule as best-known values, analysis only. Its hardness parameters were fixed by a sweep whose numbers are recorded in `generate_hard_maxcut.rs`; both families' peaks move with instance size, so published values do not transfer.
+
 ```toml
 num_runs = 10
 seed = 42                      # optional: makes every run bit-reproducible
@@ -260,14 +298,14 @@ max_iteration = 100000         # max_duration_secs / max_failed_update also supp
 
 `HeuristicConfig` is an internally-tagged enum (`#[serde(tag = "kind")]`), so each `kind` declares exactly its own required fields; missing fields and unknown kinds fail at parse time.
 
-**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RandomWalk` (give it a `stop_condition` — an empty one never terminates), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `Kernelize` (MaxCut only; exactly 1 nested `steps` entry = the heuristic that solves the kernel), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), `AdaptiveLargeNeighborhoodSearch` (VRP only; optional `removal_fraction`, `cooling_rate`), `HybridGeneticSearch` (VRP only; optional `min_population_size` / `generation_size` / `granularity` / `target_feasible` / `restart_generations`), and the meta-heuristics `Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `VariableNeighborhoodSearch` uses `steps[0] = search, steps[1..] = shakes N_1..N_kmax`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
+**Supported `kind` values**: `LocalSearch`, `TabuSearch` (`tabu_tenure = [min, max]`), `SimulatedAnnealing` (`initial_temperature`, `cooling_rate`), `LateAcceptanceHillClimbing` (`history_length`), `RandomWalk` (give it a `stop_condition` — an empty one never terminates), `RlSearch` (optional `learning_rate` / `discount` / `softmax_temperature` / `reward_shaping` / `policy_weights` / `max_candidates`), `BreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, `p0`, `q`), `RlBreakoutLocalSearch` (MaxCut only; `tabu_tenure`, `t`, `l0`, optional `strength_bins` / `learning_rate` / `softmax_temperature` / `exploration` / `policy_weights`), `LinKernighanHelsgaun` (TSP only; optional `num_neighbors`, `max_depth`), `AdaptiveLargeNeighborhoodSearch` (VRP only; optional `removal_fraction`, `cooling_rate`), `HybridGeneticSearch` (VRP only; optional `min_population_size` / `generation_size` / `granularity` / `target_feasible` / `restart_generations`), and the meta-heuristics `Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart` / `GeneticAlgorithm` (nested `steps` array; `Iterated` uses `steps[0] = search, steps[1] = perturbation`; `VariableNeighborhoodSearch` uses `steps[0] = search, steps[1..] = shakes N_1..N_kmax`; `Restart` also requires `restart_condition`; GA requires `population_size`, optional `crossover_kind` / `parent_selection` / `parent_top_k`).
 
 **`Summary` fields**: `num_successful_runs`, `best/avg/worst/std_objective`, `best/avg_time_to_best_secs`, `avg_total_time_secs`, plus averaged `initial_objective` / `improvement` / acceptance counters. Each `SingleRunResult` carries `best_objective: f64`, `best_iteration: u64`, timing, the per-run `seed`, and `solution: Vec<usize>` (0-indexed encoding).
 
 ## Key Design Patterns
 
 1. **Gain-based incremental updates** — binary/formula solutions cache per-variable `gain`; applying a move only refreshes the affected neighbors in O(degree). MaxCut and QUBO additionally offer optional `positive_gain` / `negative_gain` indexes (advanced) to enumerate only improving moves — used by problem-specific heuristics like BLS, not needed for standard use. TSP instead computes move gains on the fly from the lazily built distance matrix; JobShop re-decodes per candidate (and evaluates candidates with rayon on large instances, order-preserving so results are thread-count independent).
-2. **Sub-run clone/merge** — every meta-heuristic uses `state.run_sub(inner, clone_type)` (`clone_for_new_run` → run → `update_state`). The global iteration counter advances monotonically across all phases.
+2. **Sub-run clone/merge** — every meta-heuristic isolates a phase with `clone_for_new_run(kind)` → run it → `update_state(sub)`. The global iteration counter advances monotonically across all phases. There is deliberately no `run_sub` wrapper around the triad: both halves are public, every user-facing doc teaches this form, and a wrapper would have to name `Heuristic`, which `search_state` must not — nothing about cloning and merging a state needs to know what a heuristic is.
 3. **Seeded reproducibility** — all randomness flows through `state.rng` (`SmallRng`); `EnabledTabu::add_to_tabu_map` and `Crossover::crossover` take the RNG explicitly. With `seed` set in the benchmark config, reruns are bit-identical (enforced by e2e tests).
 4. **Tabu abstraction via trait** — `TabuSearch` is generic over `N: EnabledTabu`. Each move type owns its `TabuMap`; binary problems share `VarTabuMap` + helpers from `common/tabu.rs`.
 5. **Always-higher-is-better in `FormulaProblem`** — for `Maximize`, `score = objective − penalty`; for `Minimize`, `score = −objective − penalty`. Heuristics only need the higher-is-better convention.

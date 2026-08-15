@@ -150,9 +150,11 @@
 mod crossover;
 mod kernel;
 mod neighbor;
+mod planted;
 mod problem;
 
 pub use crossover::MaxCutUniformCrossover;
 pub use kernel::MaxCutKernel;
 pub use neighbor::{MaxCutFlipNeighbor, MaxCutSwapNeighbor};
+pub use planted::{PlantedMaxCut, TileProbs2d, TileProbs3d, WishartCouplers};
 pub use problem::{MaxCut, MaxCutSolution};

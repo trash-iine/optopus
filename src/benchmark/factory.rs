@@ -350,7 +350,6 @@ where
         HeuristicConfig::BreakoutLocalSearch { .. }
         | HeuristicConfig::PopulationAnnealingForMaxCut { .. }
         | HeuristicConfig::RlBreakoutLocalSearch { .. }
-        | HeuristicConfig::Kernelize { .. }
         | HeuristicConfig::LinKernighanHelsgaun { .. }
         | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
