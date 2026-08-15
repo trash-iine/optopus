@@ -136,9 +136,18 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
   ```rust
   type Source: ProblemTrait;  type Target: ProblemTrait;
   fn target(&self) -> &Self::Target;                                      // P1 -> P2
-  fn project(&self, sol: &SourceSolution<Self>) -> TargetSolution<Self>;  // P1.Solution -> P2.Solution
-  fn lift(&self, source, base, sol) -> SourceSolution<Self>;              // P2.Solution -> P1.Solution
+  //                                         P1.Solution -> P2.Solution
+  fn project(&self, sol: &<Self::Source as ProblemTrait>::Solution)
+      -> <Self::Target as ProblemTrait>::Solution;
+  //                                         P2.Solution -> P1.Solution
+  fn lift(&self, source: &Self::Source,
+          base: &<Self::Source as ProblemTrait>::Solution,
+          sol: &<Self::Target as ProblemTrait>::Solution)
+      -> <Self::Source as ProblemTrait>::Solution;
   ```
+  The qualified spelling is deliberate: an alias for it would be used at these
+  five positions and nowhere else — impls and callers name concrete types — so
+  it would be an exported name buying nothing.
   `lift` takes `base` because the target need not cover the source's whole index space — uncovered positions keep `base`'s value; it takes `source` because `MaxCutKernel` is stored in a heuristic that outlives any one `run_once` and so cannot borrow the instance. Implemented by `MaxCutKernel` (`Source = Target = MaxCut`); the two associated types are separate because a reduction need not stay inside its problem. Exactness is **not** required by the trait — it is required by each user, and stated on the implementation (`MaxCutKernel`'s `kernel_cut(y) + offset == original_cut(lift(y))` for every `y`).
 
   **Running a heuristic on the target and folding the result back is a SearchState operation**, and lives there (see below): `open_reduction` / `close_reduction`. There is deliberately **no heuristic wrapper** around that pair (see the kernelization entry below for why the one that existed was deleted); a caller writes the loop, and `tests/reduction_crossing.rs` is that loop with its trajectory pinned.

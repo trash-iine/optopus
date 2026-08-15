@@ -3,12 +3,6 @@
 
 use super::ProblemTrait;
 
-/// The solution type of a reduction's source problem.
-pub type SourceSolution<R> = <<R as ProblemReduction>::Source as ProblemTrait>::Solution;
-
-/// The solution type of a reduction's target problem.
-pub type TargetSolution<R> = <<R as ProblemReduction>::Target as ProblemTrait>::Solution;
-
 /// A map from an instance of one problem to an instance of another, with a
 /// solution mapping in each direction.
 ///
@@ -58,7 +52,10 @@ pub trait ProblemReduction {
     fn target(&self) -> &Self::Target;
 
     /// Maps a solution of the source onto the target, for use as a warm start.
-    fn project(&self, sol: &SourceSolution<Self>) -> TargetSolution<Self>;
+    fn project(
+        &self,
+        sol: &<Self::Source as ProblemTrait>::Solution,
+    ) -> <Self::Target as ProblemTrait>::Solution;
 
     /// Maps a solution of the target back onto the source.
     ///
@@ -74,9 +71,9 @@ pub trait ProblemReduction {
     fn lift(
         &self,
         source: &Self::Source,
-        base: &SourceSolution<Self>,
-        sol: &TargetSolution<Self>,
-    ) -> SourceSolution<Self>;
+        base: &<Self::Source as ProblemTrait>::Solution,
+        sol: &<Self::Target as ProblemTrait>::Solution,
+    ) -> <Self::Source as ProblemTrait>::Solution;
 }
 
 /// The map's own contract, exercised through the one implementation the core

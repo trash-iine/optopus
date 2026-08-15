@@ -22,5 +22,5 @@ pub use evaluate::{Evaluable, Evaluate};
 pub use neighbor::MoveToNeighbor;
 pub use problem::ProblemTrait;
 pub use rankable::{Distance, Rankable, filter_best, rank_cmp};
-pub use reduction::{ProblemReduction, SourceSolution, TargetSolution};
+pub use reduction::ProblemReduction;
 pub use tabu::EnabledTabu;

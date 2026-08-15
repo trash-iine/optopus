@@ -24,7 +24,12 @@ a *reduction* rather than by a problem; see the section below the table.
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
 | `Distance` (on `Solution`) | `GeneticAlgorithm::ParentSelection::DistantTopK` | `fn distance(&self, other: &Self) -> usize` |
 | `BinaryProblem` | the shared binary machinery in `common::binary` | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip` |
-| `ProblemReduction` | nothing — it is a facility, not a requirement | `type Source: ProblemTrait; type Target: ProblemTrait;`<br>`fn target(&self) -> &Self::Target;`<br>`fn project(&self, sol: &SourceSolution<Self>) -> TargetSolution<Self>;`<br>`fn lift(&self, source, base, sol) -> SourceSolution<Self>` |
+| `ProblemReduction` | nothing — it is a facility, not a requirement | `type Source: ProblemTrait; type Target: ProblemTrait;`<br>`fn target(&self) -> &Self::Target;`<br>`fn project(&self, sol: &SourceSolution) -> TargetSolution;`<br>`fn lift(&self, source: &Self::Source, base: &SourceSolution, sol: &TargetSolution) -> SourceSolution` |
+
+In the last row `SourceSolution` and `TargetSolution` stand for
+`<Self::Source as ProblemTrait>::Solution` and
+`<Self::Target as ProblemTrait>::Solution`, which is how the trait spells them
+— there is no alias for either.
 
 For QUBO, gain values are integers, so the relevant evaluators are
 `Evaluate<i32>` (and `Evaluable<i32>`).
