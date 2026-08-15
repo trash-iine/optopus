@@ -409,6 +409,7 @@ fn push(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::trait_defs::ProblemTrait;
     use rand::rngs::SmallRng;
     use rand::{Rng, SeedableRng};
 
@@ -600,5 +601,45 @@ mod tests {
         assert!(kernel.is_trivial());
         assert_eq!(kernel.offset(), 0.0);
         assert_eq!(kernel.kernel().graph.num_edges(), mc.graph.num_edges());
+    }
+
+    /// The [`ProblemReduction`] impl, which is a layer above the tests here:
+    /// they work in raw assignments, it works in `MaxCutSolution`s and has to
+    /// rebuild their caches and honour `base` on the way back.
+    ///
+    /// A warm start must keep the incumbent's decisions on the vertices the
+    /// kernel still has, and re-derive the removed ones — which the rules
+    /// choose optimally, so the round trip can only improve the cut. The calls
+    /// are fully qualified because the inherent `project` / `lift` shadow the
+    /// trait's.
+    #[test]
+    fn the_reduction_round_trip_keeps_kernel_vertices_and_never_loses_cut() {
+        let mut rng = SmallRng::seed_from_u64(7);
+        for _ in 0..5 {
+            let mc = random_instance(&mut rng, 200, 2.5 / 200.0, unit);
+            let kernel = MaxCutKernel::reduce(&mc);
+            assert!(!kernel.is_trivial(), "the instance must actually reduce");
+            let original = mc.new_solution(&mut rng);
+
+            let projected = ProblemReduction::project(&kernel, &original);
+            let back = ProblemReduction::lift(&kernel, &mc, &original, &projected);
+
+            assert_eq!(
+                ProblemReduction::project(&kernel, &back).x,
+                projected.x,
+                "the kernel's own vertices must survive the round trip"
+            );
+            assert_eq!(
+                back.objective,
+                mc.calculate_cut_size(&back.x),
+                "the lifted solution's cached objective must be exact"
+            );
+            assert!(
+                back.objective >= original.objective,
+                "re-deriving removed vertices must not lose cut: {} < {}",
+                back.objective,
+                original.objective
+            );
+        }
     }
 }
