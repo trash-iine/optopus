@@ -86,8 +86,11 @@ an optimum below its clause count).
 
 The `.sol` files carry the best-known solutions and are used for reporting gaps
 only; the solvers never read them. X-set files have no `No of trucks: K`
-comment, so the fleet size falls back to `ceil(total demand / capacity)`, which
-matches the `k` in each file name.
+comment, so the fleet size is computed rather than read — the demands packed
+first-fit-decreasing plus a 10% margin (`default_fleet_size` in
+`src/problem/vrp/problem.rs`). It does not match the `k` in the file name, which
+is the best-known solution's vehicle count: first-fit-decreasing alone already
+needs 26 bins for `X-n101-k25`.
 
 ## MaxCut & VertexCover — `max_cut/`
 
