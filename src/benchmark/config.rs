@@ -22,6 +22,7 @@ pub enum ProblemKind {
     Tsp,
     VertexCover,
     JobShop,
+    Vrp,
 }
 
 /// Stop condition as expressed in a config file (duration in seconds instead of `Duration`).
@@ -213,6 +214,39 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Adaptive Large Neighborhood Search (VRP only).
+    AdaptiveLargeNeighborhoodSearch {
+        /// Fraction of customers ruined each iteration. Default: 0.15.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        removal_fraction: Option<f64>,
+        /// Geometric cooling factor applied per iteration. Default: 0.9995.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        cooling_rate: Option<f64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// Hybrid Genetic Search (VRP only).
+    HybridGeneticSearch {
+        /// Target size of each sub-population (μ). Default: 25.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        min_population_size: Option<usize>,
+        /// Offspring accumulated before culling back to μ (λ). Default: 40.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        generation_size: Option<usize>,
+        /// Nearest customers considered as move partners (Γ). Default: 20.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        granularity: Option<usize>,
+        /// Share of offspring the adaptive penalty steers toward feasibility.
+        /// Default: 0.2.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        target_feasible: Option<f64>,
+        /// Generations without improvement before the population is reseeded.
+        /// Default: 20000.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        restart_generations: Option<u64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// WalkSAT/SKC stochastic local search (SAT/MaxSAT only).
     WalkSat {
         /// Random-walk probability within the chosen unsatisfied clause. Default: 0.3.
@@ -286,6 +320,8 @@ impl HeuristicConfig {
             Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
             Self::RlBreakoutLocalSearch { .. } => "RlBreakoutLocalSearch",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
+            Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
+            Self::HybridGeneticSearch { .. } => "HybridGeneticSearch",
             Self::WalkSat { .. } => "WalkSat",
             Self::Sequential { .. } => "Sequential",
             Self::Iterated { .. } => "Iterated",
@@ -333,6 +369,8 @@ impl HeuristicConfig {
             | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
             | Self::RlBreakoutLocalSearch { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
+            | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
+            | Self::HybridGeneticSearch { stop_condition, .. }
             | Self::WalkSat { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
             | Self::Iterated { stop_condition, .. }
