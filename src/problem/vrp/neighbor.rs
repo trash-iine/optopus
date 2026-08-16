@@ -570,10 +570,15 @@ impl MoveToNeighbor<Vrp> for VrpTwoOptNeighbor {
         }
         let r = candidates[rng.random_range(0..candidates.len())];
         let len = sol.routes[r].len();
+        // Draw two *distinct* positions: the second index is drawn from a range
+        // one shorter and stepped over the first, the same trick the inter-route
+        // samplers above use to pick a different route. Drawing twice and
+        // rejecting a collision would return `None` for a non-empty
+        // neighborhood, which the caller reads as "no move exists".
         let a = rng.random_range(0..len);
-        let b = rng.random_range(0..len);
-        if a == b {
-            return None;
+        let mut b = rng.random_range(0..len - 1);
+        if b >= a {
+            b += 1;
         }
         let (p, q) = (a.min(b), a.max(b));
         Some(Self::new(prob, sol, r, p, q))
@@ -687,6 +692,31 @@ mod tests {
                 }));
             }
         }
+    }
+
+    /// `None` from `random_neighbor` reaches SA / LAHC as "the neighborhood is
+    /// empty" and aborts the run, so it must only happen when the neighborhood
+    /// really is empty — never because two draws collided.
+    #[test]
+    fn two_opt_random_neighbor_never_gives_up_on_a_non_empty_neighborhood() {
+        let prob = vrp();
+        // The shortest route a 2-opt move exists in: exactly two customers.
+        let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5, 6]]);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
+
+        let all: Vec<_> = VrpTwoOptNeighbor::iter(&prob, &sol).collect();
+        for _ in 0..500 {
+            let m = VrpTwoOptNeighbor::random_neighbor(&prob, &sol, &mut rng)
+                .expect("every route has two customers, so a 2-opt move exists");
+            assert!(m.p < m.q, "2-opt requires p < q, got {} {}", m.p, m.q);
+            assert!(all.iter().any(|n| n.r == m.r && n.p == m.p && n.q == m.q));
+        }
+
+        // A route of one customer admits no reversal; only then is `None` right.
+        let single = prob.solution_from_routes(vec![vec![1], vec![2], vec![3, 4, 5, 6]]);
+        assert!(VrpTwoOptNeighbor::random_neighbor(&prob, &single, &mut rng).is_some());
+        let flat = prob.solution_from_routes(vec![vec![1, 2, 3, 4, 5, 6], vec![], vec![]]);
+        assert!(VrpTwoOptNeighbor::random_neighbor(&prob, &flat, &mut rng).is_some());
     }
 
     #[test]
