@@ -5,6 +5,7 @@
 //! travel distance such that every customer is visited exactly once and no
 //! route exceeds capacity (enforced with a penalty, see [`VrpSolution`]).
 
+mod adjacency;
 mod crossover;
 mod neighbor;
 mod problem;
@@ -18,3 +19,8 @@ pub use split::split_giant_tour;
 /// The capacity overflow of a route load, shared with the VRP heuristics so the
 /// penalty they search under is computed exactly as [`VrpSolution`]'s is.
 pub(crate) use problem::overload_of;
+
+/// Who each customer is served between, shared with the VRP heuristics so that
+/// solution diversity means one thing in this crate — see
+/// [`Distance for VrpSolution`](VrpSolution#impl-Distance-for-VrpSolution).
+pub(crate) use adjacency::RouteAdjacency;

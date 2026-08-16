@@ -128,10 +128,14 @@ described above. The node named by `DEPOT_SECTION` is re-indexed to `0`.
 
 ## Optional traits
 
-- `Distance` — number of customers assigned to a different route *index*. Note
-  this is **not** invariant to permuting the routes, so it is a rough proxy,
-  adequate for `ParentSelection::DistantTopK` but not for careful diversity
-  management (HGS uses a broken-pairs distance internally instead).
+- `Distance` — broken pairs: how many of the two solutions' customer
+  adjacencies the other one does not have. It counts *trips*, not vehicle
+  labels, so permuting the routes or driving one backwards is a distance of `0`,
+  and two solutions are at `0` exactly when they describe the same set of trips.
+  The underlying count is directional (a solution using more routes has more
+  depot departures to lose), so the trait takes the larger of the two
+  directions; HGS ranks diversity on the directional count itself, which is what
+  Vidal's biased fitness is defined on.
 - `Evaluate<f64>` — on the neighbor types, not the solution.
 - `SubProblemExtractable` is **not** implemented, so
   `crossover_kind = "SubProblem"` is unavailable for VRP.

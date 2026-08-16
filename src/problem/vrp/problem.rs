@@ -1,6 +1,7 @@
 use rand::seq::SliceRandom;
 use std::sync::OnceLock;
 
+use super::adjacency::RouteAdjacency;
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait, Rankable};
 
@@ -72,29 +73,24 @@ impl Rankable for VrpSolution {
 }
 
 impl Distance for VrpSolution {
-    /// Position-based dissimilarity: number of customers assigned to a different
-    /// route index in the two solutions. A rough diversity proxy for GA parent
-    /// selection (route indices are not canonicalized).
+    /// Broken-pairs dissimilarity: how many of the two solutions' customer
+    /// adjacencies the other one does not have.
+    ///
+    /// It counts *trips*, not vehicle labels, so permuting the routes or driving
+    /// one of them backwards is a distance of `0` — which the obvious
+    /// alternative, comparing each customer's route index, gets wrong on exactly
+    /// the solutions a search meets most often. Two solutions are at distance
+    /// `0` precisely when they describe the same set of trips.
+    ///
+    /// The underlying count is directional; this takes the larger of the two
+    /// directions, so `a.distance(b) == b.distance(a)`. Hybrid Genetic Search
+    /// ranks diversity on the directional count instead, the form Vidal's biased
+    /// fitness is defined on.
     fn distance(&self, other: &Self) -> usize {
-        let a = self.customer_route_map();
-        let b = other.customer_route_map();
-        a.iter().zip(b.iter()).filter(|(x, y)| x != y).count()
-    }
-}
-
-impl VrpSolution {
-    /// Builds `map[c] = route index serving customer c` (`map[0]` unused).
-    fn customer_route_map(&self) -> Vec<usize> {
         let n: usize = self.routes.iter().map(|r| r.len()).sum();
-        let mut map = vec![usize::MAX; n + 1];
-        for (r, route) in self.routes.iter().enumerate() {
-            for &c in route {
-                if c < map.len() {
-                    map[c] = r;
-                }
-            }
-        }
-        map
+        let a = RouteAdjacency::from_routes(n, &self.routes);
+        let b = RouteAdjacency::from_routes(n, &other.routes);
+        a.broken_pairs_from(&b).max(b.broken_pairs_from(&a))
     }
 }
 

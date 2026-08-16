@@ -8,6 +8,8 @@
 use rand::Rng;
 use rand::rngs::SmallRng;
 
+use crate::problem::vrp::RouteAdjacency;
+
 /// Number of nearest individuals averaged into a diversity contribution.
 const N_CLOSEST: usize = 5;
 
@@ -18,44 +20,29 @@ const N_ELITE: usize = 4;
 /// fitness itself lies in `[0, 2]`, so any large constant separates the two.
 const CLONE_FITNESS_PENALTY: f64 = 100.0;
 
-/// A member of the population: a route partition plus the successor/predecessor
-/// view the diversity metric needs.
+/// A member of the population: a route partition plus the adjacency view the
+/// diversity metric is measured on.
 ///
-/// `succ` / `pred` describe each customer's neighbors along its route (the depot
-/// is `0`). They are invariant to relabeling the routes, which
-/// [`crate::problem::VrpSolution`]'s own [`crate::search_state::Distance`] is
-/// not — that one counts customers assigned to a different route *index*, so
-/// merely permuting the routes of a solution would read as maximally distant.
+/// The view is kept per member rather than rebuilt per comparison because a
+/// newcomer is measured against every incumbent, so building it once turns the
+/// arrival's O(N·n) into N cheap comparisons.
 #[derive(Debug, Clone)]
 pub(super) struct Individual {
     pub routes: Vec<Vec<usize>>,
     pub distance: f64,
     pub excess: i64,
-    succ: Vec<usize>,
-    pred: Vec<usize>,
+    adjacency: RouteAdjacency,
 }
 
 impl Individual {
     /// Builds an individual from a route partition and its evaluated caches.
     pub(super) fn new(n: usize, routes: Vec<Vec<usize>>, distance: f64, excess: i64) -> Self {
-        let mut succ = vec![0usize; n + 1];
-        let mut pred = vec![0usize; n + 1];
-        for route in &routes {
-            for (pos, &c) in route.iter().enumerate() {
-                pred[c] = if pos == 0 { 0 } else { route[pos - 1] };
-                succ[c] = if pos + 1 == route.len() {
-                    0
-                } else {
-                    route[pos + 1]
-                };
-            }
-        }
+        let adjacency = RouteAdjacency::from_routes(n, &routes);
         Self {
             routes,
             distance,
             excess,
-            succ,
-            pred,
+            adjacency,
         }
     }
 
@@ -73,28 +60,22 @@ impl Individual {
         self.routes.iter().flatten().copied().collect()
     }
 
-    /// Broken-pairs distance in `[0, 1]`: the fraction of customers whose route
+    /// Broken-pairs distance in `[0, 1]`: the share of customers whose route
     /// neighbors differ between the two individuals.
     ///
-    /// Orientation-agnostic — a reversed route is the same set of pairs — and
-    /// invariant to route relabeling, so two solutions are at distance `0`
-    /// exactly when they describe the same set of trips.
+    /// [`RouteAdjacency::broken_pairs_from`] does the counting; normalizing by
+    /// `n` is what makes the value comparable across instances, which is all
+    /// biased fitness needs of it — the ranking itself only reads the order.
+    ///
+    /// This is the *directional* count, the form Vidal's biased fitness is
+    /// defined on, not the symmetrized one
+    /// [`Distance`](crate::search_state::Distance) exposes.
     pub(super) fn broken_pairs_distance(&self, other: &Self) -> f64 {
-        let n = self.succ.len().saturating_sub(1);
+        let n = self.adjacency.customers();
         if n == 0 {
             return 0.0;
         }
-        let mut broken = 0usize;
-        for c in 1..=n {
-            if self.succ[c] != other.succ[c] && self.succ[c] != other.pred[c] {
-                broken += 1;
-            }
-            // Losing or gaining a depot leg is a structural change too.
-            if self.pred[c] == 0 && other.pred[c] != 0 && other.succ[c] != 0 {
-                broken += 1;
-            }
-        }
-        broken as f64 / n as f64
+        self.adjacency.broken_pairs_from(&other.adjacency) as f64 / n as f64
     }
 }
 
@@ -366,31 +347,22 @@ mod tests {
     }
 
     #[test]
-    fn broken_pairs_distance_properties() {
+    fn broken_pairs_distance_is_the_normalized_count() {
+        // What the metric *means* is pinned next to it, in
+        // `problem/vrp/adjacency.rs`; here only the normalization is at stake,
+        // since biased fitness compares these values across sub-populations.
         let n = 6;
         let a = individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0);
         let same = individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0);
-        let relabeled = individual(n, vec![vec![4, 5, 6], vec![1, 2, 3]], 10.0, 0);
-        let reversed = individual(n, vec![vec![3, 2, 1], vec![6, 5, 4]], 10.0, 0);
         let other = individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 12.0, 0);
 
-        assert_eq!(a.broken_pairs_distance(&a), 0.0);
         assert_eq!(a.broken_pairs_distance(&same), 0.0);
+        let d = a.broken_pairs_distance(&other);
+        assert!(d > 0.0 && d <= 2.0, "distance {d} left [0, 2]");
         assert_eq!(
-            a.broken_pairs_distance(&relabeled),
-            0.0,
-            "route order must not count as a difference"
-        );
-        assert_eq!(
-            a.broken_pairs_distance(&reversed),
-            0.0,
-            "route orientation must not count as a difference"
-        );
-        assert!(a.broken_pairs_distance(&other) > 0.0);
-        assert_eq!(
-            a.broken_pairs_distance(&other),
-            other.broken_pairs_distance(&a),
-            "distance must be symmetric"
+            d * n as f64,
+            (d * n as f64).round(),
+            "the value must be a whole count divided by n, got {d}"
         );
     }
 
