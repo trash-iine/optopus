@@ -6,16 +6,24 @@
 //! adaptively by a roulette wheel whose weights track recent performance, and
 //! accepting worse solutions with a simulated-annealing criterion.
 //!
-//! The operator machinery lives in [`AlnsOps`] (the same split MaxCut makes in
-//! [`super::max_cut::ops`]); the outer [`AdaptiveLargeNeighborhoodSearch`]
-//! drives the accept/score/cool loop, operating directly on `state.solution`
-//! (like [`super::lkh_for_tsp`]) since a destroy+repair step is not a single
+//! The destroy/repair bank lives in [`AlnsOps`]; the outer
+//! [`AdaptiveLargeNeighborhoodSearch`] drives the accept/score/cool loop,
+//! operating directly on `state.solution` (like
+//! [`super::super::lkh_for_tsp`]) since a destroy+repair step is not a single
 //! [`MoveToNeighbor`](crate::search_state::MoveToNeighbor).
+//!
+//! What a route edit *costs* is not decided here: the insertion and removal
+//! deltas come from [`super::ops`], and each recreated solution is handed to the
+//! same granular descent Hybrid Genetic Search uses — with
+//! [`Vrp::penalty_weight`] as its penalty, the weight this heuristic's objective
+//! already charges overload at. Ruin-and-recreate alone re-inserts customers
+//! greedily and never repairs the edges it disturbs elsewhere in the route.
 
 use rand::Rng;
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 
+use super::ops::{self, RouteState};
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::vrp::Vrp;
@@ -33,11 +41,14 @@ const SIGMA_ACCEPT: f64 = 1.0;
 const SEGMENT_LEN: u64 = 100;
 const REACTION: f64 = 0.1;
 
-/// Capacity overflow of a load (duplicated locally to avoid a cross-module dep).
-#[inline]
-fn overload_of(load: i64, cap: i64) -> i64 {
-    (load - cap).max(0)
-}
+/// Nearest partners considered per customer by the post-repair descent. Matches
+/// the default Hybrid Genetic Search uses.
+const GRANULARITY: usize = 20;
+
+/// Descent passes over a recreated solution. The descent is anchored at the
+/// re-inserted customers, so a pass is cheap and a handful of them is enough to
+/// settle the routes the ruin disturbed.
+const MAX_LS_PASSES: usize = 4;
 
 /// Destroy/repair operator bank plus the adaptive-weight bookkeeping.
 struct AlnsOps {
@@ -140,14 +151,8 @@ impl AlnsOps {
             1 => Self::worst_removal(prob, routes, k),
             _ => Self::shaw_removal(prob, routes, k, rng),
         };
-        Self::recompute_loads(prob, routes, loads);
+        ops::route_loads(prob, routes, loads);
         removed
-    }
-
-    fn recompute_loads(prob: &Vrp, routes: &[Vec<usize>], loads: &mut [i64]) {
-        for (r, route) in routes.iter().enumerate() {
-            loads[r] = route.iter().map(|&c| prob.demands[c]).sum();
-        }
     }
 
     fn remove_set(routes: &mut [Vec<usize>], set: &[bool]) {
@@ -171,17 +176,8 @@ impl AlnsOps {
     fn worst_removal(prob: &Vrp, routes: &mut [Vec<usize>], k: usize) -> Vec<usize> {
         let mut costs: Vec<(f64, usize)> = Vec::new();
         for route in routes.iter() {
-            for i in 0..route.len() {
-                let c = route[i];
-                let prev = if i == 0 { 0 } else { route[i - 1] };
-                let next = if i + 1 == route.len() {
-                    0
-                } else {
-                    route[i + 1]
-                };
-                let saving =
-                    prob.distance(prev, c) + prob.distance(c, next) - prob.distance(prev, next);
-                costs.push((saving, c));
+            for (i, &c) in route.iter().enumerate() {
+                costs.push((ops::removal_gain(prob, route, i, 1), c));
             }
         }
         costs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
@@ -244,9 +240,20 @@ impl AlnsOps {
         }
     }
 
-    /// Best and second-best (augmented) insertion of `c`, as `(cost, route, pos)`.
+    /// The cheapest (augmented) insertion of `c`, and the cheapest one into a
+    /// *different* route, each as `(cost, route, pos)`.
+    ///
+    /// The two are taken across routes, not across positions, because that is what
+    /// regret-k is defined on (Ropke & Pisinger): the gap that matters is how much
+    /// worse `c` gets once its best vehicle is taken, and the second-cheapest
+    /// *slot* is almost always the one next door in the same route — a gap of
+    /// nearly zero for every customer, which would leave [`Self::regret2_insertion`]
+    /// indistinguishable from [`Self::greedy_insertion`].
+    ///
     /// The augmented cost folds capacity overflow in via the penalty weight, so an
-    /// insertion is always available even when every route is full.
+    /// insertion is always available even when every route is full. With a
+    /// single-vehicle fleet the second entry stays infinite; the caller reads that
+    /// as unbounded regret.
     fn best_two_insertions(
         prob: &Vrp,
         routes: &[Vec<usize>],
@@ -259,18 +266,19 @@ impl AlnsOps {
         let mut b1 = (f64::INFINITY, 0usize, 0usize);
         let mut b2 = (f64::INFINITY, 0usize, 0usize);
         for (r, route) in routes.iter().enumerate() {
-            let over_add = overload_of(loads[r] + dc, cap) - overload_of(loads[r], cap);
-            let pen = pw * over_add as f64;
+            let pen = pw * ops::excess_delta_insert(cap, loads[r], dc) as f64;
+            let mut best_here = (f64::INFINITY, r, 0usize);
             for pos in 0..=route.len() {
-                let a = if pos == 0 { 0 } else { route[pos - 1] };
-                let b = if pos == route.len() { 0 } else { route[pos] };
-                let cost = prob.distance(a, c) + prob.distance(c, b) - prob.distance(a, b) + pen;
-                if cost < b1.0 {
-                    b2 = b1;
-                    b1 = (cost, r, pos);
-                } else if cost < b2.0 {
-                    b2 = (cost, r, pos);
+                let cost = ops::insertion_cost(prob, route, pos, c, c) + pen;
+                if cost < best_here.0 {
+                    best_here = (cost, r, pos);
                 }
+            }
+            if best_here.0 < b1.0 {
+                b2 = b1;
+                b1 = best_here;
+            } else if best_here.0 < b2.0 {
+                b2 = best_here;
             }
         }
         (b1, b2)
@@ -306,7 +314,8 @@ impl AlnsOps {
             let mut best_place = (0usize, 0usize);
             for (idx, &c) in pool.iter().enumerate() {
                 let (b1, b2) = Self::best_two_insertions(prob, routes, loads, c);
-                // Larger regret (second-best minus best) → insert this one first.
+                // Larger regret (best other route minus best) → insert this one
+                // first, before its one good vehicle fills up.
                 let regret = if b2.0.is_finite() {
                     b2.0 - b1.0
                 } else {
@@ -358,6 +367,9 @@ pub struct AdaptiveLargeNeighborhoodSearch {
     cooling_rate: f64,
     /// Current SA temperature (initialized lazily from the first solution).
     temperature: Option<f64>,
+    /// The post-repair descent, holding its instance-derived candidate lists;
+    /// they survive [`Heuristic::clear`] because they depend on nothing else.
+    descent: ops::Descent,
 }
 
 impl AdaptiveLargeNeighborhoodSearch {
@@ -381,6 +393,7 @@ impl AdaptiveLargeNeighborhoodSearch {
             removal_fraction,
             cooling_rate,
             temperature: None,
+            descent: ops::Descent::new(),
         }
     }
 
@@ -407,6 +420,7 @@ impl Heuristic<Vrp> for AdaptiveLargeNeighborhoodSearch {
             state.progress_iteration();
             return Ok(());
         }
+        self.descent.ensure(prob, GRANULARITY);
 
         // Lazily initialize the temperature so a solution ~5% worse is accepted
         // with probability ~0.5 at the start.
@@ -424,6 +438,7 @@ impl Heuristic<Vrp> for AdaptiveLargeNeighborhoodSearch {
         let removed = self
             .ops
             .destroy(d_idx, prob, &mut routes, &mut loads, k, &mut state.rng);
+        let anchors = removed.clone();
         self.ops.repair(
             r_idx,
             prob,
@@ -432,7 +447,21 @@ impl Heuristic<Vrp> for AdaptiveLargeNeighborhoodSearch {
             removed,
             &mut state.rng,
         );
-        let candidate = prob.solution_from_routes(routes);
+        // Recreation leaves the disturbed routes locally poor: a customer is
+        // inserted where it is cheapest *now*, with no chance to fix the edges
+        // that choice spoils. The descent is what makes the ruin worth doing —
+        // anchored at the re-inserted customers, since the rest of the solution
+        // is exactly as locally optimal as the previous iteration left it.
+        let mut recreated = RouteState::from_routes(prob, routes);
+        self.descent.run_around(
+            &mut recreated,
+            prob,
+            &anchors,
+            &mut state.rng,
+            prob.penalty_weight(),
+            MAX_LS_PASSES,
+        );
+        let candidate = prob.solution_from_routes(recreated.into_routes());
 
         // Simulated-annealing acceptance (minimization).
         let accept = candidate.objective <= current.objective

@@ -141,9 +141,15 @@ described above. The node named by `DEPOT_SECTION` is re-indexed to `0`.
 Any neighborhood-based heuristic works via the three moves above. Two
 CVRP-specific heuristics are also available:
 
-- [HybridGeneticSearchForVrp](../heuristics/hgs.md) — the strongest option.
+- [HybridGeneticSearchForVrp](../heuristics/hgs.md) — giant-tour GA over
+  feasible and infeasible sub-populations.
 - `AdaptiveLargeNeighborhoodSearchForVrp` — ruin-and-recreate with adaptive
-  operator weights.
+  operator weights, descending around the customers each repair re-inserted.
+
+The two share their route machinery (`heuristic/specific/vrp/ops/`): the same
+granular descent, candidate lists and route arithmetic, differing in what drives
+them. At 30 s on CVRPLIB X they are comparable — see
+[hgs.md](../heuristics/hgs.md#measured-quality).
 
 ## References
 

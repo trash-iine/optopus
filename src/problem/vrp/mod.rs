@@ -14,3 +14,7 @@ pub use crossover::VrpOrderCrossover;
 pub use neighbor::{VrpRelocateNeighbor, VrpSwapNeighbor, VrpTwoOptNeighbor};
 pub use problem::{VRP_DIST_MATRIX_MAX_N, Vrp, VrpSolution};
 pub use split::split_giant_tour;
+
+/// The capacity overflow of a route load, shared with the VRP heuristics so the
+/// penalty they search under is computed exactly as [`VrpSolution`]'s is.
+pub(crate) use problem::overload_of;

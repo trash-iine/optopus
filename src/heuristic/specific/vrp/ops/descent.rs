@@ -2,9 +2,10 @@
 //!
 //! This is deliberately *not* built on [`crate::problem::VrpRelocateNeighbor`] and
 //! friends. Those bake [`Vrp::penalty_weight`] — a fixed, deliberately enormous
-//! constant — into every gain, whereas Hybrid Genetic Search needs to search
-//! under a penalty it adapts at runtime. They also enumerate the full O(n²)
-//! neighborhood and offer neither intra-route relocation nor 2-opt\*.
+//! constant — into every gain, whereas the callers here must be able to descend
+//! under a penalty they choose: Hybrid Genetic Search adapts one at runtime, and
+//! ALNS hands in the weight its own objective uses. They also enumerate the full
+//! O(n²) neighborhood and offer neither intra-route relocation nor 2-opt\*.
 //!
 //! Moves are restricted to *granular* candidate pairs: for each customer `u`,
 //! only its `granularity` nearest customers `v` are considered as partners. The
@@ -23,6 +24,7 @@
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 
+use super::{RouteState, before, node_at};
 use crate::problem::Vrp;
 
 /// Improvements smaller than this are treated as numerical noise, which keeps
@@ -32,250 +34,138 @@ const MIN_IMPROVEMENT: f64 = 1e-10;
 /// Longest customer segment relocated or swapped as a unit.
 const MAX_SEGMENT: usize = 2;
 
-/// Returns the capacity overflow of a route load: `max(0, load - capacity)`.
+/// Partners of an anchor that [`Descent::run_around`] sweeps along with it.
 ///
-/// Mirrors the private helper in [`crate::problem::vrp`]; duplicated here (three
-/// lines) rather than widening that module's visibility for one caller.
-#[inline]
-fn overload_of(load: i64, capacity: i64) -> i64 {
-    (load - capacity).max(0)
+/// Deliberately far below `granularity`: the anchors of a large ruin, widened by
+/// a full candidate list of 20, already cover most of a mid-sized instance, and
+/// a sweep that touches everything is the full descent the caller was trying not
+/// to pay for. The nearest handful is where a displaced customer actually lands.
+const ANCHOR_RING: usize = 5;
+
+/// The descent, plus the two things it needs kept between calls: the granular
+/// candidate lists (instance-derived, O(n²) to build) and the sweep buffers.
+///
+/// It has a receiver where the pricing functions in [`super`] are free, because
+/// these caches are exactly what both callers were keeping a private copy of.
+/// What is *not* in here is any policy: when to descend, under which penalty and
+/// for how long stays with the heuristic driving it.
+#[derive(Debug, Default)]
+pub(crate) struct Descent {
+    neighbors: Vec<Vec<usize>>,
+    /// The customers a pass visits, shuffled in place each time.
+    order: Vec<usize>,
+    /// Membership marks that keep [`Descent::run_around`]'s sweep list free of
+    /// duplicates without sorting it.
+    seen: Vec<bool>,
 }
 
-/// For each customer, its `granularity` nearest customers in ascending distance.
-///
-/// Index `0` (the depot) is present but empty so the list can be indexed by
-/// customer id directly. Costs O(n²) once per instance; callers cache it.
-pub(super) fn build_neighbor_lists(prob: &Vrp, granularity: usize) -> Vec<Vec<usize>> {
-    let n = prob.get_n();
-    let mut lists = vec![Vec::new(); n + 1];
-    let mut buffer: Vec<(f64, usize)> = Vec::with_capacity(n);
-    for (c, list) in lists.iter_mut().enumerate().skip(1) {
-        buffer.clear();
-        buffer.extend(
-            (1..=n)
-                .filter(|&o| o != c)
-                .map(|o| (prob.distance(c, o), o)),
-        );
-        let keep = granularity.min(buffer.len());
-        if keep < buffer.len() {
-            buffer.select_nth_unstable_by(keep, |a, b| a.0.total_cmp(&b.0));
-            buffer.truncate(keep);
-        }
-        buffer.sort_by(|a, b| a.0.total_cmp(&b.0));
-        *list = buffer.iter().map(|&(_, o)| o).collect();
-    }
-    lists
-}
-
-/// A route partition under local search, with the position indexes the granular
-/// move evaluation needs.
-///
-/// `route_of` / `pos_in` make "where does customer `v` currently sit?" an O(1)
-/// question, which is what lets a candidate neighbor `v` be turned into a
-/// concrete move without scanning. They are rebuilt for the (at most two) routes
-/// a move touches.
-#[derive(Debug, Clone)]
-pub(super) struct LsState {
-    pub routes: Vec<Vec<usize>>,
-    pub loads: Vec<i64>,
-    /// True total travel distance.
-    pub distance: f64,
-    /// Total capacity overflow `Σ max(0, load_r − Q)`.
-    pub excess: i64,
-    route_of: Vec<usize>,
-    pos_in: Vec<usize>,
-}
-
-impl LsState {
-    /// Builds the search state from a route partition, computing all caches.
-    pub(super) fn from_routes(prob: &Vrp, routes: Vec<Vec<usize>>) -> Self {
-        let n = prob.get_n();
-        let loads: Vec<i64> = routes
-            .iter()
-            .map(|r| r.iter().map(|&c| prob.demands[c]).sum())
-            .collect();
-        let distance: f64 = routes.iter().map(|r| prob.route_distance(r)).sum();
-        let excess: i64 = loads.iter().map(|&l| overload_of(l, prob.capacity)).sum();
-        let mut state = Self {
-            routes,
-            loads,
-            distance,
-            excess,
-            route_of: vec![usize::MAX; n + 1],
-            pos_in: vec![usize::MAX; n + 1],
-        };
-        for r in 0..state.routes.len() {
-            state.reindex(r);
-        }
-        state
+impl Descent {
+    /// A descent with no candidate lists yet; [`Descent::ensure`] builds them.
+    pub(crate) fn new() -> Self {
+        Self::default()
     }
 
-    /// The penalized objective this search descends on. The descent itself only
-    /// ever works with deltas, so this exists for the tests that check monotonicity.
-    #[cfg(test)]
-    pub(super) fn cost(&self, penalty: f64) -> f64 {
-        self.distance + penalty * self.excess as f64
-    }
-
-    /// Consumes the state, yielding the route partition.
-    pub(super) fn into_routes(self) -> Vec<Vec<usize>> {
-        self.routes
-    }
-
-    /// Refreshes `route_of` / `pos_in` for a single route.
-    fn reindex(&mut self, r: usize) {
-        for pos in 0..self.routes[r].len() {
-            let c = self.routes[r][pos];
-            self.route_of[c] = r;
-            self.pos_in[c] = pos;
+    /// Builds the candidate lists if they do not already fit `prob`.
+    ///
+    /// They depend only on the instance, so a caller may hold a `Descent` across
+    /// restarts and clears; only a change of instance costs the O(n²) again.
+    pub(crate) fn ensure(&mut self, prob: &Vrp, granularity: usize) {
+        if self.neighbors.len() != prob.get_n() + 1 {
+            self.neighbors = super::build_neighbor_lists(prob, granularity);
+            self.seen = vec![false; prob.get_n() + 1];
         }
     }
 
-    /// Node preceding position `pos` of route `r` (the depot at the start).
-    #[inline]
-    fn before(&self, r: usize, pos: usize) -> usize {
-        if pos == 0 { 0 } else { self.routes[r][pos - 1] }
+    /// The candidate lists, for callers that also build tours from them.
+    pub(crate) fn neighbors(&self) -> &[Vec<usize>] {
+        &self.neighbors
     }
 
-    /// Node following position `pos` of route `r` (the depot at the end).
-    #[inline]
-    fn after(&self, r: usize, pos: usize) -> usize {
-        let route = &self.routes[r];
-        if pos + 1 >= route.len() {
-            0
-        } else {
-            route[pos + 1]
-        }
-    }
-
-    /// `(before, first, last, after)` around the segment `routes[r][pos..pos+len]`.
-    #[inline]
-    fn segment_ends(&self, r: usize, pos: usize, len: usize) -> (usize, usize, usize, usize) {
-        let route = &self.routes[r];
-        let before = if pos == 0 { 0 } else { route[pos - 1] };
-        let after = if pos + len >= route.len() {
-            0
-        } else {
-            route[pos + len]
-        };
-        (before, route[pos], route[pos + len - 1], after)
-    }
-
-    /// Distance saved by lifting `routes[r][pos..pos+len]` out of its route.
-    #[inline]
-    fn removal_gain(&self, prob: &Vrp, r: usize, pos: usize, len: usize) -> f64 {
-        let (before, first, last, after) = self.segment_ends(r, pos, len);
-        prob.distance(before, first) + prob.distance(last, after) - prob.distance(before, after)
-    }
-
-    /// Distance added by inserting the segment `first…last` *before* position
-    /// `pos` of route `r`.
-    #[inline]
-    fn insertion_cost(&self, prob: &Vrp, r: usize, pos: usize, first: usize, last: usize) -> f64 {
-        let route = &self.routes[r];
-        let before = if pos == 0 { 0 } else { route[pos - 1] };
-        let after = if pos >= route.len() { 0 } else { route[pos] };
-        prob.distance(before, first) + prob.distance(last, after) - prob.distance(before, after)
-    }
-
-    /// Total demand of `routes[r][pos..pos+len]`.
-    #[inline]
-    fn segment_demand(&self, prob: &Vrp, r: usize, pos: usize, len: usize) -> i64 {
-        self.routes[r][pos..pos + len]
-            .iter()
-            .map(|&c| prob.demands[c])
-            .sum()
-    }
-
-    /// Change in total overflow when `demand` moves from route `from` to `to`.
-    #[inline]
-    fn excess_delta_transfer(&self, prob: &Vrp, from: usize, to: usize, demand: i64) -> i64 {
-        let cap = prob.capacity;
-        overload_of(self.loads[from] - demand, cap) - overload_of(self.loads[from], cap)
-            + overload_of(self.loads[to] + demand, cap)
-            - overload_of(self.loads[to], cap)
-    }
-
-    /// Change in total overflow when routes `a` and `b` exchange `demand_a` for
-    /// `demand_b`.
-    #[inline]
-    fn excess_delta_exchange(
-        &self,
+    /// Descends to a local optimum of `distance + penalty · excess`, sweeping
+    /// every customer. Stops at the first pass with no improving move, or after
+    /// `max_passes`.
+    pub(crate) fn run(
+        &mut self,
+        state: &mut RouteState,
         prob: &Vrp,
-        a: usize,
-        b: usize,
-        demand_a: i64,
-        demand_b: i64,
-    ) -> i64 {
-        let cap = prob.capacity;
-        overload_of(self.loads[a] - demand_a + demand_b, cap) - overload_of(self.loads[a], cap)
-            + overload_of(self.loads[b] - demand_b + demand_a, cap)
-            - overload_of(self.loads[b], cap)
+        rng: &mut SmallRng,
+        penalty: f64,
+        max_passes: usize,
+    ) {
+        let n = prob.get_n();
+        if n == 0 {
+            return;
+        }
+        self.order.clear();
+        self.order.extend(1..=n);
+        self.sweep(state, prob, rng, penalty, max_passes);
     }
 
-    /// Commits a move's cached deltas.
-    #[inline]
-    fn commit(&mut self, delta_distance: f64, delta_excess: i64) {
-        self.distance += delta_distance;
-        self.excess += delta_excess;
-    }
-
-    /// Recomputes every cache from the routes. Used by `debug_assert!` to catch
-    /// incremental-update drift, and by the tests.
-    #[cfg(debug_assertions)]
-    fn assert_caches_consistent(&self, prob: &Vrp) {
-        let fresh = LsState::from_routes(prob, self.routes.clone());
-        debug_assert!(
-            (fresh.distance - self.distance).abs() < 1e-6,
-            "distance drifted: incremental {} vs recomputed {}",
-            self.distance,
-            fresh.distance
-        );
-        debug_assert_eq!(fresh.excess, self.excess, "excess drifted");
-        debug_assert_eq!(fresh.loads, self.loads, "loads drifted");
-    }
-}
-
-/// Runs the descent to a local optimum of `distance + penalty · excess`.
-///
-/// `order` is a scratch buffer of the customers `1..=n`; it is shuffled in place
-/// each pass so the caller can reuse the allocation across calls. Stops at the
-/// first pass with no improving move, or after `max_passes`.
-pub(super) fn local_search(
-    state: &mut LsState,
-    prob: &Vrp,
-    neighbors: &[Vec<usize>],
-    order: &mut Vec<usize>,
-    rng: &mut SmallRng,
-    penalty: f64,
-    max_passes: usize,
-) {
-    let n = prob.get_n();
-    if n == 0 {
-        return;
-    }
-    order.clear();
-    order.extend(1..=n);
-
-    for _ in 0..max_passes {
-        order.shuffle(rng);
-        let mut improved = false;
-        for &u in order.iter() {
-            if improve_around(state, prob, neighbors, u, penalty) {
-                improved = true;
+    /// The same descent, anchored only at `anchors` and the customers near them
+    /// — everything else is left alone.
+    ///
+    /// A caller that has just edited a few routes knows where the damage is, and
+    /// paying for a full sweep of `1..=n` to find it again is what makes a
+    /// descent too expensive to run every iteration. The anchor set is widened
+    /// by one granular ring, so a customer *displaced* by the edit is
+    /// reconsidered too, not only the ones the caller moved — see
+    /// [`ANCHOR_RING`] for how wide that ring is and why it is narrow.
+    pub(crate) fn run_around(
+        &mut self,
+        state: &mut RouteState,
+        prob: &Vrp,
+        anchors: &[usize],
+        rng: &mut SmallRng,
+        penalty: f64,
+        max_passes: usize,
+    ) {
+        if prob.get_n() == 0 || anchors.is_empty() {
+            return;
+        }
+        self.order.clear();
+        for &u in anchors {
+            for &v in std::iter::once(&u).chain(self.neighbors[u].iter().take(ANCHOR_RING)) {
+                if !self.seen[v] {
+                    self.seen[v] = true;
+                    self.order.push(v);
+                }
             }
         }
-        if !improved {
-            break;
+        for &u in &self.order {
+            self.seen[u] = false;
         }
+        self.sweep(state, prob, rng, penalty, max_passes);
     }
-    #[cfg(debug_assertions)]
-    state.assert_caches_consistent(prob);
+
+    /// Sweeps `order` until a pass finds nothing, or `max_passes` are spent.
+    fn sweep(
+        &mut self,
+        state: &mut RouteState,
+        prob: &Vrp,
+        rng: &mut SmallRng,
+        penalty: f64,
+        max_passes: usize,
+    ) {
+        for _ in 0..max_passes {
+            self.order.shuffle(rng);
+            let mut improved = false;
+            for &u in &self.order {
+                if improve_around(state, prob, &self.neighbors, u, penalty) {
+                    improved = true;
+                }
+            }
+            if !improved {
+                break;
+            }
+        }
+        #[cfg(debug_assertions)]
+        state.assert_caches_consistent(prob);
+    }
 }
 
 /// Tries every granular move anchored at `u`, applying the first improving one.
 fn improve_around(
-    state: &mut LsState,
+    state: &mut RouteState,
     prob: &Vrp,
     neighbors: &[Vec<usize>],
     u: usize,
@@ -316,7 +206,7 @@ fn improve_around(
 /// Moves the `len` customers starting at `u` to just after `v`, optionally
 /// reversed. Handles both the inter-route and the intra-route (Or-opt) case.
 fn try_relocate(
-    state: &mut LsState,
+    state: &mut RouteState,
     prob: &Vrp,
     u: usize,
     v: usize,
@@ -327,13 +217,12 @@ fn try_relocate(
     if reverse && len == 1 {
         return false; // Reversing a single customer is the same move.
     }
-    let from = state.route_of[u];
-    let pos = state.pos_in[u];
+    let (from, pos) = state.locate(u);
     if pos + len > state.routes[from].len() {
         return false;
     }
-    let to = state.route_of[v];
-    let target = state.pos_in[v] + 1;
+    let (to, v_pos) = state.locate(v);
+    let target = v_pos + 1;
     // The insertion point must lie outside the segment, and re-inserting it
     // exactly where it came from is a no-op.
     if from == to && target >= pos && target <= pos + len {
@@ -382,14 +271,13 @@ fn try_relocate(
 
 /// Moves the `len` customers starting at `u` into an empty route.
 fn try_relocate_to_idle(
-    state: &mut LsState,
+    state: &mut RouteState,
     prob: &Vrp,
     u: usize,
     len: usize,
     penalty: f64,
 ) -> bool {
-    let from = state.route_of[u];
-    let pos = state.pos_in[u];
+    let (from, pos) = state.locate(u);
     if pos + len > state.routes[from].len() || state.routes[from].len() == len {
         // Emptying one route to fill another is a relabeling, not a move.
         return false;
@@ -436,7 +324,7 @@ struct Relocation {
 }
 
 /// Splices the segment described by `mv` into its target route.
-fn apply_relocate(state: &mut LsState, prob: &Vrp, mv: &Relocation) {
+fn apply_relocate(state: &mut RouteState, prob: &Vrp, mv: &Relocation) {
     let mut segment: Vec<usize> = state.routes[mv.from]
         .drain(mv.pos..mv.pos + mv.len)
         .collect();
@@ -463,7 +351,7 @@ fn apply_relocate(state: &mut LsState, prob: &Vrp, mv: &Relocation) {
 /// customers at `v`. Inter-route only: an intra-route exchange of overlapping
 /// segments needs its own case analysis and is already covered by relocation.
 fn try_swap(
-    state: &mut LsState,
+    state: &mut RouteState,
     prob: &Vrp,
     u: usize,
     v: usize,
@@ -471,13 +359,11 @@ fn try_swap(
     len_v: usize,
     penalty: f64,
 ) -> bool {
-    let ru = state.route_of[u];
-    let rv = state.route_of[v];
+    let (ru, pu) = state.locate(u);
+    let (rv, pv) = state.locate(v);
     if ru == rv {
         return false;
     }
-    let pu = state.pos_in[u];
-    let pv = state.pos_in[v];
     if pu + len_u > state.routes[ru].len() || pv + len_v > state.routes[rv].len() {
         return false;
     }
@@ -512,23 +398,20 @@ fn try_swap(
 }
 
 /// Reverses the sub-path between `u` and `v` within their shared route.
-fn try_two_opt(state: &mut LsState, prob: &Vrp, u: usize, v: usize, penalty: f64) -> bool {
-    let r = state.route_of[u];
-    if state.route_of[v] != r {
+fn try_two_opt(state: &mut RouteState, prob: &Vrp, u: usize, v: usize, penalty: f64) -> bool {
+    let (r, pu) = state.locate(u);
+    let (rv, pv) = state.locate(v);
+    if rv != r {
         return false;
     }
-    let (i, j) = {
-        let (a, b) = (state.pos_in[u], state.pos_in[v]);
-        if a < b { (a, b) } else { (b, a) }
-    };
+    let (i, j) = if pu < pv { (pu, pv) } else { (pv, pu) };
     if i == j {
         return false;
     }
 
-    let before = state.before(r, i);
-    let after = state.after(r, j);
-    let first = state.routes[r][i];
-    let last = state.routes[r][j];
+    let route = &state.routes[r];
+    let (before, after) = (before(route, i), node_at(route, j + 1));
+    let (first, last) = (route[i], route[j]);
     let delta_distance = prob.distance(before, last) + prob.distance(first, after)
         - prob.distance(before, first)
         - prob.distance(last, after);
@@ -546,16 +429,14 @@ fn try_two_opt(state: &mut LsState, prob: &Vrp, u: usize, v: usize, penalty: f64
 
 /// Exchanges the tails of the routes of `u` and `v`: the customers after `u` are
 /// served by `v`'s vehicle and vice versa.
-fn try_two_opt_star(state: &mut LsState, prob: &Vrp, u: usize, v: usize, penalty: f64) -> bool {
-    let ru = state.route_of[u];
-    let rv = state.route_of[v];
+fn try_two_opt_star(state: &mut RouteState, prob: &Vrp, u: usize, v: usize, penalty: f64) -> bool {
+    let (ru, pu) = state.locate(u);
+    let (rv, pv) = state.locate(v);
     if ru == rv {
         return false;
     }
-    let pu = state.pos_in[u];
-    let pv = state.pos_in[v];
-    let tail_u = state.after(ru, pu);
-    let tail_v = state.after(rv, pv);
+    let tail_u = node_at(&state.routes[ru], pu + 1);
+    let tail_v = node_at(&state.routes[rv], pv + 1);
     if tail_u == 0 && tail_v == 0 {
         return false; // Both tails empty: nothing to exchange.
     }
@@ -612,14 +493,19 @@ mod tests {
     }
 
     /// Descends from a random start and returns the state plus its starting cost.
-    fn descend(prob: &Vrp, rng: &mut SmallRng, penalty: f64, granularity: usize) -> (LsState, f64) {
+    fn descend(
+        prob: &Vrp,
+        rng: &mut SmallRng,
+        penalty: f64,
+        granularity: usize,
+    ) -> (RouteState, f64) {
         let giant = random_tour(rng, prob.get_n());
         let routes = split_giant_tour(prob, &giant, penalty);
-        let mut state = LsState::from_routes(prob, routes);
+        let mut state = RouteState::from_routes(prob, routes);
         let before = state.cost(penalty);
-        let neighbors = build_neighbor_lists(prob, granularity);
-        let mut order = Vec::new();
-        local_search(&mut state, prob, &neighbors, &mut order, rng, penalty, 64);
+        let mut descent = Descent::new();
+        descent.ensure(prob, granularity);
+        descent.run(&mut state, prob, rng, penalty, 64);
         (state, before)
     }
 
@@ -644,7 +530,7 @@ mod tests {
             let mut rng = SmallRng::seed_from_u64(1000 + seed);
             let prob = random_vrp(&mut rng, 25, 10, 5);
             let (state, _) = descend(&prob, &mut rng, 50.0, 8);
-            let fresh = LsState::from_routes(&prob, state.routes.clone());
+            let fresh = RouteState::from_routes(&prob, state.routes.clone());
             assert!(
                 (fresh.distance - state.distance).abs() < 1e-6,
                 "seed {seed}: distance {} vs recomputed {}",
@@ -698,13 +584,13 @@ mod tests {
         let prob = Vrp::new("ring", coordinates, demands, 100, 1);
         let optimum = prob.route_distance(&(1..=n).collect::<Vec<_>>());
 
-        let neighbors = build_neighbor_lists(&prob, n);
+        let mut descent = Descent::new();
+        descent.ensure(&prob, n);
         for seed in 0..20u64 {
             let mut rng = SmallRng::seed_from_u64(4000 + seed);
             let giant = random_tour(&mut rng, n);
-            let mut state = LsState::from_routes(&prob, vec![giant]);
-            let mut order = Vec::new();
-            local_search(&mut state, &prob, &neighbors, &mut order, &mut rng, 1.0, 64);
+            let mut state = RouteState::from_routes(&prob, vec![giant]);
+            descent.run(&mut state, &prob, &mut rng, 1.0, 64);
             assert!(
                 (state.distance - optimum).abs() < 1e-9,
                 "seed {seed}: got {}, optimum {optimum}",
@@ -739,18 +625,16 @@ mod tests {
             2,
             2,
         );
-        let mut state = LsState::from_routes(&prob, vec![vec![1, 2, 3, 4], Vec::new()]);
+        let mut state = RouteState::from_routes(&prob, vec![vec![1, 2, 3, 4], Vec::new()]);
         assert_eq!(
             state.excess, 2,
             "one vehicle cannot carry four unit demands"
         );
 
-        let neighbors = build_neighbor_lists(&prob, 4);
-        let mut order = Vec::new();
+        let mut descent = Descent::new();
+        descent.ensure(&prob, 4);
         let mut rng = SmallRng::seed_from_u64(0);
-        local_search(
-            &mut state, &prob, &neighbors, &mut order, &mut rng, 100.0, 64,
-        );
+        descent.run(&mut state, &prob, &mut rng, 100.0, 64);
 
         assert_eq!(
             state.excess, 0,
@@ -758,5 +642,52 @@ mod tests {
             state.routes
         );
         assert!(state.routes.iter().all(|r| !r.is_empty()));
+    }
+
+    /// An anchored sweep must reach the same local optimum as a full one when
+    /// the only damage is where the anchors are — that is the assumption ALNS
+    /// makes when it descends around the customers it just re-inserted.
+    #[test]
+    fn an_anchored_sweep_fixes_the_damage_it_is_pointed_at() {
+        let mut rng = SmallRng::seed_from_u64(17);
+        let prob = random_vrp(&mut rng, 25, 10, 5);
+        let (settled, _) = descend(&prob, &mut rng, 100.0, 8);
+
+        // Take two customers out of a settled solution and put them back at the
+        // ends of the first route, then descend around exactly those two.
+        let mut routes = settled.routes.clone();
+        let moved: Vec<usize> = routes[1].drain(..2).collect();
+        routes[0].insert(0, moved[0]);
+        routes[0].push(moved[1]);
+        let mut state = RouteState::from_routes(&prob, routes);
+        let damaged = state.cost(100.0);
+
+        let mut descent = Descent::new();
+        descent.ensure(&prob, 8);
+        descent.run_around(&mut state, &prob, &moved, &mut rng, 100.0, 64);
+
+        assert!(
+            state.cost(100.0) < damaged,
+            "the anchored sweep left the damage in place: {damaged} -> {}",
+            state.cost(100.0)
+        );
+        prob.validate_routes(&state.routes).unwrap();
+    }
+
+    /// Anchors are a *hint*, not a contract: an empty set and an anchor whose
+    /// route is untouched must both leave a valid solution behind.
+    #[test]
+    fn an_empty_anchor_set_is_a_no_op() {
+        let mut rng = SmallRng::seed_from_u64(23);
+        let prob = random_vrp(&mut rng, 20, 10, 4);
+        let (mut state, _) = descend(&prob, &mut rng, 100.0, 8);
+        let before = state.cost(100.0);
+
+        let mut descent = Descent::new();
+        descent.ensure(&prob, 8);
+        descent.run_around(&mut state, &prob, &[], &mut rng, 100.0, 64);
+
+        assert_eq!(state.cost(100.0), before);
+        prob.validate_routes(&state.routes).unwrap();
     }
 }

@@ -3,8 +3,9 @@
 //! HGS (Vidal et al.) is the strongest known general-purpose CVRP metaheuristic.
 //! It combines three ideas, each in its own layer here:
 //!
-//! - [`local_search`] — a granular descent that turns every offspring into a
-//!   local optimum, under a capacity penalty the driver adapts at runtime.
+//! - [`Descent`] — the granular descent shared with ALNS,
+//!   which turns every offspring into a local optimum under the capacity
+//!   penalty this driver adapts at runtime.
 //! - [`population`] — *biased fitness*, which ranks individuals by cost **and**
 //!   by how much diversity they contribute, so the population does not collapse.
 //! - this module — the generational loop, the adaptive penalty, and the
@@ -25,7 +26,6 @@
 //! when writing to the search state, so reported objectives stay comparable with
 //! every other heuristic in the crate.
 
-mod local_search;
 mod population;
 
 use rand::Rng;
@@ -38,7 +38,7 @@ use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::vrp::{Vrp, split_giant_tour};
 use crate::search_state::SearchState;
 
-use local_search::{LsState, build_neighbor_lists, local_search};
+use super::ops::{Descent, RouteState};
 use population::{Individual, Subpopulation, binary_tournament};
 
 /// Initial population size, as a multiple of `min_population_size`.
@@ -135,11 +135,9 @@ pub struct HybridGeneticSearch {
 
     feasible: Subpopulation,
     infeasible: Subpopulation,
-    /// Granular candidate lists, built once per instance (see
-    /// [`build_neighbor_lists`]); survives [`Heuristic::clear`].
-    neighbors: Vec<Vec<usize>>,
-    /// Scratch buffer reused by every local-search call.
-    order: Vec<usize>,
+    /// The granular descent every offspring is put through, holding the
+    /// candidate lists it was built for; survives [`Heuristic::clear`].
+    descent: Descent,
     penalty_capacity: f64,
     initial_penalty: f64,
     /// Offspring since the last penalty adjustment, and how many were feasible.
@@ -187,8 +185,7 @@ impl HybridGeneticSearch {
             restart_generations,
             feasible: Subpopulation::new(),
             infeasible: Subpopulation::new(),
-            neighbors: Vec::new(),
-            order: Vec::new(),
+            descent: Descent::new(),
             penalty_capacity: 1.0,
             initial_penalty: 1.0,
             recent_total: 0,
@@ -196,13 +193,6 @@ impl HybridGeneticSearch {
             generations_without_improvement: 0,
             best_cost: f64::INFINITY,
             warm_started: false,
-        }
-    }
-
-    /// Builds the granular candidate lists on first use.
-    fn ensure_neighbors(&mut self, prob: &Vrp) {
-        if self.neighbors.len() != prob.get_n() + 1 {
-            self.neighbors = build_neighbor_lists(prob, self.granularity);
         }
     }
 
@@ -235,7 +225,7 @@ impl HybridGeneticSearch {
                 self.warm_started = true;
                 state.solution.routes.iter().flatten().copied().collect()
             } else if i % NEAREST_NEIGHBOR_SHARE == 1 {
-                nearest_neighbor_tour(prob, &self.neighbors, &mut state.rng)
+                nearest_neighbor_tour(prob, self.descent.neighbors(), &mut state.rng)
             } else {
                 random_tour(n, &mut state.rng)
             };
@@ -251,16 +241,9 @@ impl HybridGeneticSearch {
     /// Decodes a giant tour, improves it, repairs it, and files the result.
     fn spawn(&mut self, prob: &Vrp, tour: Vec<usize>, rng: &mut SmallRng) {
         let routes = split_giant_tour(prob, &tour, self.penalty_capacity);
-        let mut child = LsState::from_routes(prob, routes);
-        local_search(
-            &mut child,
-            prob,
-            &self.neighbors,
-            &mut self.order,
-            rng,
-            self.penalty_capacity,
-            MAX_LS_PASSES,
-        );
+        let mut child = RouteState::from_routes(prob, routes);
+        self.descent
+            .run(&mut child, prob, rng, self.penalty_capacity, MAX_LS_PASSES);
 
         self.recent_total += 1;
         if child.excess == 0 {
@@ -274,11 +257,9 @@ impl HybridGeneticSearch {
         if rng.random::<f64>() < REPAIR_PROBABILITY {
             let mut repaired = child.clone();
             for boost in REPAIR_PENALTY_BOOSTS {
-                local_search(
+                self.descent.run(
                     &mut repaired,
                     prob,
-                    &self.neighbors,
-                    &mut self.order,
                     rng,
                     self.penalty_capacity * boost,
                     MAX_LS_PASSES,
@@ -293,7 +274,7 @@ impl HybridGeneticSearch {
     }
 
     /// Files an evaluated child into its sub-population, culling if it overflows.
-    fn absorb(&mut self, prob: &Vrp, child: LsState) {
+    fn absorb(&mut self, prob: &Vrp, child: RouteState) {
         let penalty = self.penalty_capacity;
         let capacity = self.min_population_size + self.generation_size;
         let target = self.min_population_size;
@@ -305,7 +286,7 @@ impl HybridGeneticSearch {
         } else {
             &mut self.infeasible
         };
-        pool.push(individual);
+        pool.push(individual, penalty);
         if pool.len() > capacity {
             pool.trim_to(target, penalty);
         }
@@ -420,7 +401,7 @@ impl Heuristic<Vrp> for HybridGeneticSearch {
 
     fn run_once(&mut self, state: &mut SearchState<'_, Vrp>) -> Result<(), OptError> {
         let prob = state.instance;
-        self.ensure_neighbors(prob);
+        self.descent.ensure(prob, self.granularity);
 
         if self.feasible.is_empty() && self.infeasible.is_empty() {
             self.initial_penalty = Self::scale_free_penalty(prob);
@@ -561,7 +542,7 @@ mod tests {
         assert!(search.infeasible.is_empty());
         assert_eq!(search.penalty_capacity, search.initial_penalty);
         assert!(
-            !search.neighbors.is_empty(),
+            !search.descent.neighbors().is_empty(),
             "the candidate lists depend only on the instance and should survive"
         );
     }
@@ -622,9 +603,10 @@ mod tests {
     #[test]
     fn nearest_neighbor_tour_visits_every_customer() {
         let prob = ring_vrp(15, 5, 3);
-        let neighbors = build_neighbor_lists(&prob, 4);
+        let mut descent = Descent::new();
+        descent.ensure(&prob, 4);
         let mut rng = SmallRng::seed_from_u64(1);
-        let tour = nearest_neighbor_tour(&prob, &neighbors, &mut rng);
+        let tour = nearest_neighbor_tour(&prob, descent.neighbors(), &mut rng);
         let mut sorted = tour.clone();
         sorted.sort_unstable();
         assert_eq!(sorted, (1..=15).collect::<Vec<_>>());

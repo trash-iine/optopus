@@ -103,6 +103,16 @@ impl Individual {
 pub(super) struct Subpopulation {
     members: Vec<Individual>,
     fitness: Vec<f64>,
+    /// Broken-pairs distances between every pair of `members`, row-major and
+    /// `members.len()` wide.
+    ///
+    /// Cached because biased fitness has to be re-ranked on *every* insertion —
+    /// the ranks are relative, so one new member shifts them all — and
+    /// recomputing the whole matrix each time would cost O(N²·n) per generation.
+    /// Grown one row/column at a time by [`Subpopulation::push`] and squeezed in
+    /// place by [`Subpopulation::trim_to`], so each individual's O(N·n) of
+    /// distance work is done once, when it arrives.
+    distances: Vec<f64>,
 }
 
 impl Subpopulation {
@@ -110,6 +120,7 @@ impl Subpopulation {
         Self {
             members: Vec::new(),
             fitness: Vec::new(),
+            distances: Vec::new(),
         }
     }
 
@@ -124,22 +135,50 @@ impl Subpopulation {
     pub(super) fn clear(&mut self) {
         self.members.clear();
         self.fitness.clear();
+        self.distances.clear();
     }
 
     pub(super) fn members(&self) -> &[Individual] {
         &self.members
     }
 
-    /// Biased fitness of member `i`; lower is better. Falls back to `0.0` before
-    /// the first [`Subpopulation::refresh_fitness`].
+    /// Biased fitness of member `i`; lower is better.
+    ///
+    /// Always current: every insertion re-ranks the sub-population. Leaving a
+    /// fresh member unranked is not an option — biased fitness lies in `[0, 2]`,
+    /// so any placeholder is either the best or the worst value there is, and
+    /// [`binary_tournament`] would then either always or never pick it.
     pub(super) fn fitness(&self, i: usize) -> f64 {
-        self.fitness.get(i).copied().unwrap_or(0.0)
+        self.fitness[i]
     }
 
-    /// Adds an individual. Fitness is stale until the next refresh or trim.
-    pub(super) fn push(&mut self, individual: Individual) {
+    /// Adds an individual and re-ranks the sub-population under `penalty`.
+    ///
+    /// Only the newcomer's distances are measured (O(N·n)); the rest of the
+    /// matrix is reused, so the re-rank itself touches no routes.
+    pub(super) fn push(&mut self, individual: Individual, penalty: f64) {
+        let row: Vec<f64> = self
+            .members
+            .iter()
+            .map(|m| m.broken_pairs_distance(&individual))
+            .collect();
+        self.grow_distances(&row);
         self.members.push(individual);
-        self.fitness.push(0.0);
+        self.refresh_fitness(penalty);
+    }
+
+    /// Widens the distance matrix by one, `row` being the new member's distances
+    /// to the existing ones (and therefore also the new last row).
+    fn grow_distances(&mut self, row: &[f64]) {
+        let old = row.len();
+        let new = old + 1;
+        let mut grown = vec![0.0; new * new];
+        for i in 0..old {
+            grown[i * new..i * new + old].copy_from_slice(&self.distances[i * old..(i + 1) * old]);
+            grown[i * new + old] = row[i];
+        }
+        grown[old * new..old * new + old].copy_from_slice(row);
+        self.distances = grown;
     }
 
     /// The cheapest member under `penalty`.
@@ -149,36 +188,50 @@ impl Subpopulation {
             .min_by(|a, b| a.cost(penalty).total_cmp(&b.cost(penalty)))
     }
 
-    /// Recomputes biased fitness for every member.
+    /// Recomputes biased fitness for every member from the cached distances.
+    ///
+    /// Callers outside this module need it when `penalty` moves: the cost half
+    /// of the ranking depends on it, the distance half does not.
     pub(super) fn refresh_fitness(&mut self, penalty: f64) {
-        let n = self.members.len();
-        let distances = pairwise_distances(&self.members);
-        let alive = vec![true; n];
-        self.fitness = biased_fitness(&self.members, &distances, &alive, penalty).1;
+        let alive = vec![true; self.members.len()];
+        self.fitness = biased_fitness(&self.members, &self.distances, &alive, penalty).1;
     }
 
     /// Shrinks the sub-population to `target` members, evicting clones first and
     /// otherwise the worst biased fitness.
     ///
-    /// The pairwise distance matrix is computed once and masked as members are
-    /// removed, so the whole trim costs O(N²·n) once plus O(N²) per eviction
-    /// rather than recomputing distances every round.
+    /// The cached distance matrix is masked as members are removed, so a trim
+    /// costs O(N² log N) per eviction and measures no routes at all.
     pub(super) fn trim_to(&mut self, target: usize, penalty: f64) {
         if self.members.len() <= target {
-            self.refresh_fitness(penalty);
             return;
         }
-        let n = self.members.len();
-        let distances = pairwise_distances(&self.members);
-        let mut alive = vec![true; n];
-        let mut alive_count = n;
+        let mut alive = vec![true; self.members.len()];
+        let mut alive_count = self.members.len();
 
         while alive_count > target {
-            let (victim, _) = biased_fitness(&self.members, &distances, &alive, penalty);
+            let (victim, _) = biased_fitness(&self.members, &self.distances, &alive, penalty);
             let victim = victim.expect("a survivor must exist while alive_count > target");
             alive[victim] = false;
             alive_count -= 1;
         }
+
+        self.compact(&alive);
+        self.refresh_fitness(penalty);
+    }
+
+    /// Drops the dead members and squeezes the distance matrix down to match.
+    fn compact(&mut self, alive: &[bool]) {
+        let n = self.members.len();
+        let survivors: Vec<usize> = (0..n).filter(|&i| alive[i]).collect();
+        let m = survivors.len();
+        let mut squeezed = vec![0.0; m * m];
+        for (a, &i) in survivors.iter().enumerate() {
+            for (b, &j) in survivors.iter().enumerate() {
+                squeezed[a * m + b] = self.distances[i * n + j];
+            }
+        }
+        self.distances = squeezed;
 
         let mut index = 0;
         self.members.retain(|_| {
@@ -186,22 +239,7 @@ impl Subpopulation {
             index += 1;
             keep
         });
-        self.refresh_fitness(penalty);
     }
-}
-
-/// All pairwise broken-pairs distances, row-major.
-fn pairwise_distances(members: &[Individual]) -> Vec<f64> {
-    let n = members.len();
-    let mut distances = vec![0.0; n * n];
-    for i in 0..n {
-        for j in (i + 1)..n {
-            let d = members[i].broken_pairs_distance(&members[j]);
-            distances[i * n + j] = d;
-            distances[j * n + i] = d;
-        }
-    }
-    distances
 }
 
 /// Biased fitness of the living members, plus the index of the worst one.
@@ -311,6 +349,22 @@ mod tests {
         Individual::new(n, routes, distance, excess)
     }
 
+    /// All pairwise broken-pairs distances, row-major — what a `Subpopulation`
+    /// builds incrementally, written out in full so `biased_fitness` can be
+    /// exercised without one.
+    fn pairwise_distances(members: &[Individual]) -> Vec<f64> {
+        let n = members.len();
+        let mut distances = vec![0.0; n * n];
+        for i in 0..n {
+            for j in (i + 1)..n {
+                let d = members[i].broken_pairs_distance(&members[j]);
+                distances[i * n + j] = d;
+                distances[j * n + i] = d;
+            }
+        }
+        distances
+    }
+
     #[test]
     fn broken_pairs_distance_properties() {
         let n = 6;
@@ -346,7 +400,7 @@ mod tests {
         let mut pop = Subpopulation::new();
         for k in 0..10 {
             let routes = vec![vec![1, 2, 3], vec![4, 5, 6]];
-            pop.push(individual(n, routes, 10.0 + k as f64, 0));
+            pop.push(individual(n, routes, 10.0 + k as f64, 0), 1.0);
         }
         pop.trim_to(4, 1.0);
         assert_eq!(pop.len(), 4);
@@ -359,10 +413,19 @@ mod tests {
         // Three identical (but expensive-to-lose) individuals plus two distinct
         // and strictly worse ones. Cost alone would evict the distinct pair.
         for _ in 0..3 {
-            pop.push(individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0));
+            pop.push(
+                individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0),
+                1.0,
+            );
         }
-        pop.push(individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 20.0, 0));
-        pop.push(individual(n, vec![vec![1, 3, 5], vec![2, 4, 6]], 21.0, 0));
+        pop.push(
+            individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 20.0, 0),
+            1.0,
+        );
+        pop.push(
+            individual(n, vec![vec![1, 3, 5], vec![2, 4, 6]], 21.0, 0),
+            1.0,
+        );
 
         pop.trim_to(3, 1.0);
         assert_eq!(pop.len(), 3);
@@ -372,6 +435,60 @@ mod tests {
             .filter(|m| m.routes == vec![vec![1, 2, 3], vec![4, 5, 6]])
             .count();
         assert_eq!(clones, 1, "duplicates should have been evicted first");
+    }
+
+    /// The matrix grown one member at a time must equal a from-scratch
+    /// recompute, both after insertions and after a trim squeezes it — the
+    /// diversity half of the ranking reads it directly.
+    #[test]
+    fn incremental_distances_match_a_full_recompute() {
+        let n = 6;
+        let mut pop = Subpopulation::new();
+        let members = [
+            individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0),
+            individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 20.0, 0),
+            individual(n, vec![vec![1, 3, 5], vec![2, 4, 6]], 21.0, 0),
+            individual(n, vec![vec![1, 5, 6], vec![2, 3, 4]], 22.0, 0),
+            individual(n, vec![vec![1, 6, 4], vec![2, 5, 3]], 23.0, 0),
+        ];
+        for m in &members {
+            pop.push(m.clone(), 1.0);
+            assert_eq!(pop.distances, pairwise_distances(pop.members()));
+        }
+
+        pop.trim_to(3, 1.0);
+        assert_eq!(pop.distances, pairwise_distances(pop.members()));
+    }
+
+    /// A newcomer has to be ranked on arrival. Filing it unranked would leave it
+    /// holding a placeholder, and since biased fitness lives in `[0, 2]` any
+    /// placeholder makes it win or lose every tournament regardless of cost.
+    #[test]
+    fn a_pushed_individual_is_ranked_immediately() {
+        let n = 6;
+        let mut pop = Subpopulation::new();
+        pop.push(
+            individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 0),
+            1.0,
+        );
+        pop.push(
+            individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 20.0, 0),
+            1.0,
+        );
+        // The last arrival is by far the most expensive and no more diverse than
+        // the others, so it must not come out ahead of the cheapest member.
+        pop.push(
+            individual(n, vec![vec![1, 3, 5], vec![2, 4, 6]], 99.0, 0),
+            1.0,
+        );
+
+        let newest = pop.len() - 1;
+        assert!(
+            pop.fitness(newest) > pop.fitness(0),
+            "the newcomer ranked {} against the cheapest member's {}",
+            pop.fitness(newest),
+            pop.fitness(0)
+        );
     }
 
     #[test]

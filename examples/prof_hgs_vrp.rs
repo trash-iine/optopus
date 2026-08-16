@@ -5,7 +5,8 @@
 //!     dominant cost by far (every offspring is driven to a local optimum)
 //!   - split_giant_tour(): O(fleet · n · route length) DP per offspring
 //!   - build_neighbor_lists(): one-time O(n²) candidate-list construction
-//!   - Subpopulation::trim_to(): O(N²·n) broken-pairs matrix, once per λ offspring
+//!   - Subpopulation::push(): O(N·n) broken-pairs row for the newcomer plus an
+//!     O(N² log N) re-rank, once per offspring (the matrix itself is cached)
 //!   - prob.distance(): O(1) read from the lazily built distance matrix
 //!     (nodes ≤ VRP_DIST_MATRIX_MAX_N)
 //!

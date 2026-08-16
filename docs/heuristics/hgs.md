@@ -127,12 +127,17 @@ solutions (`data/instances/scripts/fetch_cvrp.sh`). ALNS is
 
 | Instance | BKS | ALNS best | HGS best | ALNS gap | HGS gap |
 |---|---|---|---|---|---|
-| X-n101-k25 | 27591 | 27826 | **27658** | +0.85% | **+0.24%** |
-| X-n195-k51 | 44225 | 45254 | **44528** | +2.33% | **+0.69%** |
-| X-n502-k39 | 69226 | 72045 | **70288** | +4.07% | **+1.53%** |
+| X-n101-k25 | 27591 | 27597 | 27597 | +0.02% | +0.02% |
+| X-n195-k51 | 44225 | **44334** | 44506 | **+0.25%** | +0.64% |
+| X-n502-k39 | 69226 | **69872** | 70025 | **+0.93%** | +1.15% |
 
-The gap to ALNS widens with instance size: granular candidate lists keep the
-per-move cost flat as `n` grows, while ALNS re-scans every insertion position.
+HGS used to win this table by 0.6-2.5pp, and no longer does: ALNS now runs the
+same granular descent after each repair (anchored at the customers it
+re-inserted), which was the whole of its disadvantage. Over ten X instances of
+101-459 customers at 30 s × 5 runs the two are a wash on average objective —
+ALNS ahead on the four largest, HGS on the mid-sized ones, every difference
+under 0.7%. Which of the two to reach for at a *long* budget is not settled by
+this measurement — the 600 s band has not been re-run since the change.
 
 Reproduce with `cargo run --release --example prof_hgs_vrp` (single run, prints
 the gap) or `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
