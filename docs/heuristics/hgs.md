@@ -139,8 +139,7 @@ ALNS ahead on the four largest, HGS on the mid-sized ones, every difference
 under 0.7%. Which of the two to reach for at a *long* budget is not settled by
 this measurement — the 600 s band has not been re-run since the change.
 
-Reproduce with `cargo run --release --example prof_hgs_vrp` (single run, prints
-the gap) or `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
+Reproduce with `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
 
 ## Not implemented
 

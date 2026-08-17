@@ -1,7 +1,4 @@
 /target
-/profiles/baseline/
-/profiles/current/
-/profile.json.gz
 .DS_Store
 .claude/
 
