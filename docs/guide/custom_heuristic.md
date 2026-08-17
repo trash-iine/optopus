@@ -73,20 +73,15 @@ Key API touchpoints:
 - `N::iter(prob, sol)` — lazy iterator over moves; combine with `max_by`,
   `find`, `filter_best`, `.choose(&mut rng)` etc. as your strategy demands.
 
-## Optional: parallel execution
+## Optional: parallel evaluation
 
-Implement `ParallelHeuristic<P>` if your `run_once_par` can use rayon. The
-default delegates to `run_once`, so this is purely a perf opt.
-
-```rust
-impl<P, N> ParallelHeuristic<P> for FirstImprovingSearch<N>
-where P: ProblemTrait, N: MoveToNeighbor<P> + Send + Sync
-{ /* override run_once_par */ }
-```
-
-`SearchState::get_best_move_par_chunks(iter, chunk_size)` evaluates a move
-iterator in parallel and returns the best move — useful when neighborhoods are
-large.
+There is no parallel variant of `Heuristic` to implement. Parallelism belongs
+to the neighbor type: `MoveToNeighbor::iter` returns `impl Iterator + Send`, so
+an `iter` implementation whose per-candidate cost is heavy can evaluate
+candidates with rayon and yield the results in order. `JobShopSwapNeighbor` does
+exactly that above a size threshold (`src/problem/job_shop_scheduling/neighbor.rs`),
+which keeps results independent of the thread count while every heuristic —
+including yours — stays sequential.
 
 ## Composing your heuristic
 

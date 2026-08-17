@@ -5,7 +5,7 @@
 Optopus separates three orthogonal concerns:
 
 - **Problems** — *what* to optimize (MaxCut, QUBO, MaxSAT, TSP, Vertex Cover,
-  Job Shop, custom formula).
+  Job Shop, CVRP, custom formula).
 - **Heuristics** — *how* to search (Local Search, SA, Tabu Search, GA, …).
 - **`SearchState`** — iteration count, timing, current and best solutions.
 
@@ -17,15 +17,16 @@ runs each heuristic on each instance.
 
 1. **Existing problem × existing heuristic** — run `LocalSearch`,
    `SimulatedAnnealing`, `TabuSearch`, etc. on MaxCut / QUBO / MaxSAT / TSP /
-   Vertex Cover / Job Shop in a few lines via `use optopus::prelude::*`.
+   Vertex Cover / Job Shop / CVRP in a few lines via `use optopus::prelude::*`.
 2. **Apply existing heuristics to a new problem** — implement the three core
    traits (`ProblemTrait`, `Rankable` on the solution, `MoveToNeighbor`) and
    every heuristic and the benchmark pipeline work as-is. Add `Evaluate<f64>`
    for SA / LAHC / RL Search, `EnabledTabu` for Tabu Search, `Crossover` for
    Genetic Algorithm. See [custom problem](guide/custom_problem.md).
 3. **Compose heuristics and benchmark them** — use `Sequential`, `Iterated`,
-   `Restart`, or `GeneticAlgorithm` to combine algorithms; describe a comparison
-   in TOML and run the CLI to get aggregated statistics.
+   `VariableNeighborhoodSearch`, `Restart`, or `GeneticAlgorithm` to combine
+   algorithms; describe a comparison in TOML and run the CLI to get aggregated
+   statistics.
 
 ## `SearchState`
 
@@ -40,8 +41,9 @@ Full struct, methods, and clone variants: see
 ### Sub-run clone/merge pattern
 
 Every meta-heuristic isolates a phase on a cloned state, then merges only the
-best solution back. This is what lets `Sequential`, `Iterated`, `Restart`,
-and `GeneticAlgorithm` compose freely while keeping iteration counts monotonic.
+best solution back. This is what lets `Sequential`, `Iterated`,
+`VariableNeighborhoodSearch`, `Restart`, and `GeneticAlgorithm` compose freely
+while keeping iteration counts monotonic.
 
 ```rust
 let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
@@ -68,7 +70,9 @@ Full signatures and the per-heuristic requirement matrix: see
 - **Gain-based incremental updates.** Every solution caches a per-variable
   `gain`. Applying a move only refreshes the affected neighbors in O(degree).
   MaxCut / QUBO additionally expose optional `positive_gain` / `negative_gain`
-  indices for problem-specific solvers.
+  indices for problem-specific solvers (MaxCut also has a `zero_gain` one).
+  TSP is the exception: it caches no gains and computes them on the fly from a
+  lazily built distance matrix.
 - **Sub-run clone/merge.** Each meta-heuristic runs an inner heuristic on a
   cloned state and merges only the best solution back. The global iteration
   counter advances monotonically across phases.
@@ -76,9 +80,11 @@ Full signatures and the per-heuristic requirement matrix: see
   Each move type owns its own `TabuMap`, decoupling tabu policy from the
   search algorithm.
 - **Lazy `MoveToNeighbor::iter()`.** `LocalSearch` selects with `max_by` in
-  O(n) without collecting; `TabuSearch` uses `filter_best` plus aspiration;
-  `RandomWalk` uses `.choose()`. Only `BeamSearch` materializes all candidates,
-  and `get_best_move_par_chunks` evaluates them in parallel.
+  O(n) without collecting; `TabuSearch` uses `max_by(rank_cmp)` plus aspiration.
+  SA, LAHC and `RandomWalk` never walk the neighborhood at all — they draw one
+  move through `state.random_neighbor::<N>()`, which every built-in move type
+  answers with a direct O(1)/O(n) sampler. Only `BeamSearch` materializes all
+  candidates.
 - **Always-higher-is-better internals (`FormulaProblem`).** For `Maximize`,
   `score = objective − penalty`; for `Minimize`, `score = −objective − penalty`.
   Heuristics always treat higher `score` as better.

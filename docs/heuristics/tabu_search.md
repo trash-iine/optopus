@@ -38,8 +38,8 @@ range.
 
 Internally the map and the tenure are one `common::TabuLedger<N::TabuMap>` —
 they are never useful apart, and the two verbs it exposes (`allows` / `record`)
-are what the MaxCut operators in `heuristic::specific::max_cut::ops` share when
-several of them must respect each other's prohibitions.
+are what the MaxCut operators in `src/heuristic/specific/max_cut/ops/` share
+when several of them must respect each other's prohibitions.
 
 ## Example
 

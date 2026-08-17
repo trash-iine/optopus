@@ -20,6 +20,7 @@ Start here, then dive into the section that matches your task.
 - [TSP](problems/tsp.md)
 - [Vertex Cover](problems/vertex_cover.md)
 - [Job Shop Scheduling](problems/job_shop_scheduling.md)
+- [CVRP](problems/vrp.md)
 - [Formula](problems/formula.md)
 
 ### Heuristics
@@ -33,10 +34,14 @@ Start here, then dive into the section that matches your task.
 - [Beam Search](heuristics/beam_search.md)
 - [RL Search](heuristics/rl_search.md)
 - [Genetic Algorithm](heuristics/genetic_algorithm.md) (incl. `Crossover` trait)
-- [Meta-heuristics](heuristics/meta.md) — Sequential, Iterated (ILS), Restart
+- [Meta-heuristics](heuristics/meta.md) — Sequential, Iterated (ILS), VNS, Restart
 - [Breakout Local Search (MaxCut)](heuristics/breakout_local_search.md)
 - [RL Breakout Local Search (MaxCut)](heuristics/rl_breakout_local_search.md)
+- [Population Annealing (MaxCut)](heuristics/population_annealing.md)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
+- [WalkSAT (MaxSAT)](heuristics/walksat.md)
+- [Hybrid Genetic Search (CVRP)](heuristics/hgs.md)
+- [Adaptive Large Neighborhood Search (CVRP)](heuristics/alns.md)
 
 ## Guides
 

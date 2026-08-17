@@ -74,9 +74,10 @@ comparison.
 | `Distance` (solution) | `GeneticAlgorithm` (any selection), `ParentSelection::DistantTopK` | GA won't compile. |
 | `SubProblemExtractable` (problem) | `SubProblemBasedCrossover` | Use the problem's uniform crossover instead. |
 
-`LocalSearch`, `RandomWalk`, `BeamSearch`, `Sequential`, `Iterated`, `Restart`,
-and `GeneticAlgorithm` (with a problem-specific crossover that doesn't need
-`SubProblemExtractable`) only need the three required traits + `Distance` for GA.
+`LocalSearch`, `RandomWalk`, `BeamSearch`, `Sequential`, `Iterated`,
+`VariableNeighborhoodSearch`, `Restart`, and `GeneticAlgorithm` (with a
+problem-specific crossover that doesn't need `SubProblemExtractable`) only need
+the three required traits + `Distance` for GA.
 
 ## Performance note
 

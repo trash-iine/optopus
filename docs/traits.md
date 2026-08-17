@@ -16,15 +16,20 @@ a *reduction* rather than by a problem; see the section below the table.
 |---|---|---|
 | `ProblemTrait` | every heuristic | `type Solution: Clone + Rankable; fn new_solution(&self, rng) -> Solution` |
 | `Rankable` (on `Solution`) | every heuristic | `fn is_better_than(&self, other: &Self) -> bool` |
-| `MoveToNeighbor<P>` | every heuristic | `fn iter(prob, sol) -> impl Iterator<Self> + Send`<br>`fn apply_to_solution(&self, prob, sol) -> Result<()>`<br>`fn move_to_be_better_than(&self, prob, src, other) -> bool` (default: clone + apply)<br>`fn apply_to_iteration(&self, iter) -> u64` (default: `iter + 1`) |
+| `MoveToNeighbor<P>` | every heuristic | `fn iter(prob, sol) -> impl Iterator<Self> + Send`<br>`fn apply_to_solution(&self, prob, sol) -> Result<()>`<br>`fn random_neighbor(prob, sol, rng) -> Option<Self>` (default: reservoir-sample `iter`)<br>`fn move_to_be_better_than(&self, prob, src, other) -> bool` (default: clone + apply)<br>`fn apply_to_iteration(&self, iter) -> u64` (default: `iter + 1`) |
 | `Rankable` (on the neighbor) | `LocalSearch`, `BeamSearch`, `RandomWalk`, `TabuSearch` | same signature; selects the best move among candidates |
 | `Evaluate<T>` (returns `Evaluable<T>`) | `SimulatedAnnealing`, `LateAcceptanceHillClimbing`, `RlSearch` | `fn evaluate(&self) -> Evaluable<T>` (default `T = f64`); `Evaluable::Maximize(T)` / `Minimize(T)` carries the optimization direction. `Evaluable<f64>::worsening_amount()` normalizes both directions to "positive = worse" (used by `boltzmann_accept`). |
-| `EnabledTabu` | `TabuSearch` | `type TabuMap: Default;`<br>`fn is_move_enabled(&self, map, iter) -> bool;`<br>`fn add_to_tabu_map(&self, map, iter, tenure: (u64, u64))` |
-| `Crossover<P>` | `GeneticAlgorithm` | `fn crossover(&mut self, prob, sol1, sol2) -> P::Solution` (`&mut self` lets stateful operators run a sub-heuristic) |
+| `EnabledTabu` | `TabuSearch` | `type TabuMap: Default;`<br>`fn is_move_enabled(&self, map, iter) -> bool;`<br>`fn add_to_tabu_map(&self, map, iter, tenure: (u64, u64), rng: &mut SmallRng)` |
+| `Crossover<P>` | `GeneticAlgorithm` | `fn crossover(&mut self, prob, sol1, sol2, rng: &mut SmallRng) -> Result<P::Solution, OptError>` (`&mut self` lets stateful operators run a sub-heuristic) |
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
 | `Distance` (on `Solution`) | `GeneticAlgorithm::ParentSelection::DistantTopK` | `fn distance(&self, other: &Self) -> usize` |
 | `BinaryProblem` | the shared binary machinery in `common::binary` | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip` |
 | `ProblemReduction` | nothing — it is a facility, not a requirement | `type Source: ProblemTrait; type Target: ProblemTrait;`<br>`fn target(&self) -> &Self::Target;`<br>`fn project(&self, sol: &SourceSolution) -> TargetSolution;`<br>`fn lift(&self, source: &Self::Source, base: &SourceSolution, sol: &TargetSolution) -> SourceSolution` |
+
+`SmallRng` above is `rand::rngs::SmallRng`. Every trait method that needs
+randomness takes it as a parameter rather than reaching for a thread RNG:
+callers pass `&mut state.rng`, which is what keeps a seeded run bit-reproducible
+through tabu tenures and crossovers alike.
 
 In the last row `SourceSolution` and `TargetSolution` stand for
 `<Self::Source as ProblemTrait>::Solution` and

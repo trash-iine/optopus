@@ -1,8 +1,9 @@
 # Benchmarks
 
-Aggregated comparison of every implemented heuristic across every supported
-problem type. Each row is `(problem, instance, neighbor, heuristic)` averaged
-over 10 runs.
+Aggregated comparison of the general heuristics across the supported problem
+types, plus the two problem-specific solvers whose sweeps are published here
+(BLS for MaxCut, LKH for TSP). Each row is
+`(problem, instance, neighbor, heuristic)` averaged over 10 runs.
 
 > ⚠️ **Reference values only.** These benchmarks were collected in a
 > non-isolated environment (shared machine, background load) and some code
@@ -37,6 +38,13 @@ Small (≤30s budget), medium (120s), and large (600s) bands are all complete.
 | TSP (TSPLIB) | 4 / 2 / 1 | TwoOpt, Relocate | LS, TS, LAHC, SA, GA, Iterated, Restart, LKH |
 | JSSP (OR-Library) | 9 / 34 / 39 | Swap, Relocate | LS, TS, LAHC, SA, GA, Iterated, Restart |
 | VertexCover (GSET) | 30 / 24 / 17 | Flip, Swap | LS, TS, LAHC, SA, GA, Iterated, Restart |
+
+CVRP has run configs and a size-band profile (below) but **no published
+results yet** — there is no `data/vrp/` under this directory, so the viewer has
+no CVRP rows. The bespoke CVRP comparison lives in
+[hgs.md](../heuristics/hgs.md#measured-quality) instead. The same holds for
+`RlBreakoutLocalSearch`, `PopulationAnnealingForMaxCut` and `WalkSatForSat`:
+implemented and configurable, not part of this sweep.
 
 The BreakoutLocalSearch (BLS) sweep for MaxCut spans the full GSET set
 G1–G81 (vertex-size bins 800–20000), reported separately as

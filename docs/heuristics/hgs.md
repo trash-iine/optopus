@@ -40,8 +40,11 @@ A solution therefore earns its place either by being cheap or by being unlike
 the rest. Clones (distance `0` from another member) are always evicted first.
 
 Broken-pairs distance is the fraction of customers whose route neighbors differ.
-It is invariant to relabeling and reversing routes, unlike `VrpSolution`'s own
-`Distance` impl, which counts route *indices*.
+It is invariant to relabeling and reversing routes, and it is the same count
+`VrpSolution`'s [`Distance`](../problems/vrp.md#optional-traits) impl is built
+on — the one difference being direction: `Distance` symmetrizes by taking the
+larger of the two directions, while biased fitness here ranks on the
+*directional* count, which is the form Vidal defines it on.
 
 ### Two sub-populations and the adaptive penalty
 

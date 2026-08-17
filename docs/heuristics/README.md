@@ -21,7 +21,7 @@ plugs straight in.
 
 | Algorithm | Description |
 |---|---|
-| [Sequential / Iterated / Restart](meta.md) | Compose inner heuristics via the sub-run clone/merge pattern. |
+| [Sequential / Iterated / VariableNeighborhoodSearch / Restart](meta.md) | Compose inner heuristics via the sub-run clone/merge pattern. |
 | [GeneticAlgorithm](genetic_algorithm.md) | Tournament selection → `Crossover` → mutation → worst-replacement. |
 
 ## Crossover operators
@@ -40,6 +40,8 @@ Used by `GeneticAlgorithm`:
 |---|---|---|
 | [BreakoutLocalSearchForMaxCut](breakout_local_search.md) | MaxCut | Greedy LS + adaptive perturbation. |
 | [RlBreakoutLocalSearchForMaxCut](rl_breakout_local_search.md) | MaxCut | BLS machinery + learned (contextual-bandit) perturbation policy. |
+| [PopulationAnnealingForMaxCut](population_annealing.md) | MaxCut | Replica population cooled by β, resampled per step, with objective-preserving cluster moves. |
 | [LinKernighanHelsgaunForTsp](lkh.md) | TSP 2D | Variable-depth k-opt with candidate lists. |
+| [WalkSatForSat](walksat.md) | MaxSAT | Focused SKC flips inside a random unsatisfied clause; optional adaptive noise. |
 | [HybridGeneticSearchForVrp](hgs.md) | CVRP | Giant-tour GA + optimal Split + granular local search; biased fitness over feasible/infeasible sub-populations. |
-| `AdaptiveLargeNeighborhoodSearchForVrp` | CVRP | Ruin-and-recreate with adaptive operator weights and SA acceptance, plus the same granular descent HGS uses, anchored at the re-inserted customers. |
+| [AdaptiveLargeNeighborhoodSearchForVrp](alns.md) | CVRP | Ruin-and-recreate with adaptive operator weights and SA acceptance, plus the same granular descent HGS uses, anchored at the re-inserted customers. |

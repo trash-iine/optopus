@@ -3,7 +3,7 @@
 A metaheuristic optimization library for combinatorial problems.
 Provides a uniform interface for applying local search, tabu search, simulated
 annealing, beam search, genetic algorithms, and more to MaxCut, QUBO, MaxSAT,
-TSP, Vertex Cover, Job Shop Scheduling, and user-defined problems.
+TSP, Vertex Cover, Job Shop Scheduling, CVRP, and user-defined problems.
 
 ## Quick Start
 
@@ -42,6 +42,7 @@ file-based loading.
 | [TSP](docs/problems/tsp.md) | `TspWithCoordinates` | `TspTwoOptNeighbor`, `TspRelocateNeighbor` |
 | [Vertex Cover](docs/problems/vertex_cover.md) | `VertexCover` | `VertexCoverFlipNeighbor`, `VertexCoverSwapNeighbor` |
 | [Job Shop Scheduling](docs/problems/job_shop_scheduling.md) | `JobShopScheduling` | `JobShopSwapNeighbor`, `JobShopRelocateNeighbor` |
+| [CVRP](docs/problems/vrp.md) | `Vrp` | `VrpRelocateNeighbor`, `VrpSwapNeighbor`, `VrpTwoOptNeighbor` |
 | [Formula](docs/problems/formula.md) | `FormulaProblem` | `FormulaFlipNeighbor`, `FormulaSwapNeighbor` |
 
 ## Available Heuristics
@@ -58,7 +59,12 @@ file-based loading.
 | [Genetic Algorithm](docs/heuristics/genetic_algorithm.md) | `GeneticAlgorithm<P, C>` |
 | [Sequential / Iterated / VNS / Restart](docs/heuristics/meta.md) | `Sequential<P>`, `Iterated<P>`, `VariableNeighborhoodSearch<P>`, `Restart<P>` |
 | [Breakout Local Search (MaxCut)](docs/heuristics/breakout_local_search.md) | `BreakoutLocalSearchForMaxCut` |
+| [RL Breakout Local Search (MaxCut)](docs/heuristics/rl_breakout_local_search.md) | `RlBreakoutLocalSearchForMaxCut` |
+| [Population Annealing (MaxCut)](docs/heuristics/population_annealing.md) | `PopulationAnnealingForMaxCut` |
 | [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |
+| [WalkSAT (MaxSAT)](docs/heuristics/walksat.md) | `WalkSatForSat` |
+| [Hybrid Genetic Search (CVRP)](docs/heuristics/hgs.md) | `HybridGeneticSearchForVrp` |
+| [Adaptive Large Neighborhood Search (CVRP)](docs/heuristics/alns.md) | `AdaptiveLargeNeighborhoodSearchForVrp` |
 
 ## Benchmark CLI
 

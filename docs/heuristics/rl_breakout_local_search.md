@@ -105,6 +105,6 @@ rather than to be simple. Bandit weights saved from that version
 silently misaligning.
 
 The plateau idea itself survives in
-[PopulationAnnealingForMaxCut](../../src/heuristic/specific/max_cut/population_annealing.rs)
-as its non-local cluster move, which has its own implementation.
+[PopulationAnnealingForMaxCut](population_annealing.md) as its non-local cluster
+move, which has its own implementation.
 
