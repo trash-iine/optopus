@@ -48,7 +48,7 @@ implemented and configurable, not part of this sweep.
 
 The BreakoutLocalSearch (BLS) sweep for MaxCut spans the full GSET set
 G1–G81 (vertex-size bins 800–20000), reported separately as
-`bls_maxcut_gset_<bin>` — the specialized solver's numbers are not directly
+`bls_gset_<bin>` — the specialized solver's numbers are not directly
 comparable to the wall-clock-budgeted general heuristics.
 
 ## Browse interactively
@@ -112,7 +112,7 @@ added as a safety net.
 | BreakoutLocalSearchForMaxCut | MaxCut | 160 M-iter budget @ G1–G54 | 160 M-iter budget @ G22–G50 | per-bin iter budget (160 M → 4 B) @ G55–G81, up to 20000 vertices |
 | LinKernighanHelsgaun | TSP | duration 30s | duration 120s | duration 600s |
 
-The BLS budget mirrors the curated runs in `docs/benchmarks/data/bls_maxcut_gset_*.toml`
+The BLS budget mirrors the curated runs in `docs/benchmarks/data/maxcut/bls_gset_*.toml`
 so existing results carry over; LKH uses the same budget as the general
 heuristics for direct comparison.
 

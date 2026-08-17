@@ -1,49 +1,5 @@
 [
   {
-    "path": "bls_maxcut_gset_1000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_10000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_14000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_2000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_20000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_3000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_5000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_7000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_800.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_8000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
-    "path": "bls_maxcut_gset_9000.slim.toml",
-    "problem": "MaxCut"
-  },
-  {
     "path": "jssp/general_orlib_large.slim.toml",
     "problem": "JobShop"
   },
@@ -54,6 +10,50 @@
   {
     "path": "jssp/general_orlib_small.slim.toml",
     "problem": "JobShop"
+  },
+  {
+    "path": "maxcut/bls_gset_1000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_10000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_14000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_2000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_20000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_3000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_5000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_7000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_800.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_8000.slim.toml",
+    "problem": "MaxCut"
+  },
+  {
+    "path": "maxcut/bls_gset_9000.slim.toml",
+    "problem": "MaxCut"
   },
   {
     "path": "maxcut/general_gset_large.slim.toml",
