@@ -34,32 +34,44 @@ max_failed_update = 5_000
 Multiple `[[instances]]` and `[[heuristics]]` blocks are allowed; the runner
 takes the Cartesian product.
 
-## Heuristic kinds and required fields
+## Heuristic kinds
 
-| `kind` | Applies to | Required | Optional |
-|---|---|---|---|
-| `LocalSearch` | all | `neighbor` | — |
-| `TabuSearch` | all | `neighbor`, `tabu_tenure` | — |
-| `SimulatedAnnealing` | all | `neighbor`, `initial_temperature`, `cooling_rate` | — |
-| `LateAcceptanceHillClimbing` | all | `neighbor`, `history_length` | — |
-| `RandomWalk` | all | `neighbor` (give it a `stop_condition` — an empty one never terminates) | — |
-| `BreakoutLocalSearch` | MaxCut only | `tabu_tenure`, `t`, `l0`, `p0`, `q` | — |
-| `RlBreakoutLocalSearch` | MaxCut only | `tabu_tenure`, `t`, `l0` | `strength_bins` (`[1.0, 2.0, 4.0]`), `learning_rate` (0.1), `softmax_temperature` (1.0), `exploration` (0.05), `policy_weights` |
-| `PopulationAnnealingForMaxCut` | MaxCut only | `population_size` (≥ 2) | `initial_beta` (0.1), `delta_beta` (0.02), `sweeps_per_step` (50), `reset_period` (400; `0` disables), `cluster_moves` (true) |
-| `LinKernighanHelsgaun` | TSP only | — | `num_neighbors` (default 5), `max_depth` (default 5) |
-| `AdaptiveLargeNeighborhoodSearch` | VRP only | — | `removal_fraction` (0.15), `cooling_rate` (0.9995) |
-| `HybridGeneticSearch` | VRP only | — | `min_population_size` (25), `generation_size` (40), `granularity` (20), `target_feasible` (0.2), `restart_generations` (20000) |
-| `WalkSat` | SAT only | — | `noise` (0.3), `adaptive_noise` (false) |
-| `RlSearch` | all | `neighbor` | `learning_rate` (0.01), `softmax_temperature` (1.0), `reward_shaping` (`Raw`\|`Normalized`\|`BestImprovement`, default `Normalized`), `policy_weights`, `max_candidates`; `discount` is still accepted for config compatibility but ignored with a warning |
-| `Sequential` | all | `steps` | — |
-| `Iterated` | all | `steps` (`[0]` = search, `[1]` = perturbation) | — |
-| `VariableNeighborhoodSearch` | all | `steps` (`[0]` = search, `[1..]` = shakes N_1..N_kmax) | — |
-| `Restart` | all | `steps` (single inner), `restart_condition` | — |
-| `GeneticAlgorithm` | all | `population_size` (≥ 2), `steps` (`[0]` = mutation, optional `[1]` = init_improvement) | `crossover_kind` (per-problem default: `Uniform`, `Order` for TSP, `Ppx` for JobShop), `parent_selection` (`Tournament` default \| `DistantTopK`), `parent_top_k` (required when `DistantTopK`) |
+Every value below is a valid `kind` tag for a `[[heuristics]]` block. Each links
+to the fields it takes — required, optional, and their defaults — on the
+algorithm's own page; this table is only the index.
 
-`tabu_tenure` is a `(min, max)` pair, e.g. `tabu_tenure = [5, 10]`.
+| `kind` | Applies to |
+|---|---|
+| [`LocalSearch`](../heuristics/local_search.md#benchmark-config) | all |
+| [`TabuSearch`](../heuristics/tabu_search.md#benchmark-config) | all |
+| [`SimulatedAnnealing`](../heuristics/simulated_annealing.md#benchmark-config) | all |
+| [`LateAcceptanceHillClimbing`](../heuristics/late_acceptance.md#benchmark-config) | all |
+| [`RandomWalk`](../heuristics/random_walk.md#benchmark-config) | all |
+| [`RlSearch`](../heuristics/rl_search.md#benchmark-config) | all |
+| [`Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart`](../heuristics/meta.md#benchmark-config) | all |
+| [`GeneticAlgorithm`](../heuristics/genetic_algorithm.md#benchmark-config) | all |
+| [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | MaxCut only |
+| [`RlBreakoutLocalSearch`](../heuristics/rl_breakout_local_search.md#benchmark-config) | MaxCut only |
+| [`PopulationAnnealingForMaxCut`](../heuristics/population_annealing.md#benchmark-config) | MaxCut only |
+| [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP only |
+| [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT only |
+| [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP only |
+| [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
+
+Unknown kinds and missing required fields fail at parse time, before any run
+starts. [`BeamSearch`](../heuristics/beam_search.md) has no `kind` — it is
+reachable from the Rust API only.
+
+## Fields shared by every kind
+
 `stop_condition` accepts any subset of `max_iteration`, `max_duration_secs`,
-`max_failed_update`.
+`max_failed_update`; the heuristic stops when any of them is met. It is the TOML
+form of the builder in [Stop Conditions](stop_conditions.md), which explains what
+each limit counts.
+
+`steps` is a nested array of heuristic tables (`[[heuristics.steps]]`, see the
+example below). Which slot plays which role is per kind, and is documented with
+that kind.
 
 `neighbor` is per-problem:
 
@@ -94,9 +106,6 @@ neighbor = "Flip"
 [heuristics.steps.stop_condition]
 max_iteration = 200
 ```
-
-> `RandomWalk` never stops on its own, so always give it a `stop_condition`.
-> A short high-temperature `SimulatedAnnealing` phase works as a perturbation too.
 
 ## Output report
 

@@ -6,13 +6,13 @@ The full runnable example lives at
 [`examples/custom_problem.rs`](../../examples/custom_problem.rs)
 (`cargo run --example custom_problem`).
 
-## Required: three traits
+## Required traits
 
 | Trait | On | Required method(s) |
 |---|---|---|
-| [`Rankable`] | `Solution` | `is_better_than(&self, other) -> bool` |
-| [`ProblemTrait`] | the problem struct | `type Solution`, `new_solution(rng) -> Solution` |
-| [`MoveToNeighbor<P>`] | one or more neighbor types | `iter`, `apply_to_solution`, `move_to_be_better_than` |
+| [`Rankable`](../traits.md#core-trait-reference) | `Solution` | `is_better_than(&self, other) -> bool` |
+| [`ProblemTrait`](../traits.md#core-trait-reference) | the problem struct | `type Solution`, `new_solution(rng) -> Solution` |
+| [`MoveToNeighbor<P>`](../traits.md#core-trait-reference) | the neighbor type | `iter`, `apply_to_solution`, `move_to_be_better_than` |
 
 The optimization direction is encoded in `Rankable::is_better_than`: a
 maximization problem returns `self.score > other.score`; a minimization problem
@@ -64,15 +64,14 @@ impl Rankable for MyMove {
 moves directly; returning `false` is fine when heuristics decide via solution
 comparison.
 
-## Optional traits — what each heuristic needs
+## Optional traits
 
-| Trait on solution / move | Required by | Without it |
+| Trait | On | Required by |
 |---|---|---|
-| `Evaluate<f64>` (move) | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing`, `RlSearch` | Those heuristics won't compile for your move type. |
-| `Evaluate<i32>` (move) | Optional integer-valued objective deltas (used by QUBO). | Just don't impl. |
-| `EnabledTabu` (move) | `TabuSearch` | Same. |
-| `Distance` (solution) | `GeneticAlgorithm` (any selection), `ParentSelection::DistantTopK` | GA won't compile. |
-| `SubProblemExtractable` (problem) | `SubProblemBasedCrossover` | Use the problem's uniform crossover instead. |
+| [`Evaluate<f64>`](../traits.md#core-trait-reference) | the neighbor type | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing`, `RlSearch` |
+| [`EnabledTabu`](../traits.md#core-trait-reference) | the neighbor type | `TabuSearch` |
+| [`Distance`](../traits.md#core-trait-reference) | `Solution` | `GeneticAlgorithm` (any selection), `ParentSelection::DistantTopK` |
+| [`SubProblemExtractable`](../traits.md#core-trait-reference) | the problem struct | `SubProblemBasedCrossover` |
 
 `LocalSearch`, `RandomWalk`, `BeamSearch`, `Sequential`, `Iterated`,
 `VariableNeighborhoodSearch`, `Restart`, and `GeneticAlgorithm` (with a
@@ -82,9 +81,9 @@ the three required traits + `Distance` for GA.
 ## Performance note
 
 The default `move_to_be_better_than` clones the solution and applies the move.
-For non-trivial problems, override it with an O(1) **gain-based** check that
-inspects cached per-variable gains — see `MaxCutFlipNeighbor` or
-`QuboFlipNeighbor` in `src/problem/` for reference implementations.
+For non-trivial problems, override it with an O(1) gain-based check that
+inspects cached per-variable gains. 
+see `MaxCutFlipNeighbor` or `QuboFlipNeighbor` in `src/problem/` for reference implementations.
 
 ## Next reading
 
