@@ -128,6 +128,11 @@ q = 0.5
 max_duration_secs = 30
 ```
 
+`tabu_tenure` is read as Benlic & Hao's `γ`: a vertex stays forbidden for `2γ`
+moves. This is the one kind that doubles the key — the same range under
+[`TabuSearch`](tabu_search.md) or [`RlBreakoutLocalSearch`](rl_breakout_local_search.md)
+prohibits for half as long, so tuned values do not transfer between them.
+
 ## Reference
 
 Benlic, U. and Hao, J.-K. "Breakout Local Search for the Max-Cut problem."

@@ -89,7 +89,7 @@ instance sets.
 - [`docs/traits.md`](docs/traits.md) — core traits reference
 - [`docs/problems/`](docs/problems/) — supported problems
 - [`docs/heuristics/`](docs/heuristics/) — available algorithms
-- [`docs/guide/`](docs/guide/) — composing heuristics, stop conditions, benchmarking, custom problem/heuristic, error handling
+- [`docs/guide/`](docs/guide/) — stop conditions, benchmarking, custom problem/heuristic, error handling
 - [`docs/benchmarks/`](docs/benchmarks/) — performance reports on standard instance sets
 
 ## Examples

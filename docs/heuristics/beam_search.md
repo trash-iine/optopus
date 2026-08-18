@@ -47,6 +47,11 @@ bs.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 
+## Benchmark config
+
+None: `BeamSearch` has no `kind`, so it cannot be named in a benchmark config.
+It is reachable from the Rust API only.
+
 ## References
 
 - Ow, P. S. and Morton, T. E. "Filtered Beam Search in Scheduling."

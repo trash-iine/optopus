@@ -59,7 +59,8 @@ keeps improving across [`Restart`](meta.md#restart) /
 ```toml
 [[heuristics]]
 kind = "RlBreakoutLocalSearch"
-tabu_tenure = [3, 80]          # same density-scaled values as BLS
+tabu_tenure = [3, 80]          # density-scaled like BLS, but taken literally
+                               # (BLS reads the same key as γ and forbids for 2γ)
 t = 1000
 l0 = 80
 strength_bins = [1.0, 2.0, 4.0]  # optional (default shown)

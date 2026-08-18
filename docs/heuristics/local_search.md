@@ -34,6 +34,21 @@ ls.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 
+## Benchmark config
+
+```toml
+[[heuristics]]
+kind = "LocalSearch"
+neighbor = "Flip"        # required; the valid values are per-problem
+[heuristics.stop_condition]
+max_iteration = 100_000
+```
+
+`max_failed_update` is forced to `1` whatever the config says (see
+[Behavior](#behavior)), so the useful budget keys here are `max_iteration` and
+`max_duration_secs` — and they only bound a single hill climb. For a real
+budget, nest `LocalSearch` inside [`Restart` or `Iterated`](meta.md).
+
 ## References
 
 - Aarts, E. and Lenstra, J. K. (eds.) *Local Search in Combinatorial

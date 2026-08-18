@@ -79,7 +79,9 @@ Each loader's file format is documented on the corresponding problem page.
   patterns.
 - [Problems](problems/README.md) — what each built-in problem offers.
 - [Heuristics](heuristics/README.md) — picking an algorithm.
-- [Composing heuristics](guide/composing.md) — `Sequential`, `Iterated` (ILS),
-  `VariableNeighborhoodSearch`, `Restart`, and `GeneticAlgorithm`.
+- [Meta-heuristics](heuristics/meta.md) — `Sequential`, `Iterated` (ILS),
+  `VariableNeighborhoodSearch`, and `Restart`, with a runnable example each.
+- [Genetic Algorithm](heuristics/genetic_algorithm.md) — population-based
+  search and the `Crossover` trait.
 - [Custom problem](guide/custom_problem.md) — plug your own problem into every
   built-in heuristic by implementing three traits.

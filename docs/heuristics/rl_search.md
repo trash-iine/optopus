@@ -41,6 +41,24 @@ factor (the TOML key is still accepted but ignored, with a warning).
 `with_policy_weights([f64; NUM_FEATURES])` lets you seed the policy with
 pre-trained weights.
 
+## Benchmark config
+
+```toml
+[[heuristics]]
+kind = "RlSearch"
+neighbor = "Flip"            # required; the valid values are per-problem
+learning_rate = 0.01         # optional (default shown); 0.0 = evaluation mode
+softmax_temperature = 1.0    # optional (default shown)
+reward_shaping = "Normalized"  # optional; Raw | Normalized | BestImprovement
+max_candidates = 200         # optional; unset = evaluate the whole neighborhood
+policy_weights = []          # optional; 21 elements, see below
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+```
+
+`discount` is still accepted for config compatibility but ignored, with a
+warning at build time.
+
 ## Reward shaping
 
 ```rust
