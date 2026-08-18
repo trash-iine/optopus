@@ -1,5 +1,7 @@
 # MaxCutKernel
 
+**API:** [`MaxCutKernel`](../api/optopus/problem/max_cut/struct.MaxCutKernel.html) · [`ProblemReduction`](../api/optopus/trait_defs/trait.ProblemReduction.html)
+
 Exact data reduction (*kernelization*) for [MaxCut](max_cut.md), following
 Ferizovic, Hespe, Lamm, Mnich, Schulz and Strash, *Engineering Kernelization
 for Maximum Cut* (ALENEX 2020,

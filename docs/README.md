@@ -2,6 +2,8 @@
 
 A metaheuristic optimization library for combinatorial problems, written in Rust.
 
+- **[API reference (rustdoc)](api/optopus/index.html)** — full signatures and
+  doc comments for every public type, trait and method.
 - **[Benchmark viewer](benchmarks/viewer.html)** — filterable, sortable
   cross-heuristic comparison across every supported problem type.
 - **[How the runs were made](benchmarks/README.md)** — coverage matrix, size
@@ -17,6 +19,9 @@ Start here, then dive into the section that matches your task.
 - [Core traits](traits.md) — minimum traits + per-heuristic extras.
 
 ## Reference
+
+Every page below opens with an **API:** line linking the matching
+[rustdoc](api/optopus/index.html) items.
 
 ### Problems
 

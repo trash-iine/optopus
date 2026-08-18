@@ -82,7 +82,7 @@ pub enum EdgeWeightType {
 /// TSP problem instance storing city coordinates.
 ///
 /// Distances are computed via the formula selected by `edge_weight_type`.
-/// For instances with at most [`DIST_MATRIX_MAX_N`] cities, the full distance
+/// For instances with at most `DIST_MATRIX_MAX_N` cities, the full distance
 /// matrix is built lazily on first use, turning every subsequent
 /// [`TspWithCoordinates::distance`] call into an O(1) lookup.
 #[derive(Debug, Clone)]
@@ -245,7 +245,7 @@ impl TspWithCoordinates {
     /// Returns the distance between cities `i` and `j` using the formula selected
     /// by `self.edge_weight_type`.
     ///
-    /// For instances with at most [`DIST_MATRIX_MAX_N`] cities, the full
+    /// For instances with at most `DIST_MATRIX_MAX_N` cities, the full
     /// distance matrix is built lazily on the first call and subsequent calls
     /// are O(1) lookups; larger instances compute the formula on the fly.
     #[inline]

@@ -1,5 +1,7 @@
 # MaxSAT
 
+**API:** [`Sat`](../api/optopus/problem/sat/struct.Sat.html) · [`SatSolution`](../api/optopus/problem/sat/struct.SatSolution.html) · [`SatFlipNeighbor`](../api/optopus/problem/sat/struct.SatFlipNeighbor.html) · [`SatSwapNeighbor`](../api/optopus/problem/sat/struct.SatSwapNeighbor.html) · [`SatUniformCrossover`](../api/optopus/problem/sat/struct.SatUniformCrossover.html)
+
 Given a propositional CNF formula, **maximize** the number of satisfied
 clauses.
 

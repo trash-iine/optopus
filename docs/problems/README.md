@@ -1,5 +1,7 @@
 # Problems
 
+**API:** [`optopus::problem`](../api/optopus/problem/index.html)
+
 Each built-in problem implements `ProblemTrait` plus enough additional traits
 to plug into every relevant heuristic.
 

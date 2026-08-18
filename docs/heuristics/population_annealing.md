@@ -1,5 +1,7 @@
 # PopulationAnnealingForMaxCut
 
+**API:** [`PopulationAnnealingForMaxCut`](../api/optopus/heuristic/struct.PopulationAnnealingForMaxCut.html)
+
 Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Population
 Annealing Monte Carlo (PAMC) keeps a population of `population_size` replicas
 and cools a shared inverse temperature `β` upward, resampling the population at

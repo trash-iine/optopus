@@ -1,5 +1,7 @@
 # WalkSatForSat
 
+**API:** [`WalkSatForSat`](../api/optopus/heuristic/struct.WalkSatForSat.html)
+
 Problem-specific heuristic for [MaxSAT](../problems/sat.md). WalkSAT/SKC keeps
 the search **focused**: instead of scanning all `n` variables per step, it
 samples a currently unsatisfied clause and flips one variable inside it.

@@ -28,11 +28,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # The deploy workflow builds the same rustdoc; gating the warnings here
+      # means a broken intra-doc link fails the PR instead of the deployment.
+      - name: Build rustdoc
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        run: |
+          cargo doc --no-deps --lib
+          rm -rf docs/api
+          cp -r target/doc docs/api
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install 'mkdocs-material==9.5.*'
       # Same build the Pages workflow publishes; here it runs only as a link
-      # check, so a PR that breaks a docs link fails before it reaches main.
+      # check, so a PR that breaks a docs link — including one into the API
+      # reference — fails before it reaches main.
       - name: Docs link check
         run: mkdocs build --strict --site-dir /tmp/site

@@ -1,5 +1,7 @@
 # TabuSearch
 
+**API:** [`TabuSearch`](../api/optopus/heuristic/struct.TabuSearch.html) · [`EnabledTabu`](../api/optopus/trait_defs/trait.EnabledTabu.html)
+
 At each step, pick the strictly best move that is not currently tabu, then
 mark it tabu for a tenure drawn uniformly from `tabu_tenure = (min, max)`.
 

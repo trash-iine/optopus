@@ -1,5 +1,7 @@
 # Core Traits Reference
 
+**API:** [`ProblemTrait`](api/optopus/trait_defs/trait.ProblemTrait.html) · [`Rankable`](api/optopus/trait_defs/trait.Rankable.html) · [`MoveToNeighbor`](api/optopus/trait_defs/trait.MoveToNeighbor.html) · [`Evaluate`](api/optopus/trait_defs/trait.Evaluate.html) · [`Crossover`](api/optopus/trait_defs/trait.Crossover.html) · [`SubProblemExtractable`](api/optopus/trait_defs/trait.SubProblemExtractable.html) · [`EnabledTabu`](api/optopus/trait_defs/trait.EnabledTabu.html) · [`BinaryProblem`](api/optopus/trait_defs/trait.BinaryProblem.html) · [`ProblemReduction`](api/optopus/trait_defs/trait.ProblemReduction.html) · [`Distance`](api/optopus/trait_defs/trait.Distance.html)
+
 Companion reference for [Concepts](concepts.md). This page lists the full
 signatures of every trait a problem or move type can implement, and which
 heuristic each one unlocks.

@@ -1,5 +1,7 @@
 # Formula
 
+**API:** [`FormulaProblem`](../api/optopus/problem/binary_optimization/struct.FormulaProblem.html) · [`FormulaSolution`](../api/optopus/problem/binary_optimization/struct.FormulaSolution.html) · [`Expr`](../api/optopus/problem/binary_optimization/enum.Expr.html) · [`Constraint`](../api/optopus/problem/binary_optimization/enum.Constraint.html) · [`FormulaFlipNeighbor`](../api/optopus/problem/binary_optimization/struct.FormulaFlipNeighbor.html) · [`FormulaSwapNeighbor`](../api/optopus/problem/binary_optimization/struct.FormulaSwapNeighbor.html) · [`FormulaUniformCrossover`](../api/optopus/problem/binary_optimization/struct.FormulaUniformCrossover.html)
+
 `FormulaProblem` is a configurable binary optimization problem defined by an
 arithmetic expression over `{0, 1}` variables, optionally constrained by
 penalty terms. It is the most flexible problem type: declare an objective,

@@ -1,5 +1,7 @@
 # Benchmarking
 
+**API:** [`BenchmarkConfig`](../api/optopus/benchmark/struct.BenchmarkConfig.html) · [`HeuristicConfig`](../api/optopus/benchmark/enum.HeuristicConfig.html) · [`BenchmarkReport`](../api/optopus/benchmark/struct.BenchmarkReport.html)
+
 Optopus ships with a CLI benchmark runner that takes a TOML config, runs each
 heuristic on each instance N times in parallel, and writes a TOML report.
 

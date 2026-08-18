@@ -32,6 +32,10 @@ markdown_extensions:
   - toc:
       permalink: true
 
+# `docs/api/` is rustdoc output (`cargo doc --no-deps --lib`, then copy
+# `target/doc` there), not a checked-in page: build it before building the site,
+# or every `../api/...` link below fails the `--strict` check.
+#
 # `render.py` is the tool that produces the viewer's data, not a page of the
 # site. The raw result TOMLs are gitignored, so on CI there is nothing to drop;
 # the pattern keeps a local build matching what CI publishes.
@@ -39,6 +43,12 @@ exclude_docs: |
   benchmarks/render.py
   benchmarks/data/*.toml
   !benchmarks/data/*.slim.toml
+
+# rustdoc ships a Markdown font license under `static.files/`, which would
+# otherwise be reported as a page missing from the nav. Nothing under `api/`
+# belongs in the nav — the single entry below is its front door.
+not_in_nav: |
+  api/**
 
 # `mkdocs build --strict` turns every one of these into a build failure, which
 # is what keeps a relative link from silently pointing outside the site again.
@@ -54,6 +64,7 @@ validation:
 
 nav:
   - Home: README.md
+  - API reference (rustdoc): api/optopus/index.html
   - Getting started:
       - Quickstart: quickstart.md
       - Concepts: concepts.md

@@ -97,7 +97,8 @@ use crate::error::OptError;
 
 /// A MaxCut instance together with the solution it was built around.
 ///
-/// See the [module documentation](self) for how each family guarantees that
+/// See the [MaxCut guide](https://trash-iine.github.io/optopus/problems/max_cut/)
+/// for how each family guarantees that
 /// [`planted`](Self::planted) is optimal.
 #[derive(Debug, Clone)]
 pub struct PlantedMaxCut {

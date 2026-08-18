@@ -1,5 +1,7 @@
 # LocalSearch
 
+**API:** [`LocalSearch`](../api/optopus/heuristic/struct.LocalSearch.html)
+
 Greedy best-improving hill climbing: at each step, evaluate every move in the
 neighborhood, apply the strictly best one, and stop as soon as no improving
 move exists (a local optimum).

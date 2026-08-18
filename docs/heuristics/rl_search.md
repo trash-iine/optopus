@@ -1,5 +1,7 @@
 # RlSearch
 
+**API:** [`RlSearch`](../api/optopus/heuristic/reinforcement_learning/struct.RlSearch.html) · [`RewardShaping`](../api/optopus/heuristic/reinforcement_learning/enum.RewardShaping.html)
+
 Online reinforcement learning over move features. At each step:
 
 1. Enumerate all (or a subsample of) neighborhood moves and compute their

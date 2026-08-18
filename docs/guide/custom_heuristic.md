@@ -1,5 +1,7 @@
 # Defining a Custom Heuristic
 
+**API:** [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html) · [`StopCondition`](../api/optopus/heuristic/struct.StopCondition.html) · [`SearchState`](../api/optopus/search_state/struct.SearchState.html)
+
 Implement `Heuristic<P>` to plug your own algorithm into the rest of the
 library — `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
 `VariableNeighborhoodSearch`, `Restart`), and the benchmark runner all work

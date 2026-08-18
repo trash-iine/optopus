@@ -1,5 +1,7 @@
 # BreakoutLocalSearchForMaxCut
 
+**API:** [`BreakoutLocalSearchForMaxCut`](../api/optopus/heuristic/struct.BreakoutLocalSearchForMaxCut.html)
+
 Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Alternates a
 greedy local search phase with an adaptive perturbation phase, using the
 optional `positive_gain` index on `MaxCutSolution` to enumerate only improving

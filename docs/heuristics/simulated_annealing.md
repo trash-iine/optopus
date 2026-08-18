@@ -1,5 +1,7 @@
 # SimulatedAnnealing
 
+**API:** [`SimulatedAnnealing`](../api/optopus/heuristic/struct.SimulatedAnnealing.html) · [`BangBangSimulatedAnnealing`](../api/optopus/heuristic/struct.BangBangSimulatedAnnealing.html)
+
 Pick a uniformly random neighbor; accept with Boltzmann probability
 `exp(−worsening / T)`. Improving moves are always accepted. The temperature
 is multiplied by `cooling_rate` after every step.

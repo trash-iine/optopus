@@ -1,5 +1,7 @@
 # Defining a Custom Problem
 
+**API:** [`ProblemTrait`](../api/optopus/trait_defs/trait.ProblemTrait.html) · [`Rankable`](../api/optopus/trait_defs/trait.Rankable.html) · [`MoveToNeighbor`](../api/optopus/trait_defs/trait.MoveToNeighbor.html) · [`Evaluate`](../api/optopus/trait_defs/trait.Evaluate.html) · [`EnabledTabu`](../api/optopus/trait_defs/trait.EnabledTabu.html) · [`BinaryProblem`](../api/optopus/trait_defs/trait.BinaryProblem.html)
+
 Implement three traits and every built-in heuristic works on your problem.
 
 The full runnable example lives at

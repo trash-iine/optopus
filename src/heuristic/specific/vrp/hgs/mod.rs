@@ -80,7 +80,7 @@ const PENALTY_MAX_FACTOR: f64 = 1e4;
 /// Sub-populations grow to `min_population_size + generation_size` and are then
 /// culled back to `min_population_size`, clones first.
 ///
-/// The capacity penalty is retuned every [`PENALTY_UPDATE_PERIOD`] offspring to
+/// The capacity penalty is retuned every `PENALTY_UPDATE_PERIOD` offspring to
 /// hold the feasible share near `target_feasible`: too few feasible offspring
 /// raises it, too many lowers it. Searching at a *deliberately* low feasible rate
 /// is the point — the shortest route through solution space between two good
