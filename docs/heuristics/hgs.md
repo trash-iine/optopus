@@ -1,5 +1,7 @@
 # HybridGeneticSearchForVrp
 
+**API:** [`HybridGeneticSearchForVrp`](../api/optopus/heuristic/struct.HybridGeneticSearchForVrp.html)
+
 Problem-specific heuristic for [CVRP](../problems/vrp.md). Hybrid Genetic
 Search (Vidal et al.) is the strongest known general-purpose CVRP metaheuristic.
 

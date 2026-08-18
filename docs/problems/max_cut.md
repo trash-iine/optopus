@@ -1,5 +1,7 @@
 # MaxCut
 
+**API:** [`MaxCut`](../api/optopus/problem/max_cut/struct.MaxCut.html) · [`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html) · [`MaxCutFlipNeighbor`](../api/optopus/problem/max_cut/struct.MaxCutFlipNeighbor.html) · [`MaxCutSwapNeighbor`](../api/optopus/problem/max_cut/struct.MaxCutSwapNeighbor.html) · [`MaxCutUniformCrossover`](../api/optopus/problem/max_cut/struct.MaxCutUniformCrossover.html) · [`PlantedMaxCut`](../api/optopus/problem/max_cut/struct.PlantedMaxCut.html)
+
 Partition the vertices of a weighted undirected graph into two sets so as to
 **maximize** the total weight of edges crossing the partition.
 

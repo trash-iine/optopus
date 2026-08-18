@@ -1,5 +1,7 @@
 # Job Shop Scheduling
 
+**API:** [`JobShopScheduling`](../api/optopus/problem/job_shop_scheduling/struct.JobShopScheduling.html) · [`JobShopSolution`](../api/optopus/problem/job_shop_scheduling/struct.JobShopSolution.html) · [`JobShopSwapNeighbor`](../api/optopus/problem/job_shop_scheduling/struct.JobShopSwapNeighbor.html) · [`JobShopRelocateNeighbor`](../api/optopus/problem/job_shop_scheduling/struct.JobShopRelocateNeighbor.html) · [`JobShopPpxCrossover`](../api/optopus/problem/job_shop_scheduling/struct.JobShopPpxCrossover.html)
+
 Given `n_jobs` jobs and `n_machines` machines, where each job has a fixed
 sequence of `(machine, duration)` operations, **minimize** the makespan
 (time at which the last operation finishes).

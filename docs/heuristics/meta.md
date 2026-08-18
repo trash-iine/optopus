@@ -1,5 +1,7 @@
 # Sequential / Iterated / VariableNeighborhoodSearch / Restart
 
+**API:** [`Sequential`](../api/optopus/heuristic/struct.Sequential.html) · [`Iterated`](../api/optopus/heuristic/struct.Iterated.html) · [`VariableNeighborhoodSearch`](../api/optopus/heuristic/struct.VariableNeighborhoodSearch.html) · [`Restart`](../api/optopus/heuristic/struct.Restart.html)
+
 Four meta-heuristics that compose other heuristics via the **sub-run
 clone/merge pattern**:
 

@@ -1,5 +1,7 @@
 # RlBreakoutLocalSearchForMaxCut
 
+**API:** [`RlBreakoutLocalSearchForMaxCut`](../api/optopus/heuristic/struct.RlBreakoutLocalSearchForMaxCut.html)
+
 Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Shares the
 descent / perturbation machinery of
 [BreakoutLocalSearchForMaxCut](breakout_local_search.md) (positive-gain-indexed

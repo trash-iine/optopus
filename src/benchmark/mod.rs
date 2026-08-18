@@ -6,13 +6,13 @@
 //!
 //! # Module layout
 //!
-//! - [`config`] — the TOML-facing types ([`BenchmarkConfig`], [`HeuristicConfig`], ...)
+//! - `config` — the TOML-facing types ([`BenchmarkConfig`], [`HeuristicConfig`], ...)
 //!   and config validation
-//! - [`factory`] — the generic heuristic factory (`build_heuristic` + visitors)
-//! - [`problems`] — per-problem registration: to add a problem to the benchmark,
+//! - `factory` — the generic heuristic factory (`build_heuristic` + visitors)
+//! - `problems` — per-problem registration: to add a problem to the benchmark,
 //!   add a [`ProblemKind`] variant, a `with_problem` arm, and one impl block here
-//! - [`runner`] — the parallel run loop and per-run metrics
-//! - [`report`] — the output report types and summary statistics
+//! - `runner` — the parallel run loop and per-run metrics
+//! - `report` — the output report types and summary statistics
 mod config;
 mod factory;
 mod problems;

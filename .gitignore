@@ -11,3 +11,9 @@ docs/benchmarks/data/**/*.toml
 
 # `mkdocs build`'s default output directory (CI builds into _site instead).
 /site
+
+# rustdoc output, copied into the site source so the Markdown can link to it
+# with checked relative paths. Regenerate with `cargo doc --no-deps --lib`
+# (`--lib` avoids the lib/bin output-filename collision) and copy target/doc
+# here before building the site.
+/docs/api/

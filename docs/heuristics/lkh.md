@@ -1,5 +1,7 @@
 # LinKernighanHelsgaunForTsp
 
+**API:** [`LinKernighanHelsgaunForTsp`](../api/optopus/heuristic/struct.LinKernighanHelsgaunForTsp.html)
+
 Problem-specific heuristic for [TSP](../problems/tsp.md). Performs a
 variable-depth edge-exchange search (up to *k*-opt) starting from each city.
 

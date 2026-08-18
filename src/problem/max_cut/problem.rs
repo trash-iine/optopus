@@ -39,7 +39,7 @@ pub struct MaxCut {
 ///
 /// # Core fields
 ///
-/// - [`cut`](Self::cut) — partition assignment (`cut[i]` is the side of vertex `i`)
+/// - [`x`](Self::x) — partition assignment (`x[i]` is the side of vertex `i`)
 /// - [`gain`](Self::gain) — per-vertex flip gain (`gain[i]` = change in cut weight when `i` is flipped; positive = improvement)
 /// - [`objective`](Self::objective) — total weight of edges crossing the cut
 ///
@@ -72,7 +72,7 @@ pub struct MaxCut {
 /// ```
 #[derive(Debug, Clone)]
 pub struct MaxCutSolution {
-    /// The cut assignment for each vertex: `cut[i]` is the side of vertex `i`.
+    /// The cut assignment for each vertex: `x[i]` is the side of vertex `i`.
     /// Sized to `max_vertex_id + 1`; only indices in `MaxCut::graph.vertices` are meaningful.
     pub x: Vec<bool>,
     /// The gain of flipping each vertex: `gain[i]` = change in cut weight when flipping `i`.

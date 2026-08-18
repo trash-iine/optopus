@@ -1,5 +1,7 @@
 # RandomWalk
 
+**API:** [`RandomWalk`](../api/optopus/heuristic/struct.RandomWalk.html)
+
 Sample a uniformly random neighbor and apply it unconditionally — no
 acceptance test, no comparison. The best solution encountered along the walk
 is still tracked in `state.best_solution`.

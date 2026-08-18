@@ -83,6 +83,16 @@ instance sets.
 
 ## Documentation
 
+The rendered documentation site is at
+<https://trash-iine.github.io/optopus/>:
+
+- [API reference (rustdoc)](https://trash-iine.github.io/optopus/api/optopus/index.html)
+  — full signatures and doc comments for every public type and trait
+- [Benchmark viewer](https://trash-iine.github.io/optopus/benchmarks/viewer.html)
+  — cross-heuristic results on standard instance sets
+
+The same pages as Markdown in this repository:
+
 - [`docs/quickstart.md`](docs/quickstart.md) — getting started, file loaders
 - [`docs/concepts.md`](docs/concepts.md) — design philosophy and key patterns
 - [`docs/search_state.md`](docs/search_state.md) — `SearchState` API reference

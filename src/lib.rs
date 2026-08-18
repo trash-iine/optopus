@@ -1,6 +1,9 @@
 //! optopus — combinatorial optimization library providing heuristic algorithms
 //! for problems such as MaxCut, QUBO, SAT, TSP, and formula-based problems.
 //!
+//! Guides, per-problem and per-heuristic prose, and the benchmark viewer live
+//! on the documentation site: <https://trash-iine.github.io/optopus/>.
+//!
 //! # Quick start
 //!
 //! ```

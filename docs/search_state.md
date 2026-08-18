@@ -1,5 +1,7 @@
 # `SearchState` API Reference
 
+**API:** [`SearchState`](api/optopus/search_state/struct.SearchState.html) · [`SearchStateCloneType`](api/optopus/search_state/enum.SearchStateCloneType.html)
+
 Companion reference for [Concepts](concepts.md). This page documents the
 struct, its methods, and the sub-run clone/merge variants in full.
 

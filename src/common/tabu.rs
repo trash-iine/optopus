@@ -3,7 +3,7 @@
 //! The flip/swap moves of the binary-variable problems all use the same tabu
 //! policy: a map from variable index to the iteration the variable becomes
 //! movable again. These helpers hold that policy in one place; each move's
-//! [`EnabledTabu`](crate::trait_defs::EnabledTabu) impl delegates to them (once
+//! [`EnabledTabu`] impl delegates to them (once
 //! per variable the move touches).
 //!
 //! Two backings, same policy: [`VarTabuMap`] hashes, which suits a sparse or
@@ -127,7 +127,7 @@ impl VecTabuMap {
 /// [`allows`](Self::allows) asks, [`record`](Self::record) writes.
 ///
 /// It is deliberately *not* a tabu policy. The policy lives in each move's
-/// [`EnabledTabu`](crate::trait_defs::EnabledTabu) impl, so a ledger forbids
+/// [`EnabledTabu`] impl, so a ledger forbids
 /// exactly what a [`TabuSearch`](crate::heuristic::TabuSearch) over the same
 /// neighborhood would — the ledger only owns the storage and the tenure.
 ///

@@ -1,5 +1,7 @@
 # GeneticAlgorithm
 
+**API:** [`GeneticAlgorithm`](../api/optopus/heuristic/struct.GeneticAlgorithm.html) · [`ParentSelection`](../api/optopus/heuristic/enum.ParentSelection.html) · [`Crossover`](../api/optopus/trait_defs/trait.Crossover.html) · [`SubProblemBasedCrossover`](../api/optopus/heuristic/struct.SubProblemBasedCrossover.html)
+
 Population-based search. Each iteration: select two parents → cross them with
 operator `C` → mutate the offspring → insert into the population, evicting
 the worst when at capacity.

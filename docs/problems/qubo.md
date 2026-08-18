@@ -1,5 +1,7 @@
 # QUBO
 
+**API:** [`Qubo`](../api/optopus/problem/qubo/struct.Qubo.html) · [`QuboSolution`](../api/optopus/problem/qubo/struct.QuboSolution.html) · [`QuboFlipNeighbor`](../api/optopus/problem/qubo/struct.QuboFlipNeighbor.html) · [`QuboSwapNeighbor`](../api/optopus/problem/qubo/struct.QuboSwapNeighbor.html) · [`QuboUniformCrossover`](../api/optopus/problem/qubo/struct.QuboUniformCrossover.html)
+
 Quadratic Unconstrained Binary Optimization. Given a symmetric coefficient
 matrix `Q`, **minimize**
 

@@ -22,6 +22,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # The API reference is part of the site: rustdoc goes to `docs/api/`, so
+      # the Markdown links to it with ordinary relative paths that `--strict`
+      # then verifies. `--lib` avoids the lib/bin output-filename collision.
+      - name: Build rustdoc
+        run: |
+          cargo doc --no-deps --lib
+          rm -rf docs/api
+          cp -r target/doc docs/api
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

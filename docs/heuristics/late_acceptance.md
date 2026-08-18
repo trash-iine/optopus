@@ -1,5 +1,7 @@
 # LateAcceptanceHillClimbing
 
+**API:** [`LateAcceptanceHillClimbing`](../api/optopus/heuristic/struct.LateAcceptanceHillClimbing.html)
+
 LAHC: at each step, sample a random neighbor and accept it if the resulting
 score is no worse than either the current score *or* the score recorded
 `history_length` iterations ago. The history acts as an adaptive threshold

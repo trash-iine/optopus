@@ -1,5 +1,7 @@
 # BeamSearch
 
+**API:** [`BeamSearch`](../api/optopus/heuristic/struct.BeamSearch.html)
+
 Maintains a beam of `beam_width` candidate solutions in parallel. Each step:
 
 1. Expand every neighbor of every beam member.

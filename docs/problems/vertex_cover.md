@@ -1,5 +1,7 @@
 # Vertex Cover
 
+**API:** [`VertexCover`](../api/optopus/problem/vertex_cover/struct.VertexCover.html) · [`VertexCoverSolution`](../api/optopus/problem/vertex_cover/struct.VertexCoverSolution.html) · [`VertexCoverFlipNeighbor`](../api/optopus/problem/vertex_cover/struct.VertexCoverFlipNeighbor.html) · [`VertexCoverSwapNeighbor`](../api/optopus/problem/vertex_cover/struct.VertexCoverSwapNeighbor.html) · [`VertexCoverUniformCrossover`](../api/optopus/problem/vertex_cover/struct.VertexCoverUniformCrossover.html)
+
 Given an undirected graph, **minimize** the size of a vertex subset that
 covers every edge. Hard feasibility is enforced by penalty:
 

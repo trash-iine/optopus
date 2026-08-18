@@ -316,6 +316,24 @@ max_iteration = 100000         # max_duration_secs / max_failed_update also supp
 
 **`Summary` fields**: `num_successful_runs`, `best/avg/worst/std_objective`, `best/avg_time_to_best_secs`, `avg_total_time_secs`, plus averaged `initial_objective` / `improvement` / acceptance counters. Each `SingleRunResult` carries `best_objective: f64`, `best_iteration: u64`, timing, the per-run `seed`, `solution: Vec<usize>` (0-indexed encoding), and `trajectory: Vec<(f64, f64)>` — the `(elapsed_secs, objective)` anytime curve, made monotone in the problem's direction, which is what the benchmark viewer plots.
 
+## Documentation site (`docs/` + `mkdocs.yml`)
+
+`docs/` is the source of the Pages site (mkdocs-material). The **API reference is
+part of that site**: `cargo doc --no-deps --lib` (the `--lib` avoids the lib/bin
+output-filename collision) is copied to `docs/api/` — gitignored, generated —
+so every page's `**API:**` line links it with a plain relative path that
+`mkdocs build --strict` verifies. Both workflows build it that way; CI's `docs`
+job adds `RUSTDOCFLAGS=-D warnings`, so a broken intra-doc link fails the PR.
+To build the site locally:
+
+```bash
+cargo doc --no-deps --lib && rm -rf docs/api && cp -r target/doc docs/api
+mkdocs build --strict --site-dir /tmp/site   # or `mkdocs serve`
+```
+
+Adding a problem or heuristic means adding its `**API:**` line to the new page
+too — `--strict` catches a wrong path, not a missing line.
+
 ## Key Design Patterns
 
 1. **Gain-based incremental updates** — binary/formula solutions cache per-variable `gain`; applying a move only refreshes the affected neighbors in O(degree). MaxCut and QUBO additionally offer optional `positive_gain` / `negative_gain` indexes (advanced) to enumerate only improving moves — used by problem-specific heuristics like BLS, not needed for standard use. TSP instead computes move gains on the fly from the lazily built distance matrix; JobShop re-decodes per candidate (and evaluates candidates with rayon on large instances, order-preserving so results are thread-count independent).

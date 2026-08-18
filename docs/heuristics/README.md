@@ -1,5 +1,7 @@
 # Heuristics
 
+**API:** [`optopus::heuristic`](../api/optopus/heuristic/index.html) · [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html) · [`StopCondition`](../api/optopus/heuristic/struct.StopCondition.html)
+
 Every heuristic implements `Heuristic<P>` (`clear` / `is_done` / `run_once` /
 `run`). Heuristics are problem-agnostic: they only require traits on the
 neighbor type, so any built-in or custom problem that satisfies those traits

@@ -156,7 +156,8 @@ impl WalkSatScratch {
 
 /// WalkSAT/SKC stochastic local search for [`Sat`] (MaxSAT).
 ///
-/// See the [module docs](self) for the algorithm. Construct with [`new`](Self::new);
+/// See the [WalkSAT guide](https://trash-iine.github.io/optopus/heuristics/walksat/)
+/// for the algorithm. Construct with [`new`](Self::new);
 /// wire it into the benchmark via `kind = "WalkSat"` (SAT only).
 ///
 /// # References

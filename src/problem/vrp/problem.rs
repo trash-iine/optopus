@@ -134,7 +134,7 @@ impl Vrp {
     /// Creates a CVRP instance with plain (non-rounded) Euclidean distances.
     ///
     /// `coordinates[0]` / `demands[0]` are the depot (demand ignored). If
-    /// `num_vehicles == 0` it defaults to [`default_fleet_size`]: the demands
+    /// `num_vehicles == 0` it defaults to `default_fleet_size`: the demands
     /// packed first-fit-decreasing, plus a 10% margin. Not
     /// `ceil(total_demand / capacity)`, which is only a lower bound on the bin
     /// count and often admits no feasible assignment.

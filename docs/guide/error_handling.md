@@ -1,5 +1,7 @@
 # Error Handling
 
+**API:** [`OptError`](../api/optopus/error/enum.OptError.html)
+
 Every fallible operation in Optopus returns `Result<_, OptError>`. The error
 type is defined in [`optopus::error`](https://github.com/trash-iine/optopus/blob/main/src/error.rs).
 
