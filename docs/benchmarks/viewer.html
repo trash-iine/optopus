@@ -114,6 +114,37 @@ main {
 }
 .disclaimer strong { color: var(--fg); }
 
+/* ---------- reading notes ----------
+   Interpretive caveats that cannot be read off the data. Per-row configuration
+   (tabu_tenure, stop conditions, nested steps) is NOT repeated here — that is
+   rendered per row by heurEntries() into the detail pane. */
+.notes {
+  padding: 8px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.notes > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--fg);
+  list-style-position: outside;
+}
+.notes > summary:hover { color: var(--accent); }
+.notes ul { margin: 8px 0 2px; padding-left: 1.1em; }
+.notes li { margin: 5px 0; }
+.notes strong { color: var(--fg); }
+.notes code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--accent-softer);
+  border-radius: 4px;
+  padding: 0 3px;
+}
+
 /* ---------- filters ---------- */
 .filters {
   padding: 12px 16px;
@@ -415,6 +446,31 @@ th.sortable.sort-desc::after { content: " \25BC"; font-size: 9px; }
     over raw speed), so these numbers do not reflect each algorithm's true
     performance — read them as indicative, not a rigorous ranking.
   </div>
+
+  <details class="notes">
+    <summary>Reading these numbers</summary>
+    <ul>
+      <li><strong>BreakoutLocalSearch rows are on an iteration budget</strong>, not
+        the wall-clock budget the general heuristics share (30&nbsp;s / 120&nbsp;s /
+        600&nbsp;s by band). Do not compare BLS against the others on the
+        time-to-best or total-time metrics. Each row's actual stop condition is in
+        the detail pane, under <code>stop.*</code>.</li>
+      <li><strong>Three columns changed meaning for the BLS rows</strong>:
+        <code>best_iteration</code>, <code>time_to_best</code> and
+        <code>n_best_updates</code>. When the descent stopped refreshing the
+        incumbent on every improving move, these went from counting steps inside a
+        descent to counting rounds that moved the incumbent — the same definition
+        every other heuristic uses. Objective values are unaffected (verified
+        bit-identical across that change), but these three columns are not
+        comparable against BLS results recorded before it.</li>
+      <li><strong>Click any cell</strong> for that run's full configuration —
+        hyperparameters, stop conditions, and nested steps are read straight from
+        the result files, so they are always what actually ran.</li>
+      <li>How the runs were set up and how to reproduce them:
+        <a href="https://github.com/trash-iine/optopus/blob/main/docs/benchmarks/README.md">benchmarks
+        README</a> on GitHub.</li>
+    </ul>
+  </details>
   <section class="card filters" id="filter-bar">
     <label class="row-label">Problem<span class="count" id="count-problems"></span></label>
     <div class="chips" data-axis="problems"></div>
