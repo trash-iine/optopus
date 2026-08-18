@@ -99,5 +99,5 @@ internally. The `EXPLICIT` weight type is not supported.
 - Reinelt, G. "TSPLIB — A Traveling Salesman Problem Library." *ORSA Journal
   on Computing*, 3(4), 376-384, 1991. (Defines the file format and the
   standard instance set.)
-- See [`data/instances/README.md`](../../data/instances/README.md) for
+- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
   instance sources and download instructions.

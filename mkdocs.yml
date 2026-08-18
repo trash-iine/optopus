@@ -1,0 +1,98 @@
+site_name: Optopus
+site_description: A metaheuristic optimization library for combinatorial problems, written in Rust.
+site_url: https://trash-iine.github.io/optopus/
+repo_url: https://github.com/trash-iine/optopus
+repo_name: trash-iine/optopus
+docs_dir: docs
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+# `render.py` is the tool that produces the viewer's data, not a page of the
+# site. The raw result TOMLs are gitignored, so on CI there is nothing to drop;
+# the pattern keeps a local build matching what CI publishes.
+exclude_docs: |
+  benchmarks/render.py
+  benchmarks/data/*.toml
+  !benchmarks/data/*.slim.toml
+
+# `mkdocs build --strict` turns every one of these into a build failure, which
+# is what keeps a relative link from silently pointing outside the site again.
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    anchors: warn
+    absolute_links: relative_to_docs
+    unrecognized_links: warn
+
+nav:
+  - Home: README.md
+  - Getting started:
+      - Quickstart: quickstart.md
+      - Concepts: concepts.md
+      - SearchState API: search_state.md
+      - Core traits: traits.md
+  - Problems:
+      - Overview: problems/README.md
+      - MaxCut: problems/max_cut.md
+      - MaxCut kernelization: problems/max_cut_kernel.md
+      - QUBO: problems/qubo.md
+      - MaxSAT: problems/sat.md
+      - TSP: problems/tsp.md
+      - Vertex Cover: problems/vertex_cover.md
+      - Job Shop Scheduling: problems/job_shop_scheduling.md
+      - CVRP: problems/vrp.md
+      - Formula: problems/formula.md
+  - Heuristics:
+      - Overview: heuristics/README.md
+      - Local Search: heuristics/local_search.md
+      - Simulated Annealing: heuristics/simulated_annealing.md
+      - Late Acceptance Hill Climbing: heuristics/late_acceptance.md
+      - Tabu Search: heuristics/tabu_search.md
+      - Random Walk: heuristics/random_walk.md
+      - Beam Search: heuristics/beam_search.md
+      - RL Search: heuristics/rl_search.md
+      - Genetic Algorithm: heuristics/genetic_algorithm.md
+      - Meta-heuristics: heuristics/meta.md
+      - Breakout Local Search (MaxCut): heuristics/breakout_local_search.md
+      - RL Breakout Local Search (MaxCut): heuristics/rl_breakout_local_search.md
+      - Population Annealing (MaxCut): heuristics/population_annealing.md
+      - Lin-Kernighan-Helsgaun (TSP): heuristics/lkh.md
+      - WalkSAT (MaxSAT): heuristics/walksat.md
+      - Hybrid Genetic Search (CVRP): heuristics/hgs.md
+      - Adaptive Large Neighborhood Search (CVRP): heuristics/alns.md
+  - Guides:
+      - Stop conditions: guide/stop_conditions.md
+      - Benchmarking: guide/benchmarking.md
+      - Error handling: guide/error_handling.md
+      - Defining a custom problem: guide/custom_problem.md
+      - Defining a custom heuristic: guide/custom_heuristic.md
+  - Benchmarks:
+      - How the runs were made: benchmarks/README.md

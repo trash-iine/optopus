@@ -1,5 +1,12 @@
 # Optopus Documentation
 
+A metaheuristic optimization library for combinatorial problems, written in Rust.
+
+- **[Benchmark viewer](benchmarks/viewer.html)** — filterable, sortable
+  cross-heuristic comparison across every supported problem type.
+- **[How the runs were made](benchmarks/README.md)** — coverage matrix, size
+  bands, budget and hyperparameter policy, and how to reproduce a run.
+
 Start here, then dive into the section that matches your task.
 
 ## Getting started
@@ -46,12 +53,7 @@ Start here, then dive into the section that matches your task.
 ## Guides
 
 - [Stop conditions](guide/stop_conditions.md)
-- [Composing heuristics](guide/composing.md)
 - [Benchmarking](guide/benchmarking.md) — TOML schema and CLI
 - [Error handling](guide/error_handling.md)
 - [Defining a custom problem](guide/custom_problem.md)
 - [Defining a custom heuristic](guide/custom_heuristic.md)
-
-## Benchmarks
-
-- [Reports](benchmarks/) — per-heuristic results on standard instance sets.

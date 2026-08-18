@@ -23,3 +23,16 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: Test
         run: cargo test
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install 'mkdocs-material==9.5.*'
+      # Same build the Pages workflow publishes; here it runs only as a link
+      # check, so a PR that breaks a docs link fails before it reaches main.
+      - name: Docs link check
+        run: mkdocs build --strict --site-dir /tmp/site

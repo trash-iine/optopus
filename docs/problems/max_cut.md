@@ -130,7 +130,7 @@ Three things are worth knowing before using them:
 
 Suite generation lives in `examples/generate_hard_maxcut.rs`, which records what
 the sweep showed for each parameter it bakes in; see
-[`data/instances/README.md`](../../data/instances/README.md).
+[`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md).
 
 ## Optional traits
 
@@ -155,7 +155,7 @@ the sweep showed for each parameter it bakes in; see
   Karp's 21 NP-complete problems.)
 - Standard benchmark set: the **Gset** graphs (G1–G81), generated with the
   `rudy` graph generator and distributed by Y. Ye. See
-  [`data/instances/README.md`](../../data/instances/README.md) for instance
+  [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for instance
   sources and download instructions.
 - Perera, D. et al. "Chook — A comprehensive suite for generating binary
   optimization problems with planted solutions."

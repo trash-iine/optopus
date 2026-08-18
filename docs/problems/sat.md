@@ -74,5 +74,5 @@ p cnf N M
 - Hoos, H. H. and Stützle, T. "SATLIB: An Online Resource for Research on
   SAT." In *SAT 2000*, pp. 283-292. IOS Press, 2000. (Source of the `uf`
   instance sets.)
-- See [`data/instances/README.md`](../../data/instances/README.md) for
+- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
   instance sources and download instructions.

@@ -85,5 +85,5 @@ m d m d m d ...
   Prentice-Hall, 1963. (Source of the classic `ft06` instance.)
 - Taillard, E. "Benchmarks for Basic Scheduling Problems." *European Journal
   of Operational Research*, 64(2), 278-285, 1993.
-- See [`data/instances/README.md`](../../data/instances/README.md) for
+- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
   instance sources and licensing.

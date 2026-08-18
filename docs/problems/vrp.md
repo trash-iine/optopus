@@ -165,5 +165,5 @@ them. At 30 s on CVRPLIB X they are comparable — see
 - Prins, C. "A Simple and Effective Evolutionary Algorithm for the Vehicle
   Routing Problem." *Computers & Operations Research*, 31(12), 1985-2002, 2004.
   (Split.)
-- See [`data/instances/README.md`](../../data/instances/README.md) for
+- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
   instance sources and download instructions.

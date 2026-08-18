@@ -8,3 +8,6 @@
 # `python3 docs/benchmarks/render.py`.
 docs/benchmarks/data/**/*.toml
 !docs/benchmarks/data/**/*.slim.toml
+
+# `mkdocs build`'s default output directory (CI builds into _site instead).
+/site

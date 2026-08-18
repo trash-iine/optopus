@@ -3,7 +3,7 @@
 Implement three traits and every built-in heuristic works on your problem.
 
 The full runnable example lives at
-[`examples/custom_problem.rs`](../../examples/custom_problem.rs)
+[`examples/custom_problem.rs`](https://github.com/trash-iine/optopus/blob/main/examples/custom_problem.rs)
 (`cargo run --example custom_problem`).
 
 ## Required traits

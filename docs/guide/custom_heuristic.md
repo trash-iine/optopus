@@ -6,7 +6,7 @@ library — `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
 with it unchanged.
 
 The full runnable example lives at
-[`examples/custom_heuristic.rs`](../../examples/custom_heuristic.rs)
+[`examples/custom_heuristic.rs`](https://github.com/trash-iine/optopus/blob/main/examples/custom_heuristic.rs)
 (`cargo run --example custom_heuristic`).
 
 ## The `Heuristic<P>` trait
