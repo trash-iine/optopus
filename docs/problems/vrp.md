@@ -147,10 +147,11 @@ CVRP-specific heuristics are also available:
 
 - [HybridGeneticSearchForVrp](../heuristics/hgs.md) — giant-tour GA over
   feasible and infeasible sub-populations.
-- `AdaptiveLargeNeighborhoodSearchForVrp` — ruin-and-recreate with adaptive
-  operator weights, descending around the customers each repair re-inserted.
+- [AdaptiveLargeNeighborhoodSearchForVrp](../heuristics/alns.md) —
+  ruin-and-recreate with adaptive operator weights, descending around the
+  customers each repair re-inserted.
 
-The two share their route machinery (`heuristic/specific/vrp/ops/`): the same
+The two share their route machinery (`src/heuristic/specific/vrp/ops/`): the same
 granular descent, candidate lists and route arithmetic, differing in what drives
 them. At 30 s on CVRPLIB X they are comparable — see
 [hgs.md](../heuristics/hgs.md#measured-quality).
@@ -164,5 +165,5 @@ them. At 30 s on CVRPLIB X they are comparable — see
 - Prins, C. "A Simple and Effective Evolutionary Algorithm for the Vehicle
   Routing Problem." *Computers & Operations Research*, 31(12), 1985-2002, 2004.
   (Split.)
-- See [`data/instances/README.md`](../../data/instances/README.md) for
+- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
   instance sources and download instructions.

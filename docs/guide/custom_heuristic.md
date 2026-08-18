@@ -2,10 +2,11 @@
 
 Implement `Heuristic<P>` to plug your own algorithm into the rest of the
 library — `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
-`Restart`), and the benchmark runner all work with it unchanged.
+`VariableNeighborhoodSearch`, `Restart`), and the benchmark runner all work
+with it unchanged.
 
 The full runnable example lives at
-[`examples/custom_heuristic.rs`](../../examples/custom_heuristic.rs)
+[`examples/custom_heuristic.rs`](https://github.com/trash-iine/optopus/blob/main/examples/custom_heuristic.rs)
 (`cargo run --example custom_heuristic`).
 
 ## The `Heuristic<P>` trait
@@ -13,15 +14,21 @@ The full runnable example lives at
 ```rust
 pub trait Heuristic<Problem: ProblemTrait> {
     fn clear(&mut self) {}
-    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool;
+    fn stop_condition(&self) -> &StopCondition;
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError>;
+
+    // Default `is_done` delegates to `stop_condition()`.
+    fn is_done<'a>(&self, state: &SearchState<'a, Problem>) -> bool { … }
 
     // Default `run` calls `clear()` then loops `run_once` while `!is_done`.
     fn run<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError> { … }
 }
 ```
 
-You implement `is_done` and `run_once`; `run` is provided. Override `clear` if
+You implement `stop_condition` and `run_once`; `is_done` and `run` are
+provided. Override `is_done` only when your heuristic has a termination rule
+the stop condition cannot express — "stop at a local optimum", as `LocalSearch`
+and `LinKernighanHelsgaunForTsp` do, on top of the default. Override `clear` if
 your heuristic carries per-run state (counters, learned weights, etc.).
 
 ## Minimal first-improving search
@@ -32,12 +39,15 @@ use optopus::prelude::*;
 
 struct FirstImprovingSearch<N> {
     stop_condition: StopCondition,
-    _phantom: std::marker::PhantomData<N>,
+    _neighbor: std::marker::PhantomData<N>,
 }
 
 impl<N> FirstImprovingSearch<N> {
     fn new(stop_condition: StopCondition) -> Self {
-        Self { stop_condition, _phantom: std::marker::PhantomData }
+        Self {
+            stop_condition,
+            _neighbor: std::marker::PhantomData,
+        }
     }
 }
 
@@ -46,19 +56,22 @@ where
     P: ProblemTrait,
     N: MoveToNeighbor<P>,
 {
-    fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state)
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let next_move = N::iter(state.instance, &state.solution)
-            .find(|n| n.move_to_be_better_than(state.instance, &state.solution, &state.solution));
+        let instance = state.instance;
+        let solution = &state.solution;
+        let next_move = N::iter(instance, solution)
+            .find(|neighbor| neighbor.move_to_be_better_than(instance, solution, solution));
 
         if let Some(neighbor) = next_move {
             state.apply(&neighbor)?;
         } else {
             state.progress_iteration();
         }
+
         Ok(())
     }
 }
@@ -66,27 +79,27 @@ where
 
 Key API touchpoints:
 
-- `state.apply(&neighbor)` — applies the move, increments iteration, updates
+- `state.apply(&neighbor)`:  applies the move, increments iteration, updates
   best if improved.
-- `state.progress_iteration()` — increments iteration without applying anything
+- `state.apply_move_only(&neighbor)`: same, but defers the best update.
+  `state.update_best()` must be applied at the end of a multi-move step.
+- `state.progress_iteration()`: increments iteration without applying anything
   (use this when you can't make progress this step).
-- `N::iter(prob, sol)` — lazy iterator over moves; combine with `max_by`,
+- `state.random_neighbor::<N>(context)`: draws one uniformly random move, or
+  `OptError::InvalidState` when the neighborhood is empty. This is what
+  SA / LAHC / `RandomWalk` call each step.
+- `N::iter(prob, sol)`: lazy iterator over moves; combine with `max_by`,
   `find`, `filter_best`, `.choose(&mut rng)` etc. as your strategy demands.
 
-## Optional: parallel execution
+## Optional: parallel evaluation
 
-Implement `ParallelHeuristic<P>` if your `run_once_par` can use rayon. The
-default delegates to `run_once`, so this is purely a perf opt.
-
-```rust
-impl<P, N> ParallelHeuristic<P> for FirstImprovingSearch<N>
-where P: ProblemTrait, N: MoveToNeighbor<P> + Send + Sync
-{ /* override run_once_par */ }
-```
-
-`SearchState::get_best_move_par_chunks(iter, chunk_size)` evaluates a move
-iterator in parallel and returns the best move — useful when neighborhoods are
-large.
+There is no parallel variant of `Heuristic` to implement. Parallelism belongs
+to the neighbor type: `MoveToNeighbor::iter` returns `impl Iterator + Send`, so
+an `iter` implementation whose per-candidate cost is heavy can evaluate
+candidates with rayon and yield the results in order. `JobShopSwapNeighbor` does
+exactly that above a size threshold (`src/problem/job_shop_scheduling/neighbor.rs`),
+which keeps results independent of the thread count while every heuristic —
+including yours — stays sequential.
 
 ## Composing your heuristic
 
@@ -96,10 +109,12 @@ Once it implements `Heuristic<P>`, your algorithm can be:
   solution on stagnation.
 - Used as a phase of [`Iterated`](../heuristics/meta.md#iterated).
 - Listed inside [`Sequential`](../heuristics/meta.md#sequential).
+- Used as the local search or a shake of
+  [`VariableNeighborhoodSearch`](../heuristics/meta.md#variableneighborhoodsearch).
 - Passed as the `mutation` argument of
   [`GeneticAlgorithm`](../heuristics/genetic_algorithm.md).
 
 ## Next reading
 
 - [SearchState API](../search_state.md)
-- [Composing heuristics](composing.md)
+- [Meta-heuristics](../heuristics/meta.md)

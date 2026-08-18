@@ -22,13 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Stage site
-        # The committed *.slim.toml + index.json are the viewer's data source
-        # (regenerated locally by docs/benchmarks/render.py). Raw result TOMLs
-        # are gitignored, so nothing heavy needs pruning here.
-        run: |
-          cp -r docs _site
-          find _site/benchmarks/data -name '*.toml' ! -name '*.slim.toml' -delete
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install 'mkdocs-material==9.5.*'
+      # `docs/` is the site source: MkDocs renders the Markdown to HTML and
+      # copies the viewer, its vendored parser and the committed *.slim.toml +
+      # index.json through untouched. `--strict` fails the build on any broken
+      # link, which is what keeps a relative link from pointing outside the site.
+      - run: mkdocs build --strict --site-dir _site
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

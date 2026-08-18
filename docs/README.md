@@ -1,5 +1,12 @@
 # Optopus Documentation
 
+A metaheuristic optimization library for combinatorial problems, written in Rust.
+
+- **[Benchmark viewer](benchmarks/viewer.html)** — filterable, sortable
+  cross-heuristic comparison across every supported problem type.
+- **[How the runs were made](benchmarks/README.md)** — coverage matrix, size
+  bands, budget and hyperparameter policy, and how to reproduce a run.
+
 Start here, then dive into the section that matches your task.
 
 ## Getting started
@@ -20,6 +27,7 @@ Start here, then dive into the section that matches your task.
 - [TSP](problems/tsp.md)
 - [Vertex Cover](problems/vertex_cover.md)
 - [Job Shop Scheduling](problems/job_shop_scheduling.md)
+- [CVRP](problems/vrp.md)
 - [Formula](problems/formula.md)
 
 ### Heuristics
@@ -33,20 +41,19 @@ Start here, then dive into the section that matches your task.
 - [Beam Search](heuristics/beam_search.md)
 - [RL Search](heuristics/rl_search.md)
 - [Genetic Algorithm](heuristics/genetic_algorithm.md) (incl. `Crossover` trait)
-- [Meta-heuristics](heuristics/meta.md) — Sequential, Iterated (ILS), Restart
+- [Meta-heuristics](heuristics/meta.md) — Sequential, Iterated (ILS), VNS, Restart
 - [Breakout Local Search (MaxCut)](heuristics/breakout_local_search.md)
 - [RL Breakout Local Search (MaxCut)](heuristics/rl_breakout_local_search.md)
+- [Population Annealing (MaxCut)](heuristics/population_annealing.md)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
+- [WalkSAT (MaxSAT)](heuristics/walksat.md)
+- [Hybrid Genetic Search (CVRP)](heuristics/hgs.md)
+- [Adaptive Large Neighborhood Search (CVRP)](heuristics/alns.md)
 
 ## Guides
 
 - [Stop conditions](guide/stop_conditions.md)
-- [Composing heuristics](guide/composing.md)
 - [Benchmarking](guide/benchmarking.md) — TOML schema and CLI
 - [Error handling](guide/error_handling.md)
 - [Defining a custom problem](guide/custom_problem.md)
 - [Defining a custom heuristic](guide/custom_heuristic.md)
-
-## Benchmarks
-
-- [Reports](benchmarks/) — per-heuristic results on standard instance sets.

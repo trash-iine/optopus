@@ -35,6 +35,20 @@ LinKernighanHelsgaunForTsp::new(
 
 Reasonable defaults: `num_neighbors = 5`, `max_depth = 5`.
 
+## Benchmark config
+
+```toml
+[[heuristics]]
+kind = "LinKernighanHelsgaun"
+num_neighbors = 5        # optional (default shown)
+max_depth = 5            # optional (default shown)
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+```
+
+Takes no `neighbor` — it owns its move set. It stops at a local optimum, so a
+long budget only pays inside [`Restart` or `Iterated`](meta.md).
+
 ## References
 
 - Lin, S. and Kernighan, B. W. "An Effective Heuristic Algorithm for the

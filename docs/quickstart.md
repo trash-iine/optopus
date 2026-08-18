@@ -65,6 +65,9 @@ let tsp = TspWithCoordinates::load_file("data/instances/tsp/burma14.tsp")?;
 
 // Job Shop Scheduling loader (Taillard / OR-Library):
 let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
+
+// CVRP loader (CVRPLIB):
+let vrp = Vrp::load_file("data/instances/vrp/X-n101-k25.vrp")?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 
@@ -76,7 +79,9 @@ Each loader's file format is documented on the corresponding problem page.
   patterns.
 - [Problems](problems/README.md) — what each built-in problem offers.
 - [Heuristics](heuristics/README.md) — picking an algorithm.
-- [Composing heuristics](guide/composing.md) — `Sequential`, `Iterated` (ILS),
-  `Restart`, and `GeneticAlgorithm`.
+- [Meta-heuristics](heuristics/meta.md) — `Sequential`, `Iterated` (ILS),
+  `VariableNeighborhoodSearch`, and `Restart`, with a runnable example each.
+- [Genetic Algorithm](heuristics/genetic_algorithm.md) — population-based
+  search and the `Crossover` trait.
 - [Custom problem](guide/custom_problem.md) — plug your own problem into every
   built-in heuristic by implementing three traits.

@@ -42,6 +42,18 @@ sa.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
 
+## Benchmark config
+
+```toml
+[[heuristics]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"             # required; the valid values are per-problem
+initial_temperature = 1.0     # required
+cooling_rate = 0.9999         # required; multiplied into T after every step
+[heuristics.stop_condition]
+max_iteration = 100_000
+```
+
 ## BangBangSimulatedAnnealing
 
 Variant with an oscillating temperature schedule:
@@ -60,6 +72,9 @@ The temperature decays multiplicatively until it drops below
 `min_wave_threshold`, then *grows* by dividing by `cooling_rate` until it
 exceeds `max_wave_threshold`, and so on. The sawtooth profile occasionally
 re-injects exploration when the search becomes too greedy.
+
+`BangBangSimulatedAnnealing` has no `kind` of its own — the benchmark runner
+only builds the plain schedule; the oscillating one is Rust-API only.
 
 ## References
 

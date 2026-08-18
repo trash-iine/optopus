@@ -15,7 +15,7 @@ edges).
 
 ```rust
 pub struct VertexCoverSolution {
-    pub cover: Vec<bool>,           // cover[v] = true iff v is selected
+    pub x: Vec<bool>,               // x[v] = true iff v is selected
     pub gain: Vec<i32>,             // change in objective per flip (negative = improving)
     pub objective: i32,             // penalty-augmented objective
     pub cover_size: usize,          // current |cover|
@@ -60,12 +60,12 @@ weights are ignored (every edge contributes equally to the cover constraint).
 
 ## Optional traits
 
-- `Distance` — Hamming distance on `cover`.
+- `Distance` — Hamming distance on `x`.
 
 ## References
 
 - Karp, R. M. "Reducibility Among Combinatorial Problems." In *Complexity of
   Computer Computations*, pp. 85-103. Plenum Press, 1972. (Vertex Cover is
   one of Karp's 21 NP-complete problems.)
-- See [`data/instances/README.md`](../../data/instances/README.md) for
+- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
   instance sources.

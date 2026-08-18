@@ -30,3 +30,17 @@ let mut rw = RandomWalk::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10)
 rw.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
+
+## Benchmark config
+
+```toml
+[[heuristics]]
+kind = "RandomWalk"
+neighbor = "Flip"        # required; the valid values are per-problem
+[heuristics.stop_condition]
+max_iteration = 200      # give it one — a random walk never stops on its own
+```
+
+An empty `stop_condition` never terminates, which matters most where
+`RandomWalk` is normally used: as a nested perturbation step. See the
+[ILS example](../guide/benchmarking.md#nested-example-ils-in-toml).

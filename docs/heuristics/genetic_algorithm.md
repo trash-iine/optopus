@@ -124,6 +124,37 @@ let crossover = SubProblemBasedCrossover {
 
 Implemented by MaxCut, QUBO, SAT, Vertex Cover, and Formula.
 
+## Benchmark config
+
+```toml
+[[heuristics]]
+kind = "GeneticAlgorithm"
+population_size = 20         # required; must be >= 2
+crossover_kind = "Uniform"   # optional; default is per-problem (see below)
+parent_selection = "Tournament"  # optional; Tournament (default) | DistantTopK
+parent_top_k = 5             # required when parent_selection = "DistantTopK"
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+
+[[heuristics.steps]]         # steps[0] = mutation (required)
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [5, 150]
+[heuristics.steps.stop_condition]
+max_iteration = 2_000
+
+[[heuristics.steps]]         # steps[1] = init_improvement (optional, HEA pattern)
+kind = "LocalSearch"
+neighbor = "Flip"
+[heuristics.steps.stop_condition]
+max_failed_update = 1
+```
+
+`crossover_kind` defaults to `"Uniform"`, except `"Order"` for TSP and `"Ppx"`
+for JobShop. MaxCut additionally accepts `"SubProblem"` — memetic recombination
+that solves the sub-MaxCut of the disagreeing variables with an internal bounded
+BLS (see [SubProblemBasedCrossover](#subproblembasedcrossover)).
+
 ## References
 
 - Holland, J. H. *Adaptation in Natural and Artificial Systems*. University of

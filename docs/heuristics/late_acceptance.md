@@ -44,6 +44,17 @@ lahc.run(&mut state)?;
 `clear()` empties the history buffer; the buffer is re-initialized on the
 first `run_once` call after a `run`.
 
+## Benchmark config
+
+```toml
+[[heuristics]]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"        # required; the valid values are per-problem
+history_length = 5_000   # required; must be >= 1
+[heuristics.stop_condition]
+max_iteration = 100_000
+```
+
 ## References
 
 - Burke, E. K. and Bykov, Y. "The Late Acceptance Hill-Climbing Heuristic."

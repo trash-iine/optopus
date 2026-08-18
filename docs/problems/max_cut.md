@@ -11,10 +11,10 @@ search through.
 
 ```rust
 pub struct MaxCutSolution {
-    pub cut: Vec<bool>,        // partition assignment per vertex
+    pub x: Vec<bool>,          // partition assignment per vertex
     pub gain: Vec<f32>,        // change in objective when each vertex is flipped
     pub objective: f32,        // total weight of crossing edges
-    // pub(crate) positive_gain_*  — optional advanced index
+    // pub(crate) positive_gain / zero_gain — optional advanced indexes
 }
 ```
 
@@ -130,18 +130,23 @@ Three things are worth knowing before using them:
 
 Suite generation lives in `examples/generate_hard_maxcut.rs`, which records what
 the sweep showed for each parameter it bakes in; see
-[`data/instances/README.md`](../../data/instances/README.md).
+[`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md).
 
 ## Optional traits
 
-- `Distance` — Hamming distance on the cut vector (used by `ParentSelection::DistantTopK`).
+- `Distance` — Hamming distance on `x` (used by `ParentSelection::DistantTopK`).
 
 ## Notes
 
-- `MaxCutSolution` carries an optional **`positive_gain` index** that
-  enumerates only improving flips in O(|improving|). It is used by problem-
-  specific algorithms such as [Breakout Local Search](../heuristics/breakout_local_search.md);
-  standard heuristics do not need to enable it.
+- `MaxCutSolution` carries two optional gain indexes, both maintained
+  incrementally once enabled and both off by default — standard heuristics need
+  neither:
+  - **`positive_gain`** enumerates only improving flips in O(|improving|), used
+    by [Breakout Local Search](../heuristics/breakout_local_search.md) and
+    [RL-BLS](../heuristics/rl_breakout_local_search.md).
+  - **`zero_gain`** enumerates objective-preserving ("plateau") flips, used by
+    [Population Annealing](../heuristics/population_annealing.md)'s non-local
+    cluster move.
 
 ## References
 
@@ -150,7 +155,7 @@ the sweep showed for each parameter it bakes in; see
   Karp's 21 NP-complete problems.)
 - Standard benchmark set: the **Gset** graphs (G1–G81), generated with the
   `rudy` graph generator and distributed by Y. Ye. See
-  [`data/instances/README.md`](../../data/instances/README.md) for instance
+  [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for instance
   sources and download instructions.
 - Perera, D. et al. "Chook — A comprehensive suite for generating binary
   optimization problems with planted solutions."

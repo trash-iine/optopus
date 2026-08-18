@@ -40,8 +40,11 @@ A solution therefore earns its place either by being cheap or by being unlike
 the rest. Clones (distance `0` from another member) are always evicted first.
 
 Broken-pairs distance is the fraction of customers whose route neighbors differ.
-It is invariant to relabeling and reversing routes, unlike `VrpSolution`'s own
-`Distance` impl, which counts route *indices*.
+It is invariant to relabeling and reversing routes, and it is the same count
+`VrpSolution`'s [`Distance`](../problems/vrp.md#optional-traits) impl is built
+on — the one difference being direction: `Distance` symmetrizes by taking the
+larger of the two directions, while biased fitness here ranks on the
+*directional* count, which is the form Vidal defines it on.
 
 ### Two sub-populations and the adaptive penalty
 
@@ -139,8 +142,7 @@ ALNS ahead on the four largest, HGS on the mid-sized ones, every difference
 under 0.7%. Which of the two to reach for at a *long* budget is not settled by
 this measurement — the 600 s band has not been re-run since the change.
 
-Reproduce with `cargo run --release --example prof_hgs_vrp` (single run, prints
-the gap) or `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
+Reproduce with `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
 
 ## Not implemented
 

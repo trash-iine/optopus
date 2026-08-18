@@ -19,8 +19,8 @@ seed = 42                              # optional master seed; when set, reruns 
                                        # bit-identical (each run derives its own seed)
 
 [[instances]]
-path = "data/instances/max_cut/G*.txt"           # file path or glob
-problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop
+path = "data/instances/max_cut/G*"     # file path or glob (Gset files have no extension)
+problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | Vrp
 
 [[heuristics]]
 kind = "LocalSearch"                   # see kinds below
@@ -34,28 +34,44 @@ max_failed_update = 5_000
 Multiple `[[instances]]` and `[[heuristics]]` blocks are allowed; the runner
 takes the Cartesian product.
 
-## Heuristic kinds and required fields
+## Heuristic kinds
 
-| `kind` | Applies to | Required | Optional |
-|---|---|---|---|
-| `LocalSearch` | all | `neighbor` | — |
-| `TabuSearch` | all | `neighbor`, `tabu_tenure` | — |
-| `SimulatedAnnealing` | all | `neighbor`, `initial_temperature`, `cooling_rate` | — |
-| `LateAcceptanceHillClimbing` | all | `neighbor`, `history_length` | — |
-| `RandomWalk` | all | `neighbor` (give it a `stop_condition` — an empty one never terminates) | — |
-| `BreakoutLocalSearch` | MaxCut only | `tabu_tenure`, `t`, `l0`, `p0`, `q` | — |
-| `RlBreakoutLocalSearch` | MaxCut only | `tabu_tenure`, `t`, `l0` | `strength_bins` (`[1.0, 2.0, 4.0]`), `learning_rate` (0.1), `softmax_temperature` (1.0), `exploration` (0.05), `policy_weights` |
-| `LinKernighanHelsgaun` | TSP only | — | `num_neighbors` (default 5), `max_depth` (default 5) |
-| `RlSearch` | all | `neighbor` | `learning_rate` (0.01), `softmax_temperature` (1.0), `reward_shaping` (`Raw`\|`Normalized`\|`BestImprovement`, default `Normalized`), `policy_weights`, `max_candidates` |
-| `Sequential` | all | `steps` | — |
-| `Iterated` | all | `steps` (`[0]` = search, `[1]` = perturbation) | — |
-| `VariableNeighborhoodSearch` | all | `steps` (`[0]` = search, `[1..]` = shakes N_1..N_kmax) | — |
-| `Restart` | all | `steps` (single inner), `restart_condition` | — |
-| `GeneticAlgorithm` | all | `population_size` (≥ 2), `steps` (`[0]` = mutation, optional `[1]` = init_improvement) | `crossover_kind` (per-problem default: `Uniform`, `Order` for TSP, `Ppx` for JobShop), `parent_selection` (`Tournament` default \| `DistantTopK`), `parent_top_k` (required when `DistantTopK`) |
+Every value below is a valid `kind` tag for a `[[heuristics]]` block. Each links
+to the fields it takes — required, optional, and their defaults — on the
+algorithm's own page; this table is only the index.
 
-`tabu_tenure` is a `(min, max)` pair, e.g. `tabu_tenure = [5, 10]`.
+| `kind` | Applies to |
+|---|---|
+| [`LocalSearch`](../heuristics/local_search.md#benchmark-config) | all |
+| [`TabuSearch`](../heuristics/tabu_search.md#benchmark-config) | all |
+| [`SimulatedAnnealing`](../heuristics/simulated_annealing.md#benchmark-config) | all |
+| [`LateAcceptanceHillClimbing`](../heuristics/late_acceptance.md#benchmark-config) | all |
+| [`RandomWalk`](../heuristics/random_walk.md#benchmark-config) | all |
+| [`RlSearch`](../heuristics/rl_search.md#benchmark-config) | all |
+| [`Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart`](../heuristics/meta.md#benchmark-config) | all |
+| [`GeneticAlgorithm`](../heuristics/genetic_algorithm.md#benchmark-config) | all |
+| [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | MaxCut only |
+| [`RlBreakoutLocalSearch`](../heuristics/rl_breakout_local_search.md#benchmark-config) | MaxCut only |
+| [`PopulationAnnealingForMaxCut`](../heuristics/population_annealing.md#benchmark-config) | MaxCut only |
+| [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP only |
+| [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT only |
+| [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP only |
+| [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
+
+Unknown kinds and missing required fields fail at parse time, before any run
+starts. [`BeamSearch`](../heuristics/beam_search.md) has no `kind` — it is
+reachable from the Rust API only.
+
+## Fields shared by every kind
+
 `stop_condition` accepts any subset of `max_iteration`, `max_duration_secs`,
-`max_failed_update`.
+`max_failed_update`; the heuristic stops when any of them is met. It is the TOML
+form of the builder in [Stop Conditions](stop_conditions.md), which explains what
+each limit counts.
+
+`steps` is a nested array of heuristic tables (`[[heuristics.steps]]`, see the
+example below). Which slot plays which role is per kind, and is documented with
+that kind.
 
 `neighbor` is per-problem:
 
@@ -64,6 +80,11 @@ takes the Cartesian product.
 | MaxCut, QUBO, SAT, VertexCover | `Flip`, `Swap` |
 | TSP | `TwoOpt`, `Relocate` |
 | JobShop | `Swap`, `Relocate` |
+| VRP | `Relocate`, `Swap`, `TwoOpt` |
+
+The problem-specific kinds (`BreakoutLocalSearch`, `LinKernighanHelsgaun`,
+`AdaptiveLargeNeighborhoodSearch`, `WalkSat`, …) take no `neighbor` — they own
+their move sets.
 
 ## Nested example: ILS in TOML
 
@@ -86,9 +107,6 @@ neighbor = "Flip"
 max_iteration = 200
 ```
 
-> `RandomWalk` never stops on its own, so always give it a `stop_condition`.
-> A short high-temperature `SimulatedAnnealing` phase works as a perturbation too.
-
 ## Output report
 
 Each run produces a `BenchmarkReport`:
@@ -99,21 +117,33 @@ BenchmarkReport
 ├── config_file: String
 └── results: Vec<InstanceHeuristicResult>
     ├── instance_path: String
+    ├── problem: ProblemKind
     ├── heuristic: HeuristicConfig
     ├── summary: Summary
     │   ├── num_successful_runs: usize
     │   ├── best_objective / avg_objective / worst_objective: f64
     │   ├── std_objective: f64                  (population std)
     │   ├── best_time_to_best_secs / avg_time_to_best_secs: f64
-    │   └── avg_total_time_secs: f64
+    │   ├── avg_total_time_secs: f64
+    │   ├── avg_initial_objective / avg_improvement: Option<f64>
+    │   └── avg_n_accepted / avg_n_rejected / avg_acceptance_rate
+    │       / avg_n_best_updates: Option<f64>
     └── runs: Vec<SingleRunResult>
         ├── run_index: usize
         ├── status: String                       ("success" | "error: …")
         ├── best_objective: f64
         ├── best_iteration: u64
         ├── time_to_best_secs / total_time_secs: f64
-        └── solution: Vec<usize>                 (0-indexed, problem-specific encoding)
+        ├── initial_objective / improvement: Option<f64>
+        ├── n_accepted / n_rejected / n_best_updates: Option<u64>
+        ├── seed: Option<u64>                    (this run's derived seed)
+        ├── solution: Vec<usize>                 (0-indexed, problem-specific encoding)
+        └── trajectory: Vec<(f64, f64)>          (elapsed_secs, objective) per improvement
 ```
+
+`trajectory` is the anytime curve, monotone in the problem's optimization
+direction — it is what the benchmark viewer plots. The `Option` fields are
+absent for runs that ended in an error.
 
 Solution encoding:
 
@@ -125,3 +155,4 @@ Solution encoding:
 | TSP | city visit order |
 | VertexCover | vertex indices in the cover |
 | JobShop | operation sequence (job indices, each repeated `n_machines` times) |
+| VRP | all routes flattened with the depot (`0`) as separator: `0, r0…, 0, r1…, 0` (empty routes omitted) |

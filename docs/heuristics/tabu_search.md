@@ -38,8 +38,8 @@ range.
 
 Internally the map and the tenure are one `common::TabuLedger<N::TabuMap>` —
 they are never useful apart, and the two verbs it exposes (`allows` / `record`)
-are what the MaxCut operators in `heuristic::specific::max_cut::ops` share when
-several of them must respect each other's prohibitions.
+are what the MaxCut operators in `src/heuristic/specific/max_cut/ops/` share
+when several of them must respect each other's prohibitions.
 
 ## Example
 
@@ -56,6 +56,21 @@ let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
 ts.run(&mut state)?;
 # Ok::<(), optopus::error::OptError>(())
 ```
+
+## Benchmark config
+
+```toml
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Flip"        # required; the valid values are per-problem
+tabu_tenure = [5, 10]    # required; (min, max), drawn uniformly per move
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+```
+
+The tenure is taken literally: a move stays forbidden for that many iterations.
+(`BreakoutLocalSearch` reads the same key as the paper's `γ` and forbids for
+`2γ`, so tuned values are not interchangeable between the two kinds.)
 
 ## References
 

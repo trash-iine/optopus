@@ -7,16 +7,19 @@ the total length of a Hamiltonian tour.
 
 ```rust
 pub struct TspSolution {
-    pub tour: Vec<usize>,                                  // city indices, 0-indexed
-    pub objective: f64,                                    // total tour length
-    pub gain: HashMap<(TspEdge, TspEdge), f64>,            // cached 2-opt gains
+    pub tour: TspTour,      // = Vec<usize>; city indices, 0-indexed
+    pub objective: f64,     // total tour length
 }
 ```
 
-`Rankable::is_better_than` returns `self.objective < other.objective`. The
-`gain` map is keyed by a normalized pair of directed edges
-`((a, b), (c, d))`; the value is the change in tour length when the two edges
-are swapped (negative = improving).
+`Rankable::is_better_than` returns `self.objective < other.objective`.
+
+Unlike the binary problems, `TspSolution` caches **no** per-move gains. A move's
+gain is computed on the fly from the four endpoint distances instead, which is
+cheap because `TspWithCoordinates` builds its full `n × n` distance matrix
+lazily on first use for instances up to `DIST_MATRIX_MAX_N = 2000` cities
+(`n² × 8` bytes, 32 MB at the cap); larger instances evaluate the coordinate
+formula per call.
 
 ## Neighbors
 
@@ -96,5 +99,5 @@ internally. The `EXPLICIT` weight type is not supported.
 - Reinelt, G. "TSPLIB — A Traveling Salesman Problem Library." *ORSA Journal
   on Computing*, 3(4), 376-384, 1991. (Defines the file format and the
   standard instance set.)
-- See [`data/instances/README.md`](../../data/instances/README.md) for
+- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
   instance sources and download instructions.

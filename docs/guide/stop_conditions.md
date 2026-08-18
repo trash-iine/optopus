@@ -1,6 +1,6 @@
 # Stop Conditions
 
-Every heuristic takes a [`StopCondition`] that decides when to stop. The
+Every heuristic takes a [`StopCondition`](#builder-api) that decides when to stop. The
 condition is checked at the top of each iteration and **fires as soon as any
 configured limit is reached** (logical OR, not AND).
 

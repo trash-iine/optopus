@@ -95,5 +95,5 @@ i j v
 - Beasley, J. E. "Obtaining Test Problems via Internet." *Journal of Global
   Optimization*, 8(4), 429-433, 1996. (OR-Library, source of the bundled
   `bqp` instance set.)
-- See [`data/instances/README.md`](../../data/instances/README.md) for
+- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
   instance sources and licensing.

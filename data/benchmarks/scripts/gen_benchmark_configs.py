@@ -3,7 +3,7 @@
 Drives Phase 3 of the comprehensive benchmark plan (see
 `docs/benchmarks/README.md#profiles`). One TOML per (problem, band, track) where:
 
-    track ∈ {"general", "lkh", "vrp_special"}
+    track ∈ {"general", "lkh", "hgs"}
     band  ∈ {"small", "medium", "large"}
 
 The `general` track always enumerates LocalSearch, TabuSearch,
