@@ -3,8 +3,8 @@
 **API:** [`StopCondition`](../api/optopus/heuristic/struct.StopCondition.html)
 
 Every heuristic takes a [`StopCondition`](#builder-api) that decides when to stop. The
-condition is checked at the top of each iteration and **fires as soon as any
-configured limit is reached** (logical OR, not AND).
+condition is checked at the top of each iteration and fires as soon as **any**
+configured limit is reached.
 
 ## Builder API
 
@@ -22,6 +22,10 @@ StopCondition::iterations(1_000_000)
     .with_duration(Duration::from_secs(30))
     .with_failed_updates(10_000);
 ```
+
+- [`StopCondition::iterations`](../api/optopus/heuristic/struct.StopCondition.html#method.iterations) 
+- [`StopCondition::duration`](../api/optopus/heuristic/struct.StopCondition.html#method.duration) 
+- [`StopCondition::failed_updates`](../api/optopus/heuristic/struct.StopCondition.html#method.failed_updates)
 
 | Criterion | Meaning |
 |---|---|

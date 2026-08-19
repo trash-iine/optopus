@@ -33,6 +33,10 @@ max_duration_secs = 30.0
 max_failed_update = 5_000
 ```
 
+- [`BenchmarkConfig`](../api/optopus/benchmark/struct.BenchmarkConfig.html)
+- [`ProblemKind`](../api/optopus/benchmark/enum.ProblemKind.html)
+- [`HeuristicConfig`](../api/optopus/benchmark/enum.HeuristicConfig.html)
+
 Multiple `[[instances]]` and `[[heuristics]]` blocks are allowed; the runner
 takes the Cartesian product.
 
@@ -108,6 +112,8 @@ neighbor = "Flip"
 [heuristics.steps.stop_condition]
 max_iteration = 200
 ```
+
+**API:** [`HeuristicConfig::Iterated`](../api/optopus/benchmark/enum.HeuristicConfig.html#variant.Iterated)
 
 ## Output report
 
