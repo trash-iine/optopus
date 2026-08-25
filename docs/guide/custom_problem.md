@@ -1,6 +1,6 @@
 # Defining a Custom Problem
 
-**API:** [`ProblemTrait`](../api/optopus/trait_defs/trait.ProblemTrait.html) · [`Rankable`](../api/optopus/trait_defs/trait.Rankable.html) · [`MoveToNeighbor`](../api/optopus/trait_defs/trait.MoveToNeighbor.html) · [`Evaluate`](../api/optopus/trait_defs/trait.Evaluate.html) · [`EnabledTabu`](../api/optopus/trait_defs/trait.EnabledTabu.html) · [`BinaryProblem`](../api/optopus/trait_defs/trait.BinaryProblem.html)
+**API:** [`ProblemTrait`](../api/optopus/trait_defs/trait.ProblemTrait.html)
 
 Implement three traits and the local-search family plus every meta-heuristic
 works on your problem. The remaining heuristics are unlocked one optional trait
@@ -71,9 +71,6 @@ impl Rankable for MyMove {
 ```
 
 `examples/custom_problem.rs` shows the cached-gain form.
-
-- [`ProblemTrait::new_solution`](../api/optopus/trait_defs/trait.ProblemTrait.html#tymethod.new_solution) 
-- [`MoveToNeighbor::apply_to_solution`](../api/optopus/trait_defs/trait.MoveToNeighbor.html#tymethod.apply_to_solution)
 
 ## Which heuristic needs what
 

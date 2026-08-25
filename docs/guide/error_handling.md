@@ -37,8 +37,6 @@ match Qubo::load_file("instance.qubo") {
 }
 ```
 
-**API:** [`Qubo::load_file`](../api/optopus/problem/qubo/struct.Qubo.html#method.load_file) · [`OptError::FileLoad`](../api/optopus/error/enum.OptError.html#variant.FileLoad) · [`OptError::Io`](../api/optopus/error/enum.OptError.html#variant.Io)
-
 ## In custom code
 
 When implementing a custom problem or heuristic:

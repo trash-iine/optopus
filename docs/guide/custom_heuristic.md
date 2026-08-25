@@ -1,6 +1,6 @@
 # Defining a Custom Heuristic
 
-**API:** [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html) · [`StopCondition`](../api/optopus/heuristic/struct.StopCondition.html) · [`SearchState`](../api/optopus/search_state/struct.SearchState.html)
+**API:** [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html)
 
 Implement `Heuristic<P>` to plug your own algorithm into the rest of the
 library — `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
@@ -26,10 +26,6 @@ pub trait Heuristic<Problem: ProblemTrait> {
     fn run<'a>(&mut self, state: &mut SearchState<'a, Problem>) -> Result<(), OptError> { … }
 }
 ```
-
-- [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html)
-- [`Heuristic::run_once`](../api/optopus/heuristic/trait.Heuristic.html#tymethod.run_once)
-- [`Heuristic::run`](../api/optopus/heuristic/trait.Heuristic.html#method.run)
 
 You implement `stop_condition` and `run_once`; `is_done` and `run` are
 provided. Override `is_done` only when your heuristic has a termination rule
