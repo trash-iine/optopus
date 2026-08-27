@@ -1,7 +1,6 @@
 # Quickstart
 
-This page walks through the smallest possible end-to-end use of the library
-and then shows how to load a problem from a file.
+This page walks through the smallest use of this library.
 
 ## Install
 
@@ -79,9 +78,6 @@ Each loader's file format is documented on the corresponding problem page.
   patterns.
 - [Problems](problems/README.md) — what each built-in problem offers.
 - [Heuristics](heuristics/README.md) — picking an algorithm.
-- [Meta-heuristics](heuristics/meta.md) — `Sequential`, `Iterated` (ILS),
-  `VariableNeighborhoodSearch`, and `Restart`, with a runnable example each.
-- [Genetic Algorithm](heuristics/genetic_algorithm.md) — population-based
-  search and the `Crossover` trait.
-- [Custom problem](guide/custom_problem.md) — plug your own problem into every
-  built-in heuristic by implementing three traits.
+- [Custom problem](guide/custom_problem.md) — three traits get your own problem
+  running under `LocalSearch` and the meta-heuristics; one optional trait each
+  unlocks the rest.
