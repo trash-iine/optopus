@@ -95,7 +95,7 @@ The same pages as Markdown in this repository:
 
 - [`docs/quickstart.md`](docs/quickstart.md) — getting started, file loaders
 - [`docs/concepts.md`](docs/concepts.md) — design philosophy and key patterns
-- [`docs/search_state.md`](docs/search_state.md) — `SearchState` API reference
+- [`docs/search_state.md`](docs/search_state.md) — `SearchState`: the state every heuristic drives
 - [`docs/traits.md`](docs/traits.md) — core traits reference
 - [`docs/problems/`](docs/problems/) — supported problems
 - [`docs/heuristics/`](docs/heuristics/) — available algorithms
