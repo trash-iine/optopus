@@ -46,8 +46,15 @@ static ZERO_COEFF: Coefficient = 0;
 /// ```
 #[derive(Debug, Clone)]
 pub struct QuboSolution {
+    /// The variable assignment: `x[i] = true` means variable `i` is set to 1.
+    /// Sized to `max_variable_id + 1`; only indices in `Qubo::iter_on_variables`
+    /// are meaningful.
     pub x: Vec<bool>,
+    /// The gain of flipping each variable: `gain[i]` = change in energy when
+    /// flipping `i`. Negative = improvement (QUBO is minimized). Sized to
+    /// `max_variable_id + 1`.
     pub gain: Vec<Coefficient>,
+    /// The current energy `E(x) = Σ Q[i][j] · x[i] · x[j]`.
     pub objective: Coefficient,
     /// Advanced: index of variables `v` with `gain[v] < 0`, maintained
     /// incrementally once enabled. Not needed for standard heuristic use.

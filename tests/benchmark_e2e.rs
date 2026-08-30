@@ -5,18 +5,17 @@
 use optopus::benchmark::{Benchmark, BenchmarkConfig, BenchmarkReport};
 use optopus::prelude::{Graph, MaxCut};
 
-/// Writes `content` to a unique temp file and returns its path.
+/// Writes `content` to a temp file tagged with `tag` and returns its path.
+///
+/// The tag is what makes the path unique: every caller below passes a
+/// different one, so no two concurrent tests build the same path. A wall-clock
+/// suffix would not do that job — the clock is quantized (1 us on macOS), so
+/// two tests entering here in the same microsecond would still collide and
+/// read each other's file.
 fn write_temp_file(tag: &str, content: &str) -> std::path::PathBuf {
     use std::io::Write;
     let mut path = std::env::temp_dir();
-    path.push(format!(
-        "optopus_e2e_{tag}_{}_{}.txt",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
+    path.push(format!("optopus_e2e_{tag}_{}.txt", std::process::id()));
     let mut f = std::fs::File::create(&path).unwrap();
     f.write_all(content.as_bytes()).unwrap();
     path

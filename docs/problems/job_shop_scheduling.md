@@ -1,53 +1,31 @@
 # Job Shop Scheduling
 
-**API:** [`JobShopScheduling`](../api/optopus/problem/job_shop_scheduling/struct.JobShopScheduling.html) · [`JobShopSolution`](../api/optopus/problem/job_shop_scheduling/struct.JobShopSolution.html) · [`JobShopSwapNeighbor`](../api/optopus/problem/job_shop_scheduling/struct.JobShopSwapNeighbor.html) · [`JobShopRelocateNeighbor`](../api/optopus/problem/job_shop_scheduling/struct.JobShopRelocateNeighbor.html) · [`JobShopPpxCrossover`](../api/optopus/problem/job_shop_scheduling/struct.JobShopPpxCrossover.html)
+**API:** [`JobShopScheduling`](../api/optopus/problem/job_shop_scheduling/struct.JobShopScheduling.html)
 
-Given `n_jobs` jobs and `n_machines` machines, where each job has a fixed
-sequence of `(machine, duration)` operations, **minimize** the makespan
-(time at which the last operation finishes).
+Job Shop Scheduling is one of the most-studied strongly NP-hard scheduling
+problems.
 
-## Encoding
+Given `n_jobs` jobs and `n_machines` machines, each job `j` is a fixed
+ordered sequence of operations `(machine, duration)` that must run on their
+machines in that order: an operation cannot start before its predecessor in
+the same job finishes, and a machine can process only one operation at a
+time. Let `C_{j,k}` be the completion time of the `k`-th operation of job
+`j`, with duration `p_{j,k}`; the *makespan* is the time the last operation
+anywhere finishes. **Minimize** the makespan:
 
-A solution is a **permutation with repetition** of length `n_jobs * n_machines`:
-each job index appears exactly `n_machines` times, and the *k*-th occurrence
-(0-indexed) of job `j` represents operation `O(j, k)`. The operation sequence
-is decoded via left-shift semi-active scheduling — every operation is started
-as early as both its machine and its job's previous operation allow.
-
-## Solution
-
-```rust
-pub struct JobShopSolution {
-    pub operations: Vec<usize>,        // permutation-with-repetition; length n_jobs * n_machines
-    pub objective: u32,                // makespan (Cmax)
-    pub completion_times: Vec<u32>,    // finish time of each position in `operations`
-}
+```text
+minimize  max_j C_{j,last}
+subject to  C_{j,k} ≥ C_{j,k-1} + p_{j,k}                 (precedence within a job)
+            operations on the same machine do not overlap  (machine capacity)
 ```
 
-`Rankable::is_better_than` returns `self.objective < other.objective`.
+## Example
 
-## Neighbors
-
-| Type | Move | Iteration cost |
-|---|---|---|
-| `JobShopSwapNeighbor` | Swap `operations[i]` with `operations[i+1]`; re-decode for the exact gain. | `iter + 1` |
-| `JobShopRelocateNeighbor` | Remove `operations[i]` and reinsert it at another position; re-decode. | `iter + 1` |
-
-Both implement `Rankable`, `Evaluate<f64>`, and `EnabledTabu`.
-
-## Crossover
-
-- `JobShopPpxCrossover` — Precedence-Preserving Crossover (PPX): at each
-  child position, randomly choose a parent and append that parent's leftmost
-  unconsumed operation. Both parents are kept in sync, so the child remains a
-  precedence-feasible permutation-with-repetition.
-
-## Construction
+Running a search and reading back the decoded schedule:
 
 ```rust
 use optopus::prelude::*;
 
-// Manual:
 let inst = JobShopScheduling::new(
     "tiny".to_string(),
     /* n_machines = */ 2,
@@ -56,11 +34,43 @@ let inst = JobShopScheduling::new(
         vec![(1, 1), (0, 4)],   // job 1: M1(1) → M0(4)
     ],
 );
+let mut state = SearchState::new(&inst);
+LocalSearch::<JobShopSwapNeighbor>::new(StopCondition::iterations(10_000))
+    .run(&mut state)
+    .unwrap();
 
-// Load from file:
-let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
-# Ok::<(), optopus::error::OptError>(())
+let sol = &state.best_solution;
+println!("makespan = {}", sol.objective);
+println!("operation order = {:?}", sol.operations); // decoded permutation-with-repetition
+println!("completion times = {:?}", sol.completion_times); // finish time of each position above
 ```
+
+## Solution
+
+Solutions are encoded as a **permutation-with-repetition** of length
+`n_jobs * n_machines` — the `k`-th occurrence of job `j` in the sequence
+names the `k`-th operation of that job — and decoded by **left-shift
+semi-active scheduling** into the completion times `C_{j,k}` from the
+definition above.
+[`JobShopSolution`](../api/optopus/problem/job_shop_scheduling/struct.JobShopSolution.html)
+carries that encoding as `operations`, the per-position decoded completion
+times as `completion_times` (so `completion_times[pos]` is the `C_{j,k}` of
+the operation at position `pos`), and `objective`, which is `max_j C_{j,last}`,
+the makespan being minimized. 
+
+## Neighbors
+
+| Type | Move | Iteration cost |
+|---|---|---|
+| `JobShopSwapNeighbor` | Swap `operations[i]` with `operations[i+1]`. | `iter + 1` |
+| `JobShopRelocateNeighbor` | Remove `operations[i]` and reinsert it at another position. | `iter + 1` |
+
+## Crossover
+
+The crossover `JobShopPpxCrossover` is Precedence-Preserving Crossover (PPX): at each
+child position, randomly choose a parent and append that parent's leftmost
+unconsumed operation. Both parents are kept in sync, so the child remains a
+precedence-feasible permutation-with-repetition.
 
 ## File format (Taillard / OR-Library)
 
@@ -76,9 +86,12 @@ m d m d m d ...
 - Whitespace within and between lines is flexible — the file is tokenized
   rather than read line-strictly.
 
-## Optional traits
+```rust
+use optopus::prelude::*;
 
-- `Distance` — number of positions where the operation index differs.
+let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
+# Ok::<(), optopus::error::OptError>(())
+```
 
 ## References
 

@@ -99,17 +99,21 @@ impl InstanceLines {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
 
+    /// Handed out once per call, so two concurrent tests never build the same
+    /// path. A wall-clock suffix would not do that job — the clock is quantized
+    /// (1 us on macOS), so two tests entering `write_tmp` in the same
+    /// microsecond would still collide and read each other's file.
+    static TEMP_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+    /// Writes `content` to a unique temp file and returns its path.
     fn write_tmp(content: &str) -> std::path::PathBuf {
+        use std::io::Write;
         let mut path = std::env::temp_dir();
         path.push(format!(
             "optopus_parse_test_{}_{}.txt",
             std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
+            TEMP_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         let mut f = std::fs::File::create(&path).unwrap();
         f.write_all(content.as_bytes()).unwrap();

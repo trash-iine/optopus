@@ -2,7 +2,27 @@
 
 **API:** [`BeamSearch`](../api/optopus/heuristic/struct.BeamSearch.html)
 
-Maintains a beam of `beam_width` candidate solutions in parallel. Each step:
+Maintains a beam of `beam_width` candidate solutions in parallel.
+
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]));
+let mut state = SearchState::new(&mc);
+let mut bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
+    StopCondition::iterations(1_000),
+    /* beam_width = */ 5,
+);
+bs.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
+
+## Algorithm sketch
+
+Each step:
 
 1. Expand every neighbor of every beam member.
 2. Set `state.solution` to the best candidate (refresh `best_solution`).
@@ -33,21 +53,6 @@ Unlike `LocalSearch`/`TabuSearch`, BeamSearch *materializes* every neighbor:
 each step is O(beam_width × |neighborhood|) memory and applies that many
 `apply_to_solution` calls. Use modest `beam_width` for problems with large
 neighborhoods.
-
-## Example
-
-```rust
-use optopus::prelude::*;
-
-let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]));
-let mut state = SearchState::new(&mc);
-let mut bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
-    StopCondition::iterations(1_000),
-    /* beam_width = */ 5,
-);
-bs.run(&mut state)?;
-# Ok::<(), optopus::error::OptError>(())
-```
 
 ## Benchmark config
 

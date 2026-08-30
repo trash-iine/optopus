@@ -202,14 +202,7 @@ mod tests {
     fn test_load_file_roundtrip() {
         use std::io::Write;
         let mut path = std::env::temp_dir();
-        path.push(format!(
-            "optopus_vc_{}_{}.txt",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        ));
+        path.push(format!("optopus_vc_{}.txt", std::process::id()));
         {
             let mut f = std::fs::File::create(&path).unwrap();
             writeln!(f, "3 3").unwrap();

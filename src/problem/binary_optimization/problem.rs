@@ -6,6 +6,20 @@ use crate::search_state::{Distance, ProblemTrait, Rankable};
 pub type Value = f64;
 
 /// An arithmetic expression AST node over binary variables.
+///
+/// Built by overloading `+ - * /` rather than by naming variants directly:
+///
+/// # Examples
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// // linear combination: 2*x[0] + x[1] - 3
+/// let linear = 2.0 * Expr::Var(0) + Expr::Var(1) - 3.0;
+///
+/// // AND of two binary variables (Mul is equivalent to AND for {0,1} values)
+/// let and_of_two = Expr::Var(0) * Expr::Var(1);
+/// ```
 #[derive(Debug, Clone)]
 pub enum Expr {
     /// A numeric constant.
@@ -160,6 +174,20 @@ pub enum ConstraintRel {
 }
 
 /// A penalty-weighted constraint on the binary variables.
+///
+/// # Examples
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// // x[0] + x[1] + x[2] <= 2, penalized at weight 10.0 per unit of violation
+/// let constraint = Constraint::Comparison {
+///     lhs: Expr::Var(0) + Expr::Var(1) + Expr::Var(2),
+///     rel: ConstraintRel::Le,
+///     rhs: Expr::Const(2.0),
+///     penalty_weight: 10.0,
+/// };
+/// ```
 #[derive(Debug, Clone)]
 pub enum Constraint {
     /// `lhs rel rhs` form: penalty = violation * `penalty_weight`.
@@ -369,9 +397,13 @@ fn build_interaction_neighbors(
 /// - For [`OptDirection::Minimize`]: `score = −objective − penalty`
 #[derive(Debug, Clone)]
 pub struct FormulaProblem {
+    /// Number of binary variables; every `Expr::Var(i)` must have `i < n_vars`.
     pub n_vars: usize,
+    /// The objective expression to optimize (see [`Expr`]).
     pub objective: Expr,
+    /// Whether `objective` is maximized or minimized.
     pub direction: OptDirection,
+    /// Penalty-weighted constraints on the variables (see [`Constraint`]).
     pub constraints: Vec<Constraint>,
     // Compiled polynomial representations — built once at construction time.
     pub(super) obj_poly: CompiledPoly,
@@ -383,14 +415,18 @@ pub struct FormulaProblem {
 }
 
 /// A solution to a [`FormulaProblem`].
-///
-/// - `x` — variable assignment (`x[i] ∈ {false=0, true=1}`)
-/// - `gain` — change in score when flipping each variable (positive = improvement)
-/// - `score` — current combined score (objective adjusted for direction, minus penalty; higher is better)
 #[derive(Debug, Clone)]
 pub struct FormulaSolution {
+    /// Variable assignment: `x[i] = true` means variable `i` is set to 1.
     pub x: Vec<bool>,
+    /// `gain[i]` = change in `score` if variable `i` were flipped now (positive
+    /// = improving). Kept current by `FormulaFlipNeighbor` /
+    /// `FormulaSwapNeighbor::apply_to_solution`, which refresh only the
+    /// entries that can have changed (see their rustdoc).
     pub gain: Vec<Value>,
+    /// Combined score of the current assignment, always higher-is-better
+    /// regardless of [`OptDirection`]: `objective − penalty` when maximizing,
+    /// `−objective − penalty` when minimizing (see [`FormulaProblem::eval_score`]).
     pub score: Value,
     /// Current value of each constraint's tracked expression (used for O(d) gain computation).
     /// - Comparison constraint c: `constraint_vals[c] = eval(lhs - rhs, x)`
@@ -399,6 +435,8 @@ pub struct FormulaSolution {
 }
 
 impl Rankable for FormulaSolution {
+    /// `self.score > other.score` — `score` already folds in the optimization
+    /// direction, so higher is always better here.
     fn is_better_than(&self, other: &Self) -> bool {
         self.score > other.score
     }

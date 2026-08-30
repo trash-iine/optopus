@@ -1,37 +1,61 @@
 # QUBO
 
-**API:** [`Qubo`](../api/optopus/problem/qubo/struct.Qubo.html) · [`QuboSolution`](../api/optopus/problem/qubo/struct.QuboSolution.html) · [`QuboFlipNeighbor`](../api/optopus/problem/qubo/struct.QuboFlipNeighbor.html) · [`QuboSwapNeighbor`](../api/optopus/problem/qubo/struct.QuboSwapNeighbor.html) · [`QuboUniformCrossover`](../api/optopus/problem/qubo/struct.QuboUniformCrossover.html)
+**API:** [`Qubo`](../api/optopus/problem/qubo/struct.Qubo.html)
 
-Quadratic Unconstrained Binary Optimization. Given a symmetric coefficient
-matrix `Q`, **minimize**
+Quadratic Unconstrained Binary Optimization (QUBO) minimizes a quadratic
+polynomial over `n` binary variables `x ∈ {0,1}^n`, expressed through a
+symmetric coefficient matrix `Q`. This crate stores only the upper triangle
+(`i ≤ j`); the diagonal `Q[i][i]` is the linear term for `x[i]`, since
+`x[i]² = x[i]` for a binary value:
 
 ```text
 E(x) = Σ_{i ≤ j} Q[i][j] · x[i] · x[j]    (x ∈ {0,1}^n)
 ```
 
-## Solution
+QUBO is the standard input format accepted by quantum and classical
+Ising-machine annealers, and — being unconstrained — is also the form many
+other combinatorial problems (MaxCut, graph coloring, ...) are reduced *to*.
+This crate keeps `Qubo` as a standalone, generic problem type rather than
+special-casing those reductions.
+
+## Example
+
+Running a search and reading back the minimizing assignment:
 
 ```rust
-pub struct QuboSolution {
-    pub x: Vec<bool>,            // variable assignment
-    pub gain: Vec<i32>,          // change in energy per flip (negative = improving)
-    pub objective: i32,          // current energy
-    // pub(crate) negative_gain_* — optional advanced index
-}
+use optopus::prelude::*;
+
+let qubo = Qubo::from_entries([
+    (0, 0, -1), // diagonal = linear term
+    (0, 1, 1),
+    (1, 2, 2),
+    (0, 2, 3),
+]);
+let mut state = SearchState::new(&qubo);
+LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(10_000))
+    .run(&mut state)
+    .unwrap();
+
+let sol = &state.best_solution;
+println!("energy = {}", sol.objective);
+println!("assignment = {:?}", sol.x); // sol.x[i] is the value of x[i] at the minimizer found
 ```
 
-Coefficients use `Coefficient = i32`. `Rankable::is_better_than` returns
-`self.objective < other.objective` (lower is better).
+`Qubo::from_entries` is one way to build an instance; you can also start from
+`Qubo::new()` and call `set_q` (overwrite) / `add_q` (accumulate)
+incrementally.
+
+## Solution
+
+[`QuboSolution`](../api/optopus/problem/qubo/struct.QuboSolution.html) carries
+the assignment `x` from the definition above (`x ∈ {0,1}^n`).
 
 ## Neighbors
 
-| Type | Move | Iteration cost |
+| Type | TOML `neighbor` | Move |
 |---|---|---|
-| `QuboFlipNeighbor` | Flip one variable; gain refresh in O(degree). | `iter + 1` |
-| `QuboSwapNeighbor` | Swap two variables with different values. | `iter + 2` |
-
-Both implement `Rankable`, `Evaluate<f64>` *and* `Evaluate<i32>` (integer
-gains avoid FP drift), and `EnabledTabu`.
+| `QuboFlipNeighbor` | `"Flip"` | Flip one variable. `iter + 1`. |
+| `QuboSwapNeighbor` | `"Swap"` | Swap two variables with different values. `iter + 2`. |
 
 ## Crossover
 
@@ -39,29 +63,6 @@ gains avoid FP drift), and `EnabledTabu`.
 - `Qubo` implements `SubProblemExtractable`. Variables that agree in both
   parents are fixed; their contributions are folded into the linear terms of
   the sub-QUBO so the sub-problem stays self-contained.
-
-## Construction
-
-```rust
-use optopus::prelude::*;
-
-// Empty + manual:
-let mut qubo = Qubo::new();
-qubo.set_q(0, 1, 1);            // overwrite semantics
-qubo.add_q(0, 0, -2);           // accumulate semantics
-
-// From entries (last write wins on duplicates):
-let qubo = Qubo::from_entries([
-    (0, 1, 1),
-    (0, 2, 2),
-    (1, 2, 3),
-    (0, 0, -1),                 // diagonal = linear term
-]);
-
-// Load from file:
-let qubo = Qubo::load_file("data/instances/qubo/sample.qubo")?;
-# Ok::<(), optopus::error::OptError>(())
-```
 
 ## File format
 
@@ -77,17 +78,12 @@ i j v
 - `i == j` lines store the linear (diagonal) coefficient.
 - Duplicate entries follow `set_q` semantics: the last write wins.
 
-## Optional traits
+```rust
+use optopus::prelude::*;
 
-- `Distance` — Hamming distance on `x`.
-- `Evaluate<i32>` (in addition to `Evaluate<f64>`) for integer-precision SA /
-  LAHC / RL Search.
-
-## Notes
-
-- An optional **`negative_gain` index** lets problem-specific algorithms
-  enumerate only improving flips in O(|improving|). Not needed for standard
-  heuristic use.
+let qubo = Qubo::load_file("data/instances/qubo/sample.qubo")?;
+# Ok::<(), optopus::error::OptError>(())
+```
 
 ## References
 
@@ -97,5 +93,4 @@ i j v
 - Beasley, J. E. "Obtaining Test Problems via Internet." *Journal of Global
   Optimization*, 8(4), 429-433, 1996. (OR-Library, source of the bundled
   `bqp` instance set.)
-- See [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for
-  instance sources and licensing.
+

@@ -1,10 +1,51 @@
 # GeneticAlgorithm
 
-**API:** [`GeneticAlgorithm`](../api/optopus/heuristic/struct.GeneticAlgorithm.html) · [`ParentSelection`](../api/optopus/heuristic/enum.ParentSelection.html) · [`Crossover`](../api/optopus/trait_defs/trait.Crossover.html) · [`SubProblemBasedCrossover`](../api/optopus/heuristic/struct.SubProblemBasedCrossover.html)
+**API:** [`GeneticAlgorithm`](../api/optopus/heuristic/struct.GeneticAlgorithm.html)
 
-Population-based search. Each iteration: select two parents → cross them with
-operator `C` → mutate the offspring → insert into the population, evicting
-the worst when at capacity.
+Population-based search: a population of solutions recombined pairwise by a
+`Crossover<P>` operator, with a `Heuristic<P>` as the mutation operator.
+
+## Example
+
+An HEA-style hybrid GA: `SubProblemBasedCrossover` recombination with a
+`TabuSearch` mutation operator, every random initial individual improved first.
+
+```rust
+use optopus::prelude::*;
+
+let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
+let mut state = SearchState::new(&mc);
+
+let mut ga = GeneticAlgorithm::new_with_init(
+    StopCondition::iterations(10_000),
+    /* population_size  = */ 50,
+    SubProblemBasedCrossover {
+        sub_heuristic: Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+            StopCondition::failed_updates(1),
+        )),
+    },
+    /* mutation         = */ Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
+        StopCondition::failed_updates(100),
+        (5, 10),
+        None,
+    )),
+    /* init_improvement = */ Some(Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+        StopCondition::failed_updates(1),
+    ))),
+);
+ga.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
+
+## Algorithm sketch
+
+Each iteration:
+
+1. Select two parents.
+2. Cross them with operator `C`.
+3. Mutate the offspring.
+4. Insert into the population, evicting the worst when at capacity.
 
 ## Constructor
 
@@ -40,6 +81,9 @@ passed through `op` (using the sub-run clone/merge pattern). Pair this with a
 `TabuSearch` mutation operator to reproduce the Galinier-Hao Hybrid
 Evolutionary Algorithm (HEA).
 
+`clear()` drops the population and the cached `best_idx`; the population is
+re-seeded on the first `run_once` after a `run`.
+
 ## Parent selection
 
 Builder method `with_parent_selection(strategy)` switches between:
@@ -60,35 +104,6 @@ Worst-replacement: when the population is full, replace the worst member iff
 the offspring is strictly better. `best_idx` is maintained incrementally —
 no full population scan per iteration.
 
-## Example: HEA-style hybrid GA
-
-```rust
-use optopus::prelude::*;
-
-let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
-let mut state = SearchState::new(&mc);
-
-let mut ga = GeneticAlgorithm::new_with_init(
-    StopCondition::iterations(10_000),
-    /* population_size  = */ 50,
-    SubProblemBasedCrossover {
-        sub_heuristic: Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
-            StopCondition::failed_updates(1),
-        )),
-    },
-    /* mutation         = */ Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
-        StopCondition::failed_updates(100),
-        (5, 10),
-        None,
-    )),
-    /* init_improvement = */ Some(Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
-        StopCondition::failed_updates(1),
-    ))),
-);
-ga.run(&mut state)?;
-# Ok::<(), optopus::error::OptError>(())
-```
-
 ## Crossover trait
 
 ```rust
@@ -103,7 +118,8 @@ pub trait Crossover<P: ProblemTrait> {
 }
 ```
 
-`&mut self` lets stateful operators (such as `SubProblemBasedCrossover`,
+`&mut self` lets stateful operators (such as
+[`SubProblemBasedCrossover`](../api/optopus/heuristic/struct.SubProblemBasedCrossover.html),
 which runs an inner heuristic) hold mutable state across calls. The RNG is
 passed in explicitly so seeded runs stay reproducible.
 
@@ -152,10 +168,11 @@ neighbor = "Flip"
 max_failed_update = 1
 ```
 
-`crossover_kind` defaults to `"Uniform"`, except `"Order"` for TSP and `"Ppx"`
-for JobShop. MaxCut additionally accepts `"SubProblem"` — memetic recombination
-that solves the sub-MaxCut of the disagreeing variables with an internal bounded
-BLS (see [SubProblemBasedCrossover](#subproblembasedcrossover)).
+`crossover_kind` defaults to `"Uniform"`, except `"Order"` for TSP and CVRP
+and `"Ppx"` for JobShop. MaxCut additionally accepts `"SubProblem"` — memetic
+recombination that solves the sub-MaxCut of the disagreeing variables with an
+internal bounded BLS (see
+[SubProblemBasedCrossover](#subproblembasedcrossover)).
 
 ## References
 

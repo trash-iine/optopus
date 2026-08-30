@@ -1,6 +1,6 @@
 # Heuristics
 
-**API:** [`optopus::heuristic`](../api/optopus/heuristic/index.html) · [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html) · [`StopCondition`](../api/optopus/heuristic/struct.StopCondition.html)
+**API:** [`optopus::heuristic`](../api/optopus/heuristic/index.html)
 
 Every heuristic implements `Heuristic<P>` (`clear` / `is_done` / `run_once` /
 `run`). Heuristics are problem-agnostic: they only require traits on the
@@ -32,7 +32,8 @@ Used by `GeneticAlgorithm`:
 
 - `*UniformCrossover` — per-variable random parent (one per problem).
 - `TspOrderCrossover` — Order Crossover (OX) for permutations.
-- `JobShopPpxCrossover` — Precedence-Preserving Crossover for permutation-with-repetition.
+- `JobShopPpxCrossover` — Precedence-Preserving Crossover for
+  permutation-with-repetition.
 - [`SubProblemBasedCrossover`](genetic_algorithm.md#subproblembasedcrossover)
   — generic crossover for any `P: SubProblemExtractable`.
 

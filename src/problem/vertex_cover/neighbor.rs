@@ -12,7 +12,9 @@ use rand::Rng;
 /// A flip move that toggles whether vertex `i` is in the cover.
 ///
 /// `gain` holds the change in (penalty-augmented) objective after the flip
-/// (negative = improvement, since Vertex Cover is minimization).
+/// (negative = improvement, since Vertex Cover is minimization). Applying the
+/// move refreshes the gain of every neighbor of `i` and the uncovered-edge
+/// count, i.e. O(degree(i)) work.
 #[derive(Debug, Clone, Copy)]
 pub struct VertexCoverFlipNeighbor {
     /// Index of the vertex to flip.
@@ -152,6 +154,8 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
 /// (or vice versa), so the cover size is unchanged but coverage may improve.
 ///
 /// Only pairs `(i, j)` with `cover[i] != cover[j]` and `i < j` are enumerated.
+/// Applying the move performs two flips in sequence (`apply_to_iteration`
+/// returns `iter + 2`), each doing O(degree) work.
 #[derive(Debug, Clone, Copy)]
 pub struct VertexCoverSwapNeighbor {
     pub i: usize,

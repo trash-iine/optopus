@@ -1,6 +1,6 @@
 # Defining a Custom Heuristic
 
-**API:** [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html) · [`StopCondition`](../api/optopus/heuristic/struct.StopCondition.html) · [`SearchState`](../api/optopus/search_state/struct.SearchState.html)
+**API:** [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html)
 
 Implement `Heuristic<P>` to plug your own algorithm into the rest of the
 library — `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
@@ -79,29 +79,39 @@ where
 }
 ```
 
+- [`MoveToNeighbor::iter`](../api/optopus/trait_defs/trait.MoveToNeighbor.html#tymethod.iter)
+- [`SearchState::apply`](../api/optopus/search_state/struct.SearchState.html#method.apply)
+- [`SearchState::progress_iteration`](../api/optopus/search_state/struct.SearchState.html#method.progress_iteration)
+
 Key API touchpoints:
 
-- `state.apply(&neighbor)`:  applies the move, increments iteration, updates
-  best if improved.
-- `state.apply_move_only(&neighbor)`: same, but defers the best update.
-  `state.update_best()` must be applied at the end of a multi-move step.
-- `state.progress_iteration()`: increments iteration without applying anything
-  (use this when you can't make progress this step).
-- `state.random_neighbor::<N>(context)`: draws one uniformly random move, or
-  `OptError::InvalidState` when the neighborhood is empty. This is what
-  SA / LAHC / `RandomWalk` call each step.
-- `N::iter(prob, sol)`: lazy iterator over moves; combine with `max_by`,
-  `find`, `filter_best`, `.choose(&mut rng)` etc. as your strategy demands.
+- [`state.apply(&neighbor)`](../api/optopus/search_state/struct.SearchState.html#method.apply): applies the move, increments
+  iteration, updates best if improved.
+- [`state.apply_move_only(&neighbor)`](../api/optopus/search_state/struct.SearchState.html#method.apply_move_only): same, but
+  defers the best update. [`state.update_best()`](../api/optopus/search_state/struct.SearchState.html#method.update_best) must
+  be applied at the end of a multi-move step.
+- [`state.progress_iteration()`](../api/optopus/search_state/struct.SearchState.html#method.progress_iteration): increments
+  iteration without applying anything (use this when you can't make progress
+  this step).
+- [`state.random_neighbor::<N>(context)`](../api/optopus/search_state/struct.SearchState.html#method.random_neighbor): draws one
+  uniformly random move, or
+  [`OptError::InvalidState`](../api/optopus/error/enum.OptError.html#variant.InvalidState)
+  when the neighborhood is empty. This is what SA / LAHC /
+  [`RandomWalk`](../api/optopus/heuristic/struct.RandomWalk.html) call each step.
+- [`N::iter(prob, sol)`](../api/optopus/trait_defs/trait.MoveToNeighbor.html#tymethod.iter): lazy
+  iterator over moves; combine with `max_by`, `find`,
+  [`filter_best`](../api/optopus/trait_defs/fn.filter_best.html), `.choose(&mut rng)` etc. as your
+  strategy demands.
 
 ## Optional: parallel evaluation
 
 There is no parallel variant of `Heuristic` to implement. Parallelism belongs
 to the neighbor type: `MoveToNeighbor::iter` returns `impl Iterator + Send`, so
 an `iter` implementation whose per-candidate cost is heavy can evaluate
-candidates with rayon and yield the results in order. `JobShopSwapNeighbor` does
-exactly that above a size threshold (`src/problem/job_shop_scheduling/neighbor.rs`),
-which keeps results independent of the thread count while every heuristic —
-including yours — stays sequential.
+candidates with rayon and yield the results in order.
+[`JobShopSwapNeighbor`](../api/optopus/problem/job_shop_scheduling/struct.JobShopSwapNeighbor.html)
+does exactly that above a size threshold, which keeps results independent of
+the thread count while every heuristic — including yours — stays sequential.
 
 ## Composing your heuristic
 

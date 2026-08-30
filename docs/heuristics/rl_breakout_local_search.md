@@ -10,6 +10,34 @@ but replaces the hand-crafted `omega`-based perturbation rule **and** the
 strength schedule with a learned policy: a contextual softmax gradient bandit
 (`optopus::heuristic::reinforcement_learning::bandit::SoftmaxBandit`).
 
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let mut rng = seeded_rng(42);
+let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
+let mut state = SearchState::new_with_seed(&mc, 42);
+
+let mut rl_bls = RlBreakoutLocalSearchForMaxCut::new(
+    StopCondition::iterations(100_000),
+    /* tabu_tenure         = */ (5, 150),
+    /* t                   = */ 1_000,
+    /* l0                  = */ 8,
+    /* strength_bins       = */ vec![1.0, 2.0, 4.0],
+    /* learning_rate       = */ 0.1,
+    /* softmax_temperature = */ 1.0,
+    /* exploration         = */ 0.05,
+);
+rl_bls.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
+
+The tenure here is taken literally, unlike
+[BLS](breakout_local_search.md), which reads the same range as Benlic & Hao's
+`γ` and forbids for `2γ`.
+
 ## Algorithm sketch
 
 Each outer iteration:
@@ -33,7 +61,7 @@ so a near-linear policy can imitate BLS quickly before improving on it.
 ## Constructor
 
 ```rust
-RlBreakoutLocalSearch::new(
+RlBreakoutLocalSearchForMaxCut::new(
     stop_condition: StopCondition,
     tabu_tenure: (u64, u64),
     t: u64,                    // omega normalization period
@@ -66,13 +94,12 @@ tabu_tenure = [3, 80]          # density-scaled like BLS, but taken literally
 t = 1000
 l0 = 80
 strength_bins = [1.0, 2.0, 4.0]  # optional (default shown)
-learning_rate = 0.1              # optional (default 0.1)
-softmax_temperature = 1.0        # optional (default 1.0)
-exploration = 0.05               # optional (default 0.05)
+learning_rate = 0.1              # optional (default shown)
+softmax_temperature = 1.0        # optional (default shown)
+exploration = 0.05               # optional (default shown)
 # policy_weights = [...]         # optional warm start
-
 [heuristics.stop_condition]
-max_duration_secs = 30
+max_duration_secs = 30.0
 ```
 
 ## Measurement notes
@@ -110,4 +137,3 @@ silently misaligning.
 The plateau idea itself survives in
 [PopulationAnnealingForMaxCut](population_annealing.md) as its non-local cluster
 move, which has its own implementation.
-

@@ -126,7 +126,7 @@ fn main() {
 
         // Report what the reduction achieves, which is the whole point of
         // this suite.
-        let kernel = MaxCutKernel::reduce(&reloaded);
+        let kernel = MaxCutKernel::new(&reloaded);
         println!(
             "{stem:<24} {:>7} {:>8} {:>8.2} {:>10} {:>9} {:>10.0}",
             graph.num_vertices(),

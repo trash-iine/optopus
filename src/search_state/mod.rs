@@ -905,7 +905,7 @@ mod tests {
         #[test]
         fn close_reduction_lands_on_the_lifted_solution_with_exact_caches() {
             let mc = reducible_instance(11, 300);
-            let kernel = MaxCutKernel::reduce(&mc);
+            let kernel = MaxCutKernel::new(&mc);
             assert!(!kernel.is_trivial(), "the instance must actually reduce");
 
             let mut state = SearchState::new_with_seed(&mc, 3);
@@ -939,7 +939,7 @@ mod tests {
         #[test]
         fn open_reduction_projects_the_incumbent_and_draws_one_seed() {
             let mc = reducible_instance(2, 200);
-            let kernel = MaxCutKernel::reduce(&mc);
+            let kernel = MaxCutKernel::new(&mc);
 
             let mut state = SearchState::new_with_seed(&mc, 5);
             // A probe advanced by exactly one draw: `open_reduction` must leave
@@ -968,7 +968,7 @@ mod tests {
         #[test]
         fn close_reduction_charges_the_sub_run() {
             let mc = reducible_instance(4, 250);
-            let kernel = MaxCutKernel::reduce(&mc);
+            let kernel = MaxCutKernel::new(&mc);
             let mut state = SearchState::new_with_seed(&mc, 1);
 
             // A hand-rolled sub-run rather than a real heuristic: what is being

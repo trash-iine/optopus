@@ -1,6 +1,6 @@
 # Sequential / Iterated / VariableNeighborhoodSearch / Restart
 
-**API:** [`Sequential`](../api/optopus/heuristic/struct.Sequential.html) · [`Iterated`](../api/optopus/heuristic/struct.Iterated.html) · [`VariableNeighborhoodSearch`](../api/optopus/heuristic/struct.VariableNeighborhoodSearch.html) · [`Restart`](../api/optopus/heuristic/struct.Restart.html)
+**API:** [`Sequential`](../api/optopus/heuristic/struct.Sequential.html)
 
 Four meta-heuristics that compose other heuristics via the **sub-run
 clone/merge pattern**:
@@ -29,6 +29,36 @@ Which one to reach for:
 
 For a population instead of a single incumbent, see
 [GeneticAlgorithm](genetic_algorithm.md).
+
+## Example
+
+`Iterated` (ILS) is the usual entry point: a search phase that stalls, and a
+perturbation phase that pushes it out of the basin it stalled in.
+
+```rust
+use optopus::prelude::*;
+
+let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
+let mut state = SearchState::new(&mc);
+
+let mut ils = Iterated::<MaxCut>::new(
+    StopCondition::iterations(100_000),
+    /* search       = */ Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
+        StopCondition::failed_updates(500),
+        (5, 10),
+        None,
+    )),
+    /* perturbation = */ Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
+        StopCondition::iterations(5),
+    )),
+);
+ils.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
+
+Each of the four sections below carries the constructor and an example of its
+own.
 
 ## Sequential
 
@@ -74,8 +104,9 @@ seq.run(&mut state)?;
 
 ## Iterated
 
-Iterated Local Search (ILS) pattern. Alternates a `search` phase with a
-`perturbation` phase:
+[`Iterated`](../api/optopus/heuristic/struct.Iterated.html) is the Iterated
+Local Search (ILS) pattern. Alternates a `search` phase with a `perturbation`
+phase:
 
 ```rust
 Iterated::<P>::new(
@@ -112,7 +143,8 @@ ils.run(&mut state)?;
 
 ## VariableNeighborhoodSearch
 
-Basic Variable Neighborhood Search (VNS). Keeps an ordered list of shake
+[`VariableNeighborhoodSearch`](../api/optopus/heuristic/struct.VariableNeighborhoodSearch.html)
+is basic Variable Neighborhood Search (VNS). Keeps an ordered list of shake
 heuristics `N_1..N_kmax` (typically `RandomWalk` with growing budgets) and a
 local `search`:
 
@@ -158,7 +190,8 @@ vns.run(&mut state)?;
 
 ## Restart
 
-Runs an inner heuristic; whenever `restart_condition` is satisfied (typically
+[`Restart`](../api/optopus/heuristic/struct.Restart.html) runs an inner
+heuristic; whenever `restart_condition` is satisfied (typically
 `max_failed_update`), replaces `state.solution` with a fresh random solution.
 `state.best_solution` is preserved across restarts.
 

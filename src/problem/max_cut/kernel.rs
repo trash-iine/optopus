@@ -34,7 +34,7 @@
 //! // A path: every vertex has degree <= 2, so the whole instance reduces away
 //! // and the offset is the exact optimum.
 //! let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0), (2, 3, 1.0)]);
-//! let kernel = MaxCutKernel::reduce(&mc);
+//! let kernel = MaxCutKernel::new(&mc);
 //! assert_eq!(kernel.kernel().graph.num_vertices(), 0);
 //! assert_eq!(kernel.offset(), 3.0);
 //! ```
@@ -91,7 +91,7 @@ impl MaxCutKernel {
     /// Runs in `O(m log m)`: every vertex enters the work queue only when one
     /// of its incident edges changes, and each rule application removes a
     /// vertex.
-    pub fn reduce(problem: &MaxCut) -> Self {
+    pub fn new(problem: &MaxCut) -> Self {
         let n = problem.graph.len();
         let mut adj: Vec<BTreeMap<usize, f32>> = vec![BTreeMap::new(); n];
         for (u, v, w) in problem.graph.edges() {
@@ -473,7 +473,7 @@ mod tests {
                 for p in [0.15, 0.3, 0.6] {
                     for _ in 0..12 {
                         let mc = random_instance(&mut rng, n, p, weight);
-                        let kernel = MaxCutKernel::reduce(&mc);
+                        let kernel = MaxCutKernel::new(&mc);
                         let reduced = brute_force(kernel.kernel()) + kernel.offset();
                         let original = brute_force(&mc);
                         assert_eq!(
@@ -496,7 +496,7 @@ mod tests {
         for weight in [unit as fn(&mut SmallRng) -> f32, signed, general] {
             for _ in 0..40 {
                 let mc = random_instance(&mut rng, 8, 0.35, weight);
-                let kernel = MaxCutKernel::reduce(&mc);
+                let kernel = MaxCutKernel::new(&mc);
                 let k = kernel.kernel().graph.len();
                 for mask in 0u32..(1 << k) {
                     let y: Vec<bool> = (0..k).map(|i| mask >> i & 1 == 1).collect();
@@ -517,7 +517,7 @@ mod tests {
     fn a_path_reduces_away_completely() {
         let edges: Vec<_> = (0..15).map(|i| (i, i + 1, 1.0)).collect();
         let mc = MaxCut::from_edges(edges);
-        let kernel = MaxCutKernel::reduce(&mc);
+        let kernel = MaxCutKernel::new(&mc);
         assert_eq!(kernel.kernel().graph.num_vertices(), 0);
         assert_eq!(
             kernel.offset(),
@@ -546,8 +546,8 @@ mod tests {
                 for p in [0.2, 0.25, 0.35] {
                     for _ in 0..25 {
                         let mc = random_instance(&mut rng, n, p, weight);
-                        let kernel = MaxCutKernel::reduce(&mc);
-                        let again = MaxCutKernel::reduce(kernel.kernel());
+                        let kernel = MaxCutKernel::new(&mc);
+                        let again = MaxCutKernel::new(kernel.kernel());
                         assert!(
                             again.is_trivial(),
                             "the kernel was not a fixpoint (n={n}, p={p}, \
@@ -571,7 +571,7 @@ mod tests {
                 for p in [0.15, 0.25, 0.4] {
                     for _ in 0..25 {
                         let mc = random_instance(&mut rng, n, p, weight);
-                        let kernel = MaxCutKernel::reduce(&mc);
+                        let kernel = MaxCutKernel::new(&mc);
                         let k = kernel.kernel().graph.len();
                         assert_eq!(
                             k,
@@ -597,7 +597,7 @@ mod tests {
             .flat_map(|i| [(i, (i + 1) % n, 1.0), (i, (i + 2) % n, 1.0)])
             .collect();
         let mc = MaxCut::from_edges(edges);
-        let kernel = MaxCutKernel::reduce(&mc);
+        let kernel = MaxCutKernel::new(&mc);
         assert!(kernel.is_trivial());
         assert_eq!(kernel.offset(), 0.0);
         assert_eq!(kernel.kernel().graph.num_edges(), mc.graph.num_edges());
@@ -617,7 +617,7 @@ mod tests {
         let mut rng = SmallRng::seed_from_u64(7);
         for _ in 0..5 {
             let mc = random_instance(&mut rng, 200, 2.5 / 200.0, unit);
-            let kernel = MaxCutKernel::reduce(&mc);
+            let kernel = MaxCutKernel::new(&mc);
             assert!(!kernel.is_trivial(), "the instance must actually reduce");
             let original = mc.new_solution(&mut rng);
 

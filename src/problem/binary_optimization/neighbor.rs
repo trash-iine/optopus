@@ -9,6 +9,10 @@ use rand::Rng;
 /// A flip move that toggles a single variable `i`.
 ///
 /// `gain` is the change in score after the flip (positive = improvement).
+/// `apply_to_solution` costs O(d): it only recomputes the gains of variables
+/// in `FormulaProblem::interaction_neighbors[i]` — those sharing a monomial
+/// with `i` in the objective, or co-occurring with it in a constraint
+/// expression — since every other variable's gain is provably unaffected.
 #[derive(Debug, Clone)]
 pub struct FormulaFlipNeighbor {
     /// Index of the variable to flip.
@@ -111,6 +115,12 @@ impl MoveToNeighbor<FormulaProblem> for FormulaFlipNeighbor {
 /// A swap move that simultaneously flips variables `i` and `j`.
 ///
 /// `gain` is the combined change in score (positive = improvement).
+/// `apply_to_solution` applies the swap as two flips
+/// ([`common::apply_swap_as_two_flips`](crate::common::apply_swap_as_two_flips)),
+/// so `apply_to_iteration` charges `iter + 2`. `iter` prices one virtual flip
+/// of `i` per pivot instead of virtually flipping both endpoints of every
+/// pair, and `random_neighbor` mirrors that trick to sample a pair in O(1)
+/// gain evaluations plus the one virtual flip.
 #[derive(Debug, Clone)]
 pub struct FormulaSwapNeighbor {
     pub i: usize,

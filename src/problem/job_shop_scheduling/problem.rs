@@ -14,8 +14,13 @@ use crate::search_state::{Distance, ProblemTrait, Rankable};
 /// in the same order as `operations`.
 #[derive(Debug, Clone)]
 pub struct JobShopSolution {
+    /// Permutation-with-repetition of length `n_jobs * n_machines`; the
+    /// k-th occurrence of job `j` is operation `O(j, k)`.
     pub operations: Vec<usize>,
+    /// Makespan (Cmax) of the decoded schedule.
     pub objective: u32,
+    /// Finish time of each position in `operations`, decoded by
+    /// [`JobShopScheduling::decode`].
     pub completion_times: Vec<u32>,
 }
 
@@ -43,9 +48,14 @@ impl Distance for JobShopSolution {
 /// (precedence constraint), and a machine can process only one operation at a time.
 #[derive(Debug, Clone)]
 pub struct JobShopScheduling {
+    /// Instance name (from the file stem, or user-supplied for in-memory
+    /// instances).
     pub name: String,
+    /// Number of jobs.
     pub n_jobs: usize,
+    /// Number of machines; also the number of operations per job.
     pub n_machines: usize,
+    /// `jobs[j]` is job `j`'s ordered `(machine, duration)` sequence.
     pub jobs: Vec<Vec<(usize, u32)>>,
 }
 
@@ -280,18 +290,21 @@ impl ProblemTrait for JobShopScheduling {
 mod tests {
     use super::*;
 
+    /// Handed out once per call, so two concurrent tests never build the same
+    /// path. A wall-clock suffix would not do that job — the clock is quantized
+    /// (1 us on macOS), so two tests entering `write_tmp` in the same
+    /// microsecond would still collide and read each other's file.
+    static TEMP_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+    /// Writes `contents` to a unique temp file and returns its path.
     fn write_tmp(contents: &str) -> std::path::PathBuf {
         use std::io::Write;
         let mut path = std::env::temp_dir();
-        let unique = format!(
+        path.push(format!(
             "optopus_jssp_{}_{}.txt",
             std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        );
-        path.push(unique);
+            TEMP_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
         let mut f = std::fs::File::create(&path).unwrap();
         f.write_all(contents.as_bytes()).unwrap();
         path

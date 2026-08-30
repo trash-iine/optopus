@@ -9,7 +9,9 @@ use rand::Rng;
 /// A flip move that toggles a single variable `i`.
 ///
 /// `gain` is the change in the number of satisfied clauses after the flip
-/// (positive = improvement, since MaxSAT is maximized).
+/// (positive = improvement, since MaxSAT is maximized). Applying the move
+/// refreshes the gain of every variable sharing a clause with `i`, i.e.
+/// O(clauses containing `i`) work, using `Sat::var_neighbors`.
 #[derive(Debug, Clone)]
 pub struct SatFlipNeighbor {
     /// Index of the variable to flip.
@@ -112,6 +114,9 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
 /// Only pairs that appear together in at least one clause are enumerated,
 /// which reduces the search space relative to all O(n²) pairs.
 /// `gain` is the combined change in satisfied-clause count (positive = improvement).
+/// Applying the move performs two flips in sequence (`apply_to_iteration`
+/// returns `iter + 2`), each refreshing its own O(clauses containing that
+/// variable) set of neighbor gains.
 #[derive(Debug, Clone)]
 pub struct SatSwapNeighbor {
     /// Index of the first variable to flip.

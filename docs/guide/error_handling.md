@@ -3,23 +3,19 @@
 **API:** [`OptError`](../api/optopus/error/enum.OptError.html)
 
 Every fallible operation in Optopus returns `Result<_, OptError>`. The error
-type is defined in [`optopus::error`](https://github.com/trash-iine/optopus/blob/main/src/error.rs).
+type is defined in [`optopus::error`](../api/optopus/error/index.html).
 
 ## Variants
 
 | Variant | When raised | Common causes |
 |---|---|---|
-| `Config(String)` | A user-facing configuration error. | Invalid benchmark TOML field, missing required parameter, illegal range. |
-| `Io(std::io::Error)` | Wrapped via `#[from]`; bubbles up from the `std::io` layer. | File not found, permission denied, EOF mid-read. |
-| `Parse(String)` | Generic format error not tied to a single line. | Malformed input that pre-loaders surface before line-by-line parsing. |
-| `FileLoad { path, line, detail }` | Structured file-load error. `line == 0` indicates a file-level error not tied to one line. | TSPLIB / DIMACS / QUBO loaders hitting an unexpected token. |
-| `InvalidState(String)` | The search reached an inconsistent runtime state. | Empty neighborhood, attempting a move on an out-of-range index. |
-
-## Display formatting
-
-`OptError` implements `Display` via `thiserror`. `FileLoad` is rendered as
-`<path>: line <line>: <detail>` (or `<path>: <detail>` when `line == 0`), which
-makes loader errors point at the offending file and line directly.
+| [`Config(String)`](../api/optopus/error/enum.OptError.html#variant.Config) | A user-facing configuration error. | Invalid benchmark TOML field, missing required parameter, illegal range. |
+| [`Io(std::io::Error)`](../api/optopus/error/enum.OptError.html#variant.Io) | Wrapped via `#[from]`; bubbles up from the `std::io` layer. | File not found, permission denied, EOF mid-read. |
+| [`Parse(String)`](../api/optopus/error/enum.OptError.html#variant.Parse) | Generic format error not tied to a single line. | Malformed input that pre-loaders surface before line-by-line parsing. |
+| [`TomlDe(toml::de::Error)`](../api/optopus/error/enum.OptError.html#variant.TomlDe) | Wrapped via `#[from]`; TOML deserialization failed. The inner error already carries line / column context. | Malformed benchmark config, an unknown heuristic `kind`, a field missing from a tagged `HeuristicConfig` variant. |
+| [`TomlSer(toml::ser::Error)`](../api/optopus/error/enum.OptError.html#variant.TomlSer) | Wrapped via `#[from]`; serializing a value to TOML failed. | Writing a `BenchmarkReport` out with `write_to_dir`. |
+| [`FileLoad { path, line, detail }`](../api/optopus/error/enum.OptError.html#variant.FileLoad) | Structured file-load error. `line == 0` indicates a file-level error not tied to one line. | TSPLIB / DIMACS / QUBO loaders hitting an unexpected token. |
+| [`InvalidState(String)`](../api/optopus/error/enum.OptError.html#variant.InvalidState) | The search reached an inconsistent runtime state. | Empty neighborhood, attempting a move on an out-of-range index. |
 
 ## Matching on errors
 
@@ -45,9 +41,11 @@ match Qubo::load_file("instance.qubo") {
 
 When implementing a custom problem or heuristic:
 
-- Return `OptError::InvalidState(...)` for runtime invariant violations
-  (e.g., `MoveToNeighbor::apply_to_solution` with an invalid index).
-- Return `OptError::Parse(...)` or `OptError::FileLoad { … }` from custom
-  loaders.
-- Let `?` propagate `std::io::Error` automatically — `OptError: From<io::Error>`
-  is derived.
+- Return [`OptError::InvalidState(...)`](../api/optopus/error/enum.OptError.html#variant.InvalidState) for runtime
+  invariant violations (e.g.,
+  [`MoveToNeighbor::apply_to_solution`](../api/optopus/trait_defs/trait.MoveToNeighbor.html#tymethod.apply_to_solution)
+  with an invalid index).
+- Return [`OptError::Parse(...)`](../api/optopus/error/enum.OptError.html#variant.Parse) or
+  [`OptError::FileLoad { … }`](../api/optopus/error/enum.OptError.html#variant.FileLoad) from custom loaders.
+- Let `?` propagate `std::io::Error` automatically —
+  [`OptError: From<io::Error>`](../api/optopus/error/enum.OptError.html#trait-implementations) is derived.

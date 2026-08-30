@@ -5,6 +5,34 @@
 Problem-specific heuristic for [CVRP](../problems/vrp.md). Hybrid Genetic
 Search (Vidal et al.) is the strongest known general-purpose CVRP metaheuristic.
 
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
+let mut state = SearchState::new(&vrp);
+
+let mut hgs = HybridGeneticSearchForVrp::new(
+    StopCondition::iterations(10_000),
+    /* min_population_size = */ 25,   // μ
+    /* generation_size     = */ 40,   // λ
+    /* granularity         = */ 20,   // Γ, clamped to n - 1
+    /* target_feasible     = */ 0.2,
+    /* restart_generations = */ Some(20_000),
+);
+hgs.run(&mut state)?;
+
+let sol = &state.best_solution;
+println!("total distance = {}", sol.distance);
+for (vehicle, route) in sol.routes.iter().enumerate() {
+    println!("vehicle {vehicle}: depot -> {route:?} -> depot");
+}
+# Ok::<(), optopus::error::OptError>(())
+```
+
+Takes no `neighbor` type parameter — it owns its move set.
+
 ## Algorithm sketch
 
 The representation is the **giant tour**: an individual is a customer
@@ -22,7 +50,7 @@ Each `run_once` produces one offspring:
 4. **Local search** — granular descent to a local optimum.
 5. **Repair** — an infeasible child gets a 50% chance of a second descent at
    10× then 100× the penalty; if that succeeds, the feasible copy is inserted
-   *as well as* the original.
+   as well as the original.
 6. **Survival** — the child joins the feasible or infeasible sub-population.
    Each grows to `min_population_size + generation_size` and is then culled back
    to `min_population_size`.
@@ -36,17 +64,17 @@ hundred generations. Instead each individual is ranked by
 fitness = rank_cost / (N−1) + (1 − N_ELITE/N) · rank_diversity / (N−1)
 ```
 
-where `rank_diversity` orders individuals by *decreasing* contribution — the
+where `rank_diversity` orders individuals by decreasing contribution — the
 mean broken-pairs distance to their 5 nearest neighbors in the sub-population.
 A solution therefore earns its place either by being cheap or by being unlike
 the rest. Clones (distance `0` from another member) are always evicted first.
 
 Broken-pairs distance is the fraction of customers whose route neighbors differ.
-It is invariant to relabeling and reversing routes, and it is the same count
-`VrpSolution`'s [`Distance`](../problems/vrp.md#optional-traits) impl is built
-on — the one difference being direction: `Distance` symmetrizes by taking the
-larger of the two directions, while biased fitness here ranks on the
-*directional* count, which is the form Vidal defines it on.
+It is invariant to relabeling and reversing routes, and it is the count the
+[`Distance`](../api/optopus/trait_defs/trait.Distance.html) impl on
+`VrpSolution` is built on too — the one difference being direction: `Distance`
+symmetrizes by taking the larger of the two directions, while biased fitness
+here ranks on the *directional* count, which is the form Vidal defines it on.
 
 ### Two sub-populations and the adaptive penalty
 
@@ -107,6 +135,10 @@ The first individual is seeded from `state.solution`, so composing HGS inside
 so it does not land back in the basin it just failed to escape;
 `state.best_solution` is preserved across it.
 
+`clear()` empties both sub-populations, resets the feasible-share and
+stagnation counters, and returns the capacity penalty to its initial value, so
+a fresh episode re-derives the penalty rather than inheriting a tuned one.
+
 ## Benchmark config
 
 ```toml
@@ -145,12 +177,6 @@ under 0.7%. Which of the two to reach for at a *long* budget is not settled by
 this measurement — the 600 s band has not been re-run since the change.
 
 Reproduce with `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
-
-## Not implemented
-
-- **SWAP\*** (Vidal 2022) — exchanging two customers between routes without
-  insisting on their current positions. The main remaining quality lever.
-- Multi-layered populations and the parallel variants.
 
 ## References
 

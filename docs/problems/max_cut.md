@@ -1,35 +1,54 @@
 # MaxCut
 
-**API:** [`MaxCut`](../api/optopus/problem/max_cut/struct.MaxCut.html) · [`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html) · [`MaxCutFlipNeighbor`](../api/optopus/problem/max_cut/struct.MaxCutFlipNeighbor.html) · [`MaxCutSwapNeighbor`](../api/optopus/problem/max_cut/struct.MaxCutSwapNeighbor.html) · [`MaxCutUniformCrossover`](../api/optopus/problem/max_cut/struct.MaxCutUniformCrossover.html) · [`PlantedMaxCut`](../api/optopus/problem/max_cut/struct.PlantedMaxCut.html)
+**API:** [`MaxCut`](../api/optopus/problem/max_cut/struct.MaxCut.html)
 
-Partition the vertices of a weighted undirected graph into two sets so as to
-**maximize** the total weight of edges crossing the partition.
+Given a weighted undirected graph `G = (V, E, w)` with vertex set `V`, edge
+set `E`, and edge weights `w`, partition `V` into two
+disjoint sets so as to **maximize** the total weight of the edges that cross
+the partition. Equivalently, assign each vertex `i` a binary label
+`x_i ∈ {0, 1}` naming which side it falls on; an edge `(i, j)` is *cut*
+exactly when `x_i ≠ x_j`:
 
-Sparse instances can be shrunk first without giving anything up: see
-[MaxCutKernel](max_cut_kernel.md), an exact data reduction any heuristic can
-search through.
+```text
+maximize  Σ_{(i,j)∈E} w_ij · [x_i ≠ x_j]        (x ∈ {0,1}^|V|)
+```
 
-## Solution
+## Example
+
+Running a search and reading back the partition it found:
 
 ```rust
-pub struct MaxCutSolution {
-    pub x: Vec<bool>,          // partition assignment per vertex
-    pub gain: Vec<f32>,        // change in objective when each vertex is flipped
-    pub objective: f32,        // total weight of crossing edges
-    // pub(crate) positive_gain / zero_gain — optional advanced indexes
+use optopus::prelude::*;
+
+let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]);
+let mut state = SearchState::new(&mc);
+LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10_000))
+    .run(&mut state)
+    .unwrap();
+
+let sol = &state.best_solution;
+println!("cut weight = {}", sol.objective);
+for (v, &side) in sol.x.iter().enumerate() {
+    println!("vertex {v} is on side {}", side as u8); // which of the two sets `v` ended up in
 }
 ```
 
-`Rankable::is_better_than` returns `self.objective > other.objective`.
+`MaxCut::from_edges` is a convenience wrapper around
+`MaxCut::new(Graph::from_edges(...))`; both use **set semantics** for
+duplicate edges — the last write wins.
+
+## Solution
+
+[`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html)
+represents the partition from the definition above: `x[v]` is the side
+(`false`/`true`) vertex `v`.
 
 ## Neighbors
 
-| Type | Move | Iteration cost |
+| Type | TOML `neighbor` | Move |
 |---|---|---|
-| `MaxCutFlipNeighbor` | Flip the side of one vertex; gain refresh in O(degree). | `iter + 1` |
-| `MaxCutSwapNeighbor` | Swap two vertices on opposite sides. | `iter + 2` |
-
-Both implement `Rankable`, `Evaluate<f64>`, and `EnabledTabu`.
+| `MaxCutFlipNeighbor` | `"Flip"` | Flip one vertex to the opposite side. `iter + 1`. |
+| `MaxCutSwapNeighbor` | `"Swap"` | Swap two vertices on opposite sides. `iter + 2`. |
 
 ## Crossover
 
@@ -38,28 +57,6 @@ Both implement `Rankable`, `Evaluate<f64>`, and `EnabledTabu`.
   works: vertices that agree in both parents are fixed; the disagreeing
   vertices form the sub-MaxCut instance whose edges include bias terms toward
   the fixed neighborhood.
-
-## Construction
-
-```rust
-use optopus::prelude::*;
-
-// Inline edges (1-indexed in the file format, 0-indexed here):
-let mc = MaxCut::new(Graph::from_edges([
-    (0, 1, 1.0),
-    (1, 2, 2.0),
-]));
-
-// Convenience wrapper (same semantics):
-let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
-
-// Load from file:
-let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
-# Ok::<(), optopus::error::OptError>(())
-```
-
-`Graph::from_edges` and `Graph::load_from_file` use **set semantics** for
-duplicate edges — the last write wins.
 
 ## File format
 
@@ -77,25 +74,29 @@ i j w
 - `w` is optional; defaults to `1.0` if absent.
 - Vertices are converted to 0-indexed internally.
 
+```rust
+use optopus::prelude::*;
+
+let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+# Ok::<(), optopus::error::OptError>(())
+```
+
 ## Instances with a known optimum
 
-`PlantedMaxCut` (`src/problem/max_cut/planted.rs`) builds instances *around* a
-chosen solution, so the optimum is exact by construction rather than a
-best-known value. That changes what a benchmark can say: on the G-set a gap is
-measured against the best result anyone has published — a number that has moved
-as recently as 2025 and that different papers report differently by 1 to 4 — and
-here it is measured against the answer.
+[`PlantedMaxCut`](../api/optopus/problem/max_cut/struct.PlantedMaxCut.html)
+builds instances *around* a chosen solution, so the optimum is exact by
+construction rather than a best-known value. 
 
 ```rust
 use optopus::common::seeded_rng;
 use optopus::problem::{PlantedMaxCut, TileProbs2d};
 
 let planted = PlantedMaxCut::tile_planting_2d(
-    40,                              // 40 x 40 torus, degree 4
+    40, // 40 x 40 torus, degree 4
     TileProbs2d::new(0.35, 0.0, 0.65),
     &mut seeded_rng(1),
 );
-planted.verify().unwrap();           // the recorded optimum is what the instance computes
+planted.verify().unwrap(); // the recorded optimum is what the instance computes
 // planted.optimum — no run can exceed this
 ```
 
@@ -104,8 +105,6 @@ planted.verify().unwrap();           // the recorded optimum is what the instanc
 | `tile_planting_2d(l, TileProbs2d, rng)` | square lattice torus, degree 4 | class mixture `p1`/`p2`/`p3` |
 | `tile_planting_3d(l, TileProbs3d, rng)` | cubic lattice torus, degree 6 | class mixture `p_2fp`/`p_4fp` |
 | `wishart(n, alpha, WishartCouplers, rng)` | complete graph | `alpha = M / n`, in `(0, 1)` |
-
-Three things are worth knowing before using them:
 
 - **Every instance is gauge-transformed.** Each construction natively plants the
   all-aligned state, which is trivially findable; a random gauge moves the
@@ -134,21 +133,15 @@ Suite generation lives in `examples/generate_hard_maxcut.rs`, which records what
 the sweep showed for each parameter it bakes in; see
 [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md).
 
-## Optional traits
-
-- `Distance` — Hamming distance on `x` (used by `ParentSelection::DistantTopK`).
-
 ## Notes
 
-- `MaxCutSolution` carries two optional gain indexes, both maintained
-  incrementally once enabled and both off by default — standard heuristics need
-  neither:
-  - **`positive_gain`** enumerates only improving flips in O(|improving|), used
-    by [Breakout Local Search](../heuristics/breakout_local_search.md) and
-    [RL-BLS](../heuristics/rl_breakout_local_search.md).
-  - **`zero_gain`** enumerates objective-preserving ("plateau") flips, used by
-    [Population Annealing](../heuristics/population_annealing.md)'s non-local
-    cluster move.
+- `MaxCutSolution`'s optional `positive_gain` / `zero_gain` indexes power
+  [Breakout Local Search](../heuristics/breakout_local_search.md),
+  [RL-BLS](../heuristics/rl_breakout_local_search.md), and
+  [Population Annealing](../heuristics/population_annealing.md); standard
+  heuristics need neither. See
+  [`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html)
+  rustdoc for the implementation details.
 
 ## References
 
@@ -156,9 +149,7 @@ the sweep showed for each parameter it bakes in; see
   Computer Computations*, pp. 85-103. Plenum Press, 1972. (Max Cut is one of
   Karp's 21 NP-complete problems.)
 - Standard benchmark set: the **Gset** graphs (G1–G81), generated with the
-  `rudy` graph generator and distributed by Y. Ye. See
-  [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md) for instance
-  sources and download instructions.
+  `rudy` graph generator and distributed by Y. Ye.
 - Perera, D. et al. "Chook — A comprehensive suite for generating binary
   optimization problems with planted solutions."
   [arXiv:2005.14344](https://arxiv.org/abs/2005.14344). The reference

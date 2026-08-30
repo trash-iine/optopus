@@ -290,7 +290,8 @@ pub enum HeuristicConfig {
         /// Must be >= 2.
         population_size: usize,
         steps: Vec<HeuristicConfig>,
-        /// Crossover operator. Defaults: "Uniform" ("Order" for TSP, "Ppx" for JobShop).
+        /// Crossover operator. Defaults: "Uniform" ("Order" for TSP and Vrp,
+        /// "Ppx" for JobShop).
         /// MaxCut also accepts "SubProblem" (memetic recombination: solves the
         /// sub-MaxCut of disagreeing variables with an internal bounded BLS).
         #[serde(skip_serializing_if = "Option::is_none")]

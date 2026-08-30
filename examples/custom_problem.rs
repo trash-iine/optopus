@@ -50,6 +50,21 @@ impl ProblemTrait for OneMaxProblem {
 // ─── Neighborhood definition (single-bit flip) ──────────────
 struct FlipMove {
     index: usize,
+    /// Change in objective this flip would cause, cached at construction time.
+    /// Every built-in move type carries one; it is what lets `Rankable` below
+    /// compare two moves without touching a solution.
+    gain: i32,
+}
+
+impl FlipMove {
+    /// The only correct way to build a move: the cached `gain` must match the
+    /// solution the move will be applied to, so it is computed here rather than
+    /// filled in by the caller.
+    fn new(_prob: &OneMaxProblem, sol: &OneMaxSolution, index: usize) -> Self {
+        // Setting a 0 bit gains one satisfied variable; clearing a 1 bit loses one.
+        let gain = if sol.bits[index] { -1 } else { 1 };
+        FlipMove { index, gain }
+    }
 }
 
 impl MoveToNeighbor<OneMaxProblem> for FlipMove {
@@ -62,8 +77,8 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
         Ok(())
     }
 
-    fn iter(prob: &OneMaxProblem, _sol: &OneMaxSolution) -> impl Iterator<Item = Self> + Send {
-        (0..prob.n).map(|i| FlipMove { index: i })
+    fn iter(prob: &OneMaxProblem, sol: &OneMaxSolution) -> impl Iterator<Item = Self> + Send {
+        (0..prob.n).map(move |i| FlipMove::new(prob, sol, i))
     }
 
     fn move_to_be_better_than(
@@ -80,8 +95,12 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
 }
 
 impl Rankable for FlipMove {
-    fn is_better_than(&self, _other: &Self) -> bool {
-        false // move-vs-move comparison is unused (LocalSearch ranks by resulting solutions)
+    /// Ranks candidate moves against each other. `LocalSearch` selects with
+    /// `max_by(rank_cmp)` over this, so comparing the cached gains is what makes
+    /// it *best*-improving; a constant `false` would compile but leave every
+    /// candidate tied, degrading the selection to an arbitrary improving move.
+    fn is_better_than(&self, other: &Self) -> bool {
+        self.gain > other.gain
     }
 }
 
