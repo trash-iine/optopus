@@ -24,7 +24,9 @@ const PARALLEL_ITER_MIN_OPS: usize = 400;
 /// exact value.
 #[derive(Debug, Clone)]
 pub struct JobShopSwapNeighbor {
+    /// Left index of the swapped pair (swaps `operations[i]` and `operations[i+1]`).
     pub i: usize,
+    /// Change in makespan (negative = improvement).
     pub gain: f64,
 }
 
@@ -202,12 +204,16 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
 /// Removes `operations[from]` and re-inserts it at position `to` (in the
 /// post-removal indexing — i.e. `to ∈ 0..n-1`).
 ///
-/// `gain` is the change in makespan relative to the solution the move was
-/// enumerated from (negative = improvement).
+/// `gain` is the change in makespan (negative = improvement) relative to the
+/// solution the move was enumerated from; the schedule is re-decoded after
+/// the relocation to obtain the exact value.
 #[derive(Debug, Clone)]
 pub struct JobShopRelocateNeighbor {
+    /// Index of the operation to be relocated.
     pub from: usize,
+    /// Destination index, in post-removal indexing (`to ∈ 0..n-1`).
     pub to: usize,
+    /// Change in makespan (negative = improvement).
     pub gain: f64,
 }
 

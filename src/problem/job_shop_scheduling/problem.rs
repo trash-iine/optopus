@@ -14,8 +14,13 @@ use crate::search_state::{Distance, ProblemTrait, Rankable};
 /// in the same order as `operations`.
 #[derive(Debug, Clone)]
 pub struct JobShopSolution {
+    /// Permutation-with-repetition of length `n_jobs * n_machines`; the
+    /// k-th occurrence of job `j` is operation `O(j, k)`.
     pub operations: Vec<usize>,
+    /// Makespan (Cmax) of the decoded schedule.
     pub objective: u32,
+    /// Finish time of each position in `operations`, decoded by
+    /// [`JobShopScheduling::decode`].
     pub completion_times: Vec<u32>,
 }
 
@@ -43,9 +48,14 @@ impl Distance for JobShopSolution {
 /// (precedence constraint), and a machine can process only one operation at a time.
 #[derive(Debug, Clone)]
 pub struct JobShopScheduling {
+    /// Instance name (from the file stem, or user-supplied for in-memory
+    /// instances).
     pub name: String,
+    /// Number of jobs.
     pub n_jobs: usize,
+    /// Number of machines; also the number of operations per job.
     pub n_machines: usize,
+    /// `jobs[j]` is job `j`'s ordered `(machine, duration)` sequence.
     pub jobs: Vec<Vec<(usize, u32)>>,
 }
 

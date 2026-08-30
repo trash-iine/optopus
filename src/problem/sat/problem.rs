@@ -7,15 +7,16 @@ fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
 }
 
 /// A solution to the MaxSAT problem.
-///
-/// - `x` — variable assignment (`x[i]` is the truth value of variable `i+1`, 0-indexed)
-/// - `gain` — incremental change in satisfied-clause count when flipping each variable
-///   (`gain[i] > 0` means flipping variable `i` increases the number of satisfied clauses)
-/// - `n_satisfied` — number of currently satisfied clauses
 #[derive(Debug, Clone)]
 pub struct SatSolution {
+    /// Variable assignment; `x[i]` is the truth value of variable `i + 1`
+    /// (DIMACS literals are 1-indexed, `x` is 0-indexed).
     pub x: Vec<bool>,
+    /// Incremental change in satisfied-clause count when flipping each variable
+    /// (`gain[i] > 0` means flipping variable `i` increases the number of
+    /// satisfied clauses).
     pub gain: Vec<i64>,
+    /// Number of currently satisfied clauses.
     pub n_satisfied: usize,
 }
 

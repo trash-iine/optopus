@@ -87,8 +87,14 @@ pub enum EdgeWeightType {
 /// [`TspWithCoordinates::distance`] call into an O(1) lookup.
 #[derive(Debug, Clone)]
 pub struct TspWithCoordinates {
+    /// Instance name (from the TSPLIB `NAME` header, the file stem, or
+    /// user-supplied for in-memory instances).
     pub name: String,
+    /// City coordinates, 0-indexed. Interpretation depends on
+    /// `edge_weight_type` — e.g. `Geo` expects `DDD.MM` degrees-minutes,
+    /// the others expect plane coordinates.
     pub coordinates: Vec<(f64, f64)>,
+    /// Selects the distance formula used by [`TspWithCoordinates::distance`].
     pub edge_weight_type: EdgeWeightType,
     /// Lazily built `n × n` distance matrix (row-major). Only populated when
     /// `n <= DIST_MATRIX_MAX_N`; reset by [`TspWithCoordinates::add_city`].
