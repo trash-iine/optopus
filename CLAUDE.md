@@ -13,7 +13,7 @@ CLI entry `src/main.rs`: TOML config → benchmark run → TOML output (via `Ben
 ## Library Concept (3 use cases)
 
 1. **Existing problem × existing heuristic** — run `LocalSearch`, `SimulatedAnnealing`, `TabuSearch`, etc. on MaxCut / QUBO / SAT / TSP / VertexCover / JobShop / VRP in a few lines via `use optopus::prelude::*`.
-2. **Apply existing heuristics to a new problem** — implement just three traits (`ProblemTrait` + `Rankable` on `Solution` + `MoveToNeighbor`) and every heuristic works as-is. Add `Evaluate<f64>` for SA/LAHC/RlSearch, `EnabledTabu` for TabuSearch, `BinaryProblem` to reuse the generic binary machinery in `src/common/`.
+2. **Apply existing heuristics to a new problem** — implement three traits (`ProblemTrait`, `Rankable` — on `Solution` **and** on the move, two separate impls — and `MoveToNeighbor`) and LocalSearch / RandomWalk / BeamSearch plus every meta-heuristic work as-is. The rest unlock one trait at a time: `Evaluate<f64>` for SA/LAHC/RlSearch, `EnabledTabu` (+ `Clone`) for TabuSearch, `Distance` + a `Crossover` for GA, `SubProblemExtractable` for `SubProblemBasedCrossover`; `BinaryProblem` reuses the generic binary machinery in `src/common/`. Registering the problem with the **benchmark** is the strict case — `ConfigNeighbor` bundles `MoveToNeighbor + Rankable + Evaluate + EnabledTabu + Clone` and `ConfigurableProblem` requires `Solution: Distance`, so there is no partial registration.
 3. **Combine heuristics and run benchmarks** — compose components with `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm`, write a TOML config, and get aggregated best/avg/worst/std/time results.
 
 ## Extension recipes
@@ -133,7 +133,7 @@ src/
 
 These live in `src/trait_defs/` and are re-exported via `crate::search_state::*` and the `prelude`. Internal code imports them from `crate::trait_defs`; the `search_state` re-export is kept for the public API.
 
-- **`Rankable`**: `is_better_than(&Self) -> bool`. Implemented by every `Solution`; the optimization direction is baked into the problem. The `filter_best(iter)` helper returns the set of tied-best items.
+- **`Rankable`**: `is_better_than(&Self) -> bool`. Implemented **twice**: on every `Solution` (the optimization direction is baked into the problem) and on every move type, where it ranks candidate moves against each other — LocalSearch / BeamSearch / RandomWalk / TabuSearch select with `max_by(rank_cmp)` over the latter and do not compile without it. The `filter_best(iter)` helper returns the set of tied-best items.
 - **`ProblemTrait`**: `type Solution: Clone + Rankable; fn new_solution(&self, rng) -> Solution`.
 - **`MoveToNeighbor<P>`**: a single one-step move.
   ```rust
