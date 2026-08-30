@@ -40,7 +40,7 @@ fn tabu_search() -> TabuSearch<MaxCutFlipNeighbor> {
 /// This is the whole recipe. Two details are the caller's responsibility and
 /// both are here:
 ///
-/// - The reduction is built **once**. `MaxCutKernel::reduce` runs the rules to
+/// - The reduction is built **once**. `MaxCutKernel::new` runs the rules to
 ///   a fixpoint, which is not something to repeat every cycle.
 /// - An inner heuristic that halts at a local optimum returns without
 ///   consuming an iteration, so a cycle that changed nothing has to be charged
@@ -51,7 +51,7 @@ fn solve_through_kernel<'a>(
     inner: &mut dyn Heuristic<MaxCut>,
     seed: u64,
 ) -> SearchState<'a, MaxCut> {
-    let kernel = MaxCutKernel::reduce(mc);
+    let kernel = MaxCutKernel::new(mc);
     let mut state = SearchState::new_with_seed(mc, seed);
     while !outer.is_done(&state) {
         let before = state.iteration;
@@ -86,7 +86,7 @@ fn solve_through_kernel<'a>(
 #[test]
 fn the_reducing_path_trajectory_is_pinned() {
     let mc = sparse_instance(11, 300);
-    assert!(!MaxCutKernel::reduce(&mc).is_trivial());
+    assert!(!MaxCutKernel::new(&mc).is_trivial());
 
     let state = solve_through_kernel(
         &mc,
@@ -132,7 +132,7 @@ fn crossing_back_keeps_the_original_objective_exact() {
 #[test]
 fn crossing_into_the_kernel_does_not_cost_quality() {
     let mc = sparse_instance(11, 300);
-    let kernel = MaxCutKernel::reduce(&mc);
+    let kernel = MaxCutKernel::new(&mc);
     assert!(
         kernel.kernel().graph.num_vertices() < mc.graph.num_vertices(),
         "the test instance must actually reduce"
@@ -164,7 +164,7 @@ fn an_unreducible_instance_is_left_alone() {
         .flat_map(|i| [(i, (i + 1) % n, 1.0), (i, (i + 2) % n, 1.0)])
         .collect();
     let mc = MaxCut::from_edges(edges);
-    assert!(MaxCutKernel::reduce(&mc).is_trivial());
+    assert!(MaxCutKernel::new(&mc).is_trivial());
 
     let mut state = SearchState::new_with_seed(&mc, 5);
     LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(3_000))
