@@ -418,14 +418,7 @@ mod tests {
     fn test_load_file_rejects_literal_exceeding_n_vars() {
         use std::io::Write;
         let mut path = std::env::temp_dir();
-        path.push(format!(
-            "optopus_sat_oob_{}_{}.cnf",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        ));
+        path.push(format!("optopus_sat_oob_{}.cnf", std::process::id()));
         {
             let mut f = std::fs::File::create(&path).unwrap();
             writeln!(f, "p cnf 3 2").unwrap();
