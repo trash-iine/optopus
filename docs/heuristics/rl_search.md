@@ -1,8 +1,37 @@
 # RlSearch
 
-**API:** [`RlSearch`](../api/optopus/heuristic/reinforcement_learning/struct.RlSearch.html) · [`RewardShaping`](../api/optopus/heuristic/reinforcement_learning/enum.RewardShaping.html)
+**API:** [`RlSearch`](../api/optopus/heuristic/reinforcement_learning/struct.RlSearch.html)
 
-Online reinforcement learning over move features. At each step:
+Online reinforcement learning over move features: a linear policy scores the
+candidate moves, one is sampled from the resulting softmax, and the policy is
+updated from what it got.
+
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]));
+let mut state = SearchState::new(&mc);
+
+let mut rl = RlSearch::<MaxCutFlipNeighbor>::new(
+    StopCondition::iterations(10_000),
+    /* learning_rate       = */ 0.01,
+    /* softmax_temperature = */ 1.0,
+    RewardShaping::Normalized,
+    /* max_candidates      = */ Some(64),
+);
+rl.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
+
+One `run` is one episode. The policy is what carries over between episodes —
+see [Multi-episode learning](#multi-episode-learning).
+
+## Algorithm sketch
+
+At each step:
 
 1. Enumerate all (or a subsample of) neighborhood moves and compute their
    worsening amounts.

@@ -1,12 +1,29 @@
 # TabuSearch
 
-**API:** [`TabuSearch`](../api/optopus/heuristic/struct.TabuSearch.html) · [`EnabledTabu`](../api/optopus/trait_defs/trait.EnabledTabu.html)
+**API:** [`TabuSearch`](../api/optopus/heuristic/struct.TabuSearch.html)
 
 At each step, pick the strictly best move that is not currently tabu, then
 mark it tabu for a tenure drawn uniformly from `tabu_tenure = (min, max)`.
 
 A tabu move is still selectable when it satisfies the **aspiration criterion**:
 the resulting solution would be strictly better than the current global best.
+
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]));
+let mut state = SearchState::new(&mc);
+let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
+    StopCondition::iterations(10_000),
+    /* tabu_tenure = */ (5, 10),
+    None,
+);
+ts.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
 
 ## Constructor
 
@@ -42,22 +59,6 @@ Internally the map and the tenure are one `common::TabuLedger<N::TabuMap>` —
 they are never useful apart, and the two verbs it exposes (`allows` / `record`)
 are what the MaxCut operators in `src/heuristic/specific/max_cut/ops/` share
 when several of them must respect each other's prohibitions.
-
-## Example
-
-```rust
-use optopus::prelude::*;
-
-let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]));
-let mut state = SearchState::new(&mc);
-let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
-    StopCondition::iterations(10_000),
-    /* tabu_tenure = */ (5, 10),
-    None,
-);
-ts.run(&mut state)?;
-# Ok::<(), optopus::error::OptError>(())
-```
 
 ## Benchmark config
 

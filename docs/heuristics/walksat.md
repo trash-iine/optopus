@@ -2,9 +2,37 @@
 
 **API:** [`WalkSatForSat`](../api/optopus/heuristic/struct.WalkSatForSat.html)
 
-Problem-specific heuristic for [MaxSAT](../problems/sat.md). WalkSAT/SKC keeps
-the search **focused**: instead of scanning all `n` variables per step, it
+Problem-specific heuristic for [MaxSAT](../problems/sat.md). WalkSAT keeps
+the search focused: instead of scanning all `n` variables per step, it
 samples a currently unsatisfied clause and flips one variable inside it.
+
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let mut sat = Sat::new(3);
+sat.add_clause([1, -2, 3]); // (x1 ∨ ¬x2 ∨ x3); literals are signed 1-indexed
+sat.add_clause([-1, 2]);
+sat.add_clause([1, 2, 3]);
+
+let mut state = SearchState::new(&sat);
+let mut ws = WalkSatForSat::new(
+    StopCondition::iterations(100_000),
+    /* noise    = */ 0.3,
+    /* adaptive = */ false,
+);
+ws.run(&mut state)?;
+
+let sol = &state.best_solution;
+println!("{} / {} clauses satisfied", sol.n_satisfied, sat.n_clauses());
+println!("assignment = {:?}", sol.x);
+# Ok::<(), optopus::error::OptError>(())
+```
+
+The three-clause instance shows the shape of the call; the per-step cost is
+what makes this heuristic worth reaching for on instances the generic
+`LocalSearch` / `TabuSearch` cannot scan.
 
 ## Algorithm sketch
 

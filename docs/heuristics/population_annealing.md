@@ -7,6 +7,33 @@ Annealing Monte Carlo (PAMC) keeps a population of `population_size` replicas
 and cools a shared inverse temperature `β` upward, resampling the population at
 every temperature step.
 
+## Example
+
+```rust
+use optopus::heuristic::PopulationAnnealingForMaxCut;
+use optopus::prelude::*;
+
+let mut rng = seeded_rng(42);
+let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
+let mut state = SearchState::new_with_seed(&mc, 42);
+
+let mut pa = PopulationAnnealingForMaxCut::new(
+    StopCondition::iterations(100_000),
+    /* population_size = */ 50,
+    /* initial_beta    = */ 0.1,
+    /* delta_beta      = */ 0.02,
+    /* sweeps_per_step = */ 50,
+    /* reset_period    = */ Some(400),
+    /* cluster_moves   = */ true,
+);
+pa.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
+
+`PopulationAnnealingForMaxCut` is not in the prelude — import it from
+`optopus::heuristic`.
+
 ## Algorithm sketch
 
 The population is seeded with `population_size` random solutions. Each
@@ -32,7 +59,7 @@ bit-reproducible.
 
 ### The non-local cluster move
 
-A maximal **independent set** of zero-gain ("iso-site") vertices is flipped in
+A maximal **independent set** of zero-gain vertices is flipped in
 each replica. Independence is what makes each flip exactly objective-preserving
 — no two flipped vertices are adjacent, so no flip changes another's gain — and
 that lets the population traverse energy plateaus single-spin Metropolis cannot
@@ -42,10 +69,6 @@ The set is built from `MaxCutSolution`'s optional
 [`zero_gain` index](../problems/max_cut.md#notes), which this heuristic enables
 on each replica, walking it from a random offset and marking each selection's
 neighborhood ineligible via an `EpochMarks` scratch set.
-
-This is the surviving implementation of the plateau operators that were removed
-from [RL-BLS](rl_breakout_local_search.md#measurement-notes) — here it owns its
-own implementation rather than sharing the `ops` vocabulary.
 
 ## Constructor
 

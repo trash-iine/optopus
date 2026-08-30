@@ -331,8 +331,15 @@ cargo doc --no-deps --lib && rm -rf docs/api && cp -r target/doc docs/api
 mkdocs build --strict --site-dir /tmp/site   # or `mkdocs serve`
 ```
 
-Adding a problem or heuristic means adding its `**API:**` line to the new page
-too — `--strict` catches a wrong path, not a missing line.
+Every page carries exactly one `**API:**` line, directly under the `# ` title,
+holding exactly one link: the rustdoc item that page is about (a problem's
+problem type, a heuristic's heuristic type; a module index only on the pages
+that survey a whole module — `problems/README.md`, `heuristics/README.md`,
+`traits.md`). Sibling types are reached from that item's module page, not from
+a second link — a page that needs to point at one from its body links it
+inline in the prose, never as another `**API:**` line. Adding a problem or
+heuristic means adding that one line to the new page too — `--strict` catches a
+wrong path, not a missing line.
 
 ## Key Design Patterns
 

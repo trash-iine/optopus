@@ -7,6 +7,33 @@ Neighborhood Search (Ropke & Pisinger) *ruins* part of the incumbent and
 *recreates* it, choosing the operator pair by a roulette wheel whose weights
 track recent performance.
 
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
+let mut state = SearchState::new(&vrp);
+
+let mut alns = AdaptiveLargeNeighborhoodSearchForVrp::new(
+    StopCondition::iterations(10_000),
+    /* removal_fraction = */ 0.15,
+    /* cooling_rate     = */ 0.9995,
+);
+alns.run(&mut state)?;
+
+let sol = &state.best_solution;
+println!("total distance = {}", sol.distance);
+for (vehicle, route) in sol.routes.iter().enumerate() {
+    println!("vehicle {vehicle}: depot -> {route:?} -> depot");
+}
+# Ok::<(), optopus::error::OptError>(())
+```
+
+Takes no `neighbor` type parameter — it owns its move set. `demo16.vrp` is the
+committed 15-customer fixture; the measurements below are on CVRPLIB X
+instances.
+
 ## Algorithm sketch
 
 Each `run_once` produces one candidate:
@@ -26,7 +53,7 @@ Each `run_once` produces one candidate:
    Every 100 iterations the segment's average scores are blended into the
    weights with reaction factor `0.1`.
 
-Like [LKH](lkh.md), a destroy+repair step is not a single
+A destroy+repair step is not a single
 `MoveToNeighbor`, so the heuristic operates directly on `state.solution` rather
 than through `state.apply`.
 
@@ -48,20 +75,6 @@ Regret is measured **across routes, not across positions**: the second-cheapest
 zero for every customer, which would make regret-2 indistinguishable from
 greedy. Insertion costs are augmented with the capacity penalty, so an insertion
 is always available even when every route is full.
-
-### Why the anchored descent
-
-Recreation leaves the disturbed routes locally poor: a customer is inserted
-where it is cheapest *now*, with no chance to fix the edges that choice spoils.
-Each recreated solution is therefore handed to `ops::Descent::run_around` —
-the same granular descent [HGS](hgs.md) uses, at Γ = 20 and up to 4 passes,
-under `Vrp::penalty_weight()`.
-
-Anchoring is what makes it pay. Measured at 30 s × 5 runs on ten CVRPLIB X
-instances, the anchored descent is **−0.38% mean objective with 8/10 instances
-improved**, and −0.97% on X-n701 at 60 s. A *full* sweep per iteration was
-+0.07% — a wash, and −2% on X-n459 — because on a mid-sized instance the ruin's
-anchors, widened by a full Γ = 20 candidate list, already cover everything.
 
 ## Constructor
 
@@ -88,13 +101,6 @@ cooling_rate = 0.9995      # optional (default shown)
 [heuristics.stop_condition]
 max_duration_secs = 30.0
 ```
-
-## Relation to HGS
-
-The two CVRP heuristics share their route machinery
-(`src/heuristic/specific/vrp/ops/`) — the same granular descent, candidate
-lists and route arithmetic — and differ in what drives it. At 30 s on CVRPLIB X
-they are a wash; see [hgs.md](hgs.md#measured-quality) for the table.
 
 ## References
 

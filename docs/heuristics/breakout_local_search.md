@@ -11,7 +11,33 @@ the other MaxCut heuristics; what is BLS's own is the schedule below. All of
 them are handed the same `common::TabuLedger`, which is what stops a
 perturbation undoing the descent that just ran.
 
-## Algorithm
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let mut rng = seeded_rng(42);
+let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
+let mut state = SearchState::new_with_seed(&mc, 42);
+
+let mut bls = BreakoutLocalSearchForMaxCut::new(
+    StopCondition::iterations(100_000),
+    /* tabu_tenure = */ (5, 150),
+    /* t           = */ 1_000,
+    /* l0          = */ 8,          // 0.01 * |V|
+    /* p0          = */ 0.8,
+    /* q           = */ 0.5,
+);
+bls.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
+
+`l0` and `tabu_tenure` are instance-dependent, so they are derived from
+`|V| = 800` here rather than left at a constant — see
+[Benchmark config](#benchmark-config).
+
+## Algorithm sketch
 
 - **Greedy phase**: repeatedly apply the strictly best improving flip, updating
   a tabu map.
@@ -44,54 +70,19 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
   `paper_effective_tenure` doubles the caller's range and `tabu_tenure` keeps
   the original meaning, `rand[3, n/10]` on the G-set. Doubling only the upper
   bound does not reproduce it — the whole range has to scale.
-- **`l0` scales with the instance: `0.01 · n`, not a constant.** A fixed
-  `l0 = 80` is simultaneously ten times too strong at `n = 800` and 2.5 times
-  too weak at `n = 20000`.
-- **The weak swap selects the best non-tabu move.** An earlier version forced a
-  swap of the longest-blocked vertex on each side unless aspiration allowed the
-  best swap — a diversification move that degrades with vertex degree: on the
-  degree-20 instances the perturbation supplied noise instead of direction.
-  With the tenure fix above it closes the gap to the published values from −76
-  to −16, and it removed the need for `VecTabuMap::blocked_until`.
-- **`l` grows on a repeated *solution*, not a repeated objective.** Every G-set
-  weight is ±1, so distinct local optima collide on the same cut value
-  constantly; comparing objectives fired on 82.7% of rounds on G11 (measurement
-  in `BlsSchedule::prev_local_optimum`).
-- **No bucket sort.** The descent narrows its scan with the optional
-  `positive_gain` index on `MaxCutSolution`, but still scans that set linearly
-  for the maximum, and the tabu walk and both weak perturbations scan **all n**
-  flip neighbours per move. The same move is selected either way, so this costs
-  only speed — but the constant is large enough that wall-clock comparisons
-  against published times are meaningless in either direction (only cut values
-  compare), and that a budget in moves is not a budget in work. A caller that
-  hands this engine a move budget is really handing it an `O(n)` multiple of
-  one, so anything driving it on large instances wants to bound the *work* — a
-  budget of `2n` moves is `O(n²)`, which at `n = 20000` is a different order of
-  magnitude from what the number suggests.
+- **No bucket sort.** The original buckets vertices by gain, so selecting a
+  maximum-gain move is O(1) and a move costs only the O(degree(v)) rebucketing
+  its gain update already implies. Here selection is a linear scan: the descent
+  narrows it with the optional `positive_gain` index on `MaxCutSolution`, so it
+  costs O(|{v : gain(v) > 0}|) per move — bounded by n, and shrinking as the
+  descent approaches a local optimum — while the tabu walk and the weak swap
+  scan **all n** flip neighbours per move, O(n). The gain update itself is
+  O(degree(v)). The same move is selected either way, so this costs
+  only speed.
 - **A swap advances the iteration counter by 2**
   (`MaxCutSwapNeighbor::apply_to_iteration`), where BLS counts every move as
   one. That `+2` is a library-wide convention shared by every binary problem's
   swap, so it is not changed here for one heuristic's sake.
-
-## Cases the original scheme leaves open
-
-The eligible sets of the two weak perturbations can come out empty, and BLS as
-published does not say what to do then. All three answers below are
-**empirically dead on the G-set**: `progress_iteration` is the only thing that
-increments `n_rejected`, and all 88 recorded BLS summaries report
-`avg_n_rejected = 0.0`. That doubles as a tripwire — if `n_rejected` ever stops
-being zero, one of them has started firing.
-
-| Case | Behaviour here | Why it cannot fire on the G-set |
-|---|---|---|
-| every flip tabu, no aspiration | advance the iteration and skip the move | see above |
-| a swap where one partition side has no vertex at all | advance the iteration twice (matching the swap's `+2` accounting) and skip | a side empties only on a degenerate instance |
-| a swap where one side has no non-tabu vertex | take that side's best vertex anyway, breaking tabu **without** aspiration | the effective tenure is capped at `2·(n/10) = 0.2n` while a side holds roughly `0.5n` vertices, so a whole side cannot be tabu |
-
-The third is the only one with real algorithmic content, and it *can* fire away
-from the G-set: a caller that runs this engine on a small instance while keeping
-a tenure tuned for a large one puts the whole of one side inside the tabu
-window, which is precisely the regime the G-set never reaches.
 
 ## Constructor
 
@@ -114,6 +105,12 @@ BreakoutLocalSearchForMaxCut::new(
 | `p0` | minimum perturbation probability |
 | `q` | fraction of weak perturbations using flip (vs. swap) |
 
+`clear()` resets the schedule (`omega` to 0, `l` to `l0`, the remembered local
+optimum dropped) and empties the tabu ledger, so a fresh episode starts clean.
+The remembered local optimum is dropped rather than kept because the same
+schedule may be reused on a different instance — a meta-heuristic that rebuilds
+its sub-problem every round does exactly that.
+
 ## Benchmark config
 
 ```toml
@@ -124,17 +121,18 @@ t = 1000
 l0 = 80                   # 0.01 * |V|
 p0 = 0.8
 q = 0.5
-
 [heuristics.stop_condition]
-max_duration_secs = 30
+max_duration_secs = 30.0
 ```
 
-`tabu_tenure` is read as Benlic & Hao's `γ`: a vertex stays forbidden for `2γ`
+`tabu_tenure` is read as original `γ`: a vertex stays forbidden for `2γ`
 moves. This is the one kind that doubles the key — the same range under
-[`TabuSearch`](tabu_search.md) or [`RlBreakoutLocalSearch`](rl_breakout_local_search.md)
-prohibits for half as long, so tuned values do not transfer between them.
+[`TabuSearch`](tabu_search.md) or
+[`RlBreakoutLocalSearch`](rl_breakout_local_search.md) prohibits for half as
+long, so tuned values do not transfer between them.
 
-## Reference
+## References
 
-Benlic, U. and Hao, J.-K. "Breakout Local Search for the Max-Cut problem."
-*Engineering Applications of Artificial Intelligence*, 26(3), 1162-1173, 2013.
+- Benlic, U. and Hao, J.-K. "Breakout Local Search for the Max-Cut problem."
+  *Engineering Applications of Artificial Intelligence*, 26(3), 1162-1173,
+  2013.

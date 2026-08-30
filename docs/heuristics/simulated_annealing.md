@@ -1,10 +1,27 @@
 # SimulatedAnnealing
 
-**API:** [`SimulatedAnnealing`](../api/optopus/heuristic/struct.SimulatedAnnealing.html) · [`BangBangSimulatedAnnealing`](../api/optopus/heuristic/struct.BangBangSimulatedAnnealing.html)
+**API:** [`SimulatedAnnealing`](../api/optopus/heuristic/struct.SimulatedAnnealing.html)
 
 Pick a uniformly random neighbor; accept with Boltzmann probability
 `exp(−worsening / T)`. Improving moves are always accepted. The temperature
 is multiplied by `cooling_rate` after every step.
+
+## Example
+
+```rust
+use optopus::prelude::*;
+
+let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]));
+let mut state = SearchState::new(&mc);
+let mut sa = SimulatedAnnealing::<MaxCutFlipNeighbor>::new(
+    StopCondition::iterations(100_000),
+    /* initial_temperature = */ 1.0,
+    /* cooling_rate        = */ 0.9999,
+);
+sa.run(&mut state)?;
+println!("cut weight = {}", state.best_solution.objective);
+# Ok::<(), optopus::error::OptError>(())
+```
 
 ## Constructor
 
@@ -28,22 +45,6 @@ The shared helper `boltzmann_accept(delta: Evaluable<f64>, T: f64)` returns
 `true` if `delta` improves the score, otherwise it draws a uniform random
 number and compares against `exp(−worsening / T)`.
 
-## Example
-
-```rust
-use optopus::prelude::*;
-
-let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]));
-let mut state = SearchState::new(&mc);
-let mut sa = SimulatedAnnealing::<MaxCutFlipNeighbor>::new(
-    StopCondition::iterations(100_000),
-    /* initial_temperature = */ 1.0,
-    /* cooling_rate        = */ 0.9999,
-);
-sa.run(&mut state)?;
-# Ok::<(), optopus::error::OptError>(())
-```
-
 ## Benchmark config
 
 ```toml
@@ -58,7 +59,8 @@ max_iteration = 100_000
 
 ## BangBangSimulatedAnnealing
 
-Variant with an oscillating temperature schedule:
+[`BangBangSimulatedAnnealing`](../api/optopus/heuristic/struct.BangBangSimulatedAnnealing.html)
+is a variant with an oscillating temperature schedule:
 
 ```rust
 BangBangSimulatedAnnealing::<N>::new(
