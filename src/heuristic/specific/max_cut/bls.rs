@@ -6,13 +6,16 @@ use crate::search_state::SearchState;
 use rand::Rng;
 use rand::rngs::SmallRng;
 
-/// Picks the perturbation type for one BLS-style iteration, following the
-/// adaptive scheme of Benlic & Hao: the probability of a directed (weak)
-/// perturbation is `p = max(exp(−omega / t), p0)`, so right after an
-/// improvement (`omega == 0`, hence `p = 1`) a directed perturbation always
-/// runs to gently exploit the fresh region, and as `omega` grows the random
-/// (strong) perturbation becomes more likely. Once `omega` exceeds `t` the
-/// strongest random perturbation is forced and `omega` is reset.
+/// Picks the perturbation type for one BLS-style iteration,
+///
+/// - `omega > t` zeroes the counter (Alg. 1, lines 24-27), so stagnation
+///   arrives at the next test as `omega == 0`.
+/// - `omega == 0` takes the **random (strong)** perturbation (Alg. 2, line 1).
+/// - otherwise `p = max(exp(−omega / t), p0)` (Formula (2)) is the probability
+///   of a *directed* (weak) perturbation — `p * q` for the flip variant `A1`,
+///   `p * (1 − q)` for the swap variant `A2` — leaving `1 − p` for the random
+///   one. `p` decays toward `p0` as `omega` grows, so the random perturbation
+///   becomes steadily more likely the longer the best solution stands.
 ///
 /// This selection rule is specific to [`BreakoutLocalSearch`]; the operators it
 /// chooses between are the free functions in [`ops`](super::ops), and the other
@@ -27,6 +30,8 @@ fn choose_perturbation(
 ) -> PerturbationType {
     if *omega > t {
         *omega = 0;
+    }
+    if *omega == 0 {
         return PerturbationType::Strong;
     }
 
@@ -134,20 +139,18 @@ impl BlsSchedule {
 /// Breakout Local Search (BLS) for the MaxCut problem.
 ///
 /// BLS alternates between a greedy local search phase (with tabu updates) and a
-/// perturbation phase. The perturbation type is chosen probabilistically based on
-/// the `omega` counter (number of consecutive non-improving iterations). With
+/// perturbation phase. The perturbation type is chosen from the `omega` counter
+/// (number of consecutive non-improving local optima), with
 /// `p = max(exp(−omega / t), p0)` the probability of a **weak** (directed)
 /// perturbation:
 ///
-/// - `omega == 0` (after an improvement, so `p = 1`): always a **weak**
-///   perturbation — `flip` with probability `q`, `swap` with probability `1 − q` —
-///   to gently exploit the freshly found region.
+/// - `omega == 0` — either the last descent improved the global best, or
+///   `omega` just passed `t` and was reset: a **strong** (random) perturbation
+///   runs.
 /// - `0 < omega <= t` (stuck): **weak** perturbation with probability `p * q`
 ///   (flip) or `p * (1 − q)` (swap), and **strong** (random) otherwise; `p`
 ///   decays toward `p0` as `omega` grows, so strong perturbations become more
 ///   likely.
-/// - `omega > t`: the strongest **random** perturbation is forced and `omega`
-///   is reset to 0.
 ///
 /// The perturbation length `l` increases by 1 each time the solution does not change,
 /// resetting to `l0` whenever the solution changes.
@@ -273,10 +276,9 @@ mod tests {
     /// Regression test: BLS must run to completion without erroring.
     ///
     /// The weak-swap perturbation previously returned `Err("No tabu v1")` when a
-    /// partition side had no tabu vertex yet — a path that is hit frequently now
-    /// that directed (weak) perturbations run at `omega == 0`. Running the full
-    /// loop many times exercises all three perturbation types and the swap
-    /// fallback; it must never error and must find a non-trivial cut.
+    /// partition side had no tabu vertex yet. Running the full loop many times
+    /// exercises all three perturbation types and the swap fallback; it must
+    /// never error and must find a non-trivial cut.
     #[test]
     fn bls_runs_without_error_and_improves() {
         let mc = small_instance();
