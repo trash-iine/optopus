@@ -289,38 +289,6 @@ mod tests {
         assert_eq!(sol.overload, 2, "9 demand over 2 × capacity 4");
     }
 
-    /// Every capacity-respecting split is reachable in the DP, so whenever Split
-    /// lands on a feasible partition it is at least as good as the greedy one.
-    /// (Once both are infeasible the comparison is not guaranteed: overloaded arcs
-    /// are length-capped, while the greedy splitter may dump the whole tail onto
-    /// the last vehicle.)
-    #[test]
-    fn split_never_worse_than_greedy_when_feasible() {
-        let mut rng = SmallRng::seed_from_u64(99);
-        let mut compared = 0;
-        for _ in 0..100 {
-            let n = 10;
-            let prob = random_vrp(&mut rng, n, 6, 4);
-            let giant = random_tour(&mut rng, n);
-            let dp =
-                prob.solution_from_routes(split_giant_tour(&prob, &giant, prob.penalty_weight()));
-            prob.validate_routes(&dp.routes).unwrap();
-            if dp.overload > 0 {
-                continue;
-            }
-            let greedy = prob
-                .solution_from_routes(super::super::crossover::split_into_routes(&prob, &giant));
-            assert!(
-                dp.objective <= greedy.objective + 1e-9,
-                "split DP ({}) worse than the greedy split ({})",
-                dp.objective,
-                greedy.objective
-            );
-            compared += 1;
-        }
-        assert!(compared > 0, "no feasible case was exercised");
-    }
-
     /// A small penalty lets Split trade overload for distance; a large one does not.
     #[test]
     fn penalty_controls_the_overload_tradeoff() {

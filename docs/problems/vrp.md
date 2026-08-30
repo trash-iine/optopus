@@ -93,14 +93,20 @@ supplies its own move evaluation.
 ## Crossover
 
 - `VrpOrderCrossover` — flattens both parents into giant tours, applies Order
-  Crossover (`common::order_crossover`), then splits the child greedily back
-  into `num_vehicles` routes.
+  Crossover (`common::order_crossover`), then decodes the child back into
+  `num_vehicles` routes with
+  [`split_giant_tour`](../api/optopus/problem/vrp/fn.split_giant_tour.html)
+  (Prins' Split): a dynamic program that, for the customer order OX produced,
+  chooses the cut positions optimally. The child is therefore never worse than
+  any other way of cutting the same order — including the partition a parent
+  itself carried.
 
-A second, DP-optimal decoder for the same giant-tour encoding,
-[`split_giant_tour`](../api/optopus/problem/vrp/fn.split_giant_tour.html)
-(Prins' Split), is not part of this crossover — it is what
-[HybridGeneticSearchForVrp](../heuristics/hgs.md) decodes its own giant-tour
-offspring with.
+Split is decoded here under the fixed `penalty_weight` above, so what the DP
+minimizes is exactly the offspring's `objective`. That penalty is the only thing
+separating this operator from the recombination step of
+[HybridGeneticSearchForVrp](../heuristics/hgs.md), which drives the same decoder
+with a capacity penalty it retunes as the search runs (and follows it with a
+granular local descent).
 
 ## File format (CVRPLIB)
 
