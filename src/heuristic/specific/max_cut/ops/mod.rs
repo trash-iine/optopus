@@ -12,12 +12,6 @@
 //! writes are the entries the weak perturbations must not undo, so the two run
 //! against one ledger; a caller wanting them isolated just passes two.
 //!
-//! What no operator names is *which* kick to run. The selection vocabulary and
-//! the mapping from it to these functions both live with the heuristic that
-//! takes it from outside — `PerturbationType` and `BreakoutLocalSearch::kick`,
-//! in `bls.rs`. So there is no dispatcher at this level, and no operator module
-//! has to know that another one exists.
-//!
 //! What "tabu" *means* is decided nowhere here. Every operator marks and tests
 //! moves through the moves' own [`EnabledTabu`](crate::trait_defs::EnabledTabu)
 //! impls, so these operators forbid exactly what a generic
