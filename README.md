@@ -59,7 +59,6 @@ file-based loading.
 | [Genetic Algorithm](docs/heuristics/genetic_algorithm.md) | `GeneticAlgorithm<P, C>` |
 | [Sequential / Iterated / VNS / Restart](docs/heuristics/meta.md) | `Sequential<P>`, `Iterated<P>`, `VariableNeighborhoodSearch<P>`, `Restart<P>` |
 | [Breakout Local Search (MaxCut)](docs/heuristics/breakout_local_search.md) | `BreakoutLocalSearchForMaxCut` |
-| [RL Breakout Local Search (MaxCut)](docs/heuristics/rl_breakout_local_search.md) | `RlBreakoutLocalSearchForMaxCut` |
 | [Population Annealing (MaxCut)](docs/heuristics/population_annealing.md) | `PopulationAnnealingForMaxCut` |
 | [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |
 | [WalkSAT (MaxSAT)](docs/heuristics/walksat.md) | `WalkSatForSat` |

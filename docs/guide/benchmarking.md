@@ -53,7 +53,6 @@ algorithm's own page; this table is only the index.
 | [`Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart`](../heuristics/meta.md#benchmark-config) | all |
 | [`GeneticAlgorithm`](../heuristics/genetic_algorithm.md#benchmark-config) | all |
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | MaxCut only |
-| [`RlBreakoutLocalSearch`](../heuristics/rl_breakout_local_search.md#benchmark-config) | MaxCut only |
 | [`PopulationAnnealingForMaxCut`](../heuristics/population_annealing.md#benchmark-config) | MaxCut only |
 | [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP only |
 | [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT only |

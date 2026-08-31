@@ -136,7 +136,7 @@ pub enum HeuristicConfig {
         /// Tabu tenure range `(min, max)`, in Benlic & Hao's `γ` — a vertex
         /// stays forbidden for `2γ` moves, because the paper counts the tenure
         /// twice. **This is the one place the key is doubled**: the same range
-        /// under `TabuSearch` or `RlBreakoutLocalSearch` prohibits for half as
+        /// under `TabuSearch` prohibits for half as
         /// long, so the numbers are not interchangeable between them.
         tabu_tenure: (u64, u64),
         t: u64,
@@ -167,39 +167,6 @@ pub enum HeuristicConfig {
         /// Enable the non-local cluster (iso-site) move. Default: true.
         #[serde(skip_serializing_if = "Option::is_none")]
         cluster_moves: Option<bool>,
-        #[serde(default)]
-        stop_condition: StopConditionConfig,
-    },
-    /// Breakout Local Search with a learned (contextual-bandit) perturbation
-    /// policy (MaxCut only).
-    RlBreakoutLocalSearch {
-        /// Tabu tenure range `(min, max)` in moves, taken literally — unlike
-        /// [`BreakoutLocalSearch`](Self::BreakoutLocalSearch), which reads the
-        /// same key as the paper's `γ` and prohibits for `2γ`.
-        tabu_tenure: (u64, u64),
-        /// Omega normalization period for the stagnation features.
-        t: u64,
-        /// Base perturbation length; actions scale it by a strength bin.
-        l0: u64,
-        /// Strength multipliers of `l0`. Default: `[1.0, 2.0, 4.0]`.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        strength_bins: Option<Vec<f64>>,
-        /// Bandit step size (0.0 = frozen-policy evaluation). Default: 0.1.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        learning_rate: Option<f64>,
-        /// Bandit softmax temperature. Default: 1.0.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        softmax_temperature: Option<f64>,
-        /// ε-uniform exploration floor. Default: 0.05.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        exploration: Option<f64>,
-        /// Pre-trained bandit weights, row-major
-        /// `(3 × strength_bins.len()) × NUM_CONTEXT_FEATURES` elements.
-        /// Weights saved while the plateau operators were part of the action
-        /// space (5 types × 8 features) are rejected at parse time with a size
-        /// error.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        policy_weights: Option<Vec<f64>>,
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
@@ -319,7 +286,6 @@ impl HeuristicConfig {
             Self::RlSearch { .. } => "RlSearch",
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
             Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
-            Self::RlBreakoutLocalSearch { .. } => "RlBreakoutLocalSearch",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
             Self::HybridGeneticSearch { .. } => "HybridGeneticSearch",
@@ -368,7 +334,6 @@ impl HeuristicConfig {
             | Self::RlSearch { stop_condition, .. }
             | Self::BreakoutLocalSearch { stop_condition, .. }
             | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
-            | Self::RlBreakoutLocalSearch { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
             | Self::HybridGeneticSearch { stop_condition, .. }

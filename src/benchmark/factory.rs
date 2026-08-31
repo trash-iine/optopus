@@ -349,7 +349,6 @@ where
         }
         HeuristicConfig::BreakoutLocalSearch { .. }
         | HeuristicConfig::PopulationAnnealingForMaxCut { .. }
-        | HeuristicConfig::RlBreakoutLocalSearch { .. }
         | HeuristicConfig::LinKernighanHelsgaun { .. }
         | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
@@ -517,21 +516,6 @@ mod factory_tests {
         };
         try_build(&ProblemKind::MaxCut, &bls).expect("BLS builds for MaxCut");
         let err = try_build(&ProblemKind::Qubo, &bls).expect_err("BLS invalid for Qubo");
-        assert!(err.to_string().contains("Qubo"), "{err}");
-
-        let rl_bls = HeuristicConfig::RlBreakoutLocalSearch {
-            tabu_tenure: (1, 5),
-            t: 100,
-            l0: 5,
-            strength_bins: None,
-            learning_rate: None,
-            softmax_temperature: None,
-            exploration: None,
-            policy_weights: None,
-            stop_condition: StopConditionConfig::default(),
-        };
-        try_build(&ProblemKind::MaxCut, &rl_bls).expect("RL-BLS builds for MaxCut");
-        let err = try_build(&ProblemKind::Qubo, &rl_bls).expect_err("RL-BLS invalid for Qubo");
         assert!(err.to_string().contains("Qubo"), "{err}");
 
         let lkh = HeuristicConfig::LinKernighanHelsgaun {

@@ -23,7 +23,8 @@ mod perturbation;
 mod tabu_walk;
 
 pub(super) use descent::descent;
-pub(super) use perturbation::{PerturbationType, apply};
+pub(super) use perturbation::{best_swap, random_flips};
+pub(super) use tabu_walk::tabu_walk;
 
 use crate::common::{TabuLedger, VecTabuMap};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
@@ -56,8 +57,12 @@ fn keep_best(slot: &mut Option<MaxCutFlipNeighbor>, candidate: MaxCutFlipNeighbo
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::OptError;
     use crate::problem::MaxCut;
     use crate::search_state::SearchState;
+
+    /// The shape every perturbation operator shares.
+    type Op = fn(&mut Ledger, u64, &mut SearchState<'_, MaxCut>) -> Result<(), OptError>;
 
     /// Builds a small toroidal-like graph (degree 4, unit weights) that has both
     /// partition sides populated throughout the search.
@@ -82,7 +87,6 @@ mod tests {
     /// recomputation under these moves.
     #[test]
     fn mixed_perturbations_keep_gains_and_indexes_consistent() {
-        use PerturbationType::*;
         let mc = small_instance();
         let mut tabu = Ledger::new((3, 15));
         let mut state = SearchState::new_with_seed(&mc, 7);
@@ -90,10 +94,10 @@ mod tests {
         state.solution.enable_positive_gain_index();
         state.solution.enable_zero_gain_index();
 
-        let schedule = [Strong, WeakFlip, WeakSwap];
+        let schedule: [Op; 3] = [random_flips, tabu_walk, best_swap];
         for round in 0..60 {
-            for &ptype in &schedule {
-                apply(&mut tabu, ptype, 3, &mut state).unwrap();
+            for op in schedule {
+                op(&mut tabu, 3, &mut state).unwrap();
             }
             descent(&mut tabu, &mut state).unwrap();
 

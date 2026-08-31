@@ -28,10 +28,9 @@ pub use specific::AdaptiveLargeNeighborhoodSearchForVrp;
 pub use specific::BreakoutLocalSearchForMaxCut;
 pub use specific::HybridGeneticSearchForVrp;
 pub use specific::LinKernighanHelsgaunForTsp;
+pub use specific::MaxCutPerturbation;
 pub use specific::PopulationAnnealingForMaxCut;
-pub use specific::RlBreakoutLocalSearchForMaxCut;
 pub use specific::WalkSatForSat;
-pub use specific::{NUM_CONTEXT_FEATURES, NUM_PERTURBATION_TYPES};
 pub use tabu_search::TabuSearch;
 pub use variable_neighborhood_search::VariableNeighborhoodSearch;
 
