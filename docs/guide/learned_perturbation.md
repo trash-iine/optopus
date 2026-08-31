@@ -74,18 +74,6 @@ the policy keeps improving across [`Restart`](../heuristics/meta.md#restart) /
 contract [`RlSearch`](../heuristics/rl_search.md) keeps, and the reason the
 weights are a field rather than a local.
 
-## Why this is an example and not a heuristic
-
-It was one — `RlBreakoutLocalSearchForMaxCut`, with a `RlBreakoutLocalSearch`
-benchmark `kind` — until it turned out that everything it added to BLS was
-policy: the search machinery was BLS's, the learning was `SoftmaxBandit`'s, and
-what remained was a feature vector and an action decode. As a library type that
-had to be re-exported, config-validated and documented as a separate algorithm;
-as an example it is the same code, readable end to end, and it shows the
-extension point instead of hiding it. Benchmarking it means driving it from
-`main` — the example does exactly that A/B — rather than naming it in a TOML
-config.
-
 ## Measurement notes
 
 The action space was five operators rather than three until 2026-08-08: two
