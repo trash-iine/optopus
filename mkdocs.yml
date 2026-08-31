@@ -93,7 +93,6 @@ nav:
       - Genetic Algorithm: heuristics/genetic_algorithm.md
       - Meta-heuristics: heuristics/meta.md
       - Breakout Local Search (MaxCut): heuristics/breakout_local_search.md
-      - RL Breakout Local Search (MaxCut): heuristics/rl_breakout_local_search.md
       - Population Annealing (MaxCut): heuristics/population_annealing.md
       - Lin-Kernighan-Helsgaun (TSP): heuristics/lkh.md
       - WalkSAT (MaxSAT): heuristics/walksat.md
@@ -105,5 +104,6 @@ nav:
       - Error handling: guide/error_handling.md
       - Defining a custom problem: guide/custom_problem.md
       - Defining a custom heuristic: guide/custom_heuristic.md
+      - Driving BLS with a learned perturbation policy: guide/learned_perturbation.md
   - Benchmarks:
       - How the runs were made: benchmarks/README.md

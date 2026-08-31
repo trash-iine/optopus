@@ -10,9 +10,8 @@ use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearchForVrp, BreakoutLocalSearchForMaxCut, Heuristic,
-    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, NUM_CONTEXT_FEATURES,
-    PopulationAnnealingForMaxCut, RlBreakoutLocalSearchForMaxCut, StopCondition,
-    SubProblemBasedCrossover, WalkSatForSat,
+    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, PopulationAnnealingForMaxCut,
+    StopCondition, SubProblemBasedCrossover, WalkSatForSat,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -219,70 +218,6 @@ impl ConfigurableProblem for MaxCut {
                 *p0,
                 *q,
             ))),
-            HeuristicConfig::RlBreakoutLocalSearch {
-                tabu_tenure,
-                t,
-                l0,
-                strength_bins,
-                learning_rate,
-                softmax_temperature,
-                exploration,
-                policy_weights,
-                ..
-            } => {
-                let bins = strength_bins.clone().unwrap_or_else(|| vec![1.0, 2.0, 4.0]);
-                if bins.is_empty() || bins.iter().any(|&b| b <= 0.0) {
-                    return Err(OptError::Config(
-                        "'strength_bins' must be non-empty and strictly positive".to_string(),
-                    ));
-                }
-                if *l0 == 0 {
-                    return Err(OptError::Config("'l0' must be at least 1".to_string()));
-                }
-                let lr = learning_rate.unwrap_or(0.1);
-                let temp = softmax_temperature.unwrap_or(1.0);
-                let eps = exploration.unwrap_or(0.05);
-                if lr < 0.0 {
-                    return Err(OptError::Config(
-                        "'learning_rate' must be non-negative".to_string(),
-                    ));
-                }
-                if temp <= 0.0 {
-                    return Err(OptError::Config(
-                        "'softmax_temperature' must be strictly positive".to_string(),
-                    ));
-                }
-                if !(0.0..=1.0).contains(&eps) {
-                    return Err(OptError::Config(
-                        "'exploration' must be within [0, 1]".to_string(),
-                    ));
-                }
-                let mut rl = RlBreakoutLocalSearchForMaxCut::new(
-                    cond,
-                    *tabu_tenure,
-                    *t,
-                    *l0,
-                    bins,
-                    lr,
-                    temp,
-                    eps,
-                );
-                if let Some(w) = policy_weights {
-                    let expected = rl.num_actions() * NUM_CONTEXT_FEATURES;
-                    if w.len() != expected {
-                        return Err(OptError::Config(format!(
-                            "policy_weights must have exactly {} elements \
-                             (num_actions {} x {} context features), got {}",
-                            expected,
-                            rl.num_actions(),
-                            NUM_CONTEXT_FEATURES,
-                            w.len()
-                        )));
-                    }
-                    rl = rl.with_policy_weights(w.clone());
-                }
-                Ok(Box::new(rl))
-            }
             HeuristicConfig::PopulationAnnealingForMaxCut {
                 population_size,
                 initial_beta,

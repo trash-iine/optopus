@@ -1,19 +1,40 @@
-use super::ops::{self, Ledger, PerturbationType};
-use crate::error::OptError;
-use crate::heuristic::reinforcement_learning::bandit::SoftmaxBandit;
-use crate::heuristic::{Heuristic, StopCondition};
-use crate::problem::MaxCut;
-use crate::search_state::SearchState;
+//! Advanced example: driving Breakout Local Search with a learned
+//! perturbation policy.
+//!
+//! [`BreakoutLocalSearchForMaxCut`] exposes its round as two halves —
+//! `descend` (greedy descent to a local optimum) and `kick` (one perturbation
+//! plus the round's `update_best`) — so a controller can act at the point
+//! *between* them. This example replaces Benlic & Hao's hand-crafted
+//! `omega`-based perturbation rule *and* their strength schedule with a
+//! contextual softmax gradient bandit (`SoftmaxBandit`, from the library's
+//! reinforcement-learning module): each round the bandit reads search-state
+//! features and picks one of `3 x strength_bins.len()` actions — a
+//! perturbation type together with a multiplier of `l0`.
+//!
+//! Nothing here is MaxCut-specific machinery: the descent, the operators and
+//! the tabu ledger they share all stay inside BLS. What the example owns is
+//! the policy — the feature vector, the action decode, and the deferred-reward
+//! wiring around the bandit.
+//!
+//! How to run:
+//! ```
+//! cargo run --release --example rl_bls
+//! ```
+
+use optopus::error::OptError;
+use optopus::heuristic::reinforcement_learning::bandit::SoftmaxBandit;
+use optopus::prelude::*;
 
 /// Number of context features fed to the perturbation-selection bandit.
 ///
-/// Layout: `[bias, min(ω/t, 1), exp(−ω/t), descent_improved_best,
-/// relative_gap, reward_ema, budget_progress]`.
-pub const NUM_CONTEXT_FEATURES: usize = 7;
+/// Layout: `[bias, min(w/t, 1), exp(-w/t), descent_improved_best,
+/// relative_gap, reward_ema, budget_progress]`, where `w` is the `omega`
+/// stagnation counter.
+const NUM_CONTEXT_FEATURES: usize = 7;
 
 /// Number of perturbation operators the bandit chooses between
 /// (weak flip / weak swap / strong).
-pub const NUM_PERTURBATION_TYPES: usize = 3;
+const NUM_PERTURBATION_TYPES: usize = 3;
 
 const REWARD_SCALE_FLOOR: f64 = 1e-6;
 /// EMA coefficient for the reward-magnitude scale.
@@ -31,41 +52,22 @@ struct PendingDecision {
     global_best_objective: f32,
 }
 
-/// Breakout Local Search with a *learned* perturbation policy for MaxCut.
-///
-/// Shares the exact descent / perturbation machinery of
-/// [`BreakoutLocalSearch`](super::bls::BreakoutLocalSearch)
-/// (positive-gain-indexed greedy descent, flat tabu map, weak-flip /
-/// weak-swap / strong operators), but replaces the hand-crafted
-/// `omega`-based perturbation rule *and* the strength schedule with a
-/// contextual softmax bandit ([`SoftmaxBandit`]): each outer iteration the
-/// bandit observes search-state features and picks one of
-/// `3 × strength_bins.len()` actions — a perturbation type (weak flip, weak
-/// swap or strong) together with a strength multiplier applied to `l0`.
+/// Breakout Local Search with a learned perturbation policy.
 ///
 /// **Reward** (observed after the next descent): the change in local-optimum
 /// objective, normalized by an EMA of its own magnitude and clamped to
-/// `[−1, 1]`, plus a `+1` bonus when the global best improved.
+/// `[-1, 1]`, plus a `+1` bonus when the global best improved.
 ///
 /// **Multi-episode learning**: `clear()` resets the episode state (omega,
-/// tabu map, pending decision, reward statistics) but **preserves the bandit
-/// weights and baseline**, so the policy keeps improving across
-/// [`Restart`](crate::heuristic::Restart) /
-/// [`Iterated`](crate::heuristic::Iterated) episodes.
-///
-/// # Parameters
-///
-/// - `tabu_tenure` — tabu tenure range `(min, max)` in iterations
-/// - `t` — omega normalization period for the stagnation features
-/// - `l0` — base perturbation length; actions scale it by a strength bin
-/// - `strength_bins` — strength multipliers of `l0` (e.g. `[1.0, 2.0, 4.0]`)
-/// - `learning_rate` — bandit step size (`0.0` = frozen-policy evaluation)
-/// - `softmax_temperature` — bandit softmax temperature
-/// - `exploration` — ε-uniform exploration floor in `[0, 1]`
-pub struct RlBreakoutLocalSearch {
+/// the inner BLS, pending decision, reward statistics) but **preserves the
+/// bandit weights and baseline**, so the policy keeps improving across
+/// `Restart` / `Iterated` episodes.
+struct RlBreakoutLocalSearch {
     stop_condition: StopCondition,
-    /// The prohibitions the descent and the perturbations share.
-    tabu: Ledger,
+    /// The BLS this controller drives: it owns the descent, the perturbation
+    /// operators and the ledger they share, and is stepped one half-round at a
+    /// time so the bandit can decide in between.
+    bls: BreakoutLocalSearchForMaxCut,
     bandit: SoftmaxBandit,
     t: u64,
     l0: u64,
@@ -87,7 +89,7 @@ impl RlBreakoutLocalSearch {
     /// (`learning_rate < 0`, `softmax_temperature <= 0`, `exploration`
     /// outside `[0, 1]`).
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
+    fn new(
         stop_condition: StopCondition,
         tabu_tenure: (u64, u64),
         t: u64,
@@ -111,8 +113,15 @@ impl RlBreakoutLocalSearch {
             exploration,
         );
         Self {
+            // `externally_driven` takes the tenure literally: the doubling
+            // `BreakoutLocalSearchForMaxCut::new` applies reproduces the
+            // paper's `gamma`, which belongs to the schedule this controller
+            // replaces.
+            bls: BreakoutLocalSearchForMaxCut::externally_driven(
+                stop_condition.clone(),
+                tabu_tenure,
+            ),
             stop_condition,
-            tabu: Ledger::new(tabu_tenure),
             bandit,
             t,
             l0,
@@ -125,26 +134,27 @@ impl RlBreakoutLocalSearch {
         }
     }
 
-    /// Number of bandit actions (`3 × strength_bins.len()`).
-    pub fn num_actions(&self) -> usize {
+    /// Number of bandit actions (`3 x strength_bins.len()`).
+    fn num_actions(&self) -> usize {
         NUM_PERTURBATION_TYPES * self.strength_bins.len()
     }
 
     /// Seeds the bandit with pre-trained weights (row-major
-    /// `num_actions × NUM_CONTEXT_FEATURES`).
+    /// `num_actions x NUM_CONTEXT_FEATURES`).
     ///
     /// Combine with `learning_rate = 0.0` for frozen-policy evaluation.
     ///
     /// # Panics
     ///
     /// Panics if `weights.len() != num_actions() * NUM_CONTEXT_FEATURES`.
-    pub fn with_policy_weights(mut self, weights: Vec<f64>) -> Self {
+    #[allow(dead_code)]
+    fn with_policy_weights(mut self, weights: Vec<f64>) -> Self {
         self.bandit = self.bandit.with_weights(weights);
         self
     }
 
     /// Current bandit weights, e.g. for warm-starting a later run.
-    pub fn policy_weights(&self) -> &[f64] {
+    fn policy_weights(&self) -> &[f64] {
         self.bandit.weights()
     }
 
@@ -163,9 +173,7 @@ impl RlBreakoutLocalSearch {
             self.stop_condition.max_iteration,
         ) {
             (Some(d), _) => (state.duration().as_secs_f64() / d.as_secs_f64()).min(1.0),
-            (None, Some(mi)) => {
-                ((state.iteration - state.start_iteration) as f64 / mi.max(1) as f64).min(1.0)
-            }
+            (None, Some(mi)) => (state.iterations_this_run() as f64 / mi.max(1) as f64).min(1.0),
             (None, None) => 0.0,
         };
         [
@@ -179,11 +187,11 @@ impl RlBreakoutLocalSearch {
         ]
     }
 
-    fn action_to_perturbation(&self, action: usize) -> (PerturbationType, u64) {
+    fn action_to_perturbation(&self, action: usize) -> (MaxCutPerturbation, u64) {
         let ptype = match action / self.strength_bins.len() {
-            0 => PerturbationType::WeakFlip,
-            1 => PerturbationType::WeakSwap,
-            _ => PerturbationType::Strong,
+            0 => MaxCutPerturbation::WeakFlip,
+            1 => MaxCutPerturbation::WeakSwap,
+            _ => MaxCutPerturbation::Strong,
         };
         let mult = self.strength_bins[action % self.strength_bins.len()];
         let l = ((self.l0 as f64 * mult).round() as u64).max(1);
@@ -198,16 +206,14 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
         self.pending = None;
         self.reward_scale = 0.0;
         self.reward_ema = 0.0;
-        self.tabu.clear();
+        self.bls.clear();
         // Bandit weights and baseline are intentionally preserved across episodes.
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        self.tabu.ensure_capacity(state.instance.graph.len());
-
-        // 1. Greedy descent to a local optimum (same operator as BLS).
+        // 1. Greedy descent to a local optimum — the first half of a BLS round.
         let best_before_descent = state.best_solution.objective;
-        ops::descent(&mut self.tabu, state)?;
+        self.bls.descend(state)?;
         let descent_improved_best = state.best_solution.objective > best_before_descent;
 
         // 2. Update the stagnation counter (BLS omega rule: consecutive
@@ -240,7 +246,7 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
             self.reward_ema += REWARD_EMA_BETA * (reward - self.reward_ema);
         }
 
-        // 4. Select and apply the next perturbation.
+        // 4. Select the next perturbation.
         let features = self.context_features(state, descent_improved_best);
         let action = self.bandit.select(&features, &mut state.rng);
         self.pending = Some(PendingDecision {
@@ -249,22 +255,11 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
             localopt_objective: state.solution.objective,
             global_best_objective: state.best_solution.objective,
         });
-
         let (ptype, l) = self.action_to_perturbation(action);
-        tracing::debug!(
-            iteration = state.iteration,
-            omega = self.omega,
-            action,
-            perturbation = ?ptype,
-            l,
-            "RL-BLS: perturbation selected"
-        );
-        ops::apply(&mut self.tabu, ptype, l, state)?;
 
-        // Update best once after the perturbation phase completes.
-        state.update_best();
-
-        Ok(())
+        // 5. The second half of the round: BLS applies the kick against the
+        //    same ledger its descent wrote, and updates best once.
+        self.bls.kick(state, ptype, l)
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -272,88 +267,51 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::heuristic::Heuristic;
-    use crate::problem::MaxCut;
-    use crate::search_state::SearchState;
+fn main() -> Result<(), OptError> {
+    let mut rng = seeded_rng(42);
+    let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
+    let iterations = 20_000;
 
-    /// Same toroidal instance as the BLS tests.
-    fn small_instance() -> MaxCut {
-        let n = 30usize;
-        let mut edges = Vec::new();
-        for i in 0..n {
-            edges.push((i, (i + 1) % n, 1.0));
-            edges.push((i, (i + 2) % n, 1.0));
-        }
-        MaxCut::from_edges(edges)
-    }
+    // Baseline: BLS with Benlic & Hao's schedule. Its `tabu_tenure` is the
+    // paper's gamma, so it prohibits for twice this range.
+    let mut bls = BreakoutLocalSearchForMaxCut::new(
+        StopCondition::iterations(iterations),
+        (15, 300),
+        1_000,
+        20,
+        0.8,
+        0.5,
+    );
+    let mut bls_state = SearchState::new_with_seed(&mc, 42);
+    bls.run(&mut bls_state)?;
 
-    fn new_controller(stop: StopCondition) -> RlBreakoutLocalSearch {
-        RlBreakoutLocalSearch::new(stop, (3, 15), 1_000, 5, vec![1.0, 2.0, 4.0], 0.1, 1.0, 0.05)
-    }
+    // The same operators, driven by the learned policy.
+    let mut rl = RlBreakoutLocalSearch::new(
+        StopCondition::iterations(iterations),
+        (15, 300),
+        1_000,
+        20,
+        vec![1.0, 2.0, 4.0],
+        0.1,
+        1.0,
+        0.05,
+    );
+    let mut rl_state = SearchState::new_with_seed(&mc, 42);
+    rl.run(&mut rl_state)?;
 
-    #[test]
-    fn rl_bls_runs_without_error_and_improves() {
-        let mc = small_instance();
-        for seed in 0..10 {
-            let mut state = SearchState::new_with_seed(&mc, seed);
-            let mut rl = new_controller(StopCondition::iterations(5_000));
-            rl.run(&mut state).expect("RL-BLS must not error");
-            assert!(
-                state.best_solution.objective > 0.0,
-                "RL-BLS should find a positive cut, got {}",
-                state.best_solution.objective
-            );
-        }
-    }
-
-    #[test]
-    fn seeded_runs_are_deterministic() {
-        let mc = small_instance();
-        let run = || {
-            let mut state = SearchState::new_with_seed(&mc, 42);
-            let mut rl = new_controller(StopCondition::iterations(3_000));
-            rl.run(&mut state).unwrap();
-            (
-                state.best_solution.objective,
-                state.best_iteration,
-                state.best_solution.x.clone(),
-            )
-        };
-        assert_eq!(run(), run());
-    }
-
-    #[test]
-    fn clear_resets_episode_state_but_keeps_weights() {
-        let mc = small_instance();
-        let mut state = SearchState::new_with_seed(&mc, 1);
-        let mut rl = new_controller(StopCondition::iterations(2_000));
-        rl.run(&mut state).unwrap();
-        assert!(
-            rl.policy_weights().iter().any(|&w| w != 0.0),
-            "bandit should have learned something"
-        );
-        let weights_before = rl.policy_weights().to_vec();
-        rl.clear();
-        assert!(rl.pending.is_none());
-        assert_eq!(rl.omega, 0);
-        assert_eq!(rl.reward_scale, 0.0);
-        assert_eq!(rl.policy_weights(), &weights_before[..]);
-    }
-
-    #[test]
-    fn action_mapping_covers_all_types_and_strengths() {
-        let rl = new_controller(StopCondition::iterations(1));
-        let bins = 3;
-        let mut seen_types = std::collections::HashSet::new();
-        for action in 0..rl.num_actions() {
-            let (ptype, l) = rl.action_to_perturbation(action);
-            seen_types.insert(format!("{ptype:?}"));
-            let expected = ((5.0 * rl.strength_bins[action % bins]).round() as u64).max(1);
-            assert_eq!(l, expected);
-        }
-        assert_eq!(seen_types.len(), NUM_PERTURBATION_TYPES);
-    }
+    println!("instance: erdos_renyi(800, 0.02), {iterations} iterations, seed 42");
+    println!(
+        "  BLS    cut = {:>8} (best at iteration {})",
+        bls_state.best_solution.objective, bls_state.best_iteration
+    );
+    println!(
+        "  RL-BLS cut = {:>8} (best at iteration {})",
+        rl_state.best_solution.objective, rl_state.best_iteration
+    );
+    println!(
+        "  learned weights ({} actions x {NUM_CONTEXT_FEATURES} features): {:.3?}",
+        rl.num_actions(),
+        &rl.policy_weights()[..NUM_CONTEXT_FEATURES]
+    );
+    Ok(())
 }

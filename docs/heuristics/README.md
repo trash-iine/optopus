@@ -44,7 +44,6 @@ These take no `neighbor` in a config — each owns its own move set.
 | Algorithm | Config `kind` | Problem | Notes |
 |---|---|---|---|
 | [BreakoutLocalSearchForMaxCut](breakout_local_search.md) | `BreakoutLocalSearch` | MaxCut | Greedy LS + adaptive perturbation. |
-| [RlBreakoutLocalSearchForMaxCut](rl_breakout_local_search.md) | `RlBreakoutLocalSearch` | MaxCut | BLS machinery + learned (contextual-bandit) perturbation policy. |
 | [PopulationAnnealingForMaxCut](population_annealing.md) | `PopulationAnnealingForMaxCut` | MaxCut | Replica population cooled by β, resampled per step, with objective-preserving cluster moves. |
 | [LinKernighanHelsgaunForTsp](lkh.md) | `LinKernighanHelsgaun` | TSP 2D | Variable-depth k-opt with candidate lists. |
 | [WalkSatForSat](walksat.md) | `WalkSat` | MaxSAT | Focused SKC flips inside a random unsatisfied clause; optional adaptive noise. |

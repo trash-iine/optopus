@@ -127,9 +127,25 @@ max_duration_secs = 30.0
 
 `tabu_tenure` is read as original `γ`: a vertex stays forbidden for `2γ`
 moves. This is the one kind that doubles the key — the same range under
-[`TabuSearch`](tabu_search.md) or
-[`RlBreakoutLocalSearch`](rl_breakout_local_search.md) prohibits for half as
-long, so tuned values do not transfer between them.
+[`TabuSearch`](tabu_search.md) prohibits for half as long, so tuned values do
+not transfer between them.
+
+## Driving it yourself
+
+The round is also reachable in halves, for a caller that wants to keep the
+descent and the operators but replace the schedule:
+
+- `descend(state)` — the greedy descent, writing the ledger the kick reads.
+- `kick(state, perturbation, l)` — one [`MaxCutPerturbation`](../api/optopus/heuristic/enum.MaxCutPerturbation.html)
+  of length `l`, followed by the round's single `update_best`.
+- `externally_driven(stop_condition, tabu_tenure)` — the constructor for that
+  use, taking the tenure **literally**: the `2γ` doubling above belongs to the
+  paper's schedule, which such a caller replaces.
+
+`run_once` is exactly `descend` + the schedule + `kick`.
+[Driving BLS with a learned perturbation policy](../guide/learned_perturbation.md)
+walks through a controller that decides between the two halves with a
+contextual bandit.
 
 ## References
 

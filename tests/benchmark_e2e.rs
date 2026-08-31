@@ -336,27 +336,6 @@ max_iteration = 300
     );
 }
 
-/// The RL perturbation controller consumes the RNG for tabu tenures, bandit
-/// action sampling, and strong-perturbation flips; all must be seed-stable.
-#[test]
-fn rl_breakout_local_search_is_bit_identical_across_reruns_with_seed() {
-    assert_reproducible(
-        "repro_rl_bls",
-        r#"
-[[heuristics]]
-kind = "RlBreakoutLocalSearch"
-tabu_tenure = [2, 5]
-t = 100
-l0 = 3
-learning_rate = 0.1
-exploration = 0.05
-
-[heuristics.stop_condition]
-max_iteration = 300
-"#,
-    );
-}
-
 /// RlSearch consumes the RNG for reservoir sampling (`max_candidates`) and
 /// softmax move sampling; this locks in the sampled-before-evaluation path.
 #[test]

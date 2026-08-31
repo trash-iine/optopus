@@ -260,6 +260,18 @@ where
         self.objective_probe = Some(probe);
     }
 
+    /// Iterations run since this state started, i.e. excluding the work a
+    /// parent run had already done when [`clone_for_new_run`](Self::clone_for_new_run)
+    /// forked it.
+    ///
+    /// The counterpart of [`duration`](Self::duration) for an iteration
+    /// budget: a heuristic that normalizes anything by how far through its
+    /// budget it is has to measure from its own start, not from zero, or a
+    /// sub-run reads the parent's progress as its own.
+    pub fn iterations_this_run(&self) -> u64 {
+        self.iteration - self.start_iteration
+    }
+
     /// Returns the elapsed time since the current sub-run started.
     pub fn duration(&self) -> std::time::Duration {
         std::time::Instant::now() - self.start_time

@@ -1,10 +1,26 @@
-use super::ops::{self, Ledger, PerturbationType};
+use super::ops::{self, Ledger};
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::MaxCut;
 use crate::search_state::SearchState;
 use rand::Rng;
 use rand::rngs::SmallRng;
+
+/// One of the perturbation operators, in Benlic & Hao's vocabulary.
+///
+/// A *weak* perturbation is directed by the gains and the tabu ledger,
+/// a *strong* one is random.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PerturbationType {
+    /// random flip moves, ignoring gains.
+    Strong,
+    /// tabu flip moves: each taking a move which is the best non-tabu
+    /// or satisfies the aspiration rule.
+    WeakFlip,
+    /// tabu swap moves: each taking the best non-tabu vertex per partition
+    /// side, or one that satisfies the aspiration rule.
+    WeakSwap,
+}
 
 /// Picks the perturbation type for one BLS-style iteration,
 ///
@@ -191,6 +207,60 @@ impl BreakoutLocalSearch {
             schedule: BlsSchedule::new(t, l0, p0, q),
         }
     }
+
+    /// A BLS whose kicks the *caller* chooses: it is stepped through
+    /// [`descend`](Self::descend) and [`kick`](Self::kick), and the schedule
+    /// [`run_once`](Heuristic::run_once) would consult is never reached.
+    ///
+    /// `tabu_tenure` is therefore taken **literally**, without the doubling
+    /// [`new`](Self::new) applies: `2γ` is a property of Benlic & Hao's
+    /// perturbation rule, and a controller that replaces that rule brings its
+    /// own tenure. The schedule the instance still carries is neutral, so
+    /// driving it with [`run`](Heuristic::run) instead would merely kick once
+    /// per round with `l = 1`.
+    pub fn externally_driven(stop_condition: StopCondition, tabu_tenure: (u64, u64)) -> Self {
+        Self {
+            tabu: Ledger::new(tabu_tenure),
+            stop_condition,
+            schedule: BlsSchedule::new(1, 1, 0.0, 0.0),
+        }
+    }
+
+    /// The first half of one round: greedy descent to a local optimum, writing
+    /// the prohibitions the kick then has to respect.
+    ///
+    /// Split out because the point *between* the two phases is where a
+    /// controller other than the paper's schedule has to act — a learned
+    /// policy observes the local optimum it landed on before choosing the next
+    /// kick.
+    pub fn descend(&mut self, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
+        self.tabu.ensure_capacity(state.instance.graph.len());
+        ops::descent(&mut self.tabu, state)
+    }
+
+    /// The second half of one round: one perturbation of type `perturbation`
+    /// and length `l`, against the same ledger the descent wrote, followed by
+    /// the single `update_best` that closes the round.
+    ///
+    /// The match below is the only place a [`PerturbationType`] is turned into
+    /// an operator: the operators define what each one does and leave the
+    /// naming to whoever takes the vocabulary from outside, which is this
+    /// method.
+    pub fn kick(
+        &mut self,
+        state: &mut SearchState<'_, MaxCut>,
+        perturbation: PerturbationType,
+        l: u64,
+    ) -> Result<(), OptError> {
+        self.tabu.ensure_capacity(state.instance.graph.len());
+        match perturbation {
+            PerturbationType::Strong => ops::random_flips(&mut self.tabu, l, state)?,
+            PerturbationType::WeakFlip => ops::tabu_walk(&mut self.tabu, l, state)?,
+            PerturbationType::WeakSwap => ops::best_swap(&mut self.tabu, l, state)?,
+        }
+        state.update_best();
+        Ok(())
+    }
 }
 
 /// Converts Benlic & Hao's tenure parameter `γ` into the prohibition length the
@@ -219,8 +289,6 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        self.tabu.ensure_capacity(state.instance.graph.len());
-
         let (omega, l) = self.schedule.state();
         tracing::debug!(
             iteration = state.iteration,
@@ -229,7 +297,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
             "BLS: local search phase start"
         );
 
-        ops::descent(&mut self.tabu, state)?;
+        self.descend(state)?;
 
         let (perturbation_type, l) = self.schedule.next(state);
         let (omega, _) = self.schedule.state();
@@ -241,12 +309,7 @@ impl Heuristic<MaxCut> for BreakoutLocalSearch {
             "BLS: perturbation selected"
         );
 
-        ops::apply(&mut self.tabu, perturbation_type, l, state)?;
-
-        // Update best once after the perturbation phase completes.
-        state.update_best();
-
-        Ok(())
+        self.kick(state, perturbation_type, l)
     }
 
     fn stop_condition(&self) -> &StopCondition {

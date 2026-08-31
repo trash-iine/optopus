@@ -22,6 +22,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Error handling](guide/error_handling.md)
 - [Defining a custom problem](guide/custom_problem.md)
 - [Defining a custom heuristic](guide/custom_heuristic.md)
+- [Driving BLS with a learned perturbation policy](guide/learned_perturbation.md)
 
 ## Reference
 
@@ -50,7 +51,6 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Genetic Algorithm](heuristics/genetic_algorithm.md) (including `Crossover` trait)
 - [Meta-heuristics](heuristics/meta.md) — Sequential, Iterated (ILS), VNS, Restart
 - [Breakout Local Search (MaxCut)](heuristics/breakout_local_search.md)
-- [RL Breakout Local Search (MaxCut)](heuristics/rl_breakout_local_search.md)
 - [Population Annealing (MaxCut)](heuristics/population_annealing.md)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
 - [WalkSAT (MaxSAT)](heuristics/walksat.md)

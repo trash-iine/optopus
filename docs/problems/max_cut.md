@@ -136,8 +136,8 @@ the sweep showed for each parameter it bakes in; see
 ## Notes
 
 - `MaxCutSolution`'s optional `positive_gain` / `zero_gain` indexes power
-  [Breakout Local Search](../heuristics/breakout_local_search.md),
-  [RL-BLS](../heuristics/rl_breakout_local_search.md), and
+  [Breakout Local Search](../heuristics/breakout_local_search.md) (and the
+  [learned-policy controller](../guide/learned_perturbation.md) built on it) and
   [Population Annealing](../heuristics/population_annealing.md); standard
   heuristics need neither. See
   [`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html)

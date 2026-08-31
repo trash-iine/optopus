@@ -1,40 +1,13 @@
-//! The three kicks: what a heuristic does once the descent has nothing left.
+//! Two of the three kicks a heuristic can run once the descent has nothing
+//! left: the random one and the directed swap. The third — the tabu walk — is
+//! a walk in its own right and lives in [`tabu_walk`](super::tabu_walk).
 
-use super::tabu_walk::tabu_walk;
 use super::{Ledger, keep_best};
 use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::SearchState;
 use crate::trait_defs::MoveToNeighbor;
-
-/// One of the perturbation operators, in Benlic & Hao's vocabulary.
-///
-/// The names are the paper's (a *weak* perturbation is directed, a *strong*
-/// one is random); what each actually does is the function it dispatches to.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum PerturbationType {
-    /// `l` random flip moves — [`random_flips`].
-    Strong,
-    /// A tabu walk of `l` iterations — [`tabu_walk`].
-    WeakFlip,
-    /// `l` best-swap moves — [`best_swap`].
-    WeakSwap,
-}
-
-/// Applies the given perturbation type with strength `l`.
-pub(crate) fn apply(
-    tabu: &mut Ledger,
-    perturbation_type: PerturbationType,
-    l: u64,
-    state: &mut SearchState<'_, MaxCut>,
-) -> Result<(), OptError> {
-    match perturbation_type {
-        PerturbationType::Strong => random_flips(tabu, l, state),
-        PerturbationType::WeakFlip => tabu_walk(tabu, l, state),
-        PerturbationType::WeakSwap => best_swap(tabu, l, state),
-    }
-}
 
 /// Applies `l` random flip moves (the paper's *strong* perturbation).
 ///
@@ -44,7 +17,8 @@ pub(crate) fn apply(
 /// [`SubProblemBasedCrossover`](crate::heuristic::SubProblemBasedCrossover)
 /// when the parents disagree only on an independent set) there is nothing to
 /// flip, so this just advances the iteration counter — mirroring how
-/// [`tabu_walk`] progresses when it finds no move — so the outer stop condition
+/// [`tabu_walk`](super::tabu_walk::tabu_walk) progresses when it finds no move
+/// — so the outer stop condition
 /// still terminates instead of the sampler panicking on an empty range.
 pub(crate) fn random_flips(
     tabu: &mut Ledger,
