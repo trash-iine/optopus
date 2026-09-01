@@ -89,11 +89,24 @@ across every phase however deeply they nest.
 
 ### [`SearchStateCloneType`](api/optopus/search_state/enum.SearchStateCloneType.html) variants
 
-| Variant | Solution | Best | Counters |
+| Variant | Solution | Best | Clocks and anchors |
 |---|---|---|---|
 | `Simple` | current | retained | `start_iteration = iteration`; clocks unchanged |
-| `ClearBest` | current | reset to current | `iteration = 0`, clocks reset |
-| `StartBest` | best | retained | `iteration = 0`, clocks reset |
+| `ClearBest` | current | reset to current | `start_iteration = best_iteration = iteration`, clocks reset |
+| `StartBest` | best | retained | `start_iteration = best_iteration = iteration`, clocks reset |
+
+All three keep the parent's iteration frame (`iteration` marks where the current
+phase is, and `start_iteration` marks where the phase began). Everything
+budget-shaped is measured against that anchor (`iterations_this_run()`,
+`StopCondition`, `update_state`'s deltas). What a shared frame buys is that an
+iteration number means the same thing on both sides of a merge — which matters
+for anything that records one, such as a trajectory point.
+
+The `n_accepted` / `n_rejected` / `n_best_updates` counters are the other kind of
+value: they measure a phase rather than timestamp anything, so **every** variant
+starts them at zero and `update_state` adds them straight into the parent. That
+is also why the state carries no `start_n_*` anchors — only `start_iteration`
+and `start_time`, which say where the phase began.
 
 `ClearBest` is the usual choice: the phase gets a fresh local notion of "best"
 while the parent keeps the global one. `StartBest` restarts the phase from the

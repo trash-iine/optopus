@@ -196,7 +196,7 @@ pub struct SearchState<'a, P: ProblemTrait> {
     pub n_accepted: u64, pub n_rejected: u64, pub n_best_updates: u64,
     pub rng: SmallRng,                // ALL randomness flows through this
     pub trajectory: Vec<TrajectoryPoint>,  // anytime curve; empty unless a probe is set
-    pub(crate) start_*: ...,          // sub-run merge anchors — hands off
+    pub(crate) start_iteration/start_time: ...,  // where the phase began — hands off
 }
 ```
 
@@ -215,9 +215,14 @@ The two steps inside `close_reduction` are one method because their **order** is
 let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
 inner_heuristic.run(&mut sub)?;
 state.update_state(sub);
-// Simple    — keeps all counters and best (sets start_iteration to current)
-// ClearBest — resets best and timers to current state (iteration = 0)
-// StartBest — restarts from best_solution                (iteration = 0)
+// Simple    — keeps the best and the clocks (sets start_iteration to current)
+// ClearBest — resets best and timers to current state (start_iteration = iteration)
+// StartBest — restarts from best_solution              (start_iteration = iteration)
+// All three keep the parent's iteration frame: the counter runs on and
+// start_iteration is the anchor every budget is measured against. The
+// n_accepted / n_rejected / n_best_updates counters measure a phase instead,
+// so *every* variant starts them at zero and update_state adds them straight
+// on — which is why the state carries no start_n_* anchors.
 ```
 
 ## Heuristic Algorithms (`src/heuristic/`)
