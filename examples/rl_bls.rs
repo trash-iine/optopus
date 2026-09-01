@@ -12,7 +12,7 @@
 //! perturbation type together with a multiplier of `l0`.
 //!
 //! Nothing here is MaxCut-specific machinery: the descent, the operators and
-//! the tabu ledger they share all stay inside BLS. What the example owns is
+//! the tabu memory they share all stay inside BLS. What the example owns is
 //! the policy — the feature vector, the action decode, and the deferred-reward
 //! wiring around the bandit.
 //!
@@ -65,7 +65,7 @@ struct PendingDecision {
 struct RlBreakoutLocalSearch {
     stop_condition: StopCondition,
     /// The BLS this controller drives: it owns the descent, the perturbation
-    /// operators and the ledger they share, and is stepped one half-round at a
+    /// operators and the tabu memory they share, and is stepped one half-round at a
     /// time so the bandit can decide in between.
     bls: BreakoutLocalSearchForMaxCut,
     bandit: SoftmaxBandit,
@@ -258,7 +258,7 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
         let (ptype, l) = self.action_to_perturbation(action);
 
         // 5. The second half of the round: BLS applies the kick against the
-        //    same ledger its descent wrote, and updates best once.
+        //    same prohibitions its descent wrote, and updates best once.
         self.bls.kick(state, ptype, l)
     }
 

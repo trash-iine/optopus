@@ -1,16 +1,21 @@
 //! The vertex-level search operators for MaxCut, shared by every heuristic in
 //! this directory.
 //!
-//! Each operator is a free function over a [`Ledger`], one module per role:
-//! [`descent`] walks downhill, [`tabu_walk`] walks through local optima, and
-//! [`perturbation`] kicks. They are independent — none calls into another
-//! except through the ledger — so what they share is visible in their
-//! signatures rather than hidden in a receiver: whoever hands them the same
-//! ledger is the one deciding they should see each other's prohibitions.
+//! Each operator is a free function over a [`SearchState`](crate::search_state::SearchState),
+//! one module per role: [`descent`] walks downhill, [`tabu_walk`] walks through
+//! local optima, and [`perturbation`] kicks. They are independent — none calls
+//! into another — and what they share is the state's own tabu memory, recorded
+//! by [`apply`](crate::search_state::SearchState::apply) itself rather than by
+//! each operator.
 //!
-//! That sharing is the point. In Breakout Local Search the entries the descent
-//! writes are the entries the weak perturbations must not undo, so the two run
-//! against one ledger; a caller wanting them isolated just passes two.
+//! That sharing is the point, and it is automatic here: a
+//! [`TabuMemory`](crate::common::TabuMemory) keys its slots by map type, and
+//! both [`MaxCutFlipNeighbor`] and
+//! [`MaxCutSwapNeighbor`](crate::problem::MaxCutSwapNeighbor) use
+//! [`VecTabuMap`](crate::common::VecTabuMap) — so in Breakout Local Search the
+//! entries the descent writes are exactly the entries the weak perturbations
+//! must not undo. A caller wanting them isolated runs the two phases on
+//! separate states.
 //!
 //! What "tabu" *means* is decided nowhere here. Every operator marks and tests
 //! moves through the moves' own [`EnabledTabu`](crate::trait_defs::EnabledTabu)
@@ -26,12 +31,7 @@ pub(super) use descent::descent;
 pub(super) use perturbation::{best_swap, random_flips};
 pub(super) use tabu_walk::tabu_walk;
 
-use crate::common::{TabuLedger, VecTabuMap};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
-
-/// The prohibitions the operators read and write, and the tenure they record
-/// with. MaxCut's variables are a dense `0..n`, hence the `Vec` backing.
-pub(super) type Ledger = TabuLedger<VecTabuMap>;
 
 /// Keeps `candidate` in `slot` when it beats what is already there.
 ///
@@ -62,7 +62,21 @@ mod tests {
     use crate::search_state::SearchState;
 
     /// The shape every perturbation operator shares.
-    type Op = fn(&mut Ledger, u64, &mut SearchState<'_, MaxCut>) -> Result<(), OptError>;
+    type Op = fn(u64, &mut SearchState<'_, MaxCut>) -> Result<(), OptError>;
+
+    /// Prepares a state the way [`BreakoutLocalSearch`](super::super::bls::BreakoutLocalSearch)
+    /// does before handing it to an operator: the tenure the records draw from,
+    /// and a tabu map grown to the instance up front.
+    pub(super) fn state_with_tabu(
+        mc: &MaxCut,
+        seed: u64,
+        tenure: (u64, u64),
+    ) -> SearchState<'_, MaxCut> {
+        let mut state = SearchState::new_with_seed(mc, seed);
+        state.set_tabu_tenure(tenure);
+        state.reserve_tabu_vars(mc.graph.len());
+        state
+    }
 
     /// Builds a small toroidal-like graph (degree 4, unit weights) that has both
     /// partition sides populated throughout the search.
@@ -88,18 +102,16 @@ mod tests {
     #[test]
     fn mixed_perturbations_keep_gains_and_indexes_consistent() {
         let mc = small_instance();
-        let mut tabu = Ledger::new((3, 15));
-        let mut state = SearchState::new_with_seed(&mc, 7);
-        tabu.ensure_capacity(mc.graph.len());
+        let mut state = state_with_tabu(&mc, 7, (3, 15));
         state.solution.enable_positive_gain_index();
         state.solution.enable_zero_gain_index();
 
         let schedule: [Op; 3] = [random_flips, tabu_walk, best_swap];
         for round in 0..60 {
             for op in schedule {
-                op(&mut tabu, 3, &mut state).unwrap();
+                op(3, &mut state).unwrap();
             }
-            descent(&mut tabu, &mut state).unwrap();
+            descent(&mut state).unwrap();
 
             for v in 0..state.solution.x.len() {
                 let expected = mc.calculate_gain(&state.solution.x, v);

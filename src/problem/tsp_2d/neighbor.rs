@@ -1,9 +1,11 @@
 use super::problem::{TspSolution, TspWithCoordinates};
 use crate::{
+    common::TabuMemory,
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 use rand::Rng;
+use rand::rngs::SmallRng;
 
 /// A 2-opt move that removes edges `(tour[i], tour[i+1])` and `(tour[j], tour[(j+1)%n])`,
 /// then reconnects as `(tour[i], tour[j])` and `(tour[i+1], tour[(j+1)%n])`.
@@ -85,28 +87,26 @@ impl Evaluate for TspTwoOptNeighbor {
 }
 
 impl EnabledTabu for TspTwoOptNeighbor {
-    // Keyed by the (i, j) pair (normalized so i < j)
-    type TabuMap = std::collections::HashMap<(usize, usize), u64>;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
+    /// Keyed by the `(i, j)` pair, normalized so that `i < j`.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
         let key = (self.i.min(self.j), self.i.max(self.j));
-        tabu_map.get(&key).is_none_or(|&t| iteration > t)
+        tabu.is_enabled(key, iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
+    /// Applying it forbids that edge pair.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
         let key = (self.i.min(self.j), self.i.max(self.j));
-        tabu_map.insert(key, iteration + d);
+        tabu.forbid(key, iteration, rng);
     }
 }
 
 impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn apply_to_solution(
         &self,
         _prob: &TspWithCoordinates,
@@ -271,28 +271,24 @@ impl Evaluate for TspRelocateNeighbor {
 }
 
 impl EnabledTabu for TspRelocateNeighbor {
-    // Keyed by the (pos, ins) pair
-    type TabuMap = std::collections::HashMap<(usize, usize), u64>;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map
-            .get(&(self.pos, self.ins))
-            .is_none_or(|&t| iteration > t)
+    /// Keyed by the `(pos, ins)` pair.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled((self.pos, self.ins), iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert((self.pos, self.ins), iteration + d);
+    /// Applying it forbids that `(pos, ins)` pair.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid((self.pos, self.ins), iteration, rng);
     }
 }
 
 impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn apply_to_solution(
         &self,
         _prob: &TspWithCoordinates,

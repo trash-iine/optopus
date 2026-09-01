@@ -8,8 +8,8 @@ optional `positive_gain` index on `MaxCutSolution` to enumerate only improving
 flips in O(|improving|). The descent, the tabu walk and the perturbations it
 drives are free functions in `src/heuristic/specific/max_cut/ops/`, shared with
 the other MaxCut heuristics; what is BLS's own is the schedule below. All of
-them are handed the same `common::TabuLedger`, which is what stops a
-perturbation undoing the descent that just ran.
+them record into — and read — the tabu memory on the `SearchState` they are
+handed, which is what stops a perturbation undoing the descent that just ran.
 
 ## Example
 
@@ -66,7 +66,7 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
 
 - **The tenure parameter is doubled on the way in.** The original tenure is
   added once when a vertex is recorded and once more in the eligibility test, so
-  a vertex stays forbidden for twice it. `VecTabuMap` stores a single tenure, so
+  a vertex stays forbidden for twice it. `TabuMemory` stores a single tenure, so
   `paper_effective_tenure` doubles the caller's range and `tabu_tenure` keeps
   the original meaning, `rand[3, n/10]` on the G-set. Doubling only the upper
   bound does not reproduce it — the whole range has to scale.
@@ -106,7 +106,10 @@ BreakoutLocalSearchForMaxCut::new(
 | `q` | fraction of weak perturbations using flip (vs. swap) |
 
 `clear()` resets the schedule (`omega` to 0, `l` to `l0`, the remembered local
-optimum dropped) and empties the tabu ledger, so a fresh episode starts clean.
+optimum dropped). The prohibitions are not its to clear: they belong to the
+`SearchState`, and a sub-run clone — how every meta-heuristic starts a phase —
+already arrives with an empty tabu memory (`state.reset_tabu()` for a state you
+are reusing directly).
 The remembered local optimum is dropped rather than kept because the same
 schedule may be reused on a different instance — a meta-heuristic that rebuilds
 its sub-problem every round does exactly that.
@@ -135,7 +138,7 @@ not transfer between them.
 The round is also reachable in halves, for a caller that wants to keep the
 descent and the operators but replace the schedule:
 
-- `descend(state)` — the greedy descent, writing the ledger the kick reads.
+- `descend(state)` — the greedy descent, writing the prohibitions the kick reads.
 - `kick(state, perturbation, l)` — one [`MaxCutPerturbation`](../api/optopus/heuristic/enum.MaxCutPerturbation.html)
   of length `l`, followed by the round's single `update_best`.
 - `externally_driven(stop_condition, tabu_tenure)` — the constructor for that

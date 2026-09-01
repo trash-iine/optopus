@@ -2,7 +2,7 @@
 //! left: the random one and the directed swap. The third — the tabu walk — is
 //! a walk in its own right and lives in [`tabu_walk`](super::tabu_walk).
 
-use super::{Ledger, keep_best};
+use super::keep_best;
 use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
@@ -20,11 +20,7 @@ use crate::trait_defs::MoveToNeighbor;
 /// [`tabu_walk`](super::tabu_walk::tabu_walk) progresses when it finds no move
 /// — so the outer stop condition
 /// still terminates instead of the sampler panicking on an empty range.
-pub(crate) fn random_flips(
-    tabu: &mut Ledger,
-    l: u64,
-    state: &mut SearchState<'_, MaxCut>,
-) -> Result<(), OptError> {
+pub(crate) fn random_flips(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
     if state.instance.graph.vertices.is_empty() {
         for _ in 0..l {
             state.progress_iteration();
@@ -35,13 +31,13 @@ pub(crate) fn random_flips(
         let neighbor =
             MaxCutFlipNeighbor::random_neighbor(state.instance, &state.solution, &mut state.rng);
 
-        tabu.record(&neighbor, state.iteration, &mut state.rng);
         state.apply_move_only(&neighbor)?;
     }
     Ok(())
 }
 
-/// Applies `l` swap moves guided by the ledger (the paper's *weak swap*).
+/// Applies `l` swap moves guided by the state's tabu memory (the paper's
+/// *weak swap*).
 ///
 /// This is Benlic & Hao's set `A2` — the highest-gain move of the `M2`
 /// operator that is *not tabu*, with a tabu move admitted only when the
@@ -54,11 +50,7 @@ pub(crate) fn random_flips(
 /// Uses scalar best tracking per side instead of collecting tied-best lists
 /// into Vecs; the tie rule itself is [`keep_best`](super::keep_best), and it is
 /// deliberate — see its measurement record.
-pub(crate) fn best_swap(
-    tabu: &mut Ledger,
-    l: u64,
-    state: &mut SearchState<'_, MaxCut>,
-) -> Result<(), OptError> {
+pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
     for _ in 0..l {
         let mut free_v0 = None;
         let mut free_v1 = None;
@@ -70,7 +62,7 @@ pub(crate) fn best_swap(
 
             keep_best(if on_side0 { &mut any_v0 } else { &mut any_v1 }, neighbor);
 
-            if tabu.allows(&neighbor, state.iteration) {
+            if state.tabu_allows(&neighbor) {
                 keep_best(if on_side0 { &mut free_v0 } else { &mut free_v1 }, neighbor);
             }
         }
@@ -99,7 +91,6 @@ pub(crate) fn best_swap(
             MaxCutSwapNeighbor::new(state.instance, &state.solution, i, j)
         };
 
-        tabu.record(&swap, state.iteration, &mut state.rng);
         state.apply_move_only(&swap)?;
     }
     Ok(())
@@ -107,8 +98,8 @@ pub(crate) fn best_swap(
 
 #[cfg(test)]
 mod tests {
+    use super::super::tests::state_with_tabu;
     use super::*;
-    use crate::search_state::SearchState;
 
     /// On a graph with no edged vertices — as produced by
     /// `SubProblemBasedCrossover` when the two parents disagree only on an
@@ -117,12 +108,10 @@ mod tests {
     #[test]
     fn random_flips_progress_on_an_edgeless_graph() {
         let mc = MaxCut::new(crate::common::Graph::new());
-        let mut tabu = Ledger::new((3, 15));
-        let mut state = SearchState::new_with_seed(&mc, 0);
-        tabu.ensure_capacity(mc.graph.len());
+        let mut state = state_with_tabu(&mc, 0, (3, 15));
 
         let before = state.iteration;
-        random_flips(&mut tabu, 5, &mut state).unwrap();
+        random_flips(5, &mut state).unwrap();
         assert_eq!(state.iteration - before, 5);
     }
 
@@ -131,13 +120,11 @@ mod tests {
     #[test]
     fn a_swap_keeps_the_partition_sizes() {
         let mc = super::super::tests::small_instance();
-        let mut tabu = Ledger::new((3, 15));
-        let mut state = SearchState::new_with_seed(&mc, 2);
-        tabu.ensure_capacity(mc.graph.len());
+        let mut state = state_with_tabu(&mc, 2, (3, 15));
 
         let side0 = |x: &[bool]| x.iter().filter(|&&b| b).count();
         let before = side0(&state.solution.x);
-        best_swap(&mut tabu, 4, &mut state).unwrap();
+        best_swap(4, &mut state).unwrap();
         assert_eq!(side0(&state.solution.x), before);
     }
 }

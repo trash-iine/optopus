@@ -125,11 +125,7 @@ where
                         tabu_tenure.0, tabu_tenure.1
                     )));
                 }
-                Ok(Box::new(TabuSearch::<N>::new(
-                    self.cond,
-                    *tabu_tenure,
-                    None,
-                )))
+                Ok(Box::new(TabuSearch::<N>::new(self.cond, *tabu_tenure)))
             }
             HeuristicConfig::SimulatedAnnealing {
                 initial_temperature,

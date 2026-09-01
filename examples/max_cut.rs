@@ -35,8 +35,7 @@ fn main() {
 
     // --- Tabu Search ---
     let mut state = SearchState::new(&mc);
-    let mut ts =
-        TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100_000), (3, 7), None);
+    let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100_000), (3, 7));
     ts.run(&mut state).unwrap();
     println!(
         "[TabuSearch]   best objective = {:.1} (iter {})",

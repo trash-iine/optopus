@@ -1,10 +1,11 @@
 use super::problem::{Sat, SatSolution};
 use crate::{
-    common::{VarTabuMap, add_var_to_tabu, is_var_enabled},
+    common::TabuMemory,
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 use rand::Rng;
+use rand::rngs::SmallRng;
 
 /// A flip move that toggles a single variable `i`.
 ///
@@ -43,20 +44,14 @@ impl Rankable for SatFlipNeighbor {
 }
 
 impl EnabledTabu for SatFlipNeighbor {
-    type TabuMap = VarTabuMap;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        is_var_enabled(tabu_map, self.i, iteration)
+    /// The move is tabu while variable `i` is still blocked at the current iteration.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(self.i, iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
+    /// Applying the move forbids variable `i` for a tenure the memory draws.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(self.i, iteration, rng);
     }
 }
 
@@ -67,6 +62,12 @@ impl Evaluate for SatFlipNeighbor {
 }
 
 impl MoveToNeighbor<Sat> for SatFlipNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
         // Flip x[i]
         sol.x[self.i] = !sol.x[self.i];
@@ -152,21 +153,15 @@ impl Rankable for SatSwapNeighbor {
 }
 
 impl EnabledTabu for SatSwapNeighbor {
-    type TabuMap = VarTabuMap;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        is_var_enabled(tabu_map, self.i, iteration) && is_var_enabled(tabu_map, self.j, iteration)
+    /// A swap is tabu unless **both** variables it moves are free.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        add_var_to_tabu(tabu_map, self.i, iteration, tabu_tenure, rng);
-        add_var_to_tabu(tabu_map, self.j, iteration, tabu_tenure, rng);
+    /// Applying the swap forbids both variables, each for its own drawn tenure.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(self.i, iteration, rng);
+        tabu.forbid(self.j, iteration, rng);
     }
 }
 
@@ -177,6 +172,12 @@ impl Evaluate for SatSwapNeighbor {
 }
 
 impl MoveToNeighbor<Sat> for SatSwapNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }

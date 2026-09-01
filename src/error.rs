@@ -42,6 +42,12 @@ pub enum OptError {
     /// An invalid search state (e.g., empty neighborhood).
     #[error("Invalid state: {0}")]
     InvalidState(String),
+
+    /// An operation the type at hand does not support (e.g. asking a move that
+    /// does not implement [`EnabledTabu`](crate::trait_defs::EnabledTabu) about
+    /// the tabu map).
+    #[error("Unsupported: {0}")]
+    Unsupported(String),
 }
 
 fn display_file_load(path: &str, line: &usize, detail: &str) -> String {

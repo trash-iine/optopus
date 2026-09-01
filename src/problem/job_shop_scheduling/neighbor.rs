@@ -1,9 +1,10 @@
 use rand::Rng;
+use rand::rngs::SmallRng;
 use rayon::prelude::*;
-use std::collections::HashMap;
 
 use super::problem::{JobShopScheduling, JobShopSolution};
 use crate::{
+    common::TabuMemory,
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
@@ -96,26 +97,24 @@ impl Evaluate for JobShopSwapNeighbor {
 }
 
 impl EnabledTabu for JobShopSwapNeighbor {
-    /// Keyed by the swap position `i`.
-    type TabuMap = HashMap<usize, u64>;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.get(&self.i).is_none_or(|&t| iteration > t)
+    /// The move is tabu while position `i` is still blocked at the current iteration.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(self.i, iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert(self.i, iteration + d);
+    /// Applying the move forbids position `i` for a tenure the memory draws.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(self.i, iteration, rng);
     }
 }
 
 impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn apply_to_solution(
         &self,
         prob: &JobShopScheduling,
@@ -285,24 +284,14 @@ impl Evaluate for JobShopRelocateNeighbor {
 }
 
 impl EnabledTabu for JobShopRelocateNeighbor {
-    /// Keyed by the `(from, to)` pair.
-    type TabuMap = HashMap<(usize, usize), u64>;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map
-            .get(&(self.from, self.to))
-            .is_none_or(|&t| iteration > t)
+    /// Keyed by the `(from, to)` move, so re-making the same relocation is what is blocked.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled((self.from, self.to), iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert((self.from, self.to), iteration + d);
+    /// Applying it forbids that `(from, to)` pair.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid((self.from, self.to), iteration, rng);
     }
 }
 
@@ -312,6 +301,12 @@ fn relocate_in_place(operations: &mut Vec<usize>, from: usize, to: usize) {
 }
 
 impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn apply_to_solution(
         &self,
         prob: &JobShopScheduling,
