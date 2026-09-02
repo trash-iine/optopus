@@ -130,38 +130,64 @@ holds `perturbation.rs` open regardless, and `RandomWalk` fails with
 `InvalidState` on the edgeless sub-instances `SubProblemBasedCrossover`
 produces, so its guard would only move into the caller.
 
-## Why `best_swap` is not a move type
+## The directed swap is a TabuSearch step on each side
 
-The obvious next step is to give the directed swap the same treatment: define a
-move type whose neighborhood is small enough for a generic `TabuSearch`, and
-delete the operator. `TabuSearch<MaxCutSwapNeighbor>` is out because its `iter`
+`best_swap` went the same way, once the neighborhood was restricted on the
+right axis. `TabuSearch<MaxCutSwapNeighbor>` is out because its `iter`
 enumerates every cross-side pair, O(n²) — 4·10⁸ against 2·10⁴ per step on G81 —
-but that is a property of *that* neighborhood, not of swaps. A
-`MaxCutBestSwapNeighbor` yielding only the pairs that touch each side's
-highest-gain vertex is O(n), always contains the greedy pair, and needs no new
-parameter.
+but that is a property of *that* neighborhood, not of swaps.
 
-**It was built and measured, and it fails.** Against the integrated descent as
-the baseline, on the same ten-instance panel at 30s × 5 runs: **−452.6 total
-average cut**, worse on 8 of 10, at **0.05–0.36× the moves**, with `TabuSearch`
-reporting no eligible move 3.8× more often than it found one (5.6M times on G1
-against 1.5M applied moves).
+**The first restriction tried was the obvious one, and it failed badly.** A
+move type yielding only the pairs that touch each side's *highest-gain* vertex
+is O(n) and always contains the greedy pair. Measured against the operator:
+**−452.6 total average cut**, worse on 8 of 10, at **0.05–0.36× the moves**,
+with `TabuSearch` reporting no eligible move 3.8× more often than it found one
+(5.6M times on G1 against 1.5M applied moves).
 
-The cause is structural. `apply_swap_as_two_flips` inverts the sign of both
-moved vertices' gains, and the weak swap runs straight after a descent, from a
-local optimum where every gain is ≤ 0. So the two vertices a swap just moved
-become the highest-gain vertex of their new side — and they are tabu, because
-the swap just recorded them. On the next step both centres are forbidden, every
-candidate has a forbidden endpoint, and the neighborhood empties. **Ranking a
-restricted neighborhood by gain is anti-correlated with a recency-based tabu
-list.** Widening to the top `k` per side does not escape it: `k` would have to
-exceed the tenure — up to 600 on the sparse instances — and `k²` then overtakes
-the `n` it was meant to replace.
+The cause was structural. Applying a move inverts the sign of its vertex's
+gain, and this phase starts from a local optimum where every gain is ≤ 0. So
+the vertices a search just moved become the highest-gain ones — and they are
+exactly the vertices the tabu memory now forbids. On the next step both centres
+are gone and the neighborhood empties. **Ranking a restricted neighborhood by
+gain is anti-correlated with a recency-based tabu list**, and widening to the
+top `k` per side does not escape it: `k` would have to exceed the tenure — up
+to 600 on the sparse instances — and `k²` then overtakes the `n` it replaces.
 
-What `best_swap` does instead is consult the tabu memory *during* the scan, for
-the best **non-tabu** vertex on each side. That is what `MoveToNeighbor::iter`
-cannot do: it is handed the problem and the solution, never the search state.
-The operator stays.
+**Restricting by partition side has no such correlation.** A side holds about
+n/2 vertices and loses only the handful recently moved.
+[`MaxCutSideFlipNeighbor<SIDE>`](../problems/max_cut.md) is `MaxCutFlipNeighbor`
+with `iter` narrowed to the vertices currently on `SIDE`, and one
+[`TabuSearch`](tabu_search.md) step on each side moves one vertex per side —
+the swap, taken one half at a time. `Heuristic::run_once` is exactly one step,
+so no stop condition is involved:
+
+```rust
+let cond = StopCondition::new(None, None, None);
+let mut on_true = TabuSearch::<MaxCutSideFlipNeighbor<true>>::new(cond.clone(), tenure);
+let mut on_false = TabuSearch::<MaxCutSideFlipNeighbor<false>>::new(cond, tenure);
+for _ in 0..l {
+    on_true.run_once(state)?;
+    on_false.run_once(state)?;
+}
+```
+
+Measured against the operator it replaced, on the same panel: **+20.8 total
+average cut**, better on 5 and worse on 4, and **not one** "no eligible move"
+on any instance. G1 now reaches the best known 11624 on all five runs where the
+operator averaged 11620.6. The per-instance differences sit inside one standard
+deviation either way, which is the point — this deletes an operator without
+costing anything.
+
+Three details of `best_swap` did not survive, and none of them showed up in the
+panel:
+
+- aspiration is tested per flip rather than on the combined swap, so it fires
+  less often;
+- the second flip is chosen from gains the first has already updated, so the
+  `2·w(i, j)` correction happens by construction rather than by formula;
+- a side with no free vertex now yields no move, where the operator fell back
+  to that side's best and broke tabu without aspiration — a branch already
+  recorded above as paper-undefined and unreached on the G-set.
 
 Integrating the descent also required dropping `LocalSearch::new`'s rewrite of
 an unset `max_failed_update` to `Some(1)`. `is_done` reads that field as

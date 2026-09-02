@@ -76,6 +76,7 @@
 //! |---|---|---|
 //! | [`MaxCutFlipNeighbor`] | Flip one vertex to the opposite side | 1 |
 //! | [`MaxCutSwapNeighbor`] | Swap two vertices on different sides | 2 |
+//! | [`MaxCutSideFlipNeighbor`] | Flip a vertex, restricted to one side of the cut | 1 |
 //!
 //! # Applying heuristics
 //!
@@ -154,6 +155,6 @@ mod problem;
 
 pub use crossover::MaxCutUniformCrossover;
 pub use kernel::MaxCutKernel;
-pub use neighbor::{MaxCutFlipNeighbor, MaxCutSwapNeighbor};
+pub use neighbor::{MaxCutFlipNeighbor, MaxCutSideFlipNeighbor, MaxCutSwapNeighbor};
 pub use planted::{PlantedMaxCut, TileProbs2d, TileProbs3d, WishartCouplers};
 pub use problem::{MaxCut, MaxCutSolution};

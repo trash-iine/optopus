@@ -62,6 +62,8 @@ mod tests {
         assert_policy! {
             MaxCut => MaxCutFlipNeighbor { i: 0, gain: 0.0 },
             MaxCut => MaxCutSwapNeighbor { i: 0, j: 1, gain: 0.0 },
+            MaxCut => MaxCutSideFlipNeighbor::<true>(MaxCutFlipNeighbor { i: 0, gain: 0.0 }),
+            MaxCut => MaxCutSideFlipNeighbor::<false>(MaxCutFlipNeighbor { i: 0, gain: 0.0 }),
             Qubo => QuboFlipNeighbor { i: 0, gain: 0 },
             Qubo => QuboSwapNeighbor { i: 0, j: 1, gain: 0 },
             Sat => SatFlipNeighbor { i: 0, gain: 0 },

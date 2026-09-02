@@ -51,6 +51,7 @@ pub use crate::problem::{
     // MaxCut
     MaxCut,
     MaxCutFlipNeighbor,
+    MaxCutSideFlipNeighbor,
     MaxCutSolution,
     MaxCutSwapNeighbor,
     OptDirection,

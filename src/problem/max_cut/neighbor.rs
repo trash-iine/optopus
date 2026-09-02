@@ -1,9 +1,11 @@
 //! Neighborhood move types for the [`MaxCut`] problem.
 //!
-//! Two move types are provided:
+//! Three move types are provided:
 //!
 //! - [`MaxCutFlipNeighbor`] — flip a single vertex (O(degree) update)
 //! - [`MaxCutSwapNeighbor`] — swap two vertices on opposite sides (two sequential flips)
+//! - [`MaxCutSideFlipNeighbor`] — the same flip, over the vertices of one side
+//!   only, so a step on each side makes a swap without enumerating pairs
 //!
 //! Both implement [`MoveToNeighbor`], [`Evaluate`], and [`EnabledTabu`], so they
 //! work with all heuristics ([`LocalSearch`], [`TabuSearch`], [`SimulatedAnnealing`], etc.).
@@ -380,6 +382,156 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     }
 }
 
+/// A flip restricted to one side of the cut.
+///
+/// The move is [`MaxCutFlipNeighbor`]'s — same O(degree) update, same gain,
+/// same tabu policy. What differs is the *neighborhood*: `iter` yields only the
+/// vertices currently assigned to `SIDE`, so two searches over
+/// `MaxCutSideFlipNeighbor<true>` and `MaxCutSideFlipNeighbor<false>` move one
+/// vertex per side and leave the partition sizes untouched — Benlic & Hao's
+/// `M2`, taken one half at a time.
+///
+/// That is how Breakout Local Search runs its directed swap perturbation `A2`:
+/// a [`TabuSearch`] step on each side picks that side's highest-gain non-tabu
+/// vertex, with a tabu one admitted on aspiration.
+///
+/// The side has to be a type parameter rather than a field because
+/// [`iter`](MoveToNeighbor::iter) is an associated function with no receiver.
+///
+/// # Why restrict by side and not by gain
+///
+/// A neighborhood restricted to the *highest-gain* vertices is O(n) to
+/// enumerate too, and it fails: applying a move inverts the sign of its
+/// vertex's gain, and these perturbations start from a local optimum where
+/// every gain is ≤ 0, so the vertices a search just moved become the
+/// highest-gain ones — and they are exactly the vertices the tabu memory now
+/// forbids. Ranking a restricted neighborhood by gain is anti-correlated with a
+/// recency-based tabu list. A side holds about n/2 vertices and loses only the
+/// handful recently moved, so it stays populated.
+///
+/// # Example
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]);
+/// let mut state = SearchState::new(&mc);
+///
+/// // One step per side keeps the partition sizes unchanged.
+/// let cond = StopCondition::new(None, None, None);
+/// let mut on_true = TabuSearch::<MaxCutSideFlipNeighbor<true>>::new(cond.clone(), (5, 10));
+/// let mut on_false = TabuSearch::<MaxCutSideFlipNeighbor<false>>::new(cond, (5, 10));
+/// on_true.run_once(&mut state)?;
+/// on_false.run_once(&mut state)?;
+/// # Ok::<(), optopus::error::OptError>(())
+/// ```
+///
+/// [`TabuSearch`]: crate::heuristic::TabuSearch
+#[derive(Debug, Clone, Copy)]
+pub struct MaxCutSideFlipNeighbor<const SIDE: bool>(pub MaxCutFlipNeighbor);
+
+impl<const SIDE: bool> MaxCutSideFlipNeighbor<SIDE> {
+    /// Builds the flip of vertex `i`, reading the gain cached in `sol`.
+    ///
+    /// `i` is expected to be on `SIDE`; nothing here depends on it, so a
+    /// caller that builds one by hand still gets a correctly evaluated move,
+    /// but [`iter`](MoveToNeighbor::iter) will never yield it.
+    pub fn new(prob: &MaxCut, sol: &MaxCutSolution, i: usize) -> Self {
+        Self(MaxCutFlipNeighbor::new(prob, sol, i))
+    }
+
+    /// The vertex this move flips.
+    pub fn vertex(&self) -> usize {
+        self.0.i
+    }
+
+    /// The change in cut weight this move makes.
+    pub fn gain(&self) -> f32 {
+        self.0.gain
+    }
+}
+
+impl<const SIDE: bool> Rankable for MaxCutSideFlipNeighbor<SIDE> {
+    fn is_better_than(&self, other: &Self) -> bool {
+        self.0.is_better_than(&other.0)
+    }
+}
+
+impl<const SIDE: bool> Evaluate for MaxCutSideFlipNeighbor<SIDE> {
+    /// Returns the gain as `Evaluable::Maximize`.
+    fn evaluate(&self) -> Evaluable<f64> {
+        self.0.evaluate()
+    }
+}
+
+impl<const SIDE: bool> EnabledTabu for MaxCutSideFlipNeighbor<SIDE> {
+    /// The move is tabu while its vertex is still blocked — the flip's policy.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        self.0.is_move_enabled(tabu, iteration)
+    }
+
+    /// Applying the move forbids the vertex for a tenure the memory draws.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        self.0.add_to_tabu_map(tabu, iteration, rng)
+    }
+}
+
+impl<const SIDE: bool> MoveToNeighbor<MaxCut> for MaxCutSideFlipNeighbor<SIDE> {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
+    /// Applies the flip, exactly as [`MaxCutFlipNeighbor`] does.
+    fn apply_to_solution(&self, prob: &MaxCut, sol: &mut MaxCutSolution) -> Result<(), OptError> {
+        self.0.apply_to_solution(prob, sol)
+    }
+
+    /// Yields a flip for every vertex currently on `SIDE`, and nothing else.
+    ///
+    /// The two instantiations partition [`MaxCutFlipNeighbor::iter`] between
+    /// them: every vertex is on exactly one side.
+    fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
+        prob.graph
+            .iter_on_vertices()
+            .filter(move |&&v| sol.x[v] == SIDE)
+            .map(move |&v| Self::new(prob, sol, v))
+    }
+
+    /// Returns `true` if applying this flip to `src` yields a solution better
+    /// than `other`.
+    fn move_to_be_better_than(
+        &self,
+        prob: &MaxCut,
+        src: &MaxCutSolution,
+        other: &MaxCutSolution,
+    ) -> bool {
+        self.0.move_to_be_better_than(prob, src, other)
+    }
+
+    /// O(n): collects the vertices on `SIDE` and picks one uniformly. `None`
+    /// when that side is empty, which is exactly when
+    /// [`iter`](MoveToNeighbor::iter) is empty.
+    fn random_neighbor(
+        prob: &MaxCut,
+        sol: &MaxCutSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Option<Self> {
+        let side: Vec<usize> = prob
+            .graph
+            .iter_on_vertices()
+            .filter(|&&v| sol.x[v] == SIDE)
+            .copied()
+            .collect();
+        if side.is_empty() {
+            return None;
+        }
+        let v = side[rng.random_range(0..side.len())];
+        Some(Self::new(prob, sol, v))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -454,5 +606,82 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    /// A toroidal-like graph (degree 4, unit weights) with both partition sides
+    /// populated, so neither side-restricted neighborhood is degenerate.
+    fn ring_instance() -> MaxCut {
+        let n = 30usize;
+        let mut edges = Vec::new();
+        for i in 0..n {
+            edges.push((i, (i + 1) % n, 1.0));
+            edges.push((i, (i + 2) % n, 1.0));
+        }
+        MaxCut::from_edges(edges)
+    }
+
+    /// Each instantiation must yield only vertices on its own side. That is the
+    /// whole restriction, and it is what makes a step on each side a swap.
+    #[test]
+    fn side_flip_yields_only_its_own_side() {
+        let mc = ring_instance();
+        let state = SearchState::new_with_seed(&mc, 5);
+        let sol = &state.solution;
+
+        for m in MaxCutSideFlipNeighbor::<true>::iter(&mc, sol) {
+            assert!(
+                sol.x[m.vertex()],
+                "vertex {} is not on the true side",
+                m.vertex()
+            );
+        }
+        for m in MaxCutSideFlipNeighbor::<false>::iter(&mc, sol) {
+            assert!(
+                !sol.x[m.vertex()],
+                "vertex {} is not on the false side",
+                m.vertex()
+            );
+        }
+    }
+
+    /// The two sides must partition the full flip neighborhood: every vertex is
+    /// on exactly one of them, so nothing is dropped and nothing is counted
+    /// twice.
+    #[test]
+    fn the_two_sides_partition_the_flip_neighborhood() {
+        let mc = ring_instance();
+        let state = SearchState::new_with_seed(&mc, 5);
+        let sol = &state.solution;
+
+        let mut split: Vec<usize> = MaxCutSideFlipNeighbor::<true>::iter(&mc, sol)
+            .map(|m| m.vertex())
+            .chain(MaxCutSideFlipNeighbor::<false>::iter(&mc, sol).map(|m| m.vertex()))
+            .collect();
+        let mut all: Vec<usize> = MaxCutFlipNeighbor::iter(&mc, sol).map(|m| m.i).collect();
+        split.sort_unstable();
+        all.sort_unstable();
+        assert_eq!(split, all);
+    }
+
+    /// One step per side moves one vertex on each, so the partition sizes come
+    /// back unchanged — the property `M2` exists for.
+    #[test]
+    fn a_step_on_each_side_keeps_the_partition_sizes() {
+        use crate::heuristic::{Heuristic, StopCondition, TabuSearch};
+
+        let mc = ring_instance();
+        let mut state = SearchState::new_with_seed(&mc, 2);
+
+        let on_true_side = |x: &[bool]| x.iter().filter(|&&b| b).count();
+        let before = on_true_side(&state.solution.x);
+
+        let cond = StopCondition::new(None, None, None);
+        let mut on_true = TabuSearch::<MaxCutSideFlipNeighbor<true>>::new(cond.clone(), (3, 15));
+        let mut on_false = TabuSearch::<MaxCutSideFlipNeighbor<false>>::new(cond, (3, 15));
+        for _ in 0..4 {
+            on_true.run_once(&mut state).unwrap();
+            on_false.run_once(&mut state).unwrap();
+        }
+        assert_eq!(on_true_side(&state.solution.x), before);
     }
 }

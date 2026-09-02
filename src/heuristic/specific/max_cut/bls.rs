@@ -1,8 +1,8 @@
 use super::ops;
 use crate::error::OptError;
-use crate::heuristic::{Heuristic, LocalSearch, StopCondition};
+use crate::heuristic::{Heuristic, LocalSearch, StopCondition, TabuSearch};
 use crate::problem::MaxCut;
-use crate::problem::max_cut::MaxCutFlipNeighbor;
+use crate::problem::max_cut::{MaxCutFlipNeighbor, MaxCutSideFlipNeighbor};
 use crate::search_state::SearchState;
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -291,7 +291,23 @@ impl BreakoutLocalSearch {
         match perturbation {
             PerturbationType::Strong => ops::random_flips(l, state)?,
             PerturbationType::WeakFlip => ops::tabu_walk(l, state)?,
-            PerturbationType::WeakSwap => ops::best_swap(l, state)?,
+            // The directed swap `A2`, one half per side: a `TabuSearch` step
+            // on each side takes that side's highest-gain non-tabu vertex,
+            // admitting a tabu one on aspiration. `run_once` is exactly one
+            // step, so the stop condition never comes into it. Two flips make
+            // the swap and advance the counter by 2, as `MaxCutSwapNeighbor`
+            // would.
+            PerturbationType::WeakSwap => {
+                let cond = StopCondition::new(None, None, None);
+                let mut on_true =
+                    TabuSearch::<MaxCutSideFlipNeighbor<true>>::new(cond.clone(), self.tabu_tenure);
+                let mut on_false =
+                    TabuSearch::<MaxCutSideFlipNeighbor<false>>::new(cond, self.tabu_tenure);
+                for _ in 0..l {
+                    on_true.run_once(state)?;
+                    on_false.run_once(state)?;
+                }
+            }
         }
         state.update_best();
         Ok(())
