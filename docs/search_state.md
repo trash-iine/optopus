@@ -103,10 +103,8 @@ iteration number means the same thing on both sides of a merge — which matters
 for anything that records one, such as a trajectory point.
 
 The `n_accepted` / `n_rejected` / `n_best_updates` counters are the other kind of
-value: they measure a phase rather than timestamp anything, so **every** variant
-starts them at zero and `update_state` adds them straight into the parent. That
-is also why the state carries no `start_n_*` anchors — only `start_iteration`
-and `start_time`, which say where the phase began.
+value: they measure a phase rather than timestamp anything, so every variant
+starts them at zero and `update_state` adds them straight into the parent. 
 
 `ClearBest` is the usual choice: the phase gets a fresh local notion of "best"
 while the parent keeps the global one. `StartBest` restarts the phase from the
@@ -116,7 +114,7 @@ whole history down unchanged.
 `initial_solution` is re-anchored to the phase's starting point by `ClearBest`
 and `StartBest`, and inherited by `Simple`.
 
-Every variant **forks** the RNG: the child gets an independent stream and the
+Every variant forks the RNG: the child gets an independent stream and the
 parent's advances by one fork's worth of state. That is why
 `clone_for_new_run` takes `&mut self`, and why a sub-run's internal draws never
 leak back into the parent's sequence.

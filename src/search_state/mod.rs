@@ -13,7 +13,7 @@ use rand::rngs::SmallRng;
 
 /// Controls how [`SearchState`] is cloned when starting a sub-run.
 ///
-/// All three variants keep the parent's **iteration frame**: the child's
+/// All three variants keep the parent's iteration frame: the child's
 /// `iteration` runs on from where the parent stands, and `start_iteration`
 /// marks where the phase began. Everything budget-shaped is measured against
 /// that anchor — [`SearchState::iterations_this_run`],
@@ -21,10 +21,9 @@ use rand::rngs::SmallRng;
 /// [`SearchState::update_state`] merges — so a phase still starts at zero *of
 /// its own budget*.
 ///
-/// The accept / reject / best-update counters are not part of that frame: they
-/// measure a phase rather than timestamp anything, so **every** variant starts
-/// them at zero, and [`SearchState::update_state`] adds them straight into the
-/// parent.
+/// The accept / reject / best-update counters measure a phase rather than 
+/// timestamp anything, so every variant starts them at zero,  and 
+/// [`SearchState::update_state`] adds them straight into the parent.
 #[derive(Clone, Debug)]
 pub enum SearchStateCloneType {
     /// Clone the state as-is.
@@ -71,28 +70,6 @@ pub struct TrajectoryPoint {
 ///
 /// Contains the problem instance (by reference), the current solution,
 /// the best solution found so far, and iteration / timing metadata.
-///
-/// # Field visibility policy
-///
-/// The fields below are split deliberately:
-///
-/// - **`pub` fields** are the live search state that heuristics (both built-in
-///   and user-implemented) legitimately read **and write** during a run:
-///   `solution`, `best_solution`, `iteration`, `best_iteration`, `best_time`,
-///   `initial_solution`, `n_accepted`, `n_rejected`, `n_best_updates`, `rng`,
-///   and the problem reference `instance`. Direct field access is intentional
-///   — wrapping every one of these in a setter would only add noise without
-///   strengthening any invariant, since heuristics need to mutate them
-///   anyway.
-///
-/// - **`pub(crate)` fields** (`start_iteration`, `start_time`) are the sub-run
-///   anchors, used **only** by [`Self::clone_for_new_run`],
-///   [`Self::iterations_this_run`] and [`Self::update_state`] to say where the
-///   current phase began. They must never be touched from outside this crate;
-///   an external write would silently corrupt the merge accounting.
-///
-/// In short: pub = "live state heuristics drive", pub(crate) = "internal
-/// merge bookkeeping — hands off".
 #[derive(Clone)]
 pub struct SearchState<'a, Problem>
 where
@@ -124,24 +101,14 @@ where
     /// - `StartBest`  — re-anchored to the best solution at clone time
     ///   (which is also the sub-run's starting solution).
     pub initial_solution: Problem::Solution,
-    /// Number of moves accepted (`apply` / `apply_move_only` calls) since this
-    /// sub-run started. Always satisfies
-    /// `iterations_this_run() == n_accepted + n_rejected` when only the standard
-    /// methods on this state are used.
-    ///
-    /// This and the two counters below *measure a phase*, so every clone from
-    /// [`clone_for_new_run`](Self::clone_for_new_run) starts them at zero and
-    /// [`update_state`](Self::update_state) adds them straight into the parent.
-    /// `iteration` is the opposite kind of value — a clock other things are
-    /// timestamped against — so it keeps running instead, and
-    /// [`iterations_this_run`](Self::iterations_this_run) is how a phase reads
-    /// its own progress off it.
+    /// Number of moves accepted (`apply` / `apply_move_only` calls).
+    /// Always satisfies `iterations_this_run() == n_accepted + n_rejected` 
+    /// when only the standard methods on this state are used.
     pub n_accepted: u64,
     /// Number of iterations that advanced without applying a move
-    /// (`progress_iteration` calls) since this sub-run started.
+    /// (`progress_iteration` calls).
     pub n_rejected: u64,
-    /// Number of times `update_best` actually replaced `best_solution`
-    /// since this sub-run started.
+    /// Number of times `update_best` actually replaced `best_solution`.
     pub n_best_updates: u64,
     /// Shared random source used by every heuristic that needs randomness.
     ///
@@ -316,20 +283,6 @@ where
     /// Creates a copy of this state prepared for a new sub-run.
     ///
     /// The behavior depends on `clone_type`; see [`SearchStateCloneType`] for details.
-    ///
-    /// **RNG semantics**: the parent's RNG is *forked* — the child gets a fully
-    /// independent stream, and the parent's stream advances by one fork's worth
-    /// of state. This is why `&mut self` is required.
-    ///
-    /// **Iteration semantics**: the child continues the parent's counter, and
-    /// `start_iteration` records where the phase began — which is what every
-    /// budget is measured against. Restarting the counter at zero would say the
-    /// same thing about the phase's own progress and a different thing about
-    /// everything else: an iteration number would stop being comparable across
-    /// the merge, which matters for anything that records one, such as a
-    /// trajectory point. The accept / reject / best-update counters *do* start
-    /// at zero — under every variant — because they measure the phase rather
-    /// than timestamp it.
     pub fn clone_for_new_run(&mut self, clone_type: SearchStateCloneType) -> Self {
         let now = std::time::Instant::now();
         let child_rng = SmallRng::from_rng(&mut self.rng);
@@ -394,7 +347,7 @@ where
     /// - The iteration counter is advanced by the sub-run's own progress
     ///   (`iteration - start_iteration`), and the accept/reject/best-update
     ///   counters — which the sub-run counted from zero — are added on.
-    /// - `initial_solution` is **not** overwritten: the parent's anchor is preserved.
+    /// - `initial_solution` is not overwritten.
     /// - If the sub-run found a better solution, the best solution is updated.
     ///
     /// # Panics
