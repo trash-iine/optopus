@@ -1,7 +1,8 @@
 use super::ops;
 use crate::error::OptError;
-use crate::heuristic::{Heuristic, StopCondition};
+use crate::heuristic::{Heuristic, LocalSearch, StopCondition};
 use crate::problem::MaxCut;
+use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::search_state::SearchState;
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -260,9 +261,16 @@ impl BreakoutLocalSearch {
     /// controller other than the paper's schedule has to act — a learned
     /// policy observes the local optimum it landed on before choosing the next
     /// kick.
+    ///
+    /// This is the generic [`LocalSearch`], not an operator of its own. The
+    /// empty stop condition is the whole budget: `LocalSearch` halts at a local
+    /// optimum on its own. Writing the tabu memory — Benlic & Hao's
+    /// `H ← Iter + γ`, which sits inside their descent loop — comes from
+    /// [`SearchState::apply`](crate::search_state::SearchState::apply), so the
+    /// generic descent records exactly what the specialised one did.
     pub fn descend(&mut self, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
         self.prepare(state);
-        ops::descent(state)
+        LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::new(None, None, None)).run(state)
     }
 
     /// The second half of one round: one perturbation of type `perturbation`
@@ -364,6 +372,44 @@ mod tests {
             edges.push((i, (i + 2) % n, 1.0));
         }
         MaxCut::from_edges(edges)
+    }
+
+    /// The descent must stop exactly at a local optimum — no vertex left with a
+    /// positive flip gain — and leave the vertices it moved behind in the
+    /// state's tabu memory, which is what stops the following perturbation
+    /// undoing it.
+    ///
+    /// That second half is Benlic & Hao's Algorithm 1 line 14, `H <- Iter + γ`,
+    /// which sits inside their descent loop. It used to be written out by a
+    /// specialised `ops::descent`; now [`BreakoutLocalSearch::descend`] drives
+    /// the generic [`LocalSearch`] and the record comes from `apply` itself, so
+    /// the property is pinned here rather than in the operator.
+    #[test]
+    fn descend_reaches_a_local_optimum_and_fills_the_tabu_memory() {
+        let mc = small_instance();
+        let mut state = SearchState::new_with_seed(&mc, 3);
+        let mut bls =
+            BreakoutLocalSearch::externally_driven(StopCondition::iterations(u64::MAX), (3, 15));
+
+        let before = state.solution.objective;
+        bls.descend(&mut state).unwrap();
+
+        assert!(state.solution.objective >= before, "descent must not lose");
+        for v in 0..state.solution.x.len() {
+            assert!(
+                mc.calculate_gain(&state.solution.x, v) <= 0.0,
+                "vertex {v} still improves, so this is not a local optimum"
+            );
+        }
+        assert!(
+            (0..state.solution.x.len())
+                .any(|v| { !state.tabu_allows(&MaxCutFlipNeighbor::new(&mc, &state.solution, v)) }),
+            "the moves it applied must be recorded"
+        );
+        assert_eq!(
+            state.best_solution.objective, state.solution.objective,
+            "the local optimum has to be published before returning"
+        );
     }
 
     /// Regression test: BLS must run to completion without erroring.

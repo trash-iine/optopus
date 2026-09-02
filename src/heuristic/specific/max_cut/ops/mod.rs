@@ -1,12 +1,17 @@
-//! The vertex-level search operators for MaxCut, shared by every heuristic in
-//! this directory.
+//! The vertex-level search operators for MaxCut that no generic heuristic
+//! covers, shared by every heuristic in this directory.
 //!
-//! Each operator is a free function over a [`SearchState`](crate::search_state::SearchState),
-//! one module per role: [`descent`] walks downhill, [`tabu_walk`] walks through
-//! local optima, and [`perturbation`] kicks. They are independent — none calls
-//! into another — and what they share is the state's own tabu memory, recorded
-//! by [`apply`](crate::search_state::SearchState::apply) itself rather than by
+//! Each is a free function over a [`SearchState`](crate::search_state::SearchState),
+//! one module per role: [`tabu_walk`] walks through local optima and
+//! [`perturbation`] kicks. They are independent — neither calls into the other
+//! — and what they share is the state's own tabu memory, recorded by
+//! [`apply`](crate::search_state::SearchState::apply) itself rather than by
 //! each operator.
+//!
+//! **The descent is not here.** It used to be, as `ops::descent`; Breakout
+//! Local Search now descends with the generic
+//! [`LocalSearch`](crate::heuristic::LocalSearch). See below for what that
+//! cost.
 //!
 //! That sharing is the point, and it is automatic here: a
 //! [`TabuMemory`](crate::common::TabuMemory) keys its slots by the *shape* of a
@@ -28,47 +33,50 @@
 //! [`TabuSearch`](crate::heuristic::TabuSearch) over the same neighborhood
 //! would; they only decide *which* moves to try.
 //!
-//! # Why these are not the generic heuristics
+//! # What the descent cost to give up, and why the rest stays
 //!
-//! Sharing is *not* the answer to that question. Once
+//! Sharing was never the reason these are hand-written. Once
 //! [`apply`](crate::search_state::SearchState::apply) became what records a
-//! move, [`LocalSearch`](crate::heuristic::LocalSearch) and
-//! [`RandomWalk`](crate::heuristic::RandomWalk) write the same memory these
-//! operators do, and neither reads it — exactly as the paper's descent does.
-//! The reasons are narrower, and two of them were measured (BLS, 30s x 5 runs,
-//! seed 42, ten G-set instances, `l0 = 0.01|V|`, density-scaled tenure):
+//! move, `LocalSearch` writes the same memory an operator does and reads it
+//! just as little. The reasons are narrower, and the descent's turned out to be
+//! affordable while the other two are not.
 //!
-//! - **[`descent`] against `LocalSearch`.** Both take the same candidate set —
-//!   `is_neighbor_better_than_current` on a flip is `gain > 0`, which is what
-//!   `positive_gain` indexes — but `LocalSearch` rescans all `n` vertices per
-//!   move where [`descent`] enumerates only the improving ones. In the same
-//!   wall clock it made **0.74-0.93x as many moves** on all ten instances, for
-//!   **-40.0 total average cut** (better on 3, worse on 5): -21.2 on G81,
-//!   -12.4 on G63, -8.4 on G70, -6.4 on G55, against +8.2 on G60. Two further
-//!   differences ride along and are not separated by that number: `max_by`
-//!   breaks gain ties toward the *last* candidate where [`keep_best`] keeps the
-//!   first, and `LocalSearch` spends one extra `progress_iteration` per
-//!   descent.
-//! - **`random_flips` against `RandomWalk`.** Measured the same way, this one
-//!   is **free** — swapping it on top of the above moved the total by +0.4 with
-//!   throughput unchanged. It stays anyway: it cannot delete
-//!   [`perturbation`] (which holds `best_swap` too), and `RandomWalk` fails
-//!   with `InvalidState` on the edgeless sub-instances
-//!   [`SubProblemBasedCrossover`](crate::heuristic::SubProblemBasedCrossover)
-//!   produces, so the guard would only move into the caller.
-//! - **`best_swap` has no generic counterpart.** `TabuSearch<MaxCutSwapNeighbor>`
-//!   would enumerate O(n^2) vertex pairs where `best_swap` scans each partition
-//!   side once, O(n) — 4e8 against 2e4 per step on G81.
-//! - **`LocalSearch` cannot express this descent as constructed.** Its
-//!   `new` forces `max_failed_update = Some(1)`, and after a kick the solution
-//!   is worse than the global best, so `Heuristic::run` returns before taking a
-//!   move. Reaching the phase BLS wants means clearing that field by hand.
+//! **The descent was integrated, at a measured price.** A specialised descent
+//! enumerated only the improving flips through `MaxCutSolution`'s optional
+//! `positive_gain` index, where `LocalSearch` rescans all `n` vertices per move
+//! — both selecting from the same set, since
+//! `is_neighbor_better_than_current` on a flip is `gain > 0`. One descent to a
+//! local optimum takes **1.8-2.3x** as long generically (10 seeds, medians, on
+//! G1 / G22 / G32 / G55 / G70 / G81 — flat across n from 800 to 20000 and
+//! degree from 2 to 48), of which the scan is 87% and `update_best`'s per-move
+//! clone the other 13%. Through a whole BLS run that is **-40.0 total average
+//! cut** (G-set panel of ten, 30s x 5 runs, seed 42; better on 3, worse on 5)
+//! and 0.74-0.93x as many moves. The 2x is the price of the generic contract,
+//! not slack in it: `clone_from` in `update_best` changed nothing (`derive`
+//! does not specialise it), folding the best update to the end of the descent
+//! recovers only 8-10% and coarsens the anytime trajectory, and the same
+//! traversal written as a hand loop ran **3.3x slower** than the iterator
+//! chain. Cutting the scan needs to know which gains moved, which is problem
+//! knowledge.
+//!
+//! **`best_swap` has no generic counterpart at all.**
+//! `TabuSearch<MaxCutSwapNeighbor>` would enumerate O(n²) vertex pairs where
+//! `best_swap` scans each partition side once, O(n) — 4·10⁸ against 2·10⁴ per
+//! step on G81 — and its `A2` selection rule (aspiration tested on the
+//! unrestricted best swap, a side with no free vertex falling back to its own
+//! best) is not a tabu search's.
+//!
+//! **`random_flips` is free to replace and still here.** Measured the same way,
+//! swapping it for [`RandomWalk`](crate::heuristic::RandomWalk) moved the total
+//! by +0.4 with throughput unchanged. It deletes no file — [`perturbation`]
+//! holds `best_swap` too — and `RandomWalk` fails with `InvalidState` on the
+//! edgeless sub-instances
+//! [`SubProblemBasedCrossover`](crate::heuristic::SubProblemBasedCrossover)
+//! produces, so the guard it holds would only move into the caller.
 
-mod descent;
 mod perturbation;
 mod tabu_walk;
 
-pub(super) use descent::descent;
 pub(super) use perturbation::{best_swap, random_flips};
 pub(super) use tabu_walk::tabu_walk;
 
@@ -99,6 +107,7 @@ fn keep_best(slot: &mut Option<MaxCutFlipNeighbor>, candidate: MaxCutFlipNeighbo
 mod tests {
     use super::*;
     use crate::error::OptError;
+    use crate::heuristic::{Heuristic, LocalSearch, StopCondition};
     use crate::problem::MaxCut;
     use crate::search_state::SearchState;
 
@@ -152,7 +161,12 @@ mod tests {
             for op in schedule {
                 op(3, &mut state).unwrap();
             }
-            descent(&mut state).unwrap();
+            // The descent between rounds is the generic `LocalSearch` — the
+            // same one `BreakoutLocalSearch::descend` drives — so this checks
+            // the indexes stay consistent under it too.
+            LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::new(None, None, None))
+                .run(&mut state)
+                .unwrap();
 
             for v in 0..state.solution.x.len() {
                 let expected = mc.calculate_gain(&state.solution.x, v);

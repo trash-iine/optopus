@@ -45,14 +45,20 @@ climbs again instead of reporting itself done at once — which is what makes
 
 ## Behavior
 
-For `StopCondition`,
+`LocalSearch` halts at a local optimum whether or not the `StopCondition` says
+anything: `is_done` also reports the iteration that found no improving move. So
 
-- `max_failed_update` is forced to `Some(1)`. If you pass any other value it
-  is overwritten and a warning is logged: a local-optimum step is a
-  failed update by definition.
-- The stop condition still applies (iterations / duration), so combine
-  `LocalSearch` with `Restart` or `Iterated` for budgets larger than a single
-  hill climb.
+- an empty `StopCondition::new(None, None, None)` reads exactly as "descend
+  until nothing improves" — that is how
+  [`BreakoutLocalSearchForMaxCut`](breakout_local_search.md) drives its descent;
+- anything you do set is an *additional* budget on top of that, taken as
+  written. `max_failed_update` included — it used to be rewritten to `Some(1)`
+  here, which was redundant with the local-optimum test at best and wrong at
+  worst, since `is_done` reads it as `iteration - best_iteration >= 1` and so a
+  descent starting *below* the incumbent best satisfied it before taking a
+  single move;
+- a budget only ever bounds a single hill climb, so combine `LocalSearch` with
+  `Restart` or `Iterated` for anything larger.
 
 ## Benchmark config
 
@@ -64,10 +70,9 @@ neighbor = "Flip"        # required; the valid values are per-problem
 max_iteration = 100_000
 ```
 
-`max_failed_update` is forced to `1` whatever the config says (see
-[Behavior](#behavior)), so the useful budget keys here are `max_iteration` and
-`max_duration_secs` — and they only bound a single hill climb. For a real
-budget, nest `LocalSearch` inside [`Restart` or `Iterated`](meta.md).
+Every key is honoured as written (see [Behavior](#behavior)), but all of them
+only bound a single hill climb — the run ends at the local optimum regardless.
+For a real budget, nest `LocalSearch` inside [`Restart` or `Iterated`](meta.md).
 
 ## References
 

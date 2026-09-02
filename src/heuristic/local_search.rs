@@ -20,6 +20,16 @@ use crate::trait_defs::{MoveToNeighbor, ProblemTrait, Rankable};
 /// ls.run(&mut state).unwrap();
 /// ```
 ///
+/// # Stopping
+///
+/// This heuristic stops at a local optimum whether or not the
+/// [`StopCondition`] says anything, because [`is_done`](Heuristic::is_done)
+/// also reports the iteration that found no improving move. An empty
+/// `StopCondition::new(None, None, None)` therefore reads exactly as "descend
+/// until nothing improves", and any condition given is an *additional* budget
+/// on top of that — `max_failed_update` included, which is passed through as
+/// written.
+///
 /// # References
 ///
 /// - Aarts, E. and Lenstra, J. K. (eds.) *Local Search in Combinatorial Optimization*.
@@ -32,16 +42,18 @@ pub struct LocalSearch<N> {
 
 impl<N> LocalSearch<N> {
     /// Create a new [`LocalSearch`] with the given stopping condition.
+    ///
+    /// The condition is taken as written. It used to be rewritten here — an
+    /// unset `max_failed_update` became `Some(1)` — which was redundant with
+    /// the local-optimum test at best and wrong at worst: `is_done` reads that
+    /// field as `iteration - best_iteration >= 1`, so a run starting from a
+    /// solution *below* the incumbent best satisfied it before taking a single
+    /// move. Every meta-heuristic here hands its sub-run a `ClearBest` clone,
+    /// which re-anchors `best_iteration`, so none of them ever saw it; a
+    /// caller descending on a state directly — as
+    /// [`BreakoutLocalSearchForMaxCut`](crate::heuristic::BreakoutLocalSearchForMaxCut)
+    /// does between kicks — did.
     pub fn new(stop_condition: StopCondition) -> Self {
-        let mut stop_condition = stop_condition;
-        if let Some(max_failed_update) = stop_condition.max_failed_update {
-            if max_failed_update != 1 {
-                tracing::warn!("StopCondition.max_failed_update should be `Some(1)`.");
-            }
-        } else {
-            stop_condition.max_failed_update = Some(1);
-        }
-
         Self {
             stop_condition,
             _neighbor: std::marker::PhantomData,

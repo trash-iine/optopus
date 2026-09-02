@@ -10,9 +10,18 @@
 /// only maintains the membership bookkeeping.
 ///
 /// Standard heuristics do not need this index; it exists for problem-specific
-/// algorithms (such as [`BreakoutLocalSearchForMaxCut`](crate::heuristic::BreakoutLocalSearchForMaxCut))
-/// that iterate only over improving variables, reducing the inner-loop cost
-/// from O(n) to O(|improving moves|).
+/// algorithms that iterate only over a marked subset of the variables, and it
+/// costs one O(1) membership update per gain change once enabled.
+///
+/// MaxCut's `zero_gain` is the live consumer: it feeds
+/// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)'s
+/// cluster moves. `positive_gain` and QUBO's `negative_gain` mark the improving
+/// variables and are offered for callers writing their own descent — nothing in
+/// this library reads them any more. Breakout Local Search used to, through an
+/// `ops::descent` that has since been folded into
+/// [`LocalSearch`](crate::heuristic::LocalSearch); the index made that descent
+/// 1.8-2.3x faster, and giving it up was a deliberate trade recorded in
+/// `docs/heuristics/breakout_local_search.md`.
 #[derive(Debug, Clone, Default)]
 pub struct GainIndex {
     enabled: bool,
