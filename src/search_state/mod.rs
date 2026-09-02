@@ -12,26 +12,38 @@ use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
 /// Controls how [`SearchState`] is cloned when starting a sub-run.
+///
+/// All three variants keep the parent's iteration frame: the child's
+/// `iteration` runs on from where the parent stands, and `start_iteration`
+/// marks where the phase began. Everything budget-shaped is measured against
+/// that anchor — [`SearchState::iterations_this_run`],
+/// [`StopCondition`](crate::heuristic::StopCondition), and the deltas
+/// [`SearchState::update_state`] merges — so a phase still starts at zero *of
+/// its own budget*.
+///
+/// The accept / reject / best-update counters measure a phase rather than 
+/// timestamp anything, so every variant starts them at zero,  and 
+/// [`SearchState::update_state`] adds them straight into the parent.
 #[derive(Clone, Debug)]
 pub enum SearchStateCloneType {
     /// Clone the state as-is.
     ///
     /// - Starts from the current solution
-    /// - Retains the original start time and iteration counter
+    /// - Retains the original start time
     /// - Retains the current best solution
     Simple,
 
     /// Clone the state and reset all best-solution tracking.
     ///
     /// - Starts from the current solution
-    /// - Resets start time and iteration counter to zero
+    /// - Resets the clocks, and re-anchors `start_iteration` to now
     /// - Sets the best solution to the current solution
     ClearBest,
 
     /// Clone the state starting from the best solution found so far.
     ///
     /// - Starts from the best solution
-    /// - Resets start time and iteration counter to zero
+    /// - Resets the clocks, and re-anchors `start_iteration` to now
     /// - Retains the best solution
     StartBest,
 }
@@ -58,30 +70,6 @@ pub struct TrajectoryPoint {
 ///
 /// Contains the problem instance (by reference), the current solution,
 /// the best solution found so far, and iteration / timing metadata.
-///
-/// # Field visibility policy
-///
-/// The fields below are split deliberately:
-///
-/// - **`pub` fields** are the live search state that heuristics (both built-in
-///   and user-implemented) legitimately read **and write** during a run:
-///   `solution`, `best_solution`, `iteration`, `best_iteration`, `best_time`,
-///   `initial_solution`, `n_accepted`, `n_rejected`, `n_best_updates`, `rng`,
-///   and the problem reference `instance`. Direct field access is intentional
-///   — wrapping every one of these in a setter would only add noise without
-///   strengthening any invariant, since heuristics need to mutate them
-///   anyway.
-///
-/// - **`pub(crate)` fields** (`start_iteration`, `start_time`,
-///   `start_n_accepted`, `start_n_rejected`, `start_n_best_updates`) are the
-///   sub-run anchors used **only** by [`Self::clone_for_new_run`] and
-///   [`Self::update_state`] to compute deltas when merging a sub-run's
-///   progress back into its parent. They must never be touched from outside
-///   this crate; an external write would silently corrupt the delta-merge
-///   accounting.
-///
-/// In short: pub = "live state heuristics drive", pub(crate) = "internal
-/// merge bookkeeping — hands off".
 #[derive(Clone)]
 pub struct SearchState<'a, Problem>
 where
@@ -91,12 +79,6 @@ where
     pub(crate) start_iteration: u64,
     /// Wall-clock time when the current sub-run started.
     pub(crate) start_time: std::time::Instant,
-    /// `n_accepted` at the start of the current sub-run (anchor for diff-merge).
-    pub(crate) start_n_accepted: u64,
-    /// `n_rejected` at the start of the current sub-run (anchor for diff-merge).
-    pub(crate) start_n_rejected: u64,
-    /// `n_best_updates` at the start of the current sub-run (anchor for diff-merge).
-    pub(crate) start_n_best_updates: u64,
     /// Reference to the problem instance.
     pub instance: &'a Problem,
     /// Current iteration count.
@@ -119,16 +101,14 @@ where
     /// - `StartBest`  — re-anchored to the best solution at clone time
     ///   (which is also the sub-run's starting solution).
     pub initial_solution: Problem::Solution,
-    /// Number of moves accepted (`apply` / `apply_move_only` calls) since this
-    /// sub-run started. Always satisfies
-    /// `iteration - start_iteration == (n_accepted - start_n_accepted) + (n_rejected - start_n_rejected)`
+    /// Number of moves accepted (`apply` / `apply_move_only` calls).
+    /// Always satisfies `iterations_this_run() == n_accepted + n_rejected` 
     /// when only the standard methods on this state are used.
     pub n_accepted: u64,
     /// Number of iterations that advanced without applying a move
-    /// (`progress_iteration` calls) since this sub-run started.
+    /// (`progress_iteration` calls).
     pub n_rejected: u64,
-    /// Number of times `update_best` actually replaced `best_solution`
-    /// since this sub-run started.
+    /// Number of times `update_best` actually replaced `best_solution`.
     pub n_best_updates: u64,
     /// Shared random source used by every heuristic that needs randomness.
     ///
@@ -183,9 +163,6 @@ where
         let state = Self {
             start_iteration: 0,
             start_time: now,
-            start_n_accepted: 0,
-            start_n_rejected: 0,
-            start_n_best_updates: 0,
             instance,
             iteration: 0,
             solution: solution.clone(),
@@ -231,9 +208,6 @@ where
         Self {
             start_iteration: 0,
             start_time: now,
-            start_n_accepted: 0,
-            start_n_rejected: 0,
-            start_n_best_updates: 0,
             instance,
             iteration: 0,
             solution: solution.clone(),
@@ -309,10 +283,6 @@ where
     /// Creates a copy of this state prepared for a new sub-run.
     ///
     /// The behavior depends on `clone_type`; see [`SearchStateCloneType`] for details.
-    ///
-    /// **RNG semantics**: the parent's RNG is *forked* — the child gets a fully
-    /// independent stream, and the parent's stream advances by one fork's worth
-    /// of state. This is why `&mut self` is required.
     pub fn clone_for_new_run(&mut self, clone_type: SearchStateCloneType) -> Self {
         let now = std::time::Instant::now();
         let child_rng = SmallRng::from_rng(&mut self.rng);
@@ -320,9 +290,6 @@ where
             SearchStateCloneType::Simple => Self {
                 start_iteration: self.iteration,
                 start_time: self.start_time,
-                start_n_accepted: self.n_accepted,
-                start_n_rejected: self.n_rejected,
-                start_n_best_updates: self.n_best_updates,
                 instance: self.instance,
                 iteration: self.iteration,
                 solution: self.solution.clone(),
@@ -330,24 +297,21 @@ where
                 best_iteration: self.best_iteration,
                 best_solution: self.best_solution.clone(),
                 initial_solution: self.initial_solution.clone(),
-                n_accepted: self.n_accepted,
-                n_rejected: self.n_rejected,
-                n_best_updates: self.n_best_updates,
+                n_accepted: 0,
+                n_rejected: 0,
+                n_best_updates: 0,
                 rng: child_rng,
                 trajectory: Vec::new(),
                 objective_probe: self.objective_probe,
             },
             SearchStateCloneType::ClearBest => Self {
-                start_iteration: 0,
+                start_iteration: self.iteration,
                 start_time: now,
-                start_n_accepted: 0,
-                start_n_rejected: 0,
-                start_n_best_updates: 0,
                 instance: self.instance,
-                iteration: 0,
+                iteration: self.iteration,
                 solution: self.solution.clone(),
                 best_time: now,
-                best_iteration: 0,
+                best_iteration: self.iteration,
                 best_solution: self.solution.clone(),
                 initial_solution: self.solution.clone(),
                 n_accepted: 0,
@@ -358,16 +322,13 @@ where
                 objective_probe: self.objective_probe,
             },
             SearchStateCloneType::StartBest => Self {
-                start_iteration: 0,
+                start_iteration: self.iteration,
                 start_time: now,
-                start_n_accepted: 0,
-                start_n_rejected: 0,
-                start_n_best_updates: 0,
                 instance: self.instance,
-                iteration: 0,
+                iteration: self.iteration,
                 solution: self.best_solution.clone(),
                 best_time: now,
-                best_iteration: 0,
+                best_iteration: self.iteration,
                 best_solution: self.best_solution.clone(),
                 initial_solution: self.best_solution.clone(),
                 n_accepted: 0,
@@ -383,9 +344,10 @@ where
     /// Merges the results of a completed sub-run back into this state.
     ///
     /// - The current solution is replaced with `cloned_state.solution`.
-    /// - The iteration counter and the accept/reject/best-update counters are
-    ///   incremented by each one's delta over the sub-run.
-    /// - `initial_solution` is **not** overwritten: the parent's anchor is preserved.
+    /// - The iteration counter is advanced by the sub-run's own progress
+    ///   (`iteration - start_iteration`), and the accept/reject/best-update
+    ///   counters — which the sub-run counted from zero — are added on.
+    /// - `initial_solution` is not overwritten.
     /// - If the sub-run found a better solution, the best solution is updated.
     ///
     /// # Panics
@@ -409,9 +371,9 @@ where
         // add iteration into the current iteration
         let old_iteration = self.iteration;
         self.iteration += cloned_state.iteration - cloned_state.start_iteration;
-        self.n_accepted += cloned_state.n_accepted - cloned_state.start_n_accepted;
-        self.n_rejected += cloned_state.n_rejected - cloned_state.start_n_rejected;
-        self.n_best_updates += cloned_state.n_best_updates - cloned_state.start_n_best_updates;
+        self.n_accepted += cloned_state.n_accepted;
+        self.n_rejected += cloned_state.n_rejected;
+        self.n_best_updates += cloned_state.n_best_updates;
 
         // Append the sub-run's trajectory, remapping iterations into this
         // state's frame (same saturating scheme as `best_iteration` below).
@@ -689,18 +651,19 @@ mod tests {
         state.apply(&m).unwrap();
         state.progress_iteration();
         let parent_initial = state.initial_solution.x.clone();
-        let parent_n_accepted = state.n_accepted;
-        let parent_n_rejected = state.n_rejected;
-        let parent_n_best = state.n_best_updates;
 
         let child = state.clone_for_new_run(SearchStateCloneType::Simple);
         assert_eq!(child.initial_solution.x, parent_initial);
-        assert_eq!(child.n_accepted, parent_n_accepted);
-        assert_eq!(child.n_rejected, parent_n_rejected);
-        assert_eq!(child.n_best_updates, parent_n_best);
-        assert_eq!(child.start_n_accepted, parent_n_accepted);
-        assert_eq!(child.start_n_rejected, parent_n_rejected);
-        assert_eq!(child.start_n_best_updates, parent_n_best);
+        assert_eq!(child.iteration, state.iteration);
+        assert_eq!(child.start_iteration, state.iteration);
+        assert_eq!(
+            child.best_iteration, state.best_iteration,
+            "best is retained"
+        );
+        // The counters measure the phase, so even `Simple` starts them at zero.
+        assert_eq!(child.n_accepted, 0);
+        assert_eq!(child.n_rejected, 0);
+        assert_eq!(child.n_best_updates, 0);
     }
 
     #[test]
@@ -722,6 +685,9 @@ mod tests {
         assert_eq!(state.iteration, 3);
     }
 
+    /// `ClearBest` re-anchors the phase without leaving the parent's iteration
+    /// frame: the counters run on, and `start_iteration` — not zero — is what
+    /// marks the beginning, so the phase's own budget still starts empty.
     #[test]
     fn clone_for_new_run_clear_best_reanchors_to_current() {
         let mc = triangle();
@@ -730,8 +696,14 @@ mod tests {
         state.progress_iteration(); // bump n_rejected so we can tell it gets cleared
 
         let child = state.clone_for_new_run(SearchStateCloneType::ClearBest);
-        assert_eq!(child.iteration, 0);
-        assert_eq!(child.n_accepted, 0);
+        assert_eq!(child.iteration, state.iteration);
+        assert_eq!(child.start_iteration, state.iteration);
+        assert_eq!(child.iterations_this_run(), 0, "the phase starts at zero");
+        assert_eq!(
+            child.best_iteration, state.iteration,
+            "and so does its best"
+        );
+        assert_eq!(child.n_accepted, 0, "the counters measure the phase");
         assert_eq!(child.n_rejected, 0);
         assert_eq!(child.n_best_updates, 0);
         assert_eq!(child.initial_solution.x, child.solution.x);
@@ -749,7 +721,10 @@ mod tests {
         let best_cut = state.best_solution.x.clone();
 
         let child = state.clone_for_new_run(SearchStateCloneType::StartBest);
-        assert_eq!(child.iteration, 0);
+        assert_eq!(child.iteration, state.iteration);
+        assert_eq!(child.start_iteration, state.iteration);
+        assert_eq!(child.iterations_this_run(), 0);
+        assert_eq!(child.best_iteration, state.iteration);
         assert_eq!(child.n_accepted, 0);
         assert_eq!(child.n_rejected, 0);
         assert_eq!(child.n_best_updates, 0);
@@ -861,19 +836,19 @@ mod tests {
         parent.progress_iteration();
         let parent_initial_before = parent.initial_solution.x.clone();
 
-        // Spawn ClearBest sub-run (counters start at 0)
+        // A sub-run counts its own moves from zero, and the merge adds them on.
         let mut child = parent.clone_for_new_run(SearchStateCloneType::ClearBest);
         let m = first_flip(&mc, &child.solution);
         child.apply(&m).unwrap();
         child.progress_iteration();
-        let child_accepted = child.n_accepted;
-        let child_rejected = child.n_rejected;
-        let child_best = child.n_best_updates;
+        let (accepted_in_phase, rejected_in_phase) = (child.n_accepted, child.n_rejected);
+        let best_in_phase = child.n_best_updates;
+        assert_eq!((accepted_in_phase, rejected_in_phase), (1, 1));
 
         parent.update_state(child);
-        assert_eq!(parent.n_accepted, child_accepted);
-        assert_eq!(parent.n_rejected, 2 + child_rejected);
-        assert_eq!(parent.n_best_updates, child_best);
+        assert_eq!(parent.n_accepted, accepted_in_phase);
+        assert_eq!(parent.n_rejected, 2 + rejected_in_phase);
+        assert_eq!(parent.n_best_updates, best_in_phase);
         // initial_solution must NOT be overwritten by the child's
         assert_eq!(parent.initial_solution.x, parent_initial_before);
     }
