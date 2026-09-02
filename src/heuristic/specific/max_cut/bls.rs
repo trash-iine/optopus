@@ -296,7 +296,7 @@ impl BreakoutLocalSearch {
 /// The paper's tabu list `H` holds "the iteration when the vertex was last
 /// moved **plus γ**", and the eligibility predicate of the directed
 /// perturbations then asks for `(H_m + γ) < Iter` — so `γ` is counted twice and
-/// a vertex stays forbidden for `2γ`. [`VecTabuMap`](crate::common::VecTabuMap)
+/// a vertex stays forbidden for `2γ`. [`TabuMemory`](crate::common::TabuMemory)
 /// stores the first iteration at which a move is allowed again, i.e. exactly
 /// one tenure, so reproducing the paper means handing it twice the caller's
 /// range. `tabu_tenure` therefore keeps the paper's meaning (`rand[3, |V|/10]`

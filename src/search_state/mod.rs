@@ -1201,7 +1201,7 @@ mod tests {
             assert!(state.tabu_allows(&MaxCutFlipNeighbor { i: m.i, gain: 0.0 }));
         }
 
-        /// Flip and swap share one `VecTabuMap`, so a vertex a flip forbade is
+        /// Flip and swap both key on `TabuKey::Var`, so a vertex a flip forbade is
         /// forbidden to the swap too. Breakout Local Search is built on this:
         /// its weak swap must not undo what the descent's flips wrote.
         #[test]

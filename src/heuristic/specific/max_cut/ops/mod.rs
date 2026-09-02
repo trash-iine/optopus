@@ -9,12 +9,17 @@
 //! each operator.
 //!
 //! That sharing is the point, and it is automatic here: a
-//! [`TabuMemory`](crate::common::TabuMemory) keys its slots by map type, and
-//! both [`MaxCutFlipNeighbor`] and
-//! [`MaxCutSwapNeighbor`](crate::problem::MaxCutSwapNeighbor) use
-//! [`VecTabuMap`](crate::common::VecTabuMap) — so in Breakout Local Search the
-//! entries the descent writes are exactly the entries the weak perturbations
-//! must not undo. A caller wanting them isolated runs the two phases on
+//! [`TabuMemory`](crate::common::TabuMemory) keys its slots by the *shape* of a
+//! [`TabuKey`](crate::common::TabuKey), and both [`MaxCutFlipNeighbor`] and
+//! [`MaxCutSwapNeighbor`](crate::problem::MaxCutSwapNeighbor) key on
+//! [`TabuKey::Var`](crate::common::TabuKey::Var) — so in Breakout Local Search
+//! the entries the descent writes are exactly the entries the weak
+//! perturbations must not undo. That is the paper's structure, not this
+//! implementation's licence: in Benlic & Hao's Algorithm 1 the tabu list update
+//! `H ← Iter + γ` sits *inside* the descent loop, and the same `H` is what
+//! `Perturbation(C, L, H, Iter, ω)` is handed. The descent writes it and never
+//! reads it — its own move selection takes the best applicable move, with no
+//! diversification. A caller wanting the two phases isolated runs them on
 //! separate states.
 //!
 //! What "tabu" *means* is decided nowhere here. Every operator marks and tests
