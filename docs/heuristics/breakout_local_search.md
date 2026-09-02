@@ -84,6 +84,41 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
   one. That `+2` is a library-wide convention shared by every binary problem's
   swap, so it is not changed here for one heuristic's sake.
 
+## Why the operators are not the generic heuristics
+
+Once `SearchState::apply` became what records a move into the tabu memory, the
+operators stopped needing a shared object — and the question arose whether BLS
+could simply drive `LocalSearch` and `RandomWalk` instead. It was measured: BLS
+at 30s x 5 runs, seed 42, over G1 / G11 / G22 / G32 / G43 / G55 / G60 / G63 /
+G70 / G81, with `l0 = 0.01|V|` and the density-scaled tenure.
+
+Replacing the descent with `LocalSearch` costs **-40.0 total average cut**
+(better on 3 instances, worse on 5): -21.2 on G81, -12.4 on G63, -8.4 on G70,
+-6.4 on G55, against +8.2 on G60. Most of those sit inside one or two standard
+deviations, but the reason behind them does not: in the same wall clock it
+completed only **0.74-0.93x as many moves**, on every one of the ten. Both
+select from the same candidate set — `is_neighbor_better_than_current` on a
+flip is `gain > 0` — but `LocalSearch` rescans all `n` vertices per move where
+the descent enumerates only the improving ones through `positive_gain`. Two
+further differences ride along and are not separated by that number: `max_by`
+breaks gain ties toward the last candidate where `keep_best` keeps the first,
+and `LocalSearch` spends one extra `progress_iteration` per descent.
+
+Replacing the strong perturbation with `RandomWalk` is, by the same measurement,
+**free** — applied on top of the above it moved the total by +0.4 with
+throughput unchanged. It was still not taken: it deletes no file (`best_swap`
+keeps `perturbation.rs` alive regardless), and `RandomWalk` fails with
+`InvalidState` on the edgeless sub-instances `SubProblemBasedCrossover`
+produces, so the guard the operator holds would only move into the caller.
+
+Two more differences are structural rather than measured. `best_swap` has no
+generic counterpart at all: `TabuSearch<MaxCutSwapNeighbor>` enumerates O(n²)
+vertex pairs where `best_swap` scans each partition side once, O(n) — 4·10⁸
+against 2·10⁴ per step on G81. And `LocalSearch::new` forces
+`max_failed_update = Some(1)`; after a kick the solution is worse than the
+global best, so `Heuristic::run` returns before taking a single move unless that
+field is cleared by hand.
+
 ## Constructor
 
 ```rust
