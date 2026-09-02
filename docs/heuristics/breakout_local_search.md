@@ -123,15 +123,45 @@ chain. Cutting the scan itself means knowing which gains the last move changed,
 which is problem knowledge, so it needs a hook on `MoveToNeighbor` that only
 MaxCut and QUBO could implement.
 
-Two operators stayed behind. `best_swap` has no generic counterpart at all:
-`TabuSearch<MaxCutSwapNeighbor>` enumerates O(n²) vertex pairs where
-`best_swap` scans each partition side once, O(n) — 4·10⁸ against 2·10⁴ per step
-on G81 — and its `A2` selection rule is not a tabu search's. `random_flips` is
+Two operators stayed behind. `random_flips` is
 free to replace (by the same measurement, `RandomWalk` moved the total by +0.4
 with throughput unchanged) but was kept: it deletes no file, since `best_swap`
 holds `perturbation.rs` open regardless, and `RandomWalk` fails with
 `InvalidState` on the edgeless sub-instances `SubProblemBasedCrossover`
 produces, so its guard would only move into the caller.
+
+## Why `best_swap` is not a move type
+
+The obvious next step is to give the directed swap the same treatment: define a
+move type whose neighborhood is small enough for a generic `TabuSearch`, and
+delete the operator. `TabuSearch<MaxCutSwapNeighbor>` is out because its `iter`
+enumerates every cross-side pair, O(n²) — 4·10⁸ against 2·10⁴ per step on G81 —
+but that is a property of *that* neighborhood, not of swaps. A
+`MaxCutBestSwapNeighbor` yielding only the pairs that touch each side's
+highest-gain vertex is O(n), always contains the greedy pair, and needs no new
+parameter.
+
+**It was built and measured, and it fails.** Against the integrated descent as
+the baseline, on the same ten-instance panel at 30s × 5 runs: **−452.6 total
+average cut**, worse on 8 of 10, at **0.05–0.36× the moves**, with `TabuSearch`
+reporting no eligible move 3.8× more often than it found one (5.6M times on G1
+against 1.5M applied moves).
+
+The cause is structural. `apply_swap_as_two_flips` inverts the sign of both
+moved vertices' gains, and the weak swap runs straight after a descent, from a
+local optimum where every gain is ≤ 0. So the two vertices a swap just moved
+become the highest-gain vertex of their new side — and they are tabu, because
+the swap just recorded them. On the next step both centres are forbidden, every
+candidate has a forbidden endpoint, and the neighborhood empties. **Ranking a
+restricted neighborhood by gain is anti-correlated with a recency-based tabu
+list.** Widening to the top `k` per side does not escape it: `k` would have to
+exceed the tenure — up to 600 on the sparse instances — and `k²` then overtakes
+the `n` it was meant to replace.
+
+What `best_swap` does instead is consult the tabu memory *during* the scan, for
+the best **non-tabu** vertex on each side. That is what `MoveToNeighbor::iter`
+cannot do: it is handed the problem and the solution, never the search state.
+The operator stays.
 
 Integrating the descent also required dropping `LocalSearch::new`'s rewrite of
 an unset `max_failed_update` to `Some(1)`. `is_done` reads that field as

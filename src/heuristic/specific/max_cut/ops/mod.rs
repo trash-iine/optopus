@@ -59,12 +59,33 @@
 //! chain. Cutting the scan needs to know which gains moved, which is problem
 //! knowledge.
 //!
-//! **`best_swap` has no generic counterpart at all.**
-//! `TabuSearch<MaxCutSwapNeighbor>` would enumerate O(n²) vertex pairs where
-//! `best_swap` scans each partition side once, O(n) — 4·10⁸ against 2·10⁴ per
-//! step on G81 — and its `A2` selection rule (aspiration tested on the
-//! unrestricted best swap, a side with no free vertex falling back to its own
-//! best) is not a tabu search's.
+//! **`best_swap` cannot be a move type, and the reason is not the O(n²).**
+//! `TabuSearch<MaxCutSwapNeighbor>` enumerates every cross-side pair where
+//! `best_swap` scans each side once — 4·10⁸ against 2·10⁴ per step on G81 —
+//! but that is fixable: a move type whose `iter` yields only the pairs
+//! touching each side's highest-gain vertex is O(n) and still contains the
+//! greedy pair. **It was built and measured, and it fails**: −452.6 total
+//! average cut on the ten-instance G-set panel, 8 of 10 worse, at 0.05-0.36x
+//! the moves, with `TabuSearch` reporting no eligible move 3.8x more often
+//! than it found one.
+//!
+//! The cause is structural rather than a tuning miss. Applying a swap inverts
+//! the sign of both moved vertices' gains, and this phase starts from a local
+//! optimum where every gain is ≤ 0 — so the two vertices a swap just moved
+//! become the highest-gain vertex of their new side, and are tabu. Every
+//! candidate in a gain-centred set then has a forbidden endpoint. **Ranking a
+//! restricted neighborhood by gain is anti-correlated with a recency-based
+//! tabu list**, and widening to the top `k` per side does not escape it: `k`
+//! would have to exceed the tenure (up to 600 on the sparse instances), and
+//! `k²` then overtakes the `n` it was meant to replace.
+//!
+//! What `best_swap` does instead is consult the tabu memory *during* the scan
+//! — best **non-tabu** vertex per side — which is exactly what
+//! [`iter`](crate::trait_defs::MoveToNeighbor::iter) cannot do: it is handed
+//! the problem and the solution, never the state. Its `A2` selection rule is
+//! not a tabu search's either (aspiration tested on the unrestricted best
+//! swap; a side with no free vertex falling back to its own best, breaking
+//! tabu without aspiration).
 //!
 //! **`random_flips` is free to replace and still here.** Measured the same way,
 //! swapping it for [`RandomWalk`](crate::heuristic::RandomWalk) moved the total
