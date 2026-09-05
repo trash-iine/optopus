@@ -93,27 +93,36 @@ pub struct TabuMemory {
     /// `dense[i]` = first iteration at which `Var(i)` is free again.
     dense: Vec<u64>,
     /// The same, for the keys that are not a dense index.
-    /// The compound keys, behind a `Box` **on purpose, and measured**.
+    /// The compound keys, behind a `Box` **on purpose, and measured** — but not
+    /// for the reason a reader would guess, so read this before removing it.
     ///
-    /// A `SearchState` holds one of these inline, and a neighborhood scan
-    /// reads four of that state's fields once per candidate. With this map
-    /// stored inline too, `TabuSearch` ran **+32% on G1 and +45% on G32**
-    /// against the same search before the tabu memory moved onto the state —
-    /// at identical work, bit-identical objective and move counts. Boxing just
-    /// this field puts both back to −0.1%.
+    /// A neighborhood scan walks three heap buffers in lockstep, once per
+    /// candidate: the graph's vertex list, the solution's gains, and this
+    /// memory's `dense`. **Where those three land relative to each other
+    /// decides whether they collide in the cache**, and everything that
+    /// perturbs the allocation sequence moves them. Storing this map inline
+    /// drew a bad arrangement: `TabuSearch` ran **+45% on G32** at identical
+    /// work — bit-identical objective, move counts and per-run seeds. Boxing
+    /// this one field draws a good one, −0.2%.
     ///
-    /// It is not the struct's size: padding `SearchState` back up to the same
-    /// 744 bytes with a dummy array costs nothing (+0.3%), and boxing the whole
-    /// `TabuMemory` — which is 80 bytes smaller *and* adds an indirection on the
-    /// hot `dense` path — is slightly worse (+0.7%) than boxing this one field.
-    /// What the scan cannot afford is a `HashMap` inline in the state it reads
-    /// through. **The mechanism below that is not established**; treat the
-    /// numbers as the reason, not the explanation, and re-measure before
-    /// inlining this again.
+    /// The `HashMap` is incidental. Leaving it inline and giving `dense` 4096
+    /// slots of slack instead — the map untouched — also lands at +0.9%, and
+    /// keeping the `Box` while giving `dense` 512 slots of slack puts the
+    /// slowdown *back*, at +7.6%. What is measured here is allocation layout,
+    /// not a property of `HashMap`.
     ///
-    /// `HashMap::new` does not allocate until the first insert, so the cost is
-    /// one small allocation per state and none per compound key that is never
-    /// used.
+    /// Ruled out along the way, each by measurement: the struct's size
+    /// (padding `SearchState` back to the same 744 bytes costs nothing), the
+    /// cache lines its fields occupy (`offset_of!` says four either way, in
+    /// both arrangements), inlining of `is_enabled` (no symbol survives in
+    /// either binary), the `TabuKey` construction, the shape of the closure
+    /// that reads the state, and code alignment (24 unrelated functions
+    /// inserted ahead of it change nothing). Instruction counts in the hot
+    /// `run_once` are unchanged; the cost is stalls.
+    ///
+    /// So this is a good draw rather than a fix, and it is machine-specific.
+    /// If you touch it, re-measure `TabuSearch` against `origin/main` rather
+    /// than reasoning about it -- the reasoning has been wrong three times.
     #[allow(clippy::box_collection)]
     sparse: Box<HashMap<TabuKey, u64>>,
     tenure: (u64, u64),
