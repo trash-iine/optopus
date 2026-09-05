@@ -17,11 +17,12 @@
 
 use super::{MaxCut, MaxCutSolution};
 use crate::{
-    common::VecTabuMap,
+    common::TabuMemory,
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 use rand::Rng;
+use rand::rngs::SmallRng;
 
 /// A flip move that transfers vertex `i` to the opposite partition side.
 ///
@@ -56,28 +57,14 @@ impl Rankable for MaxCutFlipNeighbor {
 }
 
 impl EnabledTabu for MaxCutFlipNeighbor {
-    /// Vertices are a dense `0..n` space and the search probes the map once per
-    /// neighbor per iteration, so this is the `Vec`-backed map rather than the
-    /// hashed [`VarTabuMap`](crate::common::VarTabuMap). It is also the map the
-    /// MaxCut-specific engine shares between its own operators.
-    type TabuMap = VecTabuMap;
-
-    /// A flip move is tabu while vertex `i` is still blocked at the current iteration.
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.is_enabled(self.i, iteration)
+    /// The move is tabu while vertex `i` is still blocked at the current iteration.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(self.i, iteration)
     }
 
-    /// When a flip move is applied,
-    /// the vertex `i` is added to the tabu map with a tenure
-    /// randomly chosen between `tabu_tenure.0` and `tabu_tenure.1`.
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        tabu_map.add(self.i, iteration, tabu_tenure, rng);
+    /// Applying the move forbids vertex `i` for a tenure the memory draws.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(self.i, iteration, rng);
     }
 }
 
@@ -241,7 +228,6 @@ impl MaxCutFlipNeighbor {
 /// TabuSearch::<MaxCutSwapNeighbor>::new(
 ///     StopCondition::iterations(10_000),
 ///     (5, 10),
-///     None,
 /// ).run(&mut state).unwrap();
 /// ```
 #[derive(Debug, Clone)]
@@ -304,26 +290,15 @@ impl Evaluate for MaxCutSwapNeighbor {
 }
 
 impl EnabledTabu for MaxCutSwapNeighbor {
-    /// The same map as [`MaxCutFlipNeighbor`], so a search that mixes the two
-    /// move types keeps one tabu memory over the vertices.
-    type TabuMap = VecTabuMap;
-
-    /// A swap move is tabu while either vertex `i` or `j` is still blocked.
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.is_enabled(self.i, iteration) && tabu_map.is_enabled(self.j, iteration)
+    /// A swap is tabu unless **both** vertexs it moves are free.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
     }
 
-    /// Adds both vertices `i` and `j` to the tabu map, each with an independently
-    /// randomised tenure from `tabu_tenure`.
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        tabu_map.add(self.i, iteration, tabu_tenure, rng);
-        tabu_map.add(self.j, iteration, tabu_tenure, rng);
+    /// Applying the swap forbids both vertexs, each for its own drawn tenure.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(self.i, iteration, rng);
+        tabu.forbid(self.j, iteration, rng);
     }
 }
 

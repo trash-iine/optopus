@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-
 use rand::Rng;
 use rand::rngs::SmallRng;
 
 use super::problem::{Vrp, VrpSolution, overload_of};
+use crate::common::TabuMemory;
 use crate::error::OptError;
 use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable};
 
@@ -153,25 +152,17 @@ impl Evaluate for VrpRelocateNeighbor {
 }
 
 impl EnabledTabu for VrpRelocateNeighbor {
-    /// Keyed by `(customer, route)`: forbids returning a moved customer to the
-    /// route it just left.
-    type TabuMap = HashMap<(usize, usize), u64>;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map
-            .get(&(self.customer, self.to_r))
-            .is_none_or(|&t| iteration > t)
+    /// May this customer enter its destination route?
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled((self.customer, self.to_r), iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut SmallRng,
-    ) {
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert((self.customer, self.from_r), iteration + d);
+    /// Forbids the customer's **source** route, not its destination: what a
+    /// relocate must not undo is moving the customer straight back where it
+    /// came from. The key it writes is therefore deliberately not the key
+    /// [`is_move_enabled`](Self::is_move_enabled) reads.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid((self.customer, self.from_r), iteration, rng);
     }
 }
 
@@ -361,24 +352,16 @@ impl Evaluate for VrpSwapNeighbor {
 }
 
 impl EnabledTabu for VrpSwapNeighbor {
-    /// Keyed by the unordered customer pair, forbidding an immediate re-swap.
-    type TabuMap = HashMap<(usize, usize), u64>;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
+    /// Keyed by the unordered customer pair.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
         let key = (self.c1.min(self.c2), self.c1.max(self.c2));
-        tabu_map.get(&key).is_none_or(|&t| iteration > t)
+        tabu.is_enabled(key, iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut SmallRng,
-    ) {
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
+    /// Applying it forbids that customer pair.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
         let key = (self.c1.min(self.c2), self.c1.max(self.c2));
-        tabu_map.insert(key, iteration + d);
+        tabu.forbid(key, iteration, rng);
     }
 }
 
@@ -521,23 +504,14 @@ impl Evaluate for VrpTwoOptNeighbor {
 }
 
 impl EnabledTabu for VrpTwoOptNeighbor {
-    type TabuMap = HashMap<(usize, usize, usize), u64>;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map
-            .get(&(self.r, self.p, self.q))
-            .is_none_or(|&t| iteration > t)
+    /// Keyed by the `(route, p, q)` triple.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled((self.r, self.p, self.q), iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut SmallRng,
-    ) {
-        let d = rng.random_range(tabu_tenure.0..=tabu_tenure.1);
-        tabu_map.insert((self.r, self.p, self.q), iteration + d);
+    /// Applying it forbids that triple.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid((self.r, self.p, self.q), iteration, rng);
     }
 }
 

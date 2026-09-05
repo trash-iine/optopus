@@ -13,7 +13,7 @@ CLI entry `src/main.rs`: TOML config → benchmark run → TOML output (via `Ben
 ## Library Concept (3 use cases)
 
 1. **Existing problem × existing heuristic** — run `LocalSearch`, `SimulatedAnnealing`, `TabuSearch`, etc. on MaxCut / QUBO / SAT / TSP / VertexCover / JobShop / VRP in a few lines via `use optopus::prelude::*`.
-2. **Apply existing heuristics to a new problem** — implement three traits (`ProblemTrait`, `Rankable` — on `Solution` **and** on the move, two separate impls — and `MoveToNeighbor`) and LocalSearch / RandomWalk / BeamSearch plus every meta-heuristic work as-is. The rest unlock one trait at a time: `Evaluate<f64>` for SA/LAHC/RlSearch, `EnabledTabu` (+ `Clone`) for TabuSearch, `Distance` + a `Crossover` for GA, `SubProblemExtractable` for `SubProblemBasedCrossover`; `BinaryProblem` reuses the generic binary machinery in `src/common/`. Registering the problem with the **benchmark** is the strict case — `ConfigNeighbor` bundles `MoveToNeighbor + Rankable + Evaluate + EnabledTabu + Clone` and `ConfigurableProblem` requires `Solution: Distance`, so there is no partial registration.
+2. **Apply existing heuristics to a new problem** — implement three traits (`ProblemTrait`, `Rankable` — on `Solution` **and** on the move, two separate impls — and `MoveToNeighbor`) and LocalSearch / RandomWalk / BeamSearch plus every meta-heuristic work as-is. The rest unlock one trait at a time: `Evaluate<f64>` for SA/LAHC/RlSearch, `EnabledTabu` (+ `Clone`, + the one-line `MoveToNeighbor::tabu_policy` override) for TabuSearch, `Distance` + a `Crossover` for GA, `SubProblemExtractable` for `SubProblemBasedCrossover`; `BinaryProblem` reuses the generic binary machinery in `src/common/`. Registering the problem with the **benchmark** is the strict case — `ConfigNeighbor` bundles `MoveToNeighbor + Rankable + Evaluate + EnabledTabu + Clone` and `ConfigurableProblem` requires `Solution: Distance`, so there is no partial registration.
 3. **Combine heuristics and run benchmarks** — compose components with `Sequential` / `Iterated` / `Restart` / `GeneticAlgorithm`, write a TOML config, and get aggregated best/avg/worst/std/time results.
 
 ## Extension recipes
@@ -23,7 +23,7 @@ CLI entry `src/main.rs`: TOML config → benchmark run → TOML output (via `Ben
 2. `with_problem` arm in `src/benchmark/problems.rs`
 3. One impl block in `src/benchmark/problems.rs`: `BenchmarkProblem` (load_instance) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (`NAME`, `MINIMIZE`, `VALID_NEIGHBORS`, `with_neighbor` registry, optional `build_special_heuristic`, `build_crossover`)
 
-Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`).
+Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). Each move's `MoveToNeighbor` impl also needs `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` next to its `EnabledTabu` impl — without it the move compiles and silently has no tabu list; `trait_defs/tabu.rs` has the test that pins every built-in move.
 
 **Add a new base metaheuristic:** implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/mod.rs` + prelude, then add one `HeuristicConfig` variant in `src/benchmark/config.rs` and follow the compile errors (one arm in `BaseBuilder::visit` in `src/benchmark/factory.rs`). The base-heuristic dispatch is written once, not per problem.
 
@@ -49,7 +49,8 @@ src/
 │   ├── neighbor.rs           MoveToNeighbor
 │   ├── evaluate.rs           Evaluable, Evaluate
 │   ├── crossover.rs          Crossover, SubProblemExtractable
-│   ├── tabu.rs               EnabledTabu
+│   ├── tabu.rs               EnabledTabu (object safe on purpose: the state holds
+│   │                         a move's policy as &dyn EnabledTabu)
 │   ├── binary.rs             BinaryProblem (unlocks the shared binary machinery)
 │   └── reduction.rs          ProblemReduction: P1 -> P2 instance map + the
 │                             solution map both ways. Pure — the crossing lives
@@ -65,10 +66,10 @@ src/
 │   ├── binary.rs             uniform_binary_crossover, hamming_distance,
 │   │                         lift_binary_solution / lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips
-│   ├── tabu.rs               VarTabuMap (hashed) + VecTabuMap (dense 0..n, what every
-│   │                         binary problem uses), is_var_enabled, add_var_to_tabu,
-│   │                         TabuLedger<M> (map + tenure; allows/record — what
-│   │                         TabuSearch holds and what MaxCut's operators share)
+│   ├── tabu.rs               TabuKey (Var / Pair / Triple — the three key shapes
+│   │                         every move uses) + TabuMemory (the one store
+│   │                         SearchState holds: a dense Vec for Var, a HashMap
+│   │                         for the rest, plus the tenure; is_enabled/forbid)
 │   ├── epoch_marks.rs        EpochMarks (index set with an O(1) clear, for
 │   │                         neighborhood walks that need a fresh "seen" set per call)
 │   ├── permutation.rs        order_crossover (OX; shared by VRP + HGS)
@@ -88,8 +89,8 @@ src/
 │   └── specific/            one directory per problem once it has several
 │       ├── max_cut/
 │       │   ├── ops/            the shared operators, one module per role, each a
-│       │   │                    free fn over a common::TabuLedger<VecTabuMap>:
-│       │   │                    mod.rs (Ledger alias + the keep_best tie rule),
+│       │   │                    free fn over the SearchState's tabu memory:
+│       │   │                    mod.rs (the keep_best tie rule),
 │       │   │                    descent.rs, tabu_walk.rs, perturbation.rs
 │       │   │                    (random_flips, best_swap)
 │       │   ├── bls.rs           BreakoutLocalSearchForMaxCut (+ its BlsSchedule);
@@ -144,6 +145,7 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
   fn move_to_be_better_than(&self, prob, src, other) -> bool;  // default: clone + apply
   fn random_neighbor(prob, sol, rng) -> Option<Self>;          // default: reservoir over iter()
   fn apply_to_iteration(&self, iter: u64) -> u64;              // default: iter + 1
+  fn tabu_policy(&self) -> Option<&dyn EnabledTabu>;           // default: None = no tabu policy
   ```
   The two defaults are slow-but-correct and emit a one-shot `tracing::warn!` when hit;
   every built-in move overrides both (O(1) gain compare; direct O(1)/O(n) sampler used
@@ -160,7 +162,7 @@ These live in `src/trait_defs/` and are re-exported via `crate::search_state::*`
   no-op insertion points.
 - **`Evaluable<T>` / `Evaluate<T>`** (default `T = f64`): `Maximize(T)` / `Minimize(T)` carries the direction of an objective delta. `Evaluable<f64>::worsening_amount()` normalizes both directions to "positive = worse" (used by `boltzmann_accept`). Required for SA / LAHC / RlSearch. QUBO also exposes `Evaluate<Coefficient = i32>` for integer gains.
 - **`Crossover<P>`**: `crossover(&mut self, prob, sol1, sol2, rng) -> Result<Solution, OptError>` (exactly two parents; RNG passed in for reproducibility; `Err` only when the operator genuinely cannot produce an offspring, e.g. an inner sub-heuristic failed).
-- **`EnabledTabu`**: `type TabuMap: Default`, `is_move_enabled(map, iter)`, `add_to_tabu_map(map, iter, tenure, rng)`. The tenure is sampled from the passed RNG (`&mut state.rng`) so seeded runs are bit-reproducible. Required by TabuSearch.
+- **`EnabledTabu`**: `is_move_enabled(&TabuMemory, iter)`, `add_to_tabu_map(&mut TabuMemory, iter, rng)`. Required by TabuSearch. The move decides its **policy** — which keys must be free, which applying it forbids, and whether those are the same set (`VrpRelocateNeighbor`'s are deliberately not: it asks about the destination route and forbids the source, so a customer cannot be moved straight back). It does *not* decide where the prohibitions live: that is the one `TabuMemory` on the state. **The trait is deliberately object safe** — no associated type, no `Clone` supertrait — which is the whole reason there is one trait here and not three: the state is not generic over the move, so it reaches the policy as `&dyn EnabledTabu`. Implementing it is **half** the job; the move also overrides `MoveToNeighbor::tabu_policy` with `Some(self)` (one line). Leaving that default `None` means "no tabu policy": `apply` records nothing and still succeeds, while `state.record_tabu` / `require_tabu_policy` return `OptError::Unsupported` — which is what keeps tabu opt-in for a new problem, and what stops a `TabuSearch` silently degrading into a plain descent.
 - **`SubProblemExtractable`**: `extract_sub_problem(sol1, sol2) -> Self`, `lift_solution(sol1, sol2, sub_sol)`. Variables that agree in both parents are fixed; the disagreeing variables form the sub-problem. Binary problems delegate lifting to `common::lift_binary_solution` (shared index space: MaxCut, VertexCover) or `common::lift_compact_binary_solution` (compacted indices: SAT, Formula); QUBO keeps its own bias-folding variant.
 - **`ProblemReduction`**: a map from one problem instance to another, with solutions crossing both ways. **Pure — it never touches a `SearchState`.**
   ```rust
@@ -197,10 +199,13 @@ pub struct SearchState<'a, P: ProblemTrait> {
     pub rng: SmallRng,                // ALL randomness flows through this
     pub trajectory: Vec<TrajectoryPoint>,  // anytime curve; empty unless a probe is set
     pub(crate) start_iteration/start_time: ...,  // where the phase began — hands off
+    tabu: TabuMemory,                 // private: erased maps, reached through a move
 }
 ```
 
-**Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` / `with_solution_and_seed(problem, sol, seed)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `clone_for_new_run(kind)` / `update_state(sub)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, `duration()` / `iterations_this_run()` (the elapsed-budget pair a heuristic normalizes progress by; both measure from *this* run's start, not the parent's), `set_objective_probe(fn(&Solution) -> f64)` (installs the probe that makes `update_best` append a `TrajectoryPoint`; off by default so `update_best` stays allocation-free — `benchmark/runner.rs` is the one caller, and it turns the result into the report's `trajectory`).
+**Key methods**: `new(problem)`, `new_with_seed(problem, seed)`, `with_solution(problem, sol)` / `with_solution_and_seed(problem, sol, seed)` (warm start), `apply(neighbor)` (apply + iter + best update), `apply_move_only(neighbor)` (defer best update), `update_best()`, `progress_iteration()`, `random_neighbor::<N>(context)` (uniform random move or `InvalidState` error), `clone_for_new_run(kind)` / `update_state(sub)` (the sub-run triad below), `is_neighbor_better_than_{current,best}(n)`, the tabu API below, `duration()` / `iterations_this_run()` (the elapsed-budget pair a heuristic normalizes progress by; both measure from *this* run's start, not the parent's), `set_objective_probe(fn(&Solution) -> f64)` (installs the probe that makes `update_best` append a `TrajectoryPoint`; off by default so `update_best` stays allocation-free — `benchmark/runner.rs` is the one caller, and it turns the result into the report's `trajectory`).
+
+**Tabu memory** — `apply` / `apply_move_only` record the applied move in the state's tabu memory, at the iteration it was made on, before the counter advances. That is why no heuristic pairs `record` with `apply` by hand any more, and why operators that must respect each other's prohibitions get that from sharing a state rather than from being handed the same object. `set_tabu_tenure((min,max))` (default `(0,0)` = record but forbid nothing) / `tabu_tenure()` / `reset_tabu()` / `tabu_allows(&mv) -> bool` (typed on the move, so `is_move_enabled` inlines into a neighborhood scan and a move without tabu cannot compile a call) / `record_tabu(&mv) -> Result<()>` / `require_tabu_policy(&mv) -> Result<()>` (the two erased ones, where a missing `tabu_policy` becomes an error — `TabuSearch` spends one `require_tabu_policy` per iteration so that mistake cannot pass silently) / `reserve_tabu_vars(n)` (pre-allocation only). `TabuMemory` keys by `TabuKey` shape, so MaxCut's flip and swap (both `Var`) share prohibitions — the property BLS is built on — while JobShop's swap (`Var`) and relocate (`Pair`) do not. `clone_for_new_run` gives the child an **empty** memory under every clone type (a phase is its own tabu list), and `update_state` carries the sub-run's prohibitions *back* into the parent along with its solution — a replacement, not a merge, and sound only because parent and child share one iteration frame. `sub.inherit_tabu_from(&parent)` is the opposite direction, for a phase that should start from what the parent knows.
 
 **Crossing to another instance** — a sub-run on a *different* problem instance (an exact kernel) cannot go through `update_state`, so it has its own pair. A caller that wants to search a reduction writes the loop itself (`tests/reduction_crossing.rs` is that loop, pinned); these two methods are the part that must not be hand-written:
 - `open_reduction(&reduction) -> SearchState<R::Target>` — projects the incumbent as the warm start and draws the sub-state's seed from this state's RNG (exactly one draw). Any `ProblemTrait`.
@@ -219,8 +224,9 @@ state.update_state(sub);
 // ClearBest — resets best and timers to current state (start_iteration = iteration)
 // StartBest — restarts from best_solution              (start_iteration = iteration)
 // All three keep the parent's iteration frame: the counter runs on and
-// start_iteration is the anchor every budget is measured against. The
-// n_accepted / n_rejected / n_best_updates counters measure a phase instead,
+// start_iteration is the anchor every budget is measured against. That is what
+// lets tabu boundaries (absolute iterations) cross between parent and sub-run.
+// The n_accepted / n_rejected / n_best_updates counters measure a phase instead,
 // so *every* variant starts them at zero and update_state adds them straight
 // on — which is why the state carries no start_n_* anchors.
 ```
@@ -246,7 +252,7 @@ StopCondition::iterations(1_000_000)
 | `SimulatedAnnealing<N>` | Random neighbor, `exp(-Δ/T)` acceptance, multiplicative cooling (requires `Evaluate<f64>`) |
 | `BangBangSimulatedAnnealing<N>` | Oscillating temperature between `min_wave_threshold` and `max_wave_threshold` |
 | `LateAcceptanceHillClimbing<N>` | LAHC: accepts a move if it is no worse than the score `history_length` steps ago (requires `Evaluate<f64>`) |
-| `TabuSearch<N>` | Best non-tabu neighbor; aspiration overrides tabu when global best is improved; tenure ∈ `(min, max)` sampled from `state.rng` |
+| `TabuSearch<N>` | Best non-tabu neighbor; aspiration overrides tabu when global best is improved; tenure ∈ `(min, max)` sampled from `state.rng`. Holds the tenure only — the map is on the state, and `apply` records |
 | `RandomWalk<N>` | Uniform random move with unconditional acceptance (useful as a perturbation) |
 | `BeamSearch<P, N>` | Maintains top-`k` candidates; expands the full neighborhood of every beam member each iteration |
 | `RlSearch<N>` | REINFORCE policy-gradient move selection over hand-crafted move features; weights persist across episodes (requires `Evaluate<f64>`) |
@@ -266,11 +272,11 @@ StopCondition::iterations(1_000_000)
 - `TspOrderCrossover` (OX) for TSP; `JobShopPpxCrossover` for JobShop.
 
 ### Problem-specific
-MaxCut has its own directory (`specific/max_cut/`) because its heuristics share *operators* rather than merely a problem type. They live in `ops/` (private to that directory), one module per role, and each is a **free function taking a `&mut Ledger`** (= `common::TabuLedger<VecTabuMap>`): `descent` (gain-indexed, monotone), `tabu_walk`, and the two kicks in `perturbation.rs` (`random_flips`, `best_swap`). `ops` names no kick and has **no dispatcher**: the selection vocabulary lives in `bls.rs` (`PerturbationType`, re-exported as `MaxCutPerturbation`) together with the one match that maps it to an operator, `BreakoutLocalSearch::kick` — the one place that takes the vocabulary from outside. That is what keeps each operator module independent of the others. `ops/mod.rs` holds only the `keep_best` tie rule they all select with.
+MaxCut has its own directory (`specific/max_cut/`) because its heuristics share *operators* rather than merely a problem type. They live in `ops/` (private to that directory), one module per role, and each is a **free function over the `SearchState`** (which is where the prohibitions live): `descent` (gain-indexed, monotone), `tabu_walk`, and the two kicks in `perturbation.rs` (`random_flips`, `best_swap`). `ops` names no kick and has **no dispatcher**: the selection vocabulary lives in `bls.rs` (`PerturbationType`, re-exported as `MaxCutPerturbation`) together with the one match that maps it to an operator, `BreakoutLocalSearch::kick` — the one place that takes the vocabulary from outside. That is what keeps each operator module independent of the others. `ops/mod.rs` holds only the `keep_best` tie rule they all select with.
 
-There is deliberately no engine object. What the operators share is exactly one ledger, and it is a parameter — so whoever passes the same ledger to two of them is the one deciding they should see each other's prohibitions (in BLS the entries the descent writes are the ones the weak perturbations must not undo; a caller wanting them isolated passes two ledgers). Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
+There is deliberately no engine object. What the operators share is the tabu memory of the `SearchState` they are handed — recorded by `apply` itself, and shared between flips and swaps because both key on `TabuKey::Var`. In BLS the entries the descent writes are the ones the weak perturbations must not undo; a caller wanting them isolated runs the phases on separate states. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
 
-What no operator decides is what "tabu" *means*. Each marks and tests moves through `MaxCutFlipNeighbor`'s and `MaxCutSwapNeighbor`'s own `EnabledTabu` impls (via the ledger's `allows` / `record`), so they forbid exactly what a generic `TabuSearch` over the same neighborhood would; they only decide *which* moves to try. `TabuSearch` itself holds the same `TabuLedger`.
+What no operator decides is what "tabu" *means*. Each marks and tests moves through `MaxCutFlipNeighbor`'s and `MaxCutSwapNeighbor`'s own `EnabledTabu` impls (via `state.tabu_allows` and the record inside `apply`), so they forbid exactly what a generic `TabuSearch` over the same neighborhood would; they only decide *which* moves to try. `TabuSearch` records through the same path.
 
 - `BreakoutLocalSearchForMaxCut` (`specific/max_cut/bls.rs`): greedy local search plus adaptive perturbation (strong / weak flip / weak swap), with probabilities decaying via the non-improvement counter `omega`. It selects exactly the three operators Benlic & Hao define, which are also the only three `ops` offers. Reproduces Benlic & Hao (2013); `docs/heuristics/breakout_local_search.md` records where it does not and why.
 - **The learned perturbation controller is an example, not a heuristic**: `examples/rl_bls.rs` drives `BreakoutLocalSearchForMaxCut` through `descend` / `kick` (constructed with `externally_driven`, which takes the tenure literally instead of as the paper's γ) and picks perturbation type (3 ops) × strength with a contextual softmax bandit (`reinforcement_learning::bandit::SoftmaxBandit`); weights persist across `Restart`/`Iterated` episodes. It was `RlBreakoutLocalSearchForMaxCut` with a benchmark `kind` until 2026-08-31: everything it added to BLS was policy (a feature vector and an action decode), so it moved out whole, bit-identical (verified by replaying a pre-move benchmark run's per-run seed through the example). Two objective-preserving *plateau* operators (flip connected clusters / an independent set of zero-gain vertices) used to be a fourth and fifth action, plus a `plateau_width` context feature. **They were removed knowing they paid**: the A/B at 30s x 5 runs costs it **-96.2 and -62.6 on G55 (two seeds), -110.4 on G60, -92.2 on G63**, against std 9-28, and is neutral on G70 (+5.8), G11 and G1 — with them it beat BLS on G55 (10200.4 against 10168.0), without them it does not. The removal was a deliberate trade of that objective for a smaller action space, one operator vocabulary and no second scratch structure; take it back if this controller becomes the thing that has to win. The mechanism itself survives as `PopulationAnnealingForMaxCut`'s non-local cluster move, which owns its own implementation and keeps the opt-in `zero_gain` index alive. See `docs/guide/learned_perturbation.md`.
@@ -353,7 +359,7 @@ wrong path, not a missing line.
 1. **Gain-based incremental updates** — binary/formula solutions cache per-variable `gain`; applying a move only refreshes the affected neighbors in O(degree). MaxCut and QUBO additionally offer optional `positive_gain` / `negative_gain` indexes (advanced) to enumerate only improving moves — used by problem-specific heuristics like BLS, not needed for standard use. TSP instead computes move gains on the fly from the lazily built distance matrix; JobShop re-decodes per candidate (and evaluates candidates with rayon on large instances, order-preserving so results are thread-count independent).
 2. **Sub-run clone/merge** — every meta-heuristic isolates a phase with `clone_for_new_run(kind)` → run it → `update_state(sub)`. The global iteration counter advances monotonically across all phases. There is deliberately no `run_sub` wrapper around the triad: both halves are public, every user-facing doc teaches this form, and a wrapper would have to name `Heuristic`, which `search_state` must not — nothing about cloning and merging a state needs to know what a heuristic is.
 3. **Seeded reproducibility** — all randomness flows through `state.rng` (`SmallRng`); `EnabledTabu::add_to_tabu_map` and `Crossover::crossover` take the RNG explicitly. With `seed` set in the benchmark config, reruns are bit-identical (enforced by e2e tests).
-4. **Tabu abstraction via trait** — `TabuSearch` is generic over `N: EnabledTabu`. Each move type owns its `TabuMap`; binary problems share `VarTabuMap` + helpers from `common/tabu.rs`.
+4. **Tabu abstraction via trait** — `TabuSearch` is generic over `N: EnabledTabu` and owns only the tenure; the prohibitions are the `SearchState`'s one `TabuMemory`, recorded by `apply` itself. Each move type owns its *policy* (which `TabuKey`s it reads and writes) and hands it over with `MoveToNeighbor::tabu_policy`; the storage is shared, which is what makes two move types over the same key shape see each other's entries.
 5. **Always-higher-is-better in `FormulaProblem`** — for `Maximize`, `score = objective − penalty`; for `Minimize`, `score = −objective − penalty`. Heuristics only need the higher-is-better convention.
 6. **`MoveToNeighbor::iter()` is lazy** — `LocalSearch` selects with `max_by` in O(n) without collecting; `TabuSearch` uses `max_by` plus aspiration; only `BeamSearch` materializes all candidates.
 7. **Config factory is generic, per-problem code is registration-only** — `build_heuristic` + `BaseBuilder` (in `benchmark/factory.rs`) contain the only base-heuristic dispatch; each problem contributes a small `ConfigurableProblem` impl in `benchmark/problems.rs`. Shared code goes in `src/common/`, not in `problem/` or at the top level.

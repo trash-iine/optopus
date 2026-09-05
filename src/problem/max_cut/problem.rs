@@ -176,10 +176,14 @@ impl MaxCutSolution {
     /// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing), etc.)
     /// work correctly without it.
     ///
-    /// This index is useful for problem-specific algorithms (such as
-    /// [`BreakoutLocalSearchForMaxCut`](crate::heuristic::BreakoutLocalSearchForMaxCut))
-    /// that need to iterate only over vertices with positive gain, reducing the
-    /// inner-loop cost from O(n) to O(|improving moves|).
+    /// This index is useful for problem-specific algorithms that need to
+    /// iterate only over vertices with positive gain, reducing the inner-loop
+    /// cost from O(n) to O(|improving moves|). **Nothing in this library calls
+    /// it any more**: Breakout Local Search did, through an `ops::descent` that
+    /// has since been folded into [`LocalSearch`](crate::heuristic::LocalSearch).
+    /// It is kept for callers writing their own descent — measured at
+    /// 1.8-2.3x on one descent to a local optimum, see
+    /// `docs/heuristics/breakout_local_search.md`.
     ///
     /// Once enabled, the index is maintained incrementally by
     /// [`MaxCutFlipNeighbor::apply_to_solution`](super::MaxCutFlipNeighbor).

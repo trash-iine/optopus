@@ -101,7 +101,6 @@
 //! let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
 //!     StopCondition::iterations(100_000),
 //!     (3, 7),
-//!     None,
 //! );
 //! ts.run(&mut state).unwrap();
 //!

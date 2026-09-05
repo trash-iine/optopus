@@ -17,4 +17,4 @@ pub use gain_index::GainIndex;
 pub use graph::{Graph, seeded_rng};
 pub use parse::InstanceLines;
 pub use permutation::order_crossover;
-pub use tabu::{TabuLedger, VarTabuMap, VecTabuMap, add_var_to_tabu, is_var_enabled};
+pub use tabu::{TabuKey, TabuMemory};

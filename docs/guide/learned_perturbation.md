@@ -18,10 +18,11 @@ bls.kick(&mut state, kind, l)?;                             // perturbation + up
 # Ok::<(), optopus::error::OptError>(())
 ```
 
-`descend` and `kick` share one tabu ledger — the prohibitions the descent
-writes are the ones the weak perturbations must not undo — and `kick` closes
-the round with the single `update_best` BLS itself performs. What you replace
-is only the *rule*: the `omega`-based schedule of Benlic & Hao and its strength
+`descend` and `kick` share the tabu memory of the `SearchState` you hand them —
+the prohibitions the descent writes are the ones the weak perturbations must not
+undo — and `kick` closes the round with the single `update_best` BLS itself
+performs. What you replace is only the *rule*: the `omega`-based schedule of
+Benlic & Hao and its strength
 progression.
 
 `externally_driven` takes `tabu_tenure` **literally**, unlike

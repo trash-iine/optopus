@@ -25,5 +25,13 @@ glob = "0.3.3"
 chrono = "0.4.42"
 
 [profile.release]
-lto = "thin"
+# `fat` rather than `thin`, and measured. It is worth 8-10% on the heuristics
+# whose inner loop is a neighborhood scan -- RandomWalk -9.5%, SimulatedAnnealing
+# -7.9% on a 40M-move MaxCut walk -- and it is what keeps `TabuSearch` off a
+# cliff: the tabu memory's `dense` buffer, the solution's gains and the graph's
+# vertex list are walked in lockstep, so where the allocator happens to put them
+# decides whether they collide in the cache. Under `thin` one arrangement cost
+# +47% on G32; under `fat` the same arrangement is within noise. Costs ~6s of
+# build time. See `src/common/tabu.rs`.
+lto = "fat"
 codegen-units = 1

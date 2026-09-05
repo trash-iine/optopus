@@ -8,8 +8,8 @@ optional `positive_gain` index on `MaxCutSolution` to enumerate only improving
 flips in O(|improving|). The descent, the tabu walk and the perturbations it
 drives are free functions in `src/heuristic/specific/max_cut/ops/`, shared with
 the other MaxCut heuristics; what is BLS's own is the schedule below. All of
-them are handed the same `common::TabuLedger`, which is what stops a
-perturbation undoing the descent that just ran.
+them record into — and read — the tabu memory on the `SearchState` they are
+handed, which is what stops a perturbation undoing the descent that just ran.
 
 ## Example
 
@@ -66,7 +66,7 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
 
 - **The tenure parameter is doubled on the way in.** The original tenure is
   added once when a vertex is recorded and once more in the eligibility test, so
-  a vertex stays forbidden for twice it. `VecTabuMap` stores a single tenure, so
+  a vertex stays forbidden for twice it. `TabuMemory` stores a single tenure, so
   `paper_effective_tenure` doubles the caller's range and `tabu_tenure` keeps
   the original meaning, `rand[3, n/10]` on the G-set. Doubling only the upper
   bound does not reproduce it — the whole range has to scale.
@@ -83,6 +83,55 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
   (`MaxCutSwapNeighbor::apply_to_iteration`), where BLS counts every move as
   one. That `+2` is a library-wide convention shared by every binary problem's
   swap, so it is not changed here for one heuristic's sake.
+
+## Generalising the operators: measured, and reverted
+
+The operators here were, at one point, replaced with generic heuristics: the
+descent with `LocalSearch` and the directed swap with a `TabuSearch` over a
+restricted neighborhood. Both were measured, both were then **reverted on
+review** — moving the tabu memory onto the `SearchState` does not require
+either, and the costs are not worth paying for nothing. The measurements are
+kept because they are what stops the ideas coming back untested.
+
+**The descent against `LocalSearch`.** They select from the same candidate set
+(`is_neighbor_better_than_current` on a flip is `gain > 0`, which is what
+`positive_gain` indexes), but `LocalSearch` rescans all n vertices per move
+where the descent enumerates only the improving ones. One descent to a local
+optimum took **1.8–2.3× as long** (10 seeds, medians, on G1 / G22 / G32 / G55 /
+G70 / G81, flat across n from 800 to 20000 and degree from 2 to 48, with move
+counts agreeing to within 1%): the scan is 87% of that gap and `update_best`'s
+per-move solution clone the other 13%. Over a whole BLS run it cost **−40.0
+total average cut** on a ten-instance G-set panel at 30s × 5 runs, at
+0.74–0.93× the moves.
+
+That 2× is the generic contract's price rather than slack in it. Three
+generality-preserving attempts were measured and none paid: `clone_from` in
+`update_best` changed nothing (`#[derive(Clone)]` does not specialise it);
+folding the best update to the end of the descent recovers 8–10% but coarsens
+the anytime trajectory to one point per descent; and the identical traversal
+written out as a hand loop ran **3.3× slower** than the iterator chain. Cutting
+the scan needs to know which gains the last move changed, which is problem
+knowledge.
+
+**The directed swap.** `TabuSearch<MaxCutSwapNeighbor>` is out because its
+`iter` enumerates every cross-side pair, O(n²) — 4·10⁸ against 2·10⁴ per step
+on G81. Two restrictions were tried. Restricting to the pairs touching each
+side's **highest-gain** vertex is O(n) and always contains the greedy pair, and
+it **failed badly**: −452.6 total average cut, worse on 8 of 10, at 0.05–0.36×
+the moves, with `TabuSearch` reporting no eligible move 3.8× more often than it
+found one. Applying a move inverts the sign of its vertex's gain, and this
+phase starts from a local optimum where every gain is ≤ 0, so the vertices a
+search just moved become the highest-gain ones — exactly the ones the tabu
+memory now forbids. **Ranking a restricted neighborhood by gain is
+anti-correlated with a recency-based tabu list**, and the top-`k` widening does
+not escape it: `k` would have to exceed the tenure (up to 600 on the sparse
+instances) and `k²` then overtakes the `n` it replaces.
+
+Restricting by **partition side** has no such correlation and did measure well
+(+20.8 on the same panel, and not one degenerate step), but it was reverted
+anyway: two independent `TabuSearch` steps succeed or fail independently, so
+the pair is not guaranteed and the partition sizes `M2` exists to preserve can
+change by one. `best_swap` scans once and commits to both endpoints together.
 
 ## Constructor
 
@@ -106,7 +155,10 @@ BreakoutLocalSearchForMaxCut::new(
 | `q` | fraction of weak perturbations using flip (vs. swap) |
 
 `clear()` resets the schedule (`omega` to 0, `l` to `l0`, the remembered local
-optimum dropped) and empties the tabu ledger, so a fresh episode starts clean.
+optimum dropped). The prohibitions are not its to clear: they belong to the
+`SearchState`, and a sub-run clone — how every meta-heuristic starts a phase —
+already arrives with an empty tabu memory (`state.reset_tabu()` for a state you
+are reusing directly).
 The remembered local optimum is dropped rather than kept because the same
 schedule may be reused on a different instance — a meta-heuristic that rebuilds
 its sub-problem every round does exactly that.
@@ -135,7 +187,7 @@ not transfer between them.
 The round is also reachable in halves, for a caller that wants to keep the
 descent and the operators but replace the schedule:
 
-- `descend(state)` — the greedy descent, writing the ledger the kick reads.
+- `descend(state)` — the greedy descent, writing the prohibitions the kick reads.
 - `kick(state, perturbation, l)` — one [`MaxCutPerturbation`](../api/optopus/heuristic/enum.MaxCutPerturbation.html)
   of length `l`, followed by the round's single `update_best`.
 - `externally_driven(stop_condition, tabu_tenure)` — the constructor for that

@@ -368,12 +368,10 @@ mod tests {
             Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
                 StopCondition::failed_updates(1),
                 (1, 5),
-                None,
             )),
             Some(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
                 StopCondition::failed_updates(1),
                 (1, 5),
-                None,
             ))),
         );
 

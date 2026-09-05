@@ -20,6 +20,7 @@ operations are shaped the way they are.
 | Accounting | `n_accepted`, `n_rejected`, `n_best_updates` | the same three, one counter each |
 | Seed | `rng` | everything that draws (see [Reproducibility](#reproducibility)) |
 | Recording | `trajectory` | `update_best`, and only once a probe is installed |
+| Tabu | the private tabu memory | `apply` / `apply_move_only` (see [Remembering tabu moves](#remembering-tabu-moves)) |
 | Problem | `instance` (a `&'a P`) | just borrowed for the whole run |
 
 ## Creating a state
@@ -66,6 +67,55 @@ meant to be worsening and re-checking the best on each one is wasted work, then
 call `update_best` once when the phase ends. Both count an acceptance;
 `progress_iteration` counts a rejection.
 
+## Remembering tabu moves
+
+Both `apply` and `apply_move_only` record the move they applied in the state's
+tabu memory, at the iteration it was made on, before the counter advances. The
+map lives here rather than on the heuristic because the state is what applies a
+move — so no heuristic has to pair `record` with `apply` by hand, and operators
+that must respect each other's prohibitions get that by sharing a state instead
+of by being handed the same object.
+
+```rust
+state.set_tabu_tenure((5, 10));            // what every record draws from
+let free = state.tabu_allows(&m);          // is this move currently forbidden?
+state.apply(&m)?;                          // applies *and* records
+state.reset_tabu();                        // drop every prohibition
+```
+
+The default tenure is `(0, 0)`: a move is recorded and freed again on the next
+iteration, so a search that never sets one is never blocked by itself.
+
+`tabu_allows` is typed on the move, so `is_move_enabled` inlines into a
+neighborhood scan — which is where it is called, once per candidate. A move that
+does not implement `EnabledTabu` cannot be asked at all, and says so at compile
+time.
+
+A move type opts in by implementing [`EnabledTabu`](traits.md#core-trait-reference)
+**and** overriding `MoveToNeighbor::tabu_policy` with `Some(self)` — one line,
+and what hands the policy to the state, which holds it as `&dyn EnabledTabu`.
+Leaving that default in place means the move has **no** tabu policy: `apply`
+still succeeds and simply records nothing, while `record_tabu(&m)` and
+`require_tabu_policy(&m)` report `OptError::Unsupported`. A missing policy is
+therefore an answer at the point a move is applied and an error at the point
+something reaches for the memory: a problem that never wanted tabu still applies
+its moves. Every move type the library ships *does* opt in, so in practice they
+all record — what the default buys is that a new problem can stop at the three
+core traits. `TabuSearch` spends one `require_tabu_policy` per iteration for
+exactly that reason: implementing `EnabledTabu` and forgetting `tabu_policy`
+would otherwise leave it running with no tabu list and no complaint.
+
+What a move forbids is a `TabuKey`: `Var(i)` for a dense index (a variable, a
+vertex, a position), `Pair` and `Triple` for the rest. The shapes are separate
+spaces, so two move types over the same shape share prohibitions — MaxCut's flip
+and swap are both `Var`, which is exactly what Breakout Local Search's descent
+and perturbations rely on — while different shapes never collide (JobShop's swap
+is a `Var`, its relocate a `Pair`). The keys a move reads and the keys it writes
+need not agree: a VRP relocate asks whether a customer may enter its destination
+route and forbids the route it just left, so the customer cannot be moved
+straight back. `state.reserve_tabu_vars(n)` pre-grows the dense space when the
+instance size is known up front.
+
 ## Isolating a sub-run
 
 Every meta-heuristic runs its phases on a clone and merges the result back. The
@@ -98,9 +148,11 @@ across every phase however deeply they nest.
 All three keep the parent's iteration frame (`iteration` marks where the current
 phase is, and `start_iteration` marks where the phase began). Everything
 budget-shaped is measured against that anchor (`iterations_this_run()`,
-`StopCondition`, `update_state`'s deltas). What a shared frame buys is that an
-iteration number means the same thing on both sides of a merge — which matters
-for anything that records one, such as a trajectory point.
+`StopCondition`, `update_state`'s deltas), so a phase still starts at zero *of
+its own budget*. What a shared frame buys is that an iteration number means the
+same thing on both sides of a merge — which matters for anything that records
+one, such as a trajectory point, and is what lets tabu boundaries (absolute
+iterations) cross.
 
 The `n_accepted` / `n_rejected` / `n_best_updates` counters are the other kind of
 value: they measure a phase rather than timestamp anything, so every variant
@@ -118,6 +170,12 @@ Every variant forks the RNG: the child gets an independent stream and the
 parent's advances by one fork's worth of state. That is why
 `clone_for_new_run` takes `&mut self`, and why a sub-run's internal draws never
 leak back into the parent's sequence.
+
+Every variant also starts the child with an **empty tabu memory** — a phase is
+its own tabu list. What it learns does come back: `update_state` carries the
+sub-run's prohibitions into the parent along with its solution, needing no
+translation because both sides share the frame. A phase that should *start* from
+the parent's asks with `sub.inherit_tabu_from(&state)`.
 
 ## Crossing a reduction
 

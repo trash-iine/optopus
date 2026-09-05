@@ -1,4 +1,4 @@
-use super::ops::{self, Ledger};
+use super::ops;
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::MaxCut;
@@ -8,7 +8,7 @@ use rand::rngs::SmallRng;
 
 /// One of the perturbation operators, in Benlic & Hao's vocabulary.
 ///
-/// A *weak* perturbation is directed by the gains and the tabu ledger,
+/// A *weak* perturbation is directed by the gains and the tabu memory,
 /// a *strong* one is random.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PerturbationType {
@@ -185,14 +185,20 @@ impl BlsSchedule {
 /// - `p0` — minimum perturbation probability
 /// - `q` — fraction of weak perturbations that use the flip strategy (vs. swap)
 pub struct BreakoutLocalSearch {
-    /// The prohibitions the descent and the perturbations share — passing one
-    /// ledger to both is what stops a weak perturbation undoing the descent.
-    tabu: Ledger,
+    /// The tenure the state's tabu memory records with while this heuristic
+    /// drives it. The prohibitions themselves live on the state, where the
+    /// descent and the perturbations share them — which is what stops a weak
+    /// perturbation undoing the descent.
+    tabu_tenure: (u64, u64),
     stop_condition: StopCondition,
     schedule: BlsSchedule,
 }
 
 impl BreakoutLocalSearch {
+    /// # Panics
+    ///
+    /// Panics if `tabu_tenure.0 > tabu_tenure.1` (an empty range). The range is
+    /// only sampled from once the search is running, so it is checked here.
     pub fn new(
         stop_condition: StopCondition,
         tabu_tenure: (u64, u64),
@@ -201,8 +207,9 @@ impl BreakoutLocalSearch {
         p0: f64,
         q: f64,
     ) -> Self {
+        crate::common::tabu::assert_valid_tenure(tabu_tenure);
         Self {
-            tabu: Ledger::new(paper_effective_tenure(tabu_tenure)),
+            tabu_tenure: paper_effective_tenure(tabu_tenure),
             stop_condition,
             schedule: BlsSchedule::new(t, l0, p0, q),
         }
@@ -218,12 +225,32 @@ impl BreakoutLocalSearch {
     /// own tenure. The schedule the instance still carries is neutral, so
     /// driving it with [`run`](Heuristic::run) instead would merely kick once
     /// per round with `l = 1`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `tabu_tenure.0 > tabu_tenure.1`; see [`new`](Self::new).
     pub fn externally_driven(stop_condition: StopCondition, tabu_tenure: (u64, u64)) -> Self {
+        crate::common::tabu::assert_valid_tenure(tabu_tenure);
         Self {
-            tabu: Ledger::new(tabu_tenure),
+            tabu_tenure,
             stop_condition,
             schedule: BlsSchedule::new(1, 1, 0.0, 0.0),
         }
+    }
+
+    /// Points the state's tabu memory at this heuristic's tenure and grows the
+    /// map to the instance.
+    ///
+    /// Called by both halves of a round rather than once per run, because
+    /// [`descend`](Self::descend) and [`kick`](Self::kick) are public: a
+    /// controller that replaces the paper's schedule
+    /// (`examples/rl_bls.rs`) steps them directly and never goes through
+    /// [`run`](Heuristic::run). Both operations are idempotent field-level
+    /// work.
+    fn prepare(&self, state: &mut SearchState<'_, MaxCut>) {
+        let n = state.instance.graph.len();
+        state.set_tabu_tenure(self.tabu_tenure);
+        state.reserve_tabu_vars(n);
     }
 
     /// The first half of one round: greedy descent to a local optimum, writing
@@ -234,12 +261,12 @@ impl BreakoutLocalSearch {
     /// policy observes the local optimum it landed on before choosing the next
     /// kick.
     pub fn descend(&mut self, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
-        self.tabu.ensure_capacity(state.instance.graph.len());
-        ops::descent(&mut self.tabu, state)
+        self.prepare(state);
+        ops::descent(state)
     }
 
     /// The second half of one round: one perturbation of type `perturbation`
-    /// and length `l`, against the same ledger the descent wrote, followed by
+    /// and length `l`, against the same prohibitions the descent wrote, followed by
     /// the single `update_best` that closes the round.
     ///
     /// The match below is the only place a [`PerturbationType`] is turned into
@@ -252,11 +279,11 @@ impl BreakoutLocalSearch {
         perturbation: PerturbationType,
         l: u64,
     ) -> Result<(), OptError> {
-        self.tabu.ensure_capacity(state.instance.graph.len());
+        self.prepare(state);
         match perturbation {
-            PerturbationType::Strong => ops::random_flips(&mut self.tabu, l, state)?,
-            PerturbationType::WeakFlip => ops::tabu_walk(&mut self.tabu, l, state)?,
-            PerturbationType::WeakSwap => ops::best_swap(&mut self.tabu, l, state)?,
+            PerturbationType::Strong => ops::random_flips(l, state)?,
+            PerturbationType::WeakFlip => ops::tabu_walk(l, state)?,
+            PerturbationType::WeakSwap => ops::best_swap(l, state)?,
         }
         state.update_best();
         Ok(())
@@ -269,7 +296,7 @@ impl BreakoutLocalSearch {
 /// The paper's tabu list `H` holds "the iteration when the vertex was last
 /// moved **plus γ**", and the eligibility predicate of the directed
 /// perturbations then asks for `(H_m + γ) < Iter` — so `γ` is counted twice and
-/// a vertex stays forbidden for `2γ`. [`VecTabuMap`](crate::common::VecTabuMap)
+/// a vertex stays forbidden for `2γ`. [`TabuMemory`](crate::common::TabuMemory)
 /// stores the first iteration at which a move is allowed again, i.e. exactly
 /// one tenure, so reproducing the paper means handing it twice the caller's
 /// range. `tabu_tenure` therefore keeps the paper's meaning (`rand[3, |V|/10]`
@@ -283,9 +310,12 @@ fn paper_effective_tenure((min, max): (u64, u64)) -> (u64, u64) {
 }
 
 impl Heuristic<MaxCut> for BreakoutLocalSearch {
+    /// Resets the schedule only. The prohibitions are the *state's*, and a
+    /// sub-run clone — which is how every meta-heuristic starts a phase — comes
+    /// with an empty tabu memory already; a caller re-running on one state calls
+    /// [`SearchState::reset_tabu`].
     fn clear(&mut self) {
         self.schedule.reset();
-        self.tabu.clear();
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
@@ -450,5 +480,13 @@ mod tests {
             l0 + 1,
             "returning to Cp lengthens the perturbation"
         );
+    }
+
+    /// A tenure the sampler cannot draw from is rejected where it is
+    /// configured, not on the first perturbation.
+    #[test]
+    #[should_panic(expected = "Invalid tabu tenure range")]
+    fn an_inverted_tenure_panics_at_construction() {
+        BreakoutLocalSearch::new(StopCondition::iterations(10), (9, 2), 100, 5, 0.8, 0.5);
     }
 }
