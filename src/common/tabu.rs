@@ -93,38 +93,34 @@ pub struct TabuMemory {
     /// `dense[i]` = first iteration at which `Var(i)` is free again.
     dense: Vec<u64>,
     /// The same, for the keys that are not a dense index.
-    /// The compound keys, behind a `Box` **on purpose, and measured** — but not
-    /// for the reason a reader would guess, so read this before removing it.
+    /// The compound keys.
     ///
-    /// A neighborhood scan walks three heap buffers in lockstep, once per
-    /// candidate: the graph's vertex list, the solution's gains, and this
-    /// memory's `dense`. **Where those three land relative to each other
-    /// decides whether they collide in the cache**, and everything that
-    /// perturbs the allocation sequence moves them. Storing this map inline
-    /// drew a bad arrangement: `TabuSearch` ran **+45% on G32** at identical
-    /// work — bit-identical objective, move counts and per-run seeds. Boxing
-    /// this one field draws a good one, −0.2%.
+    /// **This field was briefly boxed, and the reason is worth keeping.** A
+    /// neighborhood scan walks three heap buffers in lockstep, once per
+    /// candidate: the graph's vertex list, the solution's gains, and `dense`.
+    /// Where the allocator puts those three decides whether they collide in the
+    /// cache, and anything that perturbs the allocation sequence moves them.
+    /// Under `lto = "thin"` storing this map inline drew an arrangement that
+    /// cost `TabuSearch` **+47% on G32 and +35% on G1**, at identical work —
+    /// bit-identical objective, move counts and per-run seeds.
     ///
-    /// The `HashMap` is incidental. Leaving it inline and giving `dense` 4096
-    /// slots of slack instead — the map untouched — also lands at +0.9%, and
-    /// keeping the `Box` while giving `dense` 512 slots of slack puts the
-    /// slowdown *back*, at +7.6%. What is measured here is allocation layout,
-    /// not a property of `HashMap`.
+    /// The map itself was never the cause. Leaving it inline and giving `dense`
+    /// 4096 slots of slack also fixed it (+0.9%), and boxing the map while
+    /// giving `dense` 512 slots of slack put the slowdown back (+7.6%).
     ///
-    /// Ruled out along the way, each by measurement: the struct's size
-    /// (padding `SearchState` back to the same 744 bytes costs nothing), the
-    /// cache lines its fields occupy (`offset_of!` says four either way, in
-    /// both arrangements), inlining of `is_enabled` (no symbol survives in
-    /// either binary), the `TabuKey` construction, the shape of the closure
-    /// that reads the state, and code alignment (24 unrelated functions
-    /// inserted ahead of it change nothing). Instruction counts in the hot
-    /// `run_once` are unchanged; the cost is stalls.
+    /// What actually removes it is `lto = "fat"`, now set in `Cargo.toml`:
+    /// the same inline arrangement measures −2.0% / +0.2% under it. So the box
+    /// is gone and the profile carries the fix.
     ///
-    /// So this is a good draw rather than a fix, and it is machine-specific.
-    /// If you touch it, re-measure `TabuSearch` against `origin/main` rather
-    /// than reasoning about it -- the reasoning has been wrong three times.
-    #[allow(clippy::box_collection)]
-    sparse: Box<HashMap<TabuKey, u64>>,
+    /// Ruled out along the way, each by measurement, so they are not re-tried:
+    /// the struct's size (padding `SearchState` back to the same bytes costs
+    /// nothing), the cache lines its fields occupy (`offset_of!` says four
+    /// either way), inlining of `is_enabled` (no symbol survives in either
+    /// binary), the `TabuKey` construction, the shape of the closure that reads
+    /// the state, and code alignment (24 unrelated functions inserted ahead of
+    /// it change nothing). Instruction counts in `run_once` are unchanged; the
+    /// cost was stalls.
+    sparse: HashMap<TabuKey, u64>,
     tenure: (u64, u64),
 }
 
@@ -182,7 +178,7 @@ impl TabuMemory {
                 0
             }
         }));
-        *self.sparse = other
+        self.sparse = other
             .sparse
             .iter()
             .filter(|&(_, &until)| until > other_iteration)
