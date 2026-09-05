@@ -1,15 +1,10 @@
 //! The tabu memory a search carries, and the keys moves forbid in it.
 //!
-//! Every move that supports a tabu list forbids the same *kind* of thing: an
+//! Every move that supports a tabu list forbids the same kind of thing: an
 //! index, a pair, or a triple of indices, until some future iteration. This
 //! module holds that one store; which keys a move reads and writes is the
 //! move's own [`EnabledTabu`](crate::trait_defs::EnabledTabu) impl, and nothing
 //! here decides it.
-//!
-//! Two backings, one store: dense `0..n` keys ([`TabuKey::Var`] — every binary
-//! problem's variables, MaxCut's vertices, JobShop's positions) index a flat
-//! `Vec`, while compound keys hash. Both record the same thing, so a move
-//! cannot tell which one it landed in.
 
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -65,14 +60,14 @@ impl From<(usize, usize, usize)> for TabuKey {
 /// ([`apply`](crate::search_state::SearchState::apply) does it inline). A
 /// heuristic only sets the tenure it wants.
 ///
-/// It is deliberately *not* a tabu policy. The policy lives in each move's
+/// It is deliberately not a tabu policy. The policy lives in each move's
 /// [`EnabledTabu`](crate::trait_defs::EnabledTabu) impl — which keys it reads,
 /// which it writes, and whether they have to agree; this type owns only the
 /// storage and the tenure, so it forbids exactly what a
 /// [`TabuSearch`](crate::heuristic::TabuSearch) over the same neighborhood
 /// would.
 ///
-/// Each entry is the **first iteration at which the key is free again**, so `0`
+/// Each entry is the first iteration at which the key is free again, so `0`
 /// (what a fresh or cleared entry holds) means "always allowed". Storing the
 /// boundary rather than the last forbidden iteration keeps the test a plain
 /// `iteration >= until`, with no off-by-one to get wrong at each call site.
@@ -98,7 +93,29 @@ pub struct TabuMemory {
     /// `dense[i]` = first iteration at which `Var(i)` is free again.
     dense: Vec<u64>,
     /// The same, for the keys that are not a dense index.
-    sparse: HashMap<TabuKey, u64>,
+    /// The compound keys, behind a `Box` **on purpose, and measured**.
+    ///
+    /// A `SearchState` holds one of these inline, and a neighborhood scan
+    /// reads four of that state's fields once per candidate. With this map
+    /// stored inline too, `TabuSearch` ran **+32% on G1 and +45% on G32**
+    /// against the same search before the tabu memory moved onto the state —
+    /// at identical work, bit-identical objective and move counts. Boxing just
+    /// this field puts both back to −0.1%.
+    ///
+    /// It is not the struct's size: padding `SearchState` back up to the same
+    /// 744 bytes with a dummy array costs nothing (+0.3%), and boxing the whole
+    /// `TabuMemory` — which is 80 bytes smaller *and* adds an indirection on the
+    /// hot `dense` path — is slightly worse (+0.7%) than boxing this one field.
+    /// What the scan cannot afford is a `HashMap` inline in the state it reads
+    /// through. **The mechanism below that is not established**; treat the
+    /// numbers as the reason, not the explanation, and re-measure before
+    /// inlining this again.
+    ///
+    /// `HashMap::new` does not allocate until the first insert, so the cost is
+    /// one small allocation per state and none per compound key that is never
+    /// used.
+    #[allow(clippy::box_collection)]
+    sparse: Box<HashMap<TabuKey, u64>>,
     tenure: (u64, u64),
 }
 
@@ -156,7 +173,7 @@ impl TabuMemory {
                 0
             }
         }));
-        self.sparse = other
+        *self.sparse = other
             .sparse
             .iter()
             .filter(|&(_, &until)| until > other_iteration)
@@ -183,13 +200,8 @@ impl TabuMemory {
     ///
     /// Any boundary already recorded is overwritten — the most recent move
     /// wins, which is what lets a short tenure release a key early.
-    ///
-    /// The draw goes through the caller's `rng` — the state passes its own, so
-    /// seeded runs stay reproducible.
     #[inline]
     pub fn forbid(&mut self, key: impl Into<TabuKey>, iteration: u64, rng: &mut SmallRng) {
-        // Drawn before any growth so the RNG stream does not depend on the
-        // dense buffer's current capacity.
         let tabu_duration = rng.random_range(self.tenure.0..=self.tenure.1);
         // A move applied at `iteration` with tenure `d` stays blocked through
         // `iteration + d`, so the first iteration that frees it is one past.
