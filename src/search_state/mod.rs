@@ -317,7 +317,7 @@ where
     /// state.set_tabu_tenure((5, 10));
     ///
     /// let m = MaxCutFlipNeighbor::new(&mc, &state.solution, 1);
-    /// state.apply(&m)?;                        // applying records vertex 1
+    /// state.apply_with_tabu(&m)?;             // records vertex 1, then applies
     /// assert!(!state.tabu_allows(&m));
     ///
     /// let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
@@ -521,42 +521,22 @@ where
     /// Records `neighbor` as tabu for a tenure drawn from
     /// [`tabu_tenure`](Self::tabu_tenure), counted from the current iteration.
     ///
-    /// [`apply`](Self::apply) already does this for every move it applies, so a
-    /// heuristic needs this only to forbid a move it is *not* applying.
+    /// Applying a move does **not** record it: a search that never reads the
+    /// tabu memory should not pay to write it, and most of them never do.
+    /// A tabu search pairs this with the move it applies — through
+    /// [`apply_with_tabu`](Self::apply_with_tabu) or
+    /// [`apply_move_only_with_tabu`](Self::apply_move_only_with_tabu), which
+    /// get the order right — or calls this alone to forbid a move it is not
+    /// applying.
     ///
-    /// # Errors
-    ///
-    /// Returns [`OptError::Unsupported`](crate::error::OptError::Unsupported)
-    /// when the move has no tabu policy — it does not implement
-    /// [`EnabledTabu`], or implements it without overriding
-    /// [`MoveToNeighbor::tabu_policy`]. Applying such a move is fine (see
-    /// [`apply`](Self::apply)); it is only reaching for the tabu memory that has
-    /// no answer.
-    pub fn record_tabu<Move>(&mut self, neighbor: &Move) -> Result<(), crate::error::OptError>
+    /// Like [`tabu_allows`](Self::tabu_allows) this is asked of the move type,
+    /// so the policy inlines and a move without one cannot be passed at all.
+    #[inline]
+    pub fn record_tabu<N>(&mut self, neighbor: &N)
     where
-        Move: MoveToNeighbor<Problem>,
+        N: MoveToNeighbor<Problem> + EnabledTabu,
     {
-        let policy = tabu_policy::<Problem, Move>(neighbor)?;
-        policy.add_to_tabu_map(&mut self.tabu, self.iteration, &mut self.rng);
-        Ok(())
-    }
-
-    /// Checks that `neighbor`'s type hands a tabu policy over, without touching
-    /// the memory.
-    ///
-    /// [`apply`](Self::apply) records silently when there is no policy, which is
-    /// what keeps tabu optional for a problem that never wanted it — but a
-    /// heuristic whose entire method *is* the tabu list would then run without
-    /// one and never say so. Such a heuristic calls this once per iteration.
-    ///
-    /// # Errors
-    ///
-    /// As [`record_tabu`](Self::record_tabu).
-    pub fn require_tabu_policy<Move>(&self, neighbor: &Move) -> Result<(), crate::error::OptError>
-    where
-        Move: MoveToNeighbor<Problem>,
-    {
-        tabu_policy::<Problem, Move>(neighbor).map(|_| ())
+        neighbor.add_to_tabu_map(&mut self.tabu, self.iteration, &mut self.rng);
     }
 
     /// Carries `parent`'s prohibitions and tenure into this state, replacing
@@ -585,40 +565,17 @@ where
         self.tabu.reserve_vars(n);
     }
 
-    /// Records `neighbor` if it has a tabu policy, and does nothing if it does
-    /// not.
-    ///
-    /// This is the half of [`record_tabu`](Self::record_tabu) that `apply` uses.
-    /// It is deliberately silent rather than fallible: a problem that never
-    /// implements [`EnabledTabu`] must still be able to apply its moves, so
-    /// "this move has no tabu policy" is an answer here and an error only when
-    /// a caller asks about the map explicitly.
-    ///
-    /// For a move without a policy the `tabu_policy` call monomorphizes to
-    /// `None` and the whole body compiles away.
-    #[inline]
-    fn record_applied<Move>(&mut self, neighbor: &Move)
-    where
-        Move: MoveToNeighbor<Problem>,
-    {
-        if let Some(policy) = neighbor.tabu_policy() {
-            policy.add_to_tabu_map(&mut self.tabu, self.iteration, &mut self.rng);
-        }
-    }
-
     /// Applies a neighborhood move, updates the iteration counter, and refreshes the best solution.
     /// Increments [`n_accepted`](Self::n_accepted).
     ///
-    /// The move is recorded in the tabu memory **before** the iteration
-    /// advances, so a tenure of `d` forbids exactly the `d` iterations that
-    /// follow the one the move was made on. A move whose
-    /// [`tabu_policy`](MoveToNeighbor::tabu_policy) is `None` records nothing
-    /// and is applied all the same.
+    /// Applying does **not** record the move in the tabu memory. Most searches
+    /// never read that memory, and writing it costs an RNG draw and a store per
+    /// move. A tabu search uses
+    /// [`apply_with_tabu`](Self::apply_with_tabu) instead.
     pub fn apply<Move>(&mut self, neighbor: &Move) -> Result<(), crate::error::OptError>
     where
         Move: MoveToNeighbor<Problem>,
     {
-        self.record_applied(neighbor);
         self.iteration = neighbor.apply_to_iteration(self.iteration);
         neighbor.apply_to_solution(self.instance, &mut self.solution)?;
         self.n_accepted += 1;
@@ -636,11 +593,38 @@ where
     where
         Move: MoveToNeighbor<Problem>,
     {
-        self.record_applied(neighbor);
         self.iteration = neighbor.apply_to_iteration(self.iteration);
         neighbor.apply_to_solution(self.instance, &mut self.solution)?;
         self.n_accepted += 1;
         Ok(())
+    }
+
+    /// [`apply`](Self::apply), recording the move as tabu first.
+    ///
+    /// The record happens **before** the iteration advances, so a tenure of `d`
+    /// forbids exactly the `d` iterations that follow the one the move was made
+    /// on. That ordering is the reason to use this rather than pairing
+    /// [`record_tabu`](Self::record_tabu) with `apply` by hand.
+    pub fn apply_with_tabu<N>(&mut self, neighbor: &N) -> Result<(), crate::error::OptError>
+    where
+        N: MoveToNeighbor<Problem> + EnabledTabu,
+    {
+        self.record_tabu(neighbor);
+        self.apply(neighbor)
+    }
+
+    /// [`apply_move_only`](Self::apply_move_only), recording the move as tabu
+    /// first — the deferred-best counterpart of
+    /// [`apply_with_tabu`](Self::apply_with_tabu), for a perturbation phase.
+    pub fn apply_move_only_with_tabu<N>(
+        &mut self,
+        neighbor: &N,
+    ) -> Result<(), crate::error::OptError>
+    where
+        N: MoveToNeighbor<Problem> + EnabledTabu,
+    {
+        self.record_tabu(neighbor);
+        self.apply_move_only(neighbor)
     }
 
     /// Increments the iteration counter by one without applying any move.
@@ -738,22 +722,6 @@ where
     {
         m.move_to_be_better_than(self.instance, &self.solution, &self.best_solution)
     }
-}
-
-/// The tabu policy of `neighbor`, or the error the fallible tabu API reports
-/// when it has none.
-fn tabu_policy<Problem, Move>(neighbor: &Move) -> Result<&dyn EnabledTabu, crate::error::OptError>
-where
-    Problem: ProblemTrait,
-    Move: MoveToNeighbor<Problem>,
-{
-    neighbor.tabu_policy().ok_or_else(|| {
-        crate::error::OptError::Unsupported(format!(
-            "{} has no tabu policy: implement EnabledTabu for it and override \
-             MoveToNeighbor::tabu_policy with `Some(self)`",
-            std::any::type_name::<Move>()
-        ))
-    })
 }
 
 impl<'a, Problem> std::fmt::Debug for SearchState<'a, Problem>
@@ -1074,7 +1042,6 @@ mod tests {
     /// sub-run inherits, and what a move without a tabu policy gets instead.
     mod tabu {
         use super::*;
-        use crate::error::OptError;
         use crate::problem::MaxCutSwapNeighbor;
 
         /// A problem whose move deliberately does **not** implement
@@ -1133,7 +1100,7 @@ mod tests {
         /// move is applied — that is what keeps tabu an opt-in trait rather
         /// than a tax on every problem.
         #[test]
-        fn a_move_without_a_tabu_policy_applies_normally() {
+        fn a_move_without_tabu_support_applies_normally() {
             let prob = Untabued;
             let mut state = SearchState::new_with_seed(&prob, 1);
             state.apply(&Increment).unwrap();
@@ -1142,39 +1109,31 @@ mod tests {
             assert_eq!(state.n_accepted, 2);
         }
 
-        /// ...and reaching for the tabu map through such a move must say so,
-        /// rather than quietly answering "allowed" — a `TabuSearch` over it
-        /// would otherwise degrade into a plain best-move descent.
+        /// A move that does not implement [`EnabledTabu`] cannot reach the
+        /// memory at all: `tabu_allows` and `record_tabu` are bounded on the
+        /// trait, so asking is a compile error rather than a runtime one. What
+        /// stays checkable is that such a move still applies normally — tabu is
+        /// opt-in, and a problem that never wanted it pays nothing.
         #[test]
-        fn a_move_without_a_tabu_policy_cannot_be_asked_about_the_map() {
+        fn a_move_without_tabu_support_still_applies() {
             let prob = Untabued;
             let mut state = SearchState::new_with_seed(&prob, 1);
-
-            // A read is a *compile* error for such a move — it cannot name a
-            // `TabuMap` — so what is left to check at runtime is the erased
-            // pair, which any `MoveToNeighbor` can reach.
-            let required = state.require_tabu_policy(&Increment);
-            assert!(
-                matches!(required, Err(OptError::Unsupported(ref m)) if m.contains("Increment")),
-                "expected an Unsupported error naming the move, got {required:?}"
-            );
-            assert!(matches!(
-                state.record_tabu(&Increment),
-                Err(OptError::Unsupported(_))
-            ));
+            state.apply(&Increment).unwrap();
+            state.apply_move_only(&Increment).unwrap();
+            assert_eq!(state.solution.0, 2);
         }
 
         /// `apply` is what records, so a move is forbidden for exactly the
         /// `tenure` iterations that follow the one it was made on — the same
         /// boundary an explicit `record` at the pre-move iteration produced.
         #[test]
-        fn apply_records_the_move_at_the_iteration_it_was_made_on() {
+        fn apply_with_tabu_records_at_the_iteration_the_move_was_made_on() {
             let mc = triangle();
             let mut state = SearchState::new_with_seed(&mc, 3);
             state.set_tabu_tenure((5, 5));
 
             let m = first_flip(&mc, &state.solution);
-            state.apply(&m).unwrap(); // made at iteration 0, so blocked through 5
+            state.apply_with_tabu(&m).unwrap(); // made at iteration 0, blocked through 5
             assert_eq!(state.iteration, 1);
 
             let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
@@ -1212,7 +1171,7 @@ mod tests {
             state.set_tabu_tenure((9, 9));
 
             state
-                .apply(&MaxCutFlipNeighbor::new(&mc, &state.solution, 0))
+                .apply_with_tabu(&MaxCutFlipNeighbor::new(&mc, &state.solution, 0))
                 .unwrap();
             let swap = MaxCutSwapNeighbor::new(&mc, &state.solution, 0, 1);
             assert!(
@@ -1228,7 +1187,7 @@ mod tests {
             let mut state = SearchState::new_with_seed(&mc, 3);
             state.set_tabu_tenure((9, 9));
             let m = first_flip(&mc, &state.solution);
-            state.apply(&m).unwrap();
+            state.apply_with_tabu(&m).unwrap();
 
             state.reset_tabu();
             assert!(state.tabu_allows(&MaxCutFlipNeighbor { i: m.i, gain: 0.0 }));
@@ -1243,7 +1202,7 @@ mod tests {
             let mut state = SearchState::new_with_seed(&mc, 3);
             state.set_tabu_tenure((9, 9));
             let m = first_flip(&mc, &state.solution);
-            state.apply(&m).unwrap();
+            state.apply_with_tabu(&m).unwrap();
             let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
 
             let copy = state.clone();
@@ -1268,7 +1227,7 @@ mod tests {
                 state.progress_iteration();
             }
             let m = first_flip(&mc, &state.solution);
-            state.apply(&m).unwrap(); // recorded at iteration 100, free again at 104
+            state.apply_with_tabu(&m).unwrap(); // recorded at iteration 100, free again at 104
             let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
 
             let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
@@ -1300,7 +1259,7 @@ mod tests {
                 sub.progress_iteration();
             }
             let m = first_flip(&mc, &sub.solution);
-            sub.apply(&m).unwrap(); // recorded at 110, free again at 114
+            sub.apply_with_tabu(&m).unwrap(); // recorded at 110, free again at 114
             let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
             assert!(!sub.tabu_allows(&probe));
 

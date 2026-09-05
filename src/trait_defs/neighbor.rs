@@ -1,6 +1,5 @@
 use super::problem::ProblemTrait;
 use super::rankable::Rankable;
-use super::tabu::EnabledTabu;
 
 /// Is a single neighborhood move (one step of change).
 ///
@@ -67,29 +66,6 @@ where
         });
         use rand::seq::IteratorRandom;
         Self::iter(prob, sol).choose(rng)
-    }
-
-    /// This move's tabu policy, or `None` when it has none — which is the
-    /// default.
-    ///
-    /// The state owns the tabu memory but is not generic over the move type, so
-    /// a move that wants its prohibitions remembered hands the policy over
-    /// here, and the state reaches it as `&dyn EnabledTabu`.
-    /// A move implementing [`EnabledTabu`] overrides this with exactly one
-    /// line:
-    ///
-    /// ```ignore
-    /// fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }
-    /// ```
-    ///
-    /// Leaving the default in place is what makes tabu optional: `apply` on a
-    /// move without a policy records nothing and succeeds normally, while
-    /// reaching for the memory through it
-    /// ([`record_tabu`](crate::search_state::SearchState::record_tabu),
-    /// [`require_tabu_policy`](crate::search_state::SearchState::require_tabu_policy))
-    /// reports [`OptError::Unsupported`](crate::error::OptError::Unsupported).
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        None
     }
 
     /// Returns `true` if applying this move to `src` yields a solution better than `other`.

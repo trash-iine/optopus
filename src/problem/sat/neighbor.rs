@@ -62,12 +62,6 @@ impl Evaluate for SatFlipNeighbor {
 }
 
 impl MoveToNeighbor<Sat> for SatFlipNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
         // Flip x[i]
         sol.x[self.i] = !sol.x[self.i];
@@ -172,12 +166,6 @@ impl Evaluate for SatSwapNeighbor {
 }
 
 impl MoveToNeighbor<Sat> for SatSwapNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }

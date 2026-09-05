@@ -86,14 +86,11 @@ where
             .max_by(rank_cmp);
 
         if let Some(best_move) = best_move {
-            // A move type that implements `EnabledTabu` but leaves
-            // `MoveToNeighbor::tabu_policy` at its default records nothing, so
-            // this search would degrade into a plain best-move descent without
-            // ever saying so. One check per iteration, against the move that is
-            // about to be applied.
-            state.require_tabu_policy(&best_move)?;
-            // The move is recorded by `apply`, at the iteration it was made on.
-            state.apply(&best_move)?;
+            // Recording is this search's own job: `apply` leaves the tabu
+            // memory alone so that heuristics which never read it pay nothing.
+            // `apply_with_tabu` records at the iteration the move was made on,
+            // before the counter advances.
+            state.apply_with_tabu(&best_move)?;
         } else {
             tracing::warn!("No best move found");
             state.progress_iteration();

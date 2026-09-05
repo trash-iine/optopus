@@ -81,12 +81,6 @@ impl Evaluate<Coefficient> for QuboFlipNeighbor {
 }
 
 impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     /// Applies the flip move: toggles variable `self.i`.
     ///
     /// Updates the solution in-place in O(degree(i)):
@@ -281,12 +275,6 @@ impl EnabledTabu for QuboSwapNeighbor {
 }
 
 impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     /// A swap counts as 2 iterations (one for each variable flip).
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2

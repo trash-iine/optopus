@@ -101,12 +101,6 @@ impl EnabledTabu for TspTwoOptNeighbor {
 }
 
 impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_solution(
         &self,
         _prob: &TspWithCoordinates,
@@ -283,12 +277,6 @@ impl EnabledTabu for TspRelocateNeighbor {
 }
 
 impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_solution(
         &self,
         _prob: &TspWithCoordinates,

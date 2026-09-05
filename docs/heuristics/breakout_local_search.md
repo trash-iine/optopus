@@ -3,13 +3,13 @@
 **API:** [`BreakoutLocalSearchForMaxCut`](../api/optopus/heuristic/struct.BreakoutLocalSearchForMaxCut.html)
 
 Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Alternates a
-greedy local search phase with an adaptive perturbation phase. The descent is
-the generic [`LocalSearch`](local_search.md); the tabu walk and the
-perturbations it drives are free functions in
-`src/heuristic/specific/max_cut/ops/`, shared with the other MaxCut heuristics.
-What is BLS's own is the schedule below. All of them record into — and read —
-the tabu memory on the `SearchState` they are handed, which is what stops a
-perturbation undoing the descent that just ran.
+greedy local search phase with an adaptive perturbation phase, using the
+optional `positive_gain` index on `MaxCutSolution` to enumerate only improving
+flips in O(|improving|). The descent, the tabu walk and the perturbations it
+drives are free functions in `src/heuristic/specific/max_cut/ops/`, shared with
+the other MaxCut heuristics; what is BLS's own is the schedule below. All of
+them record into — and read — the tabu memory on the `SearchState` they are
+handed, which is what stops a perturbation undoing the descent that just ran.
 
 ## Example
 
@@ -72,130 +72,66 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
   bound does not reproduce it — the whole range has to scale.
 - **No bucket sort.** The original buckets vertices by gain, so selecting a
   maximum-gain move is O(1) and a move costs only the O(degree(v)) rebucketing
-  its gain update already implies. Here every phase selects by linear scan over
-  **all n** flip neighbours, O(n) — the descent included, since it is the
-  generic `LocalSearch`. The gain update itself is O(degree(v)). The same move
-  is selected either way, so this costs only speed. The descent used to narrow
-  its scan with the optional `positive_gain` index on `MaxCutSolution`; see
-  below for what dropping that cost.
+  its gain update already implies. Here selection is a linear scan: the descent
+  narrows it with the optional `positive_gain` index on `MaxCutSolution`, so it
+  costs O(|{v : gain(v) > 0}|) per move — bounded by n, and shrinking as the
+  descent approaches a local optimum — while the tabu walk and the weak swap
+  scan **all n** flip neighbours per move, O(n). The gain update itself is
+  O(degree(v)). The same move is selected either way, so this costs
+  only speed.
 - **A swap advances the iteration counter by 2**
   (`MaxCutSwapNeighbor::apply_to_iteration`), where BLS counts every move as
   one. That `+2` is a library-wide convention shared by every binary problem's
   swap, so it is not changed here for one heuristic's sake.
 
-## The descent is the generic LocalSearch
+## Generalising the operators: measured, and reverted
 
-Once `SearchState::apply` became what records a move into the tabu memory, the
-operators stopped needing a shared object — and the question arose whether BLS
-could simply drive `LocalSearch` instead of a specialised descent. It can, and
-it now does. This is a deliberate trade of objective for one less specialised
-implementation, and the price was measured before taking it.
+The operators here were, at one point, replaced with generic heuristics: the
+descent with `LocalSearch` and the directed swap with a `TabuSearch` over a
+restricted neighborhood. Both were measured, both were then **reverted on
+review** — moving the tabu memory onto the `SearchState` does not require
+either, and the costs are not worth paying for nothing. The measurements are
+kept because they are what stops the ideas coming back untested.
 
-**One descent to a local optimum takes 1.8–2.3× as long.** Ten seeds, medians,
-from identical initial solutions on G1 / G22 / G32 / G55 / G70 / G81 — flat
-across n from 800 to 20000 and average degree from 2 to 48, with move counts
-agreeing to within 1%. Both arms select from the same candidate set
-(`is_neighbor_better_than_current` on a flip is `gain > 0`, which is exactly
-what `positive_gain` indexes), but `LocalSearch` rescans all n vertices per
-move where the specialised descent enumerated only the improving ones.
-Decomposed, the scan is **87%** of the gap and `update_best`'s per-move
-solution clone the other **13%**.
+**The descent against `LocalSearch`.** They select from the same candidate set
+(`is_neighbor_better_than_current` on a flip is `gain > 0`, which is what
+`positive_gain` indexes), but `LocalSearch` rescans all n vertices per move
+where the descent enumerates only the improving ones. One descent to a local
+optimum took **1.8–2.3× as long** (10 seeds, medians, on G1 / G22 / G32 / G55 /
+G70 / G81, flat across n from 800 to 20000 and degree from 2 to 48, with move
+counts agreeing to within 1%): the scan is 87% of that gap and `update_best`'s
+per-move solution clone the other 13%. Over a whole BLS run it cost **−40.0
+total average cut** on a ten-instance G-set panel at 30s × 5 runs, at
+0.74–0.93× the moves.
 
-**Through a whole BLS run that is −40.0 total average cut**, at 30s × 5 runs,
-seed 42, over the ten-instance G-set panel G1 / G11 / G22 / G32 / G43 / G55 /
-G60 / G63 / G70 / G81 with `l0 = 0.01|V|` and the density-scaled tenure: better
-on 3, worse on 5, −21.2 on G81, −12.4 on G63, −8.4 on G70, −6.4 on G55, against
-+8.2 on G60. Most sit inside one or two standard deviations; the throughput
-behind them does not — 0.74–0.93× as many moves, on every one of the ten. Two
-further differences ride along and are not separated by that number: `max_by`
-breaks gain ties toward the last candidate where `ops::keep_best` kept the
-first, and `LocalSearch` spends one extra `progress_iteration` per descent.
+That 2× is the generic contract's price rather than slack in it. Three
+generality-preserving attempts were measured and none paid: `clone_from` in
+`update_best` changed nothing (`#[derive(Clone)]` does not specialise it);
+folding the best update to the end of the descent recovers 8–10% but coarsens
+the anytime trajectory to one point per descent; and the identical traversal
+written out as a hand loop ran **3.3× slower** than the iterator chain. Cutting
+the scan needs to know which gains the last move changed, which is problem
+knowledge.
 
-**The 2× is the generic contract's price, not slack in it.** Three
-generality-preserving attempts were measured and none of them paid:
-`clone_from` in `update_best` changed nothing (`#[derive(Clone)]` does not
-specialise it, so it falls back to `*self = source.clone()`); folding the best
-update to the end of the descent — sound, because `LocalSearch` only applies
-improving moves, so the last solution is the best one — recovers just 8–10% and
-coarsens the anytime trajectory to one point per descent; and the identical
-traversal written out as a hand loop ran **3.3× slower** than the iterator
-chain. Cutting the scan itself means knowing which gains the last move changed,
-which is problem knowledge, so it needs a hook on `MoveToNeighbor` that only
-MaxCut and QUBO could implement.
+**The directed swap.** `TabuSearch<MaxCutSwapNeighbor>` is out because its
+`iter` enumerates every cross-side pair, O(n²) — 4·10⁸ against 2·10⁴ per step
+on G81. Two restrictions were tried. Restricting to the pairs touching each
+side's **highest-gain** vertex is O(n) and always contains the greedy pair, and
+it **failed badly**: −452.6 total average cut, worse on 8 of 10, at 0.05–0.36×
+the moves, with `TabuSearch` reporting no eligible move 3.8× more often than it
+found one. Applying a move inverts the sign of its vertex's gain, and this
+phase starts from a local optimum where every gain is ≤ 0, so the vertices a
+search just moved become the highest-gain ones — exactly the ones the tabu
+memory now forbids. **Ranking a restricted neighborhood by gain is
+anti-correlated with a recency-based tabu list**, and the top-`k` widening does
+not escape it: `k` would have to exceed the tenure (up to 600 on the sparse
+instances) and `k²` then overtakes the `n` it replaces.
 
-Two operators stayed behind. `random_flips` is
-free to replace (by the same measurement, `RandomWalk` moved the total by +0.4
-with throughput unchanged) but was kept: it deletes no file, since `best_swap`
-holds `perturbation.rs` open regardless, and `RandomWalk` fails with
-`InvalidState` on the edgeless sub-instances `SubProblemBasedCrossover`
-produces, so its guard would only move into the caller.
-
-## The directed swap is a TabuSearch step on each side
-
-`best_swap` went the same way, once the neighborhood was restricted on the
-right axis. `TabuSearch<MaxCutSwapNeighbor>` is out because its `iter`
-enumerates every cross-side pair, O(n²) — 4·10⁸ against 2·10⁴ per step on G81 —
-but that is a property of *that* neighborhood, not of swaps.
-
-**The first restriction tried was the obvious one, and it failed badly.** A
-move type yielding only the pairs that touch each side's *highest-gain* vertex
-is O(n) and always contains the greedy pair. Measured against the operator:
-**−452.6 total average cut**, worse on 8 of 10, at **0.05–0.36× the moves**,
-with `TabuSearch` reporting no eligible move 3.8× more often than it found one
-(5.6M times on G1 against 1.5M applied moves).
-
-The cause was structural. Applying a move inverts the sign of its vertex's
-gain, and this phase starts from a local optimum where every gain is ≤ 0. So
-the vertices a search just moved become the highest-gain ones — and they are
-exactly the vertices the tabu memory now forbids. On the next step both centres
-are gone and the neighborhood empties. **Ranking a restricted neighborhood by
-gain is anti-correlated with a recency-based tabu list**, and widening to the
-top `k` per side does not escape it: `k` would have to exceed the tenure — up
-to 600 on the sparse instances — and `k²` then overtakes the `n` it replaces.
-
-**Restricting by partition side has no such correlation.** A side holds about
-n/2 vertices and loses only the handful recently moved.
-[`MaxCutSideFlipNeighbor<SIDE>`](../problems/max_cut.md) is `MaxCutFlipNeighbor`
-with `iter` narrowed to the vertices currently on `SIDE`, and one
-[`TabuSearch`](tabu_search.md) step on each side moves one vertex per side —
-the swap, taken one half at a time. `Heuristic::run_once` is exactly one step,
-so no stop condition is involved:
-
-```rust
-let cond = StopCondition::new(None, None, None);
-let mut on_true = TabuSearch::<MaxCutSideFlipNeighbor<true>>::new(cond.clone(), tenure);
-let mut on_false = TabuSearch::<MaxCutSideFlipNeighbor<false>>::new(cond, tenure);
-for _ in 0..l {
-    on_true.run_once(state)?;
-    on_false.run_once(state)?;
-}
-```
-
-Measured against the operator it replaced, on the same panel: **+20.8 total
-average cut**, better on 5 and worse on 4, and **not one** "no eligible move"
-on any instance. G1 now reaches the best known 11624 on all five runs where the
-operator averaged 11620.6. The per-instance differences sit inside one standard
-deviation either way, which is the point — this deletes an operator without
-costing anything.
-
-Three details of `best_swap` did not survive, and none of them showed up in the
-panel:
-
-- aspiration is tested per flip rather than on the combined swap, so it fires
-  less often;
-- the second flip is chosen from gains the first has already updated, so the
-  `2·w(i, j)` correction happens by construction rather than by formula;
-- a side with no free vertex now yields no move, where the operator fell back
-  to that side's best and broke tabu without aspiration — a branch already
-  recorded above as paper-undefined and unreached on the G-set.
-
-Integrating the descent also required dropping `LocalSearch::new`'s rewrite of
-an unset `max_failed_update` to `Some(1)`. `is_done` reads that field as
-`iteration - best_iteration >= 1`, so a descent starting from a solution below
-the incumbent best — which is where every kick leaves it — satisfied it before
-taking a single move. No meta-heuristic ever saw this, because they all hand
-their sub-run a `ClearBest` clone that re-anchors `best_iteration`; BLS
-descends on the state directly, and did.
+Restricting by **partition side** has no such correlation and did measure well
+(+20.8 on the same panel, and not one degenerate step), but it was reverted
+anyway: two independent `TabuSearch` steps succeed or fail independently, so
+the pair is not guaranteed and the partition sizes `M2` exists to preserve can
+change by one. `best_swap` scans once and commits to both endpoints together.
 
 ## Constructor
 

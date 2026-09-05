@@ -38,7 +38,7 @@ pub(crate) fn tabu_walk(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(
             state.progress_iteration();
             continue;
         };
-        state.apply_move_only(&best_move)?;
+        state.apply_move_only_with_tabu(&best_move)?;
     }
     Ok(())
 }

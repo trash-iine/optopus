@@ -167,12 +167,6 @@ impl EnabledTabu for VrpRelocateNeighbor {
 }
 
 impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_solution(&self, prob: &Vrp, sol: &mut VrpSolution) -> Result<(), OptError> {
         let dc = prob.demands[self.customer];
         sol.routes[self.from_r].remove(self.from_i);
@@ -372,12 +366,6 @@ impl EnabledTabu for VrpSwapNeighbor {
 }
 
 impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_solution(&self, prob: &Vrp, sol: &mut VrpSolution) -> Result<(), OptError> {
         let d1 = prob.demands[self.c1];
         let d2 = prob.demands[self.c2];
@@ -528,12 +516,6 @@ impl EnabledTabu for VrpTwoOptNeighbor {
 }
 
 impl MoveToNeighbor<Vrp> for VrpTwoOptNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_solution(&self, _prob: &Vrp, sol: &mut VrpSolution) -> Result<(), OptError> {
         sol.routes[self.r][self.p..=self.q].reverse();
         sol.distance += self.gain;

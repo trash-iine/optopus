@@ -65,12 +65,6 @@ impl EnabledTabu for VertexCoverFlipNeighbor {
 }
 
 impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_solution(
         &self,
         prob: &VertexCover,
@@ -223,12 +217,6 @@ impl EnabledTabu for VertexCoverSwapNeighbor {
 }
 
 impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
-    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
-    /// what holds the tabu map.
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        Some(self)
-    }
-
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }
