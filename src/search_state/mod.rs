@@ -147,9 +147,20 @@ where
     /// The tabu prohibitions this search remembers, and the tenure every write
     /// to them draws from.
     ///
-    /// Access to this tabu map is only allowed by applying a move to neighbor.
-    /// See [`set_tabu_tenure`](Self::set_tabu_tenure) and friends.
-    tabu: crate::common::TabuMemory,
+    /// Reached only through a move — see [`tabu_allows`](Self::tabu_allows) and
+    /// [`record_tabu`](Self::record_tabu) — because what it holds is
+    /// meaningless without one to interpret it.
+    ///
+    /// **Boxed on purpose, and measured.** [`TabuMemory`] is 88 bytes; stored
+    /// inline it grew this struct from 656 to 744 and cost `TabuSearch`
+    /// **+32% on G1 and +45% on G32** — about one cycle per candidate in the
+    /// neighborhood scan, which reads `solution` and `best_solution` through
+    /// this same struct. Boxing puts both numbers back inside the run-to-run
+    /// spread (+1.8% / +2.1%) at the price of one allocation per state and an
+    /// indirection on a path that is not sensitive to one: hoisting the memory
+    /// into a local before the scan was measured and changed nothing. Do not
+    /// inline this field again without re-running that comparison.
+    tabu: Box<crate::common::TabuMemory>,
 }
 
 impl<'a, Problem> SearchState<'a, Problem>
@@ -192,7 +203,7 @@ where
             rng,
             trajectory: Vec::new(),
             objective_probe: None,
-            tabu: crate::common::TabuMemory::default(),
+            tabu: Box::new(crate::common::TabuMemory::default()),
         };
         tracing::debug!("SearchState initialized");
         state
@@ -238,7 +249,7 @@ where
             rng,
             trajectory: Vec::new(),
             objective_probe: None,
-            tabu: crate::common::TabuMemory::default(),
+            tabu: Box::new(crate::common::TabuMemory::default()),
         }
     }
 
@@ -349,7 +360,7 @@ where
                 rng: child_rng,
                 trajectory: Vec::new(),
                 objective_probe: self.objective_probe,
-                tabu: crate::common::TabuMemory::default(),
+                tabu: Box::new(crate::common::TabuMemory::default()),
             },
             SearchStateCloneType::ClearBest => Self {
                 start_iteration: self.iteration,
@@ -367,7 +378,7 @@ where
                 rng: child_rng,
                 trajectory: Vec::new(),
                 objective_probe: self.objective_probe,
-                tabu: crate::common::TabuMemory::default(),
+                tabu: Box::new(crate::common::TabuMemory::default()),
             },
             SearchStateCloneType::StartBest => Self {
                 start_iteration: self.iteration,
@@ -385,7 +396,7 @@ where
                 rng: child_rng,
                 trajectory: Vec::new(),
                 objective_probe: self.objective_probe,
-                tabu: crate::common::TabuMemory::default(),
+                tabu: Box::new(crate::common::TabuMemory::default()),
             },
         }
     }
