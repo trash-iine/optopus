@@ -42,20 +42,13 @@ TabuSearch::<N>::new(
 The map is on the [`SearchState`](../search_state.md), not on this heuristic.
 The state is what applies a move, so the state is what records it: `apply` /
 `apply_move_only` write the move into the tabu memory *before* the iteration
-advances, and `TabuSearch` only installs the tenure it wants at the top of each
-iteration.
-
-That is why there is no `clear()` here, and no `borrow_tabu_map` /
-`take_tabu_map` / `set_tabu_map`: a sub-run clone — how every meta-heuristic
-starts a phase — already comes with an empty tabu memory, and
-`state.reset_tabu()` drops the prohibitions on a state you are reusing.
-`state.tabu_allows(&mv)` asks about a single move — what this heuristic's inner
-loop calls per candidate — and `state.reserve_tabu_vars(n)` pre-grows the dense
-key space.
+advances. What `TabuSearch` installs at the top of each iteration is the two
+things that make the state do it — the tenure every record draws from, and the
+recording mode itself, which is off on a fresh state.
 
 ## Tabu policy abstraction
 
-Each neighbor type owns its *policy* — which keys have to be free, and which
+Each neighbor type owns its tabu policy — which keys have to be free, and which
 applying the move forbids — via the `EnabledTabu` trait, and hands it to the
 state by overriding `MoveToNeighbor::tabu_policy` with `Some(self)`, one line.
 `TabuSearch` never knows what is keyed. This lets QUBO/MaxCut/SAT key by
@@ -64,8 +57,7 @@ not required to agree: a VRP relocate asks whether a customer may enter its
 destination route and forbids the route it just left.
 
 A move that leaves `tabu_policy` at its default `None` has no tabu policy at
-all: applying it is fine and records nothing, and `state.record_tabu` cannot be
-called with it — that method is bounded on `EnabledTabu`. A move type that
+all, and `state.record_tabu` cannot be called with it . A move type that
 implements `EnabledTabu` and forgets the one-line override would run here with
 no tabu list and no complaint, so `trait_defs/tabu.rs` pins every built-in move
 against exactly that.

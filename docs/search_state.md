@@ -69,19 +69,32 @@ call `update_best` once when the phase ends. Both count an acceptance;
 
 ## Remembering tabu moves
 
-Both `apply` and `apply_move_only` record the move they applied in the state's
-tabu memory, at the iteration it was made on, before the counter advances. The
-map lives here rather than on the heuristic because the state is what applies a
-move — so no heuristic has to pair `record` with `apply` by hand, and operators
-that must respect each other's prohibitions get that by sharing a state instead
-of by being handed the same object.
+Recording is a **mode**, and it starts off. A state records nothing until
+`start_record_tabu()`, and a sub-run starts off again whatever its parent was
+doing. Most searches never read the tabu memory, and writing it costs an RNG
+draw and a store on every move, so a search whose method *is* the tabu list has
+to say so.
+
+While the mode is on, `apply` and `apply_move_only` record the move they applied
+at the iteration it was made on, before the counter advances. The map lives here
+rather than on the heuristic because the state is what applies a move — so no
+heuristic has to pair `record` with `apply` by hand, and operators that must
+respect each other's prohibitions get that by sharing a state instead of by
+being handed the same object.
 
 ```rust
 state.set_tabu_tenure((5, 10));            // what every record draws from
+state.start_record_tabu();                 // without this, `apply` records nothing
 let free = state.tabu_allows(&m);          // is this move currently forbidden?
-state.apply(&m)?;                          // applies *and* records
+state.apply(&m)?;                          // applies, and records: the mode is on
 state.reset_tabu();                        // drop every prohibition
 ```
+
+Turn the mode on **next to `set_tabu_tenure`, and at the same rate** — per
+iteration if the tenure is set per iteration. `TabuSearch::run_once` and
+`BreakoutLocalSearchForMaxCut::prepare` both do. Arming it once, far from the
+loop that depends on it, is how it gets forgotten, and forgetting it is silent:
+the search keeps running, having stopped writing the memory it reads.
 
 The default tenure is `(0, 0)`: a move is recorded and freed again on the next
 iteration, so a search that never sets one is never blocked by itself.
@@ -103,14 +116,6 @@ all record — what the default buys is that a new problem can stop at the three
 core traits. `trait_defs/tabu.rs` pins every built-in move against implementing
 `EnabledTabu` and forgetting the one-line override, which would otherwise leave
 `TabuSearch` running with no tabu list and no complaint.
-
-Recording is also a **mode**, off by default and off in every sub-run:
-`apply` writes the memory only between `start_record_tabu()` and
-`stop_record_tabu()`. Most searches never read that memory, and writing it costs
-an RNG draw and a store per move. `TabuSearch::run_once` turns it on beside
-`set_tabu_tenure`, per iteration; `BreakoutLocalSearchForMaxCut::prepare` does
-the same for both halves of a round. Setting it far from the loop that depends
-on it is how it gets forgotten, and forgetting it is silent.
 
 What a move forbids is a `TabuKey`: `Var(i)` for a dense index (a variable, a
 vertex, a position), `Pair` and `Triple` for the rest. The shapes are separate

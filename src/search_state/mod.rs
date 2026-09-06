@@ -527,6 +527,26 @@ where
     /// A move whose [`tabu_policy`](MoveToNeighbor::tabu_policy) is `None`
     /// still records nothing, so this cannot force tabu onto a problem that
     /// never wanted it.
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
+    /// let mut state = SearchState::new_with_seed(&mc, 1);
+    /// let m = MaxCutFlipNeighbor::new(&mc, &state.solution, 1);
+    ///
+    /// state.set_tabu_tenure((5, 10));   // what every record draws from
+    /// state.apply(&m)?;                 // the mode is off: this records nothing
+    /// assert!(state.tabu_allows(&m));
+    ///
+    /// state.start_record_tabu();        // without this, `apply` records nothing
+    /// state.apply(&m)?;                 // applies, and records: the mode is on
+    /// assert!(!state.tabu_allows(&m));
+    ///
+    /// state.reset_tabu();               // drop every prohibition
+    /// assert!(state.tabu_allows(&m));
+    /// # Ok::<(), optopus::error::OptError>(())
+    /// ```
     #[inline]
     pub fn start_record_tabu(&mut self) {
         self.record_tabu_on = true;
