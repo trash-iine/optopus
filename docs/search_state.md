@@ -83,21 +83,25 @@ respect each other's prohibitions get that by sharing a state instead of by
 being handed the same object.
 
 ```rust
-state.set_tabu_tenure((5, 10));            // what every record draws from
-state.start_record_tabu();                 // without this, `apply` records nothing
+state.start_record_tabu((5, 10));          // the tenure, and the mode, in one
 let free = state.tabu_allows(&m);          // is this move currently forbidden?
 state.apply(&m)?;                          // applies, and records: the mode is on
 state.reset_tabu();                        // drop every prohibition
 ```
 
-Turn the mode on **next to `set_tabu_tenure`, and at the same rate** — per
-iteration if the tenure is set per iteration. `TabuSearch::run_once` and
-`BreakoutLocalSearchForMaxCut::prepare` both do. Arming it once, far from the
-loop that depends on it, is how it gets forgotten, and forgetting it is silent:
-the search keeps running, having stopped writing the memory it reads.
+The tenure and the mode are one call because they were always one decision: a
+memory nothing writes needs no tenure, and a tenure nothing draws from records
+nothing. Arm it **where the tenure belongs, at the same rate** — per iteration
+if that is where the tenure is decided, as `TabuSearch::run_once` does; per
+half-round for `BreakoutLocalSearchForMaxCut::prepare`. Arming it once, far from
+the loop that depends on it, is how it gets forgotten, and forgetting it is
+silent: the search keeps running, having stopped writing the memory it reads.
 
-The default tenure is `(0, 0)`: a move is recorded and freed again on the next
-iteration, so a search that never sets one is never blocked by itself.
+Until it is armed the tenure is `(0, 0)`, which records a move and frees it
+again on the next iteration, so a state nothing armed never blocks itself. To
+use a tenure *without* letting `apply` record — forbidding only what you hand to
+`record_tabu` — follow the call with `stop_record_tabu()`, which leaves the
+tenure alone.
 
 `tabu_allows` is typed on the move, so `is_move_enabled` inlines into a
 neighborhood scan — which is where it is called, once per candidate. A move that

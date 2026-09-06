@@ -140,7 +140,10 @@ mod tests {
         let mc = MaxCut::from_edges([(0, 1, 1.0)]);
         let sol = crate::problem::MaxCutSolution::new_from_assignment(&mc, vec![true, false]);
         let mut state = SearchState::with_solution_and_seed(&mc, sol, 1);
-        state.set_tabu_tenure((50, 50));
+        // The tenure without the mode: this test forbids by hand below, and
+        // wants the swap it then applies left unrecorded.
+        state.start_record_tabu((50, 50));
+        state.stop_record_tabu();
         state.reserve_tabu_vars(2);
 
         // Forbid vertex 1, which is the whole of the `false` side.

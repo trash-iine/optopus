@@ -73,11 +73,9 @@ where
     /// iteration is counted as rejected (with a warning) rather than erroring —
     /// the tabu map will eventually expire entries and unblock the search.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        // Both of these are set per iteration rather than once, and next to
-        // each other: this search's method *is* the tabu list, so the state has
-        // to be recording whenever it steps.
-        state.set_tabu_tenure(self.tabu_tenure);
-        state.start_record_tabu();
+        // Per iteration rather than once: this search's method *is* the tabu
+        // list, so the state has to be recording whenever it steps.
+        state.start_record_tabu(self.tabu_tenure);
 
         // `max_by(rank_cmp)` returns the last tied-best element — the same move
         // the previous `filter_best(..).pop()` selected — without collecting

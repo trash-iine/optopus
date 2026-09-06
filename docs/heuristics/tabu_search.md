@@ -41,10 +41,10 @@ TabuSearch::<N>::new(
 
 The map is on the [`SearchState`](../search_state.md), not on this heuristic.
 The state is what applies a move, so the state is what records it: `apply` /
-`apply_move_only` write the move into the tabu memory *before* the iteration
-advances. What `TabuSearch` installs at the top of each iteration is the two
-things that make the state do it — the tenure every record draws from, and the
-recording mode itself, which is off on a fresh state.
+`apply_move_only` write the move into the tabu memory before the iteration
+advances. What `TabuSearch` installs at the top of each iteration is the one call that
+makes the state do it: `start_record_tabu(tenure)`, which sets the tenure every
+record draws from and turns on the mode, off on a fresh state.
 
 ## Tabu policy abstraction
 
@@ -62,9 +62,9 @@ implements `EnabledTabu` and forgets the one-line override would run here with
 no tabu list and no complaint, so `trait_defs/tabu.rs` pins every built-in move
 against exactly that.
 
-`run_once` calls `state.start_record_tabu()` beside `state.set_tabu_tenure(..)`,
-once per iteration. Recording is off on a fresh state and off in every sub-run,
-so a search whose method *is* the tabu list has to say so — and says so next to
+`run_once` calls `state.start_record_tabu(tenure)` once per iteration — the
+tenure and the mode are the same call. Recording is off on a fresh state and off in every sub-run,
+so a search whose method is the tabu list has to say so — and says so next to
 the loop that depends on it rather than once, somewhere else.
 
 `common::TabuMemory` is the single store, split by `TabuKey` shape — `Var(i)`

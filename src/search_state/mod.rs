@@ -317,10 +317,9 @@ where
     ///
     /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
     /// let mut state = SearchState::new_with_seed(&mc, 1);
-    /// state.set_tabu_tenure((5, 10));
     ///
     /// let m = MaxCutFlipNeighbor::new(&mc, &state.solution, 1);
-    /// state.start_record_tabu();
+    /// state.start_record_tabu((5, 10));
     /// state.apply(&m)?;                        // applying now records vertex 1
     /// assert!(!state.tabu_allows(&m));
     ///
@@ -474,17 +473,7 @@ where
         );
     }
 
-    /// Sets the tabu tenure range `(min, max)` every recorded move is forbidden
-    /// for.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `tenure.0 > tenure.1` (an empty range).
-    pub fn set_tabu_tenure(&mut self, tenure: (u64, u64)) {
-        self.tabu.set_tenure(tenure);
-    }
-
-    /// The tenure range [`set_tabu_tenure`](Self::set_tabu_tenure) installed.
+    /// The tenure range [`start_record_tabu`](Self::start_record_tabu) installed.
     pub fn tabu_tenure(&self) -> (u64, u64) {
         self.tabu.tenure()
     }
@@ -515,14 +504,24 @@ where
 
     /// Makes [`apply`](Self::apply) and
     /// [`apply_move_only`](Self::apply_move_only) record every move they apply,
-    /// at the iteration it was made on.
+    /// at the iteration it was made on, for a tenure drawn from `tenure`.
     ///
-    /// Turn it on next to [`set_tabu_tenure`](Self::set_tabu_tenure), in the
-    /// same place and at the same rate — a search that sets the tenure per
-    /// iteration should set this per iteration too. Setting it once, far from
-    /// the loop that depends on it, is how it gets forgotten, and forgetting it
-    /// is silent: the search keeps running, having stopped writing the memory
-    /// it reads.
+    /// The tenure and the mode are one call because they were always one
+    /// decision: a memory nothing writes needs no tenure, and a tenure nothing
+    /// draws from records nothing. Setting the mode once, far from the loop
+    /// that depends on it, is how it gets forgotten, and forgetting it is
+    /// silent — the search keeps running, having stopped writing the memory it
+    /// reads — so call this wherever the tenure belongs, at the same rate.
+    /// [`TabuSearch`](crate::heuristic::TabuSearch) calls it per iteration.
+    ///
+    /// To use a tenure *without* letting `apply` record — to forbid only the
+    /// moves you hand to [`record_tabu`](Self::record_tabu) — follow this with
+    /// [`stop_record_tabu`](Self::stop_record_tabu), which leaves the tenure
+    /// alone.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `tenure.0 > tenure.1` (an empty range).
     ///
     /// A move whose [`tabu_policy`](MoveToNeighbor::tabu_policy) is `None`
     /// still records nothing, so this cannot force tabu onto a problem that
@@ -535,12 +534,11 @@ where
     /// let mut state = SearchState::new_with_seed(&mc, 1);
     /// let m = MaxCutFlipNeighbor::new(&mc, &state.solution, 1);
     ///
-    /// state.set_tabu_tenure((5, 10));   // what every record draws from
-    /// state.apply(&m)?;                 // the mode is off: this records nothing
+    /// state.apply(&m)?;                     // the mode is off: records nothing
     /// assert!(state.tabu_allows(&m));
     ///
-    /// state.start_record_tabu();        // without this, `apply` records nothing
-    /// state.apply(&m)?;                 // applies, and records: the mode is on
+    /// state.start_record_tabu((5, 10));     // tenure and mode, one decision
+    /// state.apply(&m)?;                     // applies, and records
     /// assert!(!state.tabu_allows(&m));
     ///
     /// state.reset_tabu();               // drop every prohibition
@@ -548,7 +546,8 @@ where
     /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     #[inline]
-    pub fn start_record_tabu(&mut self) {
+    pub fn start_record_tabu(&mut self, tenure: (u64, u64)) {
+        self.tabu.set_tenure(tenure);
         self.record_tabu_on = true;
     }
 
@@ -1168,11 +1167,10 @@ mod tests {
         fn apply_records_at_the_iteration_the_move_was_made_on() {
             let mc = triangle();
             let mut state = SearchState::new_with_seed(&mc, 3);
-            state.set_tabu_tenure((5, 5));
-            state.start_record_tabu();
+            state.start_record_tabu((5, 5));
 
             let m = first_flip(&mc, &state.solution);
-            state.start_record_tabu();
+            state.start_record_tabu((5, 5));
             state.apply(&m).unwrap(); // made at iteration 0, blocked through 5
             assert_eq!(state.iteration, 1);
 
@@ -1208,8 +1206,7 @@ mod tests {
             let mc = triangle();
             let sol = MaxCutSolution::new_from_assignment(&mc, vec![true, false, false]);
             let mut state = SearchState::with_solution_and_seed(&mc, sol, 3);
-            state.set_tabu_tenure((9, 9));
-            state.start_record_tabu();
+            state.start_record_tabu((9, 9));
 
             state
                 .apply(&MaxCutFlipNeighbor::new(&mc, &state.solution, 0))
@@ -1226,8 +1223,7 @@ mod tests {
         fn reset_tabu_keeps_the_tenure() {
             let mc = triangle();
             let mut state = SearchState::new_with_seed(&mc, 3);
-            state.set_tabu_tenure((9, 9));
-            state.start_record_tabu();
+            state.start_record_tabu((9, 9));
             let m = first_flip(&mc, &state.solution);
             state.apply(&m).unwrap();
 
@@ -1242,8 +1238,7 @@ mod tests {
         fn a_sub_run_starts_free_but_a_plain_clone_does_not() {
             let mc = triangle();
             let mut state = SearchState::new_with_seed(&mc, 3);
-            state.set_tabu_tenure((9, 9));
-            state.start_record_tabu();
+            state.start_record_tabu((9, 9));
             let m = first_flip(&mc, &state.solution);
             state.apply(&m).unwrap();
             let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
@@ -1265,8 +1260,7 @@ mod tests {
         fn inheriting_into_a_sub_run_carries_the_boundary_as_it_stands() {
             let mc = triangle();
             let mut state = SearchState::new_with_seed(&mc, 3);
-            state.set_tabu_tenure((3, 3));
-            state.start_record_tabu();
+            state.start_record_tabu((3, 3));
             for _ in 0..100 {
                 state.progress_iteration();
             }
@@ -1298,8 +1292,7 @@ mod tests {
             }
 
             let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
-            sub.set_tabu_tenure((3, 3));
-            sub.start_record_tabu();
+            sub.start_record_tabu((3, 3));
             for _ in 0..100 {
                 sub.progress_iteration();
             }
