@@ -1,5 +1,6 @@
 use super::problem::ProblemTrait;
 use super::rankable::Rankable;
+use super::tabu::EnabledTabu;
 
 /// Is a single neighborhood move (one step of change).
 ///
@@ -66,6 +67,27 @@ where
         });
         use rand::seq::IteratorRandom;
         Self::iter(prob, sol).choose(rng)
+    }
+
+    /// This move's tabu policy, or `None` when it has none — which is the
+    /// default.
+    ///
+    /// [`apply`](crate::search_state::SearchState::apply) records the move it
+    /// applies while the state is recording, and it is handed the move as a
+    /// bare [`MoveToNeighbor`] — it cannot name [`EnabledTabu`]. This is how it
+    /// asks. A move implementing that trait overrides this with one line:
+    ///
+    /// ```ignore
+    /// fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }
+    /// ```
+    ///
+    /// Leaving the default in place is what keeps tabu optional: applying such
+    /// a move records nothing and succeeds normally, which is what lets a new
+    /// problem implement three traits and still run
+    /// [`LocalSearch`](crate::heuristic::LocalSearch) and
+    /// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing).
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        None
     }
 
     /// Returns `true` if applying this move to `src` yields a solution better than `other`.

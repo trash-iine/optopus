@@ -100,7 +100,6 @@
 //! let mut ts = TabuSearch::<QuboFlipNeighbor>::new(
 //!     StopCondition::iterations(100_000),
 //!     (3, 7),
-//!     None,
 //! );
 //! ts.run(&mut state).unwrap();
 //!

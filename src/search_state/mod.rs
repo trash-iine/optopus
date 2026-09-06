@@ -21,8 +21,11 @@ use rand::rngs::SmallRng;
 /// [`SearchState::update_state`] merges — so a phase still starts at zero *of
 /// its own budget*.
 ///
-/// The accept / reject / best-update counters measure a phase rather than 
-/// timestamp anything, so every variant starts them at zero,  and 
+/// A parent and its sub run share an iteration number,
+/// and tabu prohibitions cross between them.
+///
+/// The accept / reject / best-update counters measure a phase rather than
+/// timestamp anything, so every variant starts them at zero, and
 /// [`SearchState::update_state`] adds them straight into the parent.
 #[derive(Clone, Debug)]
 pub enum SearchStateCloneType {
@@ -102,7 +105,7 @@ where
     ///   (which is also the sub-run's starting solution).
     pub initial_solution: Problem::Solution,
     /// Number of moves accepted (`apply` / `apply_move_only` calls).
-    /// Always satisfies `iterations_this_run() == n_accepted + n_rejected` 
+    /// Always satisfies `iterations_this_run() == n_accepted + n_rejected`
     /// when only the standard methods on this state are used.
     pub n_accepted: u64,
     /// Number of iterations that advanced without applying a move
@@ -134,6 +137,20 @@ where
     /// `None` (the default) disables recording entirely, keeping
     /// `update_best` allocation-free for library users who don't need it.
     pub(crate) objective_probe: Option<fn(&Problem::Solution) -> f64>,
+    /// The tabu prohibitions this search remembers, and the tenure every write
+    /// to them draws from.
+    ///
+    /// Reached only through applying a move.
+    tabu: crate::common::TabuMemory,
+    /// Whether [`apply`](Self::apply) and
+    /// [`apply_move_only`](Self::apply_move_only) record what they apply.
+    ///
+    /// Off by default, and off in every sub-run
+    /// ([`clone_for_new_run`](Self::clone_for_new_run)): most searches never
+    /// read the tabu memory, and writing it costs an RNG draw and a store per
+    /// move. A search whose method *is* the tabu list turns it on — see
+    /// [`start_record_tabu`](Self::start_record_tabu).
+    record_tabu_on: bool,
 }
 
 impl<'a, Problem> SearchState<'a, Problem>
@@ -176,6 +193,8 @@ where
             rng,
             trajectory: Vec::new(),
             objective_probe: None,
+            tabu: crate::common::TabuMemory::default(),
+            record_tabu_on: false,
         };
         tracing::debug!("SearchState initialized");
         state
@@ -221,6 +240,8 @@ where
             rng,
             trajectory: Vec::new(),
             objective_probe: None,
+            tabu: crate::common::TabuMemory::default(),
+            record_tabu_on: false,
         }
     }
 
@@ -283,6 +304,34 @@ where
     /// Creates a copy of this state prepared for a new sub-run.
     ///
     /// The behavior depends on `clone_type`; see [`SearchStateCloneType`] for details.
+    ///
+    /// **Tabu semantics**: the child starts with an empty tabu memory, whichever
+    /// clone type is used — a phase is its own tabu list. What it learns does
+    /// come back: [`update_state`](Self::update_state) carries the sub-run's
+    /// prohibitions into this state along with its solution. A phase that should
+    /// *start* from the parent's asks with
+    /// [`inherit_tabu_from`](Self::inherit_tabu_from):
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
+    /// let mut state = SearchState::new_with_seed(&mc, 1);
+    ///
+    /// let m = MaxCutFlipNeighbor::new(&mc, &state.solution, 1);
+    /// state.start_record_tabu((5, 10));
+    /// state.apply(&m)?;                        // applying now records vertex 1
+    /// assert!(!state.tabu_allows(&m));
+    ///
+    /// let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+    /// assert!(sub.tabu_allows(&m));            // a new phase starts free
+    /// assert_eq!(sub.tabu_tenure(), (0, 0));
+    ///
+    /// sub.inherit_tabu_from(&state);           // ...unless it asks for the parent's
+    /// assert!(!sub.tabu_allows(&m));
+    /// assert_eq!(sub.tabu_tenure(), (5, 10));
+    /// # Ok::<(), optopus::error::OptError>(())
+    /// ```
     pub fn clone_for_new_run(&mut self, clone_type: SearchStateCloneType) -> Self {
         let now = std::time::Instant::now();
         let child_rng = SmallRng::from_rng(&mut self.rng);
@@ -303,6 +352,8 @@ where
                 rng: child_rng,
                 trajectory: Vec::new(),
                 objective_probe: self.objective_probe,
+                tabu: crate::common::TabuMemory::default(),
+                record_tabu_on: false,
             },
             SearchStateCloneType::ClearBest => Self {
                 start_iteration: self.iteration,
@@ -320,6 +371,8 @@ where
                 rng: child_rng,
                 trajectory: Vec::new(),
                 objective_probe: self.objective_probe,
+                tabu: crate::common::TabuMemory::default(),
+                record_tabu_on: false,
             },
             SearchStateCloneType::StartBest => Self {
                 start_iteration: self.iteration,
@@ -337,13 +390,16 @@ where
                 rng: child_rng,
                 trajectory: Vec::new(),
                 objective_probe: self.objective_probe,
+                tabu: crate::common::TabuMemory::default(),
+                record_tabu_on: false,
             },
         }
     }
 
     /// Merges the results of a completed sub-run back into this state.
     ///
-    /// - The current solution is replaced with `cloned_state.solution`.
+    /// - The current solution is replaced with `cloned_state.solution`, and the
+    ///   tabu memory with the sub-run's — both are where the search got to.
     /// - The iteration counter is advanced by the sub-run's own progress
     ///   (`iteration - start_iteration`), and the accept/reject/best-update
     ///   counters — which the sub-run counted from zero — are added on.
@@ -367,6 +423,10 @@ where
 
         // update the current state with the new state
         self.solution = cloned_state.solution;
+
+        // The prohibitions come back with the solution.
+        // This is a replacement, not a merge.
+        self.tabu = cloned_state.tabu;
 
         // add iteration into the current iteration
         let old_iteration = self.iteration;
@@ -413,12 +473,173 @@ where
         );
     }
 
+    /// The tenure range [`start_record_tabu`](Self::start_record_tabu) installed.
+    pub fn tabu_tenure(&self) -> (u64, u64) {
+        self.tabu.tenure()
+    }
+
+    /// Drops every tabu prohibition, keeping the tenure.
+    pub fn reset_tabu(&mut self) {
+        self.tabu.clear();
+    }
+
+    /// Returns whether `neighbor` is free to be applied at the current
+    /// iteration, i.e. not forbidden by what this search has recorded.
+    ///
+    /// A key nothing has recorded yet is free, so a search that has not started
+    /// recording allows everything.
+    ///
+    /// The question is asked of the move type rather than of its erased policy,
+    /// so [`is_move_enabled`](EnabledTabu::is_move_enabled) inlines into a
+    /// neighborhood scan. A move that does not implement [`EnabledTabu`]
+    /// therefore cannot be asked at all — it fails to compile here, which is
+    /// the same answer [`record_tabu`](Self::record_tabu) gives at runtime.
+    #[inline]
+    pub fn tabu_allows<N>(&self, neighbor: &N) -> bool
+    where
+        N: MoveToNeighbor<Problem> + EnabledTabu,
+    {
+        neighbor.is_move_enabled(&self.tabu, self.iteration)
+    }
+
+    /// Makes [`apply`](Self::apply) and
+    /// [`apply_move_only`](Self::apply_move_only) record every move they apply,
+    /// at the iteration it was made on, for a tenure drawn from `tenure`.
+    ///
+    /// The tenure and the mode are one call because they were always one
+    /// decision: a memory nothing writes needs no tenure, and a tenure nothing
+    /// draws from records nothing. Setting the mode once, far from the loop
+    /// that depends on it, is how it gets forgotten, and forgetting it is
+    /// silent — the search keeps running, having stopped writing the memory it
+    /// reads — so call this wherever the tenure belongs, at the same rate.
+    /// [`TabuSearch`](crate::heuristic::TabuSearch) calls it per iteration.
+    ///
+    /// To use a tenure *without* letting `apply` record — to forbid only the
+    /// moves you hand to [`record_tabu`](Self::record_tabu) — follow this with
+    /// [`stop_record_tabu`](Self::stop_record_tabu), which leaves the tenure
+    /// alone.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `tenure.0 > tenure.1` (an empty range).
+    ///
+    /// A move whose [`tabu_policy`](MoveToNeighbor::tabu_policy) is `None`
+    /// still records nothing, so this cannot force tabu onto a problem that
+    /// never wanted it.
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
+    /// let mut state = SearchState::new_with_seed(&mc, 1);
+    /// let m = MaxCutFlipNeighbor::new(&mc, &state.solution, 1);
+    ///
+    /// state.apply(&m)?;                     // the mode is off: records nothing
+    /// assert!(state.tabu_allows(&m));
+    ///
+    /// state.start_record_tabu((5, 10));     // tenure and mode, one decision
+    /// state.apply(&m)?;                     // applies, and records
+    /// assert!(!state.tabu_allows(&m));
+    ///
+    /// state.reset_tabu();               // drop every prohibition
+    /// assert!(state.tabu_allows(&m));
+    /// # Ok::<(), optopus::error::OptError>(())
+    /// ```
+    #[inline]
+    pub fn start_record_tabu(&mut self, tenure: (u64, u64)) {
+        self.tabu.set_tenure(tenure);
+        self.record_tabu_on = true;
+    }
+
+    /// Stops recording. Prohibitions already written stay.
+    #[inline]
+    pub fn stop_record_tabu(&mut self) {
+        self.record_tabu_on = false;
+    }
+
+    /// Whether [`apply`](Self::apply) is currently recording.
+    #[inline]
+    pub fn is_recording_tabu(&self) -> bool {
+        self.record_tabu_on
+    }
+
+    /// Records `neighbor` as tabu for a tenure drawn from
+    /// [`tabu_tenure`](Self::tabu_tenure), counted from the current iteration.
+    ///
+    /// Applying a move does **not** record it: a search that never reads the
+    /// tabu memory should not pay to write it, and most of them never do.
+    /// A tabu search normally does not call this: it turns on
+    /// [`start_record_tabu`](Self::start_record_tabu) and lets
+    /// [`apply`](Self::apply) record what it applies, in the right order. This
+    /// is for forbidding a move that is *not* being applied.
+    ///
+    /// Like [`tabu_allows`](Self::tabu_allows) this is asked of the move type,
+    /// so the policy inlines and a move without one cannot be passed at all.
+    #[inline]
+    pub fn record_tabu<N>(&mut self, neighbor: &N)
+    where
+        N: MoveToNeighbor<Problem> + EnabledTabu,
+    {
+        neighbor.add_to_tabu_map(&mut self.tabu, self.iteration, &mut self.rng);
+    }
+
+    /// Carries `parent`'s prohibitions and tenure into this state, replacing
+    /// whatever it held.
+    ///
+    /// [`clone_for_new_run`](Self::clone_for_new_run) starts a sub-run free,
+    /// because a phase is usually its own tabu list. This is the opt-out, for a
+    /// phase that should go on avoiding what the parent just did.
+    ///
+    /// The boundaries are translated into this state's iteration frame — see
+    /// [`TabuMemory::inherit`](crate::common::TabuMemory::inherit). Between a
+    /// state and its sub-run that translation is the identity, since they share
+    /// the frame; it earns its keep when the two states were built separately,
+    /// which is the case the method stays total for.
+    pub fn inherit_tabu_from(&mut self, parent: &Self) {
+        self.tabu
+            .inherit(&parent.tabu, parent.iteration, self.iteration);
+    }
+
+    /// Grows the tabu memory's dense key space to `0..n` up front.
+    ///
+    /// Pure pre-allocation — recording grows it on demand, and does so without
+    /// changing what it draws — for a heuristic that knows the instance size
+    /// and is about to record `n` keys.
+    pub fn reserve_tabu_vars(&mut self, n: usize) {
+        self.tabu.reserve_vars(n);
+    }
+
+    /// Records the move about to be applied, if the state is recording and the
+    /// move has a policy. Called *before* the iteration advances, so a tenure
+    /// of `d` forbids exactly the `d` iterations after the one it was made on.
+    ///
+    /// For a move without a policy the `tabu_policy` call monomorphizes to
+    /// `None` and the whole body compiles away; with recording off it is one
+    /// predictable branch.
+    #[inline]
+    fn record_applied<Move>(&mut self, neighbor: &Move)
+    where
+        Move: MoveToNeighbor<Problem>,
+    {
+        if self.record_tabu_on
+            && let Some(policy) = neighbor.tabu_policy()
+        {
+            policy.add_to_tabu_map(&mut self.tabu, self.iteration, &mut self.rng);
+        }
+    }
+
     /// Applies a neighborhood move, updates the iteration counter, and refreshes the best solution.
     /// Increments [`n_accepted`](Self::n_accepted).
+    ///
+    /// Records the move in the tabu memory first — but only while the state is
+    /// recording ([`start_record_tabu`](Self::start_record_tabu)), which it is
+    /// not by default. Most searches never read that memory and should not pay
+    /// an RNG draw and a store per move to write it.
     pub fn apply<Move>(&mut self, neighbor: &Move) -> Result<(), crate::error::OptError>
     where
         Move: MoveToNeighbor<Problem>,
     {
+        self.record_applied(neighbor);
         self.iteration = neighbor.apply_to_iteration(self.iteration);
         neighbor.apply_to_solution(self.instance, &mut self.solution)?;
         self.n_accepted += 1;
@@ -436,6 +657,7 @@ where
     where
         Move: MoveToNeighbor<Problem>,
     {
+        self.record_applied(neighbor);
         self.iteration = neighbor.apply_to_iteration(self.iteration);
         neighbor.apply_to_solution(self.instance, &mut self.solution)?;
         self.n_accepted += 1;
@@ -693,7 +915,7 @@ mod tests {
         let mc = triangle();
         let sol = MaxCutSolution::new_from_assignment(&mc, vec![true, false, false]);
         let mut state = SearchState::with_solution(&mc, sol);
-        state.progress_iteration(); // bump n_rejected so we can tell it gets cleared
+        state.progress_iteration(); // bump n_rejected so we can tell it carries over
 
         let child = state.clone_for_new_run(SearchStateCloneType::ClearBest);
         assert_eq!(child.iteration, state.iteration);
@@ -851,6 +1073,250 @@ mod tests {
         assert_eq!(parent.n_best_updates, best_in_phase);
         // initial_solution must NOT be overwritten by the child's
         assert_eq!(parent.initial_solution.x, parent_initial_before);
+    }
+
+    /// The tabu memory the state carries: what `apply` records into it, what a
+    /// sub-run inherits, and what a move without a tabu policy gets instead.
+    mod tabu {
+        use super::*;
+        use crate::problem::MaxCutSwapNeighbor;
+
+        /// A problem whose move deliberately does **not** implement
+        /// [`EnabledTabu`], i.e. the case a user hits by implementing only the
+        /// three traits a local search needs.
+        struct Untabued;
+
+        #[derive(Clone, Debug)]
+        struct Counter(i32);
+
+        impl Rankable for Counter {
+            fn is_better_than(&self, other: &Self) -> bool {
+                self.0 > other.0
+            }
+        }
+
+        impl ProblemTrait for Untabued {
+            type Solution = Counter;
+            fn new_solution(&self, _rng: &mut impl rand::Rng) -> Counter {
+                Counter(0)
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        struct Increment;
+
+        impl Rankable for Increment {
+            fn is_better_than(&self, _other: &Self) -> bool {
+                false
+            }
+        }
+
+        impl MoveToNeighbor<Untabued> for Increment {
+            fn apply_to_solution(
+                &self,
+                _prob: &Untabued,
+                sol: &mut Counter,
+            ) -> Result<(), crate::error::OptError> {
+                sol.0 += 1;
+                Ok(())
+            }
+            fn iter(_p: &Untabued, _s: &Counter) -> impl Iterator<Item = Self> + Send {
+                std::iter::once(Increment)
+            }
+            fn move_to_be_better_than(
+                &self,
+                _p: &Untabued,
+                src: &Counter,
+                other: &Counter,
+            ) -> bool {
+                src.0 + 1 > other.0
+            }
+        }
+
+        /// Not implementing [`EnabledTabu`] must cost nothing at the point a
+        /// move is applied — that is what keeps tabu an opt-in trait rather
+        /// than a tax on every problem.
+        #[test]
+        fn a_move_without_tabu_support_applies_normally() {
+            let prob = Untabued;
+            let mut state = SearchState::new_with_seed(&prob, 1);
+            state.apply(&Increment).unwrap();
+            state.apply_move_only(&Increment).unwrap();
+            assert_eq!(state.solution.0, 2);
+            assert_eq!(state.n_accepted, 2);
+        }
+
+        /// A move that does not implement [`EnabledTabu`] cannot reach the
+        /// memory at all: `tabu_allows` and `record_tabu` are bounded on the
+        /// trait, so asking is a compile error rather than a runtime one. What
+        /// stays checkable is that such a move still applies normally — tabu is
+        /// opt-in, and a problem that never wanted it pays nothing.
+        #[test]
+        fn a_move_without_tabu_support_still_applies() {
+            let prob = Untabued;
+            let mut state = SearchState::new_with_seed(&prob, 1);
+            state.apply(&Increment).unwrap();
+            state.apply_move_only(&Increment).unwrap();
+            assert_eq!(state.solution.0, 2);
+        }
+
+        /// `apply` is what records, so a move is forbidden for exactly the
+        /// `tenure` iterations that follow the one it was made on — the same
+        /// boundary an explicit `record` at the pre-move iteration produced.
+        #[test]
+        fn apply_records_at_the_iteration_the_move_was_made_on() {
+            let mc = triangle();
+            let mut state = SearchState::new_with_seed(&mc, 3);
+            state.start_record_tabu((5, 5));
+
+            let m = first_flip(&mc, &state.solution);
+            state.start_record_tabu((5, 5));
+            state.apply(&m).unwrap(); // made at iteration 0, blocked through 5
+            assert_eq!(state.iteration, 1);
+
+            let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
+            assert!(!state.tabu_allows(&probe));
+            for _ in 0..4 {
+                state.progress_iteration();
+            }
+            assert_eq!(state.iteration, 5);
+            assert!(!state.tabu_allows(&probe), "still blocked at 5");
+            state.progress_iteration();
+            assert!(state.tabu_allows(&probe), "free again at 6");
+        }
+
+        /// The default tenure remembers without forbidding: a search that never
+        /// sets one is never blocked by its own moves.
+        #[test]
+        fn the_default_tenure_forbids_nothing() {
+            let mc = triangle();
+            let mut state = SearchState::new_with_seed(&mc, 3);
+            assert_eq!(state.tabu_tenure(), (0, 0));
+
+            let m = first_flip(&mc, &state.solution);
+            state.apply(&m).unwrap();
+            assert!(state.tabu_allows(&MaxCutFlipNeighbor { i: m.i, gain: 0.0 }));
+        }
+
+        /// Flip and swap both key on `TabuKey::Var`, so a vertex a flip forbade is
+        /// forbidden to the swap too. Breakout Local Search is built on this:
+        /// its weak swap must not undo what the descent's flips wrote.
+        #[test]
+        fn flip_and_swap_share_one_map() {
+            let mc = triangle();
+            let sol = MaxCutSolution::new_from_assignment(&mc, vec![true, false, false]);
+            let mut state = SearchState::with_solution_and_seed(&mc, sol, 3);
+            state.start_record_tabu((9, 9));
+
+            state
+                .apply(&MaxCutFlipNeighbor::new(&mc, &state.solution, 0))
+                .unwrap();
+            let swap = MaxCutSwapNeighbor::new(&mc, &state.solution, 0, 1);
+            assert!(
+                !state.tabu_allows(&swap),
+                "the swap moves vertex 0, which the flip just forbade"
+            );
+        }
+
+        /// `reset_tabu` frees every move and leaves the tenure in place.
+        #[test]
+        fn reset_tabu_keeps_the_tenure() {
+            let mc = triangle();
+            let mut state = SearchState::new_with_seed(&mc, 3);
+            state.start_record_tabu((9, 9));
+            let m = first_flip(&mc, &state.solution);
+            state.apply(&m).unwrap();
+
+            state.reset_tabu();
+            assert!(state.tabu_allows(&MaxCutFlipNeighbor { i: m.i, gain: 0.0 }));
+            assert_eq!(state.tabu_tenure(), (9, 9));
+        }
+
+        /// A sub-run is a new phase and starts free, while a plain clone is a
+        /// copy and carries the prohibitions along.
+        #[test]
+        fn a_sub_run_starts_free_but_a_plain_clone_does_not() {
+            let mc = triangle();
+            let mut state = SearchState::new_with_seed(&mc, 3);
+            state.start_record_tabu((9, 9));
+            let m = first_flip(&mc, &state.solution);
+            state.apply(&m).unwrap();
+            let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
+
+            let copy = state.clone();
+            assert!(!copy.tabu_allows(&probe));
+            assert_eq!(copy.tabu_tenure(), (9, 9));
+
+            let sub = state.clone_for_new_run(SearchStateCloneType::Simple);
+            assert!(sub.tabu_allows(&probe));
+            assert_eq!(sub.tabu_tenure(), (0, 0));
+        }
+
+        /// A sub-run shares the parent's iteration frame, so inheriting is a
+        /// plain carry-over: a key blocked until 104 arrives blocked until 104,
+        /// and the child — starting at the parent's own iteration — sees
+        /// exactly the tenure that was left.
+        #[test]
+        fn inheriting_into_a_sub_run_carries_the_boundary_as_it_stands() {
+            let mc = triangle();
+            let mut state = SearchState::new_with_seed(&mc, 3);
+            state.start_record_tabu((3, 3));
+            for _ in 0..100 {
+                state.progress_iteration();
+            }
+            let m = first_flip(&mc, &state.solution);
+            state.apply(&m).unwrap(); // recorded at iteration 100, free again at 104
+            let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
+
+            let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+            assert_eq!(sub.iteration, state.iteration, "one frame, not two");
+            sub.inherit_tabu_from(&state);
+
+            while sub.iteration < 104 {
+                assert!(!sub.tabu_allows(&probe), "blocked at {}", sub.iteration);
+                sub.progress_iteration();
+            }
+            assert!(sub.tabu_allows(&probe), "free from 104, as in the parent");
+        }
+
+        /// A sub-run's prohibitions come back with its solution — and with the
+        /// tenure it recorded them under. The boundaries need no translation
+        /// because the phase ran in the parent's own frame, which is the whole
+        /// reason `clone_for_new_run` no longer restarts the counter.
+        #[test]
+        fn update_state_carries_the_sub_runs_prohibitions_back() {
+            let mc = triangle();
+            let mut state = SearchState::new_with_seed(&mc, 3);
+            for _ in 0..10 {
+                state.progress_iteration();
+            }
+
+            let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
+            sub.start_record_tabu((3, 3));
+            for _ in 0..100 {
+                sub.progress_iteration();
+            }
+            let m = first_flip(&mc, &sub.solution);
+            sub.apply(&m).unwrap(); // recorded at 110, free again at 114
+            let probe = MaxCutFlipNeighbor { i: m.i, gain: 0.0 };
+            assert!(!sub.tabu_allows(&probe));
+
+            state.update_state(sub);
+            assert_eq!(state.iteration, 111, "the parent absorbed the phase");
+            assert_eq!(state.tabu_tenure(), (3, 3), "the tenure comes back too");
+            while state.iteration < 114 {
+                assert!(
+                    !state.tabu_allows(&probe),
+                    "still blocked at {}",
+                    state.iteration
+                );
+                state.progress_iteration();
+            }
+            assert!(
+                state.tabu_allows(&probe),
+                "free from 114, as in the sub-run"
+            );
+        }
     }
 
     /// Crossing a [`ProblemReduction`](crate::trait_defs::ProblemReduction) is

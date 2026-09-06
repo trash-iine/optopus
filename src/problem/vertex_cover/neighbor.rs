@@ -2,12 +2,13 @@
 
 use super::VertexCover;
 use crate::{
-    common::VecTabuMap,
+    common::TabuMemory,
     error::OptError,
     problem::vertex_cover::problem::VertexCoverSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
 };
 use rand::Rng;
+use rand::rngs::SmallRng;
 
 /// A flip move that toggles whether vertex `i` is in the cover.
 ///
@@ -52,24 +53,24 @@ impl Evaluate for VertexCoverFlipNeighbor {
 }
 
 impl EnabledTabu for VertexCoverFlipNeighbor {
-    type TabuMap = VecTabuMap;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.is_enabled(self.i, iteration)
+    /// The move is tabu while vertex `i` is still blocked at the current iteration.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(self.i, iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        tabu_map.add(self.i, iteration, tabu_tenure, rng);
+    /// Applying the move forbids vertex `i` for a tenure the memory draws.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(self.i, iteration, rng);
     }
 }
 
 impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn apply_to_solution(
         &self,
         prob: &VertexCover,
@@ -209,25 +210,25 @@ impl Evaluate for VertexCoverSwapNeighbor {
 }
 
 impl EnabledTabu for VertexCoverSwapNeighbor {
-    type TabuMap = VecTabuMap;
-
-    fn is_move_enabled(&self, tabu_map: &Self::TabuMap, iteration: u64) -> bool {
-        tabu_map.is_enabled(self.i, iteration) && tabu_map.is_enabled(self.j, iteration)
+    /// A swap is tabu unless **both** vertexs it moves are free.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
     }
 
-    fn add_to_tabu_map(
-        &self,
-        tabu_map: &mut Self::TabuMap,
-        iteration: u64,
-        tabu_tenure: (u64, u64),
-        rng: &mut rand::rngs::SmallRng,
-    ) {
-        tabu_map.add(self.i, iteration, tabu_tenure, rng);
-        tabu_map.add(self.j, iteration, tabu_tenure, rng);
+    /// Applying the swap forbids both vertexs, each for its own drawn tenure.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(self.i, iteration, rng);
+        tabu.forbid(self.j, iteration, rng);
     }
 }
 
 impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2
     }

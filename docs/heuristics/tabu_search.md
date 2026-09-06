@@ -18,7 +18,6 @@ let mut state = SearchState::new(&mc);
 let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(10_000),
     /* tabu_tenure = */ (5, 10),
-    None,
 );
 ts.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
@@ -31,34 +30,48 @@ println!("cut weight = {}", state.best_solution.objective);
 TabuSearch::<N>::new(
     stop_condition: StopCondition,
     tabu_tenure: (u64, u64),
-    tabu_map: Option<N::TabuMap>,
 ) -> Self
 ```
 
 `N` must satisfy `MoveToNeighbor<P> + Clone + EnabledTabu + Rankable`.
 
-`tabu_map` lets you inject a pre-warmed map (e.g. inherited from a previous
-phase). Passing `None` starts from `N::TabuMap::default()`.
-
 **Panics** if `tabu_tenure.0 > tabu_tenure.1`.
 
-`clear()` resets the tabu map to its default value.
+## Where the tabu map lives
 
-## Tabu map abstraction
+The map is on the [`SearchState`](../search_state.md), not on this heuristic.
+The state is what applies a move, so the state is what records it: `apply` /
+`apply_move_only` write the move into the tabu memory before the iteration
+advances. To enable tabu, you need to call `start_record_tabu(tenure)`
+at the first. See `TabuSearch` implementation for an example.
 
-Each neighbor type owns its `TabuMap` and the policy for inserting / querying
-it via the `EnabledTabu` trait — `TabuSearch` is generic over the neighbor
-and never knows what's stored. This lets QUBO/MaxCut/SAT key by variable
-index, TSP by edge pair, Job Shop by swap position, etc.
+## Tabu policy abstraction
 
-`borrow_tabu_map`, `borrow_mut_tabu_map`, `take_tabu_map`, and `set_tabu_map`
-let you inspect or transfer state between runs; `tabu_tenure()` reads back the
-range.
+Each neighbor type owns its tabu policy — which keys have to be free, and which
+applying the move forbids — via the `EnabledTabu` trait, and hands it to the
+state by overriding `MoveToNeighbor::tabu_policy` with `Some(self)`, one line.
+`TabuSearch` never knows what is keyed. This lets QUBO/MaxCut/SAT key by
+variable index, TSP by edge pair, Job Shop by swap position, etc. The two are
+not required to agree: a VRP relocate asks whether a customer may enter its
+destination route and forbids the route it just left.
 
-Internally the map and the tenure are one `common::TabuLedger<N::TabuMap>` —
-they are never useful apart, and the two verbs it exposes (`allows` / `record`)
-are what the MaxCut operators in `src/heuristic/specific/max_cut/ops/` share
-when several of them must respect each other's prohibitions.
+A move that leaves `tabu_policy` at its default `None` has no tabu policy at
+all, and `state.record_tabu` cannot be called with it . A move type that
+implements `EnabledTabu` and forgets the one-line override would run here with
+no tabu list and no complaint, so `trait_defs/tabu.rs` pins every built-in move
+against exactly that.
+
+`run_once` calls `state.start_record_tabu(tenure)` once per iteration — the
+tenure and the mode are the same call. Recording is off on a fresh state and off in every sub-run,
+so a search whose method is the tabu list has to say so — and says so next to
+the loop that depends on it rather than once, somewhere else.
+
+`common::TabuMemory` is the single store, split by `TabuKey` shape — `Var(i)`
+for a dense index, `Pair` and `Triple` for the rest. Two move types over the
+same shape share prohibitions (MaxCut's flip and swap are both `Var`, which is
+what the operators in `src/heuristic/specific/max_cut/ops/` rely on), while
+different shapes never collide (JobShop's swap is a `Var`, its relocate a
+`Pair`).
 
 ## Benchmark config
 

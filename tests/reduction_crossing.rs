@@ -31,7 +31,7 @@ fn sparse_instance(seed: u64, n: usize) -> MaxCut {
 }
 
 fn tabu_search() -> TabuSearch<MaxCutFlipNeighbor> {
-    TabuSearch::new(StopCondition::iterations(2_000), (2, 8), None)
+    TabuSearch::new(StopCondition::iterations(2_000), (2, 8))
 }
 
 /// Solves `mc` through its kernel: repeatedly open a sub-state on the kernel,

@@ -84,7 +84,7 @@ heuristic. Full signatures are in the
 | `Sequential`, `Iterated`, `VariableNeighborhoodSearch`, `Restart` | nothing |
 | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing` | [`Evaluate<f64>`](../traits.md#core-trait-reference) on the move |
 | `RlSearch` | [`Evaluate<f64>`](../traits.md#core-trait-reference) + `Clone` on the move |
-| `TabuSearch` | [`EnabledTabu`](../traits.md#core-trait-reference) + `Clone` on the move |
+| `TabuSearch` | [`EnabledTabu`](../traits.md#core-trait-reference) + `Clone` on the move, plus `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` in its `MoveToNeighbor` impl — that one line is what hands the policy to the [`SearchState`](../search_state.md#remembering-tabu-moves), which owns the memory |
 | `GeneticAlgorithm` | [`Distance`](../traits.md#core-trait-reference) on the solution — with *any* parent selection, not only `DistantTopK` — plus a [`Crossover<P>`](../traits.md#core-trait-reference) impl ([`SubProblemExtractable`](../traits.md#core-trait-reference) on the problem only if you use `SubProblemBasedCrossover`) |
 | the CLI benchmark (TOML config) | all of the above |
 
