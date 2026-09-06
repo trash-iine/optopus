@@ -42,9 +42,8 @@ TabuSearch::<N>::new(
 The map is on the [`SearchState`](../search_state.md), not on this heuristic.
 The state is what applies a move, so the state is what records it: `apply` /
 `apply_move_only` write the move into the tabu memory before the iteration
-advances. What `TabuSearch` installs at the top of each iteration is the one call that
-makes the state do it: `start_record_tabu(tenure)`, which sets the tenure every
-record draws from and turns on the mode, off on a fresh state.
+advances. To enable tabu, you need to call `start_record_tabu(tenure)`
+at the first. See `TabuSearch` implementation for an example.
 
 ## Tabu policy abstraction
 

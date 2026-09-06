@@ -18,10 +18,9 @@ bls.kick(&mut state, kind, l)?;                             // perturbation + up
 # Ok::<(), optopus::error::OptError>(())
 ```
 
-`descend` and `kick` share the tabu memory of the `SearchState` you hand them —
-the prohibitions the descent writes are the ones the weak perturbations must not
-undo — and `kick` closes the round with the single `update_best` BLS itself
-performs. 
+`descend` and `kick` share the tabu memory of the `SearchState`.
+The prohibitions which the descent writes are the ones the weak perturbations must not
+undo.
 
 `externally_driven` takes `tabu_tenure` **literally**, unlike
 [`new`](../heuristics/breakout_local_search.md#benchmark-config), which reads
