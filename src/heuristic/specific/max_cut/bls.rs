@@ -251,6 +251,10 @@ impl BreakoutLocalSearch {
         let n = state.instance.graph.len();
         state.set_tabu_tenure(self.tabu_tenure);
         state.reserve_tabu_vars(n);
+        // The descent writes the prohibitions the kick reads — Benlic & Hao's
+        // `H <- Iter + gamma` sits inside their descent loop — so recording is
+        // on for both halves of a round.
+        state.start_record_tabu();
     }
 
     /// The first half of one round: greedy descent to a local optimum, writing

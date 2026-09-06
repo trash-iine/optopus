@@ -31,7 +31,7 @@ pub(crate) fn random_flips(l: u64, state: &mut SearchState<'_, MaxCut>) -> Resul
         let neighbor =
             MaxCutFlipNeighbor::random_neighbor(state.instance, &state.solution, &mut state.rng);
 
-        state.apply_move_only_with_tabu(&neighbor)?;
+        state.apply_move_only(&neighbor)?;
     }
     Ok(())
 }
@@ -91,7 +91,7 @@ pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(
             MaxCutSwapNeighbor::new(state.instance, &state.solution, i, j)
         };
 
-        state.apply_move_only_with_tabu(&swap)?;
+        state.apply_move_only(&swap)?;
     }
     Ok(())
 }

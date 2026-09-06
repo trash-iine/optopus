@@ -80,6 +80,7 @@ mod tests {
         let mut state = SearchState::new_with_seed(mc, seed);
         state.set_tabu_tenure(tenure);
         state.reserve_tabu_vars(mc.graph.len());
+        state.start_record_tabu();
         state
     }
 

@@ -25,7 +25,7 @@ pub(crate) fn descent(state: &mut SearchState<'_, MaxCut>) -> Result<(), OptErro
         }
 
         if let Some(best_move) = best_move_option {
-            state.apply_move_only_with_tabu(&best_move)?;
+            state.apply_move_only(&best_move)?;
         } else {
             // The descent only ever takes strictly positive gains, so the
             // point it stops at is the best it passed through: one update

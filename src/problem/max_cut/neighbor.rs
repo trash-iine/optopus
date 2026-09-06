@@ -69,6 +69,12 @@ impl EnabledTabu for MaxCutFlipNeighbor {
 }
 
 impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     /// Applies the flip move: transfers vertex `self.i` to the opposite partition side.
     ///
     /// Updates the solution in-place in O(degree(i)):
@@ -303,6 +309,12 @@ impl EnabledTabu for MaxCutSwapNeighbor {
 }
 
 impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
+    /// Hands this move's [`EnabledTabu`] policy to the search state, which is
+    /// what holds the tabu map.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     /// A swap counts as 2 iterations (one for each vertex flip).
     fn apply_to_iteration(&self, iter: u64) -> u64 {
         iter + 2

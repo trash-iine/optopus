@@ -64,11 +64,16 @@ not required to agree: a VRP relocate asks whether a customer may enter its
 destination route and forbids the route it just left.
 
 A move that leaves `tabu_policy` at its default `None` has no tabu policy at
-all: applying it is fine and records nothing, while `state.record_tabu` and
-`state.require_tabu_policy` report `OptError::Unsupported`. `TabuSearch` calls
-`require_tabu_policy` once per iteration, on the move it is about to apply, so
-a move type that implements `EnabledTabu` and forgets the one-line override
-fails loudly instead of quietly running without a tabu list.
+all: applying it is fine and records nothing, and `state.record_tabu` cannot be
+called with it — that method is bounded on `EnabledTabu`. A move type that
+implements `EnabledTabu` and forgets the one-line override would run here with
+no tabu list and no complaint, so `trait_defs/tabu.rs` pins every built-in move
+against exactly that.
+
+`run_once` calls `state.start_record_tabu()` beside `state.set_tabu_tenure(..)`,
+once per iteration. Recording is off on a fresh state and off in every sub-run,
+so a search whose method *is* the tabu list has to say so — and says so next to
+the loop that depends on it rather than once, somewhere else.
 
 `common::TabuMemory` is the single store, split by `TabuKey` shape — `Var(i)`
 for a dense index, `Pair` and `Triple` for the rest. Two move types over the

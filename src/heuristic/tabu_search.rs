@@ -73,7 +73,11 @@ where
     /// iteration is counted as rejected (with a warning) rather than erroring —
     /// the tabu map will eventually expire entries and unblock the search.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
+        // Both of these are set per iteration rather than once, and next to
+        // each other: this search's method *is* the tabu list, so the state has
+        // to be recording whenever it steps.
         state.set_tabu_tenure(self.tabu_tenure);
+        state.start_record_tabu();
 
         // `max_by(rank_cmp)` returns the last tied-best element — the same move
         // the previous `filter_best(..).pop()` selected — without collecting
@@ -86,11 +90,9 @@ where
             .max_by(rank_cmp);
 
         if let Some(best_move) = best_move {
-            // Recording is this search's own job: `apply` leaves the tabu
-            // memory alone so that heuristics which never read it pay nothing.
-            // `apply_with_tabu` records at the iteration the move was made on,
-            // before the counter advances.
-            state.apply_with_tabu(&best_move)?;
+            // `apply` records it, at the iteration it was made on, because
+            // the mode is on.
+            state.apply(&best_move)?;
         } else {
             tracing::warn!("No best move found");
             state.progress_iteration();
@@ -201,5 +203,32 @@ mod tests {
                 "the tenure is the child's to set"
             );
         }
+    }
+
+    /// The mode is what makes this a tabu search: `apply` writes the memory
+    /// `run_once` reads, and only while the state is recording. Forgetting to
+    /// turn it on is silent — the search keeps running, having stopped writing
+    /// — so this pins that `run_once` turns it on itself rather than trusting
+    /// a caller to have done it.
+    #[test]
+    fn run_once_turns_recording_on_itself() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 5);
+        assert!(
+            !state.is_recording_tabu(),
+            "a fresh state does not record: tabu is opt-in"
+        );
+
+        let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1), (5, 5));
+        ts.run_once(&mut state).unwrap();
+
+        assert!(state.is_recording_tabu(), "run_once must turn recording on");
+        let applied = MaxCutFlipNeighbor {
+            i: (0..mc.graph.len())
+                .find(|&i| !state.tabu_allows(&MaxCutFlipNeighbor { i, gain: 0.0 }))
+                .expect("the move it applied must be recorded"),
+            gain: 0.0,
+        };
+        assert!(!state.tabu_allows(&applied));
     }
 }

@@ -94,16 +94,23 @@ time.
 A move type opts in by implementing [`EnabledTabu`](traits.md#core-trait-reference)
 **and** overriding `MoveToNeighbor::tabu_policy` with `Some(self)` — one line,
 and what hands the policy to the state, which holds it as `&dyn EnabledTabu`.
-Leaving that default in place means the move has **no** tabu policy: `apply`
-still succeeds and simply records nothing, while `record_tabu(&m)` and
-`require_tabu_policy(&m)` report `OptError::Unsupported`. A missing policy is
-therefore an answer at the point a move is applied and an error at the point
-something reaches for the memory: a problem that never wanted tabu still applies
+Leaving that default in place means the move has **no** tabu policy: applying it
+still succeeds and simply records nothing, and `record_tabu(&m)` cannot even be
+called — it is bounded on `EnabledTabu`, so reaching for the memory with a move
+that has none is a compile error. A problem that never wanted tabu still applies
 its moves. Every move type the library ships *does* opt in, so in practice they
 all record — what the default buys is that a new problem can stop at the three
-core traits. `TabuSearch` spends one `require_tabu_policy` per iteration for
-exactly that reason: implementing `EnabledTabu` and forgetting `tabu_policy`
-would otherwise leave it running with no tabu list and no complaint.
+core traits. `trait_defs/tabu.rs` pins every built-in move against implementing
+`EnabledTabu` and forgetting the one-line override, which would otherwise leave
+`TabuSearch` running with no tabu list and no complaint.
+
+Recording is also a **mode**, off by default and off in every sub-run:
+`apply` writes the memory only between `start_record_tabu()` and
+`stop_record_tabu()`. Most searches never read that memory, and writing it costs
+an RNG draw and a store per move. `TabuSearch::run_once` turns it on beside
+`set_tabu_tenure`, per iteration; `BreakoutLocalSearchForMaxCut::prepare` does
+the same for both halves of a round. Setting it far from the loop that depends
+on it is how it gets forgotten, and forgetting it is silent.
 
 What a move forbids is a `TabuKey`: `Var(i)` for a dense index (a variable, a
 vertex, a position), `Pair` and `Triple` for the rest. The shapes are separate
