@@ -99,13 +99,14 @@ cores, three repetitions, minimum taken, timing only `Heuristic::run`):
 
 - **The descent cost 1.15x the time for the same iterations** (1.03x on G63 to
   1.26x on G43, stable to within 0.03 across repetitions, against a machine
-  noise floor of 1.01-1.06). It replaced a scan of `MaxCutSolution`'s optional
-  `positive_gain` index — O(|improving|), which shrinks as the descent
-  approaches its local optimum — with `LocalSearch`'s scan of all `n` flips, so
-  the loss is worst on the small dense instances. `LocalSearch` also spends an
-  iteration detecting the local optimum it has reached, where an empty
-  `positive_gain` index reported the same thing for free, which is 0.4-7.7% of
-  the budget. At a fixed 30s budget the two together are **−41.8 cut points in
+  noise floor of 1.01-1.06). It replaced a scan of an index of the improving
+  flips — O(|improving|), which shrinks as the descent approaches its local
+  optimum — with `LocalSearch`'s scan of all `n` flips, so the loss is worst on
+  the small dense instances. `LocalSearch` also spends an iteration detecting
+  the local optimum it has reached, where an empty index reported the same thing
+  for free, which is 0.4-7.7% of the budget. That index (`MaxCutSolution`'s
+  `positive_gain`) was deleted along with the descent: it was the last reader,
+  and nothing outside the crate could ever read it. At a fixed 30s budget the two together are **−41.8 cut points in
   total** (3 instances better, 5 worse), concentrated on the large sparse
   instances: G81 −22.4, G63 −12.6, G70 −8.6, against G60 +8.0. `lto = "fat"`
   does not change the ratio — the same substitution cost −40.0 before it was

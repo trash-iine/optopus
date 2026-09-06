@@ -275,8 +275,12 @@ impl BreakoutLocalSearch {
         // None, None)` that says the same thing: the two are behaviourally
         // identical — bit-identical solutions on all ten G-set instances of the
         // timing suite — but the all-`None` spelling measured **7% slower**
-        // across every one of them (three repetitions, min taken). The
-        // mechanism was not chased; the number is why this reads oddly.
+        // across every one of them (three repetitions, min taken). A sibling
+        // case was traced all the way down (see `GainIndex`): there an
+        // instruction-for-instruction identical hot function, shifted 4 bytes,
+        // cost 10%, and forcing 64-byte function alignment erased it. This is
+        // very likely the same code-alignment lottery rather than anything
+        // about the condition, but only the number here is measured.
         LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(u64::MAX)).run(state)
     }
 

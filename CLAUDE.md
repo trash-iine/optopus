@@ -73,7 +73,7 @@ src/
 │   ├── epoch_marks.rs        EpochMarks (index set with an O(1) clear, for
 │   │                         neighborhood walks that need a fresh "seen" set per call)
 │   ├── permutation.rs        order_crossover (OX; shared by VRP + HGS)
-│   ├── gain_index.rs         GainIndex (improving-move index)
+│   ├── gain_index.rs         GainIndex (marked-subset index; MaxCut zero_gain only)
 │   └── parse.rs              InstanceLines (file-loader scaffold with FileLoad errors)
 ├── heuristic/
 │   ├── mod.rs                Heuristic trait, StopCondition
@@ -271,7 +271,7 @@ StopCondition::iterations(1_000_000)
 - `TspOrderCrossover` (OX) for TSP; `JobShopPpxCrossover` for JobShop.
 
 ### Problem-specific
-MaxCut has its own directory (`specific/max_cut/`) because its heuristics share *operators* rather than merely a problem type. `ops/` (private to that directory) holds only what the library has **no generic equivalent for**, one module per role, each a **free function over the `SearchState`** (which is where the prohibitions live): `tabu_walk` and `best_swap`. The other two thirds of a BLS round are the generic heuristics — the descent is a `LocalSearch`, the strong perturbation a `RandomWalk`, both driven from `bls.rs` — which works because recording is a mode on the state (`start_record_tabu`), so their `apply` writes the same prohibitions a hand-written operator would. That substitution costs **1.15x at equal iterations** (−41.8 cut points at 30s over 10 G-set instances) and was taken deliberately; `docs/heuristics/breakout_local_search.md` holds the numbers and `src/common/gain_index.rs` records what `positive_gain` was buying. `best_swap` stays because `M2` moves one vertex per partition side in a *single* move, which two independent one-step searches cannot express. `ops` names no kick and has **no dispatcher**: the selection vocabulary lives in `bls.rs` (`PerturbationType`, re-exported as `MaxCutPerturbation`) together with the one match that maps it to an operator, `BreakoutLocalSearch::kick` — the one place that takes the vocabulary from outside. `ops/mod.rs` holds only the `keep_best` tie rule.
+MaxCut has its own directory (`specific/max_cut/`) because its heuristics share *operators* rather than merely a problem type. `ops/` (private to that directory) holds only what the library has **no generic equivalent for**, one module per role, each a **free function over the `SearchState`** (which is where the prohibitions live): `tabu_walk` and `best_swap`. The other two thirds of a BLS round are the generic heuristics — the descent is a `LocalSearch`, the strong perturbation a `RandomWalk`, both driven from `bls.rs` — which works because recording is a mode on the state (`start_record_tabu`), so their `apply` writes the same prohibitions a hand-written operator would. That substitution costs **1.15x at equal iterations** (−41.8 cut points at 30s over 10 G-set instances) and was taken deliberately; `docs/heuristics/breakout_local_search.md` holds the numbers; the improving-move index the descent scanned (`positive_gain`) was deleted with it, since it was the last reader. `best_swap` stays because `M2` moves one vertex per partition side in a *single* move, which two independent one-step searches cannot express. `ops` names no kick and has **no dispatcher**: the selection vocabulary lives in `bls.rs` (`PerturbationType`, re-exported as `MaxCutPerturbation`) together with the one match that maps it to an operator, `BreakoutLocalSearch::kick` — the one place that takes the vocabulary from outside. `ops/mod.rs` holds only the `keep_best` tie rule.
 
 There is deliberately no engine object. What the operators share — with each other and with the generic heuristics BLS drives — is the tabu memory of the `SearchState` they are handed, recorded by `apply` itself and shared between flips and swaps because both key on `TabuKey::Var`. In BLS the entries the descent writes are the ones the weak perturbations must not undo; a caller wanting them isolated runs the phases on separate states. Everything genuinely BLS-specific (the `omega`/`l` schedule, the Benlic & Hao selection rule) stays in `bls.rs`.
 
@@ -292,8 +292,8 @@ Binary solutions all name the assignment vector `x: Vec<bool>`.
 
 | Problem | Direction | Solution | Neighbors | Crossover | Notes |
 |---|---|---|---|---|---|
-| **MaxCut** | Max | `x`, `gain: Vec<f32>`, `objective: f32` | Flip / Swap | Uniform | format: `N M / i j w` (1-indexed); optional `positive_gain` / `zero_gain` indexes (advanced) |
-| **QUBO** | Min | `x`, `gain: Vec<i32>`, `objective: i32` | Flip / Swap | Uniform | `Coefficient = i32`; `SubProblemExtractable` (bias folding); optional `negative_gain` index (advanced) |
+| **MaxCut** | Max | `x`, `gain: Vec<f32>`, `objective: f32` | Flip / Swap | Uniform | format: `N M / i j w` (1-indexed); optional `zero_gain` index (advanced) |
+| **QUBO** | Min | `x`, `gain: Vec<i32>`, `objective: i32` | Flip / Swap | Uniform | `Coefficient = i32`; `SubProblemExtractable` (bias folding) |
 | **MaxSAT** | Max | `x` (0-indexed), `n_satisfied: usize`, `gain: Vec<i64>` | Flip / Swap | Uniform | DIMACS CNF |
 | **TSP 2D** | Min | `tour: Vec<usize>`, `objective: f64` | TwoOpt / Relocate | Order (OX) | TSPLIB (EUC_2D / CEIL_2D / ATT / GEO); lazy distance matrix for `n ≤ 2000` (`DIST_MATRIX_MAX_N`), move gains computed on the fly from it |
 | **VertexCover** | Min | `x`, `gain: Vec<i32>`, `objective` (penalty-augmented), `cover_size`, `uncovered_edges` | Flip / Swap | Uniform | same edge-list format as MaxCut |
@@ -353,9 +353,35 @@ inline in the prose, never as another `**API:**` line. Adding a problem or
 heuristic means adding that one line to the new page too — `--strict` catches a
 wrong path, not a missing line.
 
+## Measuring a change on MaxCut
+
+The MaxCut hot loop is **sensitive to code alignment**, and it has produced
+false conclusions more than once. A semantically identical change — same
+instruction stream, same heap layout — can move BLS by **7-10%** purely by
+shifting `MaxCutFlipNeighbor::apply_to_solution` a few bytes. It was pinned by
+deleting `positive_gain`: padding `MaxCutSolution` back by 8 bytes restored the
+speed exactly (a cliff at one struct size, not a gradient), the disassembly was
+identical bar a 4-byte relocation, and `-C llvm-args=-align-all-functions=6`
+erased the gap. **A timing difference is therefore never on its own evidence
+that a change is better or worse.**
+
+So when A/B-ing anything that touches MaxCut:
+
+- run arms **interleaved**, `num_runs = 1` sequential (parallel runs land on
+  performance and efficiency cores unpredictably), 3 repetitions, take the min;
+  the machine noise floor is about 1.01-1.06
+- compare **solution vectors**, not just objectives — a refactor meant to
+  preserve behaviour must be bit-identical, and that is the real acceptance gate
+- prefer a **fixed iteration budget** over wall clock, so what is compared is
+  the cost of a unit of search
+- before attributing a difference to the design, check whether the instruction
+  streams differ at all (`nm -n` for the symbol, `otool -tV` to diff it)
+- **re-measure the integrated change**, not the patched-in-place arm: they have
+  disagreed by 6% here
+
 ## Key Design Patterns
 
-1. **Gain-based incremental updates** — binary/formula solutions cache per-variable `gain`; applying a move only refreshes the affected neighbors in O(degree). MaxCut and QUBO additionally offer optional `positive_gain` / `negative_gain` indexes (advanced) to enumerate only improving moves — offered for callers writing their own descent, not needed for standard use and no longer read by anything in the library; MaxCut's `zero_gain` is the live one, feeding `PopulationAnnealingForMaxCut`'s cluster moves. TSP instead computes move gains on the fly from the lazily built distance matrix; JobShop re-decodes per candidate (and evaluates candidates with rayon on large instances, order-preserving so results are thread-count independent).
+1. **Gain-based incremental updates** — binary/formula solutions cache per-variable `gain`; applying a move only refreshes the affected neighbors in O(degree). MaxCut additionally offers the optional `zero_gain` index (advanced), which feeds `PopulationAnnealingForMaxCut`'s cluster moves; it is the only such index left, and standard use needs none. Two improving-move indexes (MaxCut's `positive_gain`, QUBO's `negative_gain`) were deleted once nothing read them. TSP instead computes move gains on the fly from the lazily built distance matrix; JobShop re-decodes per candidate (and evaluates candidates with rayon on large instances, order-preserving so results are thread-count independent).
 2. **Sub-run clone/merge** — every meta-heuristic isolates a phase with `clone_for_new_run(kind)` → run it → `update_state(sub)`. The global iteration counter advances monotonically across all phases. There is deliberately no `run_sub` wrapper around the triad: both halves are public, every user-facing doc teaches this form, and a wrapper would have to name `Heuristic`, which `search_state` must not — nothing about cloning and merging a state needs to know what a heuristic is.
 3. **Seeded reproducibility** — all randomness flows through `state.rng` (`SmallRng`); `EnabledTabu::add_to_tabu_map` and `Crossover::crossover` take the RNG explicitly. With `seed` set in the benchmark config, reruns are bit-identical (enforced by e2e tests).
 4. **Tabu abstraction via trait** — `TabuSearch` is generic over `N: EnabledTabu` and owns only the tenure; the prohibitions are the `SearchState`'s one `TabuMemory`, recorded by `apply` itself. Each move type owns its *policy* (which `TabuKey`s it reads and writes) and hands it over with `MoveToNeighbor::tabu_policy`; the storage is shared, which is what makes two move types over the same key shape see each other's entries.

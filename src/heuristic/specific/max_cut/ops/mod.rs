@@ -12,8 +12,8 @@
 //! because the library already has them: the descent is a
 //! [`LocalSearch`](crate::heuristic::LocalSearch) and the strong perturbation
 //! is a [`RandomWalk`](crate::heuristic::RandomWalk), both driven from
-//! [`bls`](super::bls). They used to be an `ops::descent` over the
-//! `positive_gain` index and an `ops::random_flips`; what that bought and what
+//! [`bls`](super::bls). They used to be an `ops::descent` over an
+//! improving-move index and an `ops::random_flips`; what that bought and what
 //! giving it up cost is recorded in
 //! `docs/heuristics/breakout_local_search.md`.
 //!
@@ -104,21 +104,18 @@ mod tests {
     }
 
     /// Property test: after hundreds of mixed perturbations of all three types,
-    /// the incrementally maintained gain vector and both gain indexes must
+    /// the incrementally maintained gain vector and the `zero_gain` index must
     /// agree with a from-scratch recomputation.
     ///
-    /// Neither gain index is read by anything driven here any more — the
-    /// descent is a plain [`LocalSearch`] over the whole neighborhood — so both
-    /// are enabled purely to check that
-    /// [`MaxCutFlipNeighbor::apply_to_solution`](crate::problem::MaxCutFlipNeighbor)
-    /// keeps maintaining them. For `zero_gain`, which
-    /// [`PopulationAnnealing`](super::super::population_annealing::PopulationAnnealing)
-    /// does read, this is the only place that check exists.
+    /// The `zero_gain` index is not read by anything driven here — it is
+    /// maintained for
+    /// [`PopulationAnnealing`](super::super::population_annealing::PopulationAnnealing) —
+    /// so this is the only place its incremental updates are checked against a
+    /// recomputation under these moves.
     #[test]
     fn mixed_perturbations_keep_gains_and_indexes_consistent() {
         let mc = small_instance();
         let mut state = state_with_tabu(&mc, 7, (3, 15));
-        state.solution.enable_positive_gain_index();
         state.solution.enable_zero_gain_index();
 
         let schedule: [Op; 2] = [tabu_walk, best_swap];
@@ -130,7 +127,7 @@ mod tests {
             for op in schedule {
                 op(3, &mut state).unwrap();
             }
-            LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::new(None, None, None))
+            LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(u64::MAX))
                 .run(&mut state)
                 .unwrap();
 
@@ -139,11 +136,6 @@ mod tests {
                 assert_eq!(
                     state.solution.gain[v], expected,
                     "gain[{v}] diverged after round {round}"
-                );
-                assert_eq!(
-                    state.solution.positive_gain.contains(v),
-                    expected > 0.0,
-                    "positive_gain membership of {v} wrong after round {round}"
                 );
                 assert_eq!(
                     state.solution.zero_gain.contains(v),

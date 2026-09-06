@@ -1,28 +1,37 @@
-//! Incrementally maintained index of "improving" variables.
+//! Incrementally maintained index of the variables a predicate currently holds for.
 
 /// **Advanced.** Unordered set of the variables whose cached gain currently
-/// satisfies an *improving* predicate, with O(1) insert/remove via an inverse
-/// position index.
+/// satisfies a caller-supplied predicate, with O(1) insert/remove via an
+/// inverse position index.
 ///
-/// The predicate itself lives at the call site (e.g. `gain > 0` for MaxCut's
-/// `positive_gain`, `gain < 0` for QUBO's `negative_gain`): callers report the
-/// old and new improving status through [`update`](Self::update) and this type
-/// only maintains the membership bookkeeping.
+/// The predicate itself lives at the call site: callers report the old and new
+/// status through [`update`](Self::update) and this type only maintains the
+/// membership bookkeeping.
 ///
 /// Standard heuristics do not need this index; it exists for problem-specific
 /// algorithms that iterate only over a marked subset of the variables, and it
 /// costs one O(1) membership update per gain change once enabled.
 ///
-/// MaxCut's `zero_gain` is the live consumer: it feeds
+/// MaxCut's `zero_gain` is its only consumer: the set of `gain == 0` vertices,
+/// which feeds
 /// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)'s
-/// cluster moves. `positive_gain` and QUBO's `negative_gain` mark the improving
-/// variables and are offered for callers writing their own descent — nothing in
-/// this library reads them any more. Breakout Local Search used to, through an
-/// `ops::descent` that has since been replaced by
-/// [`LocalSearch`](crate::heuristic::LocalSearch): scanning the index instead
-/// of all `n` flips made BLS 1.15x faster at equal iterations, and giving that
-/// up was a deliberate trade recorded in
-/// `docs/heuristics/breakout_local_search.md`.
+/// non-local cluster moves. There were two *improving*-move indexes as well —
+/// MaxCut's `positive_gain` and QUBO's `negative_gain` — and both were removed
+/// once nothing read them: `positive_gain`'s last reader was Breakout Local
+/// Search's own descent, replaced by [`LocalSearch`](crate::heuristic::LocalSearch)
+/// at a measured 1.15x (see `docs/heuristics/breakout_local_search.md`), and
+/// QUBO's never had one. Neither could be read from outside the crate anyway.
+///
+/// Dropping `positive_gain` shrank `MaxCutSolution` from 168 to 112 bytes and
+/// made BLS **8% slower**, which is worth recording because it is *not* a cost
+/// of the deletion. Padding the struct back by any amount from 8 bytes upward
+/// restored the speed exactly (a cliff at one size, not a gradient); the
+/// padding changes no allocation, so the heap layout of the hot arrays is
+/// identical; and `MaxCutFlipNeighbor::apply_to_solution` is the same 396 bytes
+/// of instructions either way, differing only in being placed 4 bytes further
+/// along. Building with `-C llvm-args=-align-all-functions=6` erased the
+/// difference entirely. It is hot-function code alignment, and it can flip on
+/// any unrelated edit — so it is never a reason to keep code.
 #[derive(Debug, Clone, Default)]
 pub struct GainIndex {
     enabled: bool,
@@ -58,7 +67,7 @@ impl GainIndex {
 
     /// Builds the index from the current `gains`, marking it enabled.
     /// If already enabled, this is a no-op. O(n).
-    pub fn enable<T>(&mut self, gains: &[T], improving: impl Fn(&T) -> bool) {
+    pub fn enable<T>(&mut self, gains: &[T], member: impl Fn(&T) -> bool) {
         if self.enabled {
             return;
         }
@@ -66,22 +75,22 @@ impl GainIndex {
         self.members.clear();
         self.pos = vec![-1i32; gains.len()];
         for (v, g) in gains.iter().enumerate() {
-            if improving(g) {
+            if member(g) {
                 self.pos[v] = self.members.len() as i32;
                 self.members.push(v);
             }
         }
     }
 
-    /// Records that variable `v`'s improving status changes from
-    /// `was_improving` to `is_improving`. No-op when the index is not enabled
-    /// or the status is unchanged. O(1).
+    /// Records that variable `v`'s membership changes from `was_member` to
+    /// `is_member`. No-op when the index is not enabled or the status is
+    /// unchanged. O(1).
     #[inline]
-    pub fn update(&mut self, v: usize, was_improving: bool, is_improving: bool) {
-        if !self.enabled || was_improving == is_improving {
+    pub fn update(&mut self, v: usize, was_member: bool, is_member: bool) {
+        if !self.enabled || was_member == is_member {
             return;
         }
-        if is_improving {
+        if is_member {
             self.pos[v] = self.members.len() as i32;
             self.members.push(v);
         } else {
@@ -101,7 +110,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn enable_collects_improving_variables() {
+    fn enable_collects_matching_variables() {
         let mut idx = GainIndex::default();
         assert!(!idx.is_enabled());
         idx.enable(&[1, -2, 3, 0, -5], |&g| g < 0);

@@ -45,15 +45,17 @@ pub struct MaxCut {
 ///
 /// These three fields are all you need to inspect results and build custom logic.
 ///
-/// # Advanced: positive-gain index
+/// # Advanced: zero-gain index
 ///
-/// An optional index tracks which vertices currently have positive gain (i.e. improving
-/// moves). Call [`enable_positive_gain_index`](Self::enable_positive_gain_index) to activate it.
+/// An optional index tracks which vertices currently have a flip gain of exactly
+/// zero — the "plateau" moves. Call
+/// [`enable_zero_gain_index`](Self::enable_zero_gain_index) to activate it.
 /// Standard heuristics ([`LocalSearch`](crate::heuristic::LocalSearch),
 /// [`TabuSearch`](crate::heuristic::TabuSearch),
 /// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing), etc.)
-/// do **not** require this index — it is a performance optimization for problem-specific
-/// algorithms such as [`BreakoutLocalSearchForMaxCut`](crate::heuristic::BreakoutLocalSearchForMaxCut).
+/// do **not** require it — it exists for
+/// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)'s
+/// non-local cluster moves, which are its only consumer.
 ///
 /// # Examples
 ///
@@ -80,10 +82,6 @@ pub struct MaxCutSolution {
     pub gain: Vec<f32>,
     /// The total weight of edges crossing the cut.
     pub objective: f32,
-    /// Advanced: index of vertices `v` with `gain[v] > 0`, maintained
-    /// incrementally once enabled. Not needed for standard heuristic use.
-    /// See [`enable_positive_gain_index`](Self::enable_positive_gain_index).
-    pub(crate) positive_gain: GainIndex,
     /// Advanced: index of vertices `v` with `gain[v] == 0` ("plateau" moves),
     /// maintained incrementally once enabled. Not needed for standard heuristic use.
     /// See [`enable_zero_gain_index`](Self::enable_zero_gain_index).
@@ -131,8 +129,8 @@ impl MaxCutSolution {
     /// Builds a [`MaxCutSolution`] from pre-computed components.
     ///
     /// The resulting solution is fully functional for all standard heuristics.
-    /// The advanced `positive_gain` index is not initialized; see
-    /// [`enable_positive_gain_index`](Self::enable_positive_gain_index) if you need it.
+    /// The advanced `zero_gain` index is not initialized; see
+    /// [`enable_zero_gain_index`](Self::enable_zero_gain_index) if you need it.
     ///
     /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions from
     /// a cut assignment — it computes `gain` and `objective` automatically.
@@ -141,7 +139,6 @@ impl MaxCutSolution {
             x,
             gain,
             objective,
-            positive_gain: GainIndex::default(),
             zero_gain: GainIndex::default(),
         }
     }
@@ -165,42 +162,6 @@ impl MaxCutSolution {
         }
         let objective = mc.calculate_cut_size(&cut);
         Self::new_from_parts(cut, gain, objective)
-    }
-
-    /// **Advanced.** Enables the `positive_gain` index, building it from the current
-    /// `gain` vector.
-    ///
-    /// Most users do **not** need to call this method. Standard heuristics
-    /// ([`LocalSearch`](crate::heuristic::LocalSearch),
-    /// [`TabuSearch`](crate::heuristic::TabuSearch),
-    /// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing), etc.)
-    /// work correctly without it.
-    ///
-    /// This index is useful for problem-specific algorithms that need to
-    /// iterate only over vertices with positive gain, reducing the inner-loop
-    /// cost from O(n) to O(|improving moves|). **Nothing in this library calls
-    /// it any more**: Breakout Local Search did, through an `ops::descent` that
-    /// has since been replaced by [`LocalSearch`](crate::heuristic::LocalSearch).
-    /// It is kept for callers writing their own descent — worth 1.15x on BLS at
-    /// equal iterations, see `docs/heuristics/breakout_local_search.md`.
-    ///
-    /// Once enabled, the index is maintained incrementally by
-    /// [`MaxCutFlipNeighbor::apply_to_solution`](super::MaxCutFlipNeighbor).
-    ///
-    /// If already enabled, this is a no-op. O(n).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use optopus::prelude::*;
-    ///
-    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]);
-    /// let mut state = SearchState::new(&mc);
-    /// state.solution.enable_positive_gain_index();
-    /// // Now positive_gain tracks vertices with gain > 0
-    /// ```
-    pub fn enable_positive_gain_index(&mut self) {
-        self.positive_gain.enable(&self.gain, |&g| g > 0.0);
     }
 
     /// **Advanced.** Enables the `zero_gain` index, building it from the current
@@ -235,18 +196,14 @@ impl MaxCutSolution {
     }
 
     /// Records that vertex `v`'s gain is changing from `self.gain[v]` to `new_gain`.
-    /// Updates membership of `v` in the `positive_gain` and `zero_gain` indexes
-    /// (does **not** write `self.gain[v]` — the caller is expected to do that).
+    /// Updates membership of `v` in the `zero_gain` index (does **not** write
+    /// `self.gain[v]` — the caller is expected to do that).
     ///
-    /// No-op for each index that is not enabled.
+    /// No-op when the index is not enabled.
     #[inline]
-    pub(crate) fn update_gain_memberships(&mut self, v: usize, new_gain: f32) {
+    pub(crate) fn update_zero_gain_membership(&mut self, v: usize, new_gain: f32) {
         // Branch on `is_enabled` here so the gain comparisons are not
         // evaluated at all on the (default) disabled hot path.
-        if self.positive_gain.is_enabled() {
-            self.positive_gain
-                .update(v, self.gain[v] > 0.0, new_gain > 0.0);
-        }
         if self.zero_gain.is_enabled() {
             self.zero_gain
                 .update(v, is_zero_gain(self.gain[v]), is_zero_gain(new_gain));
@@ -511,210 +468,8 @@ mod tests {
         (mc, sol)
     }
 
-    // 1. from_parts() creates a solution with the positive_gain index disabled.
-    #[test]
-    fn test_from_parts_index_disabled_by_default() {
-        let (_mc, sol) = make_triangle_solution();
-        assert!(
-            !sol.positive_gain.is_enabled(),
-            "index should be disabled after from_parts"
-        );
-        assert!(sol.positive_gain.is_empty(), "positive_gain must be empty");
-    }
-
-    // 2. enable_positive_gain_index() correctly builds the index from gain[].
-    //    All-false cut on a unit-weight triangle: gain[v] = 2.0 > 0 for every vertex,
-    //    so all three vertices must appear in positive_gain.
-    #[test]
-    fn test_enable_positive_gain_index_builds_correctly() {
-        let (_mc, mut sol) = make_triangle_solution();
-        sol.enable_positive_gain_index();
-
-        assert!(
-            sol.positive_gain.is_enabled(),
-            "index should be enabled after call"
-        );
-        // All gains are 2.0 > 0, so all three vertices appear.
-        let mut listed = sol.positive_gain.as_slice().to_vec();
-        listed.sort();
-        assert_eq!(
-            listed,
-            vec![0, 1, 2],
-            "all vertices should be in positive_gain"
-        );
-    }
-
-    // Also verify the case where some vertices have non-positive gain.
-    // Triangle, cut = [true, false, false]: gain[0] = -2 (negative), gain[1] = 0 (zero), gain[2] = 0 (zero).
-    // Actually: cut [true, false, false] — edges 0-1 (crossing, w=1) and 0-2 (crossing, w=1) and 1-2 (not crossing, w=1).
-    // gain[0] = -(1+1) = -2  (both edges cross, flipping 0 removes both)
-    // gain[1] = 1 - 1 = 0    (edge 0-1 crosses (+1), edge 1-2 not crossing (-1))
-    // gain[2] = 1 - 1 = 0    (edge 0-2 crosses (+1), edge 1-2 not crossing (-1))
-    // Only vertices with gain > 0 should be in positive_gain; none here.
-    #[test]
-    fn test_enable_positive_gain_index_excludes_non_positive() {
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.add_weight(0, 1, 1.0);
-        mc.graph.add_weight(1, 2, 1.0);
-        mc.graph.add_weight(0, 2, 1.0);
-        let n = mc.graph.len();
-        let cut = vec![true, false, false];
-        let gain: Vec<f32> = (0..n).map(|v| mc.calculate_gain(&cut, v)).collect();
-        let objective = mc.calculate_cut_size(&cut);
-        let mut sol = MaxCutSolution::new_from_parts(cut, gain, objective);
-
-        sol.enable_positive_gain_index();
-
-        // gain[0]=-2, gain[1]=0, gain[2]=0 — none are strictly positive.
-        assert!(
-            sol.positive_gain.is_empty(),
-            "no vertex has gain > 0; positive_gain must be empty"
-        );
-        for v in 0..n {
-            assert!(
-                !sol.positive_gain.contains(v),
-                "vertex {v} must be absent from the index"
-            );
-        }
-    }
-
-    // 3. enable_positive_gain_index() is idempotent: calling it twice must not
-    //    corrupt the index (no duplicates, consistent inverse).
-    #[test]
-    fn test_enable_positive_gain_index_idempotent() {
-        let (_mc, mut sol) = make_triangle_solution();
-        sol.enable_positive_gain_index();
-        let pg_after_first = sol.positive_gain.as_slice().to_vec();
-
-        sol.enable_positive_gain_index();
-
-        assert_eq!(
-            sol.positive_gain.as_slice(),
-            pg_after_first,
-            "second call must not change positive_gain"
-        );
-    }
-
-    // 4. update_gain_memberships() is a no-op when the index is disabled.
-    #[test]
-    fn test_update_gain_memberships_noop_when_disabled() {
-        let (_mc, mut sol) = make_triangle_solution();
-        // Index not enabled; calling the update must not populate it.
-        sol.update_gain_memberships(0, 5.0);
-        assert!(
-            sol.positive_gain.is_empty(),
-            "positive_gain must stay empty when index is disabled"
-        );
-    }
-
-    // 5. After enabling, update_gain_memberships() correctly maintains
-    //    the index through manual gain changes that simulate a flip:
-    //    move vertex 0 from positive_gain to absent (new_gain <= 0),
-    //    and then back to positive (new_gain > 0).
-    #[test]
-    fn test_update_gain_memberships_maintains_index() {
-        let (_mc, mut sol) = make_triangle_solution();
-        // Enable: all three vertices are in positive_gain (gain = 2.0 each).
-        sol.enable_positive_gain_index();
-        assert_eq!(sol.positive_gain.len(), 3);
-
-        // Simulate: vertex 0's gain changes to -1.0 (negative → should leave the index).
-        sol.update_gain_memberships(0, -1.0);
-        sol.gain[0] = -1.0;
-        assert!(
-            !sol.positive_gain.contains(0),
-            "vertex 0 must leave positive_gain when gain becomes negative"
-        );
-        assert_eq!(sol.positive_gain.len(), 2);
-
-        // Simulate: vertex 0's gain changes back to 3.0 (should re-enter the index).
-        sol.update_gain_memberships(0, 3.0);
-        sol.gain[0] = 3.0;
-        assert!(
-            sol.positive_gain.contains(0),
-            "vertex 0 must re-enter positive_gain when gain becomes positive"
-        );
-        assert_eq!(sol.positive_gain.len(), 3);
-    }
-
-    // 5b. Verify that the positive_gain index stays consistent after applying a real
-    //     flip move through the neighbor machinery (uses MaxCutFlipNeighbor).
-    //     Triangle, all-false: flip vertex 1 (gain=2.0). After the flip:
-    //     cut = [F, T, F], objective = 2.0.
-    //     New gains: gain[1] = -2.0, gain[0] = 0.0, gain[2] = 0.0.
-    //     None are strictly positive → positive_gain must be empty.
-    #[test]
-    fn test_positive_gain_index_consistent_after_flip() {
-        use crate::problem::max_cut::MaxCutFlipNeighbor;
-        use crate::search_state::MoveToNeighbor;
-
-        let (mc, mut sol) = make_triangle_solution();
-        sol.enable_positive_gain_index();
-        assert_eq!(
-            sol.positive_gain.len(),
-            3,
-            "all vertices start as improving"
-        );
-
-        let flip = MaxCutFlipNeighbor {
-            i: 1,
-            gain: sol.gain[1],
-        };
-        flip.apply_to_solution(&mc, &mut sol).unwrap();
-
-        // After flipping vertex 1: gain[1] = -2.0, gain[0] = 0.0, gain[2] = 0.0.
-        // None strictly positive → index must be empty.
-        assert!(
-            sol.positive_gain.is_empty(),
-            "positive_gain must be empty after flip makes all gains non-positive"
-        );
-        for v in 0..sol.gain.len() {
-            assert!(
-                !sol.positive_gain.contains(v),
-                "vertex {v} must be absent when index is empty"
-            );
-        }
-    }
-
-    // 6. Clone of an enabled solution preserves the enabled state and the
-    //    index content intact.
-    #[test]
-    fn test_clone_preserves_positive_gain_index() {
-        let (_mc, mut sol) = make_triangle_solution();
-        sol.enable_positive_gain_index();
-
-        let cloned = sol.clone();
-
-        assert!(
-            cloned.positive_gain.is_enabled(),
-            "clone must inherit the enabled index"
-        );
-        let mut orig_sorted = sol.positive_gain.as_slice().to_vec();
-        orig_sorted.sort();
-        let mut clone_sorted = cloned.positive_gain.as_slice().to_vec();
-        clone_sorted.sort();
-        assert_eq!(
-            orig_sorted, clone_sorted,
-            "clone must have the same positive_gain contents"
-        );
-    }
-
-    // 6b. Clone of a disabled solution preserves the disabled state.
-    #[test]
-    fn test_clone_preserves_disabled_state() {
-        let (_mc, sol) = make_triangle_solution();
-        assert!(!sol.positive_gain.is_enabled());
-
-        let cloned = sol.clone();
-        assert!(
-            !cloned.positive_gain.is_enabled(),
-            "clone must preserve the disabled index"
-        );
-        assert!(cloned.positive_gain.is_empty());
-    }
-
     // ---------------------------------------------------------------------------
-    // zero_gain index tests (mirror the positive_gain battery above)
+    // zero_gain index tests
     // ---------------------------------------------------------------------------
 
     // zero_gain is disabled by default and stays empty.
@@ -728,7 +483,6 @@ mod tests {
 
     // enable_zero_gain_index() collects exactly the vertices with gain == 0.
     // Triangle, cut = [true, false, false]: gain[0] = -2, gain[1] = 0, gain[2] = 0
-    // (same arithmetic as test_enable_positive_gain_index_excludes_non_positive).
     #[test]
     fn test_enable_zero_gain_index_builds_correctly() {
         let mut mc = MaxCut::new(Graph::new());
@@ -761,23 +515,23 @@ mod tests {
         assert_eq!(sol.zero_gain.as_slice(), after_first);
     }
 
-    // update_gain_memberships() keeps zero_gain consistent through manual
+    // update_zero_gain_membership() keeps zero_gain consistent through manual
     // gain transitions: zero → non-zero → zero.
     #[test]
-    fn test_update_gain_memberships_maintains_zero_gain() {
+    fn test_update_zero_gain_membership_maintains_index() {
         let (_mc, mut sol) = make_triangle_solution();
         // All-false triangle: every gain is 2.0 → zero_gain starts empty.
         sol.enable_zero_gain_index();
         assert!(sol.zero_gain.is_empty());
 
         // Vertex 0's gain becomes 0.0 → joins zero_gain.
-        sol.update_gain_memberships(0, 0.0);
+        sol.update_zero_gain_membership(0, 0.0);
         sol.gain[0] = 0.0;
         assert!(sol.zero_gain.contains(0));
         assert_eq!(sol.zero_gain_count(), 1);
 
         // Vertex 0's gain becomes -2.0 → leaves zero_gain.
-        sol.update_gain_memberships(0, -2.0);
+        sol.update_zero_gain_membership(0, -2.0);
         sol.gain[0] = -2.0;
         assert!(!sol.zero_gain.contains(0));
         assert!(sol.zero_gain.is_empty());
@@ -871,11 +625,11 @@ mod tests {
         assert_eq!(orig, copy);
     }
 
-    // update_gain_memberships() must not populate a disabled zero_gain index.
+    // update_zero_gain_membership() must not populate a disabled zero_gain index.
     #[test]
-    fn test_update_gain_memberships_zero_gain_noop_when_disabled() {
+    fn test_update_zero_gain_membership_noop_when_disabled() {
         let (_mc, mut sol) = make_triangle_solution();
-        sol.update_gain_memberships(0, 0.0);
+        sol.update_zero_gain_membership(0, 0.0);
         assert!(sol.zero_gain.is_empty());
     }
 
