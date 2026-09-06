@@ -135,11 +135,11 @@ the sweep showed for each parameter it bakes in; see
 
 ## Notes
 
-- `MaxCutSolution`'s optional `positive_gain` / `zero_gain` indexes power
-  [Breakout Local Search](../heuristics/breakout_local_search.md) (and the
-  [learned-policy controller](../guide/learned_perturbation.md) built on it) and
-  [Population Annealing](../heuristics/population_annealing.md); standard
-  heuristics need neither. See
+- `MaxCutSolution`'s optional `zero_gain` index powers
+  [Population Annealing](../heuristics/population_annealing.md)'s cluster moves.
+  `positive_gain` marks the improving flips and is offered for callers writing
+  their own descent — [Breakout Local Search](../heuristics/breakout_local_search.md)
+  used to read it and no longer does. Standard heuristics need neither. See
   [`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html)
   rustdoc for the implementation details.
 

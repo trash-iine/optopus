@@ -18,9 +18,10 @@
 /// cluster moves. `positive_gain` and QUBO's `negative_gain` mark the improving
 /// variables and are offered for callers writing their own descent — nothing in
 /// this library reads them any more. Breakout Local Search used to, through an
-/// `ops::descent` that has since been folded into
-/// [`LocalSearch`](crate::heuristic::LocalSearch); the index made that descent
-/// 1.8-2.3x faster, and giving it up was a deliberate trade recorded in
+/// `ops::descent` that has since been replaced by
+/// [`LocalSearch`](crate::heuristic::LocalSearch): scanning the index instead
+/// of all `n` flips made BLS 1.15x faster at equal iterations, and giving that
+/// up was a deliberate trade recorded in
 /// `docs/heuristics/breakout_local_search.md`.
 #[derive(Debug, Clone, Default)]
 pub struct GainIndex {

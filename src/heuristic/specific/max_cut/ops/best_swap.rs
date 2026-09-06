@@ -1,6 +1,13 @@
-//! Two of the three kicks a heuristic can run once the descent has nothing
-//! left: the random one and the directed swap. The third — the tabu walk — is
-//! a walk in its own right and lives in [`tabu_walk`](super::tabu_walk).
+//! The directed swap kick — Benlic & Hao's `A2`.
+//!
+//! It is the one perturbation with no generic equivalent in this library: `M2`
+//! moves one vertex per partition side *in a single move*, and a pair of
+//! independent one-step searches cannot express that (they succeed or fail
+//! separately, so a side with nothing eligible leaves the other vertex moved on
+//! its own — pinned by the last test below). The other two kicks are generic
+//! heuristics, driven from [`kick`](super::super::bls::BreakoutLocalSearch::kick):
+//! the strong one is a [`RandomWalk`](crate::heuristic::RandomWalk) and the weak
+//! flip is [`tabu_walk`](super::tabu_walk).
 
 use super::keep_best;
 use crate::error::OptError;
@@ -8,33 +15,6 @@ use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::SearchState;
 use crate::trait_defs::MoveToNeighbor;
-
-/// Applies `l` random flip moves (the paper's *strong* perturbation).
-///
-/// Skips `update_best` per move; the caller updates best after the phase.
-///
-/// On a graph with no edged vertices (e.g. an empty sub-MaxCut extracted by
-/// [`SubProblemBasedCrossover`](crate::heuristic::SubProblemBasedCrossover)
-/// when the parents disagree only on an independent set) there is nothing to
-/// flip, so this just advances the iteration counter — mirroring how
-/// [`tabu_walk`](super::tabu_walk::tabu_walk) progresses when it finds no move
-/// — so the outer stop condition
-/// still terminates instead of the sampler panicking on an empty range.
-pub(crate) fn random_flips(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
-    if state.instance.graph.vertices.is_empty() {
-        for _ in 0..l {
-            state.progress_iteration();
-        }
-        return Ok(());
-    }
-    for _ in 0..l {
-        let neighbor =
-            MaxCutFlipNeighbor::random_neighbor(state.instance, &state.solution, &mut state.rng);
-
-        state.apply_move_only(&neighbor)?;
-    }
-    Ok(())
-}
 
 /// Applies `l` swap moves guided by the state's tabu memory (the paper's
 /// *weak swap*).
@@ -100,20 +80,6 @@ pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(
 mod tests {
     use super::super::tests::state_with_tabu;
     use super::*;
-
-    /// On a graph with no edged vertices — as produced by
-    /// `SubProblemBasedCrossover` when the two parents disagree only on an
-    /// independent set — the random-flip kick must advance iterations without
-    /// panicking (`random_neighbor` samples an empty range).
-    #[test]
-    fn random_flips_progress_on_an_edgeless_graph() {
-        let mc = MaxCut::new(crate::common::Graph::new());
-        let mut state = state_with_tabu(&mc, 0, (3, 15));
-
-        let before = state.iteration;
-        random_flips(5, &mut state).unwrap();
-        assert_eq!(state.iteration - before, 5);
-    }
 
     /// A swap moves one vertex per side, so it must leave the partition sizes
     /// untouched — that is the whole reason `M2` exists next to the flips.

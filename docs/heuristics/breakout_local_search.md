@@ -3,13 +3,16 @@
 **API:** [`BreakoutLocalSearchForMaxCut`](../api/optopus/heuristic/struct.BreakoutLocalSearchForMaxCut.html)
 
 Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Alternates a
-greedy local search phase with an adaptive perturbation phase, using the
-optional `positive_gain` index on `MaxCutSolution` to enumerate only improving
-flips in O(|improving|). The descent, the tabu walk and the perturbations it
-drives are free functions in `src/heuristic/specific/max_cut/ops/`, shared with
-the other MaxCut heuristics; what is BLS's own is the schedule below. All of
-them record into — and read — the tabu memory on the `SearchState` they are
-handed, which is what stops a perturbation undoing the descent that just ran.
+greedy local search phase with an adaptive perturbation phase. What is BLS's own
+is the schedule below: two of the three things a round does are the library's
+generic heuristics — the descent is a [`LocalSearch`](local_search.md) and the
+strong perturbation a [`RandomWalk`](random_walk.md) — and only the two
+directed perturbations are free functions in
+`src/heuristic/specific/max_cut/ops/`, shared with the other MaxCut heuristics.
+All of them record into — and read — the tabu memory on the `SearchState` they
+are handed, which is what stops a perturbation undoing the descent that just
+ran; the generic two do it through `apply` on a state BLS has switched into
+recording mode.
 
 ## Example
 
@@ -72,17 +75,61 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
   bound does not reproduce it — the whole range has to scale.
 - **No bucket sort.** The original buckets vertices by gain, so selecting a
   maximum-gain move is O(1) and a move costs only the O(degree(v)) rebucketing
-  its gain update already implies. Here selection is a linear scan: the descent
-  narrows it with the optional `positive_gain` index on `MaxCutSolution`, so it
-  costs O(|{v : gain(v) > 0}|) per move — bounded by n, and shrinking as the
-  descent approaches a local optimum — while the tabu walk and the weak swap
-  scan **all n** flip neighbours per move, O(n). The gain update itself is
-  O(degree(v)). The same move is selected either way, so this costs
-  only speed.
+  its gain update already implies. Here every selection is a linear scan over
+  **all n** flip neighbours, O(n) per move — the descent included, since it is
+  a plain `LocalSearch` (see [below](#why-two-thirds-of-a-round-are-generic-heuristics)).
+  The gain update itself is O(degree(v)). The same move is selected either way,
+  so this costs only speed.
 - **A swap advances the iteration counter by 2**
   (`MaxCutSwapNeighbor::apply_to_iteration`), where BLS counts every move as
   one. That `+2` is a library-wide convention shared by every binary problem's
   swap, so it is not changed here for one heuristic's sake.
+
+## Why two thirds of a round are generic heuristics
+
+The descent and the strong perturbation are `LocalSearch` and `RandomWalk`
+rather than hand-written operators. They select the same moves a dedicated
+operator would, and — since recording became a mode on the `SearchState` that
+`prepare` arms — their `apply` writes the same prohibitions, so Benlic & Hao's
+`H <- Iter + gamma` inside the descent loop holds either way. **This is not
+free, and the price was measured before it was paid**, on
+G1/G11/G22/G32/G43/G55/G60/G63/G70/G81 under a fixed iteration budget (one run
+per instance, run sequentially so that parallel runs cannot land on efficiency
+cores, three repetitions, minimum taken, timing only `Heuristic::run`):
+
+- **The descent cost 1.15x the time for the same iterations** (1.03x on G63 to
+  1.26x on G43, stable to within 0.03 across repetitions, against a machine
+  noise floor of 1.01-1.06). It replaced a scan of `MaxCutSolution`'s optional
+  `positive_gain` index — O(|improving|), which shrinks as the descent
+  approaches its local optimum — with `LocalSearch`'s scan of all `n` flips, so
+  the loss is worst on the small dense instances. `LocalSearch` also spends an
+  iteration detecting the local optimum it has reached, where an empty
+  `positive_gain` index reported the same thing for free, which is 0.4-7.7% of
+  the budget. At a fixed 30s budget the two together are **−41.8 cut points in
+  total** (3 instances better, 5 worse), concentrated on the large sparse
+  instances: G81 −22.4, G63 −12.6, G70 −8.6, against G60 +8.0. `lto = "fat"`
+  does not change the ratio — the same substitution cost −40.0 before it was
+  enabled — because what is being paid for is the scan.
+- **The strong perturbation cost 1-3%** and nothing else: at a fixed budget
+  `RandomWalk` applies the same number of moves and reaches a **bit-identical
+  best solution on all ten instances**. The overhead is one `Result`-returning
+  `random_neighbor` call and a per-move `update_best` that `apply_move_only`
+  deferred.
+
+Reversing either one is a speed-only change; nothing about the schedule or the
+tabu memory depends on which side of this line an operator sits.
+
+One warning for anyone tidying `descend`: it hands `LocalSearch` an unreachable
+iteration cap rather than the `StopCondition::new(None, None, None)` that says
+the same thing, because the all-`None` spelling measured **7% slower** on every
+instance of the timing suite while producing bit-identical solutions. Both
+spellings leave `no_best_move` as the only thing that ends the run, so the
+difference is in code generation, not in the search.
+
+The weak swap stays a hand-written operator because it is not expressible as a
+generic search at all: `M2` moves one vertex per partition side **in a single
+move**, and a pair of one-step searches succeed or fail independently, so a side
+with nothing eligible leaves the other vertex moved on its own.
 
 ## Constructor
 

@@ -1,12 +1,21 @@
-//! The vertex-level search operators for MaxCut, shared by every heuristic in
-//! this directory.
+//! The vertex-level search operators for MaxCut that have no generic
+//! equivalent in this library, shared by every heuristic in this directory.
 //!
-//! Each operator is a free function over a [`SearchState`](crate::search_state::SearchState),
-//! one module per role: [`descent`] walks downhill, [`tabu_walk`] walks through
-//! local optima, and [`perturbation`] kicks. They are independent — none calls
-//! into another — and what they share is the state's own tabu memory, recorded
-//! by [`apply`](crate::search_state::SearchState::apply) itself rather than by
-//! each operator.
+//! Each is a free function over a [`SearchState`](crate::search_state::SearchState),
+//! one module per role: [`tabu_walk`] walks through local optima and
+//! [`best_swap`] moves one vertex per partition side. They are independent —
+//! neither calls into the other — and what they share is the state's own tabu
+//! memory, recorded by [`apply`](crate::search_state::SearchState::apply)
+//! itself rather than by each operator.
+//!
+//! The other two halves of a Breakout Local Search round are **not** here,
+//! because the library already has them: the descent is a
+//! [`LocalSearch`](crate::heuristic::LocalSearch) and the strong perturbation
+//! is a [`RandomWalk`](crate::heuristic::RandomWalk), both driven from
+//! [`bls`](super::bls). They used to be an `ops::descent` over the
+//! `positive_gain` index and an `ops::random_flips`; what that bought and what
+//! giving it up cost is recorded in
+//! `docs/heuristics/breakout_local_search.md`.
 //!
 //! That sharing is the point, and it is automatic here: a
 //! [`TabuMemory`](crate::common::TabuMemory) keys its slots by the *shape* of a
@@ -28,12 +37,10 @@
 //! [`TabuSearch`](crate::heuristic::TabuSearch) over the same neighborhood
 //! would; they only decide *which* moves to try.
 
-mod descent;
-mod perturbation;
+mod best_swap;
 mod tabu_walk;
 
-pub(super) use descent::descent;
-pub(super) use perturbation::{best_swap, random_flips};
+pub(super) use best_swap::best_swap;
 pub(super) use tabu_walk::tabu_walk;
 
 use crate::problem::max_cut::MaxCutFlipNeighbor;
@@ -63,6 +70,7 @@ fn keep_best(slot: &mut Option<MaxCutFlipNeighbor>, candidate: MaxCutFlipNeighbo
 mod tests {
     use super::*;
     use crate::error::OptError;
+    use crate::heuristic::{Heuristic, LocalSearch, RandomWalk, StopCondition};
     use crate::problem::MaxCut;
     use crate::search_state::SearchState;
 
@@ -99,11 +107,13 @@ mod tests {
     /// the incrementally maintained gain vector and both gain indexes must
     /// agree with a from-scratch recomputation.
     ///
-    /// The `zero_gain` index is not read by any operator here — it is
-    /// maintained for
-    /// [`PopulationAnnealing`](super::super::population_annealing::PopulationAnnealing) —
-    /// so this is the only place its incremental updates are checked against a
-    /// recomputation under these moves.
+    /// Neither gain index is read by anything driven here any more — the
+    /// descent is a plain [`LocalSearch`] over the whole neighborhood — so both
+    /// are enabled purely to check that
+    /// [`MaxCutFlipNeighbor::apply_to_solution`](crate::problem::MaxCutFlipNeighbor)
+    /// keeps maintaining them. For `zero_gain`, which
+    /// [`PopulationAnnealing`](super::super::population_annealing::PopulationAnnealing)
+    /// does read, this is the only place that check exists.
     #[test]
     fn mixed_perturbations_keep_gains_and_indexes_consistent() {
         let mc = small_instance();
@@ -111,12 +121,18 @@ mod tests {
         state.solution.enable_positive_gain_index();
         state.solution.enable_zero_gain_index();
 
-        let schedule: [Op; 3] = [random_flips, tabu_walk, best_swap];
+        let schedule: [Op; 2] = [tabu_walk, best_swap];
         for round in 0..60 {
+            let budget = state.iterations_this_run() + 3;
+            RandomWalk::<MaxCutFlipNeighbor>::new(StopCondition::iterations(budget))
+                .run(&mut state)
+                .unwrap();
             for op in schedule {
                 op(3, &mut state).unwrap();
             }
-            descent(&mut state).unwrap();
+            LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::new(None, None, None))
+                .run(&mut state)
+                .unwrap();
 
             for v in 0..state.solution.x.len() {
                 let expected = mc.calculate_gain(&state.solution.x, v);

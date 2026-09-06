@@ -32,16 +32,17 @@ pub struct LocalSearch<N> {
 
 impl<N> LocalSearch<N> {
     /// Create a new [`LocalSearch`] with the given stopping condition.
+    ///
+    /// The condition is taken as given. Reaching a local optimum already ends
+    /// the run through [`is_done`](Heuristic::is_done), so nothing here has to
+    /// be set for that: this used to force an unset `max_failed_update` to
+    /// `Some(1)`, which was redundant on a cold start — every move a descent
+    /// applies is strictly improving, so it also improves the best and leaves
+    /// `iteration - best_iteration` at 0 — and wrong on a warm start, where a
+    /// state whose `best_solution` already beats its `solution` returned
+    /// without taking a single move. Breakout Local Search descends from
+    /// exactly there, right after a perturbation.
     pub fn new(stop_condition: StopCondition) -> Self {
-        let mut stop_condition = stop_condition;
-        if let Some(max_failed_update) = stop_condition.max_failed_update {
-            if max_failed_update != 1 {
-                tracing::warn!("StopCondition.max_failed_update should be `Some(1)`.");
-            }
-        } else {
-            stop_condition.max_failed_update = Some(1);
-        }
-
         Self {
             stop_condition,
             _neighbor: std::marker::PhantomData,
@@ -124,6 +125,40 @@ mod tests {
         let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1_000));
         ls.run(&mut state).unwrap();
         assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
+    }
+
+    /// A run that starts below the global best must still descend.
+    ///
+    /// This is the case `new` used to break by forcing `max_failed_update` to
+    /// `Some(1)`: `iteration - best_iteration` is already past 1 before the
+    /// first move, so `run` returned having applied none. Breakout Local
+    /// Search's descent starts in exactly this state, right after a kick.
+    #[test]
+    fn local_search_descends_from_a_warm_start_below_the_best() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1_000));
+        ls.run(&mut state).unwrap();
+
+        // Step off the local optimum without publishing the step, so that
+        // `best_solution` strictly beats `solution`.
+        let worsening = (0..state.solution.x.len())
+            .map(|v| MaxCutFlipNeighbor::new(&mc, &state.solution, v))
+            .min_by(|a, b| a.gain.total_cmp(&b.gain))
+            .unwrap();
+        assert!(
+            worsening.gain < 0.0,
+            "the local optimum must admit a strictly worsening flip"
+        );
+        state.apply_move_only(&worsening).unwrap();
+        assert!(state.best_solution.is_better_than(&state.solution));
+
+        let accepted_before = state.n_accepted;
+        ls.run(&mut state).unwrap();
+        assert!(
+            state.n_accepted > accepted_before,
+            "a warm start must descend, not return on the first check"
+        );
     }
 
     #[test]

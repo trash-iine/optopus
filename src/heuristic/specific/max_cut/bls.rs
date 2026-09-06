@@ -1,7 +1,7 @@
 use super::ops;
 use crate::error::OptError;
-use crate::heuristic::{Heuristic, StopCondition};
-use crate::problem::MaxCut;
+use crate::heuristic::{Heuristic, LocalSearch, RandomWalk, StopCondition};
+use crate::problem::{MaxCut, MaxCutFlipNeighbor};
 use crate::search_state::SearchState;
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -33,10 +33,10 @@ pub enum PerturbationType {
 ///   one. `p` decays toward `p0` as `omega` grows, so the random perturbation
 ///   becomes steadily more likely the longer the best solution stands.
 ///
-/// This selection rule is specific to [`BreakoutLocalSearch`]; the operators it
-/// chooses between are the free functions in [`ops`](super::ops), and the other
-/// heuristics in this directory drive those same operators from their own
-/// schedules.
+/// This selection rule is specific to [`BreakoutLocalSearch`]. What it chooses
+/// between is two free functions in [`ops`](super::ops) — which the other
+/// heuristics in this directory drive from their own schedules — and, for the
+/// strong one, a plain [`RandomWalk`].
 fn choose_perturbation(
     omega: &mut u64,
     t: u64,
@@ -263,9 +263,21 @@ impl BreakoutLocalSearch {
     /// controller other than the paper's schedule has to act — a learned
     /// policy observes the local optimum it landed on before choosing the next
     /// kick.
+    ///
+    /// The descent is the library's own [`LocalSearch`]: it selects the same
+    /// move — the best strictly improving flip — and, because recording is a
+    /// mode on the state that this method turns on, its `apply`
+    /// writes the prohibitions the kick then reads. What ends this run is the
+    /// local optimum, reported by `LocalSearch` itself, not the budget.
     pub fn descend(&mut self, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
         self.prepare(state);
-        ops::descent(state)
+        // An unreachable iteration cap rather than the `StopCondition::new(None,
+        // None, None)` that says the same thing: the two are behaviourally
+        // identical — bit-identical solutions on all ten G-set instances of the
+        // timing suite — but the all-`None` spelling measured **7% slower**
+        // across every one of them (three repetitions, min taken). The
+        // mechanism was not chased; the number is why this reads oddly.
+        LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(u64::MAX)).run(state)
     }
 
     /// The second half of one round: one perturbation of type `perturbation`
@@ -276,6 +288,15 @@ impl BreakoutLocalSearch {
     /// an operator: the operators define what each one does and leave the
     /// naming to whoever takes the vocabulary from outside, which is this
     /// method.
+    ///
+    /// The strong kick is the library's own [`RandomWalk`], budgeted to `l`
+    /// further iterations of this run. Only the empty-graph case is handled
+    /// here rather than by the walk: `SubProblemBasedCrossover` builds an
+    /// edgeless sub-MaxCut when the parents disagree only on an independent
+    /// set, and there `MaxCutFlipNeighbor`'s sampler has an empty range to draw
+    /// from — so the counter is advanced directly, exactly as the tabu walk
+    /// does when it finds no move, and the outer stop condition still
+    /// terminates.
     pub fn kick(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
@@ -284,7 +305,17 @@ impl BreakoutLocalSearch {
     ) -> Result<(), OptError> {
         self.prepare(state);
         match perturbation {
-            PerturbationType::Strong => ops::random_flips(l, state)?,
+            PerturbationType::Strong => {
+                if state.instance.graph.vertices.is_empty() {
+                    for _ in 0..l {
+                        state.progress_iteration();
+                    }
+                } else {
+                    let budget = state.iterations_this_run() + l;
+                    RandomWalk::<MaxCutFlipNeighbor>::new(StopCondition::iterations(budget))
+                        .run(state)?;
+                }
+            }
             PerturbationType::WeakFlip => ops::tabu_walk(l, state)?,
             PerturbationType::WeakSwap => ops::best_swap(l, state)?,
         }
@@ -367,6 +398,71 @@ mod tests {
             edges.push((i, (i + 2) % n, 1.0));
         }
         MaxCut::from_edges(edges)
+    }
+
+    /// The descent must stop exactly at a local optimum — no vertex left with a
+    /// positive flip gain — and leave the vertices it moved behind in the
+    /// state's tabu memory, which is what stops the following perturbation
+    /// undoing it.
+    ///
+    /// That second half is the whole reason the descent can be a generic
+    /// [`LocalSearch`] at all: it never touches the tabu memory itself, and
+    /// what fills it is `apply` on a state `descend` has switched into
+    /// recording mode.
+    #[test]
+    fn the_descent_reaches_a_local_optimum_and_fills_the_tabu_memory() {
+        let mc = small_instance();
+        let mut state = SearchState::new_with_seed(&mc, 3);
+        let mut bls = BreakoutLocalSearch::new(
+            StopCondition::iterations(1_000),
+            (3, 15),
+            1_000,
+            5,
+            0.8,
+            0.5,
+        );
+
+        let before = state.solution.objective;
+        bls.descend(&mut state).unwrap();
+
+        assert!(state.solution.objective >= before, "descent must not lose");
+        for v in 0..state.solution.x.len() {
+            assert!(
+                mc.calculate_gain(&state.solution.x, v) <= 0.0,
+                "vertex {v} still improves, so this is not a local optimum"
+            );
+        }
+        assert!(
+            (0..state.solution.x.len())
+                .any(|v| { !state.tabu_allows(&MaxCutFlipNeighbor::new(&mc, &state.solution, v)) }),
+            "the moves it applied must be recorded"
+        );
+        assert_eq!(
+            state.best_solution.objective, state.solution.objective,
+            "the local optimum has to be published before returning"
+        );
+    }
+
+    /// On a graph with no edged vertices — as produced by
+    /// `SubProblemBasedCrossover` when the two parents disagree only on an
+    /// independent set — the strong kick must advance iterations without
+    /// panicking, because `RandomWalk` would draw from an empty range.
+    #[test]
+    fn the_strong_kick_progresses_on_an_edgeless_graph() {
+        let mc = MaxCut::new(crate::common::Graph::new());
+        let mut state = SearchState::new_with_seed(&mc, 0);
+        let mut bls = BreakoutLocalSearch::new(
+            StopCondition::iterations(1_000),
+            (3, 15),
+            1_000,
+            5,
+            0.8,
+            0.5,
+        );
+
+        let before = state.iteration;
+        bls.kick(&mut state, PerturbationType::Strong, 5).unwrap();
+        assert_eq!(state.iteration - before, 5);
     }
 
     /// Regression test: BLS must run to completion without erroring.
