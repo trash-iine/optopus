@@ -4,15 +4,14 @@
 
 Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Alternates a
 greedy local search phase with an adaptive perturbation phase. What is BLS's own
-is the schedule below: two of the three things a round does are the library's
-generic heuristics — the descent is a [`LocalSearch`](local_search.md) and the
-strong perturbation a [`RandomWalk`](random_walk.md) — and only the two
-directed perturbations are free functions in
-`src/heuristic/specific/max_cut/ops/`, shared with the other MaxCut heuristics.
-All of them record into — and read — the tabu memory on the `SearchState` they
-are handed, which is what stops a perturbation undoing the descent that just
-ran; the generic two do it through `apply` on a state BLS has switched into
-recording mode.
+is the schedule below: three of the four things a round does are the library's
+generic heuristics — the descent is a [`LocalSearch`](local_search.md), the
+strong perturbation a [`RandomWalk`](random_walk.md) and the weak flip a
+[`TabuSearch`](tabu_search.md) — and only the weak swap is a hand-written
+operator (`src/heuristic/specific/max_cut/best_swap.rs`). All of them record
+into — and read — the tabu memory on the `SearchState` they are handed, which is
+what stops a perturbation undoing the descent that just ran; the generic three
+do it through `apply` on a state BLS has switched into recording mode.
 
 ## Example
 
@@ -77,7 +76,7 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
   maximum-gain move is O(1) and a move costs only the O(degree(v)) rebucketing
   its gain update already implies. Here every selection is a linear scan over
   **all n** flip neighbours, O(n) per move — the descent included, since it is
-  a plain `LocalSearch` (see [below](#why-two-thirds-of-a-round-are-generic-heuristics)).
+  a plain `LocalSearch` (see [below](#why-three-quarters-of-a-round-are-generic-heuristics)).
   The gain update itself is O(degree(v)). The same move is selected either way,
   so this costs only speed.
 - **A swap advances the iteration counter by 2**
@@ -85,10 +84,10 @@ G22 / G27 / G33 / G35 / G39 at one tenth of their budget, five runs each.
   one. That `+2` is a library-wide convention shared by every binary problem's
   swap, so it is not changed here for one heuristic's sake.
 
-## Why two thirds of a round are generic heuristics
+## Why three quarters of a round are generic heuristics
 
-The descent and the strong perturbation are `LocalSearch` and `RandomWalk`
-rather than hand-written operators. They select the same moves a dedicated
+The descent, the strong perturbation and the weak flip are `LocalSearch`,
+`RandomWalk` and `TabuSearch` rather than hand-written operators. They select the same moves a dedicated
 operator would, and — since recording became a mode on the `SearchState` that
 `prepare` arms — their `apply` writes the same prohibitions, so Benlic & Hao's
 `H <- Iter + gamma` inside the descent loop holds either way. **This is not
@@ -126,6 +125,25 @@ the same thing, because the all-`None` spelling measured **7% slower** on every
 instance of the timing suite while producing bit-identical solutions. Both
 spellings leave `no_best_move` as the only thing that ends the run, so the
 difference is in code generation, not in the search.
+
+- **The weak flip was free in both directions, and then some.** `TabuSearch`
+  selects by exactly the predicate the hand-written `tabu_walk` did —
+  `tabu_allows(n) || is_neighbor_better_than_best(n)` expands to the same
+  `gain + objective > best_objective` — and at 30s x 5 runs it is **+318.2 cut
+  points in total, better on 7 of 10 instances and worse on none** (G81 +210.0,
+  G70 +37.2, G63 +20.6, G55 +20.2, against standard deviations of 15-39). At a
+  fixed iteration budget it is also **1.8x faster overall**, and 3.7x faster
+  when every weak perturbation is a flip (`q = 1.0`).
+
+  That speedup is **not explained**. Ruled out by measurement: the two run the
+  same number of weak-flip iterations (693,099 vs 703,242 of a 900,000 budget)
+  with the same perturbation length; the tie rule (`keep_best` keeps the first
+  tied-best, `max_by` the last) does not account for it; neither does
+  `apply_move_only` vs `apply` (15.14s vs 15.04s with that one line changed);
+  and the two scan loops compile to the same 14 instructions per element. The
+  one clue is that the ratio grows with instance size — 2.5x at n = 800, 4x at
+  n = 20000 — so it behaves like a per-element memory effect rather than fixed
+  overhead. Recorded as an open question rather than guessed at.
 
 The weak swap stays a hand-written operator because it is not expressible as a
 generic search at all: `M2` moves one vertex per partition side **in a single

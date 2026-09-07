@@ -69,7 +69,8 @@ the loop that depends on it rather than once, somewhere else.
 `common::TabuMemory` is the single store, split by `TabuKey` shape — `Var(i)`
 for a dense index, `Pair` and `Triple` for the rest. Two move types over the
 same shape share prohibitions (MaxCut's flip and swap are both `Var`, which is
-what the operators in `src/heuristic/specific/max_cut/ops/` rely on), while
+what Breakout Local Search relies on when it drives this search as its
+weak-flip perturbation), while
 different shapes never collide (JobShop's swap is a `Var`, its relocate a
 `Pair`).
 

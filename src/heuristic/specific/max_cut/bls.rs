@@ -1,6 +1,6 @@
-use super::ops;
+use super::best_swap::best_swap;
 use crate::error::OptError;
-use crate::heuristic::{Heuristic, LocalSearch, RandomWalk, StopCondition};
+use crate::heuristic::{Heuristic, LocalSearch, RandomWalk, StopCondition, TabuSearch};
 use crate::problem::{MaxCut, MaxCutFlipNeighbor};
 use crate::search_state::SearchState;
 use rand::Rng;
@@ -34,7 +34,7 @@ pub enum PerturbationType {
 ///   becomes steadily more likely the longer the best solution stands.
 ///
 /// This selection rule is specific to [`BreakoutLocalSearch`]. What it chooses
-/// between is two free functions in [`ops`](super::ops) — which the other
+/// between is two free functions in [`best_swap`](super::best_swap) — which the other
 /// heuristics in this directory drive from their own schedules — and, for the
 /// strong one, a plain [`RandomWalk`].
 fn choose_perturbation(
@@ -298,9 +298,9 @@ impl BreakoutLocalSearch {
     /// here rather than by the walk: `SubProblemBasedCrossover` builds an
     /// edgeless sub-MaxCut when the parents disagree only on an independent
     /// set, and there `MaxCutFlipNeighbor`'s sampler has an empty range to draw
-    /// from — so the counter is advanced directly, exactly as the tabu walk
-    /// does when it finds no move, and the outer stop condition still
-    /// terminates.
+    /// from — so the counter is advanced directly, and the outer stop
+    /// condition still terminates. The weak flip needs no such guard:
+    /// `TabuSearch` finds no move, says so, and steps the counter itself.
     pub fn kick(
         &mut self,
         state: &mut SearchState<'_, MaxCut>,
@@ -320,8 +320,15 @@ impl BreakoutLocalSearch {
                         .run(state)?;
                 }
             }
-            PerturbationType::WeakFlip => ops::tabu_walk(l, state)?,
-            PerturbationType::WeakSwap => ops::best_swap(l, state)?,
+            PerturbationType::WeakFlip => {
+                let budget = state.iterations_this_run() + l;
+                TabuSearch::<MaxCutFlipNeighbor>::new(
+                    StopCondition::iterations(budget),
+                    self.tabu_tenure,
+                )
+                .run(state)?;
+            }
+            PerturbationType::WeakSwap => best_swap(l, state)?,
         }
         state.update_best();
         Ok(())
@@ -445,6 +452,43 @@ mod tests {
             state.best_solution.objective, state.solution.objective,
             "the local optimum has to be published before returning"
         );
+    }
+
+    /// The weak flip walk must consume exactly its budget, whether or not it
+    /// found an eligible move on each iteration.
+    #[test]
+    fn the_weak_flip_kick_spends_its_whole_budget() {
+        let mc = small_instance();
+        let mut state = SearchState::new_with_seed(&mc, 5);
+        let mut bls =
+            BreakoutLocalSearch::externally_driven(StopCondition::iterations(1_000), (3, 15));
+
+        let before = state.iteration;
+        bls.kick(&mut state, PerturbationType::WeakFlip, 37)
+            .unwrap();
+        assert_eq!(state.iteration - before, 37);
+    }
+
+    /// The walk must respect the memory it writes: a move it just recorded
+    /// cannot be the move it makes next.
+    ///
+    /// This is the regression test for the whole substitution — the weak flip
+    /// is a generic [`TabuSearch`], and what makes that legal is that it reads
+    /// and writes the same `SearchState` tabu memory the rest of the round
+    /// shares.
+    #[test]
+    fn the_weak_flip_kick_does_not_immediately_repeat_a_move() {
+        let mc = small_instance();
+        let mut state = SearchState::new_with_seed(&mc, 4);
+        let mut bls =
+            BreakoutLocalSearch::externally_driven(StopCondition::iterations(1_000), (5, 5));
+
+        let before = state.solution.x.clone();
+        bls.kick(&mut state, PerturbationType::WeakFlip, 2).unwrap();
+        let flipped: Vec<usize> = (0..before.len())
+            .filter(|&v| before[v] != state.solution.x[v])
+            .collect();
+        assert_eq!(flipped.len(), 2, "two iterations must flip two vertices");
     }
 
     /// On a graph with no edged vertices — as produced by

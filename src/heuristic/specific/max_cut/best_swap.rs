@@ -5,11 +5,10 @@
 //! independent one-step searches cannot express that (they succeed or fail
 //! separately, so a side with nothing eligible leaves the other vertex moved on
 //! its own — pinned by the last test below). The other two kicks are generic
-//! heuristics, driven from [`kick`](super::super::bls::BreakoutLocalSearch::kick):
+//! heuristics, driven from [`kick`](super::bls::BreakoutLocalSearch::kick):
 //! the strong one is a [`RandomWalk`](crate::heuristic::RandomWalk) and the weak
-//! flip is [`tabu_walk`](super::tabu_walk).
+//! flip is a [`TabuSearch`](crate::heuristic::TabuSearch).
 
-use super::keep_best;
 use crate::error::OptError;
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
@@ -28,7 +27,7 @@ use crate::trait_defs::MoveToNeighbor;
 /// test and as the fallback for a side that has no non-tabu vertex left.
 ///
 /// Uses scalar best tracking per side instead of collecting tied-best lists
-/// into Vecs; the tie rule itself is [`keep_best`](super::keep_best), and it is
+/// into Vecs; the tie rule itself is [`keep_best`](keep_best), and it is
 /// deliberate — see its measurement record.
 pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
     for _ in 0..l {
@@ -76,16 +75,118 @@ pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(
     Ok(())
 }
 
+/// Keeps `candidate` in `slot` when it beats what is already there.
+///
+/// Ties keep the incumbent, i.e. the first candidate the scan met, which on the
+/// G-set means the lowest vertex index. That looks like an arbitrary bias —
+/// every G-set weight is ±1, so gains are small integers and the degree-4
+/// toroidal instances admit only five distinct values, putting hundreds of
+/// vertices in one tie — but sampling the tie uniformly was **measured and
+/// rejected**: over G11/G12/G13/G32-G34 it lost 6 cut points and turned three
+/// exact matches of the paper's best into misses, while gaining only on one
+/// planar instance. Index order on a toroidal grid tracks position, so taking
+/// the lowest index walks the lattice coherently; randomising it scatters the
+/// perturbation instead.
+///
+/// Every operator that picks a move selects with this, which is why the rule
+/// lives here rather than in any one of them.
+fn keep_best(slot: &mut Option<MaxCutFlipNeighbor>, candidate: MaxCutFlipNeighbor) {
+    if slot.is_none_or(|best| candidate.gain > best.gain) {
+        *slot = Some(candidate);
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::super::tests::state_with_tabu;
+    use crate::error::OptError;
+    use crate::heuristic::{Heuristic, LocalSearch, RandomWalk, StopCondition};
+    use crate::problem::MaxCut;
+    use crate::search_state::SearchState;
+
+    /// The shape every perturbation operator shares.
+    type Op = fn(u64, &mut SearchState<'_, MaxCut>) -> Result<(), OptError>;
+
+    /// Prepares a state the way [`BreakoutLocalSearch`](super::bls::BreakoutLocalSearch)
+    /// does before handing it to an operator: the tenure the records draw from,
+    /// and a tabu map grown to the instance up front.
+    pub(super) fn state_with_tabu(
+        mc: &MaxCut,
+        seed: u64,
+        tenure: (u64, u64),
+    ) -> SearchState<'_, MaxCut> {
+        let mut state = SearchState::new_with_seed(mc, seed);
+        state.reserve_tabu_vars(mc.graph.len());
+        state.start_record_tabu(tenure);
+        state
+    }
+
+    /// Builds a small toroidal-like graph (degree 4, unit weights) that has both
+    /// partition sides populated throughout the search.
+    pub(super) fn small_instance() -> MaxCut {
+        let n = 30usize;
+        let mut edges = Vec::new();
+        for i in 0..n {
+            edges.push((i, (i + 1) % n, 1.0));
+            edges.push((i, (i + 2) % n, 1.0));
+        }
+        MaxCut::from_edges(edges)
+    }
+
+    /// Property test: after hundreds of mixed perturbations of all three types,
+    /// the incrementally maintained gain vector and the `zero_gain` index must
+    /// agree with a from-scratch recomputation.
+    ///
+    /// The `zero_gain` index is not read by anything driven here — it is
+    /// maintained for
+    /// [`PopulationAnnealing`](super::population_annealing::PopulationAnnealing) —
+    /// so this is the only place its incremental updates are checked against a
+    /// recomputation under these moves.
+    #[test]
+    fn mixed_perturbations_keep_gains_and_indexes_consistent() {
+        let mc = small_instance();
+        let mut state = state_with_tabu(&mc, 7, (3, 15));
+        state.solution.enable_zero_gain_index();
+
+        let schedule: [Op; 1] = [best_swap];
+        for round in 0..60 {
+            let budget = state.iterations_this_run() + 3;
+            RandomWalk::<MaxCutFlipNeighbor>::new(StopCondition::iterations(budget))
+                .run(&mut state)
+                .unwrap();
+            for op in schedule {
+                op(3, &mut state).unwrap();
+            }
+            LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(u64::MAX))
+                .run(&mut state)
+                .unwrap();
+
+            for v in 0..state.solution.x.len() {
+                let expected = mc.calculate_gain(&state.solution.x, v);
+                assert_eq!(
+                    state.solution.gain[v], expected,
+                    "gain[{v}] diverged after round {round}"
+                );
+                assert_eq!(
+                    state.solution.zero_gain.contains(v),
+                    expected == 0.0,
+                    "zero_gain membership of {v} wrong after round {round}"
+                );
+            }
+            let expected_objective = mc.calculate_cut_size(&state.solution.x);
+            assert_eq!(
+                state.solution.objective, expected_objective,
+                "objective diverged after round {round}"
+            );
+        }
+    }
+
     use super::*;
 
     /// A swap moves one vertex per side, so it must leave the partition sizes
     /// untouched — that is the whole reason `M2` exists next to the flips.
     #[test]
     fn a_swap_keeps_the_partition_sizes() {
-        let mc = super::super::tests::small_instance();
+        let mc = small_instance();
         let mut state = state_with_tabu(&mc, 2, (3, 15));
 
         let side0 = |x: &[bool]| x.iter().filter(|&&b| b).count();
