@@ -136,7 +136,7 @@ kinds fail at parse time.
 | `PopulationAnnealing` | all | `neighbor`, `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `sweep_length` |
 | `LinKernighanHelsgaun` | TSP | | `num_neighbors`, `max_depth` |
 | `WalkSat` | SAT | | `noise`, `adaptive_noise` |
-| `AdaptiveLargeNeighborhoodSearch` | VRP | | `removal_fraction`, `cooling_rate` |
+| `AdaptiveLargeNeighborhoodSearch` | VRP | | `removal_fraction`, `cooling_rate`, `sigma_best`, `sigma_better`, `sigma_accept`, `segment_len`, `reaction`, `max_removal` |
 | `HybridGeneticSearch` | VRP | | `min_population_size`, `generation_size`, `granularity`, `target_feasible`, `restart_generations` |
 | `Sequential` | all | `steps` | |
 | `Iterated` | all | `steps[0]` = search, `steps[1]` = perturbation | |

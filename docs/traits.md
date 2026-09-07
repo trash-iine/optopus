@@ -30,6 +30,8 @@ the section below the table.
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
 | `Distance` (on `Solution`) | `GeneticAlgorithm`, any selection strategy, not only `ParentSelection::DistantTopK` | `fn distance(&self, other: &Self) -> usize` |
 | `BinaryProblem` | the shared binary machinery in `common::binary` | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip` |
+| `Ruinable` | `Alns` | `type Element: Copy + Eq; type Partial;`<br>`to_partial` / `finish`, `elements` / `remove_all`,<br>`removal_gain` / `relatedness` (destroy),<br>`num_buckets` / `num_places` / `insertion_cost` / `insert` (repair),<br>`num_elements` / `refresh_partial` / `partial_energy` (all defaulted) |
+| `LocalRepair<P: Ruinable>` | `Alns`, optionally | `fn repair_around(&mut self, prob: &P, partial: &mut P::Partial, anchors: &[P::Element], rng: &mut SmallRng)` |
 | `ProblemReduction` | nothing; it is a facility rather than a requirement | `type Source: ProblemTrait; type Target: ProblemTrait;`<br>`fn target(&self) -> &Self::Target;`<br>`fn project(&self, sol: &SourceSolution) -> TargetSolution;`<br>`fn lift(&self, source: &Self::Source, base: &SourceSolution, sol: &TargetSolution) -> SourceSolution` |
 
 `SmallRng` above is `rand::rngs::SmallRng`. Every trait method that needs

@@ -56,7 +56,7 @@ algorithm's own page; this table is only the index.
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | MaxCut only |
 | [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP only |
 | [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT only |
-| [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP only |
+| [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP so far |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
 
 Unknown kinds and missing required fields fail at parse time, before any run
