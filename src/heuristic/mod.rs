@@ -2,6 +2,7 @@
 
 mod alns;
 mod beam_search;
+mod breakout_local_search;
 mod crossover;
 mod genetic_algorithm;
 mod late_acceptance;
@@ -18,6 +19,7 @@ mod variable_neighborhood_search;
 
 pub use alns::{Alns, DestroyOp, RepairOp};
 pub use beam_search::BeamSearch;
+pub use breakout_local_search::{AdaptivePerturbation, BreakoutLocalSearch, PerturbationSchedule};
 pub use crossover::SubProblemBasedCrossover;
 pub use genetic_algorithm::{GeneticAlgorithm, ParentSelection};
 pub use late_acceptance::LateAcceptanceHillClimbing;
@@ -28,11 +30,14 @@ pub use reinforcement_learning::{RewardShaping, RlSearch};
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
-pub use specific::BreakoutLocalSearchForMaxCut;
 pub use specific::HybridGeneticSearchForVrp;
 pub use specific::LinKernighanHelsgaunForTsp;
 pub use specific::MaxCutPerturbation;
 pub use specific::WalkSatForSat;
+pub use specific::{
+    BreakoutLocalSearchForMaxCut, ExternallyDrivenBlsForMaxCut, breakout_local_search_for_max_cut,
+    externally_driven_bls_for_max_cut,
+};
 pub use tabu_search::TabuSearch;
 pub use variable_neighborhood_search::VariableNeighborhoodSearch;
 
