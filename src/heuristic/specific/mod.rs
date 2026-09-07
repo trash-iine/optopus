@@ -11,7 +11,6 @@ mod walksat_for_sat;
 pub use lkh_for_tsp::LinKernighanHelsgaun as LinKernighanHelsgaunForTsp;
 pub use max_cut::{
     BreakoutLocalSearch as BreakoutLocalSearchForMaxCut, PerturbationType as MaxCutPerturbation,
-    PopulationAnnealing as PopulationAnnealingForMaxCut,
 };
 pub use vrp::{
     AdaptiveLargeNeighborhoodSearch as AdaptiveLargeNeighborhoodSearchForVrp,

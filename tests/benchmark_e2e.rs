@@ -313,22 +313,21 @@ max_iteration = 300
     );
 }
 
-/// Population Annealing consumes the RNG for population init, Metropolis
-/// sweeps, cluster-move independent-set selection, and resampling; all must be
-/// seed-stable.
+/// Population Annealing consumes the RNG for population init, resampling and
+/// Metropolis sweeps; all must be seed-stable.
 #[test]
 fn population_annealing_is_bit_identical_across_reruns_with_seed() {
     assert_reproducible(
         "repro_pa",
         r#"
 [[heuristics]]
-kind = "PopulationAnnealingForMaxCut"
+kind = "PopulationAnnealing"
+neighbor = "Flip"
 population_size = 12
 initial_beta = 0.1
 delta_beta = 0.05
 sweeps_per_step = 5
 reset_period = 20
-cluster_moves = true
 
 [heuristics.stop_condition]
 max_iteration = 300

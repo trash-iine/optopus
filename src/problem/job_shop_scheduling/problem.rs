@@ -24,6 +24,13 @@ pub struct JobShopSolution {
     pub completion_times: Vec<u32>,
 }
 
+impl crate::trait_defs::Evaluate for JobShopSolution {
+    /// Job-shop minimizes the makespan.
+    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
+        crate::trait_defs::Evaluable::Minimize(f64::from(self.objective))
+    }
+}
+
 impl Rankable for JobShopSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.objective < other.objective

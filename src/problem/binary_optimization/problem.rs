@@ -434,6 +434,16 @@ pub struct FormulaSolution {
     pub(crate) constraint_vals: Vec<Value>,
 }
 
+impl crate::trait_defs::Evaluate for FormulaSolution {
+    /// `score` is already normalized to higher-is-better whichever way the
+    /// formula's own `OptDirection` points, so it is reported as maximized. The
+    /// direction has been applied once, upstream, and is not applied again
+    /// here.
+    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
+        crate::trait_defs::Evaluable::Maximize(self.score)
+    }
+}
+
 impl Rankable for FormulaSolution {
     /// `self.score > other.score`, `score` already folds in the optimization
     /// direction, so higher is always better here.

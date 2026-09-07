@@ -41,5 +41,4 @@ pub use crossover::MaxCutUniformCrossover;
 pub use kernel::MaxCutKernel;
 pub use neighbor::{MaxCutFlipNeighbor, MaxCutSwapNeighbor};
 pub use planted::{PlantedMaxCut, TileProbs2d, TileProbs3d, WishartCouplers};
-pub(crate) use problem::is_zero_gain;
 pub use problem::{MaxCut, MaxCutSolution};

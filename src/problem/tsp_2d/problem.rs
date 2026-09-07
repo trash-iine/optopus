@@ -25,6 +25,13 @@ pub struct TspSolution {
     pub objective: f64,
 }
 
+impl crate::trait_defs::Evaluate for TspSolution {
+    /// TSP minimizes the tour length.
+    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
+        crate::trait_defs::Evaluable::Minimize(self.objective)
+    }
+}
+
 impl Rankable for TspSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.objective < other.objective

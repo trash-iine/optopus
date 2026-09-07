@@ -9,6 +9,7 @@ use super::report::{BenchmarkReport, InstanceHeuristicResult, SingleRunResult, c
 use crate::error::OptError;
 use crate::heuristic::Heuristic;
 use crate::search_state::{Distance, SearchState};
+use crate::trait_defs::Evaluate;
 
 // ---------------------------------------------------------------------------
 // Benchmark runner
@@ -114,7 +115,7 @@ impl ProblemVisitor for InstanceVisitor<'_> {
     fn visit<P>(self) -> Vec<InstanceHeuristicResult>
     where
         P: ConfigurableProblem,
-        P::Solution: BenchmarkSolution + Distance,
+        P::Solution: BenchmarkSolution + Distance + Evaluate,
     {
         let instance = P::load_instance(self.instance_path);
         let mut results = Vec::with_capacity(self.config.heuristics.len());
@@ -186,7 +187,7 @@ fn run_typed<P>(
 ) -> RunMetrics
 where
     P: ConfigurableProblem,
-    P::Solution: BenchmarkSolution + Distance,
+    P::Solution: BenchmarkSolution + Distance + Evaluate,
 {
     let heuristic = match build_heuristic::<P>(config) {
         Ok(h) => h,

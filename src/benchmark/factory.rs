@@ -10,8 +10,8 @@ use super::problems::{BenchmarkProblem, BenchmarkSolution};
 use crate::error::OptError;
 use crate::heuristic::{
     GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
-    ParentSelection, RandomWalk, Restart, RewardShaping, RlSearch, Sequential, SimulatedAnnealing,
-    StopCondition, TabuSearch, VariableNeighborhoodSearch,
+    ParentSelection, PopulationAnnealing, RandomWalk, Restart, RewardShaping, RlSearch, Sequential,
+    SimulatedAnnealing, StopCondition, TabuSearch, VariableNeighborhoodSearch,
 };
 use crate::search_state::{Crossover, Distance, MoveToNeighbor, ProblemTrait};
 use crate::trait_defs::{EnabledTabu, Evaluate, Rankable};
@@ -48,7 +48,7 @@ pub(crate) trait NeighborVisitor<P: ProblemTrait> {
 /// 3. an impl of this trait (plus [`BenchmarkProblem`] / [`BenchmarkSolution`]).
 pub(crate) trait ConfigurableProblem: BenchmarkProblem + Send + Sync + 'static
 where
-    Self::Solution: BenchmarkSolution + Distance,
+    Self::Solution: BenchmarkSolution + Distance + Evaluate,
 {
     /// Problem name used in error messages (matches the `ProblemKind` variant).
     const NAME: &'static str;
@@ -85,7 +85,7 @@ where
 pub(crate) fn invalid_neighbor<P>(kind: &NeighborKind) -> OptError
 where
     P: ConfigurableProblem,
-    P::Solution: BenchmarkSolution + Distance,
+    P::Solution: BenchmarkSolution + Distance + Evaluate,
 {
     OptError::Config(format!(
         "Invalid neighbor {:?} for {} (valid: {:?})",
@@ -111,7 +111,7 @@ struct BaseBuilder<'c> {
 impl<'c, P> NeighborVisitor<P> for BaseBuilder<'c>
 where
     P: ConfigurableProblem,
-    P::Solution: BenchmarkSolution + Distance,
+    P::Solution: BenchmarkSolution + Distance + Evaluate,
 {
     type Output = Result<Box<dyn Heuristic<P>>, OptError>;
 
@@ -149,9 +149,82 @@ where
             }
             HeuristicConfig::RandomWalk { .. } => Ok(Box::new(RandomWalk::<N>::new(self.cond))),
             HeuristicConfig::RlSearch { .. } => build_rl_search::<P, N>(self.config, self.cond),
+            HeuristicConfig::PopulationAnnealing { .. } => {
+                build_population_annealing::<P, N>(self.config, self.cond)
+            }
             _ => unreachable!("non-neighbor kinds are dispatched before with_neighbor"),
         }
     }
+}
+
+/// Builds a [`PopulationAnnealing`] from a `PopulationAnnealing` config.
+///
+/// Shared by every problem that registers it, so the defaults and the range
+/// checks are written once, the way [`build_rl_search`] does for `RlSearch`.
+///
+/// # Errors
+///
+/// Returns [`OptError::Config`] if `config` is not a `PopulationAnnealing`, or
+/// if any of its values is out of range.
+fn build_population_annealing<P, N>(
+    config: &HeuristicConfig,
+    cond: StopCondition,
+) -> Result<Box<dyn Heuristic<P>>, OptError>
+where
+    P: ProblemTrait + 'static,
+    P::Solution: Evaluate,
+    N: MoveToNeighbor<P> + Evaluate + 'static,
+{
+    let HeuristicConfig::PopulationAnnealing {
+        population_size,
+        initial_beta,
+        delta_beta,
+        sweeps_per_step,
+        reset_period,
+        sweep_length,
+        ..
+    } = config
+    else {
+        return Err(OptError::Config(format!(
+            "expected a PopulationAnnealing config, got '{}'",
+            config.kind_name()
+        )));
+    };
+
+    if *population_size < 2 {
+        return Err(OptError::Config(
+            "'population_size' must be at least 2".to_string(),
+        ));
+    }
+    let beta0 = initial_beta.unwrap_or(0.1);
+    let dbeta = delta_beta.unwrap_or(0.02);
+    let sweeps = sweeps_per_step.unwrap_or(50);
+    if beta0 <= 0.0 || dbeta <= 0.0 {
+        return Err(OptError::Config(
+            "'initial_beta' and 'delta_beta' must be positive".to_string(),
+        ));
+    }
+    if sweeps == 0 {
+        return Err(OptError::Config(
+            "'sweeps_per_step' must be at least 1".to_string(),
+        ));
+    }
+    // reset_period defaults to 400; 0 disables resets.
+    let period = reset_period.unwrap_or(400);
+    let reset = if period == 0 { None } else { Some(period) };
+
+    if sweep_length.is_some_and(|l| l == 0) {
+        return Err(OptError::Config(
+            "'sweep_length' must be at least 1".to_string(),
+        ));
+    }
+
+    let mut pa =
+        PopulationAnnealing::<P, N>::new(cond, *population_size, beta0, dbeta, sweeps, reset);
+    if let Some(length) = *sweep_length {
+        pa = pa.with_sweep_length(length);
+    }
+    Ok(Box::new(pa))
 }
 
 fn build_rl_search<P, N>(
@@ -234,7 +307,7 @@ pub(crate) fn build_heuristic<P>(
 ) -> Result<Box<dyn Heuristic<P>>, OptError>
 where
     P: ConfigurableProblem,
-    P::Solution: BenchmarkSolution + Distance,
+    P::Solution: BenchmarkSolution + Distance + Evaluate,
 {
     let cond = config.stop_condition().to_stop_condition();
     match config {
@@ -344,12 +417,12 @@ where
             Ok(Box::new(ga))
         }
         HeuristicConfig::BreakoutLocalSearch { .. }
-        | HeuristicConfig::PopulationAnnealingForMaxCut { .. }
         | HeuristicConfig::LinKernighanHelsgaun { .. }
         | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::LocalSearch { neighbor, .. }
+        | HeuristicConfig::PopulationAnnealing { neighbor, .. }
         | HeuristicConfig::TabuSearch { neighbor, .. }
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
         | HeuristicConfig::LateAcceptanceHillClimbing { neighbor, .. }
@@ -375,7 +448,7 @@ mod factory_tests {
         fn visit<P>(self) -> Result<(), OptError>
         where
             P: ConfigurableProblem,
-            P::Solution: BenchmarkSolution + Distance,
+            P::Solution: BenchmarkSolution + Distance + Evaluate,
         {
             build_heuristic::<P>(self.config).map(|_| ())
         }

@@ -10,8 +10,8 @@ use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearchForVrp, BreakoutLocalSearchForMaxCut, Heuristic,
-    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, PopulationAnnealingForMaxCut,
-    StopCondition, SubProblemBasedCrossover, WalkSatForSat,
+    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
+    WalkSatForSat,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -29,6 +29,7 @@ use crate::problem::{
     },
 };
 use crate::search_state::{Crossover, Distance, ProblemTrait};
+use crate::trait_defs::Evaluate;
 
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
@@ -218,46 +219,6 @@ impl ConfigurableProblem for MaxCut {
                 *p0,
                 *q,
             ))),
-            HeuristicConfig::PopulationAnnealingForMaxCut {
-                population_size,
-                initial_beta,
-                delta_beta,
-                sweeps_per_step,
-                reset_period,
-                cluster_moves,
-                ..
-            } => {
-                if *population_size < 2 {
-                    return Err(OptError::Config(
-                        "'population_size' must be at least 2".to_string(),
-                    ));
-                }
-                let beta0 = initial_beta.unwrap_or(0.1);
-                let dbeta = delta_beta.unwrap_or(0.02);
-                let sweeps = sweeps_per_step.unwrap_or(50);
-                if beta0 <= 0.0 || dbeta <= 0.0 {
-                    return Err(OptError::Config(
-                        "'initial_beta' and 'delta_beta' must be positive".to_string(),
-                    ));
-                }
-                if sweeps == 0 {
-                    return Err(OptError::Config(
-                        "'sweeps_per_step' must be at least 1".to_string(),
-                    ));
-                }
-                // reset_period defaults to 400; 0 disables resets.
-                let period = reset_period.unwrap_or(400);
-                let reset = if period == 0 { None } else { Some(period) };
-                Ok(Box::new(PopulationAnnealingForMaxCut::new(
-                    cond,
-                    *population_size,
-                    beta0,
-                    dbeta,
-                    sweeps,
-                    reset,
-                    cluster_moves.unwrap_or(true),
-                )))
-            }
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for MaxCut",
                 config.kind_name()
@@ -547,7 +508,7 @@ pub(crate) trait ProblemVisitor {
     fn visit<P>(self) -> Self::Output
     where
         P: ConfigurableProblem,
-        P::Solution: BenchmarkSolution + Distance;
+        P::Solution: BenchmarkSolution + Distance + Evaluate;
 }
 
 /// Maps the runtime [`ProblemKind`] to the concrete problem type.
@@ -569,7 +530,7 @@ impl ProblemVisitor for MinimizeVisitor {
     fn visit<P>(self) -> bool
     where
         P: ConfigurableProblem,
-        P::Solution: BenchmarkSolution + Distance,
+        P::Solution: BenchmarkSolution + Distance + Evaluate,
     {
         P::MINIMIZE
     }
@@ -581,7 +542,7 @@ impl ProblemVisitor for ValidNeighborsVisitor {
     fn visit<P>(self) -> &'static [NeighborKind]
     where
         P: ConfigurableProblem,
-        P::Solution: BenchmarkSolution + Distance,
+        P::Solution: BenchmarkSolution + Distance + Evaluate,
     {
         P::VALID_NEIGHBORS
     }

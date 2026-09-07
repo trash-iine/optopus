@@ -15,7 +15,5 @@
 
 mod best_swap;
 mod bls;
-mod population_annealing;
 
 pub use bls::{BreakoutLocalSearch, PerturbationType};
-pub use population_annealing::PopulationAnnealing;

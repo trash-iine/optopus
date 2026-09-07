@@ -66,6 +66,13 @@ pub struct VrpSolution {
     pub objective: f64,
 }
 
+impl crate::trait_defs::Evaluate for VrpSolution {
+    /// VRP minimizes its penalty-augmented objective.
+    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
+        crate::trait_defs::Evaluable::Minimize(self.objective)
+    }
+}
+
 impl Rankable for VrpSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.objective < other.objective

@@ -29,6 +29,13 @@ pub struct VertexCoverSolution {
     pub uncovered_edges: usize,
 }
 
+impl crate::trait_defs::Evaluate for VertexCoverSolution {
+    /// Vertex Cover minimizes its penalty-augmented objective.
+    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
+        crate::trait_defs::Evaluable::Minimize(self.objective as f64)
+    }
+}
+
 impl Rankable for VertexCoverSolution {
     fn is_better_than(&self, other: &Self) -> bool {
         self.objective < other.objective

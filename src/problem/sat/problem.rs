@@ -20,6 +20,13 @@ pub struct SatSolution {
     pub n_satisfied: usize,
 }
 
+impl crate::trait_defs::Evaluate for SatSolution {
+    /// MaxSAT maximizes the number of satisfied clauses.
+    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
+        crate::trait_defs::Evaluable::Maximize(self.n_satisfied as f64)
+    }
+}
+
 impl Rankable for SatSolution {
     // MaxSAT: more satisfied clauses is better
     fn is_better_than(&self, other: &Self) -> bool {
