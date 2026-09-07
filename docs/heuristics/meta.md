@@ -204,8 +204,8 @@ solver.run(&mut state)?;
 
 ## Benchmark config
 
-All four are one `kind` with a nested `steps` array; what each slot means is the
-only difference:
+All four are one `kind` with a nested `steps` array, and only the meaning of
+each slot differs.
 
 ```toml
 [[heuristics]]
@@ -233,22 +233,11 @@ max_iteration = 200
 | `VariableNeighborhoodSearch` | `[0]` = search, `[1..]` = shakes `N_1..N_kmax` | |
 | `Restart` | `[0]` = the inner heuristic | `restart_condition` (required, same shape as `stop_condition`) |
 
-`Restart` is the only one with an extra table of its own:
+`Restart` adds one table of its own, alongside the fields above.
 
 ```toml
-[[heuristics]]
-kind = "Restart"
 [heuristics.restart_condition]     # required, when to reseed with a random solution
 max_failed_update = 1_000
-[heuristics.stop_condition]
-max_duration_secs = 30.0
-
-[[heuristics.steps]]               # steps[0] = the inner heuristic
-kind = "TabuSearch"
-neighbor = "Flip"
-tabu_tenure = [5, 150]
-[heuristics.steps.stop_condition]
-max_iteration = 10_000
 ```
 
 Steps nest arbitrarily deep: a `Restart` around an `Iterated` is the two blocks
