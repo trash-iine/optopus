@@ -16,9 +16,9 @@ use rand::rngs::SmallRng;
 /// All three variants keep the parent's iteration frame: the child's
 /// `iteration` runs on from where the parent stands, and `start_iteration`
 /// marks where the phase began. Everything budget-shaped is measured against
-/// that anchor — [`SearchState::iterations_this_run`],
+/// that anchor, [`SearchState::iterations_this_run`],
 /// [`StopCondition`](crate::heuristic::StopCondition), and the deltas
-/// [`SearchState::update_state`] merges — so a phase still starts at zero *of
+/// [`SearchState::update_state`] merges, so a phase still starts at zero *of
 /// its own budget*.
 ///
 /// A parent and its sub run share an iteration number,
@@ -99,9 +99,9 @@ where
     /// touched by `apply` / `update_best` / `update_state`.
     ///
     /// Semantics across [`SearchStateCloneType`]:
-    /// - `Simple`     — inherits the parent's `initial_solution`.
-    /// - `ClearBest`  — re-anchored to the solution at clone time.
-    /// - `StartBest`  — re-anchored to the best solution at clone time
+    /// - `Simple`, inherits the parent's `initial_solution`.
+    /// - `ClearBest`, re-anchored to the solution at clone time.
+    /// - `StartBest`, re-anchored to the best solution at clone time
     ///   (which is also the sub-run's starting solution).
     pub initial_solution: Problem::Solution,
     /// Number of moves accepted (`apply` / `apply_move_only` calls).
@@ -119,7 +119,7 @@ where
     /// field is what makes runs reproducible from a single seed
     /// (see [`SearchState::new_with_seed`]).
     ///
-    /// On `clone_for_new_run` the parent's RNG is **forked**: the child gets a
+    /// On `clone_for_new_run` the parent's RNG is forked: the child gets a
     /// fully independent stream, and the parent's stream advances by one fork.
     /// Sub-run RNG state is discarded by `update_state`, so meta-heuristic
     /// composition (Sequential / Iterated / Restart / GA) does not leak its
@@ -129,8 +129,8 @@ where
     ///
     /// Empty unless an objective probe is installed with
     /// [`Self::set_objective_probe`]. Points merged from `ClearBest` /
-    /// `StartBest` sub-runs track the *sub-run's* best, which may be worse
-    /// than an earlier parent best — consumers wanting a monotone incumbent
+    /// `StartBest` sub-runs track the sub-run's best, which may be worse
+    /// than an earlier parent best, consumers wanting a monotone incumbent
     /// curve must filter with the problem's optimization direction.
     pub trajectory: Vec<TrajectoryPoint>,
     /// Extracts an `f64` objective from a solution for trajectory recording.
@@ -148,7 +148,7 @@ where
     /// Off by default, and off in every sub-run
     /// ([`clone_for_new_run`](Self::clone_for_new_run)): most searches never
     /// read the tabu memory, and writing it costs an RNG draw and a store per
-    /// move. A search whose method *is* the tabu list turns it on — see
+    /// move. A search whose method is the tabu list turns it on, see
     /// [`start_record_tabu`](Self::start_record_tabu).
     record_tabu_on: bool,
 }
@@ -305,11 +305,11 @@ where
     ///
     /// The behavior depends on `clone_type`; see [`SearchStateCloneType`] for details.
     ///
-    /// **Tabu semantics**: the child starts with an empty tabu memory, whichever
-    /// clone type is used — a phase is its own tabu list. What it learns does
+    /// Tabu semantics: the child starts with an empty tabu memory, whichever
+    /// clone type is used, a phase is its own tabu list. What it learns does
     /// come back: [`update_state`](Self::update_state) carries the sub-run's
     /// prohibitions into this state along with its solution. A phase that should
-    /// *start* from the parent's asks with
+    /// start from the parent's asks with
     /// [`inherit_tabu_from`](Self::inherit_tabu_from):
     ///
     /// ```
@@ -399,10 +399,10 @@ where
     /// Merges the results of a completed sub-run back into this state.
     ///
     /// - The current solution is replaced with `cloned_state.solution`, and the
-    ///   tabu memory with the sub-run's — both are where the search got to.
+    ///   tabu memory with the sub-run's, both are where the search got to.
     /// - The iteration counter is advanced by the sub-run's own progress
     ///   (`iteration - start_iteration`), and the accept/reject/best-update
-    ///   counters — which the sub-run counted from zero — are added on.
+    ///   counters (which the sub-run counted from zero) are added on.
     /// - `initial_solution` is not overwritten.
     /// - If the sub-run found a better solution, the best solution is updated.
     ///
@@ -492,7 +492,7 @@ where
     /// The question is asked of the move type rather than of its erased policy,
     /// so [`is_move_enabled`](EnabledTabu::is_move_enabled) inlines into a
     /// neighborhood scan. A move that does not implement [`EnabledTabu`]
-    /// therefore cannot be asked at all — it fails to compile here, which is
+    /// therefore cannot be asked at all, it fails to compile here, which is
     /// the same answer [`record_tabu`](Self::record_tabu) gives at runtime.
     #[inline]
     pub fn tabu_allows<N>(&self, neighbor: &N) -> bool
@@ -510,12 +510,12 @@ where
     /// decision: a memory nothing writes needs no tenure, and a tenure nothing
     /// draws from records nothing. Setting the mode once, far from the loop
     /// that depends on it, is how it gets forgotten, and forgetting it is
-    /// silent — the search keeps running, having stopped writing the memory it
-    /// reads — so call this wherever the tenure belongs, at the same rate.
+    /// silent, the search keeps running, having stopped writing the memory it
+    /// reads, so call this wherever the tenure belongs, at the same rate.
     /// [`TabuSearch`](crate::heuristic::TabuSearch) calls it per iteration.
     ///
-    /// To use a tenure *without* letting `apply` record — to forbid only the
-    /// moves you hand to [`record_tabu`](Self::record_tabu) — follow this with
+    /// To use a tenure without letting `apply` record, to forbid only the
+    /// moves you hand to [`record_tabu`](Self::record_tabu), follow this with
     /// [`stop_record_tabu`](Self::stop_record_tabu), which leaves the tenure
     /// alone.
     ///
@@ -566,12 +566,12 @@ where
     /// Records `neighbor` as tabu for a tenure drawn from
     /// [`tabu_tenure`](Self::tabu_tenure), counted from the current iteration.
     ///
-    /// Applying a move does **not** record it: a search that never reads the
+    /// Applying a move does not record it: a search that never reads the
     /// tabu memory should not pay to write it, and most of them never do.
     /// A tabu search normally does not call this: it turns on
     /// [`start_record_tabu`](Self::start_record_tabu) and lets
     /// [`apply`](Self::apply) record what it applies, in the right order. This
-    /// is for forbidding a move that is *not* being applied.
+    /// is for forbidding a move that is not being applied.
     ///
     /// Like [`tabu_allows`](Self::tabu_allows) this is asked of the move type,
     /// so the policy inlines and a move without one cannot be passed at all.
@@ -590,7 +590,7 @@ where
     /// because a phase is usually its own tabu list. This is the opt-out, for a
     /// phase that should go on avoiding what the parent just did.
     ///
-    /// The boundaries are translated into this state's iteration frame — see
+    /// The boundaries are translated into this state's iteration frame, see
     /// [`TabuMemory::inherit`](crate::common::TabuMemory::inherit). Between a
     /// state and its sub-run that translation is the identity, since they share
     /// the frame; it earns its keep when the two states were built separately,
@@ -602,15 +602,15 @@ where
 
     /// Grows the tabu memory's dense key space to `0..n` up front.
     ///
-    /// Pure pre-allocation — recording grows it on demand, and does so without
-    /// changing what it draws — for a heuristic that knows the instance size
+    /// Pure pre-allocation, recording grows it on demand, and does so without
+    /// changing what it draws, for a heuristic that knows the instance size
     /// and is about to record `n` keys.
     pub fn reserve_tabu_vars(&mut self, n: usize) {
         self.tabu.reserve_vars(n);
     }
 
     /// Records the move about to be applied, if the state is recording and the
-    /// move has a policy. Called *before* the iteration advances, so a tenure
+    /// move has a policy. Called before the iteration advances, so a tenure
     /// of `d` forbids exactly the `d` iterations after the one it was made on.
     ///
     /// For a move without a policy the `tabu_policy` call monomorphizes to
@@ -631,7 +631,7 @@ where
     /// Applies a neighborhood move, updates the iteration counter, and refreshes the best solution.
     /// Increments [`n_accepted`](Self::n_accepted).
     ///
-    /// Records the move in the tabu memory first — but only while the state is
+    /// Records the move in the tabu memory first, but only while the state is
     /// recording ([`start_record_tabu`](Self::start_record_tabu)), which it is
     /// not by default. Most searches never read that memory and should not pay
     /// an RNG draw and a store per move to write it.
@@ -648,7 +648,7 @@ where
     }
 
     /// Applies a neighborhood move and updates the iteration counter, but does
-    /// **not** refresh the best solution. Increments [`n_accepted`](Self::n_accepted).
+    /// not refresh the best solution. Increments [`n_accepted`](Self::n_accepted).
     ///
     /// Use this in perturbation phases where moves intentionally diversify and
     /// a best-solution update is deferred until the phase completes. Call
@@ -690,8 +690,8 @@ where
     /// Opens a sub-state on a [`ProblemReduction`](crate::trait_defs::ProblemReduction)'s
     /// target, warm-started from the current solution.
     ///
-    /// The reduction is a pure map — it knows how to project a solution and
-    /// nothing about search state — so the *crossing* is this method: the seed
+    /// The reduction is a pure map, it knows how to project a solution and
+    /// nothing about search state, so the crossing is this method: the seed
     /// is drawn from this state's RNG, which is what keeps a seeded run
     /// reproducible through a reduction, and the sub-state starts with zeroed
     /// counters so [`close_reduction`](Self::close_reduction) can merge it
@@ -706,16 +706,16 @@ where
     }
 
     /// Folds a sub-run that ran on a [`ProblemReduction`](crate::trait_defs::ProblemReduction)'s
-    /// target back into this state — the closing half of
+    /// target back into this state, the closing half of
     /// [`open_reduction`](Self::open_reduction).
     ///
-    /// **The counters are merged before the solution moves, and that order is
-    /// load-bearing.** The sub-run ran on a *different* instance, so it cannot
+    /// The counters are merged before the solution moves, and that order is
+    /// load-bearing. The sub-run ran on a different instance, so it cannot
     /// go through [`update_state`](Self::update_state), which requires the same
     /// instance; but its work is comparable and must not be dropped, or a
     /// benchmark reports near-zero counters exactly on the instances where the
-    /// reduction did something. Merging *after* installing the solution would
-    /// record a `best_iteration` that omits the sub-run entirely — invisible in
+    /// reduction did something. Merging after installing the solution would
+    /// record a `best_iteration` that omits the sub-run entirely, invisible in
     /// the objective, which is why this is one method rather than two a caller
     /// assembles. The sub-state is assumed to start from zeroed counters, which
     /// `open_reduction` guarantees.
@@ -908,7 +908,7 @@ mod tests {
     }
 
     /// `ClearBest` re-anchors the phase without leaving the parent's iteration
-    /// frame: the counters run on, and `start_iteration` — not zero — is what
+    /// frame: the counters run on, and `start_iteration` (not zero) is what
     /// marks the beginning, so the phase's own budget still starts empty.
     #[test]
     fn clone_for_new_run_clear_best_reanchors_to_current() {
@@ -1081,7 +1081,7 @@ mod tests {
         use super::*;
         use crate::problem::MaxCutSwapNeighbor;
 
-        /// A problem whose move deliberately does **not** implement
+        /// A problem whose move deliberately does not implement
         /// [`EnabledTabu`], i.e. the case a user hits by implementing only the
         /// three traits a local search needs.
         struct Untabued;
@@ -1134,7 +1134,7 @@ mod tests {
         }
 
         /// Not implementing [`EnabledTabu`] must cost nothing at the point a
-        /// move is applied — that is what keeps tabu an opt-in trait rather
+        /// move is applied, that is what keeps tabu an opt-in trait rather
         /// than a tax on every problem.
         #[test]
         fn a_move_without_tabu_support_applies_normally() {
@@ -1149,7 +1149,7 @@ mod tests {
         /// A move that does not implement [`EnabledTabu`] cannot reach the
         /// memory at all: `tabu_allows` and `record_tabu` are bounded on the
         /// trait, so asking is a compile error rather than a runtime one. What
-        /// stays checkable is that such a move still applies normally — tabu is
+        /// stays checkable is that such a move still applies normally, tabu is
         /// opt-in, and a problem that never wanted it pays nothing.
         #[test]
         fn a_move_without_tabu_support_still_applies() {
@@ -1161,7 +1161,7 @@ mod tests {
         }
 
         /// `apply` is what records, so a move is forbidden for exactly the
-        /// `tenure` iterations that follow the one it was made on — the same
+        /// `tenure` iterations that follow the one it was made on, the same
         /// boundary an explicit `record` at the pre-move iteration produced.
         #[test]
         fn apply_records_at_the_iteration_the_move_was_made_on() {
@@ -1254,7 +1254,7 @@ mod tests {
 
         /// A sub-run shares the parent's iteration frame, so inheriting is a
         /// plain carry-over: a key blocked until 104 arrives blocked until 104,
-        /// and the child — starting at the parent's own iteration — sees
+        /// and the child (starting at the parent's own iteration) sees
         /// exactly the tenure that was left.
         #[test]
         fn inheriting_into_a_sub_run_carries_the_boundary_as_it_stands() {
@@ -1279,7 +1279,7 @@ mod tests {
             assert!(sub.tabu_allows(&probe), "free from 104, as in the parent");
         }
 
-        /// A sub-run's prohibitions come back with its solution — and with the
+        /// A sub-run's prohibitions come back with its solution, and with the
         /// tenure it recorded them under. The boundaries need no translation
         /// because the phase ran in the parent's own frame, which is the whole
         /// reason `clone_for_new_run` no longer restarts the counter.
@@ -1346,7 +1346,7 @@ mod tests {
         }
 
         /// Closing must land on exactly the solution a from-scratch rebuild of
-        /// the lifted assignment would produce, caches included — and must
+        /// the lifted assignment would produce, caches included, and must
         /// charge nothing for landing there.
         ///
         /// `lift` returns a complete `Solution`, so installing it needs no
@@ -1388,7 +1388,7 @@ mod tests {
 
         /// A warm start opened on the target must reproduce the reduction's own
         /// projection, and must consume exactly one draw from the parent's RNG
-        /// — the sub-run's whole trajectory hangs off that seed.
+        ///, the sub-run's whole trajectory hangs off that seed.
         #[test]
         fn open_reduction_projects_the_incumbent_and_draws_one_seed() {
             let mc = reducible_instance(2, 200);
@@ -1414,7 +1414,7 @@ mod tests {
             );
         }
 
-        /// `close_reduction` must carry the sub-run's accounting across —
+        /// `close_reduction` must carry the sub-run's accounting across,
         /// exactly that, and nothing else. Dropping it is invisible in the
         /// objective and shows up as a benchmark reporting near-zero counters
         /// precisely on the instances where the reduction did something.

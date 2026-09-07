@@ -2,7 +2,7 @@
 
 **API:** [`RandomWalk`](../api/optopus/heuristic/struct.RandomWalk.html)
 
-Sample a uniformly random neighbor and apply it unconditionally — no
+Sample a uniformly random neighbor and apply it unconditionally, no
 acceptance test, no comparison. The best solution encountered along the walk
 is still tracked in `state.best_solution`.
 
@@ -30,7 +30,7 @@ RandomWalk::<N>::new(stop_condition: StopCondition) -> Self
 ## When to use
 
 `RandomWalk` is rarely useful on its own; its main role is as the
-**perturbation** phase of [`Iterated`](meta.md#iterated): a few random moves
+perturbation phase of [`Iterated`](meta.md#iterated): a few random moves
 push the search out of a local optimum so the next greedy phase can climb a
 different basin.
 
@@ -41,7 +41,7 @@ different basin.
 kind = "RandomWalk"
 neighbor = "Flip"        # required; the valid values are per-problem
 [heuristics.stop_condition]
-max_iteration = 200      # give it one — a random walk never stops on its own
+max_iteration = 200      # give it one, a random walk never stops on its own
 ```
 
 An empty `stop_condition` never terminates, which matters most where

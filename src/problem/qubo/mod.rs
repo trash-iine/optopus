@@ -28,7 +28,7 @@
 //! ```
 //! use optopus::prelude::*;
 //!
-//! // Option 1: from_entries (set semantics — duplicate entries are overwritten)
+//! // Option 1: from_entries (set semantics, duplicate entries are overwritten)
 //! let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2)]);
 //!
 //! // Option 2: incremental construction
@@ -88,14 +88,14 @@
 //!     (3, 4, 1), (3, 5, 1), (4, 5, 1),
 //! ]);
 //!
-//! // LocalSearch — greedy best-improving flip
+//! // LocalSearch, greedy best-improving flip
 //! let mut state = SearchState::new(&qubo);
 //! let mut ls = LocalSearch::<QuboFlipNeighbor>::new(
 //!     StopCondition::iterations(100_000),
 //! );
 //! ls.run(&mut state).unwrap();
 //!
-//! // TabuSearch — flip with tabu tenure [3, 7]
+//! // TabuSearch, flip with tabu tenure [3, 7]
 //! let mut state = SearchState::new(&qubo);
 //! let mut ts = TabuSearch::<QuboFlipNeighbor>::new(
 //!     StopCondition::iterations(100_000),
@@ -103,7 +103,7 @@
 //! );
 //! ts.run(&mut state).unwrap();
 //!
-//! // SimulatedAnnealing — flip with temperature schedule
+//! // SimulatedAnnealing, flip with temperature schedule
 //! let mut state = SearchState::new(&qubo);
 //! let mut sa = SimulatedAnnealing::<QuboFlipNeighbor>::new(
 //!     StopCondition::iterations(100_000),
@@ -112,7 +112,7 @@
 //! );
 //! sa.run(&mut state).unwrap();
 //!
-//! // Iterated Local Search — LocalSearch + RandomWalk perturbation
+//! // Iterated Local Search, LocalSearch + RandomWalk perturbation
 //! let mut state = SearchState::new(&qubo);
 //! let mut ils = Iterated::new(
 //!     StopCondition::iterations(1_000_000),

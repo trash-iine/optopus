@@ -61,7 +61,7 @@ pub struct Sat {
     /// updates to avoid recomputing this set on every iteration.
     var_neighbors: Vec<Vec<usize>>,
     /// Lazily built, deduplicated list of clause-sharing pairs `(i, j)` with
-    /// `i < j` — the swap-move neighborhood. Built on first use and reset by
+    /// `i < j`, the swap-move neighborhood. Built on first use and reset by
     /// [`Sat::add_clause`].
     swap_pairs: std::sync::OnceLock<Vec<(usize, usize)>>,
 }
@@ -124,7 +124,7 @@ impl Sat {
         self.clauses.push(clause);
     }
 
-    /// The deduplicated clause-sharing pairs `(i, j)` with `i < j` — the
+    /// The deduplicated clause-sharing pairs `(i, j)` with `i < j`, the
     /// swap-move neighborhood. Built lazily from `var_neighbors` on first
     /// call, then cached until the next [`Sat::add_clause`].
     pub(crate) fn clause_sharing_pairs(&self) -> &[(usize, usize)] {

@@ -2,9 +2,9 @@
 
 **API:** [`VertexCover`](../api/optopus/problem/vertex_cover/struct.VertexCover.html)
 
-Given an undirected graph `G = (V, E)`, a *vertex cover* is a subset
-`S ⊆ V` such that every edge has at least one endpoint in `S`. **Minimize**
-the size of such a subset — equivalently, choose a binary membership
+Given an undirected graph `G = (V, E)`, a vertex cover is a subset
+`S ⊆ V` such that every edge has at least one endpoint in `S`. Minimize
+the size of such a subset, equivalently, choose a binary membership
 `x_v ∈ {0,1}` for each vertex `v` (`x_v = 1` iff `v ∈ S`) subject to every
 edge being covered:
 
@@ -12,7 +12,7 @@ edge being covered:
 minimize  Σ_v x_v   subject to   x_i + x_j ≥ 1  for every edge (i,j) ∈ E
 ```
 
-Vertex Cover is NP-hard — it is equivalent to Independent Set and Clique via
+Vertex Cover is NP-hard, it is equivalent to Independent Set and Clique via
 complementation.
 
 Feasibility is soft: the solver actually optimizes a penalty-augmented
@@ -65,7 +65,7 @@ and `uncovered_edges` is the constraint-violation count.
 
 ## Crossover
 
-- `VertexCoverUniformCrossover` — per-vertex random parent selection.
+- `VertexCoverUniformCrossover`, per-vertex random parent selection.
 - `VertexCover` implements `SubProblemExtractable`: vertices that agree in
   both parents are fixed; the remaining vertices form a sub-instance.
 

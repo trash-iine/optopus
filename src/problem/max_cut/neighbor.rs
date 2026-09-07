@@ -2,8 +2,8 @@
 //!
 //! Two move types are provided:
 //!
-//! - [`MaxCutFlipNeighbor`] — flip a single vertex (O(degree) update)
-//! - [`MaxCutSwapNeighbor`] — swap two vertices on opposite sides (two sequential flips)
+//! - [`MaxCutFlipNeighbor`], flip a single vertex (O(degree) update)
+//! - [`MaxCutSwapNeighbor`], swap two vertices on opposite sides (two sequential flips)
 //!
 //! Both implement [`MoveToNeighbor`], [`Evaluate`], and [`EnabledTabu`], so they
 //! work with all heuristics ([`LocalSearch`], [`TabuSearch`], [`SimulatedAnnealing`], etc.).
@@ -162,8 +162,8 @@ impl Evaluate for MaxCutFlipNeighbor {
 impl MaxCutFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
     ///
-    /// A flip's gain needs no correction — it is exactly the value the solution
-    /// already maintains — so this only exists to keep every construction site
+    /// A flip's gain needs no correction, it is exactly the value the solution
+    /// already maintains, so this only exists to keep every construction site
     /// on one path, the way [`MaxCutSwapNeighbor::new`] does. `prob` is unused
     /// for that reason and taken only so the two constructors read alike at the
     /// call site.
@@ -213,7 +213,7 @@ impl MaxCutFlipNeighbor {
 /// A swap move that simultaneously flips vertices `i` and `j` to opposite sides.
 ///
 /// Only pairs where `i` and `j` are currently on different sides are generated.
-/// Each swap counts as **2 iterations** (see [`apply_to_iteration`](MoveToNeighbor::apply_to_iteration)).
+/// Each swap counts as 2 iterations (see [`apply_to_iteration`](MoveToNeighbor::apply_to_iteration)).
 /// The neighborhood size is O(n^2), so it is slower per iteration than [`MaxCutFlipNeighbor`]
 /// but can escape local optima that flips cannot.
 ///
@@ -250,8 +250,8 @@ impl MaxCutSwapNeighbor {
     /// would count with the wrong sign. Every construction site goes through
     /// here so the correction cannot be forgotten at one of them.
     ///
-    /// `i` and `j` are expected to sit on opposite sides — that is what makes
-    /// the move a swap — but nothing here depends on it, so a caller that
+    /// `i` and `j` are expected to sit on opposite sides, that is what makes
+    /// the move a swap, but nothing here depends on it, so a caller that
     /// deliberately builds a same-side pair still gets a correctly evaluated
     /// move.
     ///
@@ -267,7 +267,7 @@ impl MaxCutSwapNeighbor {
     /// ```
     /// Non-adjacent pairs need no correction, and
     /// [`get_weight`](crate::common::Graph::get_weight) already returns `0.0`
-    /// for them, so this does not pay for a separate `has_edge` lookup — the
+    /// for them, so this does not pay for a separate `has_edge` lookup, the
     /// perturbation operators call it once per move.
     pub fn new(prob: &MaxCut, sol: &MaxCutSolution, i: usize, j: usize) -> Self {
         Self {
@@ -292,7 +292,7 @@ impl Evaluate for MaxCutSwapNeighbor {
 }
 
 impl EnabledTabu for MaxCutSwapNeighbor {
-    /// A swap is tabu unless **both** vertexs it moves are free.
+    /// A swap is tabu unless both vertexs it moves are free.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
         tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
     }

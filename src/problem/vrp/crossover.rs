@@ -90,7 +90,7 @@ mod tests {
     }
 
     /// From identical parents OX reproduces the parent's own customer order, and
-    /// the parent's routes are one way of cutting that order — so the optimal
+    /// the parent's routes are one way of cutting that order, so the optimal
     /// decoder cannot come back with anything worse. (The greedy splitter this
     /// operator used to end with could, by re-cutting a good partition.)
     #[test]

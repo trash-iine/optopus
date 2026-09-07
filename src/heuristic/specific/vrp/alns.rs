@@ -1,8 +1,8 @@
 //! Adaptive Large Neighborhood Search (ALNS) for the Capacitated VRP.
 //!
 //! ALNS (Ropke & Pisinger, 2006) is the canonical, most effective general-purpose
-//! VRP metaheuristic: each iteration *ruins* part of the incumbent with a destroy
-//! operator and *recreates* it with a repair operator, choosing operators
+//! VRP metaheuristic: each iteration ruins part of the incumbent with a destroy
+//! operator and recreates it with a repair operator, choosing operators
 //! adaptively by a roulette wheel whose weights track recent performance, and
 //! accepting worse solutions with a simulated-annealing criterion.
 //!
@@ -12,9 +12,9 @@
 //! [`super::super::lkh_for_tsp`]) since a destroy+repair step is not a single
 //! [`MoveToNeighbor`](crate::search_state::MoveToNeighbor).
 //!
-//! What a route edit *costs* is not decided here: the insertion and removal
+//! What a route edit costs is not decided here: the insertion and removal
 //! deltas come from [`super::ops`], and each recreated solution is handed to the
-//! same granular descent Hybrid Genetic Search uses — with
+//! same granular descent Hybrid Genetic Search uses, with
 //! [`Vrp::penalty_weight`] as its penalty, the weight this heuristic's objective
 //! already charges overload at. Ruin-and-recreate alone re-inserts customers
 //! greedily and never repairs the edges it disturbs elsewhere in the route.
@@ -241,12 +241,12 @@ impl AlnsOps {
     }
 
     /// The cheapest (augmented) insertion of `c`, and the cheapest one into a
-    /// *different* route, each as `(cost, route, pos)`.
+    /// different route, each as `(cost, route, pos)`.
     ///
     /// The two are taken across routes, not across positions, because that is what
     /// regret-k is defined on (Ropke & Pisinger): the gap that matters is how much
     /// worse `c` gets once its best vehicle is taken, and the second-cheapest
-    /// *slot* is almost always the one next door in the same route — a gap of
+    /// slot is almost always the one next door in the same route, a gap of
     /// nearly zero for every customer, which would leave [`Self::regret2_insertion`]
     /// indistinguishable from [`Self::greedy_insertion`].
     ///

@@ -27,7 +27,7 @@ impl TspTwoOptNeighbor {
     /// endpoint distances.
     ///
     /// Every construction site goes through here so the gain can never be
-    /// filled in by hand — a wrong value would silently corrupt
+    /// filled in by hand, a wrong value would silently corrupt
     /// [`TspSolution::objective`], which [`apply_to_solution`](MoveToNeighbor::apply_to_solution)
     /// updates from it without re-measuring the tour.
     ///
@@ -204,7 +204,7 @@ impl TspRelocateNeighbor {
     /// computing its gain as `insertion_cost - removal_gain`.
     ///
     /// Every construction site goes through the same two gain helpers, so the
-    /// two halves of the delta can never be paired up wrongly — a bad `gain`
+    /// two halves of the delta can never be paired up wrongly, a bad `gain`
     /// would silently corrupt [`TspSolution::objective`], which
     /// [`apply_to_solution`](MoveToNeighbor::apply_to_solution) updates from it
     /// without re-measuring the tour.

@@ -1,13 +1,13 @@
 //! Planted-solution [`MaxCut`] instances, where the optimum is known by
 //! construction rather than by consensus of the literature.
 //!
-//! Every standard MaxCut benchmark reports a gap against a *best-known* value
+//! Every standard MaxCut benchmark reports a gap against a best-known value
 //! that is neither an upper nor a lower bound. On the G-set that is not a
 //! theoretical worry: published values for `G59`, `G60` and `G61` disagree by
 //! 1 to 4 depending on the source, which is the same order as the difference
 //! between two competing heuristics. Planting removes the problem at the root
-//! — the instance is built *around* a chosen solution in such a way that no
-//! better one can exist — so a run's gap is measured against the truth.
+//!, the instance is built around a chosen solution in such a way that no
+//! better one can exist, so a run's gap is measured against the truth.
 //!
 //! The two families here are the two that Perera et al. package for pairwise
 //! (2-local) Ising problems, which is exactly the class that maps to weighted
@@ -28,22 +28,22 @@
 //! # Why the planted state is optimal
 //!
 //! Both tile-planting constructions partition the edges into small
-//! **edge-disjoint** tiles that share only vertices. The energy is therefore a
+//! edge-disjoint tiles that share only vertices. The energy is therefore a
 //! sum of independent per-tile terms, and each tile is drawn from a class whose
-//! ground states *all* include the all-aligned state. A configuration that
+//! ground states all include the all-aligned state. A configuration that
 //! minimizes every term simultaneously minimizes the sum, so the all-aligned
-//! state is a global ground state — no search is involved in the claim.
+//! state is a global ground state, no search is involved in the claim.
 //! Wishart planting instead builds the coupling matrix in the null space of the
 //! planted vector, which puts the planted state at the minimum directly.
 //!
 //! # Gauge transformation
 //!
-//! All three constructions plant the *ferromagnetic* state, which would be
+//! All three constructions plant the ferromagnetic state, which would be
 //! found instantly. Each instance is therefore concealed by a random gauge
 //! transformation `J_ij -> s_i s_j J_ij`, which moves the ground state to `s`.
 //! This is the switching operation on signed graphs, so it relabels the
-//! solution while preserving the frustration structure exactly: **the
-//! transformation changes nothing about how hard the instance is**.
+//! solution while preserving the frustration structure exactly: the
+//! transformation changes nothing about how hard the instance is.
 //!
 //! # Ising to MaxCut
 //!
@@ -56,17 +56,17 @@
 //! # References
 //!
 //! - Perera, D., Akpabio, I., Hamze, F., Mandrà, S., Rose, N., Aramon, M. and
-//!   Katzgraber, H. G. "Chook — A comprehensive suite for generating binary
+//!   Katzgraber, H. G. "Chook, A comprehensive suite for generating binary
 //!   optimization problems with planted solutions."
 //!   [arXiv:2005.14344](https://arxiv.org/abs/2005.14344). The constructions
 //!   below follow its reference implementation (`chook/planters/`).
 //! - Perera, D., Hamze, F., Raymond, J., Weigel, M. and Katzgraber, H. G.
 //!   "Computational hardness of spin-glass problems with tile-planted
-//!   solutions." *Phys. Rev. E* 101, 023316 (2020).
+//!   solutions." Phys. Rev. E 101, 023316 (2020).
 //!   [arXiv:1907.10809](https://arxiv.org/abs/1907.10809)
 //! - Hamze, F., Raymond, J., Pattison, C. A., Biswas, K. and Katzgraber, H. G.
 //!   "Wishart planted ensemble: A tunably rugged pairwise Ising model with a
-//!   first-order phase transition." *Phys. Rev. E* 101, 052102 (2020).
+//!   first-order phase transition." Phys. Rev. E 101, 052102 (2020).
 //!   [arXiv:1906.00275](https://arxiv.org/abs/1906.00275)
 //!
 //! # Example
@@ -106,7 +106,7 @@ pub struct PlantedMaxCut {
     pub problem: MaxCut,
     /// The planted cut. This is an optimal solution, not merely a good one.
     pub planted: Vec<bool>,
-    /// The cut weight of [`planted`](Self::planted) — the exact optimum.
+    /// The cut weight of [`planted`](Self::planted), the exact optimum.
     pub optimum: f32,
 }
 
@@ -192,7 +192,7 @@ pub enum WishartCouplers {
     /// optimum" is a comparison rather than a judgement call about rounding.
     /// The price is size: the scaling grows as `N³`, and past some point the
     /// cut value no longer round-trips through the `f32` objective. Measured at
-    /// `alpha = 0.75`, instances survive to `n = 96` and fail from `n = 128` —
+    /// `alpha = 0.75`, instances survive to `n = 96` and fail from `n = 128`,
     /// but that is where the draws happened to land, not a bound, so
     /// [`PlantedMaxCut::verify`] is what decides. It rejects any instance whose
     /// stored optimum is not exactly what the instance computes.
@@ -396,11 +396,11 @@ impl PlantedMaxCut {
     /// against [`MaxCut::calculate_cut_size`].
     ///
     /// What counts as agreement depends on the weights, and the difference
-    /// matters when reading results. **Integer weights must agree exactly** —
+    /// matters when reading results. Integer weights must agree exactly,
     /// `f32` sums integers exactly until a partial sum leaves its representable
     /// range, so a discrepancy means the couplers have outgrown the objective
     /// and "did this run reach the optimum" has stopped being a decidable
-    /// question. **Real-valued weights never agree exactly**, so they are only
+    /// question. Real-valued weights never agree exactly, so they are only
     /// held to the standard worst-case bound for sequential summation; a run on
     /// such an instance can only be scored against the optimum up to that
     /// bound.
@@ -466,7 +466,7 @@ impl PlantedMaxCut {
     ///
     /// True when every weight is an integer, which makes the `f32` objective
     /// exact and lets a run be compared against the optimum by equality. On a
-    /// real-weighted instance — `WishartCouplers::Gaussian` — a run that
+    /// real-weighted instance (`WishartCouplers::Gaussian`) a run that
     /// genuinely found the planted state may still compute a value a few bits
     /// away, so it can only be scored within a tolerance.
     ///
@@ -536,7 +536,7 @@ impl PlantedMaxCut {
 /// All four edges start strong and ferromagnetic; `c` of them are weakened to
 /// `+1`, and one of those weak ones is flipped antiferromagnetic. The single
 /// negative coupler makes the 4-cycle frustrated, so some edge must be
-/// unsatisfied, and the cheapest choice always costs `2` — which the aligned
+/// unsatisfied, and the cheapest choice always costs `2`, which the aligned
 /// state achieves by leaving the `-1` edge unsatisfied. That is why the aligned
 /// state is a ground state for every class.
 fn sample_plaquette(p: TileProbs2d, rng: &mut impl Rng) -> [f64; 4] {
@@ -617,7 +617,7 @@ fn sample_voxel(p: TileProbs3d, rng: &mut impl Rng) -> Vec<(usize, usize, f64)> 
 /// The 48 elements are exactly the 6 permutations of the coordinate axes times
 /// the 8 independent axis flips, which is the same group and the same uniform
 /// measure as the reference implementation's "24 rotations then optional
-/// inversion" — only the way a draw is spelled differs.
+/// inversion", only the way a draw is spelled differs.
 fn random_octahedral(rng: &mut impl Rng) -> [usize; 8] {
     let mut axes = [0usize, 1, 2];
     axes.shuffle(rng);
@@ -749,12 +749,12 @@ mod tests {
 
     /// Asserts the planted instance covers exactly the lattice's edge set.
     ///
-    /// This also catches two tiles *sharing* an edge, which is the failure that
+    /// This also catches two tiles sharing an edge, which is the failure that
     /// would break the optimality argument while leaving the graph looking
     /// fine. The tiles emit exactly as many couplers as the lattice has edges,
     /// and `Graph::from_edges` overwrites duplicates, so an overlap would
     /// silently collapse two couplers into one and leave some lattice edge
-    /// uncovered — which shows up here as a missing edge.
+    /// uncovered, which shows up here as a missing edge.
     fn assert_structure_matches(planted: &PlantedMaxCut, lattice: &Graph) {
         let actual: HashSet<(usize, usize)> = planted
             .problem

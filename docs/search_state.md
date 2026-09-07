@@ -30,16 +30,16 @@ randomness comes from.
 
 |  | Random initial solution | Given initial solution |
 |---|---|---|
-| **OS entropy** | `SearchState::new(problem)` | `SearchState::with_solution(problem, sol)` |
-| **Fixed seed** | `SearchState::new_with_seed(problem, seed)` | `SearchState::with_solution_and_seed(problem, sol, seed)` |
+| OS entropy | `SearchState::new(problem)` | `SearchState::with_solution(problem, sol)` |
+| Fixed seed | `SearchState::new_with_seed(problem, seed)` | `SearchState::with_solution_and_seed(problem, sol, seed)` |
 
 ```rust
 let mut state = SearchState::new_with_seed(&problem, 42);
 ```
 
-The seeded pair is what the benchmark uses — it derives one seed per run so a
+The seeded pair is what the benchmark uses, it derives one seed per run so a
 rerun is bit-identical. The `with_solution` pair is the warm start: the given
-solution becomes the current one, the best one, *and* `initial_solution`, so the
+solution becomes the current one, the best one, and `initial_solution`, so the
 reported improvement is measured from it.
 
 ## Advancing one step
@@ -69,15 +69,15 @@ call `update_best` once when the phase ends. Both count an acceptance;
 
 ## Remembering tabu moves
 
-Recording is a **mode**, and it starts off. A state records nothing until
+Recording is a mode, and it starts off. A state records nothing until
 `start_record_tabu()`, and a sub-run starts off again whatever its parent was
 doing. Most searches never read the tabu memory, and writing it costs an RNG
-draw and a store on every move, so a search whose method *is* the tabu list has
+draw and a store on every move, so a search whose method is the tabu list has
 to say so.
 
 While the mode is on, `apply` and `apply_move_only` record the move they applied
 at the iteration it was made on, before the counter advances. The map lives here
-rather than on the heuristic because the state is what applies a move — so no
+rather than on the heuristic because the state is what applies a move, so no
 heuristic has to pair `record` with `apply` by hand, and operators that must
 respect each other's prohibitions get that by sharing a state instead of by
 being handed the same object.
@@ -91,7 +91,7 @@ state.reset_tabu();                        // drop every prohibition
 
 The tenure and the mode are one call because they were always one decision: a
 memory nothing writes needs no tenure, and a tenure nothing draws from records
-nothing. Arm it **where the tenure belongs, at the same rate** — per iteration
+nothing. Arm it where the tenure belongs, at the same rate, per iteration
 if that is where the tenure is decided, as `TabuSearch::run_once` does; per
 half-round for `BreakoutLocalSearchForMaxCut::prepare`. Arming it once, far from
 the loop that depends on it, is how it gets forgotten, and forgetting it is
@@ -99,33 +99,33 @@ silent: the search keeps running, having stopped writing the memory it reads.
 
 Until it is armed the tenure is `(0, 0)`, which records a move and frees it
 again on the next iteration, so a state nothing armed never blocks itself. To
-use a tenure *without* letting `apply` record — forbidding only what you hand to
-`record_tabu` — follow the call with `stop_record_tabu()`, which leaves the
+use a tenure without letting `apply` record, forbidding only what you hand to
+`record_tabu`, follow the call with `stop_record_tabu()`, which leaves the
 tenure alone.
 
 `tabu_allows` is typed on the move, so `is_move_enabled` inlines into a
-neighborhood scan — which is where it is called, once per candidate. A move that
+neighborhood scan, which is where it is called, once per candidate. A move that
 does not implement `EnabledTabu` cannot be asked at all, and says so at compile
 time.
 
 A move type opts in by implementing [`EnabledTabu`](traits.md#core-trait-reference)
-**and** overriding `MoveToNeighbor::tabu_policy` with `Some(self)` — one line,
+and overriding `MoveToNeighbor::tabu_policy` with `Some(self)`, one line,
 and what hands the policy to the state, which holds it as `&dyn EnabledTabu`.
-Leaving that default in place means the move has **no** tabu policy: applying it
+Leaving that default in place means the move has no tabu policy: applying it
 still succeeds and simply records nothing, and `record_tabu(&m)` cannot even be
-called — it is bounded on `EnabledTabu`, so reaching for the memory with a move
+called, it is bounded on `EnabledTabu`, so reaching for the memory with a move
 that has none is a compile error. A problem that never wanted tabu still applies
-its moves. Every move type the library ships *does* opt in, so in practice they
-all record — what the default buys is that a new problem can stop at the three
+its moves. Every move type the library ships does opt in, so in practice they
+all record, what the default buys is that a new problem can stop at the three
 core traits. `trait_defs/tabu.rs` pins every built-in move against implementing
 `EnabledTabu` and forgetting the one-line override, which would otherwise leave
 `TabuSearch` running with no tabu list and no complaint.
 
 What a move forbids is a `TabuKey`: `Var(i)` for a dense index (a variable, a
 vertex, a position), `Pair` and `Triple` for the rest. The shapes are separate
-spaces, so two move types over the same shape share prohibitions — MaxCut's flip
+spaces, so two move types over the same shape share prohibitions, MaxCut's flip
 and swap are both `Var`, which is exactly what Breakout Local Search's descent
-and perturbations rely on — while different shapes never collide (JobShop's swap
+and perturbations rely on, while different shapes never collide (JobShop's swap
 is a `Var`, its relocate a `Pair`). The keys a move reads and the keys it writes
 need not agree: a VRP relocate asks whether a customer may enter its destination
 route and forbids the route it just left, so the customer cannot be moved
@@ -144,10 +144,10 @@ state.update_state(sub);
 ```
 
 `update_state` installs the sub-run's current solution, adds each counter's
-*delta over the sub-run* to the parent's, and adopts the best solution only if
+delta over the sub-run to the parent's, and adopts the best solution only if
 it actually improves. `initial_solution` is never overwritten, so the parent
 keeps its own anchor for reporting. It panics if the sub-state borrows a
-different problem instance — which is exactly the case a reduction is for (see
+different problem instance, which is exactly the case a reduction is for (see
 below).
 
 Because only deltas are merged, the global `iteration` advances monotonically
@@ -166,7 +166,7 @@ phase is, and `start_iteration` marks where the phase began). Everything
 budget-shaped is measured against that anchor (`iterations_this_run()`,
 `StopCondition`, `update_state`'s deltas), so a phase still starts at zero *of
 its own budget*. What a shared frame buys is that an iteration number means the
-same thing on both sides of a merge — which matters for anything that records
+same thing on both sides of a merge, which matters for anything that records
 one, such as a trajectory point, and is what lets tabu boundaries (absolute
 iterations) cross.
 
@@ -187,17 +187,18 @@ parent's advances by one fork's worth of state. That is why
 `clone_for_new_run` takes `&mut self`, and why a sub-run's internal draws never
 leak back into the parent's sequence.
 
-Every variant also starts the child with an **empty tabu memory** — a phase is
+Every variant also starts the child with an empty tabu memory, a phase is
 its own tabu list. What it learns does come back: `update_state` carries the
 sub-run's prohibitions into the parent along with its solution, needing no
-translation because both sides share the frame. A phase that should *start* from
+translation because both sides share the frame. A phase that should start from
 the parent's asks with `sub.inherit_tabu_from(&state)`.
 
 ## Crossing a reduction
 
-A [`ProblemReduction`](traits.md#problemreduction) maps one instance to another
-— a kernel, say — and a sub-run on it cannot go through `update_state`, which
-requires the *same* instance. This pair is the crossing:
+A [`ProblemReduction`](traits.md#problemreduction) maps one instance to another,
+a kernel for example. A sub-run on that instance cannot go through
+`update_state`, which requires the same instance, so this pair does the
+crossing.
 
 ```rust
 let mut sub = state.open_reduction(&kernel);   // warm start, seed drawn from state.rng
@@ -206,14 +207,14 @@ state.close_reduction(&kernel, &sub);          // counters, then the lifted best
 ```
 
 `open_reduction` projects the incumbent as the sub-run's starting solution and
-takes exactly one draw from this state's RNG for its seed — which is what keeps
+takes exactly one draw from this state's RNG for its seed, which is what keeps
 a seeded run reproducible through a reduction.
 
 `close_reduction` is one method rather than two because the order inside it is
-load-bearing. It merges the sub-run's counters *first*, then installs
+load-bearing. It merges the sub-run's counters first, then installs
 `lift(..., &sub.best_solution)` and refreshes the best. Installing first would
-record a `best_iteration` that omits the sub-run's work entirely — a mistake
-invisible in the objective. Note that it is the sub-run's **best** solution that
+record a `best_iteration` that omits the sub-run's work entirely, a mistake
+invisible in the objective. Note that it is the sub-run's best solution that
 crosses, not where it happened to stop.
 
 The rest is the caller's loop, deliberately: `tests/reduction_crossing.rs` is
@@ -223,14 +224,14 @@ that loop with its trajectory pinned, and
 ## Recording the anytime curve
 
 `trajectory` stays empty until an objective probe is installed. Recording is
-opt-in so that `update_best` — called on essentially every improving step —
+opt-in so that `update_best`, called on essentially every improving step,
 allocates nothing by default.
 
 ```rust
 state.set_objective_probe(|sol| sol.objective as f64);
 ```
 
-From then on each *actual* best update appends a `TrajectoryPoint` (absolute
+From then on each actual best update appends a `TrajectoryPoint` (absolute
 instant, iteration, objective). The probe is inherited by sub-run clones, so
 improvements found inside a meta-heuristic phase are recorded too, and
 `update_state` remaps their iterations into the parent's frame while leaving the
@@ -238,8 +239,8 @@ instants alone. `benchmark/runner.rs` is the one caller in the library; what it
 collects becomes the `trajectory` in the report and the curve the benchmark
 viewer plots.
 
-`duration()` is the elapsed time of the *current* sub-run, measured from the
-`start_time` that `ClearBest` / `StartBest` reset — which is what stop
+`duration()` is the elapsed time of the current sub-run, measured from the
+`start_time` that `ClearBest` / `StartBest` reset, which is what stop
 conditions compare against.
 
 ## Reproducibility
@@ -247,5 +248,5 @@ conditions compare against.
 Every source of randomness in a run reaches `state.rng` and nothing else:
 initial solutions, `random_neighbor`, tabu tenures (`EnabledTabu` takes the RNG
 as a parameter), crossovers, BLS perturbations, and the seeds of sub-runs and
-reductions. Fix the seed at construction and the whole composition — nested
-meta-heuristics included — replays bit for bit.
+reductions. Fix the seed at construction and the whole composition, nested
+meta-heuristics included, replays bit for bit.

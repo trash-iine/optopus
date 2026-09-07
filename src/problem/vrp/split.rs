@@ -1,10 +1,10 @@
 //! Optimal route splitting for the CVRP "giant tour" encoding (Prins' Split).
 //!
 //! A giant tour is a permutation of the customers with no route boundaries. Split
-//! turns it into a route partition *without reordering the customers*: it only
+//! turns it into a route partition without reordering the customers: it only
 //! chooses where to cut. Under that restriction the optimal cut positions are
 //! found exactly by dynamic programming, which is what makes the giant-tour
-//! encoding usable as a genetic representation — the decoder is optimal, so the
+//! encoding usable as a genetic representation, the decoder is optimal, so the
 //! search only has to get the customer order right.
 
 use super::problem::{Vrp, overload_of};
@@ -14,8 +14,8 @@ use super::problem::{Vrp, overload_of};
 ///
 /// The customer order within `giant` is preserved; only the cut positions are
 /// chosen. Capacity is soft: a route may overflow, paying `penalty` per unit.
-/// This matters because CVRPLIB fleets are sized for the *best* tour, so an
-/// arbitrary tour order frequently admits no feasible split at all — returning
+/// This matters because CVRPLIB fleets are sized for the best tour, so an
+/// arbitrary tour order frequently admits no feasible split at all, returning
 /// an overloaded partition is the useful answer there, not a failure.
 ///
 /// `penalty` is the cost per unit of capacity overflow. Pass
@@ -47,7 +47,7 @@ pub fn split_giant_tour(prob: &Vrp, giant: &[usize], penalty: f64) -> Vec<Vec<us
 /// capped at `max_overloaded_len`, which keeps the DP at O(fleet · n · route
 /// length) instead of O(fleet · n²) while staying above the `n / fleet` needed to
 /// guarantee the fleet can always cover the tour. Splits that pile most of the
-/// tour onto one grossly overloaded vehicle are therefore out of reach — no loss,
+/// tour onto one grossly overloaded vehicle are therefore out of reach, no loss,
 /// since they are never worth keeping.
 fn split_dp(prob: &Vrp, giant: &[usize], penalty: f64) -> Vec<Vec<usize>> {
     let n = giant.len();
@@ -219,7 +219,7 @@ mod tests {
 
     /// With `penalty_weight` (larger than any possible tour), a feasible split is
     /// always preferred, so Split must reproduce the brute-force optimum whenever
-    /// one exists — and must report overload when none does.
+    /// one exists, and must report overload when none does.
     #[test]
     fn split_matches_brute_force_optimum() {
         let mut rng = SmallRng::seed_from_u64(20260807);

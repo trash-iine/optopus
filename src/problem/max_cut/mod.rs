@@ -29,7 +29,7 @@
 //! ```
 //! use optopus::prelude::*;
 //!
-//! // Option 1: from_edges (set semantics — duplicate edges are overwritten)
+//! // Option 1: from_edges (set semantics, duplicate edges are overwritten)
 //! let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
 //!
 //! // Option 2: from a Graph
@@ -89,14 +89,14 @@
 //!     (3, 4, 1.0), (3, 5, 1.0), (4, 5, 1.0),
 //! ]);
 //!
-//! // LocalSearch — greedy best-improving flip
+//! // LocalSearch, greedy best-improving flip
 //! let mut state = SearchState::new(&mc);
 //! let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(
 //!     StopCondition::iterations(100_000),
 //! );
 //! ls.run(&mut state).unwrap();
 //!
-//! // TabuSearch — flip with tabu tenure [3, 7]
+//! // TabuSearch, flip with tabu tenure [3, 7]
 //! let mut state = SearchState::new(&mc);
 //! let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
 //!     StopCondition::iterations(100_000),
@@ -104,7 +104,7 @@
 //! );
 //! ts.run(&mut state).unwrap();
 //!
-//! // SimulatedAnnealing — flip with temperature schedule
+//! // SimulatedAnnealing, flip with temperature schedule
 //! let mut state = SearchState::new(&mc);
 //! let mut sa = SimulatedAnnealing::<MaxCutFlipNeighbor>::new(
 //!     StopCondition::iterations(100_000),
@@ -113,7 +113,7 @@
 //! );
 //! sa.run(&mut state).unwrap();
 //!
-//! // Iterated Local Search — LocalSearch + RandomWalk perturbation
+//! // Iterated Local Search, LocalSearch + RandomWalk perturbation
 //! let mut state = SearchState::new(&mc);
 //! let mut ils = Iterated::new(
 //!     StopCondition::iterations(1_000_000),

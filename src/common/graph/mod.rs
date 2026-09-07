@@ -217,7 +217,7 @@ impl Graph {
 
     /// Adds (or accumulates) the weight `w` on edge `(i, j)`.
     ///
-    /// If the edge already exists, `w` is **added** to the current weight.
+    /// If the edge already exists, `w` is added to the current weight.
     /// To overwrite instead, use [`set_weight`](Self::set_weight).
     ///
     /// # Examples
@@ -322,7 +322,7 @@ impl Graph {
     ///
     /// # File format
     ///
-    /// The expected format is one header line followed by edge lines (**1-indexed** vertices):
+    /// The expected format is one header line followed by edge lines (1-indexed vertices):
     ///
     /// ```text
     /// N M
@@ -482,11 +482,11 @@ impl Graph {
 
     /// Writes the graph to `path` in the format read by
     /// [`load_from_file`](Self::load_from_file): the header `N M` followed by
-    /// one `i j w` line per edge with **1-based** vertex indices.
+    /// one `i j w` line per edge with 1-based vertex indices.
     ///
     /// The header `N` is [`len`](Self::len), the graph's vertex index space, so
     /// isolated (edge-free) vertices are still accounted for -- not
-    /// [`num_vertices`](Self::num_vertices), which counts only vertices *with*
+    /// [`num_vertices`](Self::num_vertices), which counts only vertices with
     /// edges. Weights are written in full precision, so a write / load round trip
     /// preserves both the vertex count and the weights bit-for-bit.
     ///
@@ -600,7 +600,7 @@ mod tests {
     ///
     /// The tag is what makes the path unique: every caller below passes a
     /// different one, so no two concurrent tests build the same path. A
-    /// wall-clock suffix would not do that job — the clock is quantized (1 us
+    /// wall-clock suffix would not do that job, the clock is quantized (1 us
     /// on macOS), so two tests entering here in the same microsecond would
     /// still collide and read each other's file.
     fn temp_path(tag: &str) -> std::path::PathBuf {

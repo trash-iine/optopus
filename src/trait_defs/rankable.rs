@@ -10,8 +10,8 @@ pub trait Rankable {
 /// Total-order comparator derived from [`Rankable::is_better_than`], for use
 /// with `max_by` / `min_by`.
 ///
-/// Ties compare as `Equal`, so `iter.max_by(rank_cmp)` returns the **last**
-/// tied-best element — the same element `filter_best(iter).pop()` yields.
+/// Ties compare as `Equal`, so `iter.max_by(rank_cmp)` returns the last
+/// tied-best element, the same element `filter_best(iter).pop()` yields.
 #[inline]
 pub fn rank_cmp<R: Rankable>(a: &R, b: &R) -> std::cmp::Ordering {
     if a.is_better_than(b) {
@@ -51,7 +51,7 @@ pub fn filter_best<R: Rankable, T: Iterator<Item = R>>(iter: T) -> Vec<R> {
 /// Used by parent-selection strategies that promote population diversity
 /// (e.g. [`crate::heuristic::ParentSelection::DistantTopK`]).
 ///
-/// For bit-vector solutions this is the standard Hamming distance — the
+/// For bit-vector solutions this is the standard Hamming distance, the
 /// number of variables that differ. For other encodings any application-
 /// meaningful integer dissimilarity measure works.
 pub trait Distance {

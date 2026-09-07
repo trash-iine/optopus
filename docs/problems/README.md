@@ -14,12 +14,12 @@ to plug into every relevant heuristic.
 | [Vertex Cover](vertex_cover.md) | Minimize | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `Graph::load_from_file` |
 | [Job Shop Scheduling](job_shop_scheduling.md) | Minimize | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
 | [CVRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB) |
-| [Formula](formula.md) | Configurable | `FormulaSolution` | Flip / Swap | `FormulaUniformCrossover` | (none — built from `Expr` AST) |
+| [Formula](formula.md) | Configurable | `FormulaSolution` | Flip / Swap | `FormulaUniformCrossover` | (none, built from `Expr` AST) |
 
 Type names are exported from `optopus::prelude`. See each page for the
 `Solution` struct fields, the file format, and which optional traits the
 problem implements.
 
-One problem also ships an exact **instance** reduction rather than a search:
+One problem also ships an exact instance reduction rather than a search:
 [MaxCutKernel](max_cut_kernel.md) shrinks a sparse MaxCut instance by rules
 that provably preserve the optimum, and any heuristic can search the result.

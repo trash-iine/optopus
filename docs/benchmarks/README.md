@@ -3,15 +3,15 @@
 Aggregated comparison of the general heuristics, and the problem-specific solvers. 
 Each row is `(problem, instance, neighbor, heuristic)` averaged over 10 runs.
 
-**The numbers themselves — and the exact configuration behind each one — live in
-the [benchmark viewer](viewer.html); click any cell.** This file covers how those
+The numbers themselves (and the exact configuration behind each one) live in
+the [benchmark viewer](viewer.html); click any cell. This file covers how those
 numbers were produced: what is covered, how the size bands are drawn, why the
 settings are what they are, and how to reproduce a run.
 
-> ⚠️ **Reference values only.** These benchmarks were collected in a
+> ⚠️ Reference values only. These benchmarks were collected in a
 > non-isolated environment (shared machine, background load) and some code
 > paths are deliberately generalized, trading raw speed for flexibility. The
-> numbers therefore do **not** reflect each algorithm's true performance — treat
+> numbers therefore do not reflect each algorithm's true performance, treat
 > them as indicative reference values, not a rigorous ranking.
 
 ## Coverage
@@ -27,8 +27,8 @@ Small (≤30s budget), medium (120s), and large (600s) bands.
 | JSSP (OR-Library) | 9 / 34 / 39 | Swap, Relocate | LS, TS, LAHC, SA, GA, Iterated, Restart |
 | VertexCover (GSET) | 30 / 24 / 17 | Flip, Swap | LS, TS, LAHC, SA, GA, Iterated, Restart |
 
-CVRP has run configs and a size-band profile (below) but **no published
-results yet** — there is no `data/vrp/` under this directory, so the viewer has
+CVRP has run configs and a size-band profile (below) but no published
+results yet, there is no `data/vrp/` under this directory, so the viewer has
 no CVRP rows. The bespoke CVRP comparison lives in
 [hgs.md](../heuristics/hgs.md#measured-quality) instead. The same holds for
 `PopulationAnnealingForMaxCut` and `WalkSatForSat`: implemented and
@@ -36,10 +36,10 @@ configurable, not part of this sweep.
 
 ## Browse interactively
 
-Published on GitHub Pages: **https://trash-iine.github.io/optopus/** (Benchmark
+Published on GitHub Pages: https://trash-iine.github.io/optopus/ (Benchmark
 viewer card).
 
-Locally the viewer **must be served over HTTP** — it loads its data with `fetch`
+Locally the viewer must be served over HTTP, it loads its data with `fetch`
 from `data/index.json` + `data/**/*.slim.toml`, so opening the `file://` path
 directly does not work:
 
@@ -77,7 +77,7 @@ seeds are derived deterministically.
 - Place output TOMLs to `docs/benchmarks/data/<problem>/`.
   These raw TOMLs hold the full per-run solution vectors and heavy, therefore gitignored.
 - Run `render.py` (`pip install tomli-w` first), which aggregates the curated raw TOMLs
-  into the viewer's data source — a slim copy of each with the heavy per-run
+  into the viewer's data source, a slim copy of each with the heavy per-run
   `runs` arrays stripped plus an `index.json` the browser fetches to discover them. 
   The `*.slim.toml` + `index.json` are what you commit. 
   The viewer parses those slim TOMLs client-side with the vendored parser in

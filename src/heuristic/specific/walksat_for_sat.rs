@@ -1,19 +1,19 @@
 //! WalkSAT-style stochastic local search for MaxSAT.
 //!
 //! The generic [`LocalSearch`](crate::heuristic::LocalSearch) /
-//! [`TabuSearch`](crate::heuristic::TabuSearch) scan **all** `n` variables every
+//! [`TabuSearch`](crate::heuristic::TabuSearch) scan all `n` variables every
 //! step (`O(n)` per move), which is prohibitively slow on the large instances
-//! this heuristic targets. WalkSAT instead keeps the search *focused*: each step
-//! it samples a currently **unsatisfied clause** and flips one variable *inside
+//! this heuristic targets. WalkSAT instead keeps the search focused: each step
+//! it samples a currently unsatisfied clause and flips one variable *inside
 //! it*, so the per-step cost is `O(clause length × variable degree)` and is
 //! independent of the total variable count. Because every literal of an unsat
 //! clause is false, flipping any of its variables necessarily satisfies that
 //! clause; the choice between them follows the classic Selman–Kautz–Cohen (SKC)
-//! rule based on each variable's *break count* (how many other clauses its flip
+//! rule based on each variable's break count (how many other clauses its flip
 //! would turn unsatisfied) plus a noise parameter for diversification.
 //!
 //! The move is not expressible through the uniform [`SatFlipNeighbor`] iterator,
-//! so — like Breakout Local Search for MaxCut — it lives here as a
+//! so (like Breakout Local Search for MaxCut) it lives here as a
 //! problem-specific heuristic. It keeps its own scratch state (satisfying-literal
 //! counts, an unsatisfied-clause list, and a variable→clause index) and leaves
 //! [`Sat`] / [`SatSolution`](crate::problem::SatSolution) untouched. Multi-restart
@@ -91,7 +91,7 @@ impl WalkSatScratch {
         }
     }
 
-    /// Number of clauses that variable `v` currently satisfies *alone* — flipping
+    /// Number of clauses that variable `v` currently satisfies alone, flipping
     /// `v` would break exactly these. Computed against the pre-flip assignment `x`.
     fn break_count(&self, x: &[bool], v: usize) -> u32 {
         let mut breaks = 0;
@@ -104,7 +104,7 @@ impl WalkSatScratch {
     }
 
     /// Updates `true_count` and the unsatisfied-clause list after variable `v`
-    /// has been flipped. `x` is the **post-flip** assignment. Returns
+    /// has been flipped. `x` is the post-flip assignment. Returns
     /// `(newly satisfied, newly unsatisfied)` clause counts, whose difference is
     /// the change in the satisfied-clause objective (`O(degree)`).
     fn apply_flip(&mut self, x: &[bool], v: usize) -> (u32, u32) {
@@ -163,8 +163,8 @@ impl WalkSatScratch {
 /// # References
 ///
 /// - Selman, B., Kautz, H. A., and Cohen, B. "Noise Strategies for Improving
-///   Local Search." *Proc. AAAI-94*, 337-343, 1994.
-/// - Hoos, H. H. "An Adaptive Noise Mechanism for WalkSAT." *Proc. AAAI-02*,
+///   Local Search." Proc. AAAI-94, 337-343, 1994.
+/// - Hoos, H. H. "An Adaptive Noise Mechanism for WalkSAT." Proc. AAAI-02,
 ///   655-660, 2002.
 pub struct WalkSat {
     stop_condition: StopCondition,
@@ -275,7 +275,7 @@ impl Heuristic<Sat> for WalkSat {
     }
 
     /// Stops on the configured [`StopCondition`], or early once every clause is
-    /// satisfied (a global optimum for MaxSAT — no further improvement possible).
+    /// satisfied (a global optimum for MaxSAT, no further improvement possible).
     fn is_done<'a>(&self, state: &SearchState<'a, Sat>) -> bool {
         if self.stop_condition.is_done(state) {
             return true;

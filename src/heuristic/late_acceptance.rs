@@ -15,7 +15,7 @@ use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait};
 /// # Reference
 ///
 /// Burke, E. K., & Bykov, Y. (2017). The late acceptance hill-climbing heuristic.
-/// *European Journal of Operational Research*, 258(1), 70–78.
+/// European Journal of Operational Research, 258(1), 70–78.
 pub struct LateAcceptanceHillClimbing<N> {
     pub stop_condition: StopCondition,
     pub history_length: usize,

@@ -33,15 +33,10 @@ pub struct LocalSearch<N> {
 impl<N> LocalSearch<N> {
     /// Create a new [`LocalSearch`] with the given stopping condition.
     ///
-    /// The condition is taken as given. Reaching a local optimum already ends
-    /// the run through [`is_done`](Heuristic::is_done), so nothing here has to
-    /// be set for that: this used to force an unset `max_failed_update` to
-    /// `Some(1)`, which was redundant on a cold start — every move a descent
-    /// applies is strictly improving, so it also improves the best and leaves
-    /// `iteration - best_iteration` at 0 — and wrong on a warm start, where a
-    /// state whose `best_solution` already beats its `solution` returned
-    /// without taking a single move. Breakout Local Search descends from
-    /// exactly there, right after a perturbation.
+    /// The condition is taken as given. A run also ends as soon as it reaches a
+    /// local optimum, so a search that should stop there needs nothing set for
+    /// it, and a search started from a solution worse than the recorded best
+    /// still descends.
     pub fn new(stop_condition: StopCondition) -> Self {
         Self {
             stop_condition,
@@ -80,7 +75,7 @@ where
         &self.stop_condition
     }
 
-    /// Done when the stop condition is met **or** the last iteration found no
+    /// Done when the stop condition is met or the last iteration found no
     /// improving move (a local optimum was reached).
     fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
         self.stop_condition.is_done(state) || self.no_best_move

@@ -11,8 +11,8 @@ pub type TspEdge = (usize, usize);
 
 /// A solution to the TSP problem.
 ///
-/// - `tour` — ordered sequence of city indices forming the tour
-/// - `objective` — total tour length
+/// - `tour`, ordered sequence of city indices forming the tour
+/// - `objective`, total tour length
 ///
 /// Move gains are computed on the fly from [`TspWithCoordinates::distance`]
 /// (backed by the lazily built distance matrix), so no per-solution gain
@@ -68,9 +68,9 @@ impl ProblemTrait for TspWithCoordinates {
 pub enum EdgeWeightType {
     /// Plain Euclidean distance (no rounding). Default for [`TspWithCoordinates::new`].
     Continuous,
-    /// `nint(sqrt(dx^2 + dy^2))` — TSPLIB `EUC_2D`.
+    /// `nint(sqrt(dx^2 + dy^2))`, TSPLIB `EUC_2D`.
     Euc2d,
-    /// `ceil(sqrt(dx^2 + dy^2))` — TSPLIB `CEIL_2D`.
+    /// `ceil(sqrt(dx^2 + dy^2))`, TSPLIB `CEIL_2D`.
     Ceil2d,
     /// TSPLIB pseudo-Euclidean distance (`ATT`): `r = sqrt((dx^2+dy^2)/10); t = nint(r); d = if t<r {t+1} else {t}`.
     Att,
@@ -91,7 +91,7 @@ pub struct TspWithCoordinates {
     /// user-supplied for in-memory instances).
     pub name: String,
     /// City coordinates, 0-indexed. Interpretation depends on
-    /// `edge_weight_type` — e.g. `Geo` expects `DDD.MM` degrees-minutes,
+    /// `edge_weight_type`, e.g. `Geo` expects `DDD.MM` degrees-minutes,
     /// the others expect plane coordinates.
     pub coordinates: Vec<(f64, f64)>,
     /// Selects the distance formula used by [`TspWithCoordinates::distance`].
@@ -370,7 +370,7 @@ mod tsp_coord_tests {
     use super::*;
 
     /// Handed out once per call, so two concurrent tests never build the same
-    /// path. A wall-clock suffix would not do that job — the clock is quantized
+    /// path. A wall-clock suffix would not do that job, the clock is quantized
     /// (1 us on macOS), so two tests entering `write_tmp` in the same
     /// microsecond would still collide and read each other's file.
     static TEMP_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);

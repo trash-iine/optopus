@@ -71,24 +71,24 @@ impl LkScratch {
 /// 3. If closure fails, extends the chain to deeper levels
 ///
 /// The search is pruned by:
-/// - **Candidate lists**: only the `num_neighbors` nearest cities are considered
-/// - **Positive gain criterion**: partial gain must remain positive at each step
-/// - **Maximum depth**: search stops after `max_depth` levels (k in k-opt)
+/// - Candidate lists: only the `num_neighbors` nearest cities are considered
+/// - Positive gain criterion: partial gain must remain positive at each step
+/// - Maximum depth: search stops after `max_depth` levels (k in k-opt)
 ///
 /// # References
 ///
 /// - Lin, S. and Kernighan, B. W. "An Effective Heuristic Algorithm for the
-///   Traveling-Salesman Problem." *Operations Research*, 21(2), 498-516, 1973.
+///   Traveling-Salesman Problem." Operations Research, 21(2), 498-516, 1973.
 ///   [DOI](https://doi.org/10.1287/opre.21.2.498)
 /// - Helsgaun, K. "An Effective Implementation of the Lin-Kernighan Traveling
-///   Salesman Heuristic." *European Journal of Operational Research*, 126(1),
+///   Salesman Heuristic." European Journal of Operational Research, 126(1),
 ///   106-130, 2000. [DOI](https://doi.org/10.1016/S0377-2217(99)00284-2)
 ///
 /// # Parameters
 ///
-/// - `stop_condition` — overall stopping criterion
-/// - `num_neighbors` — number of nearest neighbors in candidate lists (default: 5)
-/// - `max_depth` — maximum LK search depth (default: 5)
+/// - `stop_condition`, overall stopping criterion
+/// - `num_neighbors`, number of nearest neighbors in candidate lists (default: 5)
+/// - `max_depth`, maximum LK search depth (default: 5)
 pub struct LinKernighanHelsgaun {
     stop_condition: StopCondition,
     num_neighbors: usize,
@@ -491,7 +491,7 @@ impl Heuristic<TspWithCoordinates> for LinKernighanHelsgaun {
         &self.stop_condition
     }
 
-    /// Done when the stop condition is met **or** no improving LK move exists
+    /// Done when the stop condition is met or no improving LK move exists
     /// (a local optimum was reached).
     fn is_done<'a>(&self, state: &SearchState<'a, TspWithCoordinates>) -> bool {
         self.stop_condition.is_done(state) || self.no_improvement

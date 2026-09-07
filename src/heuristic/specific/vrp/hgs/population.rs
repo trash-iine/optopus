@@ -1,6 +1,6 @@
 //! Diversity-aware population management for Hybrid Genetic Search.
 //!
-//! Individuals are ranked by *biased fitness*: a blend of how good a solution is
+//! Individuals are ranked by biased fitness: a blend of how good a solution is
 //! and how much diversity it contributes. Selecting purely on cost collapses the
 //! population onto one basin within a few hundred generations; blending in a
 //! diversity rank is what lets HGS keep searching for millions of them.
@@ -65,9 +65,9 @@ impl Individual {
     ///
     /// [`RouteAdjacency::broken_pairs_from`] does the counting; normalizing by
     /// `n` is what makes the value comparable across instances, which is all
-    /// biased fitness needs of it — the ranking itself only reads the order.
+    /// biased fitness needs of it, the ranking itself only reads the order.
     ///
-    /// This is the *directional* count, the form Vidal's biased fitness is
+    /// This is the directional count, the form Vidal's biased fitness is
     /// defined on, not the symmetrized one
     /// [`Distance`](crate::search_state::Distance) exposes.
     pub(super) fn broken_pairs_distance(&self, other: &Self) -> f64 {
@@ -87,8 +87,8 @@ pub(super) struct Subpopulation {
     /// Broken-pairs distances between every pair of `members`, row-major and
     /// `members.len()` wide.
     ///
-    /// Cached because biased fitness has to be re-ranked on *every* insertion —
-    /// the ranks are relative, so one new member shifts them all — and
+    /// Cached because biased fitness has to be re-ranked on every insertion,
+    /// the ranks are relative, so one new member shifts them all, and
     /// recomputing the whole matrix each time would cost O(N²·n) per generation.
     /// Grown one row/column at a time by [`Subpopulation::push`] and squeezed in
     /// place by [`Subpopulation::trim_to`], so each individual's O(N·n) of
@@ -126,7 +126,7 @@ impl Subpopulation {
     /// Biased fitness of member `i`; lower is better.
     ///
     /// Always current: every insertion re-ranks the sub-population. Leaving a
-    /// fresh member unranked is not an option — biased fitness lies in `[0, 2]`,
+    /// fresh member unranked is not an option, biased fitness lies in `[0, 2]`,
     /// so any placeholder is either the best or the worst value there is, and
     /// [`binary_tournament`] would then either always or never pick it.
     pub(super) fn fitness(&self, i: usize) -> f64 {
@@ -330,7 +330,7 @@ mod tests {
         Individual::new(n, routes, distance, excess)
     }
 
-    /// All pairwise broken-pairs distances, row-major — what a `Subpopulation`
+    /// All pairwise broken-pairs distances, row-major, what a `Subpopulation`
     /// builds incrementally, written out in full so `biased_fitness` can be
     /// exercised without one.
     fn pairwise_distances(members: &[Individual]) -> Vec<f64> {
@@ -410,7 +410,7 @@ mod tests {
     }
 
     /// The matrix grown one member at a time must equal a from-scratch
-    /// recompute, both after insertions and after a trim squeezes it — the
+    /// recompute, both after insertions and after a trim squeezes it, the
     /// diversity half of the ranking reads it directly.
     #[test]
     fn incremental_distances_match_a_full_recompute() {

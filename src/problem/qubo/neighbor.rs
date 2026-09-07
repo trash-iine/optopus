@@ -2,8 +2,8 @@
 //!
 //! Two move types are provided:
 //!
-//! - [`QuboFlipNeighbor`] — flip a single variable (O(degree) update)
-//! - [`QuboSwapNeighbor`] — swap two variables with different values (two sequential flips)
+//! - [`QuboFlipNeighbor`], flip a single variable (O(degree) update)
+//! - [`QuboSwapNeighbor`], swap two variables with different values (two sequential flips)
 //!
 //! Both implement [`MoveToNeighbor`], [`Evaluate`], and [`EnabledTabu`], so they
 //! work with all heuristics ([`LocalSearch`], [`TabuSearch`], [`SimulatedAnnealing`], etc.).
@@ -148,8 +148,8 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
 impl QuboFlipNeighbor {
     /// Builds the flip of variable `i`, reading its cached gain.
     ///
-    /// A flip's gain needs no correction — it is exactly the value the solution
-    /// already maintains — so this only exists to keep every construction site
+    /// A flip's gain needs no correction, it is exactly the value the solution
+    /// already maintains, so this only exists to keep every construction site
     /// on one path, the way [`QuboSwapNeighbor::new`] does. `prob` is unused for
     /// that reason and taken only so the two constructors read alike at the call
     /// site.
@@ -198,7 +198,7 @@ impl QuboFlipNeighbor {
 /// A swap move that simultaneously flips variables `i` and `j`.
 ///
 /// Only pairs where `i` and `j` have different values are generated.
-/// Each swap counts as **2 iterations** (see [`apply_to_iteration`](MoveToNeighbor::apply_to_iteration)).
+/// Each swap counts as 2 iterations (see [`apply_to_iteration`](MoveToNeighbor::apply_to_iteration)).
 ///
 /// `gain` is the combined change in energy (negative = improvement).
 ///
@@ -265,7 +265,7 @@ impl Evaluate for QuboSwapNeighbor {
 }
 
 impl EnabledTabu for QuboSwapNeighbor {
-    /// A swap is tabu unless **both** variables it moves are free.
+    /// A swap is tabu unless both variables it moves are free.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
         tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
     }

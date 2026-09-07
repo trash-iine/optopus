@@ -4,9 +4,9 @@
 
 Given a weighted undirected graph `G = (V, E, w)` with vertex set `V`, edge
 set `E`, and edge weights `w`, partition `V` into two
-disjoint sets so as to **maximize** the total weight of the edges that cross
+disjoint sets so as to maximize the total weight of the edges that cross
 the partition. Equivalently, assign each vertex `i` a binary label
-`x_i ∈ {0, 1}` naming which side it falls on; an edge `(i, j)` is *cut*
+`x_i ∈ {0, 1}` naming which side it falls on; an edge `(i, j)` is cut
 exactly when `x_i ≠ x_j`:
 
 ```text
@@ -34,8 +34,8 @@ for (v, &side) in sol.x.iter().enumerate() {
 ```
 
 `MaxCut::from_edges` is a convenience wrapper around
-`MaxCut::new(Graph::from_edges(...))`; both use **set semantics** for
-duplicate edges — the last write wins.
+`MaxCut::new(Graph::from_edges(...))`; both use set semantics for
+duplicate edges, the last write wins.
 
 ## Solution
 
@@ -52,7 +52,7 @@ represents the partition from the definition above: `x[v]` is the side
 
 ## Crossover
 
-- `MaxCutUniformCrossover` — per-vertex random parent selection.
+- `MaxCutUniformCrossover`, per-vertex random parent selection.
 - `MaxCut` also implements `SubProblemExtractable`, so `SubProblemBasedCrossover`
   works: vertices that agree in both parents are fixed; the disagreeing
   vertices form the sub-MaxCut instance whose edges include bias terms toward
@@ -61,7 +61,7 @@ represents the partition from the definition above: `x[v]` is the side
 ## File format
 
 `Graph::load_from_file` expects one header line followed by edge lines, with
-**1-indexed** vertices:
+1-indexed vertices:
 
 ```text
 N M
@@ -70,7 +70,7 @@ i j w
 ...
 ```
 
-- `N` — number of vertices, `M` — number of edges.
+- `N` (number of vertices, `M`) number of edges.
 - `w` is optional; defaults to `1.0` if absent.
 - Vertices are converted to 0-indexed internally.
 
@@ -84,7 +84,7 @@ let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
 ## Instances with a known optimum
 
 [`PlantedMaxCut`](../api/optopus/problem/max_cut/struct.PlantedMaxCut.html)
-builds instances *around* a chosen solution, so the optimum is exact by
+builds instances around a chosen solution, so the optimum is exact by
 construction rather than a best-known value. 
 
 ```rust
@@ -97,7 +97,7 @@ let planted = PlantedMaxCut::tile_planting_2d(
     &mut seeded_rng(1),
 );
 planted.verify().unwrap(); // the recorded optimum is what the instance computes
-// planted.optimum — no run can exceed this
+// planted.optimum, no run can exceed this
 ```
 
 | Constructor | Topology | Hardness knob |
@@ -106,28 +106,27 @@ planted.verify().unwrap(); // the recorded optimum is what the instance computes
 | `tile_planting_3d(l, TileProbs3d, rng)` | cubic lattice torus, degree 6 | class mixture `p_2fp`/`p_4fp` |
 | `wishart(n, alpha, WishartCouplers, rng)` | complete graph | `alpha = M / n`, in `(0, 1)` |
 
-- **Every instance is gauge-transformed.** Each construction natively plants the
+- Every instance is gauge-transformed. Each construction natively plants the
   all-aligned state, which is trivially findable; a random gauge moves the
   optimum to an arbitrary partition. This is switching on a signed graph, so it
-  relabels the solution while leaving the frustration structure — and therefore
-  the difficulty — untouched.
-- **Integer weights make "reached the optimum" decidable.** Tile planting and
+  relabels the solution while leaving the frustration structure, and therefore
+  the difficulty, untouched.
+- Integer weights make "reached the optimum" decidable. Tile planting and
   `WishartCouplers::Discrete` produce integer weights, so the `f32` objective is
   exact. `WishartCouplers::Gaussian` does not, and there a run can only be
   scored up to a rounding bound. `verify()` enforces the distinction and refuses
   any instance whose optimum no longer round-trips.
-- **`alpha` must stay below 1, and the useful value depends on `n`.** The
-  planted vector lies in the kernel of the Wishart coupling matrix, whose
-  dimension is `n - M`; at `alpha >= 1` that kernel collapses onto the planted
-  vector and an eigendecomposition recovers it in polynomial time, so the
-  constructor rejects it. Well short of that, a hardness sweep found the
-  boundary between "always solved" and "never solved" at a **constant kernel
-  dimension `n - M` of about 32** —
-  `alpha = 0.35 / 0.50 / 0.65 / 0.90` at `n = 48 / 64 / 96 / 256`. Note that
-  small `alpha` is the *hard* side at every size measured, not the easy one the
-  original study's easy–hard–easy profile suggests; the criterion here is
-  reaching the exact optimum rather than the physics notion of a ground state.
-  `chook`'s default `alpha = 0.75` is easy at all four sizes.
+- `alpha` must stay below 1, and the useful value depends on `n`. The planted
+  vector lies in the kernel of the Wishart coupling matrix, whose dimension is
+  `n - M`. At `alpha >= 1` that kernel collapses onto the planted vector and an
+  eigendecomposition recovers it in polynomial time, so the constructor rejects
+  it. Well short of that, the boundary between "always solved" and "never
+  solved" sits at a constant kernel dimension of about 32, which is
+  `alpha = 0.35 / 0.50 / 0.65 / 0.90` at `n = 48 / 64 / 96 / 256`. Small `alpha`
+  is the hard side at every size, not the easy one an easy-hard-easy profile
+  would suggest, because the criterion here is reaching the exact optimum rather
+  than the physics notion of a ground state. `chook`'s default `alpha = 0.75` is
+  easy at all four sizes.
 
 Suite generation lives in `examples/generate_hard_maxcut.rs`, which records what
 the sweep showed for each parameter it bakes in; see
@@ -135,7 +134,7 @@ the sweep showed for each parameter it bakes in; see
 
 ## Notes
 
-- `MaxCutSolution` carries exactly three fields — `x`, `gain` and `objective`.
+- `MaxCutSolution` carries exactly three fields, `x`, `gain` and `objective`.
   It used to offer optional incrementally maintained indexes of the improving
   (`positive_gain`) and plateau (`zero_gain`) vertices; all were removed once
   nothing read them, the last when
@@ -149,17 +148,17 @@ the sweep showed for each parameter it bakes in; see
 - Karp, R. M. "Reducibility Among Combinatorial Problems." In *Complexity of
   Computer Computations*, pp. 85-103. Plenum Press, 1972. (Max Cut is one of
   Karp's 21 NP-complete problems.)
-- Standard benchmark set: the **Gset** graphs (G1–G81), generated with the
+- Standard benchmark set: the Gset graphs (G1–G81), generated with the
   `rudy` graph generator and distributed by Y. Ye.
-- Perera, D. et al. "Chook — A comprehensive suite for generating binary
+- Perera, D. et al. "Chook, A comprehensive suite for generating binary
   optimization problems with planted solutions."
   [arXiv:2005.14344](https://arxiv.org/abs/2005.14344). The reference
   implementation `PlantedMaxCut` follows.
 - Perera, D., Hamze, F., Raymond, J., Weigel, M. and Katzgraber, H. G.
   "Computational hardness of spin-glass problems with tile-planted solutions."
-  *Phys. Rev. E* 101, 023316 (2020).
+  Phys. Rev. E 101, 023316 (2020).
   [arXiv:1907.10809](https://arxiv.org/abs/1907.10809)
 - Hamze, F., Raymond, J., Pattison, C. A., Biswas, K. and Katzgraber, H. G.
   "Wishart planted ensemble: A tunably rugged pairwise Ising model with a
-  first-order phase transition." *Phys. Rev. E* 101, 052102 (2020).
+  first-order phase transition." Phys. Rev. E 101, 052102 (2020).
   [arXiv:1906.00275](https://arxiv.org/abs/1906.00275)

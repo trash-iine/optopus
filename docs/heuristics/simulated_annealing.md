@@ -73,17 +73,17 @@ BangBangSimulatedAnnealing::<N>::new(
 ```
 
 The temperature decays multiplicatively until it drops below
-`min_wave_threshold`, then *grows* by dividing by `cooling_rate` until it
+`min_wave_threshold`, then grows by dividing by `cooling_rate` until it
 exceeds `max_wave_threshold`, and so on. The sawtooth profile occasionally
 re-injects exploration when the search becomes too greedy.
 
-`BangBangSimulatedAnnealing` has no `kind` of its own — the benchmark runner
+`BangBangSimulatedAnnealing` has no `kind` of its own, the benchmark runner
 only builds the plain schedule; the oscillating one is Rust-API only.
 
 ## References
 
 - Kirkpatrick, S., Gelatt, C. D., and Vecchi, M. P. "Optimization by Simulated
-  Annealing." *Science*, 220(4598), 671-680, 1983.
+  Annealing." Science, 220(4598), 671-680, 1983.
 - Cerny, V. "Thermodynamical Approach to the Traveling Salesman Problem: An
   Efficient Simulation Algorithm." *Journal of Optimization Theory and
   Applications*, 45(1), 41-51, 1985.

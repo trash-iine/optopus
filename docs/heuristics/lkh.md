@@ -3,7 +3,7 @@
 **API:** [`LinKernighanHelsgaunForTsp`](../api/optopus/heuristic/struct.LinKernighanHelsgaunForTsp.html)
 
 Problem-specific heuristic for [TSP](../problems/tsp.md). Performs a
-variable-depth edge-exchange search (up to *k*-opt) starting from each city.
+variable-depth edge-exchange search (up to k-opt) starting from each city.
 
 ## Example
 
@@ -49,11 +49,11 @@ For each starting city, the algorithm extends a chain of edge swaps:
 
 Pruning:
 
-- **Candidate lists** — only the `num_neighbors` nearest cities at each
+- Candidate lists, only the `num_neighbors` nearest cities at each
   endpoint are considered.
-- **Positive gain criterion** — partial gain must remain positive at every
+- Positive gain criterion, partial gain must remain positive at every
   step.
-- **Maximum depth** — the search stops after `max_depth` levels (k in k-opt).
+- Maximum depth, the search stops after `max_depth` levels (k in k-opt).
 
 The first improving move found is applied; the search terminates when no
 improving move exists for any starting city, or when the stop condition
@@ -86,13 +86,13 @@ max_depth = 5            # optional (default shown)
 max_duration_secs = 30.0
 ```
 
-Takes no `neighbor` — it owns its move set. It stops at a local optimum, so a
+Takes no `neighbor`, it owns its move set. It stops at a local optimum, so a
 long budget only pays inside [`Restart` or `Iterated`](meta.md).
 
 ## References
 
 - Lin, S. and Kernighan, B. W. "An Effective Heuristic Algorithm for the
-  Traveling-Salesman Problem." *Operations Research*, 21(2), 498-516, 1973.
+  Traveling-Salesman Problem." Operations Research, 21(2), 498-516, 1973.
 - Helsgaun, K. "An Effective Implementation of the Lin-Kernighan Traveling
-  Salesman Heuristic." *European Journal of Operational Research*, 126(1),
+  Salesman Heuristic." European Journal of Operational Research, 126(1),
   106-130, 2000.

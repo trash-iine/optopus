@@ -54,14 +54,14 @@ pub enum RewardShaping {
 /// distribution and applied. The policy is updated immediately via single-step
 /// REINFORCE with baseline subtraction.
 ///
-/// **Key property**: `clear()` resets per-episode state but preserves the learned
+/// Key property: `clear()` resets per-episode state but preserves the learned
 /// weights, so the policy improves across episodes when used inside
 /// [`super::Restart`] or [`super::Iterated`].
 ///
 /// # References
 ///
 /// - Williams, R. J. "Simple Statistical Gradient-Following Algorithms for
-///   Connectionist Reinforcement Learning." *Machine Learning*, 8(3-4), 229-256, 1992.
+///   Connectionist Reinforcement Learning." Machine Learning, 8(3-4), 229-256, 1992.
 ///   [DOI](https://doi.org/10.1007/BF00992696)
 pub struct RlSearch<N> {
     pub stop_condition: StopCondition,
@@ -70,7 +70,7 @@ pub struct RlSearch<N> {
     pub softmax_temperature: f64,
     pub reward_shaping: RewardShaping,
     /// When set, each step reservoir-samples this many moves from the lazy
-    /// neighborhood iterator *before* evaluating them, so per-step evaluation
+    /// neighborhood iterator before evaluating them, so per-step evaluation
     /// and feature cost is O(max_candidates) instead of O(neighborhood).
     /// Step statistics (and therefore the neighborhood-level features) are
     /// computed over the sample only.

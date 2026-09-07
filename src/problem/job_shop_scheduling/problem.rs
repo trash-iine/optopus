@@ -208,7 +208,7 @@ impl JobShopScheduling {
     /// per-operation `completion_times` vector.
     ///
     /// Functionally equivalent to `decode(operations).map(|(m, _)| m)` but
-    /// avoids one Vec allocation — useful in neighbor evaluation loops
+    /// avoids one Vec allocation, useful in neighbor evaluation loops
     /// (e.g. `MoveToNeighbor::move_to_be_better_than`) where only the final
     /// objective is needed.
     pub(crate) fn compute_makespan(&self, operations: &[usize]) -> Result<u32, OptError> {
@@ -291,7 +291,7 @@ mod tests {
     use super::*;
 
     /// Handed out once per call, so two concurrent tests never build the same
-    /// path. A wall-clock suffix would not do that job — the clock is quantized
+    /// path. A wall-clock suffix would not do that job, the clock is quantized
     /// (1 us on macOS), so two tests entering `write_tmp` in the same
     /// microsecond would still collide and read each other's file.
     static TEMP_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);

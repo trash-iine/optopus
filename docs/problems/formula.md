@@ -52,7 +52,7 @@ AST, as above.
 [`FormulaSolution`](../api/optopus/problem/binary_optimization/struct.FormulaSolution.html)
 carries the assignment `x` from the definition above (`x ∈ {0,1}^n`), the
 per-variable `gain` (change in `score` if that variable were flipped), and
-`score`, which is `score(x)` as defined above — **not** `objective(x)`
+`score`, which is `score(x)` as defined above, not `objective(x)`
 itself; see its rustdoc for the full field list.
 `Rankable::is_better_than` returns `self.score > other.score`.
 
@@ -104,7 +104,7 @@ let constraint = Constraint::Comparison {
 | `FormulaFlipNeighbor` | Flip one variable. |
 | `FormulaSwapNeighbor` | Swap two variables. |
 
-Both implement `Rankable`, `Evaluate<f64>` *and* `Evaluate<i32>` (the integer
+Both implement `Rankable`, `Evaluate<f64>` and `Evaluate<i32>` (the integer
 form discretizes scores; suitable when all coefficients are integer-valued),
 and `EnabledTabu`; see
 [`FormulaFlipNeighbor`](../api/optopus/problem/binary_optimization/struct.FormulaFlipNeighbor.html) /
@@ -113,17 +113,17 @@ rustdoc for the incremental gain-update mechanics and iteration cost.
 
 ## Crossover
 
-- `FormulaUniformCrossover` — per-variable random parent selection.
+- `FormulaUniformCrossover`, per-variable random parent selection.
 
 ## Optional traits
 
-- `Distance` — Hamming distance on `x`.
-- `Evaluate<f64>` and `Evaluate<i32>` — both directions of `Evaluable`.
+- `Distance`, Hamming distance on `x`.
+- `Evaluate<f64>` and `Evaluate<i32>`, both directions of `Evaluable`.
 
 ## Notes
 
 `CompiledPoly` and `interaction_neighbors` are private (`pub(super)`)
-implementation details, so they do not appear in the published rustdoc — this
+implementation details, so they do not appear in the published rustdoc, this
 is the only public-facing place they're explained:
 
 - A pre-compiled polynomial form (`CompiledPoly`) gives O(d) gain deltas per

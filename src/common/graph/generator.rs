@@ -10,7 +10,7 @@
 //!
 //! All randomness flows through the passed [`Rng`]. [`seeded_rng`] names
 //! [`ChaCha12Rng`] explicitly rather than [`StdRng`]: `rand` guarantees `StdRng`
-//! is portable only *for a fixed `rand` version* and may swap the underlying
+//! is portable only for a fixed `rand` version and may swap the underlying
 //! algorithm in a future release, which would silently change every generated
 //! instance. The `golden_output_is_stable` test fails loudly if that ever moves.
 //!
@@ -64,7 +64,7 @@ impl Graph {
     /// edges on average.
     ///
     /// Uses geometric-skip sampling (Batagelj–Brandes): instead of tossing a coin
-    /// for each pair, it draws the number of pairs to *skip* from the geometric
+    /// for each pair, it draws the number of pairs to skip from the geometric
     /// distribution induced by `p`, so the cost is O(number of edges) rather than
     /// O(n²). This keeps large sparse instances feasible: `n = 10^6, p = 10^-5`
     /// yields ~5M edges in ~5M draws.
@@ -246,7 +246,7 @@ impl Graph {
     /// every vertex joins its right and lower neighbor, wrapping around both
     /// axes, so the graph is 4-regular with `2 l²` edges.
     ///
-    /// Vertices are numbered `m + l * n` for the lattice site `(m, n)` — `m`
+    /// Vertices are numbered `m + l * n` for the lattice site `(m, n)`, `m`
     /// varies fastest. This is the same convention the planted-instance
     /// generators in
     /// [`PlantedMaxCut`](crate::problem::PlantedMaxCut) index tiles with, and
@@ -291,7 +291,7 @@ impl Graph {
     /// all of them, so the graph is 6-regular with `3 l³` edges.
     ///
     /// Vertices are numbered `m + l * n + l² * k` for the lattice site
-    /// `(m, n, k)` — `m` varies fastest, matching
+    /// `(m, n, k)`, `m` varies fastest, matching
     /// [`grid_torus_2d`](Self::grid_torus_2d).
     ///
     /// Every edge gets weight `1.0`; chain
@@ -337,7 +337,7 @@ impl Graph {
     /// [`load_from_file`](Self::load_from_file). Passing `min == max` puts a
     /// fixed weight on every edge.
     ///
-    /// **Zero is never drawn.** A zero-weight edge is invisible to every
+    /// Zero is never drawn. A zero-weight edge is invisible to every
     /// objective and indistinguishable from a missing edge through
     /// [`get_weight`](Self::get_weight) / [`Index`](std::ops::Index), so it
     /// would silently make the graph sparser than its structure claims. When the

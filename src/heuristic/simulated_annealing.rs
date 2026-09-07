@@ -26,12 +26,12 @@ pub fn boltzmann_accept(
 /// The temperature is multiplied by `cooling_rate` after each iteration.
 ///
 /// Requires the neighbor type to implement [`Evaluable<f64>`], where the evaluation
-/// value represents the **worsening** amount (positive = worse move).
+/// value represents the worsening amount (positive = worse move).
 ///
 /// # References
 ///
 /// - Kirkpatrick, S., Gelatt, C. D., and Vecchi, M. P. "Optimization by Simulated Annealing."
-///   *Science*, 220(4598), 671-680, 1983.
+///   Science, 220(4598), 671-680, 1983.
 ///   [DOI](https://doi.org/10.1126/science.220.4598.671)
 /// - Cerny, V. "Thermodynamical Approach to the Traveling Salesman Problem: An Efficient
 ///   Simulation Algorithm." *Journal of Optimization Theory and Applications*, 45(1), 41-51, 1985.
@@ -92,9 +92,9 @@ where
 /// Simulated annealing with a bang-bang (oscillating) temperature schedule.
 ///
 /// The temperature alternates between cooling and reheating phases:
-/// - **Cooling phase**: temperature is multiplied by `cooling_rate` each step.
+/// - Cooling phase: temperature is multiplied by `cooling_rate` each step.
 ///   When the temperature drops below `min_wave_threshold`, the phase switches to reheating.
-/// - **Reheating phase**: temperature is divided by `cooling_rate` each step.
+/// - Reheating phase: temperature is divided by `cooling_rate` each step.
 ///   When the temperature exceeds `max_wave_threshold`, the phase switches back to cooling.
 ///
 /// This creates a sawtooth temperature profile that helps escape local optima.

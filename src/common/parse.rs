@@ -101,7 +101,7 @@ mod tests {
     use super::*;
 
     /// Handed out once per call, so two concurrent tests never build the same
-    /// path. A wall-clock suffix would not do that job — the clock is quantized
+    /// path. A wall-clock suffix would not do that job, the clock is quantized
     /// (1 us on macOS), so two tests entering `write_tmp` in the same
     /// microsecond would still collide and read each other's file.
     static TEMP_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);

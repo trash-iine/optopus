@@ -2,8 +2,8 @@
 
 **API:** [`Sequential`](../api/optopus/heuristic/struct.Sequential.html)
 
-Four meta-heuristics that compose other heuristics via the **sub-run
-clone/merge pattern**:
+Four meta-heuristics that compose other heuristics via the sub-run
+clone/merge pattern:
 
 ```rust
 let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
@@ -18,13 +18,13 @@ trait-level details and the three `SearchStateCloneType` variants are in
 
 Which one to reach for:
 
-- **`Sequential`** — a fixed pipeline of phases, in order (say `LocalSearch` to
+- `Sequential`, a fixed pipeline of phases, in order (say `LocalSearch` to
   clean up a random start, then `TabuSearch`).
-- **`Iterated`** — escape local optima by alternating search with a perturbation
+- `Iterated`, escape local optima by alternating search with a perturbation
   (ILS). The default choice when one search stalls.
-- **`VariableNeighborhoodSearch`** — the same idea with several shake
+- `VariableNeighborhoodSearch`, the same idea with several shake
   neighborhoods of growing strength, escalating only when the current one fails.
-- **`Restart`** — throw the incumbent away and draw a fresh random solution once
+- `Restart`, throw the incumbent away and draw a fresh random solution once
   progress stops; the global best survives.
 
 For a population instead of a single incumbent, see
@@ -253,9 +253,9 @@ max_iteration = 200
 
 | `kind` | `steps` | Extra fields |
 |---|---|---|
-| `Sequential` | run in order, repeated until the outer stop condition | — |
-| `Iterated` | `[0]` = search, `[1]` = perturbation | — |
-| `VariableNeighborhoodSearch` | `[0]` = search, `[1..]` = shakes `N_1..N_kmax` | — |
+| `Sequential` | run in order, repeated until the outer stop condition |, |
+| `Iterated` | `[0]` = search, `[1]` = perturbation |, |
+| `VariableNeighborhoodSearch` | `[0]` = search, `[1..]` = shakes `N_1..N_kmax` |, |
 | `Restart` | `[0]` = the inner heuristic | `restart_condition` (required, same shape as `stop_condition`) |
 
 `Restart` is the only one with an extra table of its own:
@@ -263,7 +263,7 @@ max_iteration = 200
 ```toml
 [[heuristics]]
 kind = "Restart"
-[heuristics.restart_condition]     # required — when to reseed with a random solution
+[heuristics.restart_condition]     # required, when to reseed with a random solution
 max_failed_update = 1_000
 [heuristics.stop_condition]
 max_duration_secs = 30.0
@@ -284,5 +284,5 @@ level further as `[[heuristics.steps.steps]]`. See the full
 ## References
 
 - Lourenco, H. R., Martin, O. C., and Stutzle, T. "Iterated Local Search."
-  In Glover, F. and Kochenberger, G. A. (eds.), *Handbook of Metaheuristics*,
+  In Glover, F. and Kochenberger, G. A. (eds.), Handbook of Metaheuristics,
   pp. 320-353. Springer, 2003.

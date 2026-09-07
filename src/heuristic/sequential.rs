@@ -57,7 +57,7 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Sequential<Problem> {
 
 /// Iterated meta-heuristic (ILS pattern).
 ///
-/// Alternates between a **search** phase and a **perturbation** phase, repeating until
+/// Alternates between a search phase and a perturbation phase, repeating until
 /// the outer stopping condition is satisfied.
 ///
 /// Each phase runs on a [`SearchStateCloneType::ClearBest`] clone of the current state.
@@ -66,13 +66,13 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Sequential<Problem> {
 /// # References
 ///
 /// - Lourenco, H. R., Martin, O. C., and Stutzle, T. "Iterated Local Search." In Glover, F.
-///   and Kochenberger, G. A. (eds.), *Handbook of Metaheuristics*, pp. 320-353. Springer, 2003.
+///   and Kochenberger, G. A. (eds.), Handbook of Metaheuristics, pp. 320-353. Springer, 2003.
 ///   [DOI](https://doi.org/10.1007/0-306-48056-5_11)
 ///
 /// # Cycle
 ///
 /// 1. Run `search` until its inner stopping condition is met (finds a local optimum).
-/// 2. Check the outer `stop_condition` — return early if done.
+/// 2. Check the outer `stop_condition`, return early if done.
 /// 3. Run `perturbation` to escape the local optimum.
 /// 4. Merge and repeat.
 pub struct Iterated<Problem: ProblemTrait> {

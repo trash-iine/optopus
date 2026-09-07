@@ -11,9 +11,9 @@ use rand::rngs::SmallRng;
 ///
 /// `gain` is the change in score after the flip (positive = improvement).
 /// `apply_to_solution` costs O(d): it only recomputes the gains of variables
-/// in `FormulaProblem::interaction_neighbors[i]` — those sharing a monomial
+/// in `FormulaProblem::interaction_neighbors[i]`, those sharing a monomial
 /// with `i` in the objective, or co-occurring with it in a constraint
-/// expression — since every other variable's gain is provably unaffected.
+/// expression, since every other variable's gain is provably unaffected.
 #[derive(Debug, Clone)]
 pub struct FormulaFlipNeighbor {
     /// Index of the variable to flip.
@@ -143,7 +143,7 @@ impl Evaluate for FormulaSwapNeighbor {
 }
 
 impl EnabledTabu for FormulaSwapNeighbor {
-    /// A swap is tabu unless **both** variables it moves are free.
+    /// A swap is tabu unless both variables it moves are free.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
         tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
     }

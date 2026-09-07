@@ -6,9 +6,9 @@ use crate::trait_defs::ProblemTrait;
 /// Restart meta-heuristic.
 ///
 /// Runs an inner heuristic repeatedly. When `restart_condition` is satisfied
-/// (typically `max_failed_update` — no improvement for a while), the current
-/// solution is replaced with a fresh random solution while **the global best
-/// solution is preserved**.
+/// (typically `max_failed_update`, no improvement for a while), the current
+/// solution is replaced with a fresh random solution while the global best
+/// solution is preserved.
 ///
 /// The outer `stop_condition` controls the total budget.
 pub struct Restart<Problem: ProblemTrait> {

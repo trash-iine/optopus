@@ -23,12 +23,12 @@ println!("cut weight = {}", state.best_solution.objective);
 
 Each `run_once`:
 
-1. **Enumerate** the neighborhood through the lazy `N::iter`, keeping only the
+1. Enumerate the neighborhood through the lazy `N::iter`, keeping only the
    moves that are strictly better than the current solution.
-2. **Select** the best of them with `max_by` over `rank_cmp`. Nothing is
+2. Select the best of them with `max_by` over `rank_cmp`. Nothing is
    collected, so a step costs no allocation; ties go to the last one the
    iterator yields, which is arbitrary but harmless for hill climbing.
-3. **Apply** it — or, when the filter left nothing, raise the local-optimum
+3. Apply it, or when the filter left nothing, raise the local-optimum
    flag `is_done` reads and advance the iteration counter.
 
 ## Constructor
@@ -40,7 +40,7 @@ LocalSearch::<N>::new(stop_condition: StopCondition) -> Self
 `N` must satisfy `MoveToNeighbor<P> + Rankable`.
 
 `clear()` drops the local-optimum flag that `is_done` reads, so a second `run`
-climbs again instead of reporting itself done at once — which is what makes
+climbs again instead of reporting itself done at once, which is what makes
 `LocalSearch` reusable as the search phase of a meta-heuristic.
 
 ## Behavior
@@ -66,7 +66,7 @@ max_iteration = 100_000
 
 `max_failed_update` is forced to `1` whatever the config says (see
 [Behavior](#behavior)), so the useful budget keys here are `max_iteration` and
-`max_duration_secs` — and they only bound a single hill climb. For a real
+`max_duration_secs`, and they only bound a single hill climb. For a real
 budget, nest `LocalSearch` inside [`Restart` or `Iterated`](meta.md).
 
 ## References

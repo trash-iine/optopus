@@ -24,8 +24,8 @@ pub struct SatFlipNeighbor {
 impl SatFlipNeighbor {
     /// Builds the flip of variable `i`, reading its cached gain.
     ///
-    /// A flip's gain needs no correction — it is exactly the value the solution
-    /// already maintains — so this only exists to keep every construction site
+    /// A flip's gain needs no correction, it is exactly the value the solution
+    /// already maintains, so this only exists to keep every construction site
     /// on one path, the way [`SatSwapNeighbor::new`] does. `prob` is unused for
     /// that reason and taken only so the two constructors read alike at the call
     /// site.
@@ -131,7 +131,7 @@ pub struct SatSwapNeighbor {
 impl SatSwapNeighbor {
     /// Builds the swap of `i` and `j`, computing the combined gain.
     ///
-    /// The gain is `gain[i]` plus `j`'s gain *after* `i` has been flipped, not
+    /// The gain is `gain[i]` plus `j`'s gain after `i` has been flipped, not
     /// the two standalone gains: the swap applies the flips in order, and when
     /// the two variables share a clause the second flip sees a different
     /// clause state. Every construction site goes through here so the
@@ -153,7 +153,7 @@ impl Rankable for SatSwapNeighbor {
 }
 
 impl EnabledTabu for SatSwapNeighbor {
-    /// A swap is tabu unless **both** variables it moves are free.
+    /// A swap is tabu unless both variables it moves are free.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
         tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
     }

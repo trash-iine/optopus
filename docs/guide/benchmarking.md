@@ -39,7 +39,7 @@ takes the Cartesian product.
 ## Heuristic kinds
 
 Every value below is a valid `kind` tag for a `[[heuristics]]` block. Each links
-to the fields it takes — required, optional, and their defaults — on the
+to the fields it takes (required, optional, and their defaults) on the
 algorithm's own page; this table is only the index.
 
 | `kind` | Applies to |
@@ -60,7 +60,7 @@ algorithm's own page; this table is only the index.
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
 
 Unknown kinds and missing required fields fail at parse time, before any run
-starts. [`BeamSearch`](../heuristics/beam_search.md) has no `kind` — it is
+starts. [`BeamSearch`](../heuristics/beam_search.md) has no `kind`, it is
 reachable from the Rust API only.
 
 ## Fields shared by every kind
@@ -84,7 +84,7 @@ that kind.
 | VRP | `Relocate`, `Swap`, `TwoOpt` |
 
 The problem-specific kinds (`BreakoutLocalSearch`, `LinKernighanHelsgaun`,
-`AdaptiveLargeNeighborhoodSearch`, `WalkSat`, …) take no `neighbor` — they own
+`AdaptiveLargeNeighborhoodSearch`, `WalkSat`, …) take no `neighbor`, they own
 their move sets.
 
 ## Nested example: ILS in TOML
@@ -143,7 +143,7 @@ BenchmarkReport
 ```
 
 `trajectory` is the anytime curve, monotone in the problem's optimization
-direction — it is what the benchmark viewer plots. The `Option` fields are
+direction, it is what the benchmark viewer plots. The `Option` fields are
 absent for runs that ended in an error.
 
 Solution encoding:

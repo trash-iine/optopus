@@ -6,9 +6,9 @@ use rand::rngs::SmallRng;
 /// A move is considered enabled if it is not currently forbidden by the
 /// search's [`TabuMemory`]. After a move is applied, it records itself there.
 ///
-/// What a move decides is its **policy**: which keys it has to find free, which
+/// What a move decides is its policy: which keys it has to find free, which
 /// keys applying it forbids, and whether those two sets are the same. They are
-/// not always — a VRP relocate asks whether a customer may enter its
+/// not always, a VRP relocate asks whether a customer may enter its
 /// destination route and forbids the route it just left, so that the customer
 /// cannot be moved straight back. What a move does not decide is where the
 /// prohibitions are kept.
@@ -36,7 +36,7 @@ mod tests {
     use crate::trait_defs::MoveToNeighbor;
 
     /// Implementing [`EnabledTabu`](super::EnabledTabu) does nothing on its own
-    /// — [`SearchState::apply`](crate::search_state::SearchState::apply) reaches
+    ///, [`SearchState::apply`](crate::search_state::SearchState::apply) reaches
     /// a move's policy through [`MoveToNeighbor::tabu_policy`], whose default is
     /// `None`. A built-in move that implements the one and forgets the other
     /// would degrade [`TabuSearch`](crate::heuristic::TabuSearch) to a plain

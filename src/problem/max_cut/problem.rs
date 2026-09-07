@@ -2,7 +2,7 @@ use crate::common::Graph;
 use crate::search_state::{Distance, ProblemTrait, Rankable};
 use crate::trait_defs::BinaryProblem;
 
-/// The MaxCut problem instance — an undirected weighted graph.
+/// The MaxCut problem instance, an undirected weighted graph.
 ///
 /// MaxCut seeks a partition of vertices into two sets that maximizes the total
 /// weight of edges crossing the partition.
@@ -39,9 +39,9 @@ pub struct MaxCut {
 ///
 /// # Core fields
 ///
-/// - [`x`](Self::x) — partition assignment (`x[i]` is the side of vertex `i`)
-/// - [`gain`](Self::gain) — per-vertex flip gain (`gain[i]` = change in cut weight when `i` is flipped; positive = improvement)
-/// - [`objective`](Self::objective) — total weight of edges crossing the cut
+/// - [`x`](Self::x), partition assignment (`x[i]` is the side of vertex `i`)
+/// - [`gain`](Self::gain), per-vertex flip gain (`gain[i]` = change in cut weight when `i` is flipped; positive = improvement)
+/// - [`objective`](Self::objective), total weight of edges crossing the cut
 ///
 /// These three fields are all you need to inspect results and build custom logic.
 ///
@@ -56,9 +56,9 @@ pub struct MaxCut {
 ///     .run(&mut state).unwrap();
 ///
 /// let sol = &state.best_solution;
-/// // sol.objective — the cut weight
-/// // sol.x[i]   — which side vertex i is on
-/// // sol.gain[i]  — how much flipping vertex i would change the objective
+/// // sol.objective, the cut weight
+/// // sol.x[i], which side vertex i is on
+/// // sol.gain[i], how much flipping vertex i would change the objective
 /// ```
 #[derive(Debug, Clone)]
 pub struct MaxCutSolution {
@@ -74,7 +74,7 @@ pub struct MaxCutSolution {
 
 /// What counts as a "plateau" move: a flip that leaves the objective untouched.
 ///
-/// One definition, one call site —
+/// One definition, one call site,
 /// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)'s
 /// cluster move scans the gains through this.
 #[inline]
@@ -117,7 +117,7 @@ impl MaxCutSolution {
     /// The resulting solution is fully functional for all standard heuristics.
     ///
     /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions from
-    /// a cut assignment — it computes `gain` and `objective` automatically.
+    /// a cut assignment, it computes `gain` and `objective` automatically.
     pub(crate) fn new_from_parts(x: Vec<bool>, gain: Vec<f32>, objective: f32) -> Self {
         Self { x, gain, objective }
     }
@@ -224,7 +224,7 @@ impl MaxCut {
 
     /// Calculates the gain of flipping vertex `i` given the current cut assignment.
     ///
-    /// A positive return value means flipping vertex `i` would **improve** the cut.
+    /// A positive return value means flipping vertex `i` would improve the cut.
     ///
     /// # Examples
     ///

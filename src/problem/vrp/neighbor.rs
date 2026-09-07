@@ -20,7 +20,7 @@ fn apply_deltas(prob: &Vrp, sol: &mut VrpSolution, gain: f64, overload_delta: i6
 // Relocate (inter-route shift)
 // ---------------------------------------------------------------------------
 
-/// Moves one customer from `(from_r, from_i)` to position `to_i` in a *different*
+/// Moves one customer from `(from_r, from_i)` to position `to_i` in a different
 /// route `to_r` (`to_r != from_r`). Inserting into an empty route (`to_i == 0`)
 /// puts an idle vehicle to use. `gain` is the change in objective (distance plus
 /// penalty), negative = improvement.
@@ -157,7 +157,7 @@ impl EnabledTabu for VrpRelocateNeighbor {
         tabu.is_enabled((self.customer, self.to_r), iteration)
     }
 
-    /// Forbids the customer's **source** route, not its destination: what a
+    /// Forbids the customer's source route, not its destination: what a
     /// relocate must not undo is moving the customer straight back where it
     /// came from. The key it writes is therefore deliberately not the key
     /// [`is_move_enabled`](Self::is_move_enabled) reads.
@@ -229,7 +229,7 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
 // ---------------------------------------------------------------------------
 
 /// Exchanges the customer at `(r1, i1)` with the one at `(r2, i2)` in a
-/// *different* route (`r1 != r2`). `gain` is the change in objective.
+/// different route (`r1 != r2`). `gain` is the change in objective.
 #[derive(Debug, Clone)]
 pub struct VrpSwapNeighbor {
     pub r1: usize,
@@ -460,7 +460,7 @@ impl VrpTwoOptNeighbor {
     ///
     /// Every construction site goes through here: `gain` is applied to both
     /// `distance` and `objective` without recomputing the route. The move is
-    /// intra-route, so loads — and therefore the overload penalty — are
+    /// intra-route, so loads (and therefore the overload penalty) are
     /// unchanged.
     ///
     /// # Panics
@@ -688,7 +688,7 @@ mod tests {
 
     /// `None` from `random_neighbor` reaches SA / LAHC as "the neighborhood is
     /// empty" and aborts the run, so it must only happen when the neighborhood
-    /// really is empty — never because two draws collided.
+    /// really is empty, never because two draws collided.
     #[test]
     fn two_opt_random_neighbor_never_gives_up_on_a_non_empty_neighborhood() {
         let prob = vrp();

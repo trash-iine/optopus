@@ -2,23 +2,23 @@
 
 A metaheuristic optimization library for combinatorial problems, written in Rust.
 
-- **[API reference (rustdoc)](api/optopus/index.html)** — full signatures and
+- [API reference (rustdoc)](api/optopus/index.html), full signatures and
   doc comments for every public type, trait and method.
-- **[Benchmark viewer](benchmarks/viewer.html)** — filterable, sortable
+- [Benchmark viewer](benchmarks/viewer.html), filterable, sortable
   cross-heuristic comparison across every supported problem type.
 
 ## Getting started
 
-- [Quickstart](quickstart.md) — minimal end-to-end example, file loaders.
-- [Concepts](concepts.md) — design philosophy, the three use cases, and key patterns.
-- [SearchState](search_state.md) — what the state holds, how a heuristic advances
+- [Quickstart](quickstart.md), minimal end-to-end example, file loaders.
+- [Concepts](concepts.md), design philosophy, the three use cases, and key patterns.
+- [SearchState](search_state.md), what the state holds, how a heuristic advances
   it, sub-run clone variants, and crossing a reduction.
-- [Core traits](traits.md) — minimum traits + per-heuristic extras.
+- [Core traits](traits.md), minimum traits + per-heuristic extras.
 
 ## Guides
 
 - [Stop conditions](guide/stop_conditions.md)
-- [Benchmarking](guide/benchmarking.md) — TOML schema and CLI
+- [Benchmarking](guide/benchmarking.md), TOML schema and CLI
 - [Error handling](guide/error_handling.md)
 - [Defining a custom problem](guide/custom_problem.md)
 - [Defining a custom heuristic](guide/custom_heuristic.md)
@@ -49,7 +49,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Beam Search](heuristics/beam_search.md)
 - [RL Search](heuristics/rl_search.md)
 - [Genetic Algorithm](heuristics/genetic_algorithm.md) (including `Crossover` trait)
-- [Meta-heuristics](heuristics/meta.md) — Sequential, Iterated (ILS), VNS, Restart
+- [Meta-heuristics](heuristics/meta.md), Sequential, Iterated (ILS), VNS, Restart
 - [Breakout Local Search (MaxCut)](heuristics/breakout_local_search.md)
 - [Population Annealing (MaxCut)](heuristics/population_annealing.md)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)

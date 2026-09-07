@@ -8,8 +8,8 @@ use rand::rngs::SmallRng;
 
 /// One of the perturbation operators, in Benlic & Hao's vocabulary.
 ///
-/// A *weak* perturbation is directed by the gains and the tabu memory,
-/// a *strong* one is random.
+/// A weak perturbation is directed by the gains and the tabu memory,
+/// a strong one is random.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PerturbationType {
     /// random flip moves, ignoring gains.
@@ -26,16 +26,16 @@ pub enum PerturbationType {
 ///
 /// - `omega > t` zeroes the counter (Alg. 1, lines 24-27), so stagnation
 ///   arrives at the next test as `omega == 0`.
-/// - `omega == 0` takes the **random (strong)** perturbation (Alg. 2, line 1).
+/// - `omega == 0` takes the random (strong) perturbation (Alg. 2, line 1).
 /// - otherwise `p = max(exp(−omega / t), p0)` (Formula (2)) is the probability
-///   of a *directed* (weak) perturbation — `p * q` for the flip variant `A1`,
-///   `p * (1 − q)` for the swap variant `A2` — leaving `1 − p` for the random
+///   of a directed (weak) perturbation, `p * q` for the flip variant `A1`,
+///   `p * (1 − q)` for the swap variant `A2`, leaving `1 − p` for the random
 ///   one. `p` decays toward `p0` as `omega` grows, so the random perturbation
 ///   becomes steadily more likely the longer the best solution stands.
 ///
 /// This selection rule is specific to [`BreakoutLocalSearch`]. What it chooses
-/// between is two free functions in [`best_swap`](super::best_swap) — which the other
-/// heuristics in this directory drive from their own schedules — and, for the
+/// between is two free functions in [`best_swap`](super::best_swap), which the other
+/// heuristics in this directory drive from their own schedules, and for the
 /// strong one, a plain [`RandomWalk`].
 fn choose_perturbation(
     omega: &mut u64,
@@ -76,15 +76,15 @@ struct BlsSchedule {
     omega: u64,
     l: u64,
     prev_best_objective: Option<f32>,
-    /// The local optimum the previous round ended on — Benlic & Hao's `Cp`.
+    /// The local optimum the previous round ended on, Benlic & Hao's `Cp`.
     ///
     /// This holds the assignment, not its objective value. The paper's rule is
     /// `if C = Cp then L ← L+1 else L ← L0`, and on the G-set the two readings
     /// are nowhere near equivalent: every edge weighs ±1, so cut values are
     /// small integers and distinct local optima collide on the same objective
     /// constantly. Measured on G11 with the paper's `l0 = 8`, the objective
-    /// test fired on **82.7%** of rounds and pushed the median `l` to 12 and
-    /// its maximum to 80 — a perturbation an order of magnitude stronger than
+    /// test fired on 82.7% of rounds and pushed the median `l` to 12 and
+    /// its maximum to 80, a perturbation an order of magnitude stronger than
     /// the paper asks for, applied to the instances with the widest plateaus.
     prev_local_optimum: Option<Vec<bool>>,
 }
@@ -157,14 +157,14 @@ impl BlsSchedule {
 /// BLS alternates between a greedy local search phase (with tabu updates) and a
 /// perturbation phase. The perturbation type is chosen from the `omega` counter
 /// (number of consecutive non-improving local optima), with
-/// `p = max(exp(−omega / t), p0)` the probability of a **weak** (directed)
+/// `p = max(exp(−omega / t), p0)` the probability of a weak (directed)
 /// perturbation:
 ///
-/// - `omega == 0` — either the last descent improved the global best, or
-///   `omega` just passed `t` and was reset: a **strong** (random) perturbation
+/// - `omega == 0`, either the last descent improved the global best, or
+///   `omega` just passed `t` and was reset: a strong (random) perturbation
 ///   runs.
-/// - `0 < omega <= t` (stuck): **weak** perturbation with probability `p * q`
-///   (flip) or `p * (1 − q)` (swap), and **strong** (random) otherwise; `p`
+/// - `0 < omega <= t` (stuck): weak perturbation with probability `p * q`
+///   (flip) or `p * (1 − q)` (swap), and strong (random) otherwise; `p`
 ///   decays toward `p0` as `omega` grows, so strong perturbations become more
 ///   likely.
 ///
@@ -179,15 +179,15 @@ impl BlsSchedule {
 ///
 /// # Parameters
 ///
-/// - `tabu_tenure` — tabu tenure range `(min, max)` in iterations
-/// - `t` — period of the `omega` counter before it resets
-/// - `l0` — initial perturbation length
-/// - `p0` — minimum perturbation probability
-/// - `q` — fraction of weak perturbations that use the flip strategy (vs. swap)
+/// - `tabu_tenure`, tabu tenure range `(min, max)` in iterations
+/// - `t`, period of the `omega` counter before it resets
+/// - `l0`, initial perturbation length
+/// - `p0`, minimum perturbation probability
+/// - `q`, fraction of weak perturbations that use the flip strategy (vs. swap)
 pub struct BreakoutLocalSearch {
     /// The tenure the state's tabu memory records with while this heuristic
     /// drives it. The prohibitions themselves live on the state, where the
-    /// descent and the perturbations share them — which is what stops a weak
+    /// descent and the perturbations share them, which is what stops a weak
     /// perturbation undoing the descent.
     tabu_tenure: (u64, u64),
     stop_condition: StopCondition,
@@ -215,11 +215,11 @@ impl BreakoutLocalSearch {
         }
     }
 
-    /// A BLS whose kicks the *caller* chooses: it is stepped through
+    /// A BLS whose kicks the caller chooses: it is stepped through
     /// [`descend`](Self::descend) and [`kick`](Self::kick), and the schedule
     /// [`run_once`](Heuristic::run_once) would consult is never reached.
     ///
-    /// `tabu_tenure` is therefore taken **literally**, without the doubling
+    /// `tabu_tenure` is therefore taken literally, without the doubling
     /// [`new`](Self::new) applies: `2γ` is a property of Benlic & Hao's
     /// perturbation rule, and a controller that replaces that rule brings its
     /// own tenure. The schedule the instance still carries is neutral, so
@@ -259,28 +259,20 @@ impl BreakoutLocalSearch {
     /// The first half of one round: greedy descent to a local optimum, writing
     /// the prohibitions the kick then has to respect.
     ///
-    /// Split out because the point *between* the two phases is where a
-    /// controller other than the paper's schedule has to act — a learned
+    /// Split out because the point between the two phases is where a
+    /// controller other than the paper's schedule has to act, a learned
     /// policy observes the local optimum it landed on before choosing the next
     /// kick.
     ///
     /// The descent is the library's own [`LocalSearch`]: it selects the same
-    /// move — the best strictly improving flip — and, because recording is a
+    /// move (the best strictly improving flip) and, because recording is a
     /// mode on the state that this method turns on, its `apply`
     /// writes the prohibitions the kick then reads. What ends this run is the
     /// local optimum, reported by `LocalSearch` itself, not the budget.
     pub fn descend(&mut self, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
         self.prepare(state);
-        // An unreachable iteration cap rather than the `StopCondition::new(None,
-        // None, None)` that says the same thing: the two are behaviourally
-        // identical — bit-identical solutions on all ten G-set instances of the
-        // timing suite — but the all-`None` spelling measured **7% slower**
-        // across every one of them (three repetitions, min taken). A sibling
-        // case was traced all the way down (see `GainIndex`): there an
-        // instruction-for-instruction identical hot function, shifted 4 bytes,
-        // cost 10%, and forcing 64-byte function alignment erased it. This is
-        // very likely the same code-alignment lottery rather than anything
-        // about the condition, but only the number here is measured.
+        // An unreachable cap rather than an empty `StopCondition`, which says the
+        // same thing and measured 7% slower. See decisions/0003.
         LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(u64::MAX)).run(state)
     }
 
@@ -298,7 +290,7 @@ impl BreakoutLocalSearch {
     /// here rather than by the walk: `SubProblemBasedCrossover` builds an
     /// edgeless sub-MaxCut when the parents disagree only on an independent
     /// set, and there `MaxCutFlipNeighbor`'s sampler has an empty range to draw
-    /// from — so the counter is advanced directly, and the outer stop
+    /// from, so the counter is advanced directly, and the outer stop
     /// condition still terminates. The weak flip needs no such guard:
     /// `TabuSearch` finds no move, says so, and steps the counter itself.
     pub fn kick(
@@ -339,24 +331,23 @@ impl BreakoutLocalSearch {
 /// engine's tabu map actually stores.
 ///
 /// The paper's tabu list `H` holds "the iteration when the vertex was last
-/// moved **plus γ**", and the eligibility predicate of the directed
-/// perturbations then asks for `(H_m + γ) < Iter` — so `γ` is counted twice and
+/// moved plus γ", and the eligibility predicate of the directed
+/// perturbations then asks for `(H_m + γ) < Iter`, so `γ` is counted twice and
 /// a vertex stays forbidden for `2γ`. [`TabuMemory`](crate::common::TabuMemory)
 /// stores the first iteration at which a move is allowed again, i.e. exactly
 /// one tenure, so reproducing the paper means handing it twice the caller's
 /// range. `tabu_tenure` therefore keeps the paper's meaning (`rand[3, |V|/10]`
 /// on the G-set) instead of silently meaning something else.
 ///
-/// Doubling only the upper bound does not reproduce it — the whole range has to
-/// scale. The measurement record is in
-/// `docs/heuristics/breakout_local_search.md`.
+/// Doubling only the upper bound does not reproduce the paper. The whole range
+/// has to scale.
 fn paper_effective_tenure((min, max): (u64, u64)) -> (u64, u64) {
     (min * 2, max * 2)
 }
 
 impl Heuristic<MaxCut> for BreakoutLocalSearch {
-    /// Resets the schedule only. The prohibitions are the *state's*, and a
-    /// sub-run clone — which is how every meta-heuristic starts a phase — comes
+    /// Resets the schedule only. The prohibitions are the state's, and a
+    /// sub-run clone (which is how every meta-heuristic starts a phase) comes
     /// with an empty tabu memory already; a caller re-running on one state calls
     /// [`SearchState::reset_tabu`].
     fn clear(&mut self) {
@@ -411,8 +402,8 @@ mod tests {
         MaxCut::from_edges(edges)
     }
 
-    /// The descent must stop exactly at a local optimum — no vertex left with a
-    /// positive flip gain — and leave the vertices it moved behind in the
+    /// The descent must stop exactly at a local optimum, no vertex left with a
+    /// positive flip gain, and leave the vertices it moved behind in the
     /// state's tabu memory, which is what stops the following perturbation
     /// undoing it.
     ///
@@ -472,7 +463,7 @@ mod tests {
     /// The walk must respect the memory it writes: a move it just recorded
     /// cannot be the move it makes next.
     ///
-    /// This is the regression test for the whole substitution — the weak flip
+    /// This is the regression test for the whole substitution, the weak flip
     /// is a generic [`TabuSearch`], and what makes that legal is that it reads
     /// and writes the same `SearchState` tabu memory the rest of the round
     /// shares.
@@ -491,9 +482,9 @@ mod tests {
         assert_eq!(flipped.len(), 2, "two iterations must flip two vertices");
     }
 
-    /// On a graph with no edged vertices — as produced by
+    /// On a graph with no edged vertices, as produced by
     /// `SubProblemBasedCrossover` when the two parents disagree only on an
-    /// independent set — the strong kick must advance iterations without
+    /// independent set, the strong kick must advance iterations without
     /// panicking, because `RandomWalk` would draw from an empty range.
     #[test]
     fn the_strong_kick_progresses_on_an_edgeless_graph() {
@@ -541,9 +532,9 @@ mod tests {
         }
     }
 
-    /// On a graph with no edged vertices — as produced by
+    /// On a graph with no edged vertices, as produced by
     /// `SubProblemBasedCrossover` when the two parents disagree only on an
-    /// independent set — a full BLS run must terminate cleanly via its stop
+    /// independent set, a full BLS run must terminate cleanly via its stop
     /// condition. (The operator-level counterpart lives in `ops`.)
     #[test]
     fn bls_terminates_on_edgeless_graph() {
@@ -587,13 +578,13 @@ mod tests {
     }
 
     /// The perturbation length must grow only when the descent lands on the
-    /// *same* local optimum, not merely on one of equal cut value.
+    /// same local optimum, not merely on one of equal cut value.
     ///
     /// Two independent edges give two distinct assignments of identical
     /// objective: `[T,F,T,F]` and `[T,F,F,T]` both cut 2, and neither is the
     /// complement of the other. Benlic & Hao raise `L` only on `C = Cp`, so
     /// moving between them has to reset `l` to `l0`. Comparing objectives
-    /// instead — which is what this used to do — raises it, and on the G-set
+    /// instead (which is what this used to do) raises it, and on the G-set
     /// that misfires on the large majority of rounds.
     #[test]
     fn l_grows_on_a_repeated_solution_not_a_repeated_objective() {

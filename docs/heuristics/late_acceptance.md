@@ -27,18 +27,18 @@ println!("cut weight = {}", state.best_solution.objective);
 
 Each `run_once`:
 
-1. **Sample** a uniformly random neighbor.
-2. **Score** it: the running score is always higher-is-better (to minimize,
+1. Sample a uniformly random neighbor.
+2. Score it: the running score is always higher-is-better (to minimize,
    using `- score`), so the candidate is `current − worsening_amount()` and the
    direction of the underlying objective is handled by `Evaluate`.
-3. **Accept** if the candidate is no worse than the current score or no worse
-   than `history[i mod history_length]` — the score from `history_length` steps
+3. Accept if the candidate is no worse than the current score or no worse
+   than `history[i mod history_length]`, the score from `history_length` steps
    ago. A rejected move only advances the iteration counter.
-4. **Record** the (possibly unchanged) current score into that same slot, and
+4. Record the (possibly unchanged) current score into that same slot, and
    advance `i`.
 
 Both the running score and the history buffer start at `0.0`, so what the
-buffer holds is each step's score *relative to the initial solution*, not the
+buffer holds is each step's score relative to the initial solution, not the
 objective itself. Every entry carries the same offset, so the comparison in
 step 3 is unaffected.
 
@@ -53,7 +53,7 @@ LateAcceptanceHillClimbing::<N>::new(
 
 `N` must satisfy `MoveToNeighbor<P> + Evaluate`.
 
-**Panics** if `history_length == 0`.
+Panics if `history_length == 0`.
 
 `history_length` controls the exploitation/exploration trade-off:
 
@@ -80,4 +80,4 @@ max_iteration = 100_000
 ## References
 
 - Burke, E. K. and Bykov, Y. "The Late Acceptance Hill-Climbing Heuristic."
-  *European Journal of Operational Research*, 258(1), 70-78, 2017.
+  European Journal of Operational Research, 258(1), 70-78, 2017.

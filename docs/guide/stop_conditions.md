@@ -3,7 +3,7 @@
 **API:** [`StopCondition`](../api/optopus/heuristic/struct.StopCondition.html)
 
 Every heuristic takes a [`StopCondition`](#builder-api) that decides when to stop. The
-condition is checked at the top of each iteration and fires as soon as **any**
+condition is checked at the top of each iteration and fires as soon as any
 configured limit is reached.
 
 ## Builder API
@@ -41,18 +41,18 @@ deserializing from config).
 
 Inside the sub-run clone/merge pattern (see
 [concepts](../concepts.md#sub-run-clonemerge-pattern)), iteration counts are
-measured **relative to the start of the sub-run**, not the global iteration.
+measured relative to the start of the sub-run, not the global iteration.
 The outer condition still uses the global counter, so an inner
 `failed_updates(100)` triggers based on the inner phase's progress while the
 outer `iterations(10_000)` budget governs the overall run.
 
 ## Tips
 
-- `iterations` is the most reproducible (no clock dependency) — use it in
+- `iterations` is the most reproducible (no clock dependency), use it in
   tests and benchmarks where you need deterministic stops.
 - `duration` is best for time-budgeted comparisons across machines.
 - `failed_updates` is the natural condition for "run until it stops finding
-  improvements" — pair with `LocalSearch` (which forces it to `1`) or with the
+  improvements", pair with `LocalSearch` (which forces it to `1`) or with the
   inner phase of `Iterated`.
 - Combine criteria when you want a soft target plus a hard cap: e.g.,
   `failed_updates(1_000).with_duration(Duration::from_secs(60))`.

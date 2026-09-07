@@ -5,7 +5,7 @@
 Given `n` cities placed at 2D coordinates, with `d(i, j)` the distance between
 cities `i` and `j`, find the shortest closed tour that visits every city
 exactly once and returns to its start. A tour is a permutation `π` of
-`{1, ..., n}`, where `π(k)` names the `k`-th city visited. **Minimize** the
+`{1, ..., n}`, where `π(k)` names the `k`-th city visited. Minimize the
 total length of that Hamiltonian tour:
 
 ```text
@@ -14,7 +14,7 @@ minimize  Σ_{k=1}^{n} d(π(k), π(k mod n + 1))    (π a permutation of the n c
 
 This crate's `TspWithCoordinates` restricts instances to 2D coordinates
 (rather than an arbitrary distance matrix) and supports several standard
-distance formulas matching the TSPLIB benchmark set's conventions — see
+distance formulas matching the TSPLIB benchmark set's conventions, see
 [Edge-weight types](#edge-weight-types) below.
 
 ## Example
@@ -58,7 +58,7 @@ which is `Σ d(π(k), π(k+1))`.
 
 ## Crossover
 
-- `TspOrderCrossover` — Order Crossover (OX): copy a contiguous segment from
+- `TspOrderCrossover`, Order Crossover (OX): copy a contiguous segment from
   one parent, fill remaining positions in order from the other parent.
 
 ## Edge-weight types
@@ -67,7 +67,7 @@ which is `Σ d(π(k), π(k+1))`.
 
 | Variant | Formula | TSPLIB key |
 |---|---|---|
-| `Continuous` | plain Euclidean (no rounding) | — (default for `new`) |
+| `Continuous` | plain Euclidean (no rounding) |, (default for `new`) |
 | `Euc2d` | `nint(sqrt(dx² + dy²))` | `EUC_2D` |
 | `Ceil2d` | `ceil(sqrt(dx² + dy²))` | `CEIL_2D` |
 | `Att` | TSPLIB pseudo-Euclidean | `ATT` |
@@ -101,7 +101,7 @@ let tsp = TspWithCoordinates::load_file("data/instances/tsp/att48.tsp")?;
 
 ## References
 
-- Reinelt, G. "TSPLIB — A Traveling Salesman Problem Library." *ORSA Journal
+- Reinelt, G. "TSPLIB, A Traveling Salesman Problem Library." *ORSA Journal
   on Computing*, 3(4), 376-384, 1991. (Defines the file format and the
   standard instance set.)
 
