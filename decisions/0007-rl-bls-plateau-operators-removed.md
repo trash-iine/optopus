@@ -26,5 +26,5 @@ G55, 10200.4 against 10168.0. Without them it does not.
 ## Do not retry
 
 Take them back if this controller becomes the thing that has to win. The
-mechanism survives in `PopulationAnnealingForMaxCut`, which owns its own
-implementation of the cluster move.
+mechanism used to survive in `PopulationAnnealing`, which owned its own
+implementation of the cluster move; that is gone too, see 0016.

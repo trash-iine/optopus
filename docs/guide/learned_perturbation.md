@@ -70,20 +70,3 @@ the policy keeps improving across [`Restart`](../heuristics/meta.md#restart) /
 [`Iterated`](../heuristics/meta.md#iterated) episodes. That is the same
 contract [`RlSearch`](../heuristics/rl_search.md) keeps, and the reason the
 weights are a field rather than a local.
-
-## A note on the action space
-
-The action space was five operators rather than three until 2026-08-08. Two
-objective-preserving plateau perturbations, one flipping a connected cluster and
-one flipping an independent set of zero-gain vertices, were extra bandit
-actions, alongside a `plateau_width` context feature. They were removed in
-exchange for a smaller action space, one operator vocabulary shared with BLS,
-and no second scratch structure inside the operators.
-
-Bandit weights saved from that version no longer load. The example asserts the
-expected length in `with_policy_weights`, so they fail loudly rather than
-misaligning silently.
-
-The plateau idea itself survives in
-[PopulationAnnealingForMaxCut](../heuristics/population_annealing.md) as its
-non-local cluster move, which has its own implementation.

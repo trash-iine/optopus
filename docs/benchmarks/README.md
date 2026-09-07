@@ -31,7 +31,7 @@ CVRP has run configs and a size-band profile (below) but no published
 results yet, there is no `data/vrp/` under this directory, so the viewer has
 no CVRP rows. The bespoke CVRP comparison lives in
 [hgs.md](../heuristics/hgs.md#measured-quality) instead. The same holds for
-`PopulationAnnealingForMaxCut` and `WalkSatForSat`: implemented and
+`PopulationAnnealing` and `WalkSatForSat`: implemented and
 configurable, not part of this sweep.
 
 ## Browse interactively

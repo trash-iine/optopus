@@ -22,6 +22,7 @@ Read the table, open the one file you need.
 | [0012](0012-alns-descent-is-anchored.md) | vrp | adopted | The descent after each ruin is anchored at the re-inserted customers |
 | [0013](0013-no-run-sub-wrapper.md) | search_state | adopted | The clone/merge triad has no wrapper, and should not get one |
 | [0014](0014-documentation-is-split-three-ways.md) | all | adopted | Documentation is split three ways, and each part has one audience |
+| [0016](0016-population-annealing-drops-the-cluster-move.md) | heuristic, max_cut, qubo | adopted | Population annealing drops the non-local cluster move and runs on every problem |
 
 ## Writing a new record
 
