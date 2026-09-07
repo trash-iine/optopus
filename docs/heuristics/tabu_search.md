@@ -5,7 +5,7 @@
 At each step, pick the strictly best move that is not currently tabu, then
 mark it tabu for a tenure drawn uniformly from `tabu_tenure = (min, max)`.
 
-A tabu move is still selectable when it satisfies the **aspiration criterion**:
+A tabu move is still selectable when it satisfies the aspiration criterion:
 the resulting solution would be strictly better than the current global best.
 
 ## Example
@@ -21,7 +21,6 @@ let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
 );
 ts.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Constructor
@@ -35,7 +34,7 @@ TabuSearch::<N>::new(
 
 `N` must satisfy `MoveToNeighbor<P> + Clone + EnabledTabu + Rankable`.
 
-**Panics** if `tabu_tenure.0 > tabu_tenure.1`.
+Panics if `tabu_tenure.0 > tabu_tenure.1`.
 
 ## Where the tabu map lives
 
@@ -47,8 +46,8 @@ at the first. See `TabuSearch` implementation for an example.
 
 ## Tabu policy abstraction
 
-Each neighbor type owns its tabu policy — which keys have to be free, and which
-applying the move forbids — via the `EnabledTabu` trait, and hands it to the
+Each neighbor type owns its tabu policy, which keys have to be free, and which
+applying the move forbids, via the `EnabledTabu` trait, and hands it to the
 state by overriding `MoveToNeighbor::tabu_policy` with `Some(self)`, one line.
 `TabuSearch` never knows what is keyed. This lets QUBO/MaxCut/SAT key by
 variable index, TSP by edge pair, Job Shop by swap position, etc. The two are
@@ -61,12 +60,12 @@ implements `EnabledTabu` and forgets the one-line override would run here with
 no tabu list and no complaint, so `trait_defs/tabu.rs` pins every built-in move
 against exactly that.
 
-`run_once` calls `state.start_record_tabu(tenure)` once per iteration — the
+`run_once` calls `state.start_record_tabu(tenure)` once per iteration, the
 tenure and the mode are the same call. Recording is off on a fresh state and off in every sub-run,
-so a search whose method is the tabu list has to say so — and says so next to
+so a search whose method is the tabu list has to say so, and says so next to
 the loop that depends on it rather than once, somewhere else.
 
-`common::TabuMemory` is the single store, split by `TabuKey` shape — `Var(i)`
+`common::TabuMemory` is the single store, split by `TabuKey` shape, `Var(i)`
 for a dense index, `Pair` and `Triple` for the rest. Two move types over the
 same shape share prohibitions (MaxCut's flip and swap are both `Var`, which is
 what Breakout Local Search relies on when it drives this search as its
@@ -92,6 +91,6 @@ The tenure is taken literally: a move stays forbidden for that many iterations.
 ## References
 
 - Glover, F. "Future Paths for Integer Programming and Links to Artificial
-  Intelligence." *Computers & Operations Research*, 13(5), 533-549, 1986.
-- Glover, F. "Tabu Search — Part I." *ORSA Journal on Computing*, 1(3),
+  Intelligence." Computers & Operations Research, 13(5), 533-549, 1986.
+- Glover, F. "Tabu Search, Part I." ORSA Journal on Computing, 1(3),
   190-206, 1989.

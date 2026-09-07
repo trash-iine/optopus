@@ -100,7 +100,7 @@ pub enum HeuristicConfig {
     },
     /// Uniform random walk with unconditional acceptance; useful as a shake /
     /// perturbation step inside a meta-heuristic. Always give it a
-    /// `stop_condition` (e.g. `max_iteration`) — an empty one never terminates.
+    /// `stop_condition` (e.g. `max_iteration`), an empty one never terminates.
     RandomWalk {
         neighbor: NeighborKind,
         #[serde(default)]
@@ -133,9 +133,9 @@ pub enum HeuristicConfig {
     },
     /// Breakout Local Search (MaxCut only).
     BreakoutLocalSearch {
-        /// Tabu tenure range `(min, max)`, in Benlic & Hao's `γ` — a vertex
+        /// Tabu tenure range `(min, max)`, in Benlic & Hao's `γ`, a vertex
         /// stays forbidden for `2γ` moves, because the paper counts the tenure
-        /// twice. **This is the one place the key is doubled**: the same range
+        /// twice. This is the one place the key is doubled: the same range
         /// under `TabuSearch` prohibits for half as
         /// long, so the numbers are not interchangeable between them.
         tabu_tenure: (u64, u64),

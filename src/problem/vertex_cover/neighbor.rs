@@ -27,8 +27,8 @@ pub struct VertexCoverFlipNeighbor {
 impl VertexCoverFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
     ///
-    /// A flip's gain needs no correction — it is exactly the value the solution
-    /// already maintains — so this only exists to keep every construction site
+    /// A flip's gain needs no correction. It is exactly the value the solution
+    /// already maintains, so this only exists to keep every construction site
     /// on one path, the way [`VertexCoverSwapNeighbor::new`] does. `prob` is
     /// unused for that reason and taken only so the two constructors read alike
     /// at the call site.
@@ -210,7 +210,7 @@ impl Evaluate for VertexCoverSwapNeighbor {
 }
 
 impl EnabledTabu for VertexCoverSwapNeighbor {
-    /// A swap is tabu unless **both** vertexs it moves are free.
+    /// A swap is tabu unless both vertexs it moves are free.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
         tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
     }

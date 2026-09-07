@@ -10,7 +10,7 @@ pub const STATE_FEATURES: usize = 6;
 /// state-level feature. State-level features are constant across the moves of
 /// one step, so as plain additive terms they would cancel in the softmax and
 /// contribute nothing to move selection; as interactions they let the state
-/// *modulate* the policy's move preferences (e.g. "prefer worsening moves
+/// modulate the policy's move preferences (e.g. "prefer worsening moves
 /// when stagnating").
 pub const NUM_FEATURES: usize = MOVE_FEATURES * (1 + STATE_FEATURES);
 pub(crate) const EPSILON: f64 = 1e-10;

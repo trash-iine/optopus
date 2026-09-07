@@ -96,7 +96,7 @@ impl RouteState {
         removal_gain(prob, &self.routes[r], pos, len)
     }
 
-    /// Distance added by inserting the segment `first…last` *before* position
+    /// Distance added by inserting the segment `first…last` before position
     /// `pos` of route `r`.
     #[inline]
     pub(super) fn insertion_cost(

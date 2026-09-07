@@ -17,14 +17,14 @@ use crate::trait_defs::{ProblemTrait, Rankable};
 /// # References
 ///
 /// - Mladenovic, N. and Hansen, P. "Variable neighborhood search."
-///   *Computers & Operations Research*, 24(11):1097-1100, 1997.
+///   Computers & Operations Research, 24(11):1097-1100, 1997.
 ///   [DOI](https://doi.org/10.1016/S0305-0548(97)00031-2)
 ///
 /// # Cycle
 ///
 /// 1. Snapshot the incumbent solution.
 /// 2. Run `shakes[k]` to jump to a random point in neighborhood `N_k`.
-/// 3. Check the outer `stop_condition` — restore the incumbent and return
+/// 3. Check the outer `stop_condition`, restore the incumbent and return
 ///    early if done (never end a run on an un-searched shaken solution).
 /// 4. Run `search` until its inner stopping condition is met.
 /// 5. If the result improves the incumbent, keep it and reset `k = 0`;

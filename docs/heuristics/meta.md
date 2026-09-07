@@ -2,8 +2,8 @@
 
 **API:** [`Sequential`](../api/optopus/heuristic/struct.Sequential.html)
 
-Four meta-heuristics that compose other heuristics via the **sub-run
-clone/merge pattern**:
+Four meta-heuristics that compose other heuristics via the sub-run
+clone/merge pattern:
 
 ```rust
 let mut sub = state.clone_for_new_run(SearchStateCloneType::ClearBest);
@@ -18,13 +18,13 @@ trait-level details and the three `SearchStateCloneType` variants are in
 
 Which one to reach for:
 
-- **`Sequential`** — a fixed pipeline of phases, in order (say `LocalSearch` to
+- `Sequential`, a fixed pipeline of phases, in order (say `LocalSearch` to
   clean up a random start, then `TabuSearch`).
-- **`Iterated`** — escape local optima by alternating search with a perturbation
+- `Iterated`, escape local optima by alternating search with a perturbation
   (ILS). The default choice when one search stalls.
-- **`VariableNeighborhoodSearch`** — the same idea with several shake
+- `VariableNeighborhoodSearch`, the same idea with several shake
   neighborhoods of growing strength, escalating only when the current one fails.
-- **`Restart`** — throw the incumbent away and draw a fresh random solution once
+- `Restart`, throw the incumbent away and draw a fresh random solution once
   progress stops; the global best survives.
 
 For a population instead of a single incumbent, see
@@ -32,7 +32,7 @@ For a population instead of a single incumbent, see
 
 ## Example
 
-`Iterated` (ILS) is the usual entry point: a search phase that stalls, and a
+`Iterated` (ILS) is the usual entry point, with a search phase that stalls and a
 perturbation phase that pushes it out of the basin it stalled in.
 
 ```rust
@@ -54,7 +54,6 @@ let mut ils = Iterated::<MaxCut>::new(
 );
 ils.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 Each of the four sections below carries the constructor and an example of its
@@ -80,11 +79,6 @@ heuristics each carry their own stop condition. The cycle re-runs from the top
 once it reaches the end of the list.
 
 ```rust
-use optopus::prelude::*;
-
-let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
-let mut state = SearchState::new(&mc);
-
 let mut seq = Sequential::<MaxCut>::new(
     StopCondition::iterations(100_000),
     vec![
@@ -99,7 +93,6 @@ let mut seq = Sequential::<MaxCut>::new(
     ],
 );
 seq.run(&mut state)?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Iterated
@@ -123,11 +116,6 @@ A typical pairing: `search = LocalSearch`, `perturbation = RandomWalk` for a
 few iterations.
 
 ```rust
-use optopus::prelude::*;
-
-let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
-let mut state = SearchState::new(&mc);
-
 let mut ils = Iterated::<MaxCut>::new(
     StopCondition::iterations(100_000),
     Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
@@ -138,7 +126,6 @@ let mut ils = Iterated::<MaxCut>::new(
     )),
 );
 ils.run(&mut state)?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## VariableNeighborhoodSearch
@@ -162,11 +149,6 @@ and advance `k` (wrapping around after the last neighborhood). The global best
 survives either way.
 
 ```rust
-use optopus::prelude::*;
-
-let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
-let mut state = SearchState::new(&mc);
-
 let mut vns = VariableNeighborhoodSearch::<MaxCut>::new(
     StopCondition::iterations(100_000),
     Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
@@ -185,7 +167,6 @@ let mut vns = VariableNeighborhoodSearch::<MaxCut>::new(
     ],
 );
 vns.run(&mut state)?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Restart
@@ -207,11 +188,6 @@ Since the inner slot is any `Heuristic<P>`, the usual shape is a `Restart`
 around an `Iterated`:
 
 ```rust
-use optopus::prelude::*;
-
-let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
-let mut state = SearchState::new(&mc);
-
 let ils = Iterated::<MaxCut>::new(
     StopCondition::iterations(10_000),
     Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::failed_updates(1))),
@@ -224,13 +200,12 @@ let mut solver = Restart::new(
     StopCondition::failed_updates(1_000),
 );
 solver.run(&mut state)?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Benchmark config
 
-All four are one `kind` with a nested `steps` array; what each slot means is the
-only difference:
+All four are one `kind` with a nested `steps` array, and only the meaning of
+each slot differs.
 
 ```toml
 [[heuristics]]
@@ -253,27 +228,16 @@ max_iteration = 200
 
 | `kind` | `steps` | Extra fields |
 |---|---|---|
-| `Sequential` | run in order, repeated until the outer stop condition | — |
-| `Iterated` | `[0]` = search, `[1]` = perturbation | — |
-| `VariableNeighborhoodSearch` | `[0]` = search, `[1..]` = shakes `N_1..N_kmax` | — |
+| `Sequential` | run in order, repeated until the outer stop condition | |
+| `Iterated` | `[0]` = search, `[1]` = perturbation | |
+| `VariableNeighborhoodSearch` | `[0]` = search, `[1..]` = shakes `N_1..N_kmax` | |
 | `Restart` | `[0]` = the inner heuristic | `restart_condition` (required, same shape as `stop_condition`) |
 
-`Restart` is the only one with an extra table of its own:
+`Restart` adds one table of its own, alongside the fields above.
 
 ```toml
-[[heuristics]]
-kind = "Restart"
-[heuristics.restart_condition]     # required — when to reseed with a random solution
+[heuristics.restart_condition]     # required, when to reseed with a random solution
 max_failed_update = 1_000
-[heuristics.stop_condition]
-max_duration_secs = 30.0
-
-[[heuristics.steps]]               # steps[0] = the inner heuristic
-kind = "TabuSearch"
-neighbor = "Flip"
-tabu_tenure = [5, 150]
-[heuristics.steps.stop_condition]
-max_iteration = 10_000
 ```
 
 Steps nest arbitrarily deep: a `Restart` around an `Iterated` is the two blocks
@@ -284,5 +248,5 @@ level further as `[[heuristics.steps.steps]]`. See the full
 ## References
 
 - Lourenco, H. R., Martin, O. C., and Stutzle, T. "Iterated Local Search."
-  In Glover, F. and Kochenberger, G. A. (eds.), *Handbook of Metaheuristics*,
+  In Glover, F. and Kochenberger, G. A. (eds.), Handbook of Metaheuristics,
   pp. 320-353. Springer, 2003.

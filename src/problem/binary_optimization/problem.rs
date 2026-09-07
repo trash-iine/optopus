@@ -346,8 +346,8 @@ fn constraint_penalty_from_val(c: &Constraint, val: Value) -> Value {
 /// is flipped.
 ///
 /// Two sources of dependency:
-/// 1. **Objective**: `i` and `j` share a monomial → flipping `i` changes j's objective delta.
-/// 2. **Constraint**: `i` and `j` both appear in the same constraint expression
+/// 1. Objective: `i` and `j` share a monomial → flipping `i` changes j's objective delta.
+/// 2. Constraint: `i` and `j` both appear in the same constraint expression
 ///    (even in separate monomials) → flipping `i` shifts the base `cv[c]`, and because
 ///    the penalty function `max(0,·)` / `abs(·)` is non-linear, j's penalty delta can
 ///    change even when the expression delta for `j` itself is unaffected.
@@ -435,7 +435,7 @@ pub struct FormulaSolution {
 }
 
 impl Rankable for FormulaSolution {
-    /// `self.score > other.score` — `score` already folds in the optimization
+    /// `self.score > other.score`, `score` already folds in the optimization
     /// direction, so higher is always better here.
     fn is_better_than(&self, other: &Self) -> bool {
         self.score > other.score

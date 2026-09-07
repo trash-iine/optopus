@@ -1,10 +1,10 @@
-//! The directed swap kick — Benlic & Hao's `A2`.
+//! The directed swap kick, Benlic & Hao's `A2`.
 //!
 //! It is the one perturbation with no generic equivalent in this library: `M2`
-//! moves one vertex per partition side *in a single move*, and a pair of
+//! moves one vertex per partition side in a single move, and a pair of
 //! independent one-step searches cannot express that (they succeed or fail
 //! separately, so a side with nothing eligible leaves the other vertex moved on
-//! its own — pinned by the last test below). The other two kicks are generic
+//! its own, pinned by the last test below). The other two kicks are generic
 //! heuristics, driven from [`kick`](super::bls::BreakoutLocalSearch::kick):
 //! the strong one is a [`RandomWalk`](crate::heuristic::RandomWalk) and the weak
 //! flip is a [`TabuSearch`](crate::heuristic::TabuSearch).
@@ -16,30 +16,18 @@ use crate::search_state::SearchState;
 use crate::trait_defs::MoveToNeighbor;
 
 /// Applies `l` swap moves guided by the state's tabu memory (the paper's
-/// *weak swap*).
+/// weak swap).
 ///
-/// This is Benlic & Hao's set `A2` — the highest-gain move of the `M2`
-/// operator that is *not tabu*, with a tabu move admitted only when the
+/// This is Benlic & Hao's set `A2`, the highest-gain move of the `M2`
+/// operator that is not tabu, with a tabu move admitted only when the
 /// resulting swap would beat the global best (aspiration). `M2` takes one
 /// vertex per partition side, so a single scan tracks two candidates per
 /// side: the best non-tabu vertex, which is what `A2` normally selects,
 /// and the best vertex overall, which is consulted only for the aspiration
 /// test and as the fallback for a side that has no non-tabu vertex left.
 ///
-/// Uses scalar best tracking per side instead of collecting tied-best lists
-/// into Vecs.
-///
-/// **Ties keep the incumbent** — the first candidate the scan met, which on the
-/// G-set means the lowest vertex index. That looks like an arbitrary bias:
-/// every G-set weight is ±1, so gains are small integers and the degree-4
-/// toroidal instances admit only five distinct values, putting hundreds of
-/// vertices in one tie. Sampling the tie uniformly was **measured and
-/// rejected** — over G11/G12/G13/G32-G34 it lost 6 cut points and turned three
-/// exact matches of the paper's best into misses, while gaining only on one
-/// planar instance. Index order on a toroidal grid tracks position, so taking
-/// the lowest index walks the lattice coherently; randomising it scatters the
-/// perturbation instead. That is why the four comparisons below are `>` and
-/// not `>=`.
+/// Tracks a scalar best per side rather than collecting tied-best lists into
+/// Vecs. Among candidates of equal gain it keeps the first one the scan met.
 pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
     for _ in 0..l {
         let mut free_v0 = None;
@@ -48,6 +36,9 @@ pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(
         let mut any_v1 = None;
 
         for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
+            // The comparisons below are `>` and not `>=`, so equal gains keep the
+            // lowest vertex index. Sampling ties uniformly was measured and lost;
+            // see decisions/0005.
             let on_side0 = state.solution.x[neighbor.i];
 
             let any = if on_side0 { &mut any_v0 } else { &mut any_v1 };
@@ -171,7 +162,7 @@ mod tests {
     use super::*;
 
     /// A swap moves one vertex per side, so it must leave the partition sizes
-    /// untouched — that is the whole reason `M2` exists next to the flips.
+    /// untouched, which is the whole reason `M2` exists next to the flips.
     #[test]
     fn a_swap_keeps_the_partition_sizes() {
         let mc = small_instance();

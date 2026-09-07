@@ -2,25 +2,25 @@
 
 **API:** [`Vrp`](../api/optopus/problem/vrp/struct.Vrp.html)
 
-Capacitated Vehicle Routing Problem (CVRP): a depot (customer `0`) and `n`
+Capacitated Vehicle Routing Problem (CVRP), with a depot (customer `0`) and `n`
 customers `1, ..., n`, each with 2D coordinates and an integer demand `q_i`,
 are served by a homogeneous fleet of `K` vehicles with shared capacity `Q`,
 each starting and ending at the depot. Partition the customers into at most
-`K` routes `R_1, ..., R_K` — each a sequence of customers visited by one
-vehicle — so that every customer is served exactly once and no route's total
-demand exceeds `Q`. **Minimize** total travel distance:
+`K` routes `R_1, ..., R_K`, each a sequence of customers visited by one
+vehicle, so that every customer is served exactly once and no route's total
+demand exceeds `Q`. Minimize total travel distance:
 
 ```text
 minimize  Σ_{k=1}^{K} distance(R_k)
 subject to  R_1, …, R_K partition {1, …, n},  Σ_{i∈R_k} q_i ≤ Q for every route
 ```
 
-CVRP generalizes TSP — a single vehicle with unlimited capacity recovers it
-exactly — and is the base case of the routing-problem family used throughout
+CVRP generalizes TSP, a single vehicle with unlimited capacity recovers it
+exactly, and is the base case of the routing-problem family used throughout
 logistics and last-mile delivery planning.
 
-Capacity is a **soft** constraint, handled with a penalty exactly like
-[Vertex Cover](vertex_cover.md): `penalty_weight` is chosen larger than any
+Capacity is a soft constraint, handled with a penalty exactly like
+[Vertex Cover](vertex_cover.md), where `penalty_weight` is chosen larger than any
 possible tour length, so whenever a feasible solution exists, every optimum of
 the penalty-augmented objective is feasible:
 
@@ -59,10 +59,10 @@ Pass nearest-integer `EUC_2D` distances (the CVRPLIB convention) instead via
 
 ### Fleet size
 
-Passing `num_vehicles = 0` sizes the fleet by **first-fit-decreasing plus a 10%
-margin**. The margin is there because the
+Passing `num_vehicles = 0` sizes the fleet by first-fit-decreasing plus a 10%
+margin. The margin is there because the
 distance-optimal solution routinely uses a few more vehicles than the
-minimum — splitting a remote customer onto its own route can be cheaper than
+minimum, splitting a remote customer onto its own route can be cheaper than
 detouring to it. Idle vehicles cost nothing, an undersized fleet costs the
 optimum.
 
@@ -73,8 +73,8 @@ the partition from the definition above: `routes` is `R_1, ..., R_K`, the
 cached `route_loads` is `Σ_{i∈R_k} q_i` per route, `distance` is
 `Σ_k distance(R_k)`, `overload` is `Σ_k max(0, load(R_k) − Q)`, and
 `objective` is the penalty-augmented form defined above. 
-An **idle vehicle is an empty route** (distance `0`), and each route lists only
-the customers (`1..=n`) it visits — the depot (index `0`) is implicit at both
+An idle vehicle is an empty route (distance `0`), and each route lists only
+the customers (`1..=n`) it visits, the depot (index `0`) is implicit at both
 ends. 
 
 ## Neighbors
@@ -86,19 +86,19 @@ ends.
 | `VrpTwoOptNeighbor` | Reverse a segment within one route. | intra-route only |
 
 Note that these moves bake `penalty_weight` into their gains. A heuristic that
-needs to tune the capacity penalty at runtime — as
-[HybridGeneticSearchForVrp](../heuristics/hgs.md) does — cannot use them and
+needs to tune the capacity penalty at runtime, as
+[HybridGeneticSearchForVrp](../heuristics/hgs.md) does, cannot use them and
 supplies its own move evaluation.
 
 ## Crossover
 
-- `VrpOrderCrossover` — flattens both parents into giant tours, applies Order
+- `VrpOrderCrossover`, flattens both parents into giant tours, applies Order
   Crossover (`common::order_crossover`), then decodes the child back into
   `num_vehicles` routes with
   [`split_giant_tour`](../api/optopus/problem/vrp/fn.split_giant_tour.html)
   (Prins' Split): a dynamic program that, for the customer order OX produced,
   chooses the cut positions optimally. The child is therefore never worse than
-  any other way of cutting the same order — including the partition a parent
+  any other way of cutting the same order, including the partition a parent
   itself carried.
 
 Split is decoded here under the fixed `penalty_weight` above, so what the DP
@@ -137,16 +137,15 @@ described above. The node named by `DEPOT_SECTION` is re-indexed to `0`.
 use optopus::prelude::*;
 
 let vrp = Vrp::load_file("data/instances/vrp/X-n101-k25.vrp")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References
 
 - Uchoa, E., Pecin, D., Pessoa, A., Poggi, M., Vidal, T., and Subramanian, A.
   "New Benchmark Instances for the Capacitated Vehicle Routing Problem."
-  *European Journal of Operational Research*, 257(3), 845-858, 2017.
+  European Journal of Operational Research, 257(3), 845-858, 2017.
   (The CVRPLIB "X" set.)
 - Prins, C. "A Simple and Effective Evolutionary Algorithm for the Vehicle
-  Routing Problem." *Computers & Operations Research*, 31(12), 1985-2002, 2004.
+  Routing Problem." Computers & Operations Research, 31(12), 1985-2002, 2004.
   (Split.)
 

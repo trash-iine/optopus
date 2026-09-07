@@ -1,9 +1,9 @@
 //! Exact data reduction (kernelization) for [`MaxCut`].
 //!
-//! Kernelization shrinks an instance by rules that are *provably* optimum
+//! Kernelization shrinks an instance by rules that are provably optimum
 //! preserving: whatever is removed can be re-derived from an optimal solution
 //! of what remains. This is the opposite trade-off from a heuristic
-//! contraction, which shrinks the instance by *guessing* structure and
+//! contraction, which shrinks the instance by guessing structure and
 //! therefore restricts the search space; a kernel restricts nothing.
 //!
 //! The rules are stated here in raw cut-value space, and each one is pinned
@@ -12,17 +12,17 @@
 //!
 //! # What it does and does not do
 //!
-//! Reduction happens where vertices have *low degree*. Measured on the G-set,
+//! Reduction happens where vertices have low degree. Measured on the G-set,
 //! `G70` (average degree 2.0) loses 78% of its vertices, `G55` and `G60`
 //! (average degree 5) lose 13%, and 4-regular or dense instances lose nothing
-//! at all. On dense random graphs the rules never fire — the paper reports the
+//! at all. On dense random graphs the rules never fire, the paper reports the
 //! same. [`MaxCutKernel::is_trivial`] makes that case free to detect, so a
 //! caller can fall back without paying for anything.
 //!
 //! # References
 //!
 //! - Ferizovic, D., Hespe, D., Lamm, S., Mnich, M., Schulz, C. and Strash, D.
-//!   "Engineering Kernelization for Maximum Cut." *ALENEX 2020*.
+//!   "Engineering Kernelization for Maximum Cut." ALENEX 2020.
 //!   [arXiv:1905.10902](https://arxiv.org/abs/1905.10902)
 //!
 //! # Example
@@ -70,7 +70,7 @@ enum Reduction {
 /// kernel solution back to the original vertex set.
 ///
 /// The defining invariant, checked by the tests, is
-/// `kernel_cut(y) + offset == original_cut(lift(y))` for **every** `y` — not
+/// `kernel_cut(y) + offset == original_cut(lift(y))` for every `y`, not
 /// just for optimal ones. Solving the kernel and lifting is therefore
 /// equivalent to solving the original.
 #[derive(Debug, Clone)]
@@ -281,9 +281,9 @@ impl MaxCutKernel {
 /// `MaxCut`, and the objective is preserved up to [`offset`](MaxCutKernel::offset).
 ///
 /// Stating it as the trait is what lets a caller reach the kernel through the
-/// shared search-state plumbing —
+/// shared search-state plumbing,
 /// [`open_reduction`](crate::search_state::SearchState::open_reduction) and
-/// [`close_reduction`](crate::search_state::SearchState::close_reduction) —
+/// [`close_reduction`](crate::search_state::SearchState::close_reduction),
 /// rather than its own copy of it. The inherent [`project`](MaxCutKernel::project) /
 /// [`lift`](MaxCutKernel::lift) stay: they work in raw assignments, which is
 /// what a caller holding an incrementally maintained solution actually wants.
@@ -317,7 +317,7 @@ impl ProblemReduction for MaxCutKernel {
 ///
 /// If `w(v, a) >= Σ_{u ≠ a} |w(v, u)|` then moving `v` to the side opposite
 /// `a` gains `w(v, a)` on that edge and can lose at most as much everywhere
-/// else, so *some* optimum puts them apart — and symmetrically, an edge that
+/// else, so some optimum puts them apart, and symmetrically, an edge that
 /// negative pins them together. Either way `v`'s side becomes a function of
 /// `a`'s, which is a contraction rather than a deletion: `v`'s other edges are
 /// still undecided and have to be carried over to `a`.
@@ -336,7 +336,7 @@ fn dominating_neighbor(neighbors: &BTreeMap<usize, f32>) -> Option<(usize, bool)
 /// value that decision contributes.
 ///
 /// Every edge `(v, t)` becomes an edge `(a, t)`: with `v` opposite `a` it is
-/// cut exactly when `(a, t)` is *not*, which is a constant `w` minus an edge
+/// cut exactly when `(a, t)` is not, which is a constant `w` minus an edge
 /// of weight `w`; with `v` on `a`'s side it is simply an edge of weight `w`.
 fn merge_into(
     v: usize,
@@ -464,7 +464,7 @@ mod tests {
     }
 
     /// The reduction must preserve the optimum exactly, in every weight
-    /// regime — this is what licenses calling it "exact".
+    /// regime, which is what licenses calling it "exact".
     #[test]
     fn kernel_optimum_matches_brute_force() {
         let mut rng = SmallRng::seed_from_u64(20260729);
@@ -488,7 +488,7 @@ mod tests {
         }
     }
 
-    /// Lifting must be exact for *every* kernel assignment, not only optimal
+    /// Lifting must be exact for every kernel assignment, not only optimal
     /// ones, so a heuristic can be run on the kernel and lifted at any point.
     #[test]
     fn lifting_identity_holds_for_every_assignment() {
@@ -537,7 +537,7 @@ mod tests {
     /// surviving endpoint, so a vertex far from the one being reduced can lose
     /// degree. The sweep is wide enough to catch a merge that fails to re-queue
     /// such a vertex (the narrower `n = 12, p = 0.25` sweep this replaced did
-    /// not — it takes signed weights and a few hundred draws).
+    /// not, since it takes signed weights and a few hundred draws).
     #[test]
     fn reduction_is_idempotent() {
         let mut rng = SmallRng::seed_from_u64(99);
@@ -562,7 +562,7 @@ mod tests {
 
     /// A kernel solution is built from `graph.len()`, so a kernel whose graph is
     /// shorter than its vertex list cannot be lifted at all. The reduction must
-    /// never produce one — an edgeless survivor is isolated, not carried over.
+    /// never produce one, an edgeless survivor is isolated, not carried over.
     #[test]
     fn the_kernel_graph_covers_every_kernel_vertex() {
         let mut rng = SmallRng::seed_from_u64(20260809);
@@ -608,7 +608,7 @@ mod tests {
     /// rebuild their caches and honour `base` on the way back.
     ///
     /// A warm start must keep the incumbent's decisions on the vertices the
-    /// kernel still has, and re-derive the removed ones — which the rules
+    /// kernel still has, and re-derive the removed ones, which the rules
     /// choose optimally, so the round trip can only improve the cut. The calls
     /// are fully qualified because the inherent `project` / `lift` shadow the
     /// trait's.

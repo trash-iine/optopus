@@ -1,13 +1,13 @@
 //! Granular local search over CVRP routes, in place and penalty-parameterized.
 //!
-//! This is deliberately *not* built on [`crate::problem::VrpRelocateNeighbor`] and
-//! friends. Those bake [`Vrp::penalty_weight`] — a fixed, deliberately enormous
-//! constant — into every gain, whereas the callers here must be able to descend
+//! This is deliberately not built on [`crate::problem::VrpRelocateNeighbor`] and
+//! friends. Those bake [`Vrp::penalty_weight`], a fixed, deliberately enormous
+//! constant, into every gain, whereas the callers here must be able to descend
 //! under a penalty they choose: Hybrid Genetic Search adapts one at runtime, and
 //! ALNS hands in the weight its own objective uses. They also enumerate the full
 //! O(n²) neighborhood and offer neither intra-route relocation nor 2-opt\*.
 //!
-//! Moves are restricted to *granular* candidate pairs: for each customer `u`,
+//! Moves are restricted to granular candidate pairs: for each customer `u`,
 //! only its `granularity` nearest customers `v` are considered as partners. The
 //! move set follows Vidal's HGS-CVRP:
 //!
@@ -47,7 +47,7 @@ const ANCHOR_RING: usize = 5;
 ///
 /// It has a receiver where the pricing functions in [`super`] are free, because
 /// these caches are exactly what both callers were keeping a private copy of.
-/// What is *not* in here is any policy: when to descend, under which penalty and
+/// What is not in here is any policy: when to descend, under which penalty and
 /// for how long stays with the heuristic driving it.
 #[derive(Debug, Default)]
 pub(crate) struct Descent {
@@ -101,14 +101,14 @@ impl Descent {
         self.sweep(state, prob, rng, penalty, max_passes);
     }
 
-    /// The same descent, anchored only at `anchors` and the customers near them
-    /// — everything else is left alone.
+    /// The same descent, anchored only at `anchors` and the customers near them.
+    /// Everything else is left alone.
     ///
     /// A caller that has just edited a few routes knows where the damage is, and
     /// paying for a full sweep of `1..=n` to find it again is what makes a
     /// descent too expensive to run every iteration. The anchor set is widened
-    /// by one granular ring, so a customer *displaced* by the edit is
-    /// reconsidered too, not only the ones the caller moved — see
+    /// by one granular ring, so a customer displaced by the edit is
+    /// reconsidered too, not only the ones the caller moved, see
     /// [`ANCHOR_RING`] for how wide that ring is and why it is narrow.
     pub(crate) fn run_around(
         &mut self,
@@ -608,7 +608,7 @@ mod tests {
     }
 
     /// Splitting a route never shortens it (triangle inequality), so an idle
-    /// vehicle only earns its keep by absorbing overload — which is exactly what
+    /// vehicle only earns its keep by absorbing overload, which is exactly what
     /// the fixed-fleet encoding needs it for.
     #[test]
     fn an_idle_vehicle_absorbs_overload() {
@@ -645,7 +645,7 @@ mod tests {
     }
 
     /// An anchored sweep must reach the same local optimum as a full one when
-    /// the only damage is where the anchors are — that is the assumption ALNS
+    /// the only damage is where the anchors are, which is the assumption ALNS
     /// makes when it descends around the customers it just re-inserted.
     #[test]
     fn an_anchored_sweep_fixes_the_damage_it_is_pointed_at() {
@@ -674,7 +674,7 @@ mod tests {
         prob.validate_routes(&state.routes).unwrap();
     }
 
-    /// Anchors are a *hint*, not a contract: an empty set and an anchor whose
+    /// Anchors are a hint, not a contract: an empty set and an anchor whose
     /// route is untouched must both leave a valid solution behind.
     #[test]
     fn an_empty_anchor_set_is_a_no_op() {

@@ -3,8 +3,8 @@
 **API:** [`AdaptiveLargeNeighborhoodSearchForVrp`](../api/optopus/heuristic/struct.AdaptiveLargeNeighborhoodSearchForVrp.html)
 
 Problem-specific heuristic for [CVRP](../problems/vrp.md). Adaptive Large
-Neighborhood Search (Ropke & Pisinger) *ruins* part of the incumbent and
-*recreates* it, choosing the operator pair by a roulette wheel whose weights
+Neighborhood Search (Ropke & Pisinger) ruins part of the incumbent and
+recreates it, choosing the operator pair by a roulette wheel whose weights
 track recent performance.
 
 ## Example
@@ -27,10 +27,9 @@ println!("total distance = {}", sol.distance);
 for (vehicle, route) in sol.routes.iter().enumerate() {
     println!("vehicle {vehicle}: depot -> {route:?} -> depot");
 }
-# Ok::<(), optopus::error::OptError>(())
 ```
 
-Takes no `neighbor` type parameter — it owns its move set. `demo16.vrp` is the
+Takes no `neighbor` type parameter, since it owns its move set. `demo16.vrp` is the
 committed 15-customer fixture; the measurements below are on CVRPLIB X
 instances.
 
@@ -38,17 +37,17 @@ instances.
 
 Each `run_once` produces one candidate:
 
-1. **Select operators** — one destroy and one repair operator, by roulette wheel
+1. Select operators, one destroy and one repair operator, by roulette wheel
    over the adaptive weights.
-2. **Destroy** — remove `removal_fraction · n` customers from the incumbent.
-3. **Repair** — re-insert all of them.
-4. **Descend** — run the shared granular descent over the recreated routes,
-   **anchored at the re-inserted customers** (see below).
-5. **Accept** — simulated-annealing criterion on the penalty-augmented
+2. Destroy, remove `removal_fraction · n` customers from the incumbent.
+3. Repair, re-insert all of them.
+4. Descend, run the shared granular descent over the recreated routes,
+   anchored at the re-inserted customers (see below).
+5. Accept, simulated-annealing criterion on the penalty-augmented
    objective; the temperature is initialized so that a solution 5% worse is
    accepted with probability ≈ 0.5, then cooled by `cooling_rate` each
    iteration.
-6. **Score** — reward the operator pair: `4` for a new global best, `2` for
+6. Score, reward the operator pair: `4` for a new global best, `2` for
    better than current, `1` for an accepted worse solution, `0` otherwise.
    Every 100 iterations the segment's average scores are blended into the
    weights with reaction factor `0.1`.
@@ -62,16 +61,16 @@ than through `state.apply`.
 | Destroy | Removes |
 |---|---|
 | Random | `k` customers drawn uniformly. |
-| Worst | the `k` customers with the largest removal gain — those whose detour costs the most. |
-| Shaw | the `k` customers most *related* to a random seed customer, relatedness being `distance(seed, c) + \|demand(seed) − demand(c)\|`. |
+| Worst | the `k` customers with the largest removal gain, those whose detour costs the most. |
+| Shaw | the `k` customers most related to a random seed customer, relatedness being `distance(seed, c) + \|demand(seed) − demand(c)\|`. |
 
 | Repair | Inserts |
 |---|---|
 | Greedy | each removed customer at its cheapest insertion point, cheapest customer first. |
-| Regret-2 | the customer with the largest regret first — the gap between its cheapest insertion and its cheapest insertion into a *different route*. |
+| Regret-2 | the customer with the largest regret first, the gap between its cheapest insertion and its cheapest insertion into a different route. |
 
-Regret is measured **across routes, not across positions**: the second-cheapest
-*slot* is almost always the one next door in the same route, a gap of nearly
+Regret is measured across routes, not across positions: the second-cheapest
+slot is almost always the one next door in the same route, a gap of nearly
 zero for every customer, which would make regret-2 indistinguishable from
 greedy. Insertion costs are augmented with the capacity penalty, so an insertion
 is always available even when every route is full.
@@ -86,7 +85,7 @@ AdaptiveLargeNeighborhoodSearchForVrp::new(
 ) -> Self
 ```
 
-**Panics** if `removal_fraction` or `cooling_rate` is outside `(0, 1]`.
+Panics if `removal_fraction` or `cooling_rate` is outside `(0, 1]`.
 
 `clear()` resets the operator weights and the temperature; the descent's
 instance-derived candidate lists survive it, since they depend on nothing else.
@@ -108,5 +107,5 @@ max_duration_secs = 30.0
   for the Pickup and Delivery Problem with Time Windows." *Transportation
   Science*, 40(4), 455-472, 2006.
 - Shaw, P. "Using Constraint Programming and Local Search Methods to Solve
-  Vehicle Routing Problems." In *CP 1998*, pp. 417-431. Springer, 1998.
+  Vehicle Routing Problems." In CP 1998, pp. 417-431. Springer, 1998.
   (Shaw removal.)

@@ -28,10 +28,9 @@ let mut pa = PopulationAnnealingForMaxCut::new(
 );
 pa.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
-`PopulationAnnealingForMaxCut` is not in the prelude — import it from
+`PopulationAnnealingForMaxCut` is not in the prelude, import it from
 `optopus::heuristic`.
 
 ## Algorithm sketch
@@ -39,16 +38,16 @@ println!("cut weight = {}", state.best_solution.objective);
 The population is seeded with `population_size` random solutions. Each
 `run_once` is one temperature step:
 
-1. **Metropolis sweeps** — every replica is swept `sweeps_per_step` times at the
+1. Metropolis sweeps, every replica is swept `sweeps_per_step` times at the
    current `β`. One sweep proposes one flip per edged vertex; a flip with cut
    change `gain` is accepted with probability `min(1, exp(β · gain))`, through
    the same `boltzmann_accept` helper [SA](simulated_annealing.md) uses.
-2. **Non-local cluster move** (when `cluster_moves` is on) — see below.
-3. **Resampling** — replica `j` gets `τ_j = exp(−Δβ (E_j − E_min)) / Z · R`
+2. Non-local cluster move (when `cluster_moves` is on), see below.
+3. Resampling, replica `j` gets `τ_j = exp(−Δβ (E_j − E_min)) / Z · R`
    expected copies, with `E_j = −cut_j` shifted by `E_min` for numerical
    stability. High-cut replicas are preferentially replicated and the population
    is restored to exactly `population_size`.
-4. **Periodic reset** — every `reset_period` steps `β` returns to
+4. Periodic reset, every `reset_period` steps `β` returns to
    `initial_beta`, recovering diversity once the population has converged. The
    global best survives the reset.
 
@@ -59,9 +58,9 @@ bit-reproducible.
 
 ### The non-local cluster move
 
-A maximal **independent set** of zero-gain vertices is flipped in
+A maximal independent set of zero-gain vertices is flipped in
 each replica. Independence is what makes each flip exactly objective-preserving
-— no two flipped vertices are adjacent, so no flip changes another's gain — and
+No two flipped vertices are adjacent, so no flip changes another's gain, and
 that lets the population traverse energy plateaus single-spin Metropolis cannot
 cross.
 
@@ -69,16 +68,9 @@ The set is built by scanning the replica's `gain` vector for the zeros, walking
 that list from a random offset and marking each selection's neighborhood
 ineligible via an `EpochMarks` scratch set.
 
-An incrementally maintained index of the zero-gain vertices used to supply the
-list, and was removed once this became its only reader: the plateau is read
-**once per step**, while the index charged an O(degree) membership update on
-every accepted Metropolis flip and rode along in every replica clone `resample`
-makes. Dropping it measured **0.92-0.94x the time at a fixed iteration budget**
-(G1 and G60, three repetitions, min taken) with the objective unchanged within
-noise (+10.0 in total over G1/G22/G55/G60 at 30s x 3 runs, against standard
-deviations of 0-4). Searches that never touched the index — every other MaxCut
-heuristic — are bit-identical across the ten G-set instances of the timing
-suite.
+The scan costs O(n) once per step, which is cheaper than keeping an
+incrementally maintained index of the zero-gain vertices would be, since such an
+index has to be updated on every accepted Metropolis flip.
 
 ## Constructor
 
@@ -94,7 +86,7 @@ PopulationAnnealingForMaxCut::new(
 ) -> Self
 ```
 
-**Panics** if `population_size < 2`, `initial_beta <= 0`, `delta_beta <= 0`, or
+Panics if `population_size < 2`, `initial_beta <= 0`, `delta_beta <= 0`, or
 `sweeps_per_step == 0`.
 
 `clear()` drops the population and resets `β` and the step counter, so a fresh
@@ -118,7 +110,7 @@ max_duration_secs = 30.0
 ## References
 
 - Machta, J. "Population annealing with weighted averages: A Monte Carlo method
-  for rough free-energy landscapes." *Phys. Rev. E* 82, 026704, 2010.
+  for rough free-energy landscapes." Phys. Rev. E 82, 026704, 2010.
 - Augmented PAMC with adaptive control and non-local cluster moves,
   [arXiv:2606.25203](https://arxiv.org/abs/2606.25203); a new G63 best-known via
   PAMC, [arXiv:2510.21105](https://arxiv.org/abs/2510.21105).

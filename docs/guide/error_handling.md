@@ -47,5 +47,5 @@ When implementing a custom problem or heuristic:
   with an invalid index).
 - Return [`OptError::Parse(...)`](../api/optopus/error/enum.OptError.html#variant.Parse) or
   [`OptError::FileLoad { … }`](../api/optopus/error/enum.OptError.html#variant.FileLoad) from custom loaders.
-- Let `?` propagate `std::io::Error` automatically —
+- Let `?` propagate `std::io::Error` automatically,
   [`OptError: From<io::Error>`](../api/optopus/error/enum.OptError.html#trait-implementations) is derived.

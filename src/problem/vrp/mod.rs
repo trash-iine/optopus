@@ -21,6 +21,6 @@ pub use split::split_giant_tour;
 pub(crate) use problem::overload_of;
 
 /// Who each customer is served between, shared with the VRP heuristics so that
-/// solution diversity means one thing in this crate — see
+/// solution diversity means one thing in this crate, see
 /// [`Distance for VrpSolution`](VrpSolution#impl-Distance-for-VrpSolution).
 pub(crate) use adjacency::RouteAdjacency;

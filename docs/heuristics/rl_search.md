@@ -23,10 +23,9 @@ let mut rl = RlSearch::<MaxCutFlipNeighbor>::new(
 );
 rl.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
-One `run` is one episode. The policy is what carries over between episodes —
+One `run` is one episode. The policy is what carries over between episodes,
 see [Multi-episode learning](#multi-episode-learning).
 
 ## Algorithm sketch
@@ -59,7 +58,7 @@ RlSearch::<N>::new(
 `N` must satisfy `MoveToNeighbor<P> + Evaluate + Clone`.
 
 `max_candidates`: if set, reservoir-samples this many moves from the lazy
-neighborhood iterator **before** evaluating them, so per-step evaluation and
+neighborhood iterator before evaluating them, so per-step evaluation and
 feature cost is `O(max_candidates)` instead of `O(neighborhood)`. Step
 statistics (and therefore the neighborhood-level features) are computed over
 the sample only.
@@ -102,8 +101,8 @@ pub enum RewardShaping {
 
 ## Multi-episode learning
 
-`clear()` resets per-episode state but **preserves `policy.weights` and the
-running baseline**. Wrap `RlSearch` in [`Restart`](meta.md#restart) or
+`clear()` resets per-episode state but preserves `policy.weights` and the
+running baseline. Wrap `RlSearch` in [`Restart`](meta.md#restart) or
 [`Iterated`](meta.md#iterated) to train across many episodes:
 
 ```rust
@@ -125,5 +124,5 @@ let mut solver = Restart::new(
 ## References
 
 - Williams, R. J. "Simple Statistical Gradient-Following Algorithms for
-  Connectionist Reinforcement Learning." *Machine Learning*, 8(3-4), 229-256,
+  Connectionist Reinforcement Learning." Machine Learning, 8(3-4), 229-256,
   1992.

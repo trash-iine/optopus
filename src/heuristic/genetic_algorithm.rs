@@ -50,12 +50,12 @@ pub enum ParentSelection {
 /// - Goldberg, D. E. *Genetic Algorithms in Search, Optimization, and Machine Learning*.
 ///   Addison-Wesley, 1989.
 /// - Galinier, P. and Hao, J.-K. "Hybrid Evolutionary Algorithms for Graph Coloring."
-///   *Journal of Combinatorial Optimization*, 3(4), 379-397, 1999.
+///   Journal of Combinatorial Optimization, 3(4), 379-397, 1999.
 ///
 /// # Type parameters
 ///
-/// - `P` — the problem type; must implement [`ProblemTrait`].
-/// - `C` — the crossover operator; must implement [`Crossover<P>`].
+/// - `P`, the problem type; must implement [`ProblemTrait`].
+/// - `C`, the crossover operator; must implement [`Crossover<P>`].
 ///
 /// # Example
 ///
@@ -83,7 +83,7 @@ pub struct GeneticAlgorithm<P: ProblemTrait, C> {
     pub population_size: usize,
     /// Crossover operator stored as a value because `Crossover::crossover` takes `&mut self`.
     pub crossover: C,
-    /// Mutation operator — any [`Heuristic<P>`] works (local search, SA, random walk, …).
+    /// Mutation operator, any [`Heuristic<P>`] works (local search, SA, random walk, …).
     pub mutation: Box<dyn Heuristic<P>>,
     /// Optional per-individual local-improvement applied to each random seed during
     /// population initialization. `None` (default) means the initial population is
@@ -174,7 +174,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
     }
 
     /// Returns indices of the two parents according to `self.parent_selection`.
-    /// May return the same index twice (rare, but allowed — matches the original tournament).
+    /// May return the same index twice (rare, but allowed, matches the original tournament).
     fn select_parent_indices(&self, rng: &mut impl rand::Rng) -> (usize, usize)
     where
         P::Solution: Distance,

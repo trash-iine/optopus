@@ -13,8 +13,8 @@ E(x) = Σ_{i ≤ j} Q[i][j] · x[i] · x[j]    (x ∈ {0,1}^n)
 ```
 
 QUBO is the standard input format accepted by quantum and classical
-Ising-machine annealers, and — being unconstrained — is also the form many
-other combinatorial problems (MaxCut, graph coloring, ...) are reduced *to*.
+Ising-machine annealers, and (being unconstrained) is also the form many
+other combinatorial problems (MaxCut, graph coloring, ...) are reduced to.
 This crate keeps `Qubo` as a standalone, generic problem type rather than
 special-casing those reductions.
 
@@ -59,7 +59,7 @@ the assignment `x` from the definition above (`x ∈ {0,1}^n`).
 
 ## Crossover
 
-- `QuboUniformCrossover` — per-variable random parent selection.
+- `QuboUniformCrossover`, per-variable random parent selection.
 - `Qubo` implements `SubProblemExtractable`. Variables that agree in both
   parents are fixed; their contributions are folded into the linear terms of
   the sub-QUBO so the sub-problem stays self-contained.
@@ -73,8 +73,8 @@ i j v
 ...
 ```
 
-- `N` — variable count, `M` — number of entries.
-- Indices are **1-indexed**; converted to 0-indexed internally.
+- `N` (variable count, `M`) number of entries.
+- Indices are 1-indexed; converted to 0-indexed internally.
 - `i == j` lines store the linear (diagonal) coefficient.
 - Duplicate entries follow `set_q` semantics: the last write wins.
 
@@ -82,14 +82,13 @@ i j v
 use optopus::prelude::*;
 
 let qubo = Qubo::load_file("data/instances/qubo/sample.qubo")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References
 
 - Kochenberger, G., Hao, J.-K., Glover, F., Lewis, M., Lü, Z., Wang, H., and
   Wang, Y. "The Unconstrained Binary Quadratic Programming Problem: A Survey."
-  *Journal of Combinatorial Optimization*, 28(1), 58-81, 2014.
+  Journal of Combinatorial Optimization, 28(1), 58-81, 2014.
 - Beasley, J. E. "Obtaining Test Problems via Internet." *Journal of Global
   Optimization*, 8(4), 429-433, 1996. (OR-Library, source of the bundled
   `bqp` instance set.)

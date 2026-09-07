@@ -17,20 +17,20 @@ use rand::rngs::SmallRng;
 /// inverse temperature `β` from `initial_beta` upward in steps of `delta_beta`.
 /// Each temperature step:
 ///
-/// 1. **Metropolis sweeps** — every replica is swept `sweeps_per_step` times at
+/// 1. Metropolis sweeps, every replica is swept `sweeps_per_step` times at
 ///    the current `β`; a proposed flip with cut change `gain` is accepted with
 ///    probability `min(1, exp(β · gain))` (reusing [`boltzmann_accept`]).
-/// 2. **Non-local cluster move (NCM)** — when `cluster_moves` is set, a maximal
+/// 2. Non-local cluster move (NCM), when `cluster_moves` is set, a maximal
 ///    independent set of zero-gain ("iso-site") vertices is flipped in each
 ///    replica. Independence keeps every flip exactly objective-preserving, so
 ///    the population traverses energy plateaus that single-spin Metropolis
 ///    cannot cross. This is the mechanism behind the recent G-set best-known
 ///    updates.
-/// 3. **Resampling** — replicas are reweighted for the next temperature by
+/// 3. Resampling, replicas are reweighted for the next temperature by
 ///    `τ_j = exp(-Δβ (E_j - E_min)) / Z · R` with `E_j = -cut_j`; low-energy
 ///    (high-cut) replicas are preferentially replicated and the population is
 ///    restored to exactly `population_size`.
-/// 4. **Periodic reset** — every `reset_period` steps `β` is reset to
+/// 4. Periodic reset, every `reset_period` steps `β` is reset to
 ///    `initial_beta` (population-annealing restart) while the global best is
 ///    preserved, recovering diversity after the population converges.
 ///
@@ -39,21 +39,21 @@ use rand::rngs::SmallRng;
 ///
 /// # References
 ///
-/// - Machta, J. "Population annealing with weighted averages." *Phys. Rev. E*
+/// - Machta, J. "Population annealing with weighted averages." Phys. Rev. E
 ///   82, 026704, 2010.
 /// - Augmented PAMC with adaptive control and non-local cluster moves,
 ///   arXiv:2606.25203; new G63 best-known via PAMC, arXiv:2510.21105.
 ///
 /// # Parameters
 ///
-/// - `population_size` — number of replicas `R` (>= 2)
-/// - `initial_beta` — starting inverse temperature (> 0)
-/// - `delta_beta` — inverse-temperature increment per step (> 0)
-/// - `sweeps_per_step` — Metropolis sweeps per replica per step (>= 1); one
+/// - `population_size`, number of replicas `R` (>= 2)
+/// - `initial_beta`, starting inverse temperature (> 0)
+/// - `delta_beta`, inverse-temperature increment per step (> 0)
+/// - `sweeps_per_step`, Metropolis sweeps per replica per step (>= 1); one
 ///   sweep proposes one flip per edged vertex
-/// - `reset_period` — reset `β` to `initial_beta` every this many steps
+/// - `reset_period`, reset `β` to `initial_beta` every this many steps
 ///   (`None` = never reset)
-/// - `cluster_moves` — enable the non-local cluster (iso-site) move
+/// - `cluster_moves`, enable the non-local cluster (iso-site) move
 pub struct PopulationAnnealing {
     stop_condition: StopCondition,
     population_size: usize,

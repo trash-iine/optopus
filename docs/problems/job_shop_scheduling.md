@@ -10,8 +10,8 @@ ordered sequence of operations `(machine, duration)` that must run on their
 machines in that order: an operation cannot start before its predecessor in
 the same job finishes, and a machine can process only one operation at a
 time. Let `C_{j,k}` be the completion time of the `k`-th operation of job
-`j`, with duration `p_{j,k}`; the *makespan* is the time the last operation
-anywhere finishes. **Minimize** the makespan:
+`j`, with duration `p_{j,k}`; the makespan is the time the last operation
+anywhere finishes. Minimize the makespan:
 
 ```text
 minimize  max_j C_{j,last}
@@ -47,10 +47,10 @@ println!("completion times = {:?}", sol.completion_times); // finish time of eac
 
 ## Solution
 
-Solutions are encoded as a **permutation-with-repetition** of length
-`n_jobs * n_machines` — the `k`-th occurrence of job `j` in the sequence
-names the `k`-th operation of that job — and decoded by **left-shift
-semi-active scheduling** into the completion times `C_{j,k}` from the
+Solutions are encoded as a permutation-with-repetition of length
+`n_jobs * n_machines`, the `k`-th occurrence of job `j` in the sequence
+names the `k`-th operation of that job, and decoded by left-shift
+semi-active scheduling into the completion times `C_{j,k}` from the
 definition above.
 [`JobShopSolution`](../api/optopus/problem/job_shop_scheduling/struct.JobShopSolution.html)
 carries that encoding as `operations`, the per-position decoded completion
@@ -81,22 +81,21 @@ m d m d m d ...
 ...
 ```
 
-- Machine indices are **0-indexed**.
+- Machine indices are 0-indexed.
 - Empty lines and `#`-prefixed comment lines are ignored.
-- Whitespace within and between lines is flexible — the file is tokenized
+- Whitespace within and between lines is flexible, since the file is tokenized
   rather than read line-strictly.
 
 ```rust
 use optopus::prelude::*;
 
 let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References
 
 - Fisher, H. and Thompson, G. L. "Probabilistic Learning Combinations of
-  Local Job-Shop Scheduling Rules." In *Industrial Scheduling*, pp. 225-251.
+  Local Job-Shop Scheduling Rules." In Industrial Scheduling, pp. 225-251.
   Prentice-Hall, 1963. (Source of the classic `ft06` instance.)
 - Taillard, E. "Benchmarks for Basic Scheduling Problems." *European Journal
   of Operational Research*, 64(2), 278-285, 1993.

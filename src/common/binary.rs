@@ -38,7 +38,7 @@ pub fn hamming_distance(a: &[bool], b: &[bool]) -> usize {
 }
 
 /// Shared body for `SubProblemExtractable::lift_solution` when the sub-problem
-/// **keeps the parent's variable indices** (MaxCut, VertexCover).
+/// keeps the parent's variable indices (MaxCut, VertexCover).
 ///
 /// Clones `sol1`, then for every index in `sub_indices` where the parents
 /// disagree (the sub-problem's free variables), flips the clone wherever it
@@ -68,7 +68,7 @@ pub fn lift_binary_solution<P: BinaryProblem>(
 }
 
 /// Shared body for `SubProblemExtractable::lift_solution` when the sub-problem
-/// **re-indexes the free variables compactly** (MaxSAT, Formula): the k-th
+/// re-indexes the free variables compactly (MaxSAT, Formula): the k-th
 /// disagreeing variable of the parents corresponds to variable `k` of `sub_sol`.
 pub fn lift_compact_binary_solution<P: BinaryProblem>(
     prob: &P,

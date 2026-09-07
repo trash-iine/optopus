@@ -2,7 +2,7 @@
 
 **API:** [`GeneticAlgorithm`](../api/optopus/heuristic/struct.GeneticAlgorithm.html)
 
-Population-based search: a population of solutions recombined pairwise by a
+Population-based search, where a population of solutions is recombined pairwise by a
 `Crossover<P>` operator, with a `Heuristic<P>` as the mutation operator.
 
 ## Example
@@ -35,7 +35,6 @@ let mut ga = GeneticAlgorithm::new_with_init(
 );
 ga.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Algorithm sketch
@@ -62,7 +61,7 @@ GeneticAlgorithm::<P, C>::new(
 even when using `Tournament` selection because the type bound is on the
 `Heuristic<P>` impl).
 
-**Panics** if `population_size < 2`.
+Panics if `population_size < 2`.
 
 ## Constructor with HEA-style init
 
@@ -90,7 +89,7 @@ Builder method `with_parent_selection(strategy)` switches between:
 
 ```rust
 pub enum ParentSelection {
-    Tournament,                          // default — two binary tournaments
+    Tournament,                          // default, two binary tournaments
     DistantTopK { top_k: usize },        // pick A randomly, B from top-k by distance
 }
 ```
@@ -101,7 +100,7 @@ preferring distant parents.
 ## Replacement
 
 Worst-replacement: when the population is full, replace the worst member iff
-the offspring is strictly better. `best_idx` is maintained incrementally —
+the offspring is strictly better. `best_idx` is maintained incrementally,
 no full population scan per iteration.
 
 ## Crossover trait
@@ -127,7 +126,7 @@ passed in explicitly so seeded runs stay reproducible.
 
 A generic crossover for any `P: SubProblemExtractable`:
 
-1. `extract_sub_problem(sol1, sol2)` — variables that agree in both parents
+1. `extract_sub_problem(sol1, sol2)`, variables that agree in both parents
    are fixed; the disagreeing variables form a sub-instance.
 2. `sub_heuristic.run(...)` solves the sub-instance from scratch.
 3. `lift_solution(sol1, sol2, sub_solution)` reconstructs the full solution.
@@ -169,7 +168,7 @@ max_failed_update = 1
 ```
 
 `crossover_kind` defaults to `"Uniform"`, except `"Order"` for TSP and CVRP
-and `"Ppx"` for JobShop. MaxCut additionally accepts `"SubProblem"` — memetic
+and `"Ppx"` for JobShop. MaxCut additionally accepts `"SubProblem"`, memetic
 recombination that solves the sub-MaxCut of the disagreeing variables with an
 internal bounded BLS (see
 [SubProblemBasedCrossover](#subproblembasedcrossover)).
@@ -181,4 +180,4 @@ internal bounded BLS (see
 - Goldberg, D. E. *Genetic Algorithms in Search, Optimization, and Machine
   Learning*. Addison-Wesley, 1989.
 - Galinier, P. and Hao, J.-K. "Hybrid Evolutionary Algorithms for Graph
-  Coloring." *Journal of Combinatorial Optimization*, 3(4), 379-397, 1999.
+  Coloring." Journal of Combinatorial Optimization, 3(4), 379-397, 1999.

@@ -57,7 +57,7 @@ impl SubProblemExtractable for MaxCut {
     /// Creates a sub-MaxCut containing only vertices whose side assignment
     /// differs between the two parent solutions.
     ///
-    /// Only edges *between* free (disagreeing) vertices are included.
+    /// Only edges between free (disagreeing) vertices are included.
     /// Vertices that are isolated in the sub-problem (no edges to other free vertices)
     /// do not appear in the sub-solution and will inherit `sol1`'s assignment
     /// in [`Self::lift_solution`].
@@ -104,8 +104,8 @@ impl SubProblemExtractable for MaxCut {
 
     /// Lifts the sub-problem solution back into the full solution space.
     ///
-    /// - **Fixed vertices** (same side in both parents): inherit from `sol1`.
-    /// - **Free vertices** (different side): take from `sub_solution`.
+    /// - Fixed vertices (same side in both parents): inherit from `sol1`.
+    /// - Free vertices (different side): take from `sub_solution`.
     ///
     /// The returned solution has correct `gain` and `objective` values.
     ///

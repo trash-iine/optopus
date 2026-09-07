@@ -1,9 +1,9 @@
-//! Each customer's route neighbors — the view a relabeling-invariant distance
+//! Each customer's route neighbors, the view a relabeling-invariant distance
 //! between two CVRP solutions is computed from.
 //!
 //! A route partition names its routes, and two solutions that differ only in
 //! which vehicle drives which route describe the same set of trips. Comparing
-//! route *indices* therefore reads a relabeling as a total difference, which is
+//! route indices therefore reads a relabeling as a total difference, which is
 //! why the diversity metric works on adjacency instead: who each customer is
 //! served between.
 
@@ -11,7 +11,7 @@
 /// depot, so a route's first customer has `pred == 0`).
 ///
 /// Built once per solution and compared in O(n). Callers that compare one
-/// solution against many — a population ranking its members by diversity —
+/// solution against many, a population ranking its members by diversity,
 /// keep the view rather than rebuilding it per pair.
 #[derive(Debug, Clone)]
 pub(crate) struct RouteAdjacency {
@@ -51,8 +51,8 @@ impl RouteAdjacency {
     /// a customer that leaves the depot in `self` but is served mid-route in
     /// `other` counts as one more break.
     ///
-    /// **Directional.** That last clause is not symmetric — the solution using
-    /// more routes has more depot departures to lose — so `a.broken_pairs_from(b)`
+    /// Directional. That last clause is not symmetric, the solution using
+    /// more routes has more depot departures to lose, so `a.broken_pairs_from(b)`
     /// and `b.broken_pairs_from(a)` can differ: `[[1, 2, 3], []]` measures 2
     /// against `[[1, 3], [2]]`, which measures 3 back. This is the count Vidal's
     /// biased fitness is defined on and it is kept as-is;

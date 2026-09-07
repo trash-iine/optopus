@@ -3,19 +3,19 @@
 //! HGS (Vidal et al.) is the strongest known general-purpose CVRP metaheuristic.
 //! It combines three ideas, each in its own layer here:
 //!
-//! - [`Descent`] — the granular descent shared with ALNS,
+//! - [`Descent`], the granular descent shared with ALNS,
 //!   which turns every offspring into a local optimum under the capacity
 //!   penalty this driver adapts at runtime.
-//! - [`population`] — *biased fitness*, which ranks individuals by cost **and**
+//! - [`population`], biased fitness, which ranks individuals by cost and
 //!   by how much diversity they contribute, so the population does not collapse.
-//! - this module — the generational loop, the adaptive penalty, and the
+//! - this module, the generational loop, the adaptive penalty, and the
 //!   feasible / infeasible split that lets the search cross infeasible ground
 //!   between feasible basins.
 //!
-//! The genetic representation is the **giant tour**: an offspring is a customer
+//! The genetic representation is the giant tour: an offspring is a customer
 //! permutation, decoded into routes by [`split_giant_tour`], which is optimal for
 //! that permutation. The genetic operator therefore only has to get the customer
-//! *order* right — the decoder handles the vehicle assignment exactly.
+//! order right, the decoder handles the vehicle assignment exactly.
 //!
 //! # Relationship to the rest of the crate
 //!
@@ -82,8 +82,8 @@ const PENALTY_MAX_FACTOR: f64 = 1e4;
 ///
 /// The capacity penalty is retuned every `PENALTY_UPDATE_PERIOD` offspring to
 /// hold the feasible share near `target_feasible`: too few feasible offspring
-/// raises it, too many lowers it. Searching at a *deliberately* low feasible rate
-/// is the point — the shortest route through solution space between two good
+/// raises it, too many lowers it. Searching at a deliberately low feasible rate
+/// is the point, the shortest route through solution space between two good
 /// feasible solutions usually crosses infeasible ground.
 ///
 /// The first individual is seeded from `state.solution`, so composing HGS inside
@@ -94,11 +94,11 @@ const PENALTY_MAX_FACTOR: f64 = 1e4;
 ///
 /// - Vidal, T., Crainic, T. G., Gendreau, M., Lahrichi, N., and Rei, W. "A Hybrid
 ///   Genetic Algorithm for Multidepot and Periodic Vehicle Routing Problems."
-///   *Operations Research*, 60(3), 611-624, 2012.
+///   Operations Research, 60(3), 611-624, 2012.
 /// - Vidal, T. "Hybrid Genetic Search for the CVRP: Open-Source Implementation
-///   and SWAP\* Neighborhood." *Computers & Operations Research*, 140, 105643, 2022.
+///   and SWAP\* Neighborhood." Computers & Operations Research, 140, 105643, 2022.
 /// - Prins, C. "A Simple and Effective Evolutionary Algorithm for the Vehicle
-///   Routing Problem." *Computers & Operations Research*, 31(12), 1985-2002, 2004.
+///   Routing Problem." Computers & Operations Research, 31(12), 1985-2002, 2004.
 ///
 /// # Example
 ///

@@ -25,7 +25,7 @@ impl Crossover<VertexCover> for VertexCoverUniformCrossover {
 
 impl SubProblemExtractable for VertexCover {
     /// Builds a sub-VertexCover containing only the vertices whose membership
-    /// differs between the two parents. Only edges *between* free vertices are kept.
+    /// differs between the two parents. Only edges between free vertices are kept.
     fn extract_sub_problem(
         &self,
         sol1: &VertexCoverSolution,

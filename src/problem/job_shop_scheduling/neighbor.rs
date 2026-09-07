@@ -12,7 +12,7 @@ use crate::{
 /// Minimum operation-sequence length for parallel neighborhood evaluation.
 ///
 /// Each candidate costs a full O(n) schedule decode, so the neighborhood scan
-/// is O(n²) (swap) / O(n³) (relocate) — heavy enough for rayon to pay off on
+/// is O(n²) (swap) / O(n³) (relocate), heavy enough for rayon to pay off on
 /// larger instances. Candidates are collected in index order, so results are
 /// identical to the serial path regardless of thread count.
 const PARALLEL_ITER_MIN_OPS: usize = 400;
@@ -38,7 +38,7 @@ impl JobShopSwapNeighbor {
     /// This is the single-move path, used by
     /// [`random_neighbor`](MoveToNeighbor::random_neighbor) and by callers
     /// building one specific move. [`iter`](MoveToNeighbor::iter) deliberately
-    /// does *not* go through here: it reuses one scratch buffer across the
+    /// does not go through here: it reuses one scratch buffer across the
     /// whole neighborhood instead of cloning the sequence per candidate.
     ///
     /// Swapping two positions that hold the same job is an identity move; the
@@ -201,7 +201,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
 }
 
 /// Removes `operations[from]` and re-inserts it at position `to` (in the
-/// post-removal indexing — i.e. `to ∈ 0..n-1`).
+/// post-removal indexing, i.e. `to ∈ 0..n-1`).
 ///
 /// `gain` is the change in makespan (negative = improvement) relative to the
 /// solution the move was enumerated from; the schedule is re-decoded after
@@ -223,7 +223,7 @@ impl JobShopRelocateNeighbor {
     /// This is the single-move path, used by
     /// [`random_neighbor`](MoveToNeighbor::random_neighbor) and by callers
     /// building one specific move. [`iter`](MoveToNeighbor::iter) deliberately
-    /// does *not* go through here: it reuses one scratch buffer across the
+    /// does not go through here: it reuses one scratch buffer across the
     /// whole neighborhood instead of cloning the sequence per candidate.
     ///
     /// `to` is in post-removal indexing, so `to == from` is the identity move;

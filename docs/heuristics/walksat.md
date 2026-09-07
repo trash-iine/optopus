@@ -27,7 +27,6 @@ ws.run(&mut state)?;
 let sol = &state.best_solution;
 println!("{} / {} clauses satisfied", sol.n_satisfied, sat.n_clauses());
 println!("assignment = {:?}", sol.x);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 The three-clause instance shows the shape of the call; the per-step cost is
@@ -36,29 +35,29 @@ what makes this heuristic worth reaching for on instances the generic
 
 ## Algorithm sketch
 
-Every literal of an unsatisfied clause is false, so flipping *any* of its
+Every literal of an unsatisfied clause is false, so flipping any of its
 variables satisfies that clause. Which one is the Selman–Kautz–Cohen rule.
 Each `run_once`:
 
-1. **Sample** a uniformly random unsatisfied clause.
-2. **Score** each of its variables by *break count* — how many currently
+1. Sample a uniformly random unsatisfied clause.
+2. Score each of its variables by break count, how many currently
    satisfied clauses that flip would break.
-3. **Choose** — if some variable has break count `0`, take it (a free move);
+3. Choose, if some variable has break count `0`, take it (a free move);
    otherwise flip a random variable of the clause with probability `noise`, and
    the minimum-break one otherwise.
-4. **Commit** the flip and update the scratch state in O(degree).
+4. Commit the flip and update the scratch state in O(degree).
 
 Per-step cost is `O(clause length × variable degree)` and independent of the
 total variable count, which is why this heuristic reaches instances the generic
 `LocalSearch` / `TabuSearch` (O(n) per move) cannot.
 
-`is_done` stops early once every clause is satisfied — for MaxSAT that is a
+`is_done` stops early once every clause is satisfied, for MaxSAT that is a
 global optimum, so there is nothing left to improve.
 
 ### Its own flip
 
-The move deliberately does **not** go through `SatFlipNeighbor::apply`, which
-refreshes the cached `gain[]` over every neighbor variable — `O(degree²)` and
+The move deliberately does not go through `SatFlipNeighbor::apply`, which
+refreshes the cached `gain[]` over every neighbor variable, `O(degree²)` and
 the dominant cost on dense instances. WalkSAT never reads `gain[]`; it selects
 from its own satisfying-literal counts. So it updates only `x`, `n_satisfied`
 and its scratch in O(degree), and restores a valid `gain[]` once at the end of
@@ -85,10 +84,10 @@ WalkSatForSat::new(
 ) -> Self
 ```
 
-**Panics** if `noise` is outside `[0.0, 1.0]`.
+Panics if `noise` is outside `[0.0, 1.0]`.
 
 `clear()` drops the scratch and resets the working noise to `noise`, so a fresh
-episode starts clean. Multi-restart is composed externally —
+episode starts clean. Multi-restart is composed externally,
 [`Restart`](meta.md#restart) around `WalkSat` is the usual form.
 
 ## Benchmark config
@@ -105,6 +104,6 @@ max_duration_secs = 30.0
 ## References
 
 - Selman, B., Kautz, H. A., and Cohen, B. "Noise Strategies for Improving Local
-  Search." *Proc. AAAI-94*, 337-343, 1994.
-- Hoos, H. H. "An Adaptive Noise Mechanism for WalkSAT." *Proc. AAAI-02*,
+  Search." Proc. AAAI-94, 337-343, 1994.
+- Hoos, H. H. "An Adaptive Noise Mechanism for WalkSAT." Proc. AAAI-02,
   655-660, 2002.

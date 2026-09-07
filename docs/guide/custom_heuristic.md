@@ -3,9 +3,9 @@
 **API:** [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html)
 
 Implement `Heuristic<P>` to plug your own algorithm into the rest of the
-library — `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
-`VariableNeighborhoodSearch`, `Restart`), and the benchmark runner all work
-with it unchanged.
+library. `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
+`VariableNeighborhoodSearch`, `Restart`) and the benchmark runner all work with
+it unchanged.
 
 The full runnable example lives at
 [`examples/custom_heuristic.rs`](https://github.com/trash-iine/optopus/blob/main/examples/custom_heuristic.rs)
@@ -29,7 +29,7 @@ pub trait Heuristic<Problem: ProblemTrait> {
 
 You implement `stop_condition` and `run_once`; `is_done` and `run` are
 provided. Override `is_done` only when your heuristic has a termination rule
-the stop condition cannot express — "stop at a local optimum", as `LocalSearch`
+the stop condition cannot express, "stop at a local optimum", as `LocalSearch`
 and `LinKernighanHelsgaunForTsp` do, on top of the default. Override `clear` if
 your heuristic carries per-run state (counters, learned weights, etc.).
 
@@ -111,7 +111,7 @@ an `iter` implementation whose per-candidate cost is heavy can evaluate
 candidates with rayon and yield the results in order.
 [`JobShopSwapNeighbor`](../api/optopus/problem/job_shop_scheduling/struct.JobShopSwapNeighbor.html)
 does exactly that above a size threshold, which keeps results independent of
-the thread count while every heuristic — including yours — stays sequential.
+the thread count while every heuristic (including yours) stays sequential.
 
 ## Composing your heuristic
 

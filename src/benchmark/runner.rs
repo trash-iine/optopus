@@ -57,7 +57,7 @@ fn empty_metrics(status: String, seed: Option<u64>) -> RunMetrics {
 
 /// Converts a recorded trajectory into `(elapsed_secs, objective)` pairs,
 /// keeping only points that strictly improve the incumbent. Points merged
-/// from `ClearBest`/`StartBest` sub-runs track the sub-run's *local* best,
+/// from `ClearBest`/`StartBest` sub-runs track the sub-run's local best,
 /// which can be worse than an earlier global best; this filter restores the
 /// monotone anytime curve.
 fn monotone_trajectory(

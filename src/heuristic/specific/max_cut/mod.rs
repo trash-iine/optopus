@@ -1,12 +1,12 @@
 //! MaxCut-specific heuristics.
 //!
 //! [`best_swap`] is the one operator here with no generic equivalent in the
-//! library: `M2` moves one vertex per partition side in a *single* move, which
+//! library: `M2` moves one vertex per partition side in a single move, which
 //! a pair of independent one-step searches cannot express. Everything else a
 //! Breakout Local Search round does is a generic heuristic driven from
-//! [`bls`] — a [`LocalSearch`](crate::heuristic::LocalSearch) descent, a
+//! [`bls`], a [`LocalSearch`](crate::heuristic::LocalSearch) descent, a
 //! [`RandomWalk`](crate::heuristic::RandomWalk) strong kick and a
-//! [`TabuSearch`](crate::heuristic::TabuSearch) weak flip — all sharing the
+//! [`TabuSearch`](crate::heuristic::TabuSearch) weak flip, all sharing the
 //! tabu memory of the `SearchState` they are handed.
 //!
 //! [`BreakoutLocalSearch`] additionally exposes its round as two halves

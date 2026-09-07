@@ -42,7 +42,7 @@ where
     /// When this default is invoked at runtime, a one-shot
     /// <code>tracing::warn!</code> is emitted per concrete Move type (via
     /// <code>OnceLock</code>). Providing an override bypasses the default
-    /// body entirely, so the warning never fires — no opt-in flag required.
+    /// body entirely, so the warning never fires, no opt-in flag required.
     /// </div>
     fn random_neighbor(
         prob: &Problem,
@@ -69,20 +69,21 @@ where
         Self::iter(prob, sol).choose(rng)
     }
 
-    /// This move's tabu policy, or `None` when it has none — which is the
+    /// This move's tabu policy, or `None` when it has none, which is the
     /// default.
     ///
     /// [`apply`](crate::search_state::SearchState::apply) records the move it
     /// applies while the state is recording, and it is handed the move as a
-    /// bare [`MoveToNeighbor`] — it cannot name [`EnabledTabu`]. This is how it
-    /// asks. A move implementing that trait overrides this with one line:
+    /// bare [`MoveToNeighbor`], so it cannot name [`EnabledTabu`]. This is how it
+    /// asks. A move implementing that trait **must** override this with one
+    /// line, or it will run with no tabu list and no complaint.
     ///
     /// ```ignore
     /// fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }
     /// ```
     ///
-    /// Leaving the default in place is what keeps tabu optional: applying such
-    /// a move records nothing and succeeds normally, which is what lets a new
+    /// Leaving the default in place keeps tabu optional, since applying such a
+    /// move records nothing and succeeds normally. That is what lets a new
     /// problem implement three traits and still run
     /// [`LocalSearch`](crate::heuristic::LocalSearch) and
     /// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing).
@@ -99,7 +100,7 @@ where
     /// When this default is invoked at runtime, a one-shot
     /// <code>tracing::warn!</code> is emitted per concrete Move type (via
     /// <code>OnceLock</code>). Providing an override bypasses the default
-    /// body entirely, so the warning never fires — no opt-in flag required.
+    /// body entirely, so the warning never fires, no opt-in flag required.
     /// </div>
     fn move_to_be_better_than(
         &self,

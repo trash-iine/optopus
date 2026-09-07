@@ -10,19 +10,19 @@ use super::ProblemTrait;
 /// ([`MaxCutKernel`](crate::problem::MaxCutKernel)) is the shape this
 /// describes: something smaller to search, a way in for a warm start, and a way
 /// back out. `Source` and `Target` are separate associated types rather than
-/// one because a reduction need not stay inside its problem — a penalised
+/// one because a reduction need not stay inside its problem, a penalised
 /// objective, for instance, can reduce into a
 /// [`Qubo`](crate::problem::Qubo) when its penalty term is quadratic.
 ///
 /// # What this trait is not
 ///
 /// It is only the map. Running a heuristic on the target and folding the result
-/// back is a *search-state* operation and lives there:
+/// back is a search-state operation and lives there:
 /// [`SearchState::open_reduction`](crate::search_state::SearchState::open_reduction)
 /// draws the sub-state's seed and projects the warm start, and
 /// [`close_reduction`](crate::search_state::SearchState::close_reduction)
 /// merges the sub-run's counters and installs the lifted result. Doing that by
-/// hand — or in the other order — is where copies drift apart, silently, in
+/// hand (or in the other order) is where copies drift apart, silently, in
 /// `iteration` / `n_accepted` / `best_iteration` rather than in the objective,
 /// so it belongs on the type that owns the state, not here. `close_reduction`
 /// is where that reasoning is written down; it is not repeated at the call
@@ -37,18 +37,17 @@ use super::ProblemTrait;
 /// ```text
 /// kernel_cut(y) + offset == original_cut(lift(y))    for every y
 /// ```
-///
-/// — for *every* `y`, not only optimal ones, which is what lets a heuristic be
+/// holds for every `y`, not only optimal ones, which is what lets a heuristic be
 /// stopped at any point and lifted. Stating that as the implementation's
 /// obligation rather than the trait's keeps the plumbing reusable by a map that
 /// only preserves optima, or none.
 pub trait ProblemReduction {
-    /// The problem being mapped *from*.
+    /// The problem being mapped from.
     type Source: ProblemTrait;
-    /// The problem being mapped *to*.
+    /// The problem being mapped to.
     type Target: ProblemTrait;
 
-    /// The reduced instance — what a heuristic actually searches.
+    /// The reduced instance, what a heuristic actually searches.
     fn target(&self) -> &Self::Target;
 
     /// Maps a solution of the source onto the target, for use as a warm start.

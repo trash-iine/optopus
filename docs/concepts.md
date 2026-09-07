@@ -4,26 +4,26 @@
 
 Optopus separates three orthogonal concerns:
 
-- **Problems**: *what* to optimize (MaxCut, TSP, ...)
-- **Heuristics**: *how* to optimize (Local Search, SA, ...).
-- **Search state**: iteration count, timing, current and best solutions.
+- Problems: what to optimize (MaxCut, TSP, ...)
+- Heuristics: how to optimize (Local Search, SA, ...).
+- Search state: iteration count, timing, current and best solutions.
 
 Every heuristic runs under the search state, recording its behavior and enable to compare heuristics in the same condition.
 
 ## Three use cases
 
-1. **Existing problem × existing heuristic** — run `LocalSearch`,
+1. Existing problem × existing heuristic, run `LocalSearch`,
    `SimulatedAnnealing`, ... on MaxCut, TSP, ... in a few lines via `use optopus::prelude::*`.
-2. **Apply existing heuristics to a new problem** — implement the three core
+2. Apply existing heuristics to a new problem, implement the three core
    traits (`ProblemTrait` on the problem, `Rankable` on the solution and on the
    move, `MoveToNeighbor` on the solution move across the problem) and
    `LocalSearch`, `RandomWalk`, `BeamSearch` and every meta-heuristic work as-is.
-   The rest are unlocked one trait at a time: `Evaluate<f64>` for SA / LAHC /
+   The rest are unlocked one trait at a time, with `Evaluate<f64>` for SA / LAHC /
    RL Search, `EnabledTabu` for Tabu Search, `Distance` + a `Crossover` for
    Genetic Algorithm. 
-   Full signatures and the per-heuristic requirement matrix: see
+   Full signatures and the per-heuristic requirement matrix are in
    [Core traits](traits.md#core-trait-reference).
-3. **Compose heuristics and benchmark them** — use `Sequential`, `Iterated`,
+3. Compose heuristics and benchmark them, use `Sequential`, `Iterated`,
    `VariableNeighborhoodSearch`, `Restart`, or `GeneticAlgorithm` to combine
    algorithms; describe a comparison in TOML and run the CLI to get aggregated
    statistics.

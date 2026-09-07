@@ -67,17 +67,16 @@ let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 
 // CVRP loader (CVRPLIB):
 let vrp = Vrp::load_file("data/instances/vrp/X-n101-k25.vrp")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 Each loader's file format is documented on the corresponding problem page.
 
 ## What to read next
 
-- [Concepts](concepts.md) — the design philosophy, three use cases, and key
+- [Concepts](concepts.md), the design philosophy, three use cases, and key
   patterns.
-- [Problems](problems/README.md) — what each built-in problem offers.
-- [Heuristics](heuristics/README.md) — picking an algorithm.
-- [Custom problem](guide/custom_problem.md) — three traits get your own problem
+- [Problems](problems/README.md), what each built-in problem offers.
+- [Heuristics](heuristics/README.md), picking an algorithm.
+- [Custom problem](guide/custom_problem.md), three traits get your own problem
   running under `LocalSearch` and the meta-heuristics; one optional trait each
   unlocks the rest.

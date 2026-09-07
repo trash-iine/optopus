@@ -13,13 +13,13 @@ pub(crate) fn overload_of(load: i64, capacity: i64) -> i64 {
 
 /// Fleet size to use when the caller does not specify one.
 ///
-/// `ceil(total demand / capacity)` is only a *lower* bound — the bin-packing
-/// relaxation — and a fleet that small frequently cannot serve the customers at
+/// `ceil(total demand / capacity)` is only a lower bound, the bin-packing
+/// relaxation, and a fleet that small frequently cannot serve the customers at
 /// all: three demand-2 customers never fit into two capacity-3 vehicles, and
 /// CVRPLIB's `X-n101-k25` needs 26 vehicles despite the `k25` in its name.
 ///
 /// So the fleet is sized by first-fit-decreasing, which always yields a feasible
-/// packing, plus a 10% margin: the *distance*-optimal solution routinely uses a
+/// packing, plus a 10% margin: the distance-optimal solution routinely uses a
 /// few more vehicles than the minimum, because splitting a remote customer onto
 /// its own route can be cheaper than detouring to it. Idle vehicles are free
 /// (an empty route has distance `0`), so an overly generous fleet costs only a
@@ -76,8 +76,8 @@ impl Distance for VrpSolution {
     /// Broken-pairs dissimilarity: how many of the two solutions' customer
     /// adjacencies the other one does not have.
     ///
-    /// It counts *trips*, not vehicle labels, so permuting the routes or driving
-    /// one of them backwards is a distance of `0` — which the obvious
+    /// It counts trips, not vehicle labels, so permuting the routes or driving
+    /// one of them backwards is a distance of `0`, which the obvious
     /// alternative, comparing each customer's route index, gets wrong on exactly
     /// the solutions a search meets most often. Two solutions are at distance
     /// `0` precisely when they describe the same set of trips.

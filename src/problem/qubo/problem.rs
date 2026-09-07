@@ -13,9 +13,9 @@ static ZERO_COEFF: Coefficient = 0;
 ///
 /// # Core fields
 ///
-/// - [`x`](Self::x) — variable assignment (`x[i] = true` means variable `i` is set to 1)
-/// - [`gain`](Self::gain) — incremental energy change for each variable flip (`gain[i] < 0` means flipping `i` improves the objective)
-/// - [`objective`](Self::objective) — current energy value (minimized)
+/// - [`x`](Self::x), variable assignment (`x[i] = true` means variable `i` is set to 1)
+/// - [`gain`](Self::gain), incremental energy change for each variable flip (`gain[i] < 0` means flipping `i` improves the objective)
+/// - [`objective`](Self::objective), current energy value (minimized)
 ///
 /// These three fields are all you need to inspect results and build custom logic.
 ///
@@ -70,7 +70,7 @@ impl QuboSolution {
     /// The resulting solution is fully functional for all standard heuristics.
     ///
     /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions
-    /// from a variable assignment — it computes `gain` and `objective` automatically.
+    /// from a variable assignment, it computes `gain` and `objective` automatically.
     pub(crate) fn new_from_parts(
         x: Vec<bool>,
         gain: Vec<Coefficient>,
@@ -250,7 +250,7 @@ impl Qubo {
 
     /// Adds (or accumulates) the coefficient `v` on entry `(i, j)`.
     ///
-    /// If the entry already exists, `v` is **added** to the current value.
+    /// If the entry already exists, `v` is added to the current value.
     /// To overwrite instead, use [`set_q`](Self::set_q).
     ///
     /// # Examples
@@ -416,7 +416,7 @@ impl Qubo {
     ///
     /// # File format
     ///
-    /// One header line followed by Q-matrix entries (**1-indexed**):
+    /// One header line followed by Q-matrix entries (1-indexed):
     ///
     /// ```text
     /// N M

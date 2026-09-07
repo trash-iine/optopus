@@ -6,19 +6,19 @@
 //! pairs are worth considering at all, and [`descent`] walks downhill over the
 //! moves those pairs allow.
 //!
-//! Everything here is parameterized by the capacity **penalty** rather than
+//! Everything here is parameterized by the capacity penalty rather than
 //! reading [`Vrp::penalty_weight`](crate::problem::vrp::Vrp::penalty_weight),
 //! which is what lets one descent serve both callers: ALNS hands it the fixed
 //! weight its objective already uses, HGS hands it the weight it is currently
 //! tuning, and neither has to own a copy of the move set. What each caller
-//! still decides for itself is *when* to descend and over which customers —
+//! still decides for itself is when to descend and over which customers,
 //! HGS over every one of a freshly decoded offspring, ALNS only around the ones
 //! it has just re-inserted.
 //!
 //! The pricing functions below are free rather than methods because both
-//! callers hold their routes differently — in a [`RouteState`] with position
+//! callers hold their routes differently, in a [`RouteState`] with position
 //! indexes while descending, in the plain `Vec<Vec<usize>>` ALNS ruins and
-//! recreates — and what they share is the arithmetic, not the container.
+//! recreates, and what they share is the arithmetic, not the container.
 //! Sharing it is not cosmetic: these are the formulas that decide what a move
 //! costs, so a second copy is a second answer to "how long is this route".
 //! [`Descent`] does have a receiver, because it owns caches (the candidate
@@ -66,7 +66,7 @@ pub(super) fn segment_ends(
 
 /// Distance saved by lifting `route[pos..pos + len]` out of its route.
 ///
-/// The segment's own edges are *not* counted: it is lifted out to be put back
+/// The segment's own edges are not counted: it is lifted out to be put back
 /// somewhere, and it carries its internal edges with it. Removal and insertion
 /// therefore compose into the cost of a relocation without either of them ever
 /// naming the segment's length.
@@ -76,7 +76,7 @@ pub(super) fn removal_gain(prob: &Vrp, route: &[usize], pos: usize, len: usize) 
     prob.distance(before, first) + prob.distance(last, after) - prob.distance(before, after)
 }
 
-/// Distance added by inserting the segment `first…last` *before* position `pos`
+/// Distance added by inserting the segment `first…last` before position `pos`
 /// of `route`, its internal edges excluded for the reason
 /// [`removal_gain`] excludes them.
 #[inline]
@@ -156,7 +156,7 @@ mod tests {
     }
 
     /// Both deltas must equal the difference of two from-scratch route lengths,
-    /// up to the segment's internal edges they deliberately leave out — that
+    /// up to the segment's internal edges they deliberately leave out, that
     /// equality is the whole reason a heuristic may trust an O(1) gain.
     #[test]
     fn removal_and_insertion_price_the_edit_they_describe() {

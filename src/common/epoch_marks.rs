@@ -1,7 +1,7 @@
 //! Epoch-stamped index marker: a set of indices that clears in O(1).
 //!
-//! The graph operators that walk a neighborhood — a BFS over a cluster, an
-//! independent-set selection — need "have I already seen this vertex?" many
+//! The graph operators that walk a neighborhood, a BFS over a cluster, an
+//! independent-set selection, need "have I already seen this vertex?" many
 //! times per call and a fresh set on every call. Clearing a `Vec<bool>` or a
 //! `HashSet` costs O(n) per call, which dominates when the walk itself touches
 //! only a handful of vertices.
@@ -32,7 +32,7 @@
 pub struct EpochMarks {
     /// Per-index generation stamp: index `i` is marked iff `stamps[i] == epoch`.
     stamps: Vec<u32>,
-    /// The current generation. Never 0 — that value is reserved for "this entry
+    /// The current generation. Never 0, that value is reserved for "this entry
     /// has never been marked", which is what [`ensure_capacity`](Self::ensure_capacity)
     /// fills new entries with. Starting at 1 rather than 0 is what makes a
     /// freshly constructed marker read as empty instead of full.
@@ -115,7 +115,7 @@ mod tests {
     }
 
     /// A fresh marker must read as empty. It would not if the initial epoch
-    /// were 0, since that is also the stamp `ensure_capacity` fills in — every
+    /// were 0, since that is also the stamp `ensure_capacity` fills in, every
     /// index would come back marked before a single `mark` call.
     #[test]
     fn nothing_is_marked_before_the_first_epoch() {

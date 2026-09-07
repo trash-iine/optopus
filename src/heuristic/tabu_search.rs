@@ -16,7 +16,7 @@ use std::marker::PhantomData;
 /// The map itself lives on the [`SearchState`], not here: the state is what
 /// applies a move, so the state is what records it. This heuristic owns only the
 /// tenure, which it installs on the state at the top of every iteration. That is
-/// also why it has no `clear` — a fresh state (or a sub-run clone, which every
+/// also why it has no `clear`, a fresh state (or a sub-run clone, which every
 /// meta-heuristic makes) already starts with no prohibitions, and
 /// [`SearchState::reset_tabu`] drops them on demand.
 ///
@@ -25,9 +25,9 @@ use std::marker::PhantomData;
 /// # References
 ///
 /// - Glover, F. "Future Paths for Integer Programming and Links to Artificial Intelligence."
-///   *Computers & Operations Research*, 13(5), 533-549, 1986.
+///   Computers & Operations Research, 13(5), 533-549, 1986.
 ///   [DOI](https://doi.org/10.1016/0305-0548(86)90048-1)
-/// - Glover, F. "Tabu Search — Part I." *ORSA Journal on Computing*, 1(3), 190-206, 1989.
+/// - Glover, F. "Tabu Search, Part I." ORSA Journal on Computing, 1(3), 190-206, 1989.
 ///   [DOI](https://doi.org/10.1287/ijoc.1.3.190)
 pub struct TabuSearch<N>
 where
@@ -70,7 +70,7 @@ where
     }
 
     /// When every move is tabu and none satisfies the aspiration criterion, the
-    /// iteration is counted as rejected (with a warning) rather than erroring —
+    /// iteration is counted as rejected (with a warning) rather than erroring,
     /// the tabu map will eventually expire entries and unblock the search.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         // Per iteration rather than once: this search's method *is* the tabu
@@ -150,7 +150,7 @@ mod tests {
     }
 
     /// The prohibitions the run left behind live on the state, and
-    /// [`SearchState::reset_tabu`] frees every move — the observable property a
+    /// [`SearchState::reset_tabu`] frees every move, the observable property a
     /// new episode depends on, which used to be `TabuSearch::clear`'s job.
     #[test]
     fn reset_tabu_frees_what_a_run_forbade() {
@@ -171,7 +171,7 @@ mod tests {
         assert!(!blocked(&state), "reset_tabu must free every vertex");
     }
 
-    /// A sub-run starts from no prohibitions whichever clone type made it —
+    /// A sub-run starts from no prohibitions whichever clone type made it,
     /// what every meta-heuristic relies on to isolate a phase, and what
     /// `Heuristic::clear` used to provide.
     #[test]
@@ -205,8 +205,7 @@ mod tests {
 
     /// The mode is what makes this a tabu search: `apply` writes the memory
     /// `run_once` reads, and only while the state is recording. Forgetting to
-    /// turn it on is silent — the search keeps running, having stopped writing
-    /// — so this pins that `run_once` turns it on itself rather than trusting
+    /// turn it on is silent. The search keeps running, having stopped writing, so this pins that `run_once` turns it on itself rather than trusting
     /// a caller to have done it.
     #[test]
     fn run_once_turns_recording_on_itself() {

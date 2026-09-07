@@ -1,7 +1,7 @@
 //! Contextual softmax gradient bandit.
 //!
 //! A problem-agnostic learner for "pick one of A actions given a context
-//! vector" decisions inside heuristics — e.g. selecting a perturbation
+//! vector" decisions inside heuristics, e.g. selecting a perturbation
 //! operator and strength from search-state features. Uses per-action linear
 //! preferences with a softmax policy, an ε-uniform exploration floor, and a
 //! one-step REINFORCE update against an EMA baseline. Constant step sizes keep
@@ -13,12 +13,12 @@ use super::sample_categorical;
 
 /// Contextual gradient bandit with a softmax policy over linear preferences.
 ///
-/// - **Selection**: `π(a | φ) = (1 − ε) · softmax(w_a · φ / τ) + ε / A`.
-/// - **Update**: `w_a += lr · (r − b) · (1{a = A} − π(a)) · φ` for every
+/// - Selection: `π(a | φ) = (1 − ε) · softmax(w_a · φ / τ) + ε / A`.
+/// - Update: `w_a += lr · (r − b) · (1{a = A} − π(a)) · φ` for every
 ///   action `a`, with baseline `b` tracked as an exponential moving average.
 ///
-/// Call [`select`](Self::select) to choose an action, then — *before the next
-/// `select`* — call [`update`](Self::update) with the observed reward; the
+/// Call [`select`](Self::select) to choose an action, then *before the next
+/// `select`*, call [`update`](Self::update) with the observed reward; the
 /// selection probabilities needed by the gradient are kept internally from
 /// the last `select`.
 pub struct SoftmaxBandit {

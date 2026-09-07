@@ -106,7 +106,7 @@ fn free_cities(prob: &TspWithCoordinates, sol1: &TspSolution, sol2: &TspSolution
 }
 
 impl SubProblemExtractable for TspWithCoordinates {
-    /// Creates a sub-TSP containing only the "free" cities — those whose incident
+    /// Creates a sub-TSP containing only the "free" cities, those whose incident
     /// edges differ between the two parent tours.
     ///
     /// Sub-problem city `i` corresponds to `free_cities(...)[i]` in the original problem.
