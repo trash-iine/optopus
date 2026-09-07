@@ -29,29 +29,29 @@ mod descent;
 mod granular;
 mod route_state;
 
-pub(super) use descent::Descent;
+pub(crate) use descent::Descent;
 use granular::build_neighbor_lists;
-pub(super) use route_state::RouteState;
+pub(crate) use route_state::RouteState;
 
 use crate::problem::Vrp;
 use crate::problem::vrp::overload_of;
 
 /// The node at `pos` of `route`, or the depot when `pos` is past its end.
 #[inline]
-pub(super) fn node_at(route: &[usize], pos: usize) -> usize {
+pub(crate) fn node_at(route: &[usize], pos: usize) -> usize {
     route.get(pos).copied().unwrap_or(0)
 }
 
 /// The node preceding `pos`, or the depot when `pos` is the start of the route.
 #[inline]
-pub(super) fn before(route: &[usize], pos: usize) -> usize {
+pub(crate) fn before(route: &[usize], pos: usize) -> usize {
     if pos == 0 { 0 } else { route[pos - 1] }
 }
 
 /// `(before, first, last, after)` around the segment `route[pos..pos + len]`,
 /// with the depot standing in at either end of the route.
 #[inline]
-pub(super) fn segment_ends(
+pub(crate) fn segment_ends(
     route: &[usize],
     pos: usize,
     len: usize,
@@ -71,7 +71,7 @@ pub(super) fn segment_ends(
 /// therefore compose into the cost of a relocation without either of them ever
 /// naming the segment's length.
 #[inline]
-pub(super) fn removal_gain(prob: &Vrp, route: &[usize], pos: usize, len: usize) -> f64 {
+pub(crate) fn removal_gain(prob: &Vrp, route: &[usize], pos: usize, len: usize) -> f64 {
     let (before, first, last, after) = segment_ends(route, pos, len);
     prob.distance(before, first) + prob.distance(last, after) - prob.distance(before, after)
 }
@@ -80,7 +80,7 @@ pub(super) fn removal_gain(prob: &Vrp, route: &[usize], pos: usize, len: usize) 
 /// of `route`, its internal edges excluded for the reason
 /// [`removal_gain`] excludes them.
 #[inline]
-pub(super) fn insertion_cost(
+pub(crate) fn insertion_cost(
     prob: &Vrp,
     route: &[usize],
     pos: usize,
@@ -93,12 +93,12 @@ pub(super) fn insertion_cost(
 
 /// Total demand of `route[pos..pos + len]`.
 #[inline]
-pub(super) fn segment_demand(prob: &Vrp, route: &[usize], pos: usize, len: usize) -> i64 {
+pub(crate) fn segment_demand(prob: &Vrp, route: &[usize], pos: usize, len: usize) -> i64 {
     route[pos..pos + len].iter().map(|&c| prob.demands[c]).sum()
 }
 
 /// Recomputes every route's load in place.
-pub(super) fn route_loads(prob: &Vrp, routes: &[Vec<usize>], loads: &mut [i64]) {
+pub(crate) fn route_loads(prob: &Vrp, routes: &[Vec<usize>], loads: &mut [i64]) {
     for (r, route) in routes.iter().enumerate() {
         loads[r] = route.iter().map(|&c| prob.demands[c]).sum();
     }
@@ -106,13 +106,13 @@ pub(super) fn route_loads(prob: &Vrp, routes: &[Vec<usize>], loads: &mut [i64]) 
 
 /// Change in total overflow when `demand` is added to a route carrying `load`.
 #[inline]
-pub(super) fn excess_delta_insert(capacity: i64, load: i64, demand: i64) -> i64 {
+pub(crate) fn excess_delta_insert(capacity: i64, load: i64, demand: i64) -> i64 {
     overload_of(load + demand, capacity) - overload_of(load, capacity)
 }
 
 /// Change in total overflow when `demand` moves from one route to another.
 #[inline]
-pub(super) fn excess_delta_transfer(capacity: i64, from: i64, to: i64, demand: i64) -> i64 {
+pub(crate) fn excess_delta_transfer(capacity: i64, from: i64, to: i64, demand: i64) -> i64 {
     overload_of(from - demand, capacity) - overload_of(from, capacity)
         + overload_of(to + demand, capacity)
         - overload_of(to, capacity)
@@ -120,7 +120,7 @@ pub(super) fn excess_delta_transfer(capacity: i64, from: i64, to: i64, demand: i
 
 /// Change in total overflow when two routes exchange `demand_a` for `demand_b`.
 #[inline]
-pub(super) fn excess_delta_exchange(
+pub(crate) fn excess_delta_exchange(
     capacity: i64,
     load_a: i64,
     load_b: i64,

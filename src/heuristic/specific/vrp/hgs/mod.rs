@@ -38,7 +38,7 @@ use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::vrp::{Vrp, split_giant_tour};
 use crate::search_state::SearchState;
 
-use super::ops::{Descent, RouteState};
+use crate::problem::vrp::ops::{Descent, RouteState};
 use population::{Individual, Subpopulation, binary_tournament};
 
 /// Initial population size, as a multiple of `min_population_size`.

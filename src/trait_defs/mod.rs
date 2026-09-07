@@ -15,6 +15,7 @@ mod neighbor;
 mod problem;
 mod rankable;
 mod reduction;
+mod ruinable;
 mod tabu;
 
 pub use binary::BinaryProblem;
@@ -24,4 +25,5 @@ pub use neighbor::MoveToNeighbor;
 pub use problem::ProblemTrait;
 pub use rankable::{Distance, Rankable, filter_best, rank_cmp};
 pub use reduction::ProblemReduction;
+pub use ruinable::{LocalRepair, Ruinable};
 pub use tabu::EnabledTabu;
