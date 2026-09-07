@@ -352,21 +352,11 @@ mod tests {
     use crate::problem::max_cut::MaxCutFlipNeighbor;
     use crate::problem::qubo::QuboFlipNeighbor;
 
+    use crate::problem::max_cut::test_fixtures::small_instance;
     use crate::problem::{MaxCut, Qubo};
     use crate::search_state::SearchState;
 
     type PaForMaxCut = PopulationAnnealing<MaxCut, MaxCutFlipNeighbor>;
-
-    /// Same toroidal instance used by the BLS tests (degree 4, plateau-rich).
-    fn small_instance() -> MaxCut {
-        let n = 30usize;
-        let mut edges = Vec::new();
-        for i in 0..n {
-            edges.push((i, (i + 1) % n, 1.0));
-            edges.push((i, (i + 2) % n, 1.0));
-        }
-        MaxCut::from_edges(edges)
-    }
 
     fn new_pa(stop: StopCondition) -> PaForMaxCut {
         PopulationAnnealing::new(stop, 16, 0.1, 0.05, 5, Some(20))
