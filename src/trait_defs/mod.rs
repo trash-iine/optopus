@@ -1,11 +1,12 @@
 //! Core library traits shared across the Problem, Heuristic, and SearchState layers.
 //!
 //! These traits form the common vocabulary that lets any heuristic work with any
-//! problem. A custom problem implements [`ProblemTrait`] (plus [`Rankable`] on its
-//! solution and [`MoveToNeighbor`] for its moves); optional capabilities such as
-//! [`Evaluate`] (SA/LAHC), [`EnabledTabu`] (TabuSearch), [`Crossover`] /
+//! problem. A custom problem implements [`ProblemTrait`] (plus [`Evaluate`] on
+//! its solution and on each of its moves, and [`MoveToNeighbor`] for the moves);
+//! optional capabilities such as [`EnabledTabu`] (TabuSearch), [`Crossover`] /
 //! [`SubProblemExtractable`] / [`Distance`] (GeneticAlgorithm) unlock additional
-//! heuristics.
+//! heuristics. [`Rankable`] is derived from [`Evaluate`] rather than
+//! implemented.
 
 mod binary;
 mod crossover;

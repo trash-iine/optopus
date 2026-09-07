@@ -1,7 +1,7 @@
 use rand::seq::SliceRandom;
 
 use crate::error::OptError;
-use crate::search_state::{Distance, ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait};
 
 /// A solution to the Job Shop Scheduling problem.
 ///
@@ -28,12 +28,6 @@ impl crate::trait_defs::Evaluate for JobShopSolution {
     /// Job-shop minimizes the makespan.
     fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
         crate::trait_defs::Evaluable::Minimize(f64::from(self.objective))
-    }
-}
-
-impl Rankable for JobShopSolution {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.objective < other.objective
     }
 }
 

@@ -19,7 +19,7 @@ use super::{MaxCut, MaxCutSolution};
 use crate::{
     common::TabuMemory,
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -50,12 +50,6 @@ pub struct MaxCutFlipNeighbor {
     /// Change in cut weight after the flip (positive = improvement).
     pub gain: f32,
 }
-impl Rankable for MaxCutFlipNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain > other.gain
-    }
-}
-
 impl EnabledTabu for MaxCutFlipNeighbor {
     /// The move is tabu while vertex `i` is still blocked at the current iteration.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
@@ -275,12 +269,6 @@ impl MaxCutSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] + 2.0 * prob.graph.get_weight(i, j),
         }
-    }
-}
-
-impl Rankable for MaxCutSwapNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain > other.gain
     }
 }
 

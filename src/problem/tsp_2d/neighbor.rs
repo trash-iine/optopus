@@ -2,7 +2,7 @@ use super::problem::{TspSolution, TspWithCoordinates};
 use crate::{
     common::TabuMemory,
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -71,12 +71,6 @@ impl TspTwoOptNeighbor {
             j,
             gain: prob.calc_2opt_gain_cities(e1, e2),
         }
-    }
-}
-
-impl Rankable for TspTwoOptNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
     }
 }
 
@@ -255,12 +249,6 @@ impl TspRelocateNeighbor {
             ins,
             gain: insertion_cost(prob, sol, pos, ins) - removal_gain(prob, sol, pos),
         }
-    }
-}
-
-impl Rankable for TspRelocateNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
     }
 }
 

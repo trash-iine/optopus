@@ -1,6 +1,6 @@
 //! Example of defining your own optimization problem.
 //!
-//! Implements ProblemTrait / MoveToNeighbor / Rankable and solves the
+//! Implements ProblemTrait / MoveToNeighbor / Evaluate and solves the
 //! problem with the built-in LocalSearch.
 //!
 //! The problem here is deliberately simple: maximize the number of `true`
@@ -31,9 +31,12 @@ impl OneMaxSolution {
     }
 }
 
-impl Rankable for OneMaxSolution {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.objective() > other.objective()
+impl Evaluate for OneMaxSolution {
+    /// OneMax maximizes the number of set bits. Wrapping it in `Maximize` is
+    /// the only place this problem states its direction, and it is also what
+    /// gives the solution `Rankable`.
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(self.objective() as f64)
     }
 }
 
@@ -94,13 +97,14 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
     }
 }
 
-impl Rankable for FlipMove {
-    /// Ranks candidate moves against each other. `LocalSearch` selects with
-    /// `max_by(rank_cmp)` over this, so comparing the cached gains is what makes
-    /// it *best*-improving; a constant `false` would compile but leave every
-    /// candidate tied, degrading the selection to an arbitrary improving move.
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain > other.gain
+impl Evaluate for FlipMove {
+    /// The change this move would make. `LocalSearch` selects with
+    /// `max_by(rank_cmp)`, which reads this through the derived `Rankable`, so
+    /// reporting the cached gain here is what makes the search
+    /// *best*-improving; a constant would compile but leave every candidate
+    /// tied, degrading the selection to an arbitrary improving move.
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(f64::from(self.gain))
     }
 }
 

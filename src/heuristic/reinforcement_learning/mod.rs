@@ -39,7 +39,7 @@ use rand::Rng;
 /// Reward shaping strategy for the RL agent.
 #[derive(Clone, Debug)]
 pub enum RewardShaping {
-    /// Raw gain: `reward = -worsening_amount`.
+    /// Raw gain: `reward = -minimized`.
     Raw,
     /// Normalized by the step's max absolute gain: `reward = -worsening / max_abs`.
     Normalized,
@@ -201,13 +201,13 @@ where
                     }
                 }
                 for entry in self.buf_moves.iter_mut() {
-                    entry.1 = entry.0.evaluate().worsening_amount();
+                    entry.1 = entry.0.evaluate().minimized();
                     acc.push(entry.1);
                 }
             }
             None => {
                 for m in N::iter(state.instance, &state.solution) {
-                    let w = m.evaluate().worsening_amount();
+                    let w = m.evaluate().minimized();
                     acc.push(w);
                     self.buf_moves.push((m, w));
                 }
@@ -430,9 +430,9 @@ mod tests {
     struct DummyProblem;
     #[derive(Clone)]
     struct DummySolution;
-    impl crate::trait_defs::Rankable for DummySolution {
-        fn is_better_than(&self, _other: &Self) -> bool {
-            false
+    impl crate::trait_defs::Evaluate for DummySolution {
+        fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
+            crate::trait_defs::Evaluable::Minimize(0.0)
         }
     }
     impl crate::trait_defs::ProblemTrait for DummyProblem {

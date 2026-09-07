@@ -1,4 +1,4 @@
-use crate::search_state::{Distance, ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait};
 
 fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
     if let Err(pos) = v.binary_search(&x) {
@@ -24,13 +24,6 @@ impl crate::trait_defs::Evaluate for SatSolution {
     /// MaxSAT maximizes the number of satisfied clauses.
     fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
         crate::trait_defs::Evaluable::Maximize(self.n_satisfied as f64)
-    }
-}
-
-impl Rankable for SatSolution {
-    // MaxSAT: more satisfied clauses is better
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.n_satisfied > other.n_satisfied
     }
 }
 

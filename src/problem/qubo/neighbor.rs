@@ -20,7 +20,7 @@ use crate::{
     common::TabuMemory,
     error::OptError,
     problem::qubo::problem::QuboSolution,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -47,12 +47,6 @@ pub struct QuboFlipNeighbor {
     pub i: usize,
     /// Change in objective value when this variable is flipped (negative = improvement).
     pub gain: Coefficient,
-}
-
-impl Rankable for QuboFlipNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
-    }
 }
 
 impl EnabledTabu for QuboFlipNeighbor {
@@ -249,12 +243,6 @@ impl QuboSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
         }
-    }
-}
-
-impl Rankable for QuboSwapNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
     }
 }
 

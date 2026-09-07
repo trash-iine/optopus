@@ -14,7 +14,7 @@ pub fn boltzmann_accept(
     temperature: f64,
     rng: &mut rand::rngs::SmallRng,
 ) -> bool {
-    let worsening = delta.worsening_amount();
+    let worsening = delta.minimized();
     worsening < 0.0 || rng.random::<f64>() < (-worsening / temperature).exp()
 }
 
