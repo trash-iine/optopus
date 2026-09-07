@@ -27,8 +27,19 @@ use crate::trait_defs::MoveToNeighbor;
 /// test and as the fallback for a side that has no non-tabu vertex left.
 ///
 /// Uses scalar best tracking per side instead of collecting tied-best lists
-/// into Vecs; the tie rule itself is [`keep_best`](keep_best), and it is
-/// deliberate — see its measurement record.
+/// into Vecs.
+///
+/// **Ties keep the incumbent** — the first candidate the scan met, which on the
+/// G-set means the lowest vertex index. That looks like an arbitrary bias:
+/// every G-set weight is ±1, so gains are small integers and the degree-4
+/// toroidal instances admit only five distinct values, putting hundreds of
+/// vertices in one tie. Sampling the tie uniformly was **measured and
+/// rejected** — over G11/G12/G13/G32-G34 it lost 6 cut points and turned three
+/// exact matches of the paper's best into misses, while gaining only on one
+/// planar instance. Index order on a toroidal grid tracks position, so taking
+/// the lowest index walks the lattice coherently; randomising it scatters the
+/// perturbation instead. That is why the four comparisons below are `>` and
+/// not `>=`.
 pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
     for _ in 0..l {
         let mut free_v0 = None;
@@ -39,10 +50,16 @@ pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(
         for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
             let on_side0 = state.solution.x[neighbor.i];
 
-            keep_best(if on_side0 { &mut any_v0 } else { &mut any_v1 }, neighbor);
+            let any = if on_side0 { &mut any_v0 } else { &mut any_v1 };
+            if any.is_none_or(|best: MaxCutFlipNeighbor| neighbor.gain > best.gain) {
+                *any = Some(neighbor);
+            }
 
             if state.tabu_allows(&neighbor) {
-                keep_best(if on_side0 { &mut free_v0 } else { &mut free_v1 }, neighbor);
+                let free = if on_side0 { &mut free_v0 } else { &mut free_v1 };
+                if free.is_none_or(|best: MaxCutFlipNeighbor| neighbor.gain > best.gain) {
+                    *free = Some(neighbor);
+                }
             }
         }
 
@@ -73,27 +90,6 @@ pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(
         state.apply_move_only(&swap)?;
     }
     Ok(())
-}
-
-/// Keeps `candidate` in `slot` when it beats what is already there.
-///
-/// Ties keep the incumbent, i.e. the first candidate the scan met, which on the
-/// G-set means the lowest vertex index. That looks like an arbitrary bias —
-/// every G-set weight is ±1, so gains are small integers and the degree-4
-/// toroidal instances admit only five distinct values, putting hundreds of
-/// vertices in one tie — but sampling the tie uniformly was **measured and
-/// rejected**: over G11/G12/G13/G32-G34 it lost 6 cut points and turned three
-/// exact matches of the paper's best into misses, while gaining only on one
-/// planar instance. Index order on a toroidal grid tracks position, so taking
-/// the lowest index walks the lattice coherently; randomising it scatters the
-/// perturbation instead.
-///
-/// Every operator that picks a move selects with this, which is why the rule
-/// lives here rather than in any one of them.
-fn keep_best(slot: &mut Option<MaxCutFlipNeighbor>, candidate: MaxCutFlipNeighbor) {
-    if slot.is_none_or(|best| candidate.gain > best.gain) {
-        *slot = Some(candidate);
-    }
 }
 
 #[cfg(test)]
