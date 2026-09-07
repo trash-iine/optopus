@@ -86,7 +86,7 @@ max_depth = 5            # optional (default shown)
 max_duration_secs = 30.0
 ```
 
-Takes no `neighbor`, it owns its move set. It stops at a local optimum, so a
+Takes no `neighbor`, since it owns its move set. It stops at a local optimum, so a
 long budget only pays inside [`Restart` or `Iterated`](meta.md).
 
 ## References

@@ -60,7 +60,7 @@ algorithm's own page; this table is only the index.
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
 
 Unknown kinds and missing required fields fail at parse time, before any run
-starts. [`BeamSearch`](../heuristics/beam_search.md) has no `kind`, it is
+starts. [`BeamSearch`](../heuristics/beam_search.md) has no `kind`. It is
 reachable from the Rust API only.
 
 ## Fields shared by every kind
@@ -143,7 +143,7 @@ BenchmarkReport
 ```
 
 `trajectory` is the anytime curve, monotone in the problem's optimization
-direction, it is what the benchmark viewer plots. The `Option` fields are
+direction. It is what the benchmark viewer plots. The `Option` fields are
 absent for runs that ended in an error.
 
 Solution encoding:

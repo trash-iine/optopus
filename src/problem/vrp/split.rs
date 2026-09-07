@@ -4,7 +4,7 @@
 //! turns it into a route partition without reordering the customers: it only
 //! chooses where to cut. Under that restriction the optimal cut positions are
 //! found exactly by dynamic programming, which is what makes the giant-tour
-//! encoding usable as a genetic representation, the decoder is optimal, so the
+//! encoding usable as a genetic representation. The decoder is optimal, so the
 //! search only has to get the customer order right.
 
 use super::problem::{Vrp, overload_of};

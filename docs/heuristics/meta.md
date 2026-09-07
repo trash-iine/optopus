@@ -32,7 +32,7 @@ For a population instead of a single incumbent, see
 
 ## Example
 
-`Iterated` (ILS) is the usual entry point: a search phase that stalls, and a
+`Iterated` (ILS) is the usual entry point, with a search phase that stalls and a
 perturbation phase that pushes it out of the basin it stalled in.
 
 ```rust

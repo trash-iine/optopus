@@ -399,7 +399,7 @@ where
     /// Merges the results of a completed sub-run back into this state.
     ///
     /// - The current solution is replaced with `cloned_state.solution`, and the
-    ///   tabu memory with the sub-run's, both are where the search got to.
+    ///   tabu memory with the sub-run's, since both are where the search got to.
     /// - The iteration counter is advanced by the sub-run's own progress
     ///   (`iteration - start_iteration`), and the accept/reject/best-update
     ///   counters (which the sub-run counted from zero) are added on.
@@ -510,7 +510,7 @@ where
     /// decision: a memory nothing writes needs no tenure, and a tenure nothing
     /// draws from records nothing. Setting the mode once, far from the loop
     /// that depends on it, is how it gets forgotten, and forgetting it is
-    /// silent, the search keeps running, having stopped writing the memory it
+    /// silent. The search keeps running, having stopped writing the memory it
     /// reads, so call this wherever the tenure belongs, at the same rate.
     /// [`TabuSearch`](crate::heuristic::TabuSearch) calls it per iteration.
     ///
@@ -1134,7 +1134,7 @@ mod tests {
         }
 
         /// Not implementing [`EnabledTabu`] must cost nothing at the point a
-        /// move is applied, that is what keeps tabu an opt-in trait rather
+        /// move is applied, which is what keeps tabu an opt-in trait rather
         /// than a tax on every problem.
         #[test]
         fn a_move_without_tabu_support_applies_normally() {
@@ -1387,8 +1387,8 @@ mod tests {
         }
 
         /// A warm start opened on the target must reproduce the reduction's own
-        /// projection, and must consume exactly one draw from the parent's RNG
-        ///, the sub-run's whole trajectory hangs off that seed.
+        /// projection, and must consume exactly one draw from the parent's RNG,
+        /// since the sub-run's whole trajectory hangs off that seed.
         #[test]
         fn open_reduction_projects_the_incumbent_and_draws_one_seed() {
             let mc = reducible_instance(2, 200);

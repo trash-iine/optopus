@@ -30,7 +30,7 @@ the section below the table.
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
 | `Distance` (on `Solution`) | `GeneticAlgorithm`, any selection strategy, not only `ParentSelection::DistantTopK` | `fn distance(&self, other: &Self) -> usize` |
 | `BinaryProblem` | the shared binary machinery in `common::binary` | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip` |
-| `ProblemReduction` | nothing, it is a facility, not a requirement | `type Source: ProblemTrait; type Target: ProblemTrait;`<br>`fn target(&self) -> &Self::Target;`<br>`fn project(&self, sol: &SourceSolution) -> TargetSolution;`<br>`fn lift(&self, source: &Self::Source, base: &SourceSolution, sol: &TargetSolution) -> SourceSolution` |
+| `ProblemReduction` | nothing; it is a facility rather than a requirement | `type Source: ProblemTrait; type Target: ProblemTrait;`<br>`fn target(&self) -> &Self::Target;`<br>`fn project(&self, sol: &SourceSolution) -> TargetSolution;`<br>`fn lift(&self, source: &Self::Source, base: &SourceSolution, sol: &TargetSolution) -> SourceSolution` |
 
 `SmallRng` above is `rand::rngs::SmallRng`. Every trait method that needs
 randomness takes it as a parameter rather than reaching for a thread RNG:
@@ -51,8 +51,8 @@ With `ProblemTrait`, `Rankable` (on the solution and on the move) and
 `MoveToNeighbor` in place, and nothing else:
 
 - `LocalSearch`, `RandomWalk` and `BeamSearch` run.
-- Every meta-heuristic, `Sequential`, `Iterated`, `VariableNeighborhoodSearch`,
-  `Restart`, runs, since they are generic over `P: ProblemTrait` and inherit
+- Every meta-heuristic (`Sequential`, `Iterated`, `VariableNeighborhoodSearch`,
+  `Restart`) runs, since they are generic over `P: ProblemTrait` and inherit
   whatever their inner heuristics require.
 - `TabuSearch`, `SimulatedAnnealing`, `LateAcceptanceHillClimbing`, `RlSearch`
   and `GeneticAlgorithm` do not: each needs the trait its row above names.

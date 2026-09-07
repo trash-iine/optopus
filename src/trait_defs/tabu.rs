@@ -35,8 +35,8 @@ pub trait EnabledTabu {
 mod tests {
     use crate::trait_defs::MoveToNeighbor;
 
-    /// Implementing [`EnabledTabu`](super::EnabledTabu) does nothing on its own
-    ///, [`SearchState::apply`](crate::search_state::SearchState::apply) reaches
+    /// Implementing [`EnabledTabu`](super::EnabledTabu) does nothing on its own.
+    /// [`SearchState::apply`](crate::search_state::SearchState::apply) reaches
     /// a move's policy through [`MoveToNeighbor::tabu_policy`], whose default is
     /// `None`. A built-in move that implements the one and forgets the other
     /// would degrade [`TabuSearch`](crate::heuristic::TabuSearch) to a plain

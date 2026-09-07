@@ -600,7 +600,7 @@ mod tests {
     ///
     /// The tag is what makes the path unique: every caller below passes a
     /// different one, so no two concurrent tests build the same path. A
-    /// wall-clock suffix would not do that job, the clock is quantized (1 us
+    /// wall-clock suffix would not do that job, because the clock is quantized (1 us
     /// on macOS), so two tests entering here in the same microsecond would
     /// still collide and read each other's file.
     fn temp_path(tag: &str) -> std::path::PathBuf {

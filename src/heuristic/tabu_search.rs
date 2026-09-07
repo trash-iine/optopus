@@ -205,8 +205,7 @@ mod tests {
 
     /// The mode is what makes this a tabu search: `apply` writes the memory
     /// `run_once` reads, and only while the state is recording. Forgetting to
-    /// turn it on is silent, the search keeps running, having stopped writing
-    ///, so this pins that `run_once` turns it on itself rather than trusting
+    /// turn it on is silent. The search keeps running, having stopped writing, so this pins that `run_once` turns it on itself rather than trusting
     /// a caller to have done it.
     #[test]
     fn run_once_turns_recording_on_itself() {

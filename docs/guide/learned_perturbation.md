@@ -39,12 +39,12 @@ and prints BLS and RL-BLS side by side on the same instance and seed.
 Each outer iteration:
 
 1. Greedy descent to a local optimum, `bls.descend`.
-2. Reward observation for the previous decision: change in local-optimum
+2. Reward observation for the previous decision, the change in local-optimum
    objective, normalized by an EMA of its own magnitude, clamped to `[−1, 1]`,
    plus a `+1` bonus when the global best improved. The bandit's per-action
    linear preferences are updated by one-step REINFORCE against an EMA
    baseline.
-3. Action selection: from 7 context features,
+3. Action selection, from 7 context features,
    `[bias, min(ω/t, 1), exp(−ω/t), descent_improved_best, relative_gap,
    reward_ema, budget_progress]`, the bandit picks one of
    `3 × strength_bins.len()` actions: a perturbation type

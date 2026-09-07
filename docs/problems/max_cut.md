@@ -97,7 +97,7 @@ let planted = PlantedMaxCut::tile_planting_2d(
     &mut seeded_rng(1),
 );
 planted.verify().unwrap(); // the recorded optimum is what the instance computes
-// planted.optimum, no run can exceed this
+// planted.optimum is the ceiling no run can exceed
 ```
 
 | Constructor | Topology | Hardness knob |

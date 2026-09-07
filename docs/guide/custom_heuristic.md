@@ -3,9 +3,9 @@
 **API:** [`Heuristic`](../api/optopus/heuristic/trait.Heuristic.html)
 
 Implement `Heuristic<P>` to plug your own algorithm into the rest of the
-library, `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
-`VariableNeighborhoodSearch`, `Restart`), and the benchmark runner all work
-with it unchanged.
+library. `SearchState`, the meta-heuristics (`Sequential`, `Iterated`,
+`VariableNeighborhoodSearch`, `Restart`) and the benchmark runner all work with
+it unchanged.
 
 The full runnable example lives at
 [`examples/custom_heuristic.rs`](https://github.com/trash-iine/optopus/blob/main/examples/custom_heuristic.rs)

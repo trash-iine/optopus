@@ -31,11 +31,11 @@ for (vehicle, route) in sol.routes.iter().enumerate() {
 # Ok::<(), optopus::error::OptError>(())
 ```
 
-Takes no `neighbor` type parameter, it owns its move set.
+Takes no `neighbor` type parameter, since it owns its move set.
 
 ## Algorithm sketch
 
-The representation is the giant tour: an individual is a customer
+The representation is the giant tour, so an individual is a customer
 permutation, decoded into routes by `split_giant_tour`, a dynamic program that
 finds the distance-optimal cut positions for that permutation. Because the
 decoder is exact, the genetic operator only has to get the customer order
@@ -72,7 +72,7 @@ the rest. Clones (distance `0` from another member) are always evicted first.
 Broken-pairs distance is the fraction of customers whose route neighbors differ.
 It is invariant to relabeling and reversing routes, and it is the count the
 [`Distance`](../api/optopus/trait_defs/trait.Distance.html) impl on
-`VrpSolution` is built on too, the one difference being direction: `Distance`
+`VrpSolution` is built on too, the one difference being direction. `Distance`
 symmetrizes by taking the larger of the two directions, while biased fitness
 here ranks on the directional count, which is the form Vidal defines it on.
 

@@ -236,8 +236,8 @@ mod tests {
     }
 
     /// A tenure of `d` drawn at `iteration` must forbid exactly the next `d`
-    /// iterations, blocked through `iteration + d`, free at `iteration + d + 1`
-    ///, and it must do so identically in both key spaces.
+    /// iterations, blocked through `iteration + d`, free at `iteration + d + 1`,
+    /// and it must do so identically in both key spaces.
     #[test]
     fn a_tenure_of_d_blocks_exactly_d_iterations() {
         for key in [

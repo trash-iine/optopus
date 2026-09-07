@@ -37,8 +37,7 @@ use super::ProblemTrait;
 /// ```text
 /// kernel_cut(y) + offset == original_cut(lift(y))    for every y
 /// ```
-///
-///, for every `y`, not only optimal ones, which is what lets a heuristic be
+/// holds for every `y`, not only optimal ones, which is what lets a heuristic be
 /// stopped at any point and lifted. Stating that as the implementation's
 /// obligation rather than the trait's keeps the plumbing reusable by a map that
 /// only preserves optima, or none.

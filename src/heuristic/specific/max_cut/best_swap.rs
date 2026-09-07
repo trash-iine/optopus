@@ -162,7 +162,7 @@ mod tests {
     use super::*;
 
     /// A swap moves one vertex per side, so it must leave the partition sizes
-    /// untouched, that is the whole reason `M2` exists next to the flips.
+    /// untouched, which is the whole reason `M2` exists next to the flips.
     #[test]
     fn a_swap_keeps_the_partition_sizes() {
         let mc = small_instance();

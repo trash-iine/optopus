@@ -83,7 +83,7 @@ m d m d m d ...
 
 - Machine indices are 0-indexed.
 - Empty lines and `#`-prefixed comment lines are ignored.
-- Whitespace within and between lines is flexible, the file is tokenized
+- Whitespace within and between lines is flexible, since the file is tokenized
   rather than read line-strictly.
 
 ```rust

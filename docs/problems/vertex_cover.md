@@ -12,7 +12,7 @@ edge being covered:
 minimize  Σ_v x_v   subject to   x_i + x_j ≥ 1  for every edge (i,j) ∈ E
 ```
 
-Vertex Cover is NP-hard, it is equivalent to Independent Set and Clique via
+Vertex Cover is NP-hard. It is equivalent to Independent Set and Clique via
 complementation.
 
 Feasibility is soft: the solver actually optimizes a penalty-augmented

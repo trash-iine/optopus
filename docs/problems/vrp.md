@@ -2,7 +2,7 @@
 
 **API:** [`Vrp`](../api/optopus/problem/vrp/struct.Vrp.html)
 
-Capacitated Vehicle Routing Problem (CVRP): a depot (customer `0`) and `n`
+Capacitated Vehicle Routing Problem (CVRP), with a depot (customer `0`) and `n`
 customers `1, ..., n`, each with 2D coordinates and an integer demand `q_i`,
 are served by a homogeneous fleet of `K` vehicles with shared capacity `Q`,
 each starting and ending at the depot. Partition the customers into at most
@@ -20,7 +20,7 @@ exactly, and is the base case of the routing-problem family used throughout
 logistics and last-mile delivery planning.
 
 Capacity is a soft constraint, handled with a penalty exactly like
-[Vertex Cover](vertex_cover.md): `penalty_weight` is chosen larger than any
+[Vertex Cover](vertex_cover.md), where `penalty_weight` is chosen larger than any
 possible tour length, so whenever a feasible solution exists, every optimum of
 the penalty-augmented objective is feasible:
 

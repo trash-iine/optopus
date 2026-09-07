@@ -2,7 +2,7 @@
 
 **API:** [`GeneticAlgorithm`](../api/optopus/heuristic/struct.GeneticAlgorithm.html)
 
-Population-based search: a population of solutions recombined pairwise by a
+Population-based search, where a population of solutions is recombined pairwise by a
 `Crossover<P>` operator, with a `Heuristic<P>` as the mutation operator.
 
 ## Example

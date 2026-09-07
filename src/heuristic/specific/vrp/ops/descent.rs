@@ -101,8 +101,8 @@ impl Descent {
         self.sweep(state, prob, rng, penalty, max_passes);
     }
 
-    /// The same descent, anchored only at `anchors` and the customers near them
-    ///, everything else is left alone.
+    /// The same descent, anchored only at `anchors` and the customers near them.
+    /// Everything else is left alone.
     ///
     /// A caller that has just edited a few routes knows where the damage is, and
     /// paying for a full sweep of `1..=n` to find it again is what makes a
@@ -645,7 +645,7 @@ mod tests {
     }
 
     /// An anchored sweep must reach the same local optimum as a full one when
-    /// the only damage is where the anchors are, that is the assumption ALNS
+    /// the only damage is where the anchors are, which is the assumption ALNS
     /// makes when it descends around the customers it just re-inserted.
     #[test]
     fn an_anchored_sweep_fixes_the_damage_it_is_pointed_at() {

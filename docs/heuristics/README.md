@@ -35,11 +35,11 @@ Used by `GeneticAlgorithm`:
 - `JobShopPpxCrossover`, Precedence-Preserving Crossover for
   permutation-with-repetition.
 - [`SubProblemBasedCrossover`](genetic_algorithm.md#subproblembasedcrossover)
-, generic crossover for any `P: SubProblemExtractable`.
+  is a generic crossover for any `P: SubProblemExtractable`.
 
 ## Problem-specific
 
-These take no `neighbor` in a config, each owns its own move set.
+These take no `neighbor` in a config, since each owns its own move set.
 
 | Algorithm | Config `kind` | Problem | Notes |
 |---|---|---|---|

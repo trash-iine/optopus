@@ -74,7 +74,7 @@ where
     ///
     /// [`apply`](crate::search_state::SearchState::apply) records the move it
     /// applies while the state is recording, and it is handed the move as a
-    /// bare [`MoveToNeighbor`], it cannot name [`EnabledTabu`]. This is how it
+    /// bare [`MoveToNeighbor`], so it cannot name [`EnabledTabu`]. This is how it
     /// asks. A move implementing that trait overrides this with one line:
     ///
     /// ```ignore

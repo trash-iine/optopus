@@ -27,7 +27,7 @@ pub struct VertexCoverFlipNeighbor {
 impl VertexCoverFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
     ///
-    /// A flip's gain needs no correction, it is exactly the value the solution
+    /// A flip's gain needs no correction. It is exactly the value the solution
     /// already maintains, so this only exists to keep every construction site
     /// on one path, the way [`VertexCoverSwapNeighbor::new`] does. `prob` is
     /// unused for that reason and taken only so the two constructors read alike

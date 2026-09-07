@@ -464,7 +464,7 @@ mod tests {
     }
 
     /// The reduction must preserve the optimum exactly, in every weight
-    /// regime, this is what licenses calling it "exact".
+    /// regime, which is what licenses calling it "exact".
     #[test]
     fn kernel_optimum_matches_brute_force() {
         let mut rng = SmallRng::seed_from_u64(20260729);
@@ -537,7 +537,7 @@ mod tests {
     /// surviving endpoint, so a vertex far from the one being reduced can lose
     /// degree. The sweep is wide enough to catch a merge that fails to re-queue
     /// such a vertex (the narrower `n = 12, p = 0.25` sweep this replaced did
-    /// not, it takes signed weights and a few hundred draws).
+    /// not, since it takes signed weights and a few hundred draws).
     #[test]
     fn reduction_is_idempotent() {
         let mut rng = SmallRng::seed_from_u64(99);

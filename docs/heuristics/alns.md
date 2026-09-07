@@ -30,7 +30,7 @@ for (vehicle, route) in sol.routes.iter().enumerate() {
 # Ok::<(), optopus::error::OptError>(())
 ```
 
-Takes no `neighbor` type parameter, it owns its move set. `demo16.vrp` is the
+Takes no `neighbor` type parameter, since it owns its move set. `demo16.vrp` is the
 committed 15-customer fixture; the measurements below are on CVRPLIB X
 instances.
 

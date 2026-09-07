@@ -4,7 +4,7 @@
 
 Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Alternates a
 greedy local search phase with an adaptive perturbation phase. What is BLS's own
-is the schedule below: three of the four things a round does are the library's
+is the schedule below. Three of the four things a round does are the library's
 generic heuristics, the descent is a [`LocalSearch`](local_search.md), the
 strong perturbation a [`RandomWalk`](random_walk.md) and the weak flip a
 [`TabuSearch`](tabu_search.md), and only the weak swap is a hand-written
@@ -47,7 +47,7 @@ println!("cut weight = {}", state.best_solution.objective);
   directed (weak) perturbation, and it decays as the non-improvement counter
   `omega` grows:
   - `omega == 0`, the last descent improved the global best, or `omega` just
-    passed `t` and was reset: a strong perturbation (random flips) runs.
+    passed `t` and was reset, a strong perturbation (random flips) runs.
   - `0 < omega <= t`: weak flip with probability `p * q`, weak swap with
     probability `p * (1 − q)`, strong (random flips) with probability
     `1 − p`. As `omega` grows `p` decays toward `p0`, so strong perturbations

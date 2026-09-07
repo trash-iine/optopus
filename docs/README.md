@@ -49,7 +49,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Beam Search](heuristics/beam_search.md)
 - [RL Search](heuristics/rl_search.md)
 - [Genetic Algorithm](heuristics/genetic_algorithm.md) (including `Crossover` trait)
-- [Meta-heuristics](heuristics/meta.md), Sequential, Iterated (ILS), VNS, Restart
+- [Meta-heuristics](heuristics/meta.md) (Sequential, Iterated (ILS), VNS, Restart)
 - [Breakout Local Search (MaxCut)](heuristics/breakout_local_search.md)
 - [Population Annealing (MaxCut)](heuristics/population_annealing.md)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)

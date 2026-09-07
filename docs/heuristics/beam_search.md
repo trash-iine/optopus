@@ -26,7 +26,7 @@ Each step:
 
 1. Expand every neighbor of every beam member.
 2. Set `state.solution` to the best candidate (refresh `best_solution`).
-3. Keep the top `beam_width` candidates, the rest are dropped.
+3. Keep the top `beam_width` candidates and drop the rest.
 
 Step 3 uses `select_nth_unstable_by` (O(n) expected), since order within
 the surviving beam doesn't matter.

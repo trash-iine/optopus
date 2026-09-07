@@ -5,8 +5,8 @@
 //! that is neither an upper nor a lower bound. On the G-set that is not a
 //! theoretical worry: published values for `G59`, `G60` and `G61` disagree by
 //! 1 to 4 depending on the source, which is the same order as the difference
-//! between two competing heuristics. Planting removes the problem at the root
-//!, the instance is built around a chosen solution in such a way that no
+//! between two competing heuristics. Planting removes the problem at the root.
+//! The instance is built around a chosen solution in such a way that no
 //! better one can exist, so a run's gap is measured against the truth.
 //!
 //! The two families here are the two that Perera et al. package for pairwise
@@ -32,7 +32,7 @@
 //! sum of independent per-tile terms, and each tile is drawn from a class whose
 //! ground states all include the all-aligned state. A configuration that
 //! minimizes every term simultaneously minimizes the sum, so the all-aligned
-//! state is a global ground state, no search is involved in the claim.
+//! state is a global ground state, and no search is involved in the claim.
 //! Wishart planting instead builds the coupling matrix in the null space of the
 //! planted vector, which puts the planted state at the minimum directly.
 //!

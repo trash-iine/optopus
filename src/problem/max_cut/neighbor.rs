@@ -162,7 +162,7 @@ impl Evaluate for MaxCutFlipNeighbor {
 impl MaxCutFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
     ///
-    /// A flip's gain needs no correction, it is exactly the value the solution
+    /// A flip's gain needs no correction. It is exactly the value the solution
     /// already maintains, so this only exists to keep every construction site
     /// on one path, the way [`MaxCutSwapNeighbor::new`] does. `prob` is unused
     /// for that reason and taken only so the two constructors read alike at the
@@ -250,7 +250,7 @@ impl MaxCutSwapNeighbor {
     /// would count with the wrong sign. Every construction site goes through
     /// here so the correction cannot be forgotten at one of them.
     ///
-    /// `i` and `j` are expected to sit on opposite sides, that is what makes
+    /// `i` and `j` are expected to sit on opposite sides, which is what makes
     /// the move a swap, but nothing here depends on it, so a caller that
     /// deliberately builds a same-side pair still gets a correctly evaluated
     /// move.
