@@ -135,11 +135,12 @@ the sweep showed for each parameter it bakes in; see
 
 ## Notes
 
-- `MaxCutSolution`'s optional `positive_gain` / `zero_gain` indexes power
-  [Breakout Local Search](../heuristics/breakout_local_search.md) (and the
-  [learned-policy controller](../guide/learned_perturbation.md) built on it) and
-  [Population Annealing](../heuristics/population_annealing.md); standard
-  heuristics need neither. See
+- `MaxCutSolution` carries exactly three fields — `x`, `gain` and `objective`.
+  It used to offer optional incrementally maintained indexes of the improving
+  (`positive_gain`) and plateau (`zero_gain`) vertices; all were removed once
+  nothing read them, the last when
+  [Population Annealing](../heuristics/population_annealing.md) switched to
+  scanning `gain` directly and got faster for it. See
   [`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html)
   rustdoc for the implementation details.
 

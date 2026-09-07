@@ -3,6 +3,7 @@ use crate::error::OptError;
 use crate::heuristic::simulated_annealing::boltzmann_accept;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
+use crate::problem::max_cut::is_zero_gain;
 use crate::problem::{MaxCut, MaxCutSolution};
 use crate::search_state::SearchState;
 use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait, Rankable};
@@ -154,17 +155,21 @@ impl PopulationAnnealing {
     /// Applies one non-local cluster move to a replica: flips a maximal
     /// independent set of zero-gain vertices. Objective-preserving.
     fn cluster_move(&mut self, replica: &mut MaxCutSolution, rng: &mut SmallRng, prob: &MaxCut) {
-        replica.enable_zero_gain_index();
-        if replica.zero_gain_count() == 0 {
+        // Collect the plateau by scanning the gains, rather than keeping an
+        // incrementally maintained index of them: this is the only place the
+        // set is read, once per step, while an index would pay an O(degree)
+        // membership update on every accepted Metropolis flip and ride along
+        // in every replica clone `resample` makes. The scan also frees the
+        // replica for mutation while the independent set is built.
+        self.members.clear();
+        self.members
+            .extend((0..replica.gain.len()).filter(|&v| is_zero_gain(replica.gain[v])));
+        if self.members.is_empty() {
             return;
         }
         self.marks.ensure_capacity(prob.graph.len());
         self.marks.next_epoch();
 
-        // Snapshot the zero-gain members so we can mutate the replica while
-        // building the independent set.
-        self.members.clear();
-        self.members.extend_from_slice(replica.zero_gain.as_slice());
         let len = self.members.len();
         let start = rng.random_range(0..len);
 
@@ -413,10 +418,9 @@ mod tests {
         // Build a replica and descend it a little via random flips so a
         // non-trivial zero-gain set exists, then check NCM invariance.
         let mut replica = mc.new_solution(&mut rng);
-        replica.enable_zero_gain_index();
         let mut moved = false;
         for _ in 0..50 {
-            if replica.zero_gain_count() == 0 {
+            if !replica.gain.iter().copied().any(is_zero_gain) {
                 break;
             }
             let objective_before = replica.objective;

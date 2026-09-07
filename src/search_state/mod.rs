@@ -722,8 +722,8 @@ where
     ///
     /// The lifted solution is then installed as-is. `lift` returns a complete
     /// `Solution`, caches included, so there is nothing left to reconstruct;
-    /// the optional improving-move indexes (`positive_gain`, `zero_gain`) are
-    /// opt-in and rebuilt by whoever asks for them next.
+    /// the optional `zero_gain` index is opt-in and rebuilt by whoever asks
+    /// for it next.
     ///
     /// It is `sub.best_solution` that crosses, not `sub.solution`: a tabu-style
     /// sub-run usually ends part-way out of a local optimum, so where it

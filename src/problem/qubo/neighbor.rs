@@ -95,7 +95,6 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
     /// 3. Updates `gain[j]` for each neighbor `j` of `i`
     /// 4. Adds `self.gain` to `solution.objective`
     ///
-    /// If the `negative_gain` index is enabled, it is maintained incrementally.
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
         let bi = sol.x[self.i];
 
@@ -104,7 +103,6 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
 
         // Update gain for flipped variable
         let new_gain_i = -self.gain;
-        sol.update_negative_gain_membership(self.i, new_gain_i);
         sol.gain[self.i] = new_gain_i;
 
         for &(j, q) in prob.iter_on_adjacency(self.i) {
@@ -114,7 +112,6 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
             let bj = sol.x[j];
             let delta = if bi == bj { q } else { -q };
             let new_g = sol.gain[j] + delta;
-            sol.update_negative_gain_membership(j, new_g);
             sol.gain[j] = new_g;
         }
 
