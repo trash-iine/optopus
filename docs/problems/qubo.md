@@ -82,7 +82,6 @@ i j v
 use optopus::prelude::*;
 
 let qubo = Qubo::load_file("data/instances/qubo/sample.qubo")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References

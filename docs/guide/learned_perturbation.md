@@ -15,7 +15,6 @@ let mut bls = BreakoutLocalSearchForMaxCut::externally_driven(
 bls.descend(&mut state)?;                                   // greedy descent
 let (kind, l) = my_policy.choose(&state);                   // your rule
 bls.kick(&mut state, kind, l)?;                             // perturbation + update_best
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 `descend` and `kick` share the tabu memory of the `SearchState`.

@@ -28,7 +28,6 @@ let mut pa = PopulationAnnealingForMaxCut::new(
 );
 pa.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 `PopulationAnnealingForMaxCut` is not in the prelude, import it from

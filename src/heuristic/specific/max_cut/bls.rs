@@ -337,7 +337,7 @@ impl BreakoutLocalSearch {
 /// stores the first iteration at which a move is allowed again, i.e. exactly
 /// one tenure, so reproducing the paper means handing it twice the caller's
 /// range. `tabu_tenure` therefore keeps the paper's meaning (`rand[3, |V|/10]`
-/// on the G-set) instead of silently meaning something else.
+/// on the G-set) instead of **silently meaning something else**.
 ///
 /// Doubling only the upper bound does not reproduce the paper. The whole range
 /// has to scale.

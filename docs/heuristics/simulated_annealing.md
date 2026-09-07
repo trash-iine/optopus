@@ -20,7 +20,6 @@ let mut sa = SimulatedAnnealing::<MaxCutFlipNeighbor>::new(
 );
 sa.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Constructor

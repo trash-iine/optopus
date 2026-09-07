@@ -32,7 +32,6 @@ let mut bls = BreakoutLocalSearchForMaxCut::new(
 );
 bls.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 `l0` and `tabu_tenure` are instance-dependent, so they are derived from

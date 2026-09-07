@@ -16,7 +16,6 @@ let mut state = SearchState::new(&mc);
 let mut rw = RandomWalk::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10));
 rw.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Constructor

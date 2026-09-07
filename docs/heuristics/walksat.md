@@ -27,7 +27,6 @@ ws.run(&mut state)?;
 let sol = &state.best_solution;
 println!("{} / {} clauses satisfied", sol.n_satisfied, sat.n_clauses());
 println!("assignment = {:?}", sol.x);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 The three-clause instance shows the shape of the call; the per-step cost is

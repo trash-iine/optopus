@@ -137,7 +137,6 @@ described above. The node named by `DEPOT_SECTION` is re-indexed to `0`.
 use optopus::prelude::*;
 
 let vrp = Vrp::load_file("data/instances/vrp/X-n101-k25.vrp")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References

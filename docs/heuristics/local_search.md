@@ -16,7 +16,6 @@ let mut state = SearchState::new(&mc);
 let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1_000));
 ls.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Algorithm sketch

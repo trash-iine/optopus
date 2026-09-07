@@ -96,7 +96,6 @@ internally. The `EXPLICIT` weight type is not supported.
 use optopus::prelude::*;
 
 let tsp = TspWithCoordinates::load_file("data/instances/tsp/att48.tsp")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References

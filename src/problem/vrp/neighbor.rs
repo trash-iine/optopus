@@ -84,7 +84,7 @@ impl VrpRelocateNeighbor {
     /// Every construction site goes through here. The three cached values are
     /// what [`apply_to_solution`](MoveToNeighbor::apply_to_solution) trusts to
     /// update `distance`, `overload` and `objective` without recomputing the
-    /// routes, so a hand-filled move would silently desynchronize all three.
+    /// routes, so a hand-filled move would **silently desynchronize all three**.
     ///
     /// # Panics
     ///

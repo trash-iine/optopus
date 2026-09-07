@@ -33,7 +33,6 @@ lkh.run(&mut state)?;
 let sol = &state.best_solution;
 println!("tour length = {}", sol.objective);
 println!("visiting order = {:?}", sol.tour);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 Like `LocalSearch`, it stops at a local optimum, so a budget larger than one

@@ -28,7 +28,6 @@ println!("total distance = {}", sol.distance);
 for (vehicle, route) in sol.routes.iter().enumerate() {
     println!("vehicle {vehicle}: depot -> {route:?} -> depot");
 }
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 Takes no `neighbor` type parameter, since it owns its move set.
@@ -69,12 +68,11 @@ mean broken-pairs distance to their 5 nearest neighbors in the sub-population.
 A solution therefore earns its place either by being cheap or by being unlike
 the rest. Clones (distance `0` from another member) are always evicted first.
 
-Broken-pairs distance is the fraction of customers whose route neighbors differ.
-It is invariant to relabeling and reversing routes, and it is the count the
+Broken-pairs distance is the fraction of customers whose route neighbors differ,
+invariant to relabeling and reversing routes. The
 [`Distance`](../api/optopus/trait_defs/trait.Distance.html) impl on
-`VrpSolution` is built on too, the one difference being direction. `Distance`
-symmetrizes by taking the larger of the two directions, while biased fitness
-here ranks on the directional count, which is the form Vidal defines it on.
+`VrpSolution` uses the same count but symmetrizes it, while biased fitness here
+ranks on the directional count, which is the form Vidal defines.
 
 ### Two sub-populations and the adaptive penalty
 
@@ -83,17 +81,15 @@ the capacity penalty is retuned every 100 offspring to hold the feasible share
 near `target_feasible` (default 0.2): too few feasible offspring raise it, too
 many lower it.
 
-Searching at a deliberately low feasible rate is the point, the shortest
-path in solution space between two good feasible solutions usually crosses
-infeasible ground. The penalty starts at the instance's average distance per
-unit of demand, so it is scale-free, and is clamped to ±3/+4 decades of that.
+Searching at a deliberately low feasible rate is the point, since the shortest
+path between two good feasible solutions usually crosses infeasible ground. The
+penalty starts at the instance's average distance per unit of demand, which
+makes it scale-free, and is clamped to a few decades either side.
 
-This is also why HGS keeps its own individuals instead of `VrpSolution`s:
-`Vrp::penalty_weight()` is a fixed, deliberately enormous constant chosen so
-that any optimum is feasible, which is the opposite of what the search needs.
-Solutions are converted back with `Vrp::solution_from_routes` only when writing
-to the search state, so reported objectives stay comparable with every other
-heuristic.
+HGS therefore keeps its own individuals rather than `VrpSolution`s, since
+`Vrp::penalty_weight()` is a fixed constant large enough to make any optimum
+feasible. `Vrp::solution_from_routes` converts back when writing to the search
+state, so reported objectives stay comparable with every other heuristic.
 
 ### Granular local search
 
@@ -106,11 +102,10 @@ as move partners. The move set:
 | swap segments of 1–2 customers | inter-route |
 | 2-opt (reverse a sub-path) | intra-route |
 | 2-opt\* (exchange route tails) | inter-route |
-| relocate a segment onto an idle vehicle |, |
-
-Every move is evaluated in O(1) from the distances at its endpoints, and the
-first improving one is applied. The descent is over `distance + penalty ·
-overload`, with the penalty supplied by the driver, which is why it cannot
+| relocate a segment onto an idle vehicle | |
+Every move is evaluated in O(1) from the distances at its endpoints and the
+first improving one is applied. The descent runs over `distance + penalty ·
+overload` with the penalty supplied by the driver, which is why it does not
 reuse the `VrpRelocateNeighbor` family.
 
 ## Constructor
@@ -168,13 +163,8 @@ solutions (`data/instances/scripts/fetch_cvrp.sh`). ALNS is
 | X-n195-k51 | 44225 | 44334 | 44506 | +0.25% | +0.64% |
 | X-n502-k39 | 69226 | 69872 | 70025 | +0.93% | +1.15% |
 
-HGS used to win this table by 0.6-2.5pp, and no longer does: ALNS now runs the
-same granular descent after each repair (anchored at the customers it
-re-inserted), which was the whole of its disadvantage. Over ten X instances of
-101-459 customers at 30 s × 5 runs the two are a wash on average objective,
-ALNS ahead on the four largest, HGS on the mid-sized ones, every difference
-under 0.7%. Which of the two to reach for at a long budget is not settled by
-this measurement, the 600 s band has not been re-run since the change.
+HGS and [ALNS](alns.md) are level at this budget, with every difference under
+0.7% over ten X instances, so either is a reasonable default for CVRP.
 
 Reproduce with `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
 

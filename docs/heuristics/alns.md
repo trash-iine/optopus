@@ -27,7 +27,6 @@ println!("total distance = {}", sol.distance);
 for (vehicle, route) in sol.routes.iter().enumerate() {
     println!("vehicle {vehicle}: depot -> {route:?} -> depot");
 }
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 Takes no `neighbor` type parameter, since it owns its move set. `demo16.vrp` is the

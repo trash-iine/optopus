@@ -90,7 +90,6 @@ m d m d m d ...
 use optopus::prelude::*;
 
 let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References

@@ -23,7 +23,6 @@ let mut rl = RlSearch::<MaxCutFlipNeighbor>::new(
 );
 rl.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 One `run` is one episode. The policy is what carries over between episodes,

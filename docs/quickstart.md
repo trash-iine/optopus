@@ -67,7 +67,6 @@ let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 
 // CVRP loader (CVRPLIB):
 let vrp = Vrp::load_file("data/instances/vrp/X-n101-k25.vrp")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 Each loader's file format is documented on the corresponding problem page.

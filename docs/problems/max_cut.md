@@ -78,7 +78,6 @@ i j w
 use optopus::prelude::*;
 
 let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Instances with a known optimum
@@ -128,20 +127,14 @@ planted.verify().unwrap(); // the recorded optimum is what the instance computes
   than the physics notion of a ground state. `chook`'s default `alpha = 0.75` is
   easy at all four sizes.
 
-Suite generation lives in `examples/generate_hard_maxcut.rs`, which records what
-the sweep showed for each parameter it bakes in; see
+Suite generation lives in `examples/generate_hard_maxcut.rs`. See
 [`data/instances/README.md`](https://github.com/trash-iine/optopus/blob/main/data/instances/README.md).
 
 ## Notes
 
-- `MaxCutSolution` carries exactly three fields, `x`, `gain` and `objective`.
-  It used to offer optional incrementally maintained indexes of the improving
-  (`positive_gain`) and plateau (`zero_gain`) vertices; all were removed once
-  nothing read them, the last when
-  [Population Annealing](../heuristics/population_annealing.md) switched to
-  scanning `gain` directly and got faster for it. See
-  [`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html)
-  rustdoc for the implementation details.
+- `MaxCutSolution` carries three fields, `x`, `gain` and `objective`. The
+  [rustdoc](../api/optopus/problem/max_cut/struct.MaxCutSolution.html) has the
+  details.
 
 ## References
 

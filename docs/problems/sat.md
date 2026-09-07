@@ -82,7 +82,6 @@ p cnf N M
 use optopus::prelude::*;
 
 let sat = Sat::load_file("data/instances/sat/example.cnf")?;
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References

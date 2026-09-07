@@ -98,9 +98,8 @@ benchmark cannot register partially.
 ## Performance note
 
 The default `move_to_be_better_than` clones the solution and applies the move.
-For non-trivial problems, override it with an O(1) gain-based check that
-inspects cached per-variable gains. 
-see `MaxCutFlipNeighbor` or `QuboFlipNeighbor` in `src/problem/` for reference implementations.
+Override it with an O(1) check against cached per-variable gains.
+`MaxCutFlipNeighbor` and `QuboFlipNeighbor` are the reference implementations.
 
 ## Next reading
 

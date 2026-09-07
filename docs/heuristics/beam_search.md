@@ -17,7 +17,6 @@ let mut bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
 );
 bs.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Algorithm sketch

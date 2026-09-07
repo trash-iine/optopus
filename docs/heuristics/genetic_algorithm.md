@@ -35,7 +35,6 @@ let mut ga = GeneticAlgorithm::new_with_init(
 );
 ga.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## Algorithm sketch

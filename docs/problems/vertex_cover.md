@@ -78,7 +78,6 @@ weights are ignored (every edge contributes equally to the cover constraint).
 use optopus::prelude::*;
 
 let vc = VertexCover::new(Graph::load_from_file("data/instances/max_cut/G1")?);
-# Ok::<(), optopus::error::OptError>(())
 ```
 
 ## References
