@@ -2,7 +2,6 @@
 
 pub mod binary;
 pub mod epoch_marks;
-pub mod gain_index;
 pub mod graph;
 pub mod parse;
 pub mod permutation;
@@ -13,7 +12,6 @@ pub use binary::{
     uniform_binary_crossover,
 };
 pub use epoch_marks::EpochMarks;
-pub use gain_index::GainIndex;
 pub use graph::{Graph, seeded_rng};
 pub use parse::InstanceLines;
 pub use permutation::order_crossover;

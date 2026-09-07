@@ -1,4 +1,4 @@
-use crate::common::{GainIndex, Graph};
+use crate::common::Graph;
 use crate::search_state::{Distance, ProblemTrait, Rankable};
 use crate::trait_defs::BinaryProblem;
 
@@ -45,18 +45,6 @@ pub struct MaxCut {
 ///
 /// These three fields are all you need to inspect results and build custom logic.
 ///
-/// # Advanced: zero-gain index
-///
-/// An optional index tracks which vertices currently have a flip gain of exactly
-/// zero — the "plateau" moves. Call
-/// [`enable_zero_gain_index`](Self::enable_zero_gain_index) to activate it.
-/// Standard heuristics ([`LocalSearch`](crate::heuristic::LocalSearch),
-/// [`TabuSearch`](crate::heuristic::TabuSearch),
-/// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing), etc.)
-/// do **not** require it — it exists for
-/// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)'s
-/// non-local cluster moves, which are its only consumer.
-///
 /// # Examples
 ///
 /// ```
@@ -82,17 +70,15 @@ pub struct MaxCutSolution {
     pub gain: Vec<f32>,
     /// The total weight of edges crossing the cut.
     pub objective: f32,
-    /// Advanced: index of vertices `v` with `gain[v] == 0` ("plateau" moves),
-    /// maintained incrementally once enabled. Not needed for standard heuristic use.
-    /// See [`enable_zero_gain_index`](Self::enable_zero_gain_index).
-    pub(crate) zero_gain: GainIndex,
 }
 
-/// The predicate shared by [`MaxCutSolution::enable_zero_gain_index`] and the
-/// incremental membership update — they must use the exact same expression or
-/// the index silently corrupts.
+/// What counts as a "plateau" move: a flip that leaves the objective untouched.
+///
+/// One definition, one call site —
+/// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)'s
+/// cluster move scans the gains through this.
 #[inline]
-fn is_zero_gain(g: f32) -> bool {
+pub(crate) fn is_zero_gain(g: f32) -> bool {
     g == 0.0
 }
 
@@ -129,18 +115,11 @@ impl MaxCutSolution {
     /// Builds a [`MaxCutSolution`] from pre-computed components.
     ///
     /// The resulting solution is fully functional for all standard heuristics.
-    /// The advanced `zero_gain` index is not initialized; see
-    /// [`enable_zero_gain_index`](Self::enable_zero_gain_index) if you need it.
     ///
     /// Prefer [`new_from_assignment`](Self::new_from_assignment) for constructing solutions from
     /// a cut assignment — it computes `gain` and `objective` automatically.
     pub(crate) fn new_from_parts(x: Vec<bool>, gain: Vec<f32>, objective: f32) -> Self {
-        Self {
-            x,
-            gain,
-            objective,
-            zero_gain: GainIndex::default(),
-        }
+        Self { x, gain, objective }
     }
 
     /// Creates a [`MaxCutSolution`] from a cut assignment, computing gain and objective automatically.
@@ -162,52 +141,6 @@ impl MaxCutSolution {
         }
         let objective = mc.calculate_cut_size(&cut);
         Self::new_from_parts(cut, gain, objective)
-    }
-
-    /// **Advanced.** Enables the `zero_gain` index, building it from the current
-    /// `gain` vector.
-    ///
-    /// The index tracks vertices whose flip gain is exactly `0.0` — "plateau"
-    /// moves that leave the objective unchanged. It powers the non-local
-    /// cluster moves of
-    /// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut);
-    /// standard heuristics do **not** need it.
-    ///
-    /// The `gain[v] == 0.0` test is exact on instances with integer edge
-    /// weights (such as the G-set), because gains are maintained by exact
-    /// `±2w` updates on integer-valued `f32`s. On non-integer weights,
-    /// rounding may keep a semantically-zero gain slightly off zero, so the
-    /// index can under-populate — it never reports a non-zero-gain vertex.
-    ///
-    /// Once enabled, the index is maintained incrementally by
-    /// [`MaxCutFlipNeighbor::apply_to_solution`](super::MaxCutFlipNeighbor).
-    ///
-    /// If already enabled, this is a no-op. O(n).
-    pub fn enable_zero_gain_index(&mut self) {
-        self.zero_gain.enable(&self.gain, |&g| is_zero_gain(g));
-    }
-
-    /// **Advanced.** Number of vertices whose flip gain is currently exactly zero.
-    ///
-    /// Returns 0 until [`enable_zero_gain_index`](Self::enable_zero_gain_index)
-    /// has been called.
-    pub fn zero_gain_count(&self) -> usize {
-        self.zero_gain.len()
-    }
-
-    /// Records that vertex `v`'s gain is changing from `self.gain[v]` to `new_gain`.
-    /// Updates membership of `v` in the `zero_gain` index (does **not** write
-    /// `self.gain[v]` — the caller is expected to do that).
-    ///
-    /// No-op when the index is not enabled.
-    #[inline]
-    pub(crate) fn update_zero_gain_membership(&mut self, v: usize, new_gain: f32) {
-        // Branch on `is_enabled` here so the gain comparisons are not
-        // evaluated at all on the (default) disabled hot path.
-        if self.zero_gain.is_enabled() {
-            self.zero_gain
-                .update(v, is_zero_gain(self.gain[v]), is_zero_gain(new_gain));
-        }
     }
 }
 
@@ -449,188 +382,6 @@ mod tests {
         assert_eq!(mc.calculate_gain(&cut, 0), 3.0);
         assert_eq!(mc.calculate_gain(&cut, 1), 4.0);
         assert_eq!(mc.calculate_gain(&cut, 2), 5.0);
-    }
-
-    // ---------------------------------------------------------------------------
-    // Helper: 3-vertex triangle (unit weights), all-false cut.
-    // gain[v] = total edge weight of v = 2.0 for each vertex (positive for all).
-    // ---------------------------------------------------------------------------
-    fn make_triangle_solution() -> (MaxCut, MaxCutSolution) {
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.add_weight(0, 1, 1.0);
-        mc.graph.add_weight(1, 2, 1.0);
-        mc.graph.add_weight(0, 2, 1.0);
-        let n = mc.graph.len(); // 3
-        let cut = vec![false; n];
-        let gain: Vec<f32> = (0..n).map(|v| mc.calculate_gain(&cut, v)).collect();
-        let objective = mc.calculate_cut_size(&cut);
-        let sol = MaxCutSolution::new_from_parts(cut, gain, objective);
-        (mc, sol)
-    }
-
-    // ---------------------------------------------------------------------------
-    // zero_gain index tests
-    // ---------------------------------------------------------------------------
-
-    // zero_gain is disabled by default and stays empty.
-    #[test]
-    fn test_zero_gain_index_disabled_by_default() {
-        let (_mc, sol) = make_triangle_solution();
-        assert!(!sol.zero_gain.is_enabled());
-        assert!(sol.zero_gain.is_empty());
-        assert_eq!(sol.zero_gain_count(), 0);
-    }
-
-    // enable_zero_gain_index() collects exactly the vertices with gain == 0.
-    // Triangle, cut = [true, false, false]: gain[0] = -2, gain[1] = 0, gain[2] = 0
-    #[test]
-    fn test_enable_zero_gain_index_builds_correctly() {
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.add_weight(0, 1, 1.0);
-        mc.graph.add_weight(1, 2, 1.0);
-        mc.graph.add_weight(0, 2, 1.0);
-        let n = mc.graph.len();
-        let cut = vec![true, false, false];
-        let gain: Vec<f32> = (0..n).map(|v| mc.calculate_gain(&cut, v)).collect();
-        let objective = mc.calculate_cut_size(&cut);
-        let mut sol = MaxCutSolution::new_from_parts(cut, gain, objective);
-
-        sol.enable_zero_gain_index();
-
-        assert!(sol.zero_gain.is_enabled());
-        let mut listed = sol.zero_gain.as_slice().to_vec();
-        listed.sort();
-        assert_eq!(listed, vec![1, 2], "only the zero-gain vertices belong");
-        assert_eq!(sol.zero_gain_count(), 2);
-        assert!(!sol.zero_gain.contains(0), "gain[0] = -2 must be excluded");
-    }
-
-    // enable_zero_gain_index() is idempotent.
-    #[test]
-    fn test_enable_zero_gain_index_idempotent() {
-        let (_mc, mut sol) = make_triangle_solution();
-        sol.enable_zero_gain_index();
-        let after_first = sol.zero_gain.as_slice().to_vec();
-        sol.enable_zero_gain_index();
-        assert_eq!(sol.zero_gain.as_slice(), after_first);
-    }
-
-    // update_zero_gain_membership() keeps zero_gain consistent through manual
-    // gain transitions: zero → non-zero → zero.
-    #[test]
-    fn test_update_zero_gain_membership_maintains_index() {
-        let (_mc, mut sol) = make_triangle_solution();
-        // All-false triangle: every gain is 2.0 → zero_gain starts empty.
-        sol.enable_zero_gain_index();
-        assert!(sol.zero_gain.is_empty());
-
-        // Vertex 0's gain becomes 0.0 → joins zero_gain.
-        sol.update_zero_gain_membership(0, 0.0);
-        sol.gain[0] = 0.0;
-        assert!(sol.zero_gain.contains(0));
-        assert_eq!(sol.zero_gain_count(), 1);
-
-        // Vertex 0's gain becomes -2.0 → leaves zero_gain.
-        sol.update_zero_gain_membership(0, -2.0);
-        sol.gain[0] = -2.0;
-        assert!(!sol.zero_gain.contains(0));
-        assert!(sol.zero_gain.is_empty());
-    }
-
-    // zero_gain stays consistent through a real flip move.
-    // Triangle, all-false: flip vertex 1 (gain = 2.0). New gains:
-    // gain[0] = 0.0, gain[1] = -2.0, gain[2] = 0.0 → zero_gain = {0, 2}.
-    #[test]
-    fn test_zero_gain_index_consistent_after_flip() {
-        use crate::problem::max_cut::MaxCutFlipNeighbor;
-        use crate::search_state::MoveToNeighbor;
-
-        let (mc, mut sol) = make_triangle_solution();
-        sol.enable_zero_gain_index();
-        assert!(sol.zero_gain.is_empty(), "all gains start at 2.0");
-
-        let flip = MaxCutFlipNeighbor {
-            i: 1,
-            gain: sol.gain[1],
-        };
-        flip.apply_to_solution(&mc, &mut sol).unwrap();
-
-        let mut listed = sol.zero_gain.as_slice().to_vec();
-        listed.sort();
-        assert_eq!(listed, vec![0, 2], "vertices 0 and 2 land on the plateau");
-        assert!(!sol.zero_gain.contains(1), "gain[1] = -2.0 is off-plateau");
-    }
-
-    // zero_gain stays consistent through a swap move (exercises the
-    // apply_swap_as_two_flips path).
-    // Triangle, cut = [true, false, false]: gains are [-2, 0, 0]. Swapping
-    // vertices 0 and 1 gives cut = [false, true, false] with gains
-    // [0, -2, 0] by symmetry → zero_gain = {0, 2}.
-    #[test]
-    fn test_zero_gain_index_consistent_after_swap() {
-        use crate::problem::max_cut::MaxCutSwapNeighbor;
-        use crate::search_state::MoveToNeighbor;
-
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.add_weight(0, 1, 1.0);
-        mc.graph.add_weight(1, 2, 1.0);
-        mc.graph.add_weight(0, 2, 1.0);
-        let n = mc.graph.len();
-        let cut = vec![true, false, false];
-        let gain: Vec<f32> = (0..n).map(|v| mc.calculate_gain(&cut, v)).collect();
-        let objective = mc.calculate_cut_size(&cut);
-        let mut sol = MaxCutSolution::new_from_parts(cut, gain, objective);
-        sol.enable_zero_gain_index();
-
-        let swap_gain = sol.gain[0] + sol.gain[1] + 2.0 * mc.graph.get_weight(0, 1);
-        let swap = MaxCutSwapNeighbor {
-            i: 0,
-            j: 1,
-            gain: swap_gain,
-        };
-        swap.apply_to_solution(&mc, &mut sol).unwrap();
-
-        // Verify against a from-scratch rebuild.
-        for v in 0..n {
-            let expected = mc.calculate_gain(&sol.x, v);
-            assert_eq!(sol.gain[v], expected, "incremental gain[{v}] must match");
-            assert_eq!(
-                sol.zero_gain.contains(v),
-                expected == 0.0,
-                "zero_gain membership of {v} must match its recomputed gain"
-            );
-        }
-    }
-
-    // Clone preserves the enabled zero_gain index and its contents.
-    #[test]
-    fn test_clone_preserves_zero_gain_index() {
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.add_weight(0, 1, 1.0);
-        mc.graph.add_weight(1, 2, 1.0);
-        mc.graph.add_weight(0, 2, 1.0);
-        let n = mc.graph.len();
-        let cut = vec![true, false, false];
-        let gain: Vec<f32> = (0..n).map(|v| mc.calculate_gain(&cut, v)).collect();
-        let objective = mc.calculate_cut_size(&cut);
-        let mut sol = MaxCutSolution::new_from_parts(cut, gain, objective);
-        sol.enable_zero_gain_index();
-
-        let cloned = sol.clone();
-        assert!(cloned.zero_gain.is_enabled());
-        let mut orig = sol.zero_gain.as_slice().to_vec();
-        orig.sort();
-        let mut copy = cloned.zero_gain.as_slice().to_vec();
-        copy.sort();
-        assert_eq!(orig, copy);
-    }
-
-    // update_zero_gain_membership() must not populate a disabled zero_gain index.
-    #[test]
-    fn test_update_zero_gain_membership_noop_when_disabled() {
-        let (_mc, mut sol) = make_triangle_solution();
-        sol.update_zero_gain_membership(0, 0.0);
-        assert!(sol.zero_gain.is_empty());
     }
 
     #[test]

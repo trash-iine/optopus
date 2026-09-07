@@ -133,19 +133,16 @@ mod tests {
     }
 
     /// Property test: after hundreds of mixed perturbations of all three types,
-    /// the incrementally maintained gain vector and the `zero_gain` index must
-    /// agree with a from-scratch recomputation.
+    /// the incrementally maintained gain vector and objective must still agree
+    /// with a from-scratch recomputation.
     ///
-    /// The `zero_gain` index is not read by anything driven here — it is
-    /// maintained for
-    /// [`PopulationAnnealing`](super::population_annealing::PopulationAnnealing) —
-    /// so this is the only place its incremental updates are checked against a
-    /// recomputation under these moves.
+    /// Every move here updates `gain` in O(degree) rather than recomputing it,
+    /// and [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)
+    /// reads those gains to find its plateau, so a drift would be silent.
     #[test]
-    fn mixed_perturbations_keep_gains_and_indexes_consistent() {
+    fn mixed_perturbations_keep_gains_consistent() {
         let mc = small_instance();
         let mut state = state_with_tabu(&mc, 7, (3, 15));
-        state.solution.enable_zero_gain_index();
 
         let schedule: [Op; 1] = [best_swap];
         for round in 0..60 {
@@ -165,11 +162,6 @@ mod tests {
                 assert_eq!(
                     state.solution.gain[v], expected,
                     "gain[{v}] diverged after round {round}"
-                );
-                assert_eq!(
-                    state.solution.zero_gain.contains(v),
-                    expected == 0.0,
-                    "zero_gain membership of {v} wrong after round {round}"
                 );
             }
             let expected_objective = mc.calculate_cut_size(&state.solution.x);

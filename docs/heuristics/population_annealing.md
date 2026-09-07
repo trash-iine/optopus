@@ -65,10 +65,20 @@ each replica. Independence is what makes each flip exactly objective-preserving
 that lets the population traverse energy plateaus single-spin Metropolis cannot
 cross.
 
-The set is built from `MaxCutSolution`'s optional
-[`zero_gain` index](../problems/max_cut.md#notes), which this heuristic enables
-on each replica, walking it from a random offset and marking each selection's
-neighborhood ineligible via an `EpochMarks` scratch set.
+The set is built by scanning the replica's `gain` vector for the zeros, walking
+that list from a random offset and marking each selection's neighborhood
+ineligible via an `EpochMarks` scratch set.
+
+An incrementally maintained index of the zero-gain vertices used to supply the
+list, and was removed once this became its only reader: the plateau is read
+**once per step**, while the index charged an O(degree) membership update on
+every accepted Metropolis flip and rode along in every replica clone `resample`
+makes. Dropping it measured **0.92-0.94x the time at a fixed iteration budget**
+(G1 and G60, three repetitions, min taken) with the objective unchanged within
+noise (+10.0 in total over G1/G22/G55/G60 at 30s x 3 runs, against standard
+deviations of 0-4). Searches that never touched the index — every other MaxCut
+heuristic — are bit-identical across the ten G-set instances of the timing
+suite.
 
 ## Constructor
 
