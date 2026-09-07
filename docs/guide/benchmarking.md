@@ -50,10 +50,10 @@ algorithm's own page; this table is only the index.
 | [`LateAcceptanceHillClimbing`](../heuristics/late_acceptance.md#benchmark-config) | all |
 | [`RandomWalk`](../heuristics/random_walk.md#benchmark-config) | all |
 | [`RlSearch`](../heuristics/rl_search.md#benchmark-config) | all |
+| [`PopulationAnnealing`](../heuristics/population_annealing.md#benchmark-config) | all |
 | [`Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart`](../heuristics/meta.md#benchmark-config) | all |
 | [`GeneticAlgorithm`](../heuristics/genetic_algorithm.md#benchmark-config) | all |
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | MaxCut only |
-| [`PopulationAnnealingForMaxCut`](../heuristics/population_annealing.md#benchmark-config) | MaxCut only |
 | [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP only |
 | [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT only |
 | [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP only |

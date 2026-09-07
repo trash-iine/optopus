@@ -1,6 +1,6 @@
 use crate::common::Graph;
 use crate::search_state::{Distance, ProblemTrait, Rankable};
-use crate::trait_defs::BinaryProblem;
+use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate};
 
 /// The MaxCut problem instance, an undirected weighted graph.
 ///
@@ -72,14 +72,11 @@ pub struct MaxCutSolution {
     pub objective: f32,
 }
 
-/// What counts as a "plateau" move: a flip that leaves the objective untouched.
-///
-/// One definition, one call site,
-/// [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)'s
-/// cluster move scans the gains through this.
-#[inline]
-pub(crate) fn is_zero_gain(g: f32) -> bool {
-    g == 0.0
+impl Evaluate for MaxCutSolution {
+    /// MaxCut maximizes the cut weight.
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Maximize(self.objective as f64)
+    }
 }
 
 impl Rankable for MaxCutSolution {

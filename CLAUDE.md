@@ -71,7 +71,6 @@ src/
 │   │                         lift_binary_solution, lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips
 │   ├── tabu.rs               TabuKey (Var / Pair / Triple), TabuMemory
-│   ├── epoch_marks.rs        EpochMarks
 │   ├── permutation.rs        order_crossover (OX)
 │   └── parse.rs              InstanceLines
 ├── heuristic/
@@ -81,13 +80,14 @@ src/
 │   ├── sequential.rs         Sequential<P>, Iterated<P> (ILS lives here too)
 │   ├── variable_neighborhood_search.rs
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
+│   ├── population_annealing.rs  PopulationAnnealing<P, N>
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
 │   ├── reinforcement_learning/  RlSearch<N>
 │   └── specific/             one directory per problem once it has several
 │       ├── max_cut/          bls.rs (BreakoutLocalSearch, also descend / kick /
 │       │                     externally_driven for examples/rl_bls.rs),
 │       │                     best_swap.rs (the one operator with no generic
-│       │                     equivalent), population_annealing.rs
+│       │                     equivalent)
 │       ├── vrp/              ops/ (pricing fns, RouteState, granular.rs, Descent),
 │       │                     alns.rs, hgs/ (mod.rs driver, population.rs)
 │       ├── lkh_for_tsp.rs
@@ -132,7 +132,7 @@ kinds fail at parse time.
 | `RandomWalk` | all | a `stop_condition` (an empty one never terminates) | |
 | `RlSearch` | all | | `learning_rate`, `softmax_temperature`, `reward_shaping`, `policy_weights`, `max_candidates` |
 | `BreakoutLocalSearch` | MaxCut | `tabu_tenure`, `t`, `l0`, `p0`, `q` | |
-| `PopulationAnnealingForMaxCut` | MaxCut | `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `cluster_moves` |
+| `PopulationAnnealing` | all | `neighbor`, `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `sweep_length` |
 | `LinKernighanHelsgaun` | TSP | | `num_neighbors`, `max_depth` |
 | `WalkSat` | SAT | | `noise`, `adaptive_noise` |
 | `AdaptiveLargeNeighborhoodSearch` | VRP | | `removal_fraction`, `cooling_rate` |

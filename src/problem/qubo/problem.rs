@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use crate::search_state::{Distance, ProblemTrait, Rankable};
-use crate::trait_defs::BinaryProblem;
+use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate};
 
 /// Integer coefficient type used in the Q matrix.
 pub type Coefficient = i32;
@@ -45,6 +45,13 @@ pub struct QuboSolution {
     pub gain: Vec<Coefficient>,
     /// The current energy `E(x) = Σ Q[i][j] · x[i] · x[j]`.
     pub objective: Coefficient,
+}
+
+impl Evaluate for QuboSolution {
+    /// QUBO minimizes its energy.
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Minimize(self.objective as f64)
+    }
 }
 
 impl Rankable for QuboSolution {

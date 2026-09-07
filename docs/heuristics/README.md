@@ -37,14 +37,22 @@ Used by `GeneticAlgorithm`:
 - [`SubProblemBasedCrossover`](genetic_algorithm.md#subproblembasedcrossover)
   is a generic crossover for any `P: SubProblemExtractable`.
 
+## Parameterized by the problem
+
+These take no `neighbor` in a config. They drive several moves at once, so what
+they need is stated on the problem rather than on one move type.
+
+| Algorithm | Config `kind` | Required traits on problem | Notes |
+|---|---|---|---|
+| [PopulationAnnealing](population_annealing.md) | `PopulationAnnealing` | `Evaluate` on the solution and on the move | Replica population cooled by β, resampled per step, then swept by Metropolis. Any problem. |
+
 ## Problem-specific
 
-These take no `neighbor` in a config, since each owns its own move set.
+These take no `neighbor` in a config either, but each owns its own move set.
 
 | Algorithm | Config `kind` | Problem | Notes |
 |---|---|---|---|
 | [BreakoutLocalSearchForMaxCut](breakout_local_search.md) | `BreakoutLocalSearch` | MaxCut | Greedy LS + adaptive perturbation. |
-| [PopulationAnnealingForMaxCut](population_annealing.md) | `PopulationAnnealingForMaxCut` | MaxCut | Replica population cooled by β, resampled per step, with objective-preserving cluster moves. |
 | [LinKernighanHelsgaunForTsp](lkh.md) | `LinKernighanHelsgaun` | TSP 2D | Variable-depth k-opt with candidate lists. |
 | [WalkSatForSat](walksat.md) | `WalkSat` | MaxSAT | Focused SKC flips inside a random unsatisfied clause; optional adaptive noise. |
 | [HybridGeneticSearchForVrp](hgs.md) | `HybridGeneticSearch` | CVRP | Giant-tour GA + optimal Split + granular local search; biased fitness over feasible/infeasible sub-populations. |

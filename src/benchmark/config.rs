@@ -146,9 +146,10 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
-    /// Population Annealing Monte Carlo with non-local cluster moves
-    /// (MaxCut only).
-    PopulationAnnealingForMaxCut {
+    /// Population Annealing Monte Carlo. Runs on any problem whose solution
+    /// implements `Evaluate`.
+    PopulationAnnealing {
+        neighbor: NeighborKind,
         /// Number of replicas `R` (>= 2).
         population_size: usize,
         /// Starting inverse temperature. Default: 0.1.
@@ -164,9 +165,10 @@ pub enum HeuristicConfig {
         /// (set to 0 to disable resets).
         #[serde(skip_serializing_if = "Option::is_none")]
         reset_period: Option<usize>,
-        /// Enable the non-local cluster (iso-site) move. Default: true.
+        /// Moves proposed in one sweep. Default: the size of `neighbor`'s
+        /// neighborhood, counted once per episode.
         #[serde(skip_serializing_if = "Option::is_none")]
-        cluster_moves: Option<bool>,
+        sweep_length: Option<usize>,
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
@@ -285,7 +287,7 @@ impl HeuristicConfig {
             Self::RandomWalk { .. } => "RandomWalk",
             Self::RlSearch { .. } => "RlSearch",
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
-            Self::PopulationAnnealingForMaxCut { .. } => "PopulationAnnealingForMaxCut",
+            Self::PopulationAnnealing { .. } => "PopulationAnnealing",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
             Self::HybridGeneticSearch { .. } => "HybridGeneticSearch",
@@ -306,7 +308,8 @@ impl HeuristicConfig {
             | Self::SimulatedAnnealing { neighbor, .. }
             | Self::LateAcceptanceHillClimbing { neighbor, .. }
             | Self::RandomWalk { neighbor, .. }
-            | Self::RlSearch { neighbor, .. } => Some(neighbor),
+            | Self::RlSearch { neighbor, .. }
+            | Self::PopulationAnnealing { neighbor, .. } => Some(neighbor),
             _ => None,
         }
     }
@@ -333,7 +336,7 @@ impl HeuristicConfig {
             | Self::RandomWalk { stop_condition, .. }
             | Self::RlSearch { stop_condition, .. }
             | Self::BreakoutLocalSearch { stop_condition, .. }
-            | Self::PopulationAnnealingForMaxCut { stop_condition, .. }
+            | Self::PopulationAnnealing { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
             | Self::HybridGeneticSearch { stop_condition, .. }

@@ -18,7 +18,8 @@ crate anyway, since the fields were private and only the write-side
 `enable_*_index` methods were public.
 
 `zero_gain` did have a reader, Population Annealing's cluster move, and was
-removed because the index cost that reader more than it saved. The plateau is
+removed because the index cost that reader more than it saved. That reader is
+itself gone now, see 0016. The plateau is
 read once per step, while the index charged a membership update on every
 accepted Metropolis flip and rode along in every replica clone `resample` makes.
 
