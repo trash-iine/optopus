@@ -41,7 +41,7 @@ LocalSearch::<FormulaFlipNeighbor>::new(StopCondition::iterations(10_000))
 let sol = &state.best_solution;
 println!("assignment = {:?}", sol.x);
 println!("objective value = {}", prob.eval_objective(&sol.x)); // the user-declared expression, before penalties
-println!("score = {}", sol.score); // higher-is-better internal ranking value used by is_better_than
+println!("score = {}", sol.score); // higher-is-better internal ranking value, what `evaluate` reports
 ```
 
 There is no file loader: build the problem programmatically from the `Expr`
@@ -54,7 +54,7 @@ carries the assignment `x` from the definition above (`x ∈ {0,1}^n`), the
 per-variable `gain` (change in `score` if that variable were flipped), and
 `score`, which is `score(x)` as defined above, not `objective(x)`
 itself; see its rustdoc for the full field list.
-`Rankable::is_better_than` returns `self.score > other.score`.
+`Evaluate` reports it as `Evaluable::Maximize(score)`, `score` having already folded in the formula's own direction, so higher is always better here.
 
 ## Expressions
 
@@ -104,7 +104,7 @@ let constraint = Constraint::Comparison {
 | `FormulaFlipNeighbor` | Flip one variable. |
 | `FormulaSwapNeighbor` | Swap two variables. |
 
-Both implement `Rankable`, `Evaluate<f64>` and `Evaluate<i32>` (the integer
+Both implement `Evaluate<f64>` and `Evaluate<i32>` (the integer
 form discretizes scores; suitable when all coefficients are integer-valued),
 and `EnabledTabu`; see
 [`FormulaFlipNeighbor`](../api/optopus/problem/binary_optimization/struct.FormulaFlipNeighbor.html) /
