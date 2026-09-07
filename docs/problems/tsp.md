@@ -67,7 +67,7 @@ which is `Σ d(π(k), π(k+1))`.
 
 | Variant | Formula | TSPLIB key |
 |---|---|---|
-| `Continuous` | plain Euclidean (no rounding) |, (default for `new`) |
+| `Continuous` | plain Euclidean (no rounding) | (default for `new`) |
 | `Euc2d` | `nint(sqrt(dx² + dy²))` | `EUC_2D` |
 | `Ceil2d` | `ceil(sqrt(dx² + dy²))` | `CEIL_2D` |
 | `Att` | TSPLIB pseudo-Euclidean | `ATT` |

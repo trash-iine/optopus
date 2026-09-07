@@ -16,7 +16,7 @@ plugs straight in.
 | [LateAcceptanceHillClimbing](late_acceptance.md) | `LateAcceptanceHillClimbing` | `MoveToNeighbor`, `Evaluate<f64>` | Compares against the score `history_length` steps ago. |
 | [TabuSearch](tabu_search.md) | `TabuSearch` | `MoveToNeighbor`, `Rankable`, `EnabledTabu` | Best non-tabu neighbor + aspiration. |
 | [RandomWalk](random_walk.md) | `RandomWalk` | `MoveToNeighbor`, `Rankable` | Uniform random move; useful as perturbation. |
-| [BeamSearch](beam_search.md) |, (Rust API only) | `MoveToNeighbor`, `Rankable` | Maintains top-`k` candidates. |
+| [BeamSearch](beam_search.md) | (Rust API only) | `MoveToNeighbor`, `Rankable` | Maintains top-`k` candidates. |
 | [RlSearch](rl_search.md) | `RlSearch` | `MoveToNeighbor`, `Evaluate<f64>`, `Clone` | Online REINFORCE over move features. |
 
 ## Meta

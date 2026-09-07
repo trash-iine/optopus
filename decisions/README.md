@@ -20,6 +20,7 @@ Read the table, open the one file you need.
 | [0010](0010-planted-instance-hardness.md) | max_cut | reference | Where the planted suites are hard, and why published parameters do not transfer |
 | [0011](0011-vrp-distance-is-symmetrized.md) | vrp | adopted | The broken-pairs count is asymmetric at the depot, so `Distance` takes the larger direction |
 | [0012](0012-alns-descent-is-anchored.md) | vrp | adopted | The descent after each ruin is anchored at the re-inserted customers |
+| [0013](0013-no-run-sub-wrapper.md) | search_state | adopted | The clone/merge triad has no wrapper, and should not get one |
 
 ## Writing a new record
 
