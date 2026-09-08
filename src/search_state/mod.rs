@@ -1089,9 +1089,9 @@ mod tests {
         #[derive(Clone, Debug)]
         struct Counter(i32);
 
-        impl Rankable for Counter {
-            fn is_better_than(&self, other: &Self) -> bool {
-                self.0 > other.0
+        impl Evaluate for Counter {
+            fn evaluate(&self) -> Evaluable<f64> {
+                Evaluable::Maximize(f64::from(self.0))
             }
         }
 
@@ -1105,9 +1105,10 @@ mod tests {
         #[derive(Clone, Debug)]
         struct Increment;
 
-        impl Rankable for Increment {
-            fn is_better_than(&self, _other: &Self) -> bool {
-                false
+        // Every move is worth the same, so none is ever better than another.
+        impl Evaluate for Increment {
+            fn evaluate(&self) -> Evaluable<f64> {
+                Evaluable::Minimize(0.0)
             }
         }
 

@@ -2,7 +2,7 @@ use super::problem::{Sat, SatSolution};
 use crate::{
     common::TabuMemory,
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -34,12 +34,6 @@ impl SatFlipNeighbor {
             i,
             gain: sol.gain[i],
         }
-    }
-}
-
-impl Rankable for SatFlipNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain > other.gain
     }
 }
 
@@ -143,12 +137,6 @@ impl SatSwapNeighbor {
             j,
             gain: sol.gain[i] + gain_j_after_flip_i,
         }
-    }
-}
-
-impl Rankable for SatSwapNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain > other.gain
     }
 }
 

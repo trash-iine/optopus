@@ -14,17 +14,22 @@ The full runnable example lives at
 
 | Trait | On | Required method(s) |
 |---|---|---|
-| [`Rankable`](../traits.md#core-trait-reference) | `Solution` | `is_better_than(&self, other) -> bool` |
+| [`Evaluate`](../traits.md#core-trait-reference) | `Solution` | `evaluate(&self) -> Evaluable<f64>` |
 | [`ProblemTrait`](../traits.md#core-trait-reference) | the problem struct | `type Solution`, `new_solution(rng) -> Solution` |
 | [`MoveToNeighbor<P>`](../traits.md#core-trait-reference) | the neighbor type | `iter`, `apply_to_solution`, `move_to_be_better_than` |
-| [`Rankable`](../traits.md#core-trait-reference) | the neighbor type | `is_better_than(&self, other) -> bool`, a second, separate impl |
+| [`Evaluate`](../traits.md#core-trait-reference) | the neighbor type | `evaluate(&self) -> Evaluable<f64>`, a second, separate impl |
 
-`Rankable` really is implemented twice. On the solution it encodes the
-optimization direction: a maximization problem returns
-`self.score > other.score`, a minimization problem returns `<`. On the move it
-ranks candidate moves against each other, which is how `LocalSearch`,
-`RandomWalk`, `BeamSearch` and `TabuSearch` pick one, without it none of them
-compiles.
+`Evaluate` really is implemented twice. On the solution it reports the
+objective, wrapped in `Evaluable::Maximize` or `Evaluable::Minimize` according
+to which way the problem optimizes. On the move it reports the change applying
+the move would make, wrapped the same way.
+
+Both impls also give you [`Rankable`](../traits.md#core-trait-reference), which
+is how `LocalSearch`, `RandomWalk`, `BeamSearch` and `TabuSearch` pick a move
+and how every heuristic decides whether a solution is an improvement. It is
+derived rather than written: `is_better_than` is a comparison of the two
+`evaluate` values with the direction applied, so there is no second place for
+the optimization direction to be stated and get out of step.
 
 ## Skeleton
 
@@ -37,8 +42,9 @@ struct MyProblem { /* ... */ }
 #[derive(Clone)]
 struct MySolution { /* ... */ }
 
-impl Rankable for MySolution {
-    fn is_better_than(&self, other: &Self) -> bool { /* > or < */ todo!() }
+impl Evaluate for MySolution {
+    // Maximize or Minimize, whichever way the problem goes.
+    fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
 
 impl ProblemTrait for MyProblem {
@@ -63,10 +69,11 @@ impl MoveToNeighbor<MyProblem> for MyMove {
     }
 }
 
-impl Rankable for MyMove {
-    // Ranks candidate moves against each other. Compare cached gains here.
-    // `LocalSearch` and `TabuSearch` select with `max_by(rank_cmp)` over this.
-    fn is_better_than(&self, other: &Self) -> bool { todo!() }
+impl Evaluate for MyMove {
+    // The change applying this move would make. Report the cached gain here.
+    // `LocalSearch` and `TabuSearch` select with `max_by(rank_cmp)`, which
+    // reads this through the derived `Rankable`.
+    fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
 ```
 
@@ -91,7 +98,7 @@ heuristic. Full signatures are in the
 The last row is not a shortcut for "everything is nicer that way": the benchmark
 factory chooses the heuristic at runtime, so it bundles the bounds
 (`ConfigNeighbor = MoveToNeighbor + Rankable + Evaluate + EnabledTabu + Clone`,
-and `ConfigurableProblem::Solution: Distance`). A problem you only drive from
+and `ConfigurableProblem::Solution: Distance + Evaluate`). A problem you only drive from
 Rust can stop at whichever traits its heuristics need; one registered with the
 benchmark cannot register partially.
 

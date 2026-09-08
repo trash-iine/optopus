@@ -11,8 +11,9 @@ use super::rankable::Rankable;
 /// struct MyProblem { /* ... */ }
 /// struct MySolution { value: f64 }
 ///
-/// impl Rankable for MySolution {
-///     fn is_better_than(&self, other: &Self) -> bool { self.value > other.value }
+/// // Evaluate is what a solution states; Rankable follows from it.
+/// impl Evaluate for MySolution {
+///     fn evaluate(&self) -> Evaluable<f64> { Evaluable::Maximize(self.value) }
 /// }
 /// impl ProblemTrait for MyProblem {
 ///     type Solution = MySolution;

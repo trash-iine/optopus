@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::search_state::{Distance, ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait};
 
 /// Numeric value type used in formula expressions.
 pub type Value = f64;
@@ -444,14 +444,6 @@ impl crate::trait_defs::Evaluate for FormulaSolution {
     }
 }
 
-impl Rankable for FormulaSolution {
-    /// `self.score > other.score`, `score` already folds in the optimization
-    /// direction, so higher is always better here.
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.score > other.score
-    }
-}
-
 impl Distance for FormulaSolution {
     fn distance(&self, other: &Self) -> usize {
         crate::common::hamming_distance(&self.x, &other.x)
@@ -673,6 +665,7 @@ impl crate::trait_defs::BinaryProblem for FormulaProblem {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::trait_defs::Rankable;
 
     /// maximize x[0] + 2*x[1] + 3*x[2]  s.t. x[0] + x[1] + x[2] <= 2
     fn make_problem() -> FormulaProblem {

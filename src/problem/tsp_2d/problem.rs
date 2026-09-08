@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::sync::OnceLock;
 
 use crate::error::OptError;
-use crate::search_state::{Distance, ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait};
 
 /// A sequence of city indices representing a Hamiltonian tour (0-indexed).
 pub type TspTour = Vec<usize>;
@@ -29,12 +29,6 @@ impl crate::trait_defs::Evaluate for TspSolution {
     /// TSP minimizes the tour length.
     fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
         crate::trait_defs::Evaluable::Minimize(self.objective)
-    }
-}
-
-impl Rankable for TspSolution {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.objective < other.objective
     }
 }
 

@@ -131,7 +131,7 @@ where
 mod default_move_warning_tests {
     use super::*;
 
-    use crate::trait_defs::ProblemTrait;
+    use crate::trait_defs::{Evaluable, Evaluate, ProblemTrait};
     use std::sync::{Arc, Mutex};
     use tracing_subscriber::fmt::MakeWriter;
 
@@ -144,9 +144,9 @@ mod default_move_warning_tests {
         value: i32,
     }
 
-    impl Rankable for ToySolution {
-        fn is_better_than(&self, other: &Self) -> bool {
-            self.value > other.value
+    impl Evaluate for ToySolution {
+        fn evaluate(&self) -> Evaluable<f64> {
+            Evaluable::Maximize(f64::from(self.value))
         }
     }
 

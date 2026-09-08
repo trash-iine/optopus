@@ -4,7 +4,7 @@ use rand::rngs::SmallRng;
 use super::problem::{Vrp, VrpSolution, overload_of};
 use crate::common::TabuMemory;
 use crate::error::OptError;
-use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable};
+use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 
 /// Applies the cached `(gain, overload_delta)` of a move to a solution's numeric
 /// caches. `distance` is derived from `gain` and `overload_delta` so the three
@@ -136,12 +136,6 @@ impl VrpRelocateNeighbor {
             gain,
             overload_delta,
         }
-    }
-}
-
-impl Rankable for VrpRelocateNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
     }
 }
 
@@ -345,12 +339,6 @@ impl VrpSwapNeighbor {
     }
 }
 
-impl Rankable for VrpSwapNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
-    }
-}
-
 impl Evaluate for VrpSwapNeighbor {
     fn evaluate(&self) -> Evaluable<f64> {
         Evaluable::Minimize(self.gain)
@@ -500,12 +488,6 @@ impl VrpTwoOptNeighbor {
             q,
             gain: two_opt_gain(prob, sol, r, p, q),
         }
-    }
-}
-
-impl Rankable for VrpTwoOptNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
     }
 }
 

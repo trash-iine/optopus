@@ -81,10 +81,10 @@ where
         let neighbor: N = state.random_neighbor("LateAcceptanceHillClimbing")?;
 
         // Compute the candidate score (higher is always better).
-        // worsening_amount() is positive when the move is worse,
-        // so subtracting it gives us a "higher is better" score.
+        // minimized() is positive when the move is worse, so subtracting it
+        // gives us a "higher is better" score.
         let delta = neighbor.evaluate();
-        let candidate_score = self.current_score - delta.worsening_amount();
+        let candidate_score = self.current_score - delta.minimized();
 
         let idx = self.history_index % self.history_length;
         let history_score = self.history[idx];

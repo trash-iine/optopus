@@ -2,7 +2,7 @@ use super::problem::{FormulaProblem, FormulaSolution, Value};
 use crate::{
     common::TabuMemory,
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -20,12 +20,6 @@ pub struct FormulaFlipNeighbor {
     pub i: usize,
     /// Change in score when this variable is flipped (positive = improvement).
     pub gain: Value,
-}
-
-impl Rankable for FormulaFlipNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain > other.gain
-    }
 }
 
 impl Evaluate for FormulaFlipNeighbor {
@@ -128,12 +122,6 @@ pub struct FormulaSwapNeighbor {
     pub j: usize,
     /// Combined change in score (positive = improvement).
     pub gain: Value,
-}
-
-impl Rankable for FormulaSwapNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain > other.gain
-    }
 }
 
 impl Evaluate for FormulaSwapNeighbor {

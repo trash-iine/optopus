@@ -15,12 +15,12 @@ Every heuristic runs under the search state, recording its behavior and enable t
 1. Existing problem × existing heuristic, run `LocalSearch`,
    `SimulatedAnnealing`, ... on MaxCut, TSP, ... in a few lines via `use optopus::prelude::*`.
 2. Apply existing heuristics to a new problem, implement the three core
-   traits (`ProblemTrait` on the problem, `Rankable` on the solution and on the
+   traits (`ProblemTrait` on the problem, `Evaluate` on the solution and on the
    move, `MoveToNeighbor` on the solution move across the problem) and
-   `LocalSearch`, `RandomWalk`, `BeamSearch` and every meta-heuristic work as-is.
-   The rest are unlocked one trait at a time, with `Evaluate<f64>` for SA / LAHC /
-   RL Search, `EnabledTabu` for Tabu Search, `Distance` + a `Crossover` for
-   Genetic Algorithm. 
+   `LocalSearch`, `RandomWalk`, `BeamSearch`, `SimulatedAnnealing` and every
+   meta-heuristic work as-is. `Rankable` comes with `Evaluate` rather than being
+   written. The rest are unlocked one trait at a time, with `EnabledTabu` for
+   Tabu Search and `Distance` + a `Crossover` for Genetic Algorithm. 
    Full signatures and the per-heuristic requirement matrix are in
    [Core traits](traits.md#core-trait-reference).
 3. Compose heuristics and benchmark them, use `Sequential`, `Iterated`,

@@ -23,25 +23,17 @@ impl Evaluable<f64> {
     /// The value with the direction applied, so that lower is better whichever
     /// way the problem optimizes.
     ///
-    /// For a move's delta this is how much worse the move makes things, which
-    /// is what [`worsening_amount`](Self::worsening_amount) names. For a
-    /// solution's objective it is what a physical analogy calls the energy, and
-    /// what population annealing weights a replica by. Same arithmetic either
-    /// way, and the reason both readings can share one type.
+    /// Read as a move's delta this is how much worse the move makes things,
+    /// positive when it degrades the objective, which is what
+    /// `boltzmann_accept` puts in `exp(-minimized / T)`. Read as a solution's
+    /// objective it is what a physical analogy calls the energy, and what
+    /// population annealing weights a replica by. Same arithmetic either way,
+    /// and the reason both readings share one type and one method.
     pub fn minimized(self) -> f64 {
         match self {
             Evaluable::Maximize(value) => -value,
             Evaluable::Minimize(value) => value,
         }
-    }
-
-    /// Returns the worsening amount: positive when the move degrades the objective.
-    ///
-    /// The same number as [`minimized`](Self::minimized), named for the reading
-    /// that suits a delta. Used by `boltzmann_accept` to compute
-    /// `exp(-worsening / T)`.
-    pub fn worsening_amount(self) -> f64 {
-        self.minimized()
     }
 }
 

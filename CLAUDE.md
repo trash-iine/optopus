@@ -56,7 +56,8 @@ src/
 │   └── report.rs             SingleRunResult, Summary, BenchmarkReport
 ├── search_state/mod.rs       SearchState<'a, P>, SearchStateCloneType
 ├── trait_defs/               core traits, re-exported via search_state and prelude
-│   ├── rankable.rs           Rankable, rank_cmp, filter_best, Distance
+│   ├── rankable.rs           Rankable (blanket impl over Evaluate), rank_cmp,
+│   │                         filter_best, Distance
 │   ├── problem.rs            ProblemTrait
 │   ├── neighbor.rs           MoveToNeighbor
 │   ├── evaluate.rs           Evaluable, Evaluate

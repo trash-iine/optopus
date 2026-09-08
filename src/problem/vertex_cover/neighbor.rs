@@ -5,7 +5,7 @@ use crate::{
     common::TabuMemory,
     error::OptError,
     problem::vertex_cover::problem::VertexCoverSolution,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -37,12 +37,6 @@ impl VertexCoverFlipNeighbor {
             i,
             gain: sol.gain[i],
         }
-    }
-}
-
-impl Rankable for VertexCoverFlipNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
     }
 }
 
@@ -194,12 +188,6 @@ impl VertexCoverSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] - edge_correction,
         }
-    }
-}
-
-impl Rankable for VertexCoverSwapNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
     }
 }
 

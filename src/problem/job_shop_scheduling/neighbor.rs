@@ -6,7 +6,7 @@ use super::problem::{JobShopScheduling, JobShopSolution};
 use crate::{
     common::TabuMemory,
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, Rankable},
+    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
 
 /// Minimum operation-sequence length for parallel neighborhood evaluation.
@@ -81,12 +81,6 @@ impl JobShopSwapNeighbor {
             i,
             gain: makespan as f64 - sol.objective as f64,
         }
-    }
-}
-
-impl Rankable for JobShopSwapNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
     }
 }
 
@@ -271,12 +265,6 @@ impl JobShopRelocateNeighbor {
     }
 }
 
-impl Rankable for JobShopRelocateNeighbor {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.gain < other.gain
-    }
-}
-
 impl Evaluate for JobShopRelocateNeighbor {
     fn evaluate(&self) -> Evaluable<f64> {
         Evaluable::Minimize(self.gain)
@@ -395,6 +383,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::trait_defs::Rankable;
 
     fn make_inst() -> JobShopScheduling {
         // 2 jobs × 2 machines

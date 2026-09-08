@@ -1,5 +1,5 @@
 use crate::common::Graph;
-use crate::search_state::{Distance, ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait};
 
 /// The Minimum Vertex Cover problem.
 ///
@@ -33,12 +33,6 @@ impl crate::trait_defs::Evaluate for VertexCoverSolution {
     /// Vertex Cover minimizes its penalty-augmented objective.
     fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
         crate::trait_defs::Evaluable::Minimize(self.objective as f64)
-    }
-}
-
-impl Rankable for VertexCoverSolution {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.objective < other.objective
     }
 }
 

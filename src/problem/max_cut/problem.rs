@@ -1,5 +1,5 @@
 use crate::common::Graph;
-use crate::search_state::{Distance, ProblemTrait, Rankable};
+use crate::search_state::{Distance, ProblemTrait};
 use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate};
 
 /// The MaxCut problem instance, an undirected weighted graph.
@@ -76,12 +76,6 @@ impl Evaluate for MaxCutSolution {
     /// MaxCut maximizes the cut weight.
     fn evaluate(&self) -> Evaluable<f64> {
         Evaluable::Maximize(self.objective as f64)
-    }
-}
-
-impl Rankable for MaxCutSolution {
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.objective > other.objective
     }
 }
 
