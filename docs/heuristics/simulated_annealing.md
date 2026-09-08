@@ -33,8 +33,8 @@ SimulatedAnnealing::<N>::new(
 ```
 
 `N` must satisfy `MoveToNeighbor<P> + Evaluate` (i.e. `Evaluate<f64>`). The
-worsening amount is read from `Evaluable::worsening_amount()`, so the
-direction of the underlying objective is handled automatically.
+worsening amount is read from `Evaluable::minimized()`, so the direction of the
+underlying objective is handled automatically.
 
 `clear()` resets the current temperature to `initial_temperature`.
 

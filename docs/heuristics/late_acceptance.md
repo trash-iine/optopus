@@ -28,7 +28,7 @@ Each `run_once`:
 
 1. Sample a uniformly random neighbor.
 2. Score it: the running score is always higher-is-better (to minimize,
-   using `- score`), so the candidate is `current − worsening_amount()` and the
+   using `- score`), so the candidate is `current − minimized()` and the
    direction of the underlying objective is handled by `Evaluate`.
 3. Accept if the candidate is no worse than the current score or no worse
    than `history[i mod history_length]`, the score from `history_length` steps
