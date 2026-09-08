@@ -27,9 +27,8 @@ the move would make, wrapped the same way.
 Both impls also give you [`Rankable`](../traits.md#core-trait-reference), which
 is how `LocalSearch`, `RandomWalk`, `BeamSearch` and `TabuSearch` pick a move
 and how every heuristic decides whether a solution is an improvement. It is
-derived rather than written: `is_better_than` is a comparison of the two
-`evaluate` values with the direction applied, so there is no second place for
-the optimization direction to be stated and get out of step.
+derived rather than written. `is_better_than` compares the two `evaluate`
+values with the direction applied, so there is nothing to implement.
 
 ## Skeleton
 

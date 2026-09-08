@@ -51,7 +51,7 @@ The population is seeded with `population_size` random solutions. Each
    through the same `boltzmann_accept` helper
    [SA](simulated_annealing.md) uses.
 
-There is no sweep before the first resampling: the method starts from a random
+There is no sweep before the first resampling. The method starts from a random
 population, which at high temperature is already the distribution the sweeps
 would produce.
 
