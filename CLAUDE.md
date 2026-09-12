@@ -142,7 +142,7 @@ kinds fail at parse time.
 | `Iterated` | all | `steps[0]` = search, `steps[1]` = perturbation | |
 | `VariableNeighborhoodSearch` | all | `steps[0]` = search, `steps[1..]` = shakes | |
 | `Restart` | all | `steps[0]`, `restart_condition` | |
-| `GeneticAlgorithm` | all | `population_size` | `crossover_kind`, `parent_selection`, `parent_top_k` |
+| `GeneticAlgorithm` | all | `population_size` | `crossover_kind`, `parent_selection`, `parent_top_k`, `n_elite`, `n_closest` |
 
 `RlSearch` still parses `discount` and ignores it with a warning, since
 single-step REINFORCE has none.
