@@ -24,7 +24,7 @@ plugs straight in.
 | Algorithm | Config `kind` | Description |
 |---|---|---|
 | [Sequential / Iterated / VariableNeighborhoodSearch / Restart](meta.md) | same names | Compose inner heuristics via the sub-run clone/merge pattern. |
-| [GeneticAlgorithm](genetic_algorithm.md) | `GeneticAlgorithm` | Tournament selection → `Crossover` → mutation → worst-replacement. |
+| [GeneticAlgorithm](genetic_algorithm.md) | `GeneticAlgorithm` | Parent selection → `Crossover` → mutation → replacement. `BiasedFitness` selection additionally ranks the population by cost and diversity. |
 
 ## Crossover operators
 

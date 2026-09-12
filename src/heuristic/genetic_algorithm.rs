@@ -1,7 +1,8 @@
 use super::{Heuristic, StopCondition};
+use crate::common::{BiasedFitnessPopulation, binary_tournament};
 use crate::error::OptError;
 use crate::search_state::{
-    Crossover, Distance, ProblemTrait, Rankable, SearchState, SearchStateCloneType,
+    Crossover, Distance, Evaluate, ProblemTrait, Rankable, SearchState, SearchStateCloneType,
 };
 
 /// How [`GeneticAlgorithm`] picks the two parents for each crossover step.
@@ -23,6 +24,94 @@ pub enum ParentSelection {
     /// Promotes exploration by avoiding crossover between near-identical
     /// individuals. Requires `P::Solution: Distance`.
     DistantTopK { top_k: usize },
+    /// Vidal's *biased fitness*: rank members by a blend of cost rank and
+    /// diversity rank, then run a binary tournament on that rank.
+    ///
+    /// The other two strategies rank on cost alone, which collapses the
+    /// population onto one basin within a few hundred generations. Every
+    /// survivor descends from the same early winner, and crossover between
+    /// near-identical parents produces near-identical children. Blending in a
+    /// diversity rank is what lets a genetic search keep going for millions of
+    /// generations. It is the mechanism behind HGS, which uses the same
+    /// [`BiasedFitnessPopulation`].
+    ///
+    /// This strategy also changes survivor selection, not just parent
+    /// selection: members are trimmed by the same blended rank, clones first.
+    /// The two halves cannot be separated. Ranking parents by diversity while
+    /// evicting purely on cost would let the population converge anyway, one
+    /// eviction at a time.
+    ///
+    /// `n_elite` and `n_closest` are Vidal's `nbElite` and `nbClose`, whose
+    /// published values are `4` and `5`. Neither is defaulted. Note that a
+    /// population of `n_elite` or fewer ranks on cost alone, the diversity half
+    /// being weighted by `1 - n_elite / N`.
+    BiasedFitness { n_elite: usize, n_closest: usize },
+}
+
+/// The population, in whichever form the selection strategy needs.
+///
+/// Kept as a choice rather than always ranking, because the ranking is not
+/// free: it measures O(N) distances per insertion and re-ranks in O(N² log N).
+/// The cost-only strategies read no fitness, so they would pay that for
+/// nothing.
+enum Members<S> {
+    /// Insertion order, worst-replaced. What `Tournament` and `DistantTopK`
+    /// use.
+    Plain(Vec<S>),
+    /// Ranked by biased fitness, pairwise distances cached.
+    Ranked(BiasedFitnessPopulation<S>),
+}
+
+impl<S: Evaluate + 'static> Members<S> {
+    /// Builds the representation the strategy needs, and with it the cost the
+    /// ranked one is ordered by. Separate from the rest of the impl because
+    /// only this needs to know what a member is worth.
+    fn for_strategy(strategy: ParentSelection) -> Self {
+        match strategy {
+            ParentSelection::BiasedFitness { n_elite, n_closest } => {
+                // The one place the cost is stated. A solution's objective with
+                // its direction applied, which is what a rank has to compare.
+                Self::Ranked(BiasedFitnessPopulation::new(
+                    n_elite,
+                    n_closest,
+                    Box::new(|s: &S| s.evaluate().minimized()),
+                ))
+            }
+            _ => Self::Plain(Vec::new()),
+        }
+    }
+}
+
+impl<S> Members<S> {
+    fn as_slice(&self) -> &[S] {
+        match self {
+            Self::Plain(v) => v,
+            Self::Ranked(p) => p.members(),
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.as_slice().len()
+    }
+
+    fn clear(&mut self) {
+        match self {
+            Self::Plain(v) => v.clear(),
+            Self::Ranked(p) => p.clear(),
+        }
+    }
+
+    fn iter(&self) -> std::slice::Iter<'_, S> {
+        self.as_slice().iter()
+    }
+}
+
+impl<S> std::ops::Index<usize> for Members<S> {
+    type Output = S;
+
+    fn index(&self, i: usize) -> &S {
+        &self.as_slice()[i]
+    }
 }
 
 /// Genetic algorithm meta-heuristic.
@@ -37,10 +126,11 @@ pub enum ParentSelection {
 /// 4. Replacement: inserts the (possibly improved) offspring into the population,
 ///    evicting the worst member when at capacity.
 ///
-/// When `init_improvement` is `Some`, each random initial individual is also passed
-/// through that heuristic via the same sub-run pattern. This reproduces the
-/// Galinier-Hao Hybrid Evolutionary Algorithm (HEA) for graph coloring when paired
-/// with a [`crate::heuristic::TabuSearch`] mutation operator.
+/// With [`with_init_improvement`](Self::with_init_improvement), each random
+/// initial individual is also passed through that heuristic via the same
+/// sub-run pattern. This reproduces the Galinier-Hao Hybrid Evolutionary
+/// Algorithm (HEA) for graph coloring when paired with a
+/// [`crate::heuristic::TabuSearch`] mutation operator.
 ///
 /// The global best solution is tracked in `SearchState::best_solution`.
 ///
@@ -60,7 +150,9 @@ pub enum ParentSelection {
 /// # Example
 ///
 /// ```rust,ignore
-/// use optopus::heuristic::{GeneticAlgorithm, LocalSearch, StopCondition, SubProblemBasedCrossover};
+/// use optopus::heuristic::{
+///     GeneticAlgorithm, LocalSearch, ParentSelection, StopCondition, SubProblemBasedCrossover,
+/// };
 /// use optopus::problem::{MaxCut, MaxCutFlipNeighbor};
 /// use optopus::search_state::SearchState;
 ///
@@ -75,6 +167,7 @@ pub enum ParentSelection {
 ///     Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
 ///         StopCondition::failed_updates(1),
 ///     )),
+///     ParentSelection::Tournament,
 /// );
 /// ga.run(&mut state).unwrap();
 /// ```
@@ -85,36 +178,36 @@ pub struct GeneticAlgorithm<P: ProblemTrait, C> {
     pub crossover: C,
     /// Mutation operator, any [`Heuristic<P>`] works (local search, SA, random walk, …).
     pub mutation: Box<dyn Heuristic<P>>,
-    /// Optional per-individual local-improvement applied to each random seed during
-    /// population initialization. `None` (default) means the initial population is
-    /// pure random; `Some(op)` reproduces the HEA pattern.
+    /// Optional per-individual local improvement applied to each random seed
+    /// during population initialization. See
+    /// [`with_init_improvement`](Self::with_init_improvement).
     pub init_improvement: Option<Box<dyn Heuristic<P>>>,
-    /// Strategy for sampling the two parents each iteration.
-    pub parent_selection: ParentSelection,
-    population: Vec<P::Solution>,
+    /// Strategy for sampling the two parents each iteration. Fixed at
+    /// construction: it also decides how `population` is stored, so the two
+    /// cannot be changed apart.
+    parent_selection: ParentSelection,
+    population: Members<P::Solution>,
     /// Index of the best solution in `population`. Tracked incrementally to avoid O(n) scans.
     best_idx: Option<usize>,
 }
 
-impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
+impl<P, C> GeneticAlgorithm<P, C>
+where
+    P: ProblemTrait,
+    // `'static` because the ranked representation owns a boxed cost closure
+    // whose signature names the solution type. Every solution here is owned
+    // data, so it costs nothing in practice.
+    P::Solution: Distance + Evaluate + 'static,
+{
+    /// # Panics
+    ///
+    /// Panics if `population_size < 2`.
     pub fn new(
         stop_condition: StopCondition,
         population_size: usize,
         crossover: C,
         mutation: Box<dyn Heuristic<P>>,
-    ) -> Self {
-        Self::new_with_init(stop_condition, population_size, crossover, mutation, None)
-    }
-
-    /// Like [`Self::new`] but also runs `init_improvement` on every member of the
-    /// initial random population. Pass `Some(Box::new(TabuSearch::new(...)))` to
-    /// recover the Galinier-Hao HEA configuration.
-    pub fn new_with_init(
-        stop_condition: StopCondition,
-        population_size: usize,
-        crossover: C,
-        mutation: Box<dyn Heuristic<P>>,
-        init_improvement: Option<Box<dyn Heuristic<P>>>,
+        parent_selection: ParentSelection,
     ) -> Self {
         assert!(population_size >= 2, "population_size must be at least 2");
         Self {
@@ -122,16 +215,21 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
             population_size,
             crossover,
             mutation,
-            init_improvement,
-            parent_selection: ParentSelection::default(),
-            population: Vec::new(),
+            init_improvement: None,
+            parent_selection,
+            population: Members::for_strategy(parent_selection),
             best_idx: None,
         }
     }
 
-    /// Builder-style override of the parent-selection strategy.
-    pub fn with_parent_selection(mut self, strategy: ParentSelection) -> Self {
-        self.parent_selection = strategy;
+    /// Builder-style: runs `op` on every member of the initial random
+    /// population, which is the Galinier-Hao HEA configuration.
+    ///
+    /// The population is not built until the first `run_once`, so this may be
+    /// set at any point before then.
+    #[must_use]
+    pub fn with_init_improvement(mut self, op: Box<dyn Heuristic<P>>) -> Self {
+        self.init_improvement = Some(op);
         self
     }
 
@@ -161,7 +259,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
                 Some(op) => Self::improve_via_sub_run(state, seed, op.as_mut())?,
                 None => seed,
             };
-            self.population.push(member);
+            self.admit(member);
         }
 
         self.best_idx = self
@@ -182,6 +280,26 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
         match self.parent_selection {
             ParentSelection::Tournament => self.tournament_indices(rng),
             ParentSelection::DistantTopK { top_k } => self.distant_top_k_indices(rng, top_k),
+            ParentSelection::BiasedFitness { .. } => self.biased_fitness_indices(rng),
+        }
+    }
+
+    /// Two independent binary tournaments on biased fitness (lower wins).
+    ///
+    /// Falls back to the cost-only tournament when the population is not the
+    /// ranked kind. That cannot happen through the public API, the
+    /// representation being chosen from the strategy, but keeping this total
+    /// beats panicking on a state the type system does not forbid.
+    fn biased_fitness_indices(&self, rng: &mut impl rand::Rng) -> (usize, usize) {
+        let Members::Ranked(pop) = &self.population else {
+            return self.tournament_indices(rng);
+        };
+        let candidates: Vec<(usize, f64)> = (0..pop.len()).map(|i| (i, pop.fitness(i))).collect();
+        let a = binary_tournament(&candidates, rng);
+        let b = binary_tournament(&candidates, rng);
+        match (a, b) {
+            (Some(a), Some(b)) => (a, b),
+            _ => (0, 0),
         }
     }
 
@@ -222,10 +340,51 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
         (a, b)
     }
 
+    /// Adds `member` to whichever representation the population holds, without
+    /// deciding whether it deserves a place. That is
+    /// [`insert_into_population`](Self::insert_into_population)'s job, and this
+    /// is what both it and the initial seeding go through.
+    fn admit(&mut self, member: P::Solution) {
+        match &mut self.population {
+            Members::Plain(v) => v.push(member),
+            Members::Ranked(p) => {
+                p.push(member, |a: &P::Solution, b: &P::Solution| {
+                    a.distance(b) as f64
+                });
+            }
+        }
+    }
+
+    /// Index of the best member by the problem's own ranking.
+    fn best_member_idx(&self) -> Option<usize> {
+        self.population
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| crate::trait_defs::rank_cmp(*a, *b))
+            .map(|(i, _)| i)
+    }
+
     /// Inserts `offspring` into the population.
-    /// If the population is at capacity, replaces the worst member (if offspring is better).
-    /// Maintains `best_idx` incrementally to avoid an O(n) best-member scan in `run_once`.
+    ///
+    /// Which member leaves depends on the strategy, and it has to: ranking
+    /// parents by diversity while evicting purely on cost would let the
+    /// population converge anyway, one eviction at a time.
+    ///
+    /// - `Plain`: replace the worst member, if `offspring` beats it. `best_idx`
+    ///   is maintained incrementally to avoid an O(n) scan in `run_once`.
+    /// - `Ranked`: admit unconditionally, then trim back to capacity by biased
+    ///   fitness, which evicts clones first, so a newcomer that duplicates an
+    ///   incumbent simply displaces it.
     fn insert_into_population(&mut self, offspring: P::Solution) {
+        if let Members::Ranked(_) = self.population {
+            self.admit(offspring);
+            if let Members::Ranked(p) = &mut self.population {
+                p.trim_to(self.population_size);
+            }
+            self.best_idx = self.best_member_idx();
+            return;
+        }
+
         if self.population.len() < self.population_size {
             let new_idx = self.population.len();
             let is_new_best = match self.best_idx {
@@ -235,7 +394,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
             if is_new_best {
                 self.best_idx = Some(new_idx);
             }
-            self.population.push(offspring);
+            self.admit(offspring);
             return;
         }
 
@@ -249,18 +408,16 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
             .unwrap();
 
         if offspring.is_better_than(&self.population[worst_idx]) {
-            self.population[worst_idx] = offspring;
+            let Members::Plain(members) = &mut self.population else {
+                unreachable!("the ranked path returned above");
+            };
+            members[worst_idx] = offspring;
 
             // Update best_idx:
             // - If the replaced slot was the previous best, rescan (rare edge case).
             // - Otherwise compare offspring with current best.
             if self.best_idx == Some(worst_idx) {
-                self.best_idx = self
-                    .population
-                    .iter()
-                    .enumerate()
-                    .max_by(|(_, a), (_, b)| crate::trait_defs::rank_cmp(*a, *b))
-                    .map(|(i, _)| i);
+                self.best_idx = self.best_member_idx();
             } else if self.population[worst_idx]
                 .is_better_than(&self.population[self.best_idx.unwrap()])
             {
@@ -273,7 +430,7 @@ impl<P: ProblemTrait, C> GeneticAlgorithm<P, C> {
 impl<P, C> Heuristic<P> for GeneticAlgorithm<P, C>
 where
     P: ProblemTrait,
-    P::Solution: Distance,
+    P::Solution: Distance + Evaluate + 'static,
     C: Crossover<P>,
 {
     /// Clears the population so the next `run` starts fresh.
@@ -342,6 +499,7 @@ mod tests {
             Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
                 StopCondition::failed_updates(1),
             )),
+            ParentSelection::Tournament,
         );
 
         ga.run(&mut state).unwrap();
@@ -361,7 +519,7 @@ mod tests {
         ]));
         let mut state = SearchState::new(&mc);
 
-        let mut hea = GeneticAlgorithm::new_with_init(
+        let mut hea = GeneticAlgorithm::new(
             StopCondition::iterations(4),
             4,
             CloneFirstParent,
@@ -369,11 +527,12 @@ mod tests {
                 StopCondition::failed_updates(1),
                 (1, 5),
             )),
-            Some(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
-                StopCondition::failed_updates(1),
-                (1, 5),
-            ))),
-        );
+            ParentSelection::Tournament,
+        )
+        .with_init_improvement(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
+            StopCondition::failed_updates(1),
+            (1, 5),
+        )));
 
         hea.run(&mut state).unwrap();
 
@@ -401,8 +560,8 @@ mod tests {
             Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
                 StopCondition::failed_updates(1),
             )),
-        )
-        .with_parent_selection(ParentSelection::DistantTopK { top_k: 2 });
+            ParentSelection::DistantTopK { top_k: 2 },
+        );
 
         ga.run(&mut state).unwrap();
 
@@ -421,6 +580,7 @@ mod tests {
             Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
                 StopCondition::failed_updates(1),
             )),
+            ParentSelection::Tournament,
         );
     }
 }

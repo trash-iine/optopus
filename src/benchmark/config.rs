@@ -265,12 +265,23 @@ pub enum HeuristicConfig {
         /// sub-MaxCut of disagreeing variables with an internal bounded BLS).
         #[serde(skip_serializing_if = "Option::is_none")]
         crossover_kind: Option<String>,
-        /// "Tournament" (default) or "DistantTopK".
+        /// "Tournament" (default), "DistantTopK" or "BiasedFitness".
         #[serde(skip_serializing_if = "Option::is_none")]
         parent_selection: Option<String>,
         /// `top_k` for `parent_selection = "DistantTopK"` (must be >= 1).
         #[serde(skip_serializing_if = "Option::is_none")]
         parent_top_k: Option<usize>,
+        /// Vidal's `nbElite` for `parent_selection = "BiasedFitness"`: how many
+        /// members the cost rank alone keeps alive. Default: 4. Must be at
+        /// least 1 and below `population_size`, since a population of
+        /// `n_elite` or fewer ranks on cost alone.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        n_elite: Option<usize>,
+        /// Vidal's `nbClose` for `parent_selection = "BiasedFitness"`: how many
+        /// nearest members are averaged into a diversity contribution.
+        /// Default: 5. Must be at least 1.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        n_closest: Option<usize>,
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },

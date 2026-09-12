@@ -27,8 +27,7 @@ use crate::problem::{
         VrpSwapNeighbor, VrpTwoOptNeighbor,
     },
 };
-use crate::search_state::{Crossover, Distance, ProblemTrait};
-use crate::trait_defs::Evaluate;
+use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
 
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
