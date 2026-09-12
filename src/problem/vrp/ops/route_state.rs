@@ -66,12 +66,12 @@ impl RouteState {
 
     /// The route holding customer `c`, and its position within it.
     #[inline]
-    pub(super) fn locate(&self, c: usize) -> (usize, usize) {
+    pub(crate) fn locate(&self, c: usize) -> (usize, usize) {
         (self.route_of[c], self.pos_in[c])
     }
 
     /// Refreshes `route_of` / `pos_in` for a single route.
-    pub(super) fn reindex(&mut self, r: usize) {
+    pub(crate) fn reindex(&mut self, r: usize) {
         for pos in 0..self.routes[r].len() {
             let c = self.routes[r][pos];
             self.route_of[c] = r;
@@ -81,7 +81,7 @@ impl RouteState {
 
     /// `(before, first, last, after)` around the segment `routes[r][pos..pos+len]`.
     #[inline]
-    pub(super) fn segment_ends(
+    pub(crate) fn segment_ends(
         &self,
         r: usize,
         pos: usize,
@@ -92,14 +92,14 @@ impl RouteState {
 
     /// Distance saved by lifting `routes[r][pos..pos+len]` out of its route.
     #[inline]
-    pub(super) fn removal_gain(&self, prob: &Vrp, r: usize, pos: usize, len: usize) -> f64 {
+    pub(crate) fn removal_gain(&self, prob: &Vrp, r: usize, pos: usize, len: usize) -> f64 {
         removal_gain(prob, &self.routes[r], pos, len)
     }
 
     /// Distance added by inserting the segment `first…last` before position
     /// `pos` of route `r`.
     #[inline]
-    pub(super) fn insertion_cost(
+    pub(crate) fn insertion_cost(
         &self,
         prob: &Vrp,
         r: usize,
@@ -112,13 +112,13 @@ impl RouteState {
 
     /// Total demand of `routes[r][pos..pos+len]`.
     #[inline]
-    pub(super) fn segment_demand(&self, prob: &Vrp, r: usize, pos: usize, len: usize) -> i64 {
+    pub(crate) fn segment_demand(&self, prob: &Vrp, r: usize, pos: usize, len: usize) -> i64 {
         segment_demand(prob, &self.routes[r], pos, len)
     }
 
     /// Change in total overflow when `demand` moves from route `from` to `to`.
     #[inline]
-    pub(super) fn excess_delta_transfer(
+    pub(crate) fn excess_delta_transfer(
         &self,
         prob: &Vrp,
         from: usize,
@@ -131,7 +131,7 @@ impl RouteState {
     /// Change in total overflow when routes `a` and `b` exchange `demand_a` for
     /// `demand_b`.
     #[inline]
-    pub(super) fn excess_delta_exchange(
+    pub(crate) fn excess_delta_exchange(
         &self,
         prob: &Vrp,
         a: usize,
@@ -150,7 +150,7 @@ impl RouteState {
 
     /// Commits a move's cached deltas.
     #[inline]
-    pub(super) fn commit(&mut self, delta_distance: f64, delta_excess: i64) {
+    pub(crate) fn commit(&mut self, delta_distance: f64, delta_excess: i64) {
         self.distance += delta_distance;
         self.excess += delta_excess;
     }
@@ -158,7 +158,7 @@ impl RouteState {
     /// Recomputes every cache from the routes. Used by `debug_assert!` to catch
     /// incremental-update drift, and by the tests.
     #[cfg(debug_assertions)]
-    pub(super) fn assert_caches_consistent(&self, prob: &Vrp) {
+    pub(crate) fn assert_caches_consistent(&self, prob: &Vrp) {
         let fresh = RouteState::from_routes(prob, self.routes.clone());
         debug_assert!(
             (fresh.distance - self.distance).abs() < 1e-6,

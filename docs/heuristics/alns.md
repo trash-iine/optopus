@@ -1,11 +1,17 @@
-# AdaptiveLargeNeighborhoodSearchForVrp
+# Alns
 
-**API:** [`AdaptiveLargeNeighborhoodSearchForVrp`](../api/optopus/heuristic/struct.AdaptiveLargeNeighborhoodSearchForVrp.html)
+**API:** [`Alns`](../api/optopus/heuristic/struct.Alns.html)
 
-Problem-specific heuristic for [CVRP](../problems/vrp.md). Adaptive Large
-Neighborhood Search (Ropke & Pisinger) ruins part of the incumbent and
-recreates it, choosing the operator pair by a roulette wheel whose weights
-track recent performance.
+Adaptive Large Neighborhood Search (Ropke & Pisinger) ruins part of the
+incumbent and recreates it, choosing the operator pair by a roulette wheel whose
+weights track recent performance.
+
+Runs on any problem implementing [`Ruinable`](../traits.md) whose solution
+implements [`Evaluate`](../traits.md), which is [CVRP](../problems/vrp.md) so
+far. See
+`Ruinable` for the shape a problem needs, elements assigned to containers that
+compete for a finite resource, and for the family of problems that already has
+it.
 
 ## Example
 
@@ -15,11 +21,12 @@ use optopus::prelude::*;
 let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 let mut state = SearchState::new(&vrp);
 
-let mut alns = AdaptiveLargeNeighborhoodSearchForVrp::new(
+let mut alns = Alns::<Vrp>::new(
     StopCondition::iterations(10_000),
     /* removal_fraction = */ 0.15,
     /* cooling_rate     = */ 0.9995,
-);
+)
+.with_local_repair(Box::new(AnchoredRouteDescent::new()));
 alns.run(&mut state)?;
 
 let sol = &state.best_solution;
@@ -78,17 +85,31 @@ is always available even when every route is full.
 ## Constructor
 
 ```rust
-AdaptiveLargeNeighborhoodSearchForVrp::new(
+Alns::<P>::new(
     stop_condition: StopCondition,
-    removal_fraction: f64,   // fraction of customers ruined per iteration
+    removal_fraction: f64,   // fraction of elements ruined per iteration
     cooling_rate: f64,       // geometric cooling factor per iteration
 ) -> Self
 ```
 
 Panics if `removal_fraction` or `cooling_rate` is outside `(0, 1]`.
 
-`clear()` resets the operator weights and the temperature; the descent's
-instance-derived candidate lists survive it, since they depend on nothing else.
+Everything else is a builder with a published default, so `new` stays at three
+arguments.
+
+| Builder | Sets | Default |
+|---|---|---|
+| `with_local_repair(Box<dyn LocalRepair<P>>)` | the anchored post-repair local search | none |
+| `with_scoring(best, better, accept)` | the rewards an operator pair earns | `4.0 / 2.0 / 1.0` |
+| `with_adaptation(segment_len, reaction)` | iterations per scoring segment, and how much of its average blends into the weights | `100` / `0.1` |
+| `with_max_removal(n)` | ceiling on the per-iteration removal count | `50` |
+
+Only the ratios between the three rewards matter, since the weights are a
+convex blend of segment averages.
+
+`clear()` resets the operator weights and the temperature but keeps what the
+builders set. A `LocalRepair`'s own instance-derived caches, such as VRP's
+candidate lists, are its own to keep or drop.
 
 ## Benchmark config
 

@@ -8,12 +8,15 @@
 mod adjacency;
 mod crossover;
 mod neighbor;
+pub(crate) mod ops;
 mod problem;
+mod ruin;
 mod split;
 
 pub use crossover::VrpOrderCrossover;
 pub use neighbor::{VrpRelocateNeighbor, VrpSwapNeighbor, VrpTwoOptNeighbor};
 pub use problem::{VRP_DIST_MATRIX_MAX_N, Vrp, VrpSolution};
+pub use ruin::{AnchoredRouteDescent, VrpPartial};
 pub use split::split_giant_tour;
 
 /// The capacity overflow of a route load, shared with the VRP heuristics so the

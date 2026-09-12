@@ -1,5 +1,6 @@
 //! heuristic module provides various heuristic algorithms for combinatorial optimization problems.
 
+mod alns;
 mod beam_search;
 mod crossover;
 mod genetic_algorithm;
@@ -15,6 +16,7 @@ mod specific;
 mod tabu_search;
 mod variable_neighborhood_search;
 
+pub use alns::{Alns, DestroyOp, RepairOp};
 pub use beam_search::BeamSearch;
 pub use crossover::SubProblemBasedCrossover;
 pub use genetic_algorithm::{GeneticAlgorithm, ParentSelection};
@@ -26,7 +28,6 @@ pub use reinforcement_learning::{RewardShaping, RlSearch};
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
-pub use specific::AdaptiveLargeNeighborhoodSearchForVrp;
 pub use specific::BreakoutLocalSearchForMaxCut;
 pub use specific::HybridGeneticSearchForVrp;
 pub use specific::LinKernighanHelsgaunForTsp;

@@ -12,8 +12,5 @@ pub use lkh_for_tsp::LinKernighanHelsgaun as LinKernighanHelsgaunForTsp;
 pub use max_cut::{
     BreakoutLocalSearch as BreakoutLocalSearchForMaxCut, PerturbationType as MaxCutPerturbation,
 };
-pub use vrp::{
-    AdaptiveLargeNeighborhoodSearch as AdaptiveLargeNeighborhoodSearchForVrp,
-    HybridGeneticSearch as HybridGeneticSearchForVrp,
-};
+pub use vrp::HybridGeneticSearch as HybridGeneticSearchForVrp;
 pub use walksat_for_sat::WalkSat as WalkSatForSat;
