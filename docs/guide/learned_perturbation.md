@@ -7,21 +7,21 @@ round as two halves, so a controller of your own can act at the point between
 them:
 
 ```rust
-let mut bls = BreakoutLocalSearchForMaxCut::externally_driven(
+let mut bls = externally_driven_bls_for_max_cut(
     StopCondition::iterations(100_000),
     /* tabu_tenure = */ (15, 300),
 );
 
 bls.descend(&mut state)?;                                   // greedy descent
 let (kind, l) = my_policy.choose(&state);                   // your rule
-bls.kick(&mut state, kind, l)?;                             // perturbation + update_best
+bls.kick(&mut state, kind.into(), l)?;                             // perturbation + update_best
 ```
 
 `descend` and `kick` share the tabu memory of the `SearchState`.
 The prohibitions which the descent writes are the ones the weak perturbations must not
 undo.
 
-`externally_driven` takes `tabu_tenure` literally, unlike
+`externally_driven_bls_for_max_cut` takes `tabu_tenure` literally, unlike
 [`new`](../heuristics/breakout_local_search.md#benchmark-config), which reads
 the same range as the paper's `γ` and forbids for `2γ`. The doubling belongs to
 the paper's schedule, which an external controller replaces.

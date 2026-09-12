@@ -67,7 +67,7 @@ struct RlBreakoutLocalSearch {
     /// The BLS this controller drives: it owns the descent, the perturbation
     /// operators and the tabu memory they share, and is stepped one half-round at a
     /// time so the bandit can decide in between.
-    bls: BreakoutLocalSearchForMaxCut,
+    bls: ExternallyDrivenBlsForMaxCut,
     bandit: SoftmaxBandit,
     t: u64,
     l0: u64,
@@ -117,10 +117,7 @@ impl RlBreakoutLocalSearch {
             // `BreakoutLocalSearchForMaxCut::new` applies reproduces the
             // paper's `gamma`, which belongs to the schedule this controller
             // replaces.
-            bls: BreakoutLocalSearchForMaxCut::externally_driven(
-                stop_condition.clone(),
-                tabu_tenure,
-            ),
+            bls: externally_driven_bls_for_max_cut(stop_condition.clone(), tabu_tenure),
             stop_condition,
             bandit,
             t,
@@ -206,7 +203,9 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
         self.pending = None;
         self.reward_scale = 0.0;
         self.reward_ema = 0.0;
-        self.bls.clear();
+        // The inner BLS has nothing to reset. It carries no schedule (that is
+        // what this controller replaces) and the prohibitions live on the
+        // state, which a sub-run clone starts empty.
         // Bandit weights and baseline are intentionally preserved across episodes.
     }
 
@@ -259,7 +258,7 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
 
         // 5. The second half of the round: BLS applies the kick against the
         //    same prohibitions its descent wrote, and updates best once.
-        self.bls.kick(state, ptype, l)
+        self.bls.kick(state, ptype.into(), l)
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -274,7 +273,7 @@ fn main() -> Result<(), OptError> {
 
     // Baseline: BLS with Benlic & Hao's schedule. Its `tabu_tenure` is the
     // paper's gamma, so it prohibits for twice this range.
-    let mut bls = BreakoutLocalSearchForMaxCut::new(
+    let mut bls = breakout_local_search_for_max_cut(
         StopCondition::iterations(iterations),
         (15, 300),
         1_000,

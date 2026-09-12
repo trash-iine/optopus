@@ -10,6 +10,7 @@
 //! flip is a [`TabuSearch`](crate::heuristic::TabuSearch).
 
 use crate::error::OptError;
+use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::SearchState;
@@ -81,6 +82,40 @@ pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(
         state.apply_move_only(&swap)?;
     }
     Ok(())
+}
+
+/// [`best_swap`] as a one-step heuristic, so Breakout Local Search can hold it
+/// in the same bank as the two generic kicks.
+///
+/// One `run_once` is one swap, two flips and two iterations, which is what the
+/// perturbation length counts.
+pub(crate) struct BestSwap {
+    stop_condition: StopCondition,
+    tabu_tenure: (u64, u64),
+}
+
+impl BestSwap {
+    pub(crate) fn new(tabu_tenure: (u64, u64)) -> Self {
+        Self {
+            // Never consulted: BLS steps this with `run_once` for exactly the
+            // perturbation length.
+            stop_condition: StopCondition::iterations(u64::MAX),
+            tabu_tenure,
+        }
+    }
+}
+
+impl Heuristic<MaxCut> for BestSwap {
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
+        // As `TabuSearch` does: this operator reads and writes the tabu memory,
+        // so it turns recording on itself rather than trusting the caller.
+        state.start_record_tabu(self.tabu_tenure);
+        best_swap(1, state)
+    }
+
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
+    }
 }
 
 #[cfg(test)]

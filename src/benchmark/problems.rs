@@ -9,8 +9,8 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    Alns, BreakoutLocalSearchForMaxCut, Heuristic, HybridGeneticSearchForVrp,
-    LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover, WalkSatForSat,
+    Alns, Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition,
+    SubProblemBasedCrossover, WalkSatForSat, breakout_local_search_for_max_cut,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -209,7 +209,7 @@ impl ConfigurableProblem for MaxCut {
                 p0,
                 q,
                 ..
-            } => Ok(Box::new(BreakoutLocalSearchForMaxCut::new(
+            } => Ok(Box::new(breakout_local_search_for_max_cut(
                 cond,
                 *tabu_tenure,
                 *t,
@@ -232,7 +232,7 @@ impl ConfigurableProblem for MaxCut {
             // sub-problem shrinks as the population converges, so a bounded
             // BLS is enough to solve it well.
             "SubProblem" => Ok(Box::new(SubProblemBasedCrossover {
-                sub_heuristic: Box::new(BreakoutLocalSearchForMaxCut::new(
+                sub_heuristic: Box::new(breakout_local_search_for_max_cut(
                     StopCondition::iterations(50_000).with_failed_updates(10_000),
                     (3, 50),
                     1_000,
