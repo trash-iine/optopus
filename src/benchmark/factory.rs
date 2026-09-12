@@ -365,6 +365,8 @@ where
             crossover_kind,
             parent_selection,
             parent_top_k,
+            n_elite,
+            n_closest,
             ..
         } => {
             if steps.is_empty() || steps.len() > 2 {
@@ -399,21 +401,43 @@ where
                     }
                     ParentSelection::DistantTopK { top_k }
                 }
+                "BiasedFitness" => {
+                    // Vidal's nbElite and nbClose.
+                    let n_elite = n_elite.unwrap_or(4);
+                    let n_closest = n_closest.unwrap_or(5);
+                    if n_elite == 0 || n_closest == 0 {
+                        return Err(OptError::Config(
+                            "'n_elite' and 'n_closest' must be at least 1".to_string(),
+                        ));
+                    }
+                    // The diversity half is weighted by `1 - n_elite / N`, so a
+                    // population this small ranks on cost alone and the
+                    // strategy silently becomes the one it replaces.
+                    if n_elite >= *population_size {
+                        return Err(OptError::Config(format!(
+                            "'n_elite' ({n_elite}) must be below 'population_size' ({population_size}), \
+                             or the diversity half of biased fitness is weighted to zero"
+                        )));
+                    }
+                    ParentSelection::BiasedFitness { n_elite, n_closest }
+                }
                 other => {
                     return Err(OptError::Config(format!(
-                        "Unknown parent_selection '{other}' (expected 'Tournament' or 'DistantTopK')"
+                        "Unknown parent_selection '{other}' (expected 'Tournament', 'DistantTopK' or 'BiasedFitness')"
                     )));
                 }
             };
 
-            let ga = GeneticAlgorithm::new_with_init(
+            let mut ga = GeneticAlgorithm::new(
                 cond,
                 *population_size,
                 crossover,
                 mutation,
-                init_improvement,
-            )
-            .with_parent_selection(parent_selection);
+                parent_selection,
+            );
+            if let Some(op) = init_improvement {
+                ga = ga.with_init_improvement(op);
+            }
             Ok(Box::new(ga))
         }
         HeuristicConfig::BreakoutLocalSearch { .. }
@@ -597,6 +621,43 @@ mod factory_tests {
         assert!(err.to_string().contains("MaxCut"), "{err}");
     }
 
+    /// Biased fitness weights its diversity half by `1 - n_elite / N`, so a
+    /// population of `n_elite` or fewer ranks on cost alone and the strategy
+    /// silently becomes the one it replaces. The factory refuses it instead.
+    #[test]
+    fn biased_fitness_rejects_an_elite_count_that_zeroes_the_diversity_half() {
+        let ga =
+            |population_size: usize, n_elite: Option<usize>| HeuristicConfig::GeneticAlgorithm {
+                population_size,
+                steps: vec![HeuristicConfig::LocalSearch {
+                    neighbor: NeighborKind::Flip,
+                    stop_condition: StopConditionConfig::default(),
+                }],
+                crossover_kind: None,
+                parent_selection: Some("BiasedFitness".to_string()),
+                parent_top_k: None,
+                n_elite,
+                n_closest: None,
+                stop_condition: StopConditionConfig::default(),
+            };
+
+        // The default `n_elite` of 4 needs a population above it.
+        try_build(&ProblemKind::MaxCut, &ga(10, None)).expect("a roomy population builds");
+        let err = try_build(&ProblemKind::MaxCut, &ga(4, None))
+            .expect_err("population_size 4 leaves the diversity half weighted to zero");
+        assert!(err.to_string().contains("n_elite"), "{err}");
+
+        // And an explicit one is checked against the same population.
+        try_build(&ProblemKind::MaxCut, &ga(4, Some(3))).expect("3 < 4 builds");
+        let err = try_build(&ProblemKind::MaxCut, &ga(4, Some(4)))
+            .expect_err("n_elite equal to the population is rejected");
+        assert!(err.to_string().contains("n_elite"), "{err}");
+
+        let err = try_build(&ProblemKind::MaxCut, &ga(10, Some(0)))
+            .expect_err("a zero elite count is rejected");
+        assert!(err.to_string().contains("at least 1"), "{err}");
+    }
+
     #[test]
     fn genetic_algorithm_uses_problem_specific_crossover_defaults() {
         let ga = |crossover_kind: Option<String>| HeuristicConfig::GeneticAlgorithm {
@@ -608,6 +669,8 @@ mod factory_tests {
             crossover_kind,
             parent_selection: None,
             parent_top_k: None,
+            n_elite: None,
+            n_closest: None,
             stop_condition: StopConditionConfig::default(),
         };
         // TSP defaults to Order crossover.
@@ -628,6 +691,8 @@ mod factory_tests {
             crossover_kind,
             parent_selection: None,
             parent_top_k: None,
+            n_elite: None,
+            n_closest: None,
             stop_condition: StopConditionConfig::default(),
         };
         try_build(&ProblemKind::MaxCut, &ga(Some("SubProblem".to_string())))

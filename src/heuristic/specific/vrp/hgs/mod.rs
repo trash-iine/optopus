@@ -183,8 +183,8 @@ impl HybridGeneticSearch {
             granularity,
             target_feasible,
             restart_generations,
-            feasible: Subpopulation::new(),
-            infeasible: Subpopulation::new(),
+            feasible: Subpopulation::new(1.0),
+            infeasible: Subpopulation::new(1.0),
             descent: Descent::new(),
             penalty_capacity: 1.0,
             initial_penalty: 1.0,
@@ -275,7 +275,6 @@ impl HybridGeneticSearch {
 
     /// Files an evaluated child into its sub-population, culling if it overflows.
     fn absorb(&mut self, prob: &Vrp, child: RouteState) {
-        let penalty = self.penalty_capacity;
         let capacity = self.min_population_size + self.generation_size;
         let target = self.min_population_size;
         let (distance, excess) = (child.distance, child.excess);
@@ -286,9 +285,9 @@ impl HybridGeneticSearch {
         } else {
             &mut self.infeasible
         };
-        pool.push(individual, penalty);
+        pool.push(individual);
         if pool.len() > capacity {
-            pool.trim_to(target, penalty);
+            pool.trim_to(target);
         }
     }
 
@@ -319,9 +318,7 @@ impl HybridGeneticSearch {
 
     /// The best feasible individual, or the best infeasible one if none exists.
     fn best_individual(&self) -> Option<&Individual> {
-        self.feasible
-            .best(self.penalty_capacity)
-            .or_else(|| self.infeasible.best(self.penalty_capacity))
+        self.feasible.best().or_else(|| self.infeasible.best())
     }
 
     /// Copies the population's best into the search state.
@@ -342,26 +339,37 @@ impl HybridGeneticSearch {
         }
     }
 
+    /// The one place the capacity penalty is written.
+    ///
+    /// Both sub-populations rank through it, so moving it without telling them
+    /// would leave the order reflecting a penalty the search no longer uses.
+    /// Routing every write here is what makes that unwritable. The feasible
+    /// pool's costs do not actually move, its members having no excess, but it
+    /// is told anyway: an exception here is the next thing to get wrong.
+    fn set_penalty(&mut self, penalty: f64) {
+        self.penalty_capacity = penalty;
+        self.feasible.set_cost(penalty);
+        self.infeasible.set_cost(penalty);
+    }
+
     /// Steers the capacity penalty toward the target feasible share.
     fn maybe_update_penalty(&mut self) {
         if self.recent_total < PENALTY_UPDATE_PERIOD {
             return;
         }
         let ratio = self.recent_feasible as f64 / self.recent_total as f64;
+        let mut penalty = self.penalty_capacity;
         if ratio < self.target_feasible - FEASIBILITY_TOLERANCE {
-            self.penalty_capacity *= PENALTY_INCREASE;
+            penalty *= PENALTY_INCREASE;
         } else if ratio > self.target_feasible + FEASIBILITY_TOLERANCE {
-            self.penalty_capacity *= PENALTY_DECREASE;
+            penalty *= PENALTY_DECREASE;
         }
-        self.penalty_capacity = self.penalty_capacity.clamp(
-            self.initial_penalty * PENALTY_MIN_FACTOR,
-            self.initial_penalty * PENALTY_MAX_FACTOR,
-        );
         self.recent_total = 0;
         self.recent_feasible = 0;
-        // Infeasible individuals are ranked through the penalty, so their
-        // fitness is stale the moment it changes.
-        self.infeasible.refresh_fitness(self.penalty_capacity);
+        self.set_penalty(penalty.clamp(
+            self.initial_penalty * PENALTY_MIN_FACTOR,
+            self.initial_penalty * PENALTY_MAX_FACTOR,
+        ));
     }
 
     /// Wipes the population after a long stall, keeping `state.best_solution`.
@@ -374,7 +382,7 @@ impl HybridGeneticSearch {
         }
         self.feasible.clear();
         self.infeasible.clear();
-        self.penalty_capacity = self.initial_penalty;
+        self.set_penalty(self.initial_penalty);
         self.generations_without_improvement = 0;
         self.best_cost = f64::INFINITY;
         // A restart must not re-seed from the incumbent, or it lands right back
@@ -392,7 +400,7 @@ impl Heuristic<Vrp> for HybridGeneticSearch {
         self.generations_without_improvement = 0;
         self.best_cost = f64::INFINITY;
         self.warm_started = false;
-        self.penalty_capacity = self.initial_penalty;
+        self.set_penalty(self.initial_penalty);
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -405,7 +413,7 @@ impl Heuristic<Vrp> for HybridGeneticSearch {
 
         if self.feasible.is_empty() && self.infeasible.is_empty() {
             self.initial_penalty = Self::scale_free_penalty(prob);
-            self.penalty_capacity = self.initial_penalty;
+            self.set_penalty(self.initial_penalty);
             self.initialize_population(state);
             return Ok(());
         }

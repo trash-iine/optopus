@@ -29,6 +29,7 @@ use super::problem::{MaxCut, MaxCutSolution};
 ///     Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
 ///         StopCondition::failed_updates(100),
 ///     )),
+///     ParentSelection::Tournament,
 /// );
 /// let mut state = SearchState::new(&mc);
 /// ga.run(&mut state).unwrap();
