@@ -9,7 +9,7 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    AdaptiveLargeNeighborhoodSearchForVrp, BreakoutLocalSearchForMaxCut, Heuristic,
+    AdaptiveLargeNeighborhoodSearch, BreakoutLocalSearchForMaxCut, Heuristic,
     HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
     WalkSatForSat,
 };
@@ -24,8 +24,8 @@ use crate::problem::{
     sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
     tsp_2d::{TspRelocateNeighbor, TspSolution, TspTwoOptNeighbor, TspWithCoordinates},
     vrp::{
-        Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution, VrpSwapNeighbor,
-        VrpTwoOptNeighbor,
+        AnchoredRouteDescent, Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution,
+        VrpSwapNeighbor, VrpTwoOptNeighbor,
     },
 };
 use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
@@ -408,11 +408,14 @@ impl ConfigurableProblem for Vrp {
                 removal_fraction,
                 cooling_rate,
                 ..
-            } => Ok(Box::new(AdaptiveLargeNeighborhoodSearchForVrp::new(
-                cond,
-                removal_fraction.unwrap_or(0.15),
-                cooling_rate.unwrap_or(0.9995),
-            ))),
+            } => Ok(Box::new(
+                AdaptiveLargeNeighborhoodSearch::<Vrp>::new(
+                    cond,
+                    removal_fraction.unwrap_or(0.15),
+                    cooling_rate.unwrap_or(0.9995),
+                )
+                .with_local_repair(Box::new(AnchoredRouteDescent::new())),
+            )),
             HeuristicConfig::HybridGeneticSearch {
                 min_population_size,
                 generation_size,
