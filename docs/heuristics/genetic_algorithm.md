@@ -16,7 +16,7 @@ use optopus::prelude::*;
 let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&mc);
 
-let mut ga = GeneticAlgorithm::new_with_init(
+let mut ga = GeneticAlgorithm::new(
     StopCondition::iterations(10_000),
     /* population_size  = */ 50,
     SubProblemBasedCrossover {
@@ -29,10 +29,11 @@ let mut ga = GeneticAlgorithm::new_with_init(
         (5, 10),
         None,
     )),
-    /* init_improvement = */ Some(Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
-        StopCondition::failed_updates(1),
-    ))),
-);
+    ParentSelection::Tournament,
+)
+.with_init_improvement(Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+    StopCondition::failed_updates(1),
+)));
 ga.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
@@ -54,6 +55,7 @@ GeneticAlgorithm::<P, C>::new(
     population_size: usize,
     crossover: C,
     mutation: Box<dyn Heuristic<P>>,
+    parent_selection: ParentSelection,
 ) -> Self
 ```
 
@@ -63,36 +65,50 @@ even when using `Tournament` selection because the type bound is on the
 
 Panics if `population_size < 2`.
 
-## Constructor with HEA-style init
+## HEA-style init
 
 ```rust
-GeneticAlgorithm::<P, C>::new_with_init(
-    stop_condition: StopCondition,
-    population_size: usize,
-    crossover: C,
-    mutation: Box<dyn Heuristic<P>>,
-    init_improvement: Option<Box<dyn Heuristic<P>>>,
-) -> Self
+.with_init_improvement(op: Box<dyn Heuristic<P>>)
 ```
 
-When `init_improvement = Some(op)`, every random initial individual is also
-passed through `op` (using the sub-run clone/merge pattern). Pair this with a
-`TabuSearch` mutation operator to reproduce the Galinier-Hao Hybrid
-Evolutionary Algorithm (HEA).
+Every random initial individual is also passed through `op`, using the sub-run
+clone/merge pattern. Pair this with a `TabuSearch` mutation operator to
+reproduce the Galinier-Hao Hybrid Evolutionary Algorithm (HEA). The population
+is not built until the first `run_once`, so this may be set at any point before
+then.
 
 `clear()` drops the population and the cached `best_idx`; the population is
 re-seeded on the first `run_once` after a `run`.
 
 ## Parent selection
 
-Builder method `with_parent_selection(strategy)` switches between:
+The last constructor argument, one of:
 
 ```rust
 pub enum ParentSelection {
-    Tournament,                          // default, two binary tournaments
+    Tournament,                          // two binary tournaments, the config default
     DistantTopK { top_k: usize },        // pick A randomly, B from top-k by distance
+    BiasedFitness { n_elite: usize, n_closest: usize },  // rank by cost and diversity
 }
 ```
+
+`BiasedFitness` ranks the population by Vidal's blend of cost rank and
+diversity rank, the same scheme
+[HybridGeneticSearch](hgs.md) uses, and runs the binary tournament on that rank.
+It changes survivor selection as well, trimming by the same rank with clones
+evicted first. The two halves go together, since ranking parents by diversity
+while evicting on cost alone lets the population converge one eviction at a
+time. It needs `Evaluate` on the solution, which every problem here implements.
+
+`n_closest` is how many nearest members are averaged into a member's diversity
+contribution, Vidal's `nbClose`. `n_elite` is how many members the cost rank
+alone keeps alive, his `nbElite`, and it enters the blend as `1 - n_elite / N`,
+so **a population of `n_elite` or fewer ranks on cost alone**. The diversity
+half is multiplied by zero and the strategy becomes the cost-only selection it
+exists to replace. The benchmark refuses a config where `n_elite >=
+population_size` for that reason. From Rust the same combination is legal and
+silently degenerate. The enum variant carries both, so it has no default. The
+config falls back to `4` and `5`.
 
 `DistantTopK` requires `P::Solution: Distance` and promotes diversity by
 preferring distant parents.
@@ -146,10 +162,12 @@ Implemented by MaxCut, QUBO, SAT, Vertex Cover, and Formula.
 ```toml
 [[heuristics]]
 kind = "GeneticAlgorithm"
-population_size = 20         # required; must be >= 2
-crossover_kind = "Uniform"   # optional; default is per-problem (see below)
-parent_selection = "Tournament"  # optional; Tournament (default) | DistantTopK
+population_size = 20         # required, at least 2
+crossover_kind = "Uniform"   # optional, default is per-problem (see below)
+parent_selection = "Tournament"  # optional, Tournament (default) | DistantTopK | BiasedFitness
 parent_top_k = 5             # required when parent_selection = "DistantTopK"
+n_elite = 4                  # optional (default shown), BiasedFitness only, below population_size
+n_closest = 5                # optional (default shown), BiasedFitness only
 [heuristics.stop_condition]
 max_duration_secs = 30.0
 
@@ -181,3 +199,6 @@ internal bounded BLS (see
   Learning*. Addison-Wesley, 1989.
 - Galinier, P. and Hao, J.-K. "Hybrid Evolutionary Algorithms for Graph
   Coloring." Journal of Combinatorial Optimization, 3(4), 379-397, 1999.
+- Vidal, T. et al. "A Hybrid Genetic Algorithm for Multidepot and Periodic
+  Vehicle Routing Problems." *Operations Research*, 60(3), 611-624, 2012.
+  (Biased fitness.)
