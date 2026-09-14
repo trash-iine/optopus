@@ -8,8 +8,7 @@ use super::problems::{BenchmarkProblem, BenchmarkSolution, ProblemVisitor, with_
 use super::report::{BenchmarkReport, InstanceHeuristicResult, SingleRunResult, compute_summary};
 use crate::error::OptError;
 use crate::heuristic::Heuristic;
-use crate::search_state::{Distance, SearchState};
-use crate::trait_defs::Evaluate;
+use crate::search_state::{Distance, Evaluate, SearchState};
 
 // ---------------------------------------------------------------------------
 // Benchmark runner
