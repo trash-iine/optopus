@@ -17,12 +17,12 @@ pub use crate::search_state::{SearchState, SearchStateCloneType, TrajectoryPoint
 
 // Heuristics
 pub use crate::heuristic::{
-    AdaptiveLargeNeighborhoodSearchForVrp, BangBangSimulatedAnnealing, BeamSearch,
+    AdaptiveLargeNeighborhoodSearch, BangBangSimulatedAnnealing, BeamSearch,
     BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic, HybridGeneticSearchForVrp, Iterated,
     LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp, LocalSearch, MaxCutPerturbation,
     ParentSelection, RandomWalk, ReinforcementLearningSearch, Restart, RewardShaping, Sequential,
     SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch,
-    VariableNeighborhoodSearch, WalkSatForSat, boltzmann_accept,
+    VariableNeighborhoodSearch, WalkSatForSat, alns_for_vrp, boltzmann_accept,
 };
 
 // Traits
