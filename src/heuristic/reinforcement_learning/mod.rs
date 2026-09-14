@@ -1,6 +1,6 @@
 //! Reinforcement learning heuristic for combinatorial optimization.
 //!
-//! [`RlSearch`] uses a learned softmax policy over move features to select
+//! [`ReinforcementLearningSearch`] uses a learned softmax policy over move features to select
 //! which neighborhood move to apply at each step. The policy is trained online
 //! via the REINFORCE algorithm with baseline subtraction.
 //!
@@ -9,7 +9,7 @@
 //! ```rust,ignore
 //! use optopus::prelude::*;
 //!
-//! let rl = RlSearch::<MaxCutFlipNeighbor>::new(
+//! let rl = ReinforcementLearningSearch::<MaxCutFlipNeighbor>::new(
 //!     StopCondition::failed_updates(1000),
 //!     0.01,   // learning_rate
 //!     1.0,    // softmax_temperature
@@ -63,7 +63,7 @@ pub enum RewardShaping {
 /// - Williams, R. J. "Simple Statistical Gradient-Following Algorithms for
 ///   Connectionist Reinforcement Learning." Machine Learning, 8(3-4), 229-256, 1992.
 ///   [DOI](https://doi.org/10.1007/BF00992696)
-pub struct RlSearch<N> {
+pub struct ReinforcementLearningSearch<N> {
     pub stop_condition: StopCondition,
     pub policy: LinearPolicy,
     pub learning_rate: f64,
@@ -89,7 +89,7 @@ pub struct RlSearch<N> {
     buf_features: Vec<[f64; NUM_FEATURES]>,
 }
 
-impl<N> RlSearch<N> {
+impl<N> ReinforcementLearningSearch<N> {
     /// # Panics
     ///
     /// Panics if `learning_rate` is negative, `softmax_temperature` is not
@@ -164,7 +164,7 @@ fn softmax_in_place(scores: &mut [f64]) {
     }
 }
 
-impl<P, N> Heuristic<P> for RlSearch<N>
+impl<P, N> Heuristic<P> for ReinforcementLearningSearch<N>
 where
     P: ProblemTrait,
     N: MoveToNeighbor<P> + Evaluate + Clone,
@@ -369,7 +369,7 @@ mod tests {
 
     #[test]
     fn online_update_moves_weights() {
-        let mut rl = RlSearch::<()>::new(
+        let mut rl = ReinforcementLearningSearch::<()>::new(
             StopCondition::iterations(100),
             0.1,
             1.0,
@@ -404,7 +404,7 @@ mod tests {
 
     #[test]
     fn ledger_improvement_ratio_resets_on_clear() {
-        let mut rl = RlSearch::<()>::new(
+        let mut rl = ReinforcementLearningSearch::<()>::new(
             StopCondition::iterations(100),
             0.1,
             1.0,
@@ -420,13 +420,13 @@ mod tests {
         let ratio = -rl.cum_worsening / rl.cum_abs_worsening.max(EPSILON);
         assert!((ratio - 0.5).abs() < 1e-10);
 
-        <RlSearch<()> as Heuristic<DummyProblem>>::clear(&mut rl);
+        <ReinforcementLearningSearch<()> as Heuristic<DummyProblem>>::clear(&mut rl);
         assert_eq!(rl.cum_worsening, 0.0);
         assert_eq!(rl.cum_abs_worsening, 0.0);
     }
 
     /// Minimal problem/neighbor pair so `clear` (a `Heuristic` method) can be
-    /// called on `RlSearch<()>` in tests.
+    /// called on `ReinforcementLearningSearch<()>` in tests.
     struct DummyProblem;
     #[derive(Clone)]
     struct DummySolution;

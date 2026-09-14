@@ -89,11 +89,11 @@ nav:
       - Tabu Search: heuristics/tabu_search.md
       - Random Walk: heuristics/random_walk.md
       - Beam Search: heuristics/beam_search.md
-      - RL Search: heuristics/rl_search.md
+      - Reinforcement Learning Search: heuristics/rl_search.md
       - Genetic Algorithm: heuristics/genetic_algorithm.md
+      - Population Annealing: heuristics/population_annealing.md
       - Meta-heuristics: heuristics/meta.md
       - Breakout Local Search (MaxCut): heuristics/breakout_local_search.md
-      - Population Annealing (MaxCut): heuristics/population_annealing.md
       - Lin-Kernighan-Helsgaun (TSP): heuristics/lkh.md
       - WalkSAT (MaxSAT): heuristics/walksat.md
       - Hybrid Genetic Search (CVRP): heuristics/hgs.md

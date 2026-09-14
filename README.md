@@ -55,7 +55,7 @@ file-based loading.
 | [Tabu Search](docs/heuristics/tabu_search.md) | `TabuSearch<N>` |
 | [Random Walk](docs/heuristics/random_walk.md) | `RandomWalk<N>` |
 | [Beam Search](docs/heuristics/beam_search.md) | `BeamSearch<P, N>` |
-| [RL Search](docs/heuristics/rl_search.md) | `RlSearch<N>` |
+| [Reinforcement Learning Search](docs/heuristics/rl_search.md) | `ReinforcementLearningSearch<N>` |
 | [Genetic Algorithm](docs/heuristics/genetic_algorithm.md) | `GeneticAlgorithm<P, C>` |
 | [Population Annealing](docs/heuristics/population_annealing.md) | `PopulationAnnealing<P, N>` |
 | [Sequential / Iterated / VNS / Restart](docs/heuristics/meta.md) | `Sequential<P>`, `Iterated<P>`, `VariableNeighborhoodSearch<P>`, `Restart<P>` |

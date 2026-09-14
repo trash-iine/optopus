@@ -44,7 +44,7 @@ impl Evaluable<f64> {
 ///
 /// - A **move** reports the change applying it would make. This is what
 ///   [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing),
-///   `LateAcceptanceHillClimbing` and `RlSearch` need.
+///   `LateAcceptanceHillClimbing` and `ReinforcementLearningSearch` need.
 /// - A **solution** reports its own objective. This is what a search that
 ///   computes with the objective needs rather than merely comparing them:
 ///   [`PopulationAnnealing`](crate::heuristic::PopulationAnnealing) weights a
