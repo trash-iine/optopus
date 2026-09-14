@@ -29,7 +29,7 @@ pub struct StepContext {
 }
 
 /// Streaming accumulator for the per-step worsening statistics consumed by
-/// [`StepContext`]. Allows callers (such as `RlSearch::run_once`) to feed
+/// [`StepContext`]. Allows callers (such as `ReinforcementLearningSearch::run_once`) to feed
 /// values one at a time during move enumeration without materializing a slice.
 pub struct StepStatsAccumulator {
     count: usize,
@@ -78,7 +78,7 @@ impl StepStatsAccumulator {
     /// - `iteration`, `start_iteration`, `best_iteration`: from SearchState.
     /// - `max_iteration_budget`: the configured max iterations (for normalization).
     /// - `improvement_ratio`: net episode improvement in `[-1, 1]`, as
-    ///   maintained by the caller (e.g. `RlSearch`'s applied-move ledger:
+    ///   maintained by the caller (e.g. `ReinforcementLearningSearch`'s applied-move ledger:
     ///   `-cum_worsening / max(cum_abs_worsening, ε)`).
     pub fn finalize(
         &self,

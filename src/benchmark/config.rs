@@ -107,7 +107,7 @@ pub enum HeuristicConfig {
         stop_condition: StopConditionConfig,
     },
     /// REINFORCE policy-gradient move selection.
-    RlSearch {
+    ReinforcementLearningSearch {
         neighbor: NeighborKind,
         /// Learning rate (0.0 = evaluation mode). Default: 0.01.
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -296,7 +296,7 @@ impl HeuristicConfig {
             Self::SimulatedAnnealing { .. } => "SimulatedAnnealing",
             Self::LateAcceptanceHillClimbing { .. } => "LateAcceptanceHillClimbing",
             Self::RandomWalk { .. } => "RandomWalk",
-            Self::RlSearch { .. } => "RlSearch",
+            Self::ReinforcementLearningSearch { .. } => "ReinforcementLearningSearch",
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
             Self::PopulationAnnealing { .. } => "PopulationAnnealing",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
@@ -319,7 +319,7 @@ impl HeuristicConfig {
             | Self::SimulatedAnnealing { neighbor, .. }
             | Self::LateAcceptanceHillClimbing { neighbor, .. }
             | Self::RandomWalk { neighbor, .. }
-            | Self::RlSearch { neighbor, .. }
+            | Self::ReinforcementLearningSearch { neighbor, .. }
             | Self::PopulationAnnealing { neighbor, .. } => Some(neighbor),
             _ => None,
         }
@@ -345,7 +345,7 @@ impl HeuristicConfig {
             | Self::SimulatedAnnealing { stop_condition, .. }
             | Self::LateAcceptanceHillClimbing { stop_condition, .. }
             | Self::RandomWalk { stop_condition, .. }
-            | Self::RlSearch { stop_condition, .. }
+            | Self::ReinforcementLearningSearch { stop_condition, .. }
             | Self::BreakoutLocalSearch { stop_condition, .. }
             | Self::PopulationAnnealing { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }

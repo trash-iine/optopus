@@ -83,7 +83,7 @@ src/
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── population_annealing.rs  PopulationAnnealing<P, N>
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
-│   ├── reinforcement_learning/  RlSearch<N>
+│   ├── reinforcement_learning/  ReinforcementLearningSearch<N>
 │   └── specific/             one directory per problem once it has several
 │       ├── max_cut/          bls.rs (BreakoutLocalSearch, also descend / kick /
 │       │                     externally_driven for examples/rl_bls.rs),
@@ -131,7 +131,7 @@ kinds fail at parse time.
 | `SimulatedAnnealing` | all | `initial_temperature`, `cooling_rate` | |
 | `LateAcceptanceHillClimbing` | all | `history_length` | |
 | `RandomWalk` | all | a `stop_condition` (an empty one never terminates) | |
-| `RlSearch` | all | | `learning_rate`, `softmax_temperature`, `reward_shaping`, `policy_weights`, `max_candidates` |
+| `ReinforcementLearningSearch` | all | | `learning_rate`, `softmax_temperature`, `reward_shaping`, `policy_weights`, `max_candidates` |
 | `BreakoutLocalSearch` | MaxCut | `tabu_tenure`, `t`, `l0`, `p0`, `q` | |
 | `PopulationAnnealing` | all | `neighbor`, `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `sweep_length` |
 | `LinKernighanHelsgaun` | TSP | | `num_neighbors`, `max_depth` |
@@ -144,7 +144,7 @@ kinds fail at parse time.
 | `Restart` | all | `steps[0]`, `restart_condition` | |
 | `GeneticAlgorithm` | all | `population_size` | `crossover_kind`, `parent_selection`, `parent_top_k`, `n_elite`, `n_closest` |
 
-`RlSearch` still parses `discount` and ignores it with a warning, since
+`ReinforcementLearningSearch` still parses `discount` and ignores it with a warning, since
 single-step REINFORCE has none.
 
 A `SingleRunResult` carries `best_objective`, `best_iteration`, timing, the

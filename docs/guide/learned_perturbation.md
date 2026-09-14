@@ -68,5 +68,5 @@ change it.
 the reward statistics) but preserves the bandit weights and baseline, so
 the policy keeps improving across [`Restart`](../heuristics/meta.md#restart) /
 [`Iterated`](../heuristics/meta.md#iterated) episodes. That is the same
-contract [`RlSearch`](../heuristics/rl_search.md) keeps, and the reason the
+contract [`ReinforcementLearningSearch`](../heuristics/rl_search.md) keeps, and the reason the
 weights are a field rather than a local.

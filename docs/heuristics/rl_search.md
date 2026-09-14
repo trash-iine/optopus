@@ -1,6 +1,6 @@
-# RlSearch
+# ReinforcementLearningSearch
 
-**API:** [`RlSearch`](../api/optopus/heuristic/reinforcement_learning/struct.RlSearch.html)
+**API:** [`ReinforcementLearningSearch`](../api/optopus/heuristic/reinforcement_learning/struct.ReinforcementLearningSearch.html)
 
 Online reinforcement learning over move features: a linear policy scores the
 candidate moves, one is sampled from the resulting softmax, and the policy is
@@ -14,7 +14,7 @@ use optopus::prelude::*;
 let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]));
 let mut state = SearchState::new(&mc);
 
-let mut rl = RlSearch::<MaxCutFlipNeighbor>::new(
+let mut rl = ReinforcementLearningSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(10_000),
     /* learning_rate       = */ 0.01,
     /* softmax_temperature = */ 1.0,
@@ -46,7 +46,7 @@ At each step:
 ## Constructor
 
 ```rust
-RlSearch::<N>::new(
+ReinforcementLearningSearch::<N>::new(
     stop_condition: StopCondition,
     learning_rate: f64,
     softmax_temperature: f64,
@@ -75,7 +75,7 @@ pre-trained weights.
 
 ```toml
 [[heuristics]]
-kind = "RlSearch"
+kind = "ReinforcementLearningSearch"
 neighbor = "Flip"            # required; the valid values are per-problem
 learning_rate = 0.01         # optional (default shown); 0.0 = evaluation mode
 softmax_temperature = 1.0    # optional (default shown)
@@ -102,13 +102,13 @@ pub enum RewardShaping {
 ## Multi-episode learning
 
 `clear()` resets per-episode state but preserves `policy.weights` and the
-running baseline. Wrap `RlSearch` in [`Restart`](meta.md#restart) or
+running baseline. Wrap `ReinforcementLearningSearch` in [`Restart`](meta.md#restart) or
 [`Iterated`](meta.md#iterated) to train across many episodes:
 
 ```rust
 use optopus::prelude::*;
 
-let rl = RlSearch::<MaxCutFlipNeighbor>::new(
+let rl = ReinforcementLearningSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::failed_updates(1_000),
     0.01, 1.0,
     RewardShaping::Normalized,

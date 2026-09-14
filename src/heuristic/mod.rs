@@ -22,7 +22,7 @@ pub use late_acceptance::LateAcceptanceHillClimbing;
 pub use local_search::LocalSearch;
 pub use population_annealing::PopulationAnnealing;
 pub use random_walk::RandomWalk;
-pub use reinforcement_learning::{RewardShaping, RlSearch};
+pub use reinforcement_learning::{ReinforcementLearningSearch, RewardShaping};
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};

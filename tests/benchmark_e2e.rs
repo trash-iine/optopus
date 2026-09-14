@@ -335,7 +335,7 @@ max_iteration = 300
     );
 }
 
-/// RlSearch consumes the RNG for reservoir sampling (`max_candidates`) and
+/// ReinforcementLearningSearch consumes the RNG for reservoir sampling (`max_candidates`) and
 /// softmax move sampling; this locks in the sampled-before-evaluation path.
 #[test]
 fn rl_search_is_bit_identical_across_reruns_with_seed() {
@@ -343,7 +343,7 @@ fn rl_search_is_bit_identical_across_reruns_with_seed() {
         "repro_rl",
         r#"
 [[heuristics]]
-kind = "RlSearch"
+kind = "ReinforcementLearningSearch"
 neighbor = "Flip"
 learning_rate = 0.05
 max_candidates = 4

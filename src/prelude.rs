@@ -20,9 +20,9 @@ pub use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearchForVrp, BangBangSimulatedAnnealing, BeamSearch,
     BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic, HybridGeneticSearchForVrp, Iterated,
     LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp, LocalSearch, MaxCutPerturbation,
-    ParentSelection, RandomWalk, Restart, RewardShaping, RlSearch, Sequential, SimulatedAnnealing,
-    StopCondition, SubProblemBasedCrossover, TabuSearch, VariableNeighborhoodSearch, WalkSatForSat,
-    boltzmann_accept,
+    ParentSelection, RandomWalk, ReinforcementLearningSearch, Restart, RewardShaping, Sequential,
+    SimulatedAnnealing, StopCondition, SubProblemBasedCrossover, TabuSearch,
+    VariableNeighborhoodSearch, WalkSatForSat, boltzmann_accept,
 };
 
 // Traits

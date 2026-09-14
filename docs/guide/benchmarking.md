@@ -49,7 +49,7 @@ algorithm's own page; this table is only the index.
 | [`SimulatedAnnealing`](../heuristics/simulated_annealing.md#benchmark-config) | all |
 | [`LateAcceptanceHillClimbing`](../heuristics/late_acceptance.md#benchmark-config) | all |
 | [`RandomWalk`](../heuristics/random_walk.md#benchmark-config) | all |
-| [`RlSearch`](../heuristics/rl_search.md#benchmark-config) | all |
+| [`ReinforcementLearningSearch`](../heuristics/rl_search.md#benchmark-config) | all |
 | [`PopulationAnnealing`](../heuristics/population_annealing.md#benchmark-config) | all |
 | [`Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart`](../heuristics/meta.md#benchmark-config) | all |
 | [`GeneticAlgorithm`](../heuristics/genetic_algorithm.md#benchmark-config) | all |

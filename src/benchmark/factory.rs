@@ -10,8 +10,9 @@ use super::problems::{BenchmarkProblem, BenchmarkSolution};
 use crate::error::OptError;
 use crate::heuristic::{
     GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
-    ParentSelection, PopulationAnnealing, RandomWalk, Restart, RewardShaping, RlSearch, Sequential,
-    SimulatedAnnealing, StopCondition, TabuSearch, VariableNeighborhoodSearch,
+    ParentSelection, PopulationAnnealing, RandomWalk, ReinforcementLearningSearch, Restart,
+    RewardShaping, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
+    VariableNeighborhoodSearch,
 };
 use crate::search_state::{Crossover, Distance, MoveToNeighbor, ProblemTrait};
 use crate::trait_defs::{EnabledTabu, Evaluate, Rankable};
@@ -148,7 +149,9 @@ where
                 )))
             }
             HeuristicConfig::RandomWalk { .. } => Ok(Box::new(RandomWalk::<N>::new(self.cond))),
-            HeuristicConfig::RlSearch { .. } => build_rl_search::<P, N>(self.config, self.cond),
+            HeuristicConfig::ReinforcementLearningSearch { .. } => {
+                build_rl_search::<P, N>(self.config, self.cond)
+            }
             HeuristicConfig::PopulationAnnealing { .. } => {
                 build_population_annealing::<P, N>(self.config, self.cond)
             }
@@ -160,7 +163,7 @@ where
 /// Builds a [`PopulationAnnealing`] from a `PopulationAnnealing` config.
 ///
 /// Shared by every problem that registers it, so the defaults and the range
-/// checks are written once, the way [`build_rl_search`] does for `RlSearch`.
+/// checks are written once, the way [`build_rl_search`] does for `ReinforcementLearningSearch`.
 ///
 /// # Errors
 ///
@@ -237,7 +240,7 @@ where
 {
     use crate::heuristic::reinforcement_learning::feature::NUM_FEATURES;
 
-    let HeuristicConfig::RlSearch {
+    let HeuristicConfig::ReinforcementLearningSearch {
         learning_rate,
         discount,
         softmax_temperature,
@@ -247,7 +250,7 @@ where
         ..
     } = config
     else {
-        unreachable!("build_rl_search called with a non-RlSearch config");
+        unreachable!("build_rl_search called with a non-ReinforcementLearningSearch config");
     };
 
     let reward = match reward_shaping.as_deref().unwrap_or("Normalized") {
@@ -263,7 +266,7 @@ where
 
     if discount.is_some() {
         tracing::warn!(
-            "'discount' is deprecated and ignored: RlSearch uses single-step \
+            "'discount' is deprecated and ignored: ReinforcementLearningSearch uses single-step \
              REINFORCE, which has no discount factor"
         );
     }
@@ -273,7 +276,7 @@ where
         ));
     }
 
-    let mut rl = RlSearch::<N>::new(
+    let mut rl = ReinforcementLearningSearch::<N>::new(
         cond,
         learning_rate.unwrap_or(0.01),
         softmax_temperature.unwrap_or(1.0),
@@ -451,7 +454,7 @@ where
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
         | HeuristicConfig::LateAcceptanceHillClimbing { neighbor, .. }
         | HeuristicConfig::RandomWalk { neighbor, .. }
-        | HeuristicConfig::RlSearch { neighbor, .. } => {
+        | HeuristicConfig::ReinforcementLearningSearch { neighbor, .. } => {
             P::with_neighbor(neighbor, BaseBuilder { config, cond })?
         }
     }
@@ -519,7 +522,7 @@ mod factory_tests {
                 neighbor: neighbor.clone(),
                 stop_condition: sc(),
             },
-            HeuristicConfig::RlSearch {
+            HeuristicConfig::ReinforcementLearningSearch {
                 neighbor,
                 learning_rate: None,
                 discount: None,

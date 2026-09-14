@@ -17,7 +17,7 @@ plugs straight in.
 | [TabuSearch](tabu_search.md) | `TabuSearch` | `MoveToNeighbor`, `Rankable`, `EnabledTabu` | Best non-tabu neighbor + aspiration. |
 | [RandomWalk](random_walk.md) | `RandomWalk` | `MoveToNeighbor`, `Rankable` | Uniform random move; useful as perturbation. |
 | [BeamSearch](beam_search.md) | (Rust API only) | `MoveToNeighbor`, `Rankable` | Maintains top-`k` candidates. |
-| [RlSearch](rl_search.md) | `RlSearch` | `MoveToNeighbor`, `Evaluate<f64>`, `Clone` | Online REINFORCE over move features. |
+| [ReinforcementLearningSearch](rl_search.md) | `ReinforcementLearningSearch` | `MoveToNeighbor`, `Evaluate<f64>`, `Clone` | Online REINFORCE over move features. |
 
 ## Meta
 
