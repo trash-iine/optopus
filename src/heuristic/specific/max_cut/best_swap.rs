@@ -10,12 +10,13 @@
 //! flip is a [`TabuSearch`](crate::heuristic::TabuSearch).
 
 use crate::error::OptError;
+use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::max_cut::MaxCutFlipNeighbor;
 use crate::problem::{MaxCut, MaxCutSwapNeighbor};
 use crate::search_state::SearchState;
 use crate::trait_defs::MoveToNeighbor;
 
-/// Applies `l` swap moves guided by the state's tabu memory (the paper's
+/// Applies one swap move guided by the state's tabu memory (the paper's
 /// weak swap).
 ///
 /// This is Benlic & Hao's set `A2`, the highest-gain move of the `M2`
@@ -28,70 +29,97 @@ use crate::trait_defs::MoveToNeighbor;
 ///
 /// Tracks a scalar best per side rather than collecting tied-best lists into
 /// Vecs. Among candidates of equal gain it keeps the first one the scan met.
-pub(crate) fn best_swap(l: u64, state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
-    for _ in 0..l {
-        let mut free_v0 = None;
-        let mut free_v1 = None;
-        let mut any_v0 = None;
-        let mut any_v1 = None;
+pub(crate) fn best_swap(state: &mut SearchState<'_, MaxCut>) -> Result<(), OptError> {
+    let mut free_v0 = None;
+    let mut free_v1 = None;
+    let mut any_v0 = None;
+    let mut any_v1 = None;
 
-        for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
-            // The comparisons below are `>` and not `>=`, so equal gains keep the
-            // lowest vertex index. Sampling ties uniformly was measured and lost;
-            // see decisions/0005.
-            let on_side0 = state.solution.x[neighbor.i];
+    for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
+        // The comparisons below are `>` and not `>=`, so equal gains keep the
+        // lowest vertex index. Sampling ties uniformly was measured and lost;
+        // see decisions/0005.
+        let on_side0 = state.solution.x[neighbor.i];
 
-            let any = if on_side0 { &mut any_v0 } else { &mut any_v1 };
-            if any.is_none_or(|best: MaxCutFlipNeighbor| neighbor.gain > best.gain) {
-                *any = Some(neighbor);
-            }
-
-            if state.tabu_allows(&neighbor) {
-                let free = if on_side0 { &mut free_v0 } else { &mut free_v1 };
-                if free.is_none_or(|best: MaxCutFlipNeighbor| neighbor.gain > best.gain) {
-                    *free = Some(neighbor);
-                }
-            }
+        let any = if on_side0 { &mut any_v0 } else { &mut any_v1 };
+        if any.is_none_or(|best: MaxCutFlipNeighbor| neighbor.gain > best.gain) {
+            *any = Some(neighbor);
         }
 
-        let (Some(any0), Some(any1)) = (any_v0, any_v1) else {
-            // One side is empty, so no swap exists. Two counter steps match
-            // the swap's `+2` accounting. Paper-undefined; see
-            // docs/heuristics/breakout_local_search.md.
-            state.progress_iteration();
-            state.progress_iteration();
-            continue;
-        };
-
-        // Aspiration is tested on the unrestricted best swap: that is the
-        // only way a tabu vertex may enter `A2`.
-        let aspiration = MaxCutSwapNeighbor::new(state.instance, &state.solution, any0.i, any1.i);
-        let swap = if state.is_neighbor_better_than_best(&aspiration) {
-            aspiration
-        } else {
-            // A side with no non-tabu vertex falls back to its best one,
-            // breaking tabu without aspiration. Paper-undefined and
-            // unreachable on the G-set; see
-            // docs/heuristics/breakout_local_search.md.
-            let i = free_v0.map_or(any0.i, |b| b.i);
-            let j = free_v1.map_or(any1.i, |b| b.i);
-            MaxCutSwapNeighbor::new(state.instance, &state.solution, i, j)
-        };
-
-        state.apply_move_only(&swap)?;
+        if state.tabu_allows(&neighbor) {
+            let free = if on_side0 { &mut free_v0 } else { &mut free_v1 };
+            if free.is_none_or(|best: MaxCutFlipNeighbor| neighbor.gain > best.gain) {
+                *free = Some(neighbor);
+            }
+        }
     }
-    Ok(())
+
+    let (Some(any0), Some(any1)) = (any_v0, any_v1) else {
+        // One side is empty, so no swap exists. Two counter steps match
+        // the swap's `+2` accounting. Paper-undefined; see
+        // docs/heuristics/breakout_local_search.md.
+        state.progress_iteration();
+        state.progress_iteration();
+        return Ok(());
+    };
+
+    // Aspiration is tested on the unrestricted best swap: that is the
+    // only way a tabu vertex may enter `A2`.
+    let aspiration = MaxCutSwapNeighbor::new(state.instance, &state.solution, any0.i, any1.i);
+    let swap = if state.is_neighbor_better_than_best(&aspiration) {
+        aspiration
+    } else {
+        // A side with no non-tabu vertex falls back to its best one,
+        // breaking tabu without aspiration. Paper-undefined and
+        // unreachable on the G-set; see
+        // docs/heuristics/breakout_local_search.md.
+        let i = free_v0.map_or(any0.i, |b| b.i);
+        let j = free_v1.map_or(any1.i, |b| b.i);
+        MaxCutSwapNeighbor::new(state.instance, &state.solution, i, j)
+    };
+
+    state.apply_move_only(&swap)
+}
+
+/// [`best_swap`] as a one-step heuristic, so Breakout Local Search can hold it
+/// in the same bank as the two generic kicks.
+///
+/// One `run_once` is one swap, two flips and two iterations, which is what the
+/// perturbation length counts.
+pub(crate) struct BestSwap {
+    stop_condition: StopCondition,
+    tabu_tenure: (u64, u64),
+}
+
+impl BestSwap {
+    pub(crate) fn new(tabu_tenure: (u64, u64)) -> Self {
+        Self {
+            // Never consulted: BLS steps this with `run_once` for exactly the
+            // perturbation length.
+            stop_condition: StopCondition::iterations(u64::MAX),
+            tabu_tenure,
+        }
+    }
+}
+
+impl Heuristic<MaxCut> for BestSwap {
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
+        // As `TabuSearch` does: this operator reads and writes the tabu memory,
+        // so it turns recording on itself rather than trusting the caller.
+        state.start_record_tabu(self.tabu_tenure);
+        best_swap(state)
+    }
+
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::error::OptError;
     use crate::heuristic::{Heuristic, LocalSearch, RandomWalk, StopCondition};
     use crate::problem::MaxCut;
     use crate::search_state::SearchState;
-
-    /// The shape every perturbation operator shares.
-    type Op = fn(u64, &mut SearchState<'_, MaxCut>) -> Result<(), OptError>;
 
     /// Prepares a state the way [`BreakoutLocalSearch`](super::bls::BreakoutLocalSearch)
     /// does before handing it to an operator: the tenure the records draw from,
@@ -119,26 +147,24 @@ mod tests {
         MaxCut::from_edges(edges)
     }
 
-    /// Property test: after hundreds of mixed perturbations of all three types,
-    /// the incrementally maintained gain vector and objective must still agree
-    /// with a from-scratch recomputation.
+    /// Property test: after hundreds of rounds mixing random flips, directed
+    /// swaps and a descent, the incrementally maintained gain vector and
+    /// objective must still agree with a from-scratch recomputation.
     ///
     /// Every move here updates `gain` in O(degree) rather than recomputing it,
-    /// and [`PopulationAnnealingForMaxCut`](crate::heuristic::PopulationAnnealingForMaxCut)
-    /// reads those gains to find its plateau, so a drift would be silent.
+    /// and the swap selects on those gains, so a drift would be silent.
     #[test]
     fn mixed_perturbations_keep_gains_consistent() {
         let mc = small_instance();
         let mut state = state_with_tabu(&mc, 7, (3, 15));
 
-        let schedule: [Op; 1] = [best_swap];
         for round in 0..60 {
             let budget = state.iterations_this_run() + 3;
             RandomWalk::<MaxCutFlipNeighbor>::new(StopCondition::iterations(budget))
                 .run(&mut state)
                 .unwrap();
-            for op in schedule {
-                op(3, &mut state).unwrap();
+            for _ in 0..3 {
+                best_swap(&mut state).unwrap();
             }
             LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(u64::MAX))
                 .run(&mut state)
@@ -170,7 +196,9 @@ mod tests {
 
         let side0 = |x: &[bool]| x.iter().filter(|&&b| b).count();
         let before = side0(&state.solution.x);
-        best_swap(4, &mut state).unwrap();
+        for _ in 0..4 {
+            best_swap(&mut state).unwrap();
+        }
         assert_eq!(side0(&state.solution.x), before);
     }
 
@@ -198,7 +226,7 @@ mod tests {
 
         let on_true = |x: &[bool]| x.iter().filter(|&&b| b).count();
         let before = on_true(&state.solution.x);
-        best_swap(1, &mut state).unwrap();
+        best_swap(&mut state).unwrap();
         assert_eq!(
             on_true(&state.solution.x),
             before,

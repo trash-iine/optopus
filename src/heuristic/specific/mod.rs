@@ -10,7 +10,9 @@ mod walksat_for_sat;
 
 pub use lkh_for_tsp::LinKernighanHelsgaun as LinKernighanHelsgaunForTsp;
 pub use max_cut::{
-    BreakoutLocalSearch as BreakoutLocalSearchForMaxCut, PerturbationType as MaxCutPerturbation,
+    BreakoutLocalSearchForMaxCut, ExternallyDrivenBlsForMaxCut,
+    PerturbationType as MaxCutPerturbation, breakout_local_search_for_max_cut,
+    externally_driven_bls_for_max_cut,
 };
 pub use vrp::HybridGeneticSearch as HybridGeneticSearchForVrp;
 pub use walksat_for_sat::WalkSat as WalkSatForSat;

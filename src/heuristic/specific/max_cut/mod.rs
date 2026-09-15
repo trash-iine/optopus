@@ -16,4 +16,7 @@
 mod best_swap;
 mod bls;
 
-pub use bls::{BreakoutLocalSearch, PerturbationType};
+pub use bls::{
+    BreakoutLocalSearchForMaxCut, ExternallyDrivenBlsForMaxCut, PerturbationType,
+    breakout_local_search_for_max_cut, externally_driven_bls_for_max_cut,
+};
