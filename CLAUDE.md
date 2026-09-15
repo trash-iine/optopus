@@ -64,6 +64,7 @@ src/
 │   ├── crossover.rs          Crossover, SubProblemExtractable
 │   ├── tabu.rs               EnabledTabu (object safe on purpose)
 │   ├── binary.rs             BinaryProblem
+│   ├── ruinable.rs           Ruinable, LocalRepair
 │   └── reduction.rs          ProblemReduction
 ├── common/                   shared data structures and helpers; put new shared code here
 │   ├── graph/                Graph (mod.rs), random and lattice generators (generator.rs),
@@ -72,6 +73,9 @@ src/
 │   │                         lift_binary_solution, lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips
 │   ├── tabu.rs               TabuKey (Var / Pair / Triple), TabuMemory
+│   ├── biased_fitness.rs     BiasedFitnessPopulation, binary_tournament
+│   ├── ruin_recreate.rs      the five destroy / repair operators over any Ruinable
+│   ├── adaptive_weights.rs   AdaptiveWeights, the roulette the operators are picked by
 │   ├── permutation.rs        order_crossover (OX)
 │   └── parse.rs              InstanceLines
 ├── heuristic/
@@ -82,6 +86,7 @@ src/
 │   ├── variable_neighborhood_search.rs
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── population_annealing.rs  PopulationAnnealing<P, N>
+│   ├── alns.rs               AdaptiveLargeNeighborhoodSearch<P: Ruinable>
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
 │   ├── reinforcement_learning/  ReinforcementLearningSearch<N>
 │   └── specific/             one directory per problem once it has several
@@ -89,15 +94,16 @@ src/
 │       │                     externally_driven for examples/rl_bls.rs),
 │       │                     best_swap.rs (the one operator with no generic
 │       │                     equivalent)
-│       ├── vrp/              ops/ (pricing fns, RouteState, granular.rs, Descent),
-│       │                     alns.rs, hgs/ (mod.rs driver, population.rs)
+│       ├── vrp/              hgs/ (mod.rs driver, population.rs)
 │       ├── lkh_for_tsp.rs
 │       └── walksat_for_sat.rs
 └── problem/                  each holds problem, solution, neighbors, crossover
     ├── max_cut/              + kernel.rs (MaxCutKernel, the one ProblemReduction),
     │                         planted.rs (PlantedMaxCut)
     ├── qubo/ sat/ tsp_2d/ vertex_cover/ job_shop_scheduling/
-    ├── vrp/                  + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency)
+    ├── vrp/                  + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
+    │                         ops/ (pricing fns, RouteState, granular.rs, Descent),
+    │                         ruin.rs (the Ruinable + LocalRepair impl)
     └── binary_optimization/  FormulaProblem, Expr
 ```
 
