@@ -189,8 +189,6 @@ pub struct GeneticAlgorithm<P: ProblemTrait, C> {
     /// cannot be changed apart.
     parent_selection: ParentSelection,
     population: Members<P::Solution>,
-    /// Index of the best solution in `population`. Tracked incrementally to avoid O(n) scans.
-    best_idx: Option<usize>,
 }
 
 impl<P, C> GeneticAlgorithm<P, C>
@@ -220,7 +218,6 @@ where
             init_improvement: None,
             parent_selection,
             population: Members::for_strategy(parent_selection),
-            best_idx: None,
         }
     }
 
@@ -263,13 +260,6 @@ where
             };
             self.admit(member);
         }
-
-        self.best_idx = self
-            .population
-            .iter()
-            .enumerate()
-            .max_by(|(_, a), (_, b)| crate::trait_defs::rank_cmp(*a, *b))
-            .map(|(i, _)| i);
         Ok(())
     }
 
@@ -368,59 +358,28 @@ where
     /// parents by diversity while evicting purely on cost would let the
     /// population converge anyway, one eviction at a time.
     ///
-    /// - `Plain`: replace the worst member, if `offspring` beats it. `best_idx`
-    ///   is maintained incrementally to avoid an O(n) scan in `run_once`.
+    /// - `Plain`: replace the worst member, if `offspring` beats it.
     /// - `Ranked`: admit unconditionally, then trim back to capacity by biased
     ///   fitness, which evicts clones first, so a newcomer that duplicates an
     ///   incumbent simply displaces it.
     fn insert_into_population(&mut self, offspring: P::Solution) {
-        if let Members::Ranked(_) = self.population {
-            self.admit(offspring);
-            if let Members::Ranked(p) = &mut self.population {
-                p.trim_to(self.population_size);
+        if let Members::Plain(members) = &mut self.population
+            && members.len() >= self.population_size
+        {
+            let worst_idx = members
+                .iter()
+                .enumerate()
+                .min_by(|(_, a), (_, b)| crate::trait_defs::rank_cmp(*a, *b))
+                .map(|(i, _)| i)
+                .expect("a full population is non-empty");
+            if offspring.is_better_than(&members[worst_idx]) {
+                members[worst_idx] = offspring;
             }
-            self.best_idx = self.best_member_idx();
             return;
         }
-
-        if self.population.len() < self.population_size {
-            let new_idx = self.population.len();
-            let is_new_best = match self.best_idx {
-                None => true,
-                Some(b) => offspring.is_better_than(&self.population[b]),
-            };
-            if is_new_best {
-                self.best_idx = Some(new_idx);
-            }
-            self.admit(offspring);
-            return;
-        }
-
-        // Find the worst member (O(n) — unavoidable without a heap).
-        let worst_idx = self
-            .population
-            .iter()
-            .enumerate()
-            .min_by(|(_, a), (_, b)| crate::trait_defs::rank_cmp(*a, *b))
-            .map(|(i, _)| i)
-            .unwrap();
-
-        if offspring.is_better_than(&self.population[worst_idx]) {
-            let Members::Plain(members) = &mut self.population else {
-                unreachable!("the ranked path returned above");
-            };
-            members[worst_idx] = offspring;
-
-            // Update best_idx:
-            // - If the replaced slot was the previous best, rescan (rare edge case).
-            // - Otherwise compare offspring with current best.
-            if self.best_idx == Some(worst_idx) {
-                self.best_idx = self.best_member_idx();
-            } else if self.population[worst_idx]
-                .is_better_than(&self.population[self.best_idx.unwrap()])
-            {
-                self.best_idx = Some(worst_idx);
-            }
+        self.admit(offspring);
+        if let Members::Ranked(p) = &mut self.population {
+            p.trim_to(self.population_size);
         }
     }
 }
@@ -434,7 +393,6 @@ where
     /// Clears the population so the next `run` starts fresh.
     fn clear(&mut self) {
         self.population.clear();
-        self.best_idx = None;
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -447,18 +405,21 @@ where
         }
 
         let (i_a, i_b) = self.select_parent_indices(&mut state.rng);
-        let parent_a = self.population[i_a].clone();
-        let parent_b = self.population[i_b].clone();
-
-        let offspring =
-            self.crossover
-                .crossover(state.instance, &parent_a, &parent_b, &mut state.rng)?;
+        let offspring = self.crossover.crossover(
+            state.instance,
+            &self.population[i_a],
+            &self.population[i_b],
+            &mut state.rng,
+        )?;
 
         let mutated = Self::improve_via_sub_run(state, offspring, self.mutation.as_mut())?;
 
         self.insert_into_population(mutated);
 
-        state.solution = self.population[self.best_idx.unwrap()].clone();
+        let best = self
+            .best_member_idx()
+            .expect("the population was filled above");
+        state.solution = self.population[best].clone();
         state.update_best();
 
         Ok(())
@@ -487,7 +448,7 @@ mod tests {
     }
 
     #[test]
-    fn genetic_algorithm_initializes_best_idx_before_first_replacement() {
+    fn genetic_algorithm_fills_population_and_reports_a_best() {
         let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
         let mut state = SearchState::new(&mc);
         let mut ga = GeneticAlgorithm::new(
@@ -502,7 +463,7 @@ mod tests {
 
         ga.run(&mut state).unwrap();
 
-        assert!(ga.best_idx.is_some());
+        assert_eq!(ga.population.len(), 4);
         assert!(state.best_solution.objective >= 0.0);
     }
 
@@ -534,7 +495,6 @@ mod tests {
 
         hea.run(&mut state).unwrap();
 
-        assert!(hea.best_idx.is_some());
         assert_eq!(hea.population.len(), 4);
         assert!(state.best_solution.objective >= 0.0);
     }
@@ -564,7 +524,6 @@ mod tests {
         ga.run(&mut state).unwrap();
 
         assert_eq!(ga.population.len(), 4);
-        assert!(ga.best_idx.is_some());
         assert!(state.best_solution.objective >= 0.0);
     }
 
