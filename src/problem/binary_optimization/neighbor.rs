@@ -168,14 +168,16 @@ impl MoveToNeighbor<FormulaProblem> for FormulaSwapNeighbor {
         let mut cv = sol.constraint_vals.clone();
 
         let mut items = Vec::with_capacity(n * (n - 1) / 2);
+        let mut delta_i: Vec<Value> = Vec::with_capacity(prob.constraint_polys.len());
         for i in 0..n {
             // Pre-compute constraint deltas for flipping i (needed for undo as well)
-            let delta_i: Vec<Value> = prob
-                .constraint_polys
-                .iter()
-                .map(|poly| prob.eval_poly_delta(poly, &x, i))
-                .collect();
-            let gain_i = prob.calc_gain_fast(&x, &cv, i);
+            delta_i.clear();
+            delta_i.extend(
+                prob.constraint_polys
+                    .iter()
+                    .map(|poly| prob.eval_poly_delta(poly, &x, i)),
+            );
+            let gain_i = sol.gain[i];
 
             // Apply virtual flip of i
             for (v, &d) in cv.iter_mut().zip(delta_i.iter()) {
@@ -230,7 +232,7 @@ impl MoveToNeighbor<FormulaProblem> for FormulaSwapNeighbor {
         };
         let (i, j) = (a.min(b), a.max(b));
 
-        let gain_i = prob.calc_gain_fast(&sol.x, &sol.constraint_vals, i);
+        let gain_i = sol.gain[i];
 
         // Virtual flip of i, mirroring the gain computation in `iter`.
         let mut x = sol.x.clone();

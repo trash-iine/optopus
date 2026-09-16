@@ -297,20 +297,18 @@ impl Heuristic<Sat> for WalkSat {
         // 1. Sample a random unsatisfied clause. (`self.scratch` borrows `self`,
         //    `state.rng` borrows `state` — disjoint objects.)
         let clause_idx = state.rng.random_range(0..scratch.unsat_clauses.len());
-        let clause = scratch.unsat_clauses[clause_idx];
-        let clause_vars: Vec<usize> = state
-            .instance
-            .clause(clause)
-            .iter()
-            .map(|&lit| lit.unsigned_abs() as usize - 1)
-            .collect();
+        // The literal slice borrows the instance (a `Copy` reference), not
+        // `state`, so `state.rng` and `state.solution` stay free below.
+        let instance: &Sat = state.instance;
+        let literals = instance.clause(scratch.unsat_clauses[clause_idx]);
+        let var_of = |lit: i64| lit.unsigned_abs() as usize - 1;
 
         // 2. Find the variable with the smallest break count (pre-flip).
-        let mut best_var = clause_vars[0];
+        let mut best_var = var_of(literals[0]);
         let mut best_break = u32::MAX;
         {
             let x = &state.solution.x;
-            for &v in &clause_vars {
+            for v in literals.iter().map(|&lit| var_of(lit)) {
                 let breaks = scratch.break_count(x, v);
                 if breaks < best_break {
                     best_break = breaks;
@@ -324,8 +322,8 @@ impl Heuristic<Sat> for WalkSat {
         let chosen = if best_break == 0 {
             best_var
         } else if state.rng.random::<f64>() < self.noise {
-            let k = state.rng.random_range(0..clause_vars.len());
-            clause_vars[k]
+            let k = state.rng.random_range(0..literals.len());
+            var_of(literals[k])
         } else {
             best_var
         };

@@ -117,7 +117,19 @@ impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
             // When i=0, j=n-1 would reverse the entire tour (trivially equivalent for undirected),
             // so exclude that case to avoid redundant moves
             let max_j = if i == 0 { n - 1 } else { n };
-            (i + 2..max_j).map(move |j| Self::new(prob, sol, i, j))
+            // The outer edge and its length are shared by every j of this row,
+            // so they are looked up once. The sum is `calc_2opt_gain_cities`
+            // with the same operands in the same order.
+            let (a, b) = prob.get_edge_from(&sol.tour, i);
+            let d_ab = prob.distance(a, b);
+            (i + 2..max_j).map(move |j| {
+                let (c, d) = prob.get_edge_from(&sol.tour, j);
+                Self {
+                    i,
+                    j,
+                    gain: prob.distance(a, c) + prob.distance(b, d) - d_ab - prob.distance(c, d),
+                }
+            })
         })
     }
 
