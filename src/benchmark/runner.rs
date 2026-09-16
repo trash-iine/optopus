@@ -211,9 +211,10 @@ where
     };
     state.set_objective_probe(|s| s.best_objective_f64());
     let initial_objective = state.initial_solution.best_objective_f64();
-    let start = std::time::Instant::now();
     let status = heuristic.run(&mut state);
-    let total_time = start.elapsed();
+    // Timed from `state.start_time`, the origin the trajectory points are
+    // reported against, so `time_to_best_secs <= total_time_secs` holds.
+    let total_time = state.duration();
     let best_objective = state.best_solution.best_objective_f64();
     let raw_diff = best_objective - initial_objective;
     let improvement = if minimize { -raw_diff } else { raw_diff };
