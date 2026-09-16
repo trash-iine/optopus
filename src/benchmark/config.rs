@@ -396,34 +396,6 @@ pub struct BenchmarkConfig {
     pub seed: Option<u64>,
 }
 
-/// Recursively validates that every `neighbor` field in `h` (including in
-/// nested `steps` from Sequential / Iterated / VariableNeighborhoodSearch /
-/// Restart / GeneticAlgorithm) is supported by `problem`.
-fn validate_heuristic_neighbors(
-    h: &HeuristicConfig,
-    problem: &ProblemKind,
-    instance_path: &str,
-) -> Result<(), OptError> {
-    if let Some(n) = h.neighbor() {
-        let valid = problem.valid_neighbors();
-        if !valid.contains(n) {
-            return Err(OptError::Config(format!(
-                "instance '{}' ({:?}) does not support neighbor {:?} for heuristic '{}'. \
-                 Valid neighbors: {:?}",
-                instance_path,
-                problem,
-                n,
-                h.kind_name(),
-                valid,
-            )));
-        }
-    }
-    for step in h.steps() {
-        validate_heuristic_neighbors(step, problem, instance_path)?;
-    }
-    Ok(())
-}
-
 pub(crate) fn validate_config(config: &BenchmarkConfig) -> Result<(), OptError> {
     if config.num_runs == 0 {
         return Err(OptError::Config(
@@ -440,11 +412,23 @@ pub(crate) fn validate_config(config: &BenchmarkConfig) -> Result<(), OptError> 
             "at least one [[heuristics]] entry is required".to_string(),
         ));
     }
-    // Reject (problem, neighbor) mismatches early — before opening any file —
-    // so a typo in a long benchmark TOML fails at startup, not mid-run.
+    // Build every heuristic for every problem once, before opening any file,
+    // so a typo in a long benchmark TOML fails at startup, not mid-run. The
+    // builders are the one place each parameter is checked.
     for inst in &config.instances {
         for h in &config.heuristics {
-            validate_heuristic_neighbors(h, &inst.problem, &inst.path)?;
+            super::factory::check_build(&inst.problem, h).map_err(|e| {
+                let detail = match e {
+                    OptError::Config(m) => m,
+                    other => other.to_string(),
+                };
+                OptError::Config(format!(
+                    "instance '{}' ({:?}), heuristic '{}': {detail}",
+                    inst.path,
+                    inst.problem,
+                    h.kind_name()
+                ))
+            })?;
         }
     }
     Ok(())
