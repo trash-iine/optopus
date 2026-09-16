@@ -1,6 +1,4 @@
-use std::collections::HashSet;
-
-use crate::common::{Graph, lift_binary_solution, uniform_binary_crossover};
+use crate::common::{lift_binary_solution, uniform_binary_crossover};
 use crate::search_state::{Crossover, SubProblemExtractable};
 
 use super::problem::{MaxCut, MaxCutSolution};
@@ -85,22 +83,7 @@ impl SubProblemExtractable for MaxCut {
     /// assert!(sub_same.graph.is_empty());
     /// ```
     fn extract_sub_problem(&self, sol1: &MaxCutSolution, sol2: &MaxCutSolution) -> MaxCut {
-        let free: HashSet<usize> = self
-            .graph
-            .iter_on_vertices()
-            .filter(|&&v| sol1.x[v] != sol2.x[v])
-            .copied()
-            .collect();
-
-        let mut sub_graph = Graph::new();
-        for &u in &free {
-            for &(v, w) in self.graph.iter_on_adjacency(u) {
-                if free.contains(&v) && u < v {
-                    sub_graph.add_weight(u, v, w);
-                }
-            }
-        }
-        MaxCut::new(sub_graph)
+        MaxCut::new(self.graph.induced_subgraph(|v| sol1.x[v] != sol2.x[v]))
     }
 
     /// Lifts the sub-problem solution back into the full solution space.
