@@ -184,34 +184,25 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         // 1. Collect candidate moves. With `max_candidates` set, reservoir-
         //    sample from the lazy iterator (Algorithm R) so that only the
-        //    sampled moves are ever evaluated; otherwise take the whole
-        //    neighborhood.
+        //    sampled moves are ever evaluated. With no cap the reservoir never
+        //    fills, so the whole neighborhood is kept and the RNG is never
+        //    consulted.
         self.buf_moves.clear();
         let mut acc = StepStatsAccumulator::new();
-        match self.max_candidates {
-            Some(k) => {
-                for (i, m) in N::iter(state.instance, &state.solution).enumerate() {
-                    if i < k {
-                        self.buf_moves.push((m, 0.0));
-                    } else {
-                        let j = state.rng.random_range(0..=i);
-                        if j < k {
-                            self.buf_moves[j] = (m, 0.0);
-                        }
-                    }
-                }
-                for entry in self.buf_moves.iter_mut() {
-                    entry.1 = entry.0.evaluate().minimized();
-                    acc.push(entry.1);
+        let k = self.max_candidates.unwrap_or(usize::MAX);
+        for (i, m) in N::iter(state.instance, &state.solution).enumerate() {
+            if i < k {
+                self.buf_moves.push((m, 0.0));
+            } else {
+                let j = state.rng.random_range(0..=i);
+                if j < k {
+                    self.buf_moves[j] = (m, 0.0);
                 }
             }
-            None => {
-                for m in N::iter(state.instance, &state.solution) {
-                    let w = m.evaluate().minimized();
-                    acc.push(w);
-                    self.buf_moves.push((m, w));
-                }
-            }
+        }
+        for entry in self.buf_moves.iter_mut() {
+            entry.1 = entry.0.evaluate().minimized();
+            acc.push(entry.1);
         }
 
         if self.buf_moves.is_empty() {
@@ -295,29 +286,6 @@ where
 mod tests {
     use super::*;
 
-    fn compute_rank_ratios_into(
-        worsenings: &[f64],
-        indexed: &mut Vec<(usize, f64)>,
-        ranks: &mut Vec<f64>,
-    ) {
-        let n = worsenings.len();
-        indexed.clear();
-        indexed.extend(worsenings.iter().copied().enumerate());
-        ranks.clear();
-        ranks.resize(n, 0.0);
-
-        if n <= 1 {
-            return;
-        }
-
-        indexed.sort_unstable_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
-
-        let denom = (n - 1) as f64;
-        for (rank, &(orig_idx, _)) in indexed.iter().enumerate() {
-            ranks[orig_idx] = rank as f64 / denom;
-        }
-    }
-
     #[test]
     fn softmax_uniform_for_equal_scores() {
         let mut scores = vec![1.0, 1.0, 1.0];
@@ -342,19 +310,6 @@ mod tests {
         softmax_in_place(&mut scores);
         let sum: f64 = scores.iter().sum();
         assert!((sum - 1.0).abs() < 1e-10);
-    }
-
-    #[test]
-    fn rank_ratios_basic() {
-        let worsenings = [-3.0, 0.0, 2.0, -1.0];
-        let mut indexed = Vec::new();
-        let mut ranks = Vec::new();
-        compute_rank_ratios_into(&worsenings, &mut indexed, &mut ranks);
-        // sorted: -3.0 (best), -1.0, 0.0, 2.0 (worst)
-        assert!((ranks[0] - 0.0).abs() < 1e-10); // -3.0 → rank 0
-        assert!((ranks[3] - 1.0 / 3.0).abs() < 1e-10); // -1.0 → rank 1
-        assert!((ranks[1] - 2.0 / 3.0).abs() < 1e-10); // 0.0 → rank 2
-        assert!((ranks[2] - 1.0).abs() < 1e-10); // 2.0 → rank 3
     }
 
     #[test]
