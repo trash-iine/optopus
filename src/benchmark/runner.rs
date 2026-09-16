@@ -21,24 +21,10 @@ pub struct Benchmark;
 // Generic run functions
 // ---------------------------------------------------------------------------
 
-struct RunMetrics {
-    status: String,
-    best_objective: f64,
-    best_iteration: u64,
-    time_to_best_secs: f64,
-    total_time_secs: f64,
-    initial_objective: Option<f64>,
-    improvement: Option<f64>,
-    n_accepted: Option<u64>,
-    n_rejected: Option<u64>,
-    n_best_updates: Option<u64>,
-    seed: Option<u64>,
-    solution: Vec<usize>,
-    trajectory: Vec<(f64, f64)>,
-}
-
-fn empty_metrics(status: String, seed: Option<u64>) -> RunMetrics {
-    RunMetrics {
+/// The result of a run that never started: `status` says why.
+fn failed_run(run_index: usize, status: String, seed: Option<u64>) -> SingleRunResult {
+    SingleRunResult {
+        run_index,
         status,
         best_objective: 0.0,
         best_iteration: 0,
@@ -137,18 +123,18 @@ impl ProblemVisitor for InstanceVisitor<'_> {
                 .map(|run_index| {
                     let run_seed = master_seed
                         .map(|m| derive_run_seed(m, self.instance_path, heuristic_idx, run_index));
-                    let metrics = run_typed::<P>(&instance, heuristic_cfg, run_seed);
+                    let result = run_typed::<P>(&instance, heuristic_cfg, run_index, run_seed);
 
                     tracing::info!(
                         run = run_index + 1,
-                        objective = metrics.best_objective,
-                        best_iteration = metrics.best_iteration,
-                        time_to_best_secs = metrics.time_to_best_secs,
-                        total_time_secs = metrics.total_time_secs,
+                        objective = result.best_objective,
+                        best_iteration = result.best_iteration,
+                        time_to_best_secs = result.time_to_best_secs,
+                        total_time_secs = result.total_time_secs,
                         "Completed:"
                     );
 
-                    to_single_run_result(run_index, metrics)
+                    result
                 })
                 .collect();
             runs.sort_by_key(|r| r.run_index);
@@ -182,8 +168,9 @@ impl ProblemVisitor for InstanceVisitor<'_> {
 fn run_typed<P>(
     instance: &Result<P, OptError>,
     config: &HeuristicConfig,
+    run_index: usize,
     seed: Option<u64>,
-) -> RunMetrics
+) -> SingleRunResult
 where
     P: ConfigurableProblem,
     P::Solution: BenchmarkSolution + Distance + Evaluate,
@@ -195,22 +182,25 @@ where
                 OptError::Config(m) => m,
                 other => other.to_string(),
             };
-            return empty_metrics(format!("config error: {msg}"), seed);
+            return failed_run(run_index, format!("config error: {msg}"), seed);
         }
     };
     let instance = match instance {
         Ok(v) => v,
-        Err(e) => return empty_metrics(format!("error loading instance: {}", e), seed),
+        Err(e) => {
+            return failed_run(run_index, format!("error loading instance: {}", e), seed);
+        }
     };
-    run_problem::<P>(instance, heuristic, P::MINIMIZE, seed)
+    run_problem::<P>(instance, heuristic, P::MINIMIZE, run_index, seed)
 }
 
 fn run_problem<P>(
     instance: &P,
     mut heuristic: Box<dyn Heuristic<P>>,
     minimize: bool,
+    run_index: usize,
     seed: Option<u64>,
-) -> RunMetrics
+) -> SingleRunResult
 where
     P: BenchmarkProblem,
     P::Solution: BenchmarkSolution,
@@ -236,7 +226,8 @@ where
         .last()
         .map(|&(elapsed, _)| elapsed)
         .unwrap_or_else(|| (state.best_time - state.start_time).as_secs_f64());
-    RunMetrics {
+    SingleRunResult {
+        run_index,
         status: status_str(status),
         best_objective,
         best_iteration: state.best_iteration,
@@ -257,25 +248,6 @@ fn status_str(r: Result<(), crate::error::OptError>) -> String {
     match r {
         Ok(_) => "success".to_string(),
         Err(e) => format!("error: {}", e),
-    }
-}
-
-fn to_single_run_result(run_index: usize, m: RunMetrics) -> SingleRunResult {
-    SingleRunResult {
-        run_index,
-        status: m.status,
-        best_objective: m.best_objective,
-        best_iteration: m.best_iteration,
-        time_to_best_secs: m.time_to_best_secs,
-        total_time_secs: m.total_time_secs,
-        initial_objective: m.initial_objective,
-        improvement: m.improvement,
-        n_accepted: m.n_accepted,
-        n_rejected: m.n_rejected,
-        n_best_updates: m.n_best_updates,
-        seed: m.seed,
-        solution: m.solution,
-        trajectory: m.trajectory,
     }
 }
 

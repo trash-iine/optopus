@@ -118,16 +118,9 @@ pub(crate) fn compute_summary(runs: &[SingleRunResult], minimize: bool) -> Summa
         };
     }
     let objectives: Vec<f64> = successful.iter().map(|r| r.best_objective).collect();
-    let best = if minimize {
-        objectives.iter().cloned().fold(f64::INFINITY, f64::min)
-    } else {
-        objectives.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
-    };
-    let worst = if minimize {
-        objectives.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
-    } else {
-        objectives.iter().cloned().fold(f64::INFINITY, f64::min)
-    };
+    let min = objectives.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max = objectives.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let (best, worst) = if minimize { (min, max) } else { (max, min) };
     let avg = objectives.iter().sum::<f64>() / n as f64;
     let variance = objectives.iter().map(|&x| (x - avg).powi(2)).sum::<f64>() / n as f64;
     let std = variance.sqrt();
@@ -152,41 +145,35 @@ pub(crate) fn compute_summary(runs: &[SingleRunResult], minimize: bool) -> Summa
             .collect(),
     );
     let avg_improvement = avg_opt(successful.iter().filter_map(|r| r.improvement).collect());
-    let accepted_vals: Vec<u64> = successful.iter().filter_map(|r| r.n_accepted).collect();
-    let rejected_vals: Vec<u64> = successful.iter().filter_map(|r| r.n_rejected).collect();
-    let best_vals: Vec<u64> = successful.iter().filter_map(|r| r.n_best_updates).collect();
-    let avg_n_accepted = if accepted_vals.len() == n {
-        Some(accepted_vals.iter().map(|&v| v as f64).sum::<f64>() / n as f64)
-    } else {
-        None
-    };
-    let avg_n_rejected = if rejected_vals.len() == n {
-        Some(rejected_vals.iter().map(|&v| v as f64).sum::<f64>() / n as f64)
-    } else {
-        None
-    };
+    let accepted_vals: Vec<f64> = successful
+        .iter()
+        .filter_map(|r| r.n_accepted.map(|v| v as f64))
+        .collect();
+    let rejected_vals: Vec<f64> = successful
+        .iter()
+        .filter_map(|r| r.n_rejected.map(|v| v as f64))
+        .collect();
     let avg_acceptance_rate = if accepted_vals.len() == n && rejected_vals.len() == n {
         let rates: Vec<f64> = accepted_vals
             .iter()
             .zip(rejected_vals.iter())
             .map(|(&a, &r)| {
                 let total = a + r;
-                if total == 0 {
-                    0.0
-                } else {
-                    a as f64 / total as f64
-                }
+                if total == 0.0 { 0.0 } else { a / total }
             })
             .collect();
         Some(rates.iter().sum::<f64>() / n as f64)
     } else {
         None
     };
-    let avg_n_best_updates = if best_vals.len() == n {
-        Some(best_vals.iter().map(|&v| v as f64).sum::<f64>() / n as f64)
-    } else {
-        None
-    };
+    let avg_n_accepted = avg_opt(accepted_vals);
+    let avg_n_rejected = avg_opt(rejected_vals);
+    let avg_n_best_updates = avg_opt(
+        successful
+            .iter()
+            .filter_map(|r| r.n_best_updates.map(|v| v as f64))
+            .collect(),
+    );
 
     Summary {
         num_successful_runs: n,

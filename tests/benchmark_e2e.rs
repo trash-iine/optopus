@@ -163,48 +163,6 @@ max_iteration = 5
     }
 }
 
-#[test]
-fn run_from_config_is_bit_identical_across_reruns_with_seed() {
-    let instance = write_temp_file("repro", "4 4\n1 2 1\n2 3 1\n3 4 1\n4 1 1\n");
-    // SimulatedAnnealing consumes the RNG on every step, so any seeding
-    // mistake (including rayon scheduling nondeterminism) would show up here.
-    let config_toml = format!(
-        r#"
-num_runs = 4
-seed = 123
-
-[[instances]]
-path = "{}"
-problem = "MaxCut"
-
-[[heuristics]]
-kind = "SimulatedAnnealing"
-neighbor = "Flip"
-initial_temperature = 1.0
-cooling_rate = 0.99
-
-[heuristics.stop_condition]
-max_iteration = 500
-"#,
-        instance.display()
-    );
-
-    let first = run_benchmark(&config_toml);
-    let second = run_benchmark(&config_toml);
-    let _ = std::fs::remove_file(&instance);
-
-    let first_runs = &first.results[0].runs;
-    let second_runs = &second.results[0].runs;
-    assert_eq!(first_runs.len(), second_runs.len());
-    for (a, b) in first_runs.iter().zip(second_runs) {
-        assert_eq!(a.run_index, b.run_index);
-        assert_eq!(a.seed, b.seed, "derived per-run seed must be stable");
-        assert_eq!(a.best_objective, b.best_objective);
-        assert_eq!(a.best_iteration, b.best_iteration);
-        assert_eq!(a.solution, b.solution, "run {} diverged", a.run_index);
-    }
-}
-
 /// Runs `heuristic_toml` twice on a fixed instance with a fixed seed and asserts
 /// bit-identical per-run results.
 fn assert_reproducible(tag: &str, heuristic_toml: &str) {
@@ -237,6 +195,8 @@ problem = "MaxCut"
     assert_eq!(first_runs.len(), second_runs.len());
     for (a, b) in first_runs.iter().zip(second_runs) {
         assert_eq!(a.status, "success");
+        assert_eq!(a.run_index, b.run_index);
+        assert_eq!(a.seed, b.seed, "{tag} derived per-run seed must be stable");
         assert_eq!(
             a.best_objective, b.best_objective,
             "{tag} objective diverged"
@@ -247,6 +207,25 @@ problem = "MaxCut"
         );
         assert_eq!(a.solution, b.solution, "{tag} run {} diverged", a.run_index);
     }
+}
+
+/// SimulatedAnnealing consumes the RNG on every step, so any seeding mistake
+/// (including rayon scheduling nondeterminism) would show up here.
+#[test]
+fn run_from_config_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_sa",
+        r#"
+[[heuristics]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 1.0
+cooling_rate = 0.99
+
+[heuristics.stop_condition]
+max_iteration = 500
+"#,
+    );
 }
 
 /// TabuSearch samples the tabu tenure from the RNG on every applied move, so
