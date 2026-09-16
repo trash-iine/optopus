@@ -176,26 +176,7 @@ where
     /// Internal: construct from a fully prepared RNG.
     fn from_rng(instance: &'a Problem, mut rng: SmallRng) -> Self {
         let solution = instance.new_solution(&mut rng);
-        let now = std::time::Instant::now();
-        let state = Self {
-            start_iteration: 0,
-            start_time: now,
-            instance,
-            iteration: 0,
-            solution: solution.clone(),
-            best_time: now,
-            best_iteration: 0,
-            best_solution: solution.clone(),
-            initial_solution: solution,
-            n_accepted: 0,
-            n_rejected: 0,
-            n_best_updates: 0,
-            rng,
-            trajectory: Vec::new(),
-            objective_probe: None,
-            tabu: crate::common::TabuMemory::default(),
-            record_tabu_on: false,
-        };
+        let state = Self::with_solution_from_rng(instance, solution, rng);
         tracing::debug!("SearchState initialized");
         state
     }
@@ -333,66 +314,53 @@ where
     /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn clone_for_new_run(&mut self, clone_type: SearchStateCloneType) -> Self {
-        let now = std::time::Instant::now();
         let child_rng = SmallRng::from_rng(&mut self.rng);
-        match clone_type {
-            SearchStateCloneType::Simple => Self {
-                start_iteration: self.iteration,
-                start_time: self.start_time,
-                instance: self.instance,
-                iteration: self.iteration,
-                solution: self.solution.clone(),
-                best_time: self.best_time,
-                best_iteration: self.best_iteration,
-                best_solution: self.best_solution.clone(),
-                initial_solution: self.initial_solution.clone(),
-                n_accepted: 0,
-                n_rejected: 0,
-                n_best_updates: 0,
-                rng: child_rng,
-                trajectory: Vec::new(),
-                objective_probe: self.objective_probe,
-                tabu: crate::common::TabuMemory::default(),
-                record_tabu_on: false,
-            },
-            SearchStateCloneType::ClearBest => Self {
-                start_iteration: self.iteration,
-                start_time: now,
-                instance: self.instance,
-                iteration: self.iteration,
-                solution: self.solution.clone(),
-                best_time: now,
-                best_iteration: self.iteration,
-                best_solution: self.solution.clone(),
-                initial_solution: self.solution.clone(),
-                n_accepted: 0,
-                n_rejected: 0,
-                n_best_updates: 0,
-                rng: child_rng,
-                trajectory: Vec::new(),
-                objective_probe: self.objective_probe,
-                tabu: crate::common::TabuMemory::default(),
-                record_tabu_on: false,
-            },
-            SearchStateCloneType::StartBest => Self {
-                start_iteration: self.iteration,
-                start_time: now,
-                instance: self.instance,
-                iteration: self.iteration,
-                solution: self.best_solution.clone(),
-                best_time: now,
-                best_iteration: self.iteration,
-                best_solution: self.best_solution.clone(),
-                initial_solution: self.best_solution.clone(),
-                n_accepted: 0,
-                n_rejected: 0,
-                n_best_updates: 0,
-                rng: child_rng,
-                trajectory: Vec::new(),
-                objective_probe: self.objective_probe,
-                tabu: crate::common::TabuMemory::default(),
-                record_tabu_on: false,
-            },
+        // `Simple` continues this run; the other two start a fresh one from a
+        // chosen solution, with the timers and the best reset to it.
+        let (solution, best_solution, initial_solution, start_time, best_time, best_iteration) =
+            match clone_type {
+                SearchStateCloneType::Simple => (
+                    self.solution.clone(),
+                    self.best_solution.clone(),
+                    self.initial_solution.clone(),
+                    self.start_time,
+                    self.best_time,
+                    self.best_iteration,
+                ),
+                SearchStateCloneType::ClearBest | SearchStateCloneType::StartBest => {
+                    let start = match clone_type {
+                        SearchStateCloneType::ClearBest => &self.solution,
+                        _ => &self.best_solution,
+                    };
+                    let now = std::time::Instant::now();
+                    (
+                        start.clone(),
+                        start.clone(),
+                        start.clone(),
+                        now,
+                        now,
+                        self.iteration,
+                    )
+                }
+            };
+        Self {
+            start_iteration: self.iteration,
+            start_time,
+            instance: self.instance,
+            iteration: self.iteration,
+            solution,
+            best_time,
+            best_iteration,
+            best_solution,
+            initial_solution,
+            n_accepted: 0,
+            n_rejected: 0,
+            n_best_updates: 0,
+            rng: child_rng,
+            trajectory: Vec::new(),
+            objective_probe: self.objective_probe,
+            tabu: crate::common::TabuMemory::default(),
+            record_tabu_on: false,
         }
     }
 
@@ -639,10 +607,7 @@ where
     where
         Move: MoveToNeighbor<Problem>,
     {
-        self.record_applied(neighbor);
-        self.iteration = neighbor.apply_to_iteration(self.iteration);
-        neighbor.apply_to_solution(self.instance, &mut self.solution)?;
-        self.n_accepted += 1;
+        self.apply_move_only(neighbor)?;
         self.update_best();
         Ok(())
     }
