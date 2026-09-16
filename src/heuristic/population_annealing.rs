@@ -2,7 +2,7 @@ use crate::error::OptError;
 use crate::heuristic::simulated_annealing::boltzmann_accept;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::search_state::SearchState;
-use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait, Rankable};
+use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait, rank_cmp};
 use rand::Rng;
 use rand::rngs::SmallRng;
 use std::marker::PhantomData;
@@ -211,41 +211,45 @@ where
         }
         let scale = r as f64 / sum;
 
-        // Build the next population by stochastic-rounded replication.
-        self.next_population.clear();
-        self.next_population.reserve(r);
-        for (j, s) in self.population.iter().enumerate() {
-            let tau = self.weights[j] * scale;
-            let mut copies = tau.floor() as usize;
-            if rng.random::<f64>() < (tau - tau.floor()) {
-                copies += 1;
-            }
-            for _ in 0..copies {
-                self.next_population.push(s.clone());
-            }
-        }
-
-        // Restore the population to exactly R.
-        if self.next_population.is_empty() {
+        // Stochastic-rounded copy count per replica.
+        let copies: Vec<usize> = self
+            .weights
+            .iter()
+            .map(|w| {
+                let tau = w * scale;
+                let extra = usize::from(rng.random::<f64>() < (tau - tau.floor()));
+                tau.floor() as usize + extra
+            })
+            .collect();
+        if copies.iter().all(|&k| k == 0) {
             // Extremely unlikely; fall back to keeping the current population.
             return;
         }
-        // Both comparisons are reversed so the tie goes the way it has to.
-        // `min_by` keeps the first of an equal run and `max_by` the last, and
-        // which replica a tie drops or copies is part of the trajectory.
-        let worse_first = |a: &P::Solution, b: &P::Solution| {
-            b.evaluate()
-                .minimized()
-                .partial_cmp(&a.evaluate().minimized())
-                .unwrap_or(std::cmp::Ordering::Equal)
-        };
+
+        // Build the next population by replication. A replica that survives
+        // moves rather than clones for its last copy, so a step costs one
+        // clone per extra copy and none for a population that merely persists.
+        self.next_population.clear();
+        self.next_population.reserve(r);
+        for (s, &k) in self.population.drain(..).zip(&copies) {
+            for _ in 1..k {
+                self.next_population.push(s.clone());
+            }
+            if k >= 1 {
+                self.next_population.push(s);
+            }
+        }
+
+        // Restore the population to exactly R. `min_by` keeps the first of an
+        // equal run and `max_by` the last, and which replica a tie drops or
+        // copies is part of the trajectory.
         while self.next_population.len() > r {
             // Drop the highest-energy replica, the first of them on a tie.
             let (worst, _) = self
                 .next_population
                 .iter()
                 .enumerate()
-                .min_by(|(_, a), (_, b)| worse_first(a, b))
+                .min_by(|(_, a), (_, b)| rank_cmp(*a, *b))
                 .unwrap();
             self.next_population.swap_remove(worst);
         }
@@ -255,7 +259,7 @@ where
                 .next_population
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| worse_first(a, b))
+                .max_by(|(_, a), (_, b)| rank_cmp(*a, *b))
                 .map(|(i, _)| i)
                 .unwrap();
             let clone = self.next_population[best].clone();
@@ -270,13 +274,7 @@ where
         self.population
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| {
-                if a.is_better_than(b) {
-                    std::cmp::Ordering::Greater
-                } else {
-                    std::cmp::Ordering::Less
-                }
-            })
+            .max_by(|(_, a), (_, b)| rank_cmp(*a, *b))
             .map(|(i, _)| i)
             .unwrap_or(0)
     }
@@ -309,7 +307,6 @@ where
         self.beta += self.delta_beta;
         self.step += 1;
         if let Some(period) = self.reset_period
-            && period > 0
             && self.step.is_multiple_of(period as u64)
         {
             self.beta = self.initial_beta;
