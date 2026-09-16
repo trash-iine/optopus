@@ -77,8 +77,8 @@ reproduce the Galinier-Hao Hybrid Evolutionary Algorithm (HEA). The population
 is not built until the first `run_once`, so this may be set at any point before
 then.
 
-`clear()` drops the population and the cached `best_idx`; the population is
-re-seeded on the first `run_once` after a `run`.
+`clear()` drops the population; the population is re-seeded on the first
+`run_once` after a `run`.
 
 ## Parent selection
 
@@ -116,8 +116,9 @@ preferring distant parents.
 ## Replacement
 
 Worst-replacement: when the population is full, replace the worst member iff
-the offspring is strictly better. `best_idx` is maintained incrementally,
-no full population scan per iteration.
+the offspring is strictly better. The best member is then looked up with one
+scan of the population, which is small next to the crossover and mutation
+of a generation.
 
 ## Crossover trait
 
