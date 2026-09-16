@@ -74,9 +74,7 @@ impl JobShopSwapNeighbor {
     pub fn new(prob: &JobShopScheduling, sol: &JobShopSolution, i: usize) -> Self {
         let mut tentative = sol.operations.clone();
         tentative.swap(i, i + 1);
-        let makespan = prob
-            .compute_makespan(&tentative)
-            .expect("swap of valid sequence stays valid");
+        let makespan = prob.compute_makespan(&tentative);
         Self {
             i,
             gain: makespan as f64 - sol.objective as f64,
@@ -132,9 +130,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
                     || sol.operations.clone(),
                     |tentative, i| {
                         tentative.swap(i, i + 1);
-                        let makespan = prob
-                            .compute_makespan(tentative)
-                            .expect("swap of valid sequence stays valid");
+                        let makespan = prob.compute_makespan(tentative);
                         tentative.swap(i, i + 1);
                         JobShopSwapNeighbor {
                             i,
@@ -151,9 +147,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
                     continue; // identity swap (same job)
                 }
                 tentative.swap(i, i + 1);
-                let makespan = prob
-                    .compute_makespan(&tentative)
-                    .expect("swap of valid sequence stays valid");
+                let makespan = prob.compute_makespan(&tentative);
                 tentative.swap(i, i + 1);
                 let gain = makespan as f64 - base;
                 items.push(JobShopSwapNeighbor { i, gain });
@@ -254,9 +248,7 @@ impl JobShopRelocateNeighbor {
     pub fn new(prob: &JobShopScheduling, sol: &JobShopSolution, from: usize, to: usize) -> Self {
         let mut tentative = sol.operations.clone();
         relocate_in_place(&mut tentative, from, to);
-        let makespan = prob
-            .compute_makespan(&tentative)
-            .expect("relocate of valid sequence stays valid");
+        let makespan = prob.compute_makespan(&tentative);
         Self {
             from,
             to,
@@ -317,9 +309,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
                     continue; // identity move
                 }
                 relocate_in_place(tentative, from, to);
-                let makespan = prob
-                    .compute_makespan(tentative)
-                    .expect("relocate of valid sequence stays valid");
+                let makespan = prob.compute_makespan(tentative);
                 relocate_in_place(tentative, to, from);
                 let gain = makespan as f64 - base;
                 row.push(JobShopRelocateNeighbor { from, to, gain });
