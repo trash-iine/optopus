@@ -1,7 +1,6 @@
-use crate::common::uniform_binary_crossover;
-use crate::search_state::{Crossover, MoveToNeighbor, SubProblemExtractable};
+use crate::common::{lift_binary_solution, uniform_binary_crossover};
+use crate::search_state::{Crossover, SubProblemExtractable};
 
-use super::neighbor::QuboFlipNeighbor;
 use super::problem::{Qubo, QuboSolution, make_sub_problem_from};
 
 /// Uniform crossover for QUBO.
@@ -38,22 +37,16 @@ impl SubProblemExtractable for Qubo {
     fn lift_solution(
         &self,
         sol1: &QuboSolution,
-        _sol2: &QuboSolution,
+        sol2: &QuboSolution,
         sub_solution: &QuboSolution,
     ) -> QuboSolution {
-        let mut sol = sol1.clone();
-        for i in sub_solution.iter_on_variables() {
-            if sol.x[i] == sub_solution.x[i] {
-                continue;
-            }
-            QuboFlipNeighbor {
-                i,
-                gain: sol.gain[i],
-            }
-            .apply_to_solution(self, &mut sol)
-            .expect("flipping should never fail");
-        }
-        sol
+        lift_binary_solution(
+            self,
+            sol1,
+            sol2,
+            sub_solution,
+            sub_solution.iter_on_variables(),
+        )
     }
 }
 
@@ -168,5 +161,22 @@ mod tests {
             let expected = qubo.calculate_energy(&flipped) - lifted.objective;
             assert_eq!(g, expected, "lifted gain[{i}] mismatch");
         }
+    }
+
+    #[test]
+    fn test_lift_solution_keeps_fixed_true_variable() {
+        let qubo = make_qubo();
+        // Free: vars 1 and 2; fixed: var 0, which is `true` in both parents.
+        // The sub-solution holds `false` in the slot of every fixed variable,
+        // and that slot must not be read as a request to flip it.
+        let parent_a = make_sol(&qubo, &[(0, true), (1, false), (2, false)]);
+        let parent_b = make_sol(&qubo, &[(0, true), (1, true), (2, true)]);
+        let sub = qubo.extract_sub_problem(&parent_a, &parent_b);
+        let sub_sol = make_sol(&sub, &[(1, true), (2, false)]);
+        let lifted = qubo.lift_solution(&parent_a, &parent_b, &sub_sol);
+
+        assert!(lifted.x[0], "fixed var 0 stays true");
+        assert_eq!(lifted.x[1..], [true, false]);
+        assert_eq!(lifted.objective, qubo.calculate_energy(&lifted.x));
     }
 }
