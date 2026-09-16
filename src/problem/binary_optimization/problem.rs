@@ -474,35 +474,11 @@ pub fn eval_expr(expr: &Expr, x: &[bool]) -> Value {
 const STRICT_EPSILON: Value = 1e-9;
 
 fn eval_constraint_penalty(c: &Constraint, x: &[bool]) -> Value {
-    match c {
-        Constraint::Comparison {
-            lhs,
-            rel,
-            rhs,
-            penalty_weight,
-        } => {
-            let l = eval_expr(lhs, x);
-            let r = eval_expr(rhs, x);
-            let violation = match rel {
-                ConstraintRel::Lt => (l - r + STRICT_EPSILON).max(0.0),
-                ConstraintRel::Gt => (r - l + STRICT_EPSILON).max(0.0),
-                ConstraintRel::Le => (l - r).max(0.0),
-                ConstraintRel::Ge => (r - l).max(0.0),
-                ConstraintRel::Eq => (l - r).abs(),
-            };
-            violation * penalty_weight
-        }
-        Constraint::Clamp {
-            expr,
-            lo,
-            hi,
-            penalty_weight,
-        } => {
-            let v = eval_expr(expr, x);
-            let violation = (lo - v).max(0.0) + (v - hi).max(0.0);
-            violation * penalty_weight
-        }
-    }
+    let val = match c {
+        Constraint::Comparison { lhs, rhs, .. } => eval_expr(lhs, x) - eval_expr(rhs, x),
+        Constraint::Clamp { expr, .. } => eval_expr(expr, x),
+    };
+    constraint_penalty_from_val(c, val)
 }
 
 impl FormulaProblem {
@@ -609,18 +585,6 @@ impl FormulaProblem {
     pub fn calc_gain(&self, x: &[bool], i: usize) -> Value {
         let cv = self.eval_constraint_vals(x);
         self.calc_gain_fast(x, &cv, i)
-    }
-
-    /// Calculates the gain of variable `j` assuming variable `flipped` has been
-    /// virtually flipped (without modifying `x`).
-    pub fn calc_gain_with_virtual_flip(&self, x: &[bool], flipped: usize, j: usize) -> Value {
-        let mut cv = self.eval_constraint_vals(x);
-        for (v, poly) in cv.iter_mut().zip(self.constraint_polys.iter()) {
-            *v += self.eval_poly_delta(poly, x, flipped);
-        }
-        let mut xm = x.to_vec();
-        xm[flipped] = !xm[flipped];
-        self.calc_gain_fast(&xm, &cv, j)
     }
 }
 

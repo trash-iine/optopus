@@ -179,6 +179,21 @@ impl Sat {
     /// Returns `gain` such that `calc_satisfied(x') = calc_satisfied(x) + gain`
     /// where `x'` is `x` with variable `i` flipped.
     pub fn calc_gain(&self, x: &[bool], i: usize) -> i64 {
+        self.gain_of(i, |var| x[var])
+    }
+
+    /// Calculates the gain of variable `j` (0-indexed) assuming variable `flipped` has been
+    /// virtually flipped (without actually modifying `x`).
+    ///
+    /// Used for efficiently computing swap-neighbor gain values.
+    pub fn calc_gain_with_virtual_flip(&self, x: &[bool], flipped: usize, j: usize) -> i64 {
+        self.gain_of(j, |var| if var == flipped { !x[var] } else { x[var] })
+    }
+
+    /// The gain of flipping variable `i` under the assignment `x_at` reads.
+    /// `calc_gain` reads the assignment as is, the virtual-flip variant reads
+    /// one variable inverted; the clause walk is the same.
+    fn gain_of(&self, i: usize, x_at: impl Fn(usize) -> bool) -> i64 {
         let mut gain = 0i64;
         for &clause_idx in &self.clauses_per_var[i] {
             let clause = &self.clauses[clause_idx];
@@ -194,7 +209,7 @@ impl Sat {
                      it. This is a library bug — please report."
                 ),
             };
-            let i_lit_sat = x[i] == (i_lit > 0);
+            let i_lit_sat = x_at(i) == (i_lit > 0);
 
             // check if any literal other than i satisfies the clause
             let other_sat = clause.iter().any(|&lit| {
@@ -202,51 +217,11 @@ impl Sat {
                 if var == i {
                     return false;
                 }
-                x[var] == (lit > 0)
+                x_at(var) == (lit > 0)
             });
 
             let was_sat = i_lit_sat || other_sat;
             let will_be_sat = !i_lit_sat || other_sat; // after flipping i
-
-            gain += will_be_sat as i64 - was_sat as i64;
-        }
-        gain
-    }
-
-    /// Calculates the gain of variable `j` (0-indexed) assuming variable `flipped` has been
-    /// virtually flipped (without actually modifying `x`).
-    ///
-    /// Used for efficiently computing swap-neighbor gain values.
-    pub fn calc_gain_with_virtual_flip(&self, x: &[bool], flipped: usize, j: usize) -> i64 {
-        let mut gain = 0i64;
-        for &clause_idx in &self.clauses_per_var[j] {
-            let clause = &self.clauses[clause_idx];
-
-            let j_lit = match clause
-                .iter()
-                .find(|&&lit| lit.unsigned_abs() as usize - 1 == j)
-            {
-                Some(&lit) => lit,
-                None => unreachable!(
-                    "Sat::clauses_per_var invariant broken: variable {j} listed \
-                     as in clause {clause_idx} but no literal there references \
-                     it. This is a library bug — please report."
-                ),
-            };
-            let j_lit_sat = x[j] == (j_lit > 0);
-
-            // use the virtually flipped value for the `flipped` variable
-            let other_sat = clause.iter().any(|&lit| {
-                let var = lit.unsigned_abs() as usize - 1;
-                if var == j {
-                    return false;
-                }
-                let x_var = if var == flipped { !x[var] } else { x[var] };
-                x_var == (lit > 0)
-            });
-
-            let was_sat = j_lit_sat || other_sat;
-            let will_be_sat = !j_lit_sat || other_sat;
 
             gain += will_be_sat as i64 - was_sat as i64;
         }
