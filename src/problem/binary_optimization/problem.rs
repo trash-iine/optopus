@@ -434,6 +434,24 @@ pub struct FormulaSolution {
     pub(crate) constraint_vals: Vec<Value>,
 }
 
+impl FormulaSolution {
+    /// Builds the solution for assignment `x`, with the score, the constraint
+    /// values and the per-variable gains computed from scratch.
+    pub fn new_from_assignment(prob: &FormulaProblem, x: Vec<bool>) -> Self {
+        let score = prob.eval_score(&x);
+        let constraint_vals = prob.eval_constraint_vals(&x);
+        let gain = (0..prob.n_vars)
+            .map(|i| prob.calc_gain_fast(&x, &constraint_vals, i))
+            .collect();
+        Self {
+            x,
+            gain,
+            score,
+            constraint_vals,
+        }
+    }
+}
+
 impl crate::trait_defs::Evaluate for FormulaSolution {
     /// `score` is already normalized to higher-is-better whichever way the
     /// formula's own `OptDirection` points, so it is reported as maximized. The
@@ -628,18 +646,8 @@ impl ProblemTrait for FormulaProblem {
     type Solution = FormulaSolution;
 
     fn new_solution(&self, rng: &mut impl rand::Rng) -> FormulaSolution {
-        let x: Vec<bool> = (0..self.n_vars).map(|_| rng.random_bool(0.5)).collect();
-        let score = self.eval_score(&x);
-        let constraint_vals = self.eval_constraint_vals(&x);
-        let gain: Vec<Value> = (0..self.n_vars)
-            .map(|i| self.calc_gain_fast(&x, &constraint_vals, i))
-            .collect();
-        FormulaSolution {
-            x,
-            gain,
-            score,
-            constraint_vals,
-        }
+        let x = (0..self.n_vars).map(|_| rng.random_bool(0.5)).collect();
+        FormulaSolution::new_from_assignment(self, x)
     }
 }
 

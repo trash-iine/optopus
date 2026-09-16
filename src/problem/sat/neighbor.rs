@@ -222,13 +222,7 @@ mod tests {
     }
 
     fn make_solution(sat: &Sat, x: Vec<bool>) -> SatSolution {
-        let gain: Vec<i64> = (0..sat.n_vars()).map(|i| sat.calc_gain(&x, i)).collect();
-        let n_satisfied = sat.calc_satisfied(&x);
-        SatSolution {
-            x,
-            gain,
-            n_satisfied,
-        }
+        SatSolution::new_from_assignment(sat, x)
     }
 
     #[test]

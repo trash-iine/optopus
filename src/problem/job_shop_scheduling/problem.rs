@@ -34,11 +34,7 @@ impl crate::trait_defs::Evaluate for JobShopSolution {
 impl Distance for JobShopSolution {
     /// Position-based dissimilarity: number of positions where the job index differs.
     fn distance(&self, other: &Self) -> usize {
-        self.operations
-            .iter()
-            .zip(other.operations.iter())
-            .filter(|(a, b)| a != b)
-            .count()
+        crate::common::hamming_distance(&self.operations, &other.operations)
     }
 }
 

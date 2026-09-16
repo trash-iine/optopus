@@ -29,11 +29,13 @@ pub fn uniform_binary_crossover<P: BinaryProblem>(
     Ok(sol)
 }
 
-/// Hamming distance between two binary assignments of equal length.
+/// Hamming distance between two sequences of equal length: the number of
+/// positions whose values differ.
 ///
-/// The per-problem [`Distance`](crate::trait_defs::Distance) impls of the
-/// binary problems all delegate to this function.
-pub fn hamming_distance(a: &[bool], b: &[bool]) -> usize {
+/// The per-problem [`Distance`](crate::trait_defs::Distance) impls all
+/// delegate to this function, the binary problems over their assignments and
+/// the sequencing problems (TSP, job shop) over their permutations.
+pub fn hamming_distance<T: PartialEq>(a: &[T], b: &[T]) -> usize {
     a.iter().zip(b).filter(|(x, y)| x != y).count()
 }
 
@@ -115,7 +117,7 @@ mod tests {
 
     #[test]
     fn hamming_distance_counts_disagreements() {
-        assert_eq!(hamming_distance(&[], &[]), 0);
+        assert_eq!(hamming_distance::<bool>(&[], &[]), 0);
         assert_eq!(
             hamming_distance(&[true, false, true], &[true, false, true]),
             0

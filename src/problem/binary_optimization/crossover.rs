@@ -133,7 +133,7 @@ impl SubProblemExtractable for FormulaProblem {
 #[cfg(test)]
 mod tests {
     use crate::problem::binary_optimization::problem::{
-        Expr, FormulaProblem, FormulaSolution, OptDirection, Value,
+        Expr, FormulaProblem, FormulaSolution, OptDirection,
     };
     use crate::search_state::{Crossover, SubProblemExtractable};
     use rand::SeedableRng;
@@ -147,17 +147,7 @@ mod tests {
     }
 
     fn make_sol(prob: &FormulaProblem, x: Vec<bool>) -> FormulaSolution {
-        let score = prob.eval_score(&x);
-        let constraint_vals = prob.eval_constraint_vals(&x);
-        let gain: Vec<Value> = (0..prob.n_vars)
-            .map(|i| prob.calc_gain_fast(&x, &constraint_vals, i))
-            .collect();
-        FormulaSolution {
-            x,
-            gain,
-            score,
-            constraint_vals,
-        }
+        FormulaSolution::new_from_assignment(prob, x)
     }
 
     #[test]

@@ -1,7 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-use rand::Rng;
-
 use crate::search_state::{Crossover, SubProblemExtractable};
 
 use super::problem::{TspSolution, TspTour, TspWithCoordinates};
@@ -21,41 +19,7 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
         sol2: &TspSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<TspSolution, crate::error::OptError> {
-        let n = prob.get_n();
-
-        if n == 0 {
-            return Ok(sol1.clone());
-        }
-
-        // Choose a random contiguous segment from sol1
-        let s1 = rng.random_range(0..n);
-        let s2 = rng.random_range(0..n);
-        let (start, end) = if s1 <= s2 { (s1, s2) } else { (s2, s1) };
-
-        let mut child = vec![usize::MAX; n];
-        let mut in_segment = HashSet::with_capacity(end - start + 1);
-
-        for (slot, &city) in child[start..=end].iter_mut().zip(&sol1.tour[start..=end]) {
-            *slot = city;
-            in_segment.insert(city);
-        }
-
-        // Fill remaining positions from sol2, preserving relative order
-        let mut pos = (end + 1) % n;
-        let mut b_idx = (end + 1) % n;
-        let segment_len = end - start + 1;
-        let mut filled = segment_len;
-
-        while filled < n {
-            let city = sol2.tour[b_idx];
-            if !in_segment.contains(&city) {
-                child[pos] = city;
-                pos = (pos + 1) % n;
-                filled += 1;
-            }
-            b_idx = (b_idx + 1) % n;
-        }
-
+        let child = crate::common::order_crossover(&sol1.tour, &sol2.tour, rng);
         let objective = prob
             .calculate_tour_length(&child)
             .expect("OX crossover should produce a valid tour");

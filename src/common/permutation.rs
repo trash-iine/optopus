@@ -11,8 +11,8 @@ use rand::rngs::SmallRng;
 /// after the segment and wrapping around. The result is a permutation of the
 /// same elements whenever both parents are.
 ///
-/// Used by the giant-tour encodings: [`crate::problem::VrpOrderCrossover`] and
-/// Hybrid Genetic Search.
+/// Used by [`crate::problem::TspOrderCrossover`], and by the giant-tour
+/// encodings: [`crate::problem::VrpOrderCrossover`] and Hybrid Genetic Search.
 ///
 /// # Panics
 /// Panics if the parents differ in length.
@@ -52,6 +52,20 @@ pub fn order_crossover(parent1: &[usize], parent2: &[usize], rng: &mut SmallRng)
         source = (source + 1) % n;
     }
     child
+}
+
+/// Two distinct positions drawn uniformly from `0..n`, or `None` when `n < 2`.
+///
+/// The second draw is over `n - 1` values and shifted past the first, so the
+/// pair is uniform over all ordered pairs with two RNG draws. The position
+/// moves (relocate, swap over a sequence) draw their endpoints here.
+pub fn random_distinct_pair(n: usize, rng: &mut impl Rng) -> Option<(usize, usize)> {
+    if n < 2 {
+        return None;
+    }
+    let a = rng.random_range(0..n);
+    let b = rng.random_range(0..n - 1);
+    Some((a, if b >= a { b + 1 } else { b }))
 }
 
 #[cfg(test)]
