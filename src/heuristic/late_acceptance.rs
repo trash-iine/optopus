@@ -20,14 +20,13 @@ pub struct LateAcceptanceHillClimbing<N> {
     pub stop_condition: StopCondition,
     pub history_length: usize,
     _neighbor: std::marker::PhantomData<N>,
-    /// Circular buffer of "higher-is-better" scores.
+    /// Circular buffer of "higher-is-better" scores, filled on the first
+    /// `run_once` and emptied by `clear`.
     history: Vec<f64>,
     /// Current position in the circular buffer.
     history_index: usize,
     /// Running score of the current solution (higher is always better).
     current_score: f64,
-    /// Whether the history has been initialized from the first solution.
-    initialized: bool,
 }
 
 impl<N> LateAcceptanceHillClimbing<N> {
@@ -49,7 +48,6 @@ impl<N> LateAcceptanceHillClimbing<N> {
             history: Vec::new(),
             history_index: 0,
             current_score: 0.0,
-            initialized: false,
         }
     }
 }
@@ -63,7 +61,6 @@ where
         self.history.clear();
         self.history_index = 0;
         self.current_score = 0.0;
-        self.initialized = false;
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -72,10 +69,8 @@ where
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         // Initialize history buffer on first call
-        if !self.initialized {
-            self.current_score = 0.0;
+        if self.history.is_empty() {
             self.history = vec![0.0; self.history_length];
-            self.initialized = true;
         }
 
         let neighbor: N = state.random_neighbor("LateAcceptanceHillClimbing")?;
@@ -175,7 +170,6 @@ mod tests {
         lahc.clear();
         assert!(lahc.history.is_empty());
         assert_eq!(lahc.history_index, 0);
-        assert!(!lahc.initialized);
     }
 
     #[test]

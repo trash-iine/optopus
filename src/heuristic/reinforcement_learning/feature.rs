@@ -54,10 +54,6 @@ impl StepStatsAccumulator {
         }
     }
 
-    pub fn count(&self) -> usize {
-        self.count
-    }
-
     /// Add one worsening value to the accumulator (Welford's online algorithm).
     pub fn push(&mut self, w: f64) {
         self.count += 1;
@@ -123,7 +119,9 @@ impl Default for StepStatsAccumulator {
 
 /// Compute the step context from worsening values of all candidate moves.
 ///
-/// Convenience wrapper around [`StepStatsAccumulator`] for slice-based callers.
+/// Slice-based wrapper around [`StepStatsAccumulator`] for the tests; the
+/// search feeds the accumulator one move at a time.
+#[cfg(test)]
 pub fn compute_step_context(
     worsenings: &[f64],
     iteration: u64,
