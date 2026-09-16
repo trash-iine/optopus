@@ -2,7 +2,7 @@
 
 /// The unified error type for optopus.
 ///
-/// Represents errors that can occur during heuristic execution or problem parsing.
+/// Represents errors that can occur during heuristic execution or instance loading.
 #[derive(Debug, thiserror::Error)]
 pub enum OptError {
     /// A user-facing configuration error (e.g., invalid benchmark settings).
@@ -12,10 +12,6 @@ pub enum OptError {
     /// An I/O error (e.g., file not found or read failure).
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-
-    /// A parse error (e.g., malformed input format).
-    #[error("Parse error: {0}")]
-    Parse(String),
 
     /// A TOML deserialization error.
     ///
