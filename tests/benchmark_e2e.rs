@@ -155,7 +155,13 @@ max_iteration = 5
             last_objective, run.best_objective,
             "trajectory must end at the final best objective"
         );
-        assert!(last_elapsed <= run.total_time_secs + 1e-6);
+        // One clock per run: both are measured from `SearchState::start_time`,
+        // so this holds exactly rather than within a tolerance.
+        assert!(
+            last_elapsed <= run.total_time_secs,
+            "a trajectory point cannot postdate the run: {last_elapsed} > {}",
+            run.total_time_secs
+        );
         assert!(
             (run.time_to_best_secs - last_elapsed).abs() < 1e-9,
             "time_to_best must come from the trajectory"
