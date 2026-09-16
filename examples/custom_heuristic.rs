@@ -35,10 +35,8 @@ where
     }
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
-        let instance = state.instance;
-        let solution = &state.solution;
-        let next_move = N::iter(instance, solution)
-            .find(|neighbor| neighbor.move_to_be_better_than(instance, solution, solution));
+        let next_move = N::iter(state.instance, &state.solution)
+            .find(|neighbor| state.is_neighbor_better_than_current(neighbor));
 
         if let Some(neighbor) = next_move {
             state.apply(&neighbor)?;
