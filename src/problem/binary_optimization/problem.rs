@@ -646,7 +646,7 @@ impl ProblemTrait for FormulaProblem {
 impl crate::trait_defs::BinaryProblem for FormulaProblem {
     type Flip = super::FormulaFlipNeighbor;
 
-    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_ {
         0..self.n_vars
     }
 

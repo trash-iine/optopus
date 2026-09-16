@@ -431,7 +431,8 @@ mod tests {
         let prob: &MaxCut = state.instance;
         for (k, replica) in pa.population.iter_mut().enumerate() {
             for _ in 0..(k * 3) {
-                let f = MaxCutFlipNeighbor::random_neighbor(prob, replica, &mut state.rng);
+                let f = MaxCutFlipNeighbor::random_neighbor(prob, replica, &mut state.rng)
+                    .expect("a non-empty graph has a flip");
                 if f.gain > 0.0 {
                     let _ = f.apply_to_solution(prob, replica);
                 }

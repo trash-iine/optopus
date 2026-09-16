@@ -2,7 +2,10 @@
 
 use super::VertexCover;
 use crate::{
-    common::TabuMemory,
+    common::{
+        TabuMemory,
+        binary::{differing_pairs, random_differing_pair},
+    },
     error::OptError,
     problem::vertex_cover::problem::VertexCoverSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
@@ -28,15 +31,13 @@ impl VertexCoverFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
     ///
     /// A flip's gain needs no correction. It is exactly the value the solution
-    /// already maintains, so this only exists to keep every construction site
+    /// already maintains, so this is [`BinaryProblem::flip_move`](crate::trait_defs::BinaryProblem::flip_move)
+    /// spelled like the other constructors, keeping every construction site
     /// on one path, the way [`VertexCoverSwapNeighbor::new`] does. `prob` is
     /// unused for that reason and taken only so the two constructors read alike
     /// at the call site.
     pub fn new(_prob: &VertexCover, sol: &VertexCoverSolution, i: usize) -> Self {
-        Self {
-            i,
-            gain: sol.gain[i],
-        }
+        <VertexCover as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
     }
 }
 
@@ -230,12 +231,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
     }
 
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
-        prob.graph.iter_on_vertices().flat_map(move |&i| {
-            prob.graph
-                .iter_on_vertices()
-                .filter(move |&&j| j < i && (sol.x[i] != sol.x[j]))
-                .map(move |&j| Self::new(prob, sol, i, j))
-        })
+        differing_pairs(prob, sol).map(move |(i, j)| Self::new(prob, sol, i, j))
     }
 
     fn move_to_be_better_than(
@@ -247,30 +243,14 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
         self.gain + src.objective < other.objective
     }
 
-    /// O(n): collects in-cover and out-of-cover vertices once and picks one
-    /// from each. Every mixed pair is hit with equal probability, matching
-    /// the distribution of sampling [`iter`](MoveToNeighbor::iter) uniformly.
+    /// O(n): one vertex in the cover and one outside it, uniformly over all
+    /// mixed pairs.
     fn random_neighbor(
         prob: &VertexCover,
         sol: &VertexCoverSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Option<Self> {
-        let mut ins = Vec::new();
-        let mut outs = Vec::new();
-        for &v in prob.graph.iter_on_vertices() {
-            if sol.x[v] {
-                ins.push(v);
-            } else {
-                outs.push(v);
-            }
-        }
-        if ins.is_empty() || outs.is_empty() {
-            return None;
-        }
-        let a = ins[rng.random_range(0..ins.len())];
-        let b = outs[rng.random_range(0..outs.len())];
-        let (i, j) = (a.max(b), a.min(b));
-        Some(Self::new(prob, sol, i, j))
+        random_differing_pair(prob, sol, rng).map(|(i, j)| Self::new(prob, sol, i, j))
     }
 }
 

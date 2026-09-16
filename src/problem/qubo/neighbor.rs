@@ -17,7 +17,10 @@
 
 use super::problem::{Coefficient, Qubo};
 use crate::{
-    common::TabuMemory,
+    common::{
+        TabuMemory,
+        binary::{differing_pairs, random_differing_pair},
+    },
     error::OptError,
     problem::qubo::problem::QuboSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
@@ -143,7 +146,8 @@ impl QuboFlipNeighbor {
     /// Builds the flip of variable `i`, reading its cached gain.
     ///
     /// A flip's gain needs no correction. It is exactly the value the solution
-    /// already maintains, so this only exists to keep every construction site
+    /// already maintains, so this is [`BinaryProblem::flip_move`](crate::trait_defs::BinaryProblem::flip_move)
+    /// spelled like the other constructors, keeping every construction site
     /// on one path, the way [`QuboSwapNeighbor::new`] does. `prob` is unused for
     /// that reason and taken only so the two constructors read alike at the call
     /// site.
@@ -159,33 +163,7 @@ impl QuboFlipNeighbor {
     /// assert_eq!(flip.gain, sol.gain[0]);
     /// ```
     pub fn new(_prob: &Qubo, sol: &QuboSolution, i: usize) -> Self {
-        Self {
-            i,
-            gain: sol.gain[i],
-        }
-    }
-
-    /// Generates a random flip neighbor by uniformly selecting a variable from the problem.
-    ///
-    /// Useful as a perturbation step (e.g., in [`RandomWalk`](crate::heuristic::RandomWalk)).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use optopus::prelude::*;
-    ///
-    /// let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 1)]);
-    /// let mut state = SearchState::new(&qubo);
-    /// let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution, &mut state.rng);
-    /// println!("random flip: variable {}, gain {}", flip.i, flip.gain);
-    /// ```
-    pub fn random_neighbor(
-        prob: &Qubo,
-        sol: &QuboSolution,
-        rng: &mut rand::rngs::SmallRng,
-    ) -> Self {
-        let i = prob.variables[rng.random_range(0..prob.variables.len())];
-        Self::new(prob, sol, i)
+        <Qubo as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
     }
 }
 
@@ -285,41 +263,20 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
     /// Returns a lazy iterator over all valid swap pairs `(i, j)` where
     /// `i` and `j` have different values.
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
-        prob.iter_on_variables().flat_map(move |&i| {
-            prob.iter_on_variables()
-                .filter(move |&&j| j < i && (sol.x[i] ^ sol.x[j]))
-                .map(move |&j| Self::new(prob, sol, i, j))
-        })
+        differing_pairs(prob, sol).map(move |(i, j)| Self::new(prob, sol, i, j))
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
         self.gain + src.objective < other.objective
     }
 
-    /// O(n): collects the variables of each value once and picks one from each.
-    /// Every differing-value pair is hit with equal probability, matching the
-    /// distribution of sampling [`iter`](MoveToNeighbor::iter) uniformly.
+    /// O(n): one variable of each value, uniformly over all differing pairs.
     fn random_neighbor(
         prob: &Qubo,
         sol: &QuboSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Option<Self> {
-        let mut zeros = Vec::new();
-        let mut ones = Vec::new();
-        for &v in prob.iter_on_variables() {
-            if sol.x[v] {
-                ones.push(v);
-            } else {
-                zeros.push(v);
-            }
-        }
-        if zeros.is_empty() || ones.is_empty() {
-            return None;
-        }
-        let a = zeros[rng.random_range(0..zeros.len())];
-        let b = ones[rng.random_range(0..ones.len())];
-        let (i, j) = (a.max(b), a.min(b));
-        Some(Self::new(prob, sol, i, j))
+        random_differing_pair(prob, sol, rng).map(|(i, j)| Self::new(prob, sol, i, j))
     }
 }
 
@@ -445,7 +402,8 @@ mod tests {
         let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
         let mut state = SearchState::new(&qubo);
         for _ in 0..20 {
-            let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution, &mut state.rng);
+            let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution, &mut state.rng)
+                .expect("a non-empty QUBO has a flip");
             assert!(flip.i < qubo.len(), "random neighbor index out of bounds");
             assert_eq!(flip.gain, state.solution.gain[flip.i]);
         }

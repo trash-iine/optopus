@@ -25,15 +25,13 @@ impl SatFlipNeighbor {
     /// Builds the flip of variable `i`, reading its cached gain.
     ///
     /// A flip's gain needs no correction. It is exactly the value the solution
-    /// already maintains, so this only exists to keep every construction site
+    /// already maintains, so this is [`BinaryProblem::flip_move`](crate::trait_defs::BinaryProblem::flip_move)
+    /// spelled like the other constructors, keeping every construction site
     /// on one path, the way [`SatSwapNeighbor::new`] does. `prob` is unused for
     /// that reason and taken only so the two constructors read alike at the call
     /// site.
     pub fn new(_prob: &Sat, sol: &SatSolution, i: usize) -> Self {
-        Self {
-            i,
-            gain: sol.gain[i],
-        }
+        <Sat as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
     }
 }
 

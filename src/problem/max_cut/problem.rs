@@ -278,7 +278,7 @@ impl ProblemTrait for MaxCut {
 impl BinaryProblem for MaxCut {
     type Flip = super::MaxCutFlipNeighbor;
 
-    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_ {
         self.graph.iter_on_vertices().copied()
     }
 
