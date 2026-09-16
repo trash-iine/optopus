@@ -14,7 +14,10 @@ pub trait BinaryProblem: ProblemTrait + Sized {
     type Flip: MoveToNeighbor<Self>;
 
     /// Returns an iterator over the indices of the problem's binary variables.
-    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_;
+    ///
+    /// `Send` so that the pair helpers in [`crate::common`] can build the
+    /// `Send` neighborhoods [`MoveToNeighbor::iter`] requires.
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_;
 
     /// Returns the value of variable `i` in `sol`.
     fn variable(sol: &Self::Solution, i: usize) -> bool;

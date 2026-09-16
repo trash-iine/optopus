@@ -17,7 +17,10 @@
 
 use super::{MaxCut, MaxCutSolution};
 use crate::{
-    common::TabuMemory,
+    common::{
+        TabuMemory,
+        binary::{differing_pairs, random_differing_pair},
+    },
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -157,7 +160,8 @@ impl MaxCutFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
     ///
     /// A flip's gain needs no correction. It is exactly the value the solution
-    /// already maintains, so this only exists to keep every construction site
+    /// already maintains, so this is [`BinaryProblem::flip_move`](crate::trait_defs::BinaryProblem::flip_move)
+    /// spelled like the other constructors, keeping every construction site
     /// on one path, the way [`MaxCutSwapNeighbor::new`] does. `prob` is unused
     /// for that reason and taken only so the two constructors read alike at the
     /// call site.
@@ -173,34 +177,7 @@ impl MaxCutFlipNeighbor {
     /// assert_eq!(flip.gain, sol.gain[1]);
     /// ```
     pub fn new(_prob: &MaxCut, sol: &MaxCutSolution, i: usize) -> Self {
-        Self {
-            i,
-            gain: sol.gain[i],
-        }
-    }
-
-    /// Generates a random flip neighbor by uniformly selecting a vertex from the graph.
-    ///
-    /// Useful as a perturbation step (e.g., in [`RandomWalk`](crate::heuristic::RandomWalk)).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use optopus::prelude::*;
-    ///
-    /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0)]);
-    /// let mut state = SearchState::new(&mc);
-    /// let solution = state.solution.clone();
-    /// let flip = MaxCutFlipNeighbor::random_neighbor(&mc, &solution, &mut state.rng);
-    /// println!("random flip: vertex {}, gain {}", flip.i, flip.gain);
-    /// ```
-    pub fn random_neighbor(
-        prob: &MaxCut,
-        sol: &MaxCutSolution,
-        rng: &mut rand::rngs::SmallRng,
-    ) -> Self {
-        let i = prob.graph.vertices[rng.random_range(0..prob.graph.vertices.len())];
-        Self::new(prob, sol, i)
+        <MaxCut as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
     }
 }
 
@@ -318,12 +295,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     /// The gain is computed as `gain[i] + gain[j] + 2*w(i,j)` to account for
     /// the interaction when both vertices are flipped simultaneously.
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
-        prob.graph.iter_on_vertices().flat_map(move |&i| {
-            prob.graph
-                .iter_on_vertices()
-                .filter(move |&&j| j < i && (sol.x[i] ^ sol.x[j]))
-                .map(move |&j| Self::new(prob, sol, i, j))
-        })
+        differing_pairs(prob, sol).map(move |(i, j)| Self::new(prob, sol, i, j))
     }
 
     /// Returns `true` if applying this swap to `src` would produce a solution
@@ -337,30 +309,13 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
         self.gain + src.objective > other.objective
     }
 
-    /// O(n): collects the vertices of each side once and picks one from each.
-    /// Every cross-side pair is hit with equal probability, matching the
-    /// distribution of sampling [`iter`](MoveToNeighbor::iter) uniformly.
+    /// O(n): one vertex from each side, uniformly over all cross-side pairs.
     fn random_neighbor(
         prob: &MaxCut,
         sol: &MaxCutSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Option<Self> {
-        let mut side0 = Vec::new();
-        let mut side1 = Vec::new();
-        for &v in prob.graph.iter_on_vertices() {
-            if sol.x[v] {
-                side1.push(v);
-            } else {
-                side0.push(v);
-            }
-        }
-        if side0.is_empty() || side1.is_empty() {
-            return None;
-        }
-        let a = side0[rng.random_range(0..side0.len())];
-        let b = side1[rng.random_range(0..side1.len())];
-        let (i, j) = (a.max(b), a.min(b));
-        Some(Self::new(prob, sol, i, j))
+        random_differing_pair(prob, sol, rng).map(|(i, j)| Self::new(prob, sol, i, j))
     }
 }
 

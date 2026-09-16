@@ -343,7 +343,7 @@ impl ProblemTrait for Sat {
 impl crate::trait_defs::BinaryProblem for Sat {
     type Flip = super::SatFlipNeighbor;
 
-    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_ {
         0..self.n_vars
     }
 

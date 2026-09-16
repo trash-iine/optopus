@@ -561,7 +561,7 @@ impl ProblemTrait for Qubo {
 impl BinaryProblem for Qubo {
     type Flip = super::QuboFlipNeighbor;
 
-    fn variable_indices(&self) -> impl Iterator<Item = usize> + '_ {
+    fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_ {
         self.iter_on_variables().copied()
     }
 

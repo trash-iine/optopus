@@ -75,10 +75,7 @@ impl MoveToNeighbor<FormulaProblem> for FormulaFlipNeighbor {
 
     fn iter(prob: &FormulaProblem, sol: &FormulaSolution) -> impl Iterator<Item = Self> + Send {
         let n = prob.n_vars;
-        (0..n).map(move |i| FormulaFlipNeighbor {
-            i,
-            gain: sol.gain[i],
-        })
+        (0..n).map(move |i| <FormulaProblem as crate::trait_defs::BinaryProblem>::flip_move(sol, i))
     }
 
     fn move_to_be_better_than(
