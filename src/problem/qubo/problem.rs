@@ -130,7 +130,8 @@ impl QuboSolution {
 /// Minimization: A solution with a lower `objective` is better.
 #[derive(Debug, Clone)]
 pub struct Qubo {
-    /// adj[i] = list of (j, Q[i][j]) for all j in Q[i], including diagonal (i, Q[i][i]).
+    /// adj[i] = list of (j, Q[i][j]) for all j in Q[i], including diagonal (i, Q[i][i]),
+    /// sorted by `j` so lookups binary search.
     adj: Vec<Vec<(usize, Coefficient)>>,
     /// Sorted list of variable IDs that appear in the problem.
     pub(super) variables: Vec<usize>,
@@ -285,18 +286,16 @@ impl Qubo {
     }
 
     fn set_directed(&mut self, from: usize, to: usize, v: Coefficient) {
-        if let Some(entry) = self.adj[from].iter_mut().find(|(k, _)| *k == to) {
-            entry.1 = v;
-        } else {
-            self.adj[from].push((to, v));
+        match self.adj[from].binary_search_by_key(&to, |&(k, _)| k) {
+            Ok(idx) => self.adj[from][idx].1 = v,
+            Err(idx) => self.adj[from].insert(idx, (to, v)),
         }
     }
 
     fn add_directed(&mut self, from: usize, to: usize, v: Coefficient) {
-        if let Some(entry) = self.adj[from].iter_mut().find(|(k, _)| *k == to) {
-            entry.1 += v;
-        } else {
-            self.adj[from].push((to, v));
+        match self.adj[from].binary_search_by_key(&to, |&(k, _)| k) {
+            Ok(idx) => self.adj[from][idx].1 += v,
+            Err(idx) => self.adj[from].insert(idx, (to, v)),
         }
     }
 
@@ -317,9 +316,8 @@ impl Qubo {
     pub fn get_q(&self, i: usize, j: usize) -> Coefficient {
         if i < self.adj.len() {
             self.adj[i]
-                .iter()
-                .find(|(k, _)| *k == j)
-                .map(|(_, v)| *v)
+                .binary_search_by_key(&j, |&(k, _)| k)
+                .map(|idx| self.adj[i][idx].1)
                 .unwrap_or(0)
         } else {
             0
@@ -337,7 +335,7 @@ impl Qubo {
     /// assert!(!qubo.has_entry(0, 2));
     /// ```
     pub fn has_entry(&self, i: usize, j: usize) -> bool {
-        i < self.adj.len() && self.adj[i].iter().any(|(k, _)| *k == j)
+        i < self.adj.len() && self.adj[i].binary_search_by_key(&j, |&(k, _)| k).is_ok()
     }
 
     /// Returns an iterator visiting all variables that have at least one entry.
@@ -456,7 +454,29 @@ impl Qubo {
                 return Err(lines.err("index j must be >= 1 (1-indexed)"));
             }
             let v: i32 = lines.parse_next(&mut tokens, "coefficient v in entry 'i j v'")?;
-            qubo.set_q(i - 1, j - 1, v);
+            let (i, j) = (i - 1, j - 1);
+            qubo.ensure_capacity(i.max(j) + 1);
+            qubo.adj[i].push((j, v));
+            if i != j {
+                qubo.adj[j].push((i, v));
+            }
+            qubo.ensure_variable(i);
+            qubo.ensure_variable(j);
+        }
+
+        // Sort each row once instead of inserting in order entry by entry. The
+        // sort is stable, so among duplicate entries the file's last one is
+        // the one kept, which is what `set_q` would have done.
+        for row in &mut qubo.adj {
+            row.sort_by_key(|&(k, _)| k);
+            row.dedup_by(|later, kept| {
+                if later.0 == kept.0 {
+                    kept.1 = later.1;
+                    true
+                } else {
+                    false
+                }
+            });
         }
 
         Ok(qubo)
