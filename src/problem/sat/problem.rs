@@ -20,6 +20,32 @@ pub struct SatSolution {
     pub n_satisfied: usize,
 }
 
+impl SatSolution {
+    /// Builds the solution for assignment `x`, with the per-variable gains
+    /// and the satisfied-clause count computed from scratch.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let mut sat = Sat::new(2);
+    /// sat.add_clause([1, 2]);
+    /// sat.add_clause([-1]);
+    /// let sol = SatSolution::new_from_assignment(&sat, vec![false, true]);
+    /// assert_eq!(sol.n_satisfied, 2);
+    /// ```
+    pub fn new_from_assignment(sat: &Sat, x: Vec<bool>) -> Self {
+        let gain = (0..sat.n_vars()).map(|i| sat.calc_gain(&x, i)).collect();
+        let n_satisfied = sat.calc_satisfied(&x);
+        Self {
+            x,
+            gain,
+            n_satisfied,
+        }
+    }
+}
+
 impl crate::trait_defs::Evaluate for SatSolution {
     /// MaxSAT maximizes the number of satisfied clauses.
     fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
@@ -329,14 +355,8 @@ impl ProblemTrait for Sat {
     type Solution = SatSolution;
 
     fn new_solution(&self, rng: &mut impl rand::Rng) -> SatSolution {
-        let x: Vec<bool> = (0..self.n_vars).map(|_| rng.random_bool(0.5)).collect();
-        let gain: Vec<i64> = (0..self.n_vars).map(|i| self.calc_gain(&x, i)).collect();
-        let n_satisfied = self.calc_satisfied(&x);
-        SatSolution {
-            x,
-            gain,
-            n_satisfied,
-        }
+        let x = (0..self.n_vars).map(|_| rng.random_bool(0.5)).collect();
+        SatSolution::new_from_assignment(self, x)
     }
 }
 

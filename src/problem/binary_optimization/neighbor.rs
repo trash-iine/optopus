@@ -216,15 +216,7 @@ impl MoveToNeighbor<FormulaProblem> for FormulaSwapNeighbor {
         sol: &FormulaSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Option<Self> {
-        let n = prob.n_vars;
-        if n < 2 {
-            return None;
-        }
-        let a = rng.random_range(0..n);
-        let b = {
-            let b = rng.random_range(0..n - 1);
-            if b >= a { b + 1 } else { b }
-        };
+        let (a, b) = crate::common::permutation::random_distinct_pair(prob.n_vars, rng)?;
         let (i, j) = (a.min(b), a.max(b));
 
         let gain_i = prob.calc_gain_fast(&sol.x, &sol.constraint_vals, i);
@@ -270,17 +262,7 @@ mod tests {
     }
 
     fn make_solution(prob: &FormulaProblem, x: Vec<bool>) -> FormulaSolution {
-        let score = prob.eval_score(&x);
-        let constraint_vals = prob.eval_constraint_vals(&x);
-        let gain: Vec<Value> = (0..prob.n_vars)
-            .map(|i| prob.calc_gain_fast(&x, &constraint_vals, i))
-            .collect();
-        FormulaSolution {
-            x,
-            gain,
-            score,
-            constraint_vals,
-        }
+        FormulaSolution::new_from_assignment(prob, x)
     }
 
     #[test]

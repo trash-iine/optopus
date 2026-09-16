@@ -37,11 +37,7 @@ impl Distance for TspSolution {
     /// Not a metric in the strict sense, but a useful diversity proxy for GA
     /// parent selection.
     fn distance(&self, other: &Self) -> usize {
-        self.tour
-            .iter()
-            .zip(other.tour.iter())
-            .filter(|(a, b)| a != b)
-            .count()
+        crate::common::hamming_distance(&self.tour, &other.tour)
     }
 }
 

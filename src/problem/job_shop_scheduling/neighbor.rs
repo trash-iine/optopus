@@ -367,15 +367,8 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
         sol: &JobShopSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Option<Self> {
-        let n = sol.operations.len();
-        if n < 2 {
-            return None;
-        }
-        let from = rng.random_range(0..n);
-        let to = {
-            let t = rng.random_range(0..n - 1);
-            if t >= from { t + 1 } else { t }
-        };
+        let (from, to) =
+            crate::common::permutation::random_distinct_pair(sol.operations.len(), rng)?;
         Some(Self::new(prob, sol, from, to))
     }
 }
