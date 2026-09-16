@@ -493,7 +493,8 @@ max_iteration = 200
 }
 
 /// `HybridGeneticSearch` is registered only for `Vrp`; every other problem must
-/// reject it at build time rather than silently ignoring the config.
+/// reject it when the config is validated, before any run starts, rather than
+/// silently ignoring the config.
 #[test]
 fn hybrid_genetic_search_is_rejected_for_non_vrp_problems() {
     let instance = write_temp_file("hgs_reject", "4 4\n1 2 1\n2 3 1\n3 4 1\n4 1 1\n");
@@ -513,16 +514,17 @@ max_iteration = 10
 "#,
         instance.display()
     );
-    let report = run_benchmark(&config_toml);
+    let config: BenchmarkConfig = toml::from_str(&config_toml).expect("config parses");
+    let result = Benchmark::run_from_config(config, "benchmark_e2e");
     let _ = std::fs::remove_file(&instance);
-    // An unsupported heuristic fails per run rather than aborting the benchmark.
-    for run in &report.results[0].runs {
-        assert!(
-            run.status.contains("not supported for MaxCut"),
-            "expected a config error, got {:?}",
-            run.status
-        );
-    }
+    let Err(err) = result else {
+        panic!("an unsupported heuristic is a config error");
+    };
+    let msg = err.to_string();
+    assert!(
+        msg.contains("not supported for MaxCut") && msg.contains("HybridGeneticSearch"),
+        "expected a config error naming the heuristic, got {msg:?}"
+    );
 }
 
 #[test]

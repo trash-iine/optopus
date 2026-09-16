@@ -275,11 +275,25 @@ where
             "'max_candidates' must be at least 1 when set".to_string(),
         ));
     }
+    // The constructor asserts the same two bounds; a TOML value has to fail
+    // as a config error, not as a panic inside a run.
+    let learning_rate = learning_rate.unwrap_or(0.01);
+    if learning_rate < 0.0 {
+        return Err(OptError::Config(format!(
+            "'learning_rate' must be non-negative, got {learning_rate}"
+        )));
+    }
+    let softmax_temperature = softmax_temperature.unwrap_or(1.0);
+    if softmax_temperature <= 0.0 {
+        return Err(OptError::Config(format!(
+            "'softmax_temperature' must be strictly positive, got {softmax_temperature}"
+        )));
+    }
 
     let mut rl = ReinforcementLearningSearch::<N>::new(
         cond,
-        learning_rate.unwrap_or(0.01),
-        softmax_temperature.unwrap_or(1.0),
+        learning_rate,
+        softmax_temperature,
         reward,
         *max_candidates,
     );
@@ -460,17 +474,19 @@ where
     }
 }
 
-#[cfg(test)]
-mod factory_tests {
-    use super::*;
-    use crate::benchmark::config::{ProblemKind, StopConditionConfig};
-    use crate::benchmark::problems::{ProblemVisitor, with_problem};
-
-    /// Visitor that builds the heuristic and reports success/failure only.
+/// Builds `config` for `kind` and keeps only the verdict. `validate_config`
+/// runs this over every `(instance, heuristic)` pair before a benchmark opens
+/// a file, so the errors the builders raise (a neighbor the problem lacks, a
+/// tenure out of order, an unknown crossover) surface once at startup instead
+/// of once per run.
+pub(crate) fn check_build(
+    kind: &crate::benchmark::config::ProblemKind,
+    config: &HeuristicConfig,
+) -> Result<(), OptError> {
     struct BuildCheck<'a> {
         config: &'a HeuristicConfig,
     }
-    impl ProblemVisitor for BuildCheck<'_> {
+    impl crate::benchmark::problems::ProblemVisitor for BuildCheck<'_> {
         type Output = Result<(), OptError>;
         fn visit<P>(self) -> Result<(), OptError>
         where
@@ -480,9 +496,16 @@ mod factory_tests {
             build_heuristic::<P>(self.config).map(|_| ())
         }
     }
+    crate::benchmark::problems::with_problem(kind, BuildCheck { config })
+}
+
+#[cfg(test)]
+mod factory_tests {
+    use super::*;
+    use crate::benchmark::config::{ProblemKind, StopConditionConfig};
 
     fn try_build(kind: &ProblemKind, config: &HeuristicConfig) -> Result<(), OptError> {
-        with_problem(kind, BuildCheck { config })
+        check_build(kind, config)
     }
 
     const ALL_PROBLEMS: &[ProblemKind] = &[
