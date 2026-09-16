@@ -485,16 +485,6 @@ mod factory_tests {
         with_problem(kind, BuildCheck { config })
     }
 
-    const ALL_PROBLEMS: &[ProblemKind] = &[
-        ProblemKind::MaxCut,
-        ProblemKind::Qubo,
-        ProblemKind::Sat,
-        ProblemKind::Tsp,
-        ProblemKind::VertexCover,
-        ProblemKind::JobShop,
-        ProblemKind::Vrp,
-    ];
-
     fn base_kinds_for(neighbor: NeighborKind) -> Vec<HeuristicConfig> {
         let sc = StopConditionConfig::default;
         vec![
@@ -538,7 +528,7 @@ mod factory_tests {
     /// Every (problem x base kind x valid neighbor) combination must build.
     #[test]
     fn all_base_kinds_build_for_all_valid_neighbors() {
-        for problem in ALL_PROBLEMS {
+        for problem in ProblemKind::ALL {
             for neighbor in problem.valid_neighbors() {
                 for config in base_kinds_for(neighbor.clone()) {
                     try_build(problem, &config).unwrap_or_else(|e| {

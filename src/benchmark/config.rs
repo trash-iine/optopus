@@ -25,6 +25,19 @@ pub enum ProblemKind {
     Vrp,
 }
 
+impl ProblemKind {
+    /// Every kind, in declaration order, for code that sweeps the problems.
+    pub const ALL: &[ProblemKind] = &[
+        ProblemKind::MaxCut,
+        ProblemKind::Qubo,
+        ProblemKind::Sat,
+        ProblemKind::Tsp,
+        ProblemKind::VertexCover,
+        ProblemKind::JobShop,
+        ProblemKind::Vrp,
+    ];
+}
+
 /// Stop condition as expressed in a config file (duration in seconds instead of `Duration`).
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct StopConditionConfig {
