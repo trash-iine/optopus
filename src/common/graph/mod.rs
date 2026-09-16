@@ -318,6 +318,34 @@ impl Graph {
         i < self.adj.len() && self.adj[i].binary_search_by_key(&j, |&(v, _)| v).is_ok()
     }
 
+    /// The subgraph induced by the vertices `keep` accepts, weights preserved.
+    ///
+    /// Vertex indices are kept, so a vertex of the result is the same vertex
+    /// of `self`. The binary problems build their crossover sub-problems here,
+    /// on the vertices where two parents disagree.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::common::Graph;
+    ///
+    /// let g = Graph::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
+    /// let sub = g.induced_subgraph(|v| v != 1);
+    /// assert_eq!(sub.num_edges(), 1);
+    /// assert_eq!(sub.get_weight(0, 2), 3.0);
+    /// ```
+    pub fn induced_subgraph(&self, keep: impl Fn(usize) -> bool) -> Graph {
+        let mut sub = Graph::new();
+        for &u in self.iter_on_vertices().filter(|&&u| keep(u)) {
+            for &(v, w) in self.iter_on_adjacency(u) {
+                if u < v && keep(v) {
+                    sub.add_weight(u, v, w);
+                }
+            }
+        }
+        sub
+    }
+
     /// Loads a graph from a file.
     ///
     /// # File format
@@ -347,114 +375,42 @@ impl Graph {
     pub fn load_from_file(
         path: impl AsRef<std::path::Path>,
     ) -> Result<Self, crate::error::OptError> {
-        use crate::error::OptError;
-        use std::io::BufRead;
+        use crate::common::InstanceLines;
 
-        let path = path.as_ref();
-        let err = |line: usize, detail: String| OptError::FileLoad {
-            path: path.display().to_string(),
-            line,
-            detail,
-        };
-
-        let file =
-            std::fs::File::open(path).map_err(|e| err(0, format!("failed to open file: {e}")))?;
-        let reader = std::io::BufReader::new(file);
-        let mut line_iter = reader.lines();
-
-        // parse the number of vertices and edges
-        let (n, _) = {
-            let line = line_iter
-                .next()
-                .ok_or_else(|| err(1, "file is empty, expected header 'N M'".into()))?
-                .map_err(|e| err(1, format!("failed to read header line: {e}")))?;
-            let mut iter = line.split_whitespace();
-            let n = iter
-                .next()
-                .ok_or_else(|| err(1, "expected header 'N M', but line is empty".into()))?
-                .parse::<usize>()
-                .map_err(|e| err(1, format!("failed to parse vertex count N: {e}")))?;
-            let m = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        1,
-                        "expected header 'N M', but edge count M is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(1, format!("failed to parse edge count M: {e}")))?;
-            (n, m)
-        };
+        let mut lines = InstanceLines::open(path)?;
+        let header = lines
+            .next_line()?
+            .ok_or_else(|| lines.err("file is empty, expected header 'N M'"))?;
+        let mut tokens = header.split_whitespace();
+        let n: usize = lines.parse_next(&mut tokens, "vertex count N in header 'N M'")?;
+        let _m: usize = lines.parse_next(&mut tokens, "edge count M in header 'N M'")?;
 
         let mut g = Graph {
             adj: vec![vec![]; n],
             vertices: Vec::new(),
         };
-        let mut line_num = 1;
-        for result in line_iter {
-            line_num += 1;
-            let line = result.map_err(|e| err(line_num, format!("failed to read line: {e}")))?;
-            if line.trim().is_empty() {
-                continue;
+        // A 1-indexed vertex from the file, checked against the header.
+        let vertex = |lines: &InstanceLines, v: usize, name: &str| {
+            if v == 0 {
+                return Err(lines.err(format!("vertex index {name} must be >= 1 (1-indexed)")));
             }
-            let mut iter = line.split_whitespace();
-            let i = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        "expected edge 'i j [w]', but vertex i is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(line_num, format!("failed to parse vertex i: {e}")))?;
-            if i == 0 {
-                return Err(err(
-                    line_num,
-                    "vertex index i must be >= 1 (1-indexed)".into(),
-                ));
+            if v > n {
+                return Err(lines.err(format!(
+                    "vertex index {name} = {v} exceeds vertex count N = {n} declared in the header"
+                )));
             }
-            let i = i - 1;
-            if i >= n {
-                return Err(err(
-                    line_num,
-                    format!(
-                        "vertex index i = {} exceeds vertex count N = {n} declared in the header",
-                        i + 1
-                    ),
-                ));
-            }
-            let j = iter
-                .next()
-                .ok_or_else(|| {
-                    err(
-                        line_num,
-                        "expected edge 'i j [w]', but vertex j is missing".into(),
-                    )
-                })?
-                .parse::<usize>()
-                .map_err(|e| err(line_num, format!("failed to parse vertex j: {e}")))?;
-            if j == 0 {
-                return Err(err(
-                    line_num,
-                    "vertex index j must be >= 1 (1-indexed)".into(),
-                ));
-            }
-            let j = j - 1;
-            if j >= n {
-                return Err(err(
-                    line_num,
-                    format!(
-                        "vertex index j = {} exceeds vertex count N = {n} declared in the header",
-                        j + 1
-                    ),
-                ));
-            }
-            let w = match iter.next() {
+            Ok(v - 1)
+        };
+        while let Some(line) = lines.next_data_line()? {
+            let mut tokens = line.split_whitespace();
+            let i = lines.parse_next(&mut tokens, "vertex i in edge 'i j [w]'")?;
+            let i = vertex(&lines, i, "i")?;
+            let j = lines.parse_next(&mut tokens, "vertex j in edge 'i j [w]'")?;
+            let j = vertex(&lines, j, "j")?;
+            let w = match tokens.next() {
                 Some(s) => s
                     .parse::<f32>()
-                    .map_err(|e| err(line_num, format!("failed to parse edge weight w: {e}")))?,
+                    .map_err(|e| lines.err(format!("failed to parse edge weight w: {e}")))?,
                 None => 1.0,
             };
             g.adj[i].push((j, w));
@@ -469,13 +425,12 @@ impl Graph {
         // the sorted-unique invariant that binary search relies on.
         for (u, neighbors) in g.adj.iter().enumerate() {
             if let Some(pair) = neighbors.windows(2).find(|p| p[0].0 == p[1].0) {
-                return Err(err(
+                return Err(lines.err_at(
                     0,
                     format!("duplicate edge ({}, {}) in file", u + 1, pair[0].0 + 1),
                 ));
             }
         }
-
         g.vertices = (0..n).filter(|&i| !g.adj[i].is_empty()).collect();
         Ok(g)
     }

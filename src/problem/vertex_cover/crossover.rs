@@ -1,6 +1,4 @@
-use std::collections::HashSet;
-
-use crate::common::{Graph, lift_binary_solution, uniform_binary_crossover};
+use crate::common::{lift_binary_solution, uniform_binary_crossover};
 use crate::search_state::{Crossover, SubProblemExtractable};
 
 use super::problem::{VertexCover, VertexCoverSolution};
@@ -31,22 +29,7 @@ impl SubProblemExtractable for VertexCover {
         sol1: &VertexCoverSolution,
         sol2: &VertexCoverSolution,
     ) -> VertexCover {
-        let free: HashSet<usize> = self
-            .graph
-            .iter_on_vertices()
-            .filter(|&&v| sol1.x[v] != sol2.x[v])
-            .copied()
-            .collect();
-
-        let mut sub_graph = Graph::new();
-        for &u in &free {
-            for &(v, _w) in self.graph.iter_on_adjacency(u) {
-                if free.contains(&v) && u < v {
-                    sub_graph.add_edge(u, v);
-                }
-            }
-        }
-        VertexCover::new(sub_graph)
+        VertexCover::new(self.graph.induced_subgraph(|v| sol1.x[v] != sol2.x[v]))
     }
 
     /// Lifts the sub-solution back into the full solution space.
@@ -66,6 +49,7 @@ impl SubProblemExtractable for VertexCover {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::Graph;
     use rand::SeedableRng;
 
     fn make_vc() -> VertexCover {
