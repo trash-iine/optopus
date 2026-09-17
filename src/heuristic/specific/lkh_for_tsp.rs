@@ -31,6 +31,14 @@ struct LkScratch {
     /// Chain stacks: tour edges broken / non-closing edges added so far.
     broken: Vec<(usize, usize)>,
     added: Vec<(usize, usize)>,
+    /// `position[city]` = that city's index in the current tour.
+    position: Vec<usize>,
+    /// Validity-check workspace, all sized by the chain rather than the tour.
+    /// `cuts` holds the tour positions the broken edges cut at, sorted;
+    /// `ends` maps each arc endpoint to the arc it belongs to and which end.
+    cuts: Vec<usize>,
+    ends: Vec<(usize, usize, usize)>,
+    seen: Vec<bool>,
 }
 
 impl LkScratch {
@@ -54,6 +62,10 @@ impl LkScratch {
                 1
             };
             self.base_adj[b][s] = a;
+        }
+        self.position.resize(n, 0);
+        for (idx, &city) in tour.iter().enumerate() {
+            self.position[city] = idx;
         }
         self.in_chain.clear();
         self.in_chain.resize(n, false);
@@ -199,7 +211,7 @@ impl LinKernighanHelsgaun {
                         scratch.broken.extend([(t1, t2), (t3, t4)]);
                         scratch.added.clear();
                         scratch.added.extend([(t2, t3), (t4, t1)]);
-                        if is_valid_move(scratch, tour[0]) {
+                        if is_valid_move(scratch, tour) {
                             return Some(LkMove {
                                 removed: scratch.broken.clone(),
                                 added: scratch.added.clone(),
@@ -298,7 +310,7 @@ impl LinKernighanHelsgaun {
                     scratch.added.push((t_last, t_next));
                     scratch.added.push((t_break, t1));
 
-                    if is_valid_move(scratch, tour[0]) {
+                    if is_valid_move(scratch, tour) {
                         return Some(LkMove {
                             removed: scratch.broken.clone(),
                             added: scratch.added.clone(),
@@ -398,88 +410,6 @@ fn is_edge_in(edges: &[(usize, usize)], a: usize, b: usize) -> bool {
         .any(|&(x, y)| (x == a && y == b) || (x == b && y == a))
 }
 
-/// Checks whether replacing `scratch.broken` edges with `scratch.added`
-/// edges in the tour produces a valid Hamiltonian cycle.
-///
-/// Reuses `scratch.adj` as a working copy of the tour adjacency
-/// (`scratch.base_adj`, built by [`LkScratch::prepare`]); no allocation.
-/// `start` must be a tour city (the traversal anchor, `tour[0]`).
-fn is_valid_move(scratch: &mut LkScratch, start: usize) -> bool {
-    let n = scratch.base_adj.len();
-    scratch.adj.clone_from(&scratch.base_adj);
-    let adj = &mut scratch.adj;
-
-    // Remove
-    for &(a, b) in &scratch.broken {
-        if adj[a][0] == b {
-            adj[a][0] = usize::MAX;
-        } else if adj[a][1] == b {
-            adj[a][1] = usize::MAX;
-        } else {
-            return false;
-        }
-        if adj[b][0] == a {
-            adj[b][0] = usize::MAX;
-        } else if adj[b][1] == a {
-            adj[b][1] = usize::MAX;
-        } else {
-            return false;
-        }
-    }
-
-    // Add
-    for &(a, b) in &scratch.added {
-        if adj[a][0] == usize::MAX {
-            adj[a][0] = b;
-        } else if adj[a][1] == usize::MAX {
-            adj[a][1] = b;
-        } else {
-            return false;
-        }
-        if adj[b][0] == usize::MAX {
-            adj[b][0] = a;
-        } else if adj[b][1] == usize::MAX {
-            adj[b][1] = a;
-        } else {
-            return false;
-        }
-    }
-
-    // Every vertex must have degree 2. The base adjacency is a tour (all
-    // degree 2), so only vertices touched by the patch can violate this.
-    for &(a, b) in scratch.broken.iter().chain(scratch.added.iter()) {
-        if adj[a][0] == usize::MAX
-            || adj[a][1] == usize::MAX
-            || adj[b][0] == usize::MAX
-            || adj[b][1] == usize::MAX
-        {
-            return false;
-        }
-    }
-
-    // Traverse and check single cycle of length n
-    let mut count = 0usize;
-    let mut current = start;
-    let mut prev = usize::MAX;
-    loop {
-        count += 1;
-        if count > n {
-            return false;
-        }
-        let next = if adj[current][0] != prev {
-            adj[current][0]
-        } else {
-            adj[current][1]
-        };
-        prev = current;
-        current = next;
-        if current == start {
-            break;
-        }
-    }
-    count == n
-}
-
 // -- Heuristic impl ------------------------------------------------------
 
 impl Heuristic<TspWithCoordinates> for LinKernighanHelsgaun {
@@ -551,6 +481,108 @@ impl Heuristic<TspWithCoordinates> for LinKernighanHelsgaun {
         self.scratch = scratch;
         result
     }
+}
+
+/// The most arc endpoints a chain can produce, twice the deepest k the search
+/// is allowed to reach.
+const MAX_CHAIN_ENDS: usize = 64;
+
+/// Whether replacing `scratch.broken` with `scratch.added` leaves one
+/// Hamiltonian cycle, decided from the patch alone.
+///
+/// Breaking k tour edges cuts the cycle into k arcs, so the question is only
+/// whether the added edges chain those k arcs into a single loop. That is
+/// decided by walking the arcs, which costs O(k log k) for the sort and does
+/// not touch the other n - 2k cities.
+fn is_valid_move(scratch: &mut LkScratch, tour: &[usize]) -> bool {
+    let n = tour.len();
+    let k = scratch.broken.len();
+    if k == 0 || scratch.added.len() != k {
+        return false;
+    }
+
+    // Every broken edge has to be a tour edge; record the position it cuts at.
+    scratch.cuts.clear();
+    for &(a, b) in &scratch.broken {
+        let (pa, pb) = (scratch.position[a], scratch.position[b]);
+        let cut = if (pa + 1) % n == pb {
+            pa
+        } else if (pb + 1) % n == pa {
+            pb
+        } else {
+            return false;
+        };
+        scratch.cuts.push(cut);
+    }
+    scratch.cuts.sort_unstable();
+    if scratch.cuts.windows(2).any(|w| w[0] == w[1]) {
+        return false; // the same tour edge broken twice
+    }
+
+    // Arc j runs from just after cut j to cut j+1, so its two endpoints are
+    // `tour[cuts[j] + 1]` and `tour[cuts[(j + 1) % k]]`.
+    scratch.ends.clear();
+    for j in 0..k {
+        let head = tour[(scratch.cuts[j] + 1) % n];
+        let tail = tour[scratch.cuts[(j + 1) % k]];
+        scratch.ends.push((head, j, 0));
+        scratch.ends.push((tail, j, 1));
+    }
+    // Sorted by city so an endpoint can be looked up by binary search. A city
+    // whose both tour edges are broken is an arc of one city, and appears here
+    // twice, once as each end of that arc.
+    scratch.ends.sort_unstable_by_key(|&(city, _, _)| city);
+
+    // Every added edge joins two arc endpoints, and each endpoint is joined
+    // once. `link` is indexed by `2 * arc + end`.
+    let mut link = [(usize::MAX, usize::MAX); 2 * MAX_CHAIN_ENDS];
+    if 2 * k > link.len() {
+        return false;
+    }
+    // The first slot of `city` that nothing has been joined to yet.
+    let free_slot = |ends: &[(usize, usize, usize)], link: &[(usize, usize)], city: usize| {
+        let idx = ends.binary_search_by_key(&city, |&(c, _, _)| c).ok()?;
+        let lo = ends[..idx].partition_point(|&(c, _, _)| c < city);
+        ends[lo..]
+            .iter()
+            .take_while(|&&(c, _, _)| c == city)
+            .map(|&(_, arc, end)| 2 * arc + end)
+            .find(|&slot| link[slot] == (usize::MAX, usize::MAX))
+    };
+    for &(a, b) in &scratch.added {
+        let (Some(ia), Some(ib)) = (
+            free_slot(&scratch.ends, &link, a),
+            free_slot(&scratch.ends, &link, b),
+        ) else {
+            return false;
+        };
+        if ia == ib {
+            return false; // a self loop on one endpoint
+        }
+        link[ia] = (ib / 2, ib % 2);
+        link[ib] = (ia / 2, ia % 2);
+    }
+
+    // Walk the arcs. Enter arc 0 at its head, leave by its tail, follow the
+    // added edge, and repeat; one cycle iff every arc is visited once.
+    scratch.seen.clear();
+    scratch.seen.resize(k, false);
+    let (mut arc, mut enter_end) = (0usize, 0usize);
+    for _ in 0..k {
+        if scratch.seen[arc] {
+            return false;
+        }
+        scratch.seen[arc] = true;
+        let leave_end = 1 - enter_end;
+        let (next_arc, next_end) = link[2 * arc + leave_end];
+        if next_arc == usize::MAX {
+            return false;
+        }
+        arc = next_arc;
+        enter_end = next_end;
+    }
+    // Back where it started, having covered every arc.
+    arc == 0 && enter_end == 0
 }
 
 #[cfg(test)]
@@ -686,11 +718,34 @@ mod tests {
         scratch.prepare(&tour);
         scratch.broken.extend([(0, 1), (2, 3)]);
         scratch.added.extend([(0, 2), (1, 3)]);
-        assert!(is_valid_move(&mut scratch, tour[0]));
+        assert!(is_valid_move(&mut scratch, &tour));
 
         // Invalid: remove one edge without replacement → broken cycle
         scratch.prepare(&tour);
         scratch.broken.push((0, 1));
-        assert!(!is_valid_move(&mut scratch, tour[0]));
+        assert!(!is_valid_move(&mut scratch, &tour));
+
+        // Invalid: every vertex keeps degree 2, but each arc is closed onto
+        // itself, so the patch leaves two cycles rather than one. This is the
+        // case a degree check alone cannot reject.
+        scratch.prepare(&tour);
+        scratch.broken.extend([(0, 1), (2, 3)]);
+        scratch.added.extend([(0, 3), (1, 2)]);
+        assert!(!is_valid_move(&mut scratch, &tour));
+
+        // A city whose both tour edges are broken becomes an arc of one, and
+        // the walk has to pass through it rather than treat it as malformed.
+        let tour6 = vec![0, 1, 2, 3, 4, 5];
+        scratch.prepare(&tour6);
+        scratch.broken.extend([(1, 2), (2, 3)]);
+        scratch.added.extend([(1, 3), (2, 2)]);
+        assert!(
+            !is_valid_move(&mut scratch, &tour6),
+            "a self loop is not a tour"
+        );
+        scratch.prepare(&tour6);
+        scratch.broken.extend([(1, 2), (2, 3), (4, 5)]);
+        scratch.added.extend([(1, 4), (2, 5), (2, 3)]);
+        assert!(is_valid_move(&mut scratch, &tour6));
     }
 }
