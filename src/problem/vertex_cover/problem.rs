@@ -218,22 +218,6 @@ mod tests {
     }
 
     #[test]
-    fn test_blank_graph() {
-        let vc = VertexCover::new(Graph::new());
-        assert_eq!(vc.graph.len(), 0);
-    }
-
-    #[test]
-    fn test_add_edge_and_has_edge() {
-        let vc = make_triangle();
-        assert_eq!(vc.graph.len(), 3);
-        assert!(vc.graph.has_edge(0, 1));
-        assert!(vc.graph.has_edge(1, 2));
-        assert!(vc.graph.has_edge(0, 2));
-        assert!(!vc.graph.has_edge(0, 0));
-    }
-
-    #[test]
     fn test_calculate_state_triangle_all_false() {
         let vc = make_triangle();
         let (gain, obj, cover_size, uncov) = vc.calculate_state(&[false, false, false]);

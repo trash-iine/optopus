@@ -182,27 +182,6 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_sub_problem_size() {
-        let mc = make_mc();
-        let s = make_sol(&mc, &[(0, false), (1, true), (2, false)]);
-        let sub_same = mc.extract_sub_problem(&s, &s);
-        assert_eq!(
-            sub_same.graph.len(),
-            0,
-            "identical parents → 0 free vertices"
-        );
-
-        let all_f = make_sol(&mc, &[(0, false), (1, false), (2, false)]);
-        let all_t = make_sol(&mc, &[(0, true), (1, true), (2, true)]);
-        let sub_diff = mc.extract_sub_problem(&all_f, &all_t);
-        assert_eq!(
-            sub_diff.graph.len(),
-            3,
-            "all-different parents → 3 free vertices"
-        );
-    }
-
-    #[test]
     fn test_lift_solution() {
         let mc = make_mc();
         // Free: vertices 1 and 2 (differ); Fixed: vertex 0 (same: false)

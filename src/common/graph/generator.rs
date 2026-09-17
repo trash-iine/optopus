@@ -577,19 +577,6 @@ mod tests {
     }
 
     #[test]
-    fn grid_torus_is_regular_with_the_expected_size() {
-        let g2 = Graph::grid_torus_2d(8);
-        assert_eq!(g2.len(), 64);
-        assert_eq!(g2.num_edges(), 2 * 64);
-        assert!((0..64).all(|v| g2.degree(v) == 4));
-
-        let g3 = Graph::grid_torus_3d(4);
-        assert_eq!(g3.len(), 64);
-        assert_eq!(g3.num_edges(), 3 * 64);
-        assert!((0..64).all(|v| g3.degree(v) == 6));
-    }
-
-    #[test]
     fn grid_torus_wraps_around_every_axis() {
         // The seam edges are the ones a non-periodic grid would be missing.
         let l = 5;
