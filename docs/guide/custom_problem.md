@@ -104,8 +104,11 @@ benchmark cannot register partially.
 ## Performance note
 
 The default `move_to_be_better_than` clones the solution and applies the move.
-Override it with an O(1) check against cached per-variable gains.
-`MaxCutFlipNeighbor` and `QuboFlipNeighbor` are the reference implementations.
+Override it with an O(1) check against cached per-variable gains. The one-line
+form is `self.evaluate().improves_over(src.evaluate(), other.evaluate())`, which
+reads the optimization direction from the `Evaluate` impls instead of restating
+it as a comparison operator. `MaxCutFlipNeighbor` and `QuboFlipNeighbor` are the
+reference implementations.
 
 ## Next reading
 

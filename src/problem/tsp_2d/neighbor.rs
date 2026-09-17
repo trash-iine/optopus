@@ -139,7 +139,8 @@ impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
         src: &TspSolution,
         other: &TspSolution,
     ) -> bool {
-        self.gain + src.objective < other.objective
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(1) expected: rejection-samples a uniformly random valid `(i, j)`
@@ -334,7 +335,8 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
         src: &TspSolution,
         other: &TspSolution,
     ) -> bool {
-        self.gain + src.objective < other.objective
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(1): samples a uniformly random `(pos, ins)` pair with

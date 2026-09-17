@@ -84,7 +84,8 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
-        (src.n_satisfied as i64 + self.gain) > other.n_satisfied as i64
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(1): picks a uniformly random variable.
@@ -182,7 +183,8 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
-        (src.n_satisfied as i64 + self.gain) > other.n_satisfied as i64
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(clause): picks a uniformly random pair from the precomputed

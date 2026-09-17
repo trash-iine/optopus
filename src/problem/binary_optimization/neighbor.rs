@@ -84,7 +84,8 @@ impl MoveToNeighbor<FormulaProblem> for FormulaFlipNeighbor {
         src: &FormulaSolution,
         other: &FormulaSolution,
     ) -> bool {
-        src.score + self.gain > other.score
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(1): picks a uniformly random variable.
@@ -206,7 +207,8 @@ impl MoveToNeighbor<FormulaProblem> for FormulaSwapNeighbor {
         src: &FormulaSolution,
         other: &FormulaSolution,
     ) -> bool {
-        src.score + self.gain > other.score
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(n): samples a uniformly random pair `i < j` and computes its gain

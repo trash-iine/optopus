@@ -165,7 +165,8 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
         src: &JobShopSolution,
         other: &JobShopSolution,
     ) -> bool {
-        src.objective as f64 + self.gain < other.objective as f64
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(n) + one decode: collects the non-identity swap positions once,
@@ -346,7 +347,8 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
         src: &JobShopSolution,
         other: &JobShopSolution,
     ) -> bool {
-        src.objective as f64 + self.gain < other.objective as f64
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(1) + one decode: samples a uniformly random `(from, to)` pair with
