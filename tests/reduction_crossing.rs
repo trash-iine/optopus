@@ -140,15 +140,21 @@ fn an_unreducible_instance_is_left_alone() {
     let mc = MaxCut::from_edges(edges);
     assert!(MaxCutKernel::new(&mc).is_trivial());
 
-    let mut state = SearchState::new_with_seed(&mc, 5);
-    LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(3_000))
-        .run(&mut state)
-        .unwrap();
+    let crossed = solve_through_kernel(
+        &mc,
+        &StopCondition::iterations(3_000),
+        &mut LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(3_000)),
+        5,
+    );
 
     let mut bare = SearchState::new_with_seed(&mc, 5);
     LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(3_000))
         .run(&mut bare)
         .unwrap();
 
-    assert_eq!(state.best_solution.x, bare.best_solution.x);
+    assert_eq!(crossed.best_solution.x, bare.best_solution.x);
+    assert_eq!(
+        crossed.best_solution.objective,
+        bare.best_solution.objective
+    );
 }

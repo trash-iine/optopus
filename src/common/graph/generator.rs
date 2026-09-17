@@ -525,33 +525,36 @@ mod tests {
         }
     }
 
+    /// `with_random_weights` draws from `min..=max` and skips zero by shifting
+    /// the draw up, so the cases that matter are the ones around that shift: a
+    /// range straddling zero, a range whose endpoint is zero, and a range with
+    /// no room to shift at all.
     #[test]
-    fn zero_is_never_drawn_and_both_signs_appear() {
-        let mut rng = seeded_rng(8);
-        // The only nonzero weights in (-1, 1) are -1 and 1.
-        let g = Graph::erdos_renyi(100, 0.3, &mut rng).with_random_weights((-1, 1), &mut rng);
-        assert!(g.num_edges() > 100);
-        let mut seen = HashSet::new();
-        for (_, _, w) in g.edges() {
-            assert!(w == -1.0 || w == 1.0, "unexpected weight {w}");
-            seen.insert(w.to_bits());
-        }
-        assert_eq!(seen.len(), 2, "both -1 and 1 should occur");
-    }
+    fn weights_stay_in_range_and_are_never_zero() {
+        for (seed, (min, max)) in [(8u64, (-1, 1)), (9, (0, 3)), (3, (5, 5)), (4, (-5, 5))] {
+            let mut rng = seeded_rng(seed);
+            let g = Graph::erdos_renyi(60, 0.3, &mut rng).with_random_weights((min, max), &mut rng);
+            assert!(
+                g.num_edges() > 100,
+                "({min}, {max}): too few edges to judge"
+            );
 
-    #[test]
-    fn zero_is_skipped_at_a_range_endpoint() {
-        let mut rng = seeded_rng(9);
-        let g = Graph::erdos_renyi(60, 0.3, &mut rng).with_random_weights((0, 3), &mut rng);
-        assert!(g.edges().all(|(_, _, w)| (1.0..=3.0).contains(&w)));
-    }
+            let mut seen = HashSet::new();
+            for (_, _, w) in g.edges() {
+                assert!(w != 0.0, "({min}, {max}): drew zero");
+                assert!(
+                    (min as f32..=max as f32).contains(&w),
+                    "({min}, {max}): drew {w}"
+                );
+                seen.insert(w.to_bits());
+            }
 
-    #[test]
-    fn fixed_weight_when_min_equals_max() {
-        let mut rng = seeded_rng(3);
-        let g = Graph::barabasi_albert(40, 2, &mut rng).with_random_weights((5, 5), &mut rng);
-        for (_, _, w) in g.edges() {
-            assert_eq!(w, 5.0);
+            // (-1, 1) leaves exactly -1 and 1; (5, 5) leaves exactly 5.
+            match (min, max) {
+                (-1, 1) => assert_eq!(seen.len(), 2, "both signs should occur"),
+                (5, 5) => assert_eq!(seen.len(), 1, "a degenerate range is one weight"),
+                _ => assert!(seen.len() > 1, "({min}, {max}): only one weight drawn"),
+            }
         }
     }
 

@@ -255,30 +255,6 @@ max_iteration = 300
     );
 }
 
-/// A config naming an option that no longer exists (`plateau_prob`, dropped
-/// with the plateau perturbations) must still load and still run
-/// reproducibly: the heuristic config enum does not deny unknown fields, so an
-/// old TOML degrades to the current defaults instead of failing to parse.
-#[test]
-fn breakout_local_search_ignores_a_removed_option_and_stays_reproducible() {
-    assert_reproducible(
-        "repro_bls_removed_option",
-        r#"
-[[heuristics]]
-kind = "BreakoutLocalSearch"
-tabu_tenure = [2, 5]
-t = 100
-l0 = 3
-p0 = 0.8
-q = 0.5
-plateau_prob = 0.4
-
-[heuristics.stop_condition]
-max_iteration = 300
-"#,
-    );
-}
-
 /// Population Annealing consumes the RNG for population init, resampling and
 /// Metropolis sweeps; all must be seed-stable.
 #[test]

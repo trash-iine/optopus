@@ -607,7 +607,7 @@ mod tests {
     }
 
     #[test]
-    fn test_lkh_improves_suboptimal_tour() {
+    fn test_lkh_improves_a_suboptimal_tour_and_keeps_it_a_tour() {
         let prob = make_square_tsp();
         // [0,1,3,2] has a crossing (length ≈ 2 + 2*sqrt(2))
         let sol = make_solution(&prob, vec![0, 1, 3, 2]);
@@ -623,26 +623,16 @@ mod tests {
             initial_obj,
             state.best_solution.objective,
         );
-    }
 
-    #[test]
-    fn test_lkh_produces_valid_tour() {
-        let prob = make_square_tsp();
-        let sol = make_solution(&prob, vec![0, 1, 3, 2]);
-
-        let mut state = SearchState::with_solution(&prob, sol);
-        let mut lkh = LinKernighanHelsgaun::new(StopCondition::iterations(100), 3, 5);
-        lkh.run(&mut state).unwrap();
-
+        // The same run also has to leave a tour, not a mangled sequence: a
+        // sequential move that drops or repeats a city shows up here and
+        // nowhere else, and running it a second time to look would only
+        // repeat the descent.
         let tour = &state.best_solution.tour;
-        assert_eq!(tour.len(), 4);
-
-        // Check valid permutation
         let mut sorted = tour.clone();
         sorted.sort();
-        assert_eq!(sorted, vec![0, 1, 2, 3]);
+        assert_eq!(sorted, vec![0, 1, 2, 3], "not a permutation: {tour:?}");
 
-        // Check objective matches calculated length
         let expected = prob.calculate_tour_length(tour).unwrap();
         assert!(
             (state.best_solution.objective - expected).abs() < 1e-9,

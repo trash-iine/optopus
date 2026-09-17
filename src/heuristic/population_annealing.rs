@@ -375,14 +375,18 @@ mod tests {
     #[test]
     fn pa_runs_without_error_and_improves() {
         let mc = small_instance();
-        for seed in 0..10 {
+        // Two seeds rather than ten: they walk the same code, and the exact
+        // trajectory of a third is pinned in `tests/pa_trajectory.rs`. The
+        // claim is improvement on the starting cut, not a positive one --
+        // every edge here weighs 1, so a positive cut proves nothing.
+        for seed in 0..2 {
             let mut state = SearchState::new_with_seed(&mc, seed);
-            let mut pa = new_pa(StopCondition::iterations(2_000));
+            let initial = state.best_solution.objective;
+            let mut pa = new_pa(StopCondition::iterations(500));
             pa.run(&mut state).expect("PA must not error");
             assert!(
-                state.best_solution.objective > 0.0,
-                "PA should find a positive cut, got {}",
-                state.best_solution.objective
+                state.best_solution.objective > initial,
+                "seed {seed}: PA did not improve on its start ({initial})"
             );
         }
     }
@@ -443,7 +447,9 @@ mod tests {
     fn clear_resets_population() {
         let mc = small_instance();
         let mut state = SearchState::new_with_seed(&mc, 1);
-        let mut pa = new_pa(StopCondition::iterations(500));
+        // One iteration is enough to populate it; the point is what `clear`
+        // does afterwards.
+        let mut pa = new_pa(StopCondition::iterations(1));
         pa.run(&mut state).unwrap();
         assert!(!pa.population.is_empty());
         pa.clear();

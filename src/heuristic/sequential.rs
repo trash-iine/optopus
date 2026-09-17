@@ -127,10 +127,11 @@ impl<Problem: ProblemTrait> Heuristic<Problem> for Iterated<Problem> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::heuristic::{LocalSearch, RandomWalk, StopCondition};
+    use crate::heuristic::{RandomWalk, StopCondition};
     use crate::problem::{MaxCut, MaxCutFlipNeighbor};
     use crate::search_state::SearchState;
-    use crate::trait_defs::Rankable;
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
     fn small_maxcut() -> MaxCut {
         MaxCut::from_edges([
@@ -188,26 +189,72 @@ mod tests {
         assert_eq!(state.iteration, 10);
     }
 
+    /// Records which phase ran, and advances one iteration so a budget of `n`
+    /// counts `n` phases.
+    struct Probe {
+        id: usize,
+        log: Rc<RefCell<Vec<usize>>>,
+        stop_condition: StopCondition,
+    }
+
+    impl Heuristic<MaxCut> for Probe {
+        fn stop_condition(&self) -> &StopCondition {
+            &self.stop_condition
+        }
+
+        fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
+            self.log.borrow_mut().push(self.id);
+            state.progress_iteration();
+            Ok(())
+        }
+    }
+
+    /// `Iterated` is search, then the outer check, then perturbation, and the
+    /// order and the check are the whole of it. Two probes make the sequence
+    /// readable: deleting the perturbation phase, or moving the early return
+    /// past it, changes this log. Asserting that the best did not get worse
+    /// would not, because `update_best` never moves the best the wrong way.
     #[test]
-    fn iterated_preserves_best_across_perturbation() {
+    fn iterated_alternates_search_and_perturbation_and_checks_between_them() {
         let mc = small_maxcut();
         let mut state = SearchState::new_with_seed(&mc, 42);
-        let initial_obj = state.best_solution.objective;
+
+        let log = Rc::new(RefCell::new(Vec::new()));
+        let probe = |id| {
+            Box::new(Probe {
+                id,
+                log: Rc::clone(&log),
+                stop_condition: StopCondition::iterations(1),
+            }) as Box<dyn Heuristic<MaxCut>>
+        };
+
+        let mut ils = Iterated::new(StopCondition::iterations(5), probe(0), probe(1));
+        ils.run(&mut state).unwrap();
+
+        // Five single-iteration phases: search, perturbation, search,
+        // perturbation, and a search that meets the budget, after which the
+        // outer check returns before the perturbation of that cycle.
+        assert_eq!(&log.borrow()[..], &[0, 1, 0, 1, 0]);
+        assert_eq!(state.iteration, 5);
+    }
+
+    #[test]
+    fn iterated_merges_both_phases_into_the_counters() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 42);
 
         let mut ils = Iterated::new(
             StopCondition::iterations(100),
-            Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
-                StopCondition::iterations(50),
+            Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
+                StopCondition::iterations(7),
             )),
             Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
-                StopCondition::iterations(5),
+                StopCondition::iterations(3),
             )),
         );
         ils.run(&mut state).unwrap();
 
-        assert!(state.iteration >= 100);
-        assert!(state.best_solution.objective >= initial_obj);
-        // The best solution must never be worse than the current one.
-        assert!(!state.solution.is_better_than(&state.best_solution));
+        assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
+        assert_eq!(state.iteration % 10, 0, "a cycle is 7 + 3 iterations");
     }
 }

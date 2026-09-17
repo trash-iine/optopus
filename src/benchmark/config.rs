@@ -598,10 +598,32 @@ neighbor = "Flip"
         );
     }
 
+    /// The two halves of the compatibility contract, which pull in opposite
+    /// directions and so are easiest to read side by side: a kind that does
+    /// not exist is an error, because it names a search nobody can run, while
+    /// a field that no longer exists is not, because an old TOML naming a
+    /// dropped option should degrade to the current defaults rather than stop
+    /// loading. `plateau_prob` went with the plateau perturbations.
     #[test]
-    fn unknown_kind_fails_at_parse_time() {
+    fn an_unknown_kind_fails_to_parse_but_an_unknown_field_does_not() {
         toml::from_str::<HeuristicConfig>(r#"kind = "NoSuchHeuristic""#)
             .expect_err("unknown kind must fail");
+
+        let with_dropped_option = r#"
+kind = "BreakoutLocalSearch"
+tabu_tenure = [2, 5]
+t = 100
+l0 = 3
+p0 = 0.8
+q = 0.5
+plateau_prob = 0.4
+"#;
+        let parsed: HeuristicConfig =
+            toml::from_str(with_dropped_option).expect("a dropped option must not break parsing");
+        assert!(matches!(
+            parsed,
+            HeuristicConfig::BreakoutLocalSearch { l0: 3, .. }
+        ));
     }
 
     #[test]
