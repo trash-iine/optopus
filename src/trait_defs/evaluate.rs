@@ -35,6 +35,18 @@ impl Evaluable<f64> {
             Evaluable::Minimize(value) => value,
         }
     }
+
+    /// Whether this delta, applied to the solution `from`, lands better than
+    /// the solution `over`.
+    ///
+    /// The three values are read through [`minimized`](Self::minimized), so the
+    /// optimization direction is stated once, by the `Evaluate` impls, and the
+    /// comparison itself does not restate it. This is the body every
+    /// [`MoveToNeighbor::move_to_be_better_than`](crate::trait_defs::MoveToNeighbor::move_to_be_better_than)
+    /// override in the crate spells out.
+    pub fn improves_over(self, from: Evaluable<f64>, over: Evaluable<f64>) -> bool {
+        from.minimized() + self.minimized() < over.minimized()
+    }
 }
 
 /// Reports an objective value, or a change in one, with the direction attached.

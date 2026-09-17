@@ -125,7 +125,8 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
-        self.gain + src.objective < other.objective
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(1): picks a uniformly random variable.
@@ -267,7 +268,8 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
-        self.gain + src.objective < other.objective
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(n): one variable of each value, uniformly over all differing pairs.

@@ -128,7 +128,8 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         src: &MaxCutSolution,
         other: &MaxCutSolution,
     ) -> bool {
-        self.gain + src.objective > other.objective
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(1): picks a uniformly random vertex.
@@ -306,7 +307,8 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
         src: &MaxCutSolution,
         other: &MaxCutSolution,
     ) -> bool {
-        self.gain + src.objective > other.objective
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(n): one vertex from each side, uniformly over all cross-side pairs.

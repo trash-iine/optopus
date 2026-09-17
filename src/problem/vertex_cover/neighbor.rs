@@ -129,7 +129,8 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
         src: &VertexCoverSolution,
         other: &VertexCoverSolution,
     ) -> bool {
-        self.gain + src.objective < other.objective
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(1): picks a uniformly random vertex.
@@ -240,7 +241,8 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
         src: &VertexCoverSolution,
         other: &VertexCoverSolution,
     ) -> bool {
-        self.gain + src.objective < other.objective
+        self.evaluate()
+            .improves_over(src.evaluate(), other.evaluate())
     }
 
     /// O(n): one vertex in the cover and one outside it, uniformly over all
