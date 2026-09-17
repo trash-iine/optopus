@@ -227,6 +227,128 @@ impl BenchmarkReport {
 mod report_tests {
     use super::*;
 
+    /// A run with everything set, so a test can knock out one field at a time.
+    fn run(best_objective: f64, status: &str) -> SingleRunResult {
+        SingleRunResult {
+            run_index: 0,
+            status: status.to_string(),
+            best_objective,
+            best_iteration: 1,
+            time_to_best_secs: 0.5,
+            total_time_secs: 1.0,
+            initial_objective: Some(0.0),
+            improvement: Some(best_objective),
+            n_accepted: Some(3),
+            n_rejected: Some(1),
+            n_best_updates: Some(2),
+            seed: None,
+            solution: vec![],
+            trajectory: vec![],
+        }
+    }
+
+    /// `best` and `worst` are the two ends of the same range, and which end is
+    /// which is the only thing `minimize` decides. Getting it backwards would
+    /// not fail any run, only report the worst result of every minimizing
+    /// benchmark as its best.
+    #[test]
+    fn minimize_decides_which_end_of_the_range_is_best() {
+        let runs = [
+            run(1.0, "success"),
+            run(5.0, "success"),
+            run(3.0, "success"),
+        ];
+
+        let maximized = compute_summary(&runs, false);
+        assert_eq!(maximized.best_objective, 5.0);
+        assert_eq!(maximized.worst_objective, 1.0);
+
+        let minimized = compute_summary(&runs, true);
+        assert_eq!(minimized.best_objective, 1.0);
+        assert_eq!(minimized.worst_objective, 5.0);
+
+        // The direction changes nothing else.
+        assert_eq!(maximized.avg_objective, 3.0);
+        assert_eq!(minimized.avg_objective, 3.0);
+
+        // Population standard deviation of 1, 5, 3 about 3: sqrt(8/3).
+        assert!((minimized.std_objective - (8.0f64 / 3.0).sqrt()).abs() < 1e-12);
+    }
+
+    /// Every problem's direction is the one the summary is read with, so the
+    /// table is checked through the summary rather than against a copy of
+    /// itself.
+    #[test]
+    fn every_problem_kind_summarises_in_its_own_direction() {
+        use crate::benchmark::config::ProblemKind;
+
+        let runs = [run(1.0, "success"), run(5.0, "success")];
+        for kind in ProblemKind::ALL {
+            let summary = compute_summary(&runs, kind.minimize());
+            let (best, worst) = match kind {
+                ProblemKind::MaxCut | ProblemKind::Sat => (5.0, 1.0),
+                _ => (1.0, 5.0),
+            };
+            assert_eq!(summary.best_objective, best, "{kind:?}");
+            assert_eq!(summary.worst_objective, worst, "{kind:?}");
+        }
+    }
+
+    /// Failed runs are dropped before anything is averaged, and a combination
+    /// where every run failed has no statistics rather than zeroed ones --
+    /// a zero would read as a legitimate result in the report.
+    #[test]
+    fn failed_runs_are_excluded_and_an_all_failed_summary_is_not_a_number() {
+        let mixed = [
+            run(1.0, "success"),
+            run(100.0, "error: out of memory"),
+            run(3.0, "success"),
+        ];
+        let summary = compute_summary(&mixed, false);
+        assert_eq!(summary.num_successful_runs, 2);
+        assert_eq!(summary.best_objective, 3.0);
+        assert_eq!(summary.avg_objective, 2.0);
+
+        let none = [run(1.0, "error: out of memory")];
+        let summary = compute_summary(&none, false);
+        assert_eq!(summary.num_successful_runs, 0);
+        assert!(summary.best_objective.is_nan());
+        assert!(summary.avg_objective.is_nan());
+        assert!(summary.std_objective.is_nan());
+        assert!(summary.avg_total_time_secs.is_nan());
+        assert!(summary.avg_improvement.is_none());
+        assert!(summary.avg_acceptance_rate.is_none());
+    }
+
+    /// The optional averages are all-or-nothing: a field that only some runs
+    /// carry is reported for none of them, because an average over a subset
+    /// would silently be an average over a different denominator.
+    #[test]
+    fn an_optional_field_is_averaged_only_when_every_run_carries_it() {
+        let mut runs = [run(1.0, "success"), run(3.0, "success")];
+        let summary = compute_summary(&runs, false);
+        assert_eq!(summary.avg_n_accepted, Some(3.0));
+        assert_eq!(summary.avg_n_best_updates, Some(2.0));
+        assert_eq!(summary.avg_acceptance_rate, Some(0.75)); // 3 / (3 + 1)
+
+        runs[1].n_accepted = None;
+        let summary = compute_summary(&runs, false);
+        assert_eq!(summary.avg_n_accepted, None);
+        assert_eq!(summary.avg_acceptance_rate, None, "the rate needs both");
+        assert_eq!(summary.avg_n_rejected, Some(1.0), "the other is unaffected");
+    }
+
+    /// A run that applied no move at all divides by zero; the rate is reported
+    /// as no acceptances rather than as a NaN that spreads through the average.
+    #[test]
+    fn a_run_that_moved_nothing_has_an_acceptance_rate_of_zero() {
+        let mut runs = [run(1.0, "success"), run(3.0, "success")];
+        runs[0].n_accepted = Some(0);
+        runs[0].n_rejected = Some(0);
+        let summary = compute_summary(&runs, false);
+        assert_eq!(summary.avg_acceptance_rate, Some(0.375)); // (0 + 0.75) / 2
+    }
+
     #[test]
     fn write_to_dir_creates_timestamped_file() {
         let report = BenchmarkReport {

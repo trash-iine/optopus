@@ -106,6 +106,7 @@ mod tests {
     use crate::problem::MaxCutFlipNeighbor;
     use crate::problem::max_cut::MaxCut;
     use crate::search_state::SearchState;
+    use crate::trait_defs::Rankable;
 
     fn small_maxcut() -> MaxCut {
         MaxCut::from_edges([
@@ -119,6 +120,40 @@ mod tests {
             (3, 5, 1.0),
             (4, 5, 1.0),
         ])
+    }
+
+    /// The late acceptance is the `candidate_score >= history_score` half of
+    /// the rule, and it is the only reason this is not hill climbing: it is
+    /// what lets the current score fall. Drop that term and the score is
+    /// monotone, so a run in which it never falls proves nothing. Stepping
+    /// `run_once` and watching `current_score` is what separates the two.
+    #[test]
+    fn the_history_window_lets_the_current_score_fall() {
+        let mc = small_maxcut();
+        let mut state = SearchState::new_with_seed(&mc, 11);
+        let mut lahc = LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
+            StopCondition::iterations(300),
+            20,
+        );
+
+        let mut fell = false;
+        while !lahc.is_done(&state) {
+            let before = lahc.current_score;
+            lahc.run_once(&mut state).unwrap();
+            if lahc.current_score < before {
+                fell = true;
+            }
+        }
+
+        assert!(
+            fell,
+            "the current score never fell, so the history window never accepted anything"
+        );
+        // The window is circular: it is allocated once and reused, so its
+        // length stays put however far the index runs.
+        assert_eq!(lahc.history.len(), 20);
+        assert!(lahc.history_index > 20);
+        assert!(!state.solution.is_better_than(&state.best_solution));
     }
 
     #[test]

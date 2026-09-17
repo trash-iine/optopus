@@ -324,22 +324,104 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::problem::max_cut::MaxCut;
+    use crate::problem::max_cut::{MaxCut, MaxCutSolution};
     use crate::search_state::SearchState;
 
+    /// A weighted instance with an odd cycle and a pendant, so no two vertices
+    /// have the same neighborhood and a gain update that touches the wrong
+    /// neighbor cannot cancel out.
+    fn weighted_instance() -> MaxCut {
+        MaxCut::from_edges([
+            (0, 1, 1.0),
+            (0, 2, 2.0),
+            (1, 2, -3.0),
+            (1, 3, 4.0),
+            (2, 3, 0.5),
+            (3, 4, -1.5),
+        ])
+    }
+
+    /// `apply_to_solution` updates the objective and every touched gain in
+    /// place rather than re-deriving them, and a wrong sign or a missed
+    /// neighbor there does not show up in the solution's assignment, only in
+    /// the caches every heuristic then reads. So the caches are compared
+    /// against a full recompute after each move, for flips and swaps both.
     #[test]
-    fn test_flip_neighbor() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+    fn apply_leaves_the_objective_and_every_gain_exact() {
+        let mc = weighted_instance();
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![true, false, true, false, true]);
 
-        let mut state = SearchState::new(&mc);
-        state.solution.x[0] = true;
-        state.solution.x[1] = false;
-        state.solution.x[2] = true;
+        let check = |s: &MaxCutSolution, what: &str| {
+            assert_eq!(
+                s.objective,
+                mc.calculate_cut_size(&s.x),
+                "{what}: objective drifted"
+            );
+            for &i in mc.graph.iter_on_vertices() {
+                assert_eq!(
+                    s.gain[i],
+                    mc.calculate_gain(&s.x, i),
+                    "{what}: gain[{i}] drifted"
+                );
+            }
+        };
 
-        let neighbor = MaxCutFlipNeighbor { i: 1, gain: -2.0 };
-        state.apply(&neighbor).unwrap();
+        check(&sol, "the starting solution");
 
-        assert!(state.solution.x[1]);
+        for m in MaxCutFlipNeighbor::iter(&mc, &sol) {
+            let mut s = sol.clone();
+            m.apply_to_solution(&mc, &mut s).unwrap();
+            assert_eq!(s.x[m.i], !sol.x[m.i], "flip {} did not move", m.i);
+            check(&s, &format!("flip {}", m.i));
+        }
+
+        for m in MaxCutSwapNeighbor::iter(&mc, &sol) {
+            let mut s = sol.clone();
+            m.apply_to_solution(&mc, &mut s).unwrap();
+            assert_eq!(
+                s.x[m.i], !sol.x[m.i],
+                "swap ({}, {}) did not move i",
+                m.i, m.j
+            );
+            assert_eq!(
+                s.x[m.j], !sol.x[m.j],
+                "swap ({}, {}) did not move j",
+                m.i, m.j
+            );
+            check(&s, &format!("swap ({}, {})", m.i, m.j));
+        }
+    }
+
+    /// The gain a move advertises is what every heuristic ranks it by, so it
+    /// has to be the objective difference the move actually makes.
+    #[test]
+    fn an_advertised_gain_is_the_objective_difference_it_makes() {
+        let mc = weighted_instance();
+        let sol = MaxCutSolution::new_from_assignment(&mc, vec![true, false, true, false, true]);
+
+        for m in MaxCutFlipNeighbor::iter(&mc, &sol) {
+            let mut moved = sol.x.clone();
+            moved[m.i] = !moved[m.i];
+            assert_eq!(
+                m.gain,
+                mc.calculate_cut_size(&moved) - sol.objective,
+                "flip {}",
+                m.i
+            );
+        }
+
+        for m in MaxCutSwapNeighbor::iter(&mc, &sol) {
+            let mut moved = sol.x.clone();
+            moved[m.i] = !moved[m.i];
+            moved[m.j] = !moved[m.j];
+            assert_eq!(
+                m.gain,
+                mc.calculate_cut_size(&moved) - sol.objective,
+                "swap ({}, {})",
+                m.i,
+                m.j
+            );
+        }
     }
 
     #[test]

@@ -711,6 +711,101 @@ mod tests {
         assert!(s0.is_better_than(&s1));
     }
 
+    /// The operator impls flatten nested `Add` and `Mul` as they build, and
+    /// `compile_expr` folds either shape. So the shape of the tree is not a
+    /// contract, and pinning it would break a correct rewrite of the
+    /// operators; what is a contract is that the two shapes score the same.
+    #[test]
+    fn a_flattened_expression_scores_the_same_as_a_nested_one() {
+        let nested = Expr::Add(vec![
+            Expr::Add(vec![
+                Expr::Var(0),
+                Expr::Mul(vec![Expr::Const(2.0), Expr::Var(1)]),
+            ]),
+            Expr::Mul(vec![
+                Expr::Mul(vec![Expr::Const(3.0), Expr::Var(2)]),
+                Expr::Const(1.0),
+            ]),
+            Expr::Neg(Box::new(Expr::Neg(Box::new(Expr::Var(0))))),
+        ]);
+        let flat = Expr::Var(0) + 2.0 * Expr::Var(1) + 3.0 * Expr::Var(2) + Expr::Var(0);
+
+        let build = |objective| FormulaProblem::new(3, objective, OptDirection::Maximize, vec![]);
+        let (a, b) = (build(nested), build(flat));
+
+        for i in 0..8u8 {
+            let x: Vec<bool> = (0..3).map(|k| i >> k & 1 == 1).collect();
+            assert!(
+                (a.eval_score(&x) - b.eval_score(&x)).abs() < 1e-9,
+                "{x:?}: {} vs {}",
+                a.eval_score(&x),
+                b.eval_score(&x)
+            );
+        }
+    }
+
+    /// `Lt` and `Gt` are the strict relations, and a penalty is how strictness
+    /// is expressed: at equality they charge `STRICT_EPSILON`, where `Le` and
+    /// `Ge` charge nothing. The epsilon is small enough not to disturb a real
+    /// objective and large enough that a tie is never free.
+    #[test]
+    fn the_strict_relations_charge_at_equality_and_the_loose_ones_do_not() {
+        let with = |rel| {
+            FormulaProblem::new(
+                2,
+                Expr::Const(0.0),
+                OptDirection::Maximize,
+                vec![Constraint::Comparison {
+                    lhs: Expr::Add(vec![Expr::Var(0), Expr::Var(1)]),
+                    rel,
+                    rhs: Expr::Const(1.0),
+                    penalty_weight: 10.0,
+                }],
+            )
+        };
+        let (below, equal, above) = (
+            [false, false].to_vec(),
+            [true, false].to_vec(),
+            [true, true].to_vec(),
+        );
+
+        // sum = 1, the boundary.
+        assert_eq!(with(ConstraintRel::Le).eval_penalty(&equal), 0.0);
+        assert!(
+            with(ConstraintRel::Lt).eval_penalty(&equal) > 0.0,
+            "Lt is strict"
+        );
+        assert_eq!(with(ConstraintRel::Ge).eval_penalty(&equal), 0.0);
+        assert!(
+            with(ConstraintRel::Gt).eval_penalty(&equal) > 0.0,
+            "Gt is strict"
+        );
+        assert_eq!(with(ConstraintRel::Eq).eval_penalty(&equal), 0.0);
+
+        // Away from the boundary the strict and loose relations agree.
+        for x in [&below, &above] {
+            assert!(
+                (with(ConstraintRel::Lt).eval_penalty(x) - with(ConstraintRel::Le).eval_penalty(x))
+                    .abs()
+                    < 1e-6,
+                "{x:?}"
+            );
+        }
+
+        // Eq charges the distance in either direction.
+        assert!((with(ConstraintRel::Eq).eval_penalty(&below) - 10.0).abs() < 1e-9);
+        assert!((with(ConstraintRel::Eq).eval_penalty(&above) - 10.0).abs() < 1e-9);
+    }
+
+    /// Dividing by an expression that is not a constant would make the problem
+    /// non-polynomial, which `compile_poly` cannot represent. It is refused at
+    /// construction rather than producing a silently wrong polynomial.
+    #[test]
+    #[should_panic(expected = "division by non-constant expressions is not supported")]
+    fn dividing_by_a_variable_panics() {
+        let _ = Expr::Var(0) / Expr::Var(1);
+    }
+
     #[test]
     fn test_clamp_constraint() {
         // clamp constraint: 1 <= x[0] + x[1] + x[2] <= 2, weight=10

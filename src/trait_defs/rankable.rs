@@ -91,6 +91,37 @@ mod tests {
     use super::*;
     use crate::trait_defs::Evaluable;
 
+    /// `filter_best` keeps every tie, and `rank_cmp`'s `max_by` keeps the last
+    /// of them. `LocalSearch` and `TabuSearch` both rely on the two agreeing,
+    /// and on a plateau -- which is where MaxCut spends most of a run -- almost
+    /// every candidate is a tie, so a disagreement is not a corner case.
+    #[test]
+    fn filter_best_keeps_every_tie_and_agrees_with_max_by() {
+        #[derive(Clone, Copy, Debug)]
+        struct Cut(f64);
+        impl Evaluate for Cut {
+            fn evaluate(&self) -> Evaluable<f64> {
+                Evaluable::Maximize(self.0)
+            }
+        }
+
+        let items = [Cut(1.0), Cut(3.0), Cut(2.0), Cut(3.0), Cut(3.0)];
+
+        let best = filter_best(items.iter().copied());
+        assert_eq!(best.len(), 3, "all three 3.0s are tied for best");
+        assert!(best.iter().all(|c| c.0 == 3.0));
+
+        let last_tied = items.iter().copied().max_by(rank_cmp).unwrap();
+        assert_eq!(last_tied.0, best.last().unwrap().0);
+
+        // A better element arriving later clears the ties before it.
+        let improving = filter_best([Cut(1.0), Cut(1.0), Cut(2.0)].into_iter());
+        assert_eq!(improving.len(), 1);
+        assert_eq!(improving[0].0, 2.0);
+
+        assert!(filter_best(std::iter::empty::<Cut>()).is_empty());
+    }
+
     /// The blanket impl derives the same order the direction states.
     #[test]
     fn better_means_a_lower_minimized_value() {

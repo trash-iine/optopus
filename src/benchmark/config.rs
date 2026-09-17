@@ -461,6 +461,35 @@ mod validate_tests {
         }
     }
 
+    /// A config that asks for no work at all is a mistake, not a no-op run:
+    /// a benchmark that writes an empty report looks like it succeeded.
+    #[test]
+    fn validate_rejects_a_config_that_would_run_nothing() {
+        let ok = || {
+            cfg(
+                vec![instance(ProblemKind::MaxCut)],
+                vec![local_search(NeighborKind::Flip)],
+            )
+        };
+
+        let mut zero_runs = ok();
+        zero_runs.num_runs = 0;
+        let err = validate_config(&zero_runs).expect_err("num_runs = 0 must fail");
+        assert!(err.to_string().contains("num_runs"), "{err}");
+
+        let mut no_instances = ok();
+        no_instances.instances.clear();
+        let err = validate_config(&no_instances).expect_err("no instances must fail");
+        assert!(err.to_string().contains("instances"), "{err}");
+
+        let mut no_heuristics = ok();
+        no_heuristics.heuristics.clear();
+        let err = validate_config(&no_heuristics).expect_err("no heuristics must fail");
+        assert!(err.to_string().contains("heuristics"), "{err}");
+
+        validate_config(&ok()).expect("a config with all three is valid");
+    }
+
     #[test]
     fn validate_rejects_tsp_with_flip() {
         let c = cfg(

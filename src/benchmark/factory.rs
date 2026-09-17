@@ -738,15 +738,4 @@ mod factory_tests {
         .expect_err("SubProblem crossover is MaxCut-only for now");
         assert!(err.to_string().contains("SubProblem"), "{err}");
     }
-
-    #[test]
-    fn minimize_truth_table() {
-        assert!(!ProblemKind::MaxCut.minimize());
-        assert!(!ProblemKind::Sat.minimize());
-        assert!(ProblemKind::Qubo.minimize());
-        assert!(ProblemKind::Tsp.minimize());
-        assert!(ProblemKind::VertexCover.minimize());
-        assert!(ProblemKind::JobShop.minimize());
-        assert!(ProblemKind::Vrp.minimize());
-    }
 }
