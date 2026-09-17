@@ -115,3 +115,97 @@ where
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::problem::max_cut::MaxCut;
+    use crate::problem::{MaxCutFlipNeighbor, MaxCutSolution};
+
+    /// Five vertices, so one flip neighborhood is five candidates and a beam
+    /// of two has to discard three of them.
+    fn path5() -> MaxCut {
+        MaxCut::from_edges([
+            (0, 1, 1.0),
+            (1, 2, 2.0),
+            (2, 3, 1.0),
+            (3, 4, 3.0),
+            (0, 4, 1.0),
+        ])
+    }
+
+    fn beam_search(width: usize, iterations: u64) -> BeamSearch<MaxCut, MaxCutFlipNeighbor> {
+        BeamSearch::new(StopCondition::iterations(iterations), width)
+    }
+
+    /// The beam is trimmed by a reversed comparator, so the surviving members
+    /// are the best candidates and not the worst. Sorting the other way keeps
+    /// the beam the right size and the run still terminates, which is all a
+    /// smoke test would see.
+    #[test]
+    fn the_beam_keeps_its_best_candidates_and_nothing_more() {
+        let mc = path5();
+        let start = MaxCutSolution::new_from_assignment(&mc, vec![false; 5]);
+        let mut state = SearchState::with_solution(&mc, start.clone());
+
+        let mut bs = beam_search(2, 1);
+        bs.run_once(&mut state).unwrap();
+
+        assert_eq!(bs.beam.len(), 2, "the beam is trimmed to its width");
+
+        // Every candidate of that first expansion, ranked.
+        let mut all: Vec<MaxCutSolution> = MaxCutFlipNeighbor::iter(&mc, &start)
+            .map(|m| {
+                let mut s = start.clone();
+                m.apply_to_solution(&mc, &mut s).unwrap();
+                s
+            })
+            .collect();
+        all.sort_by(|a, b| rank_cmp(b, a));
+
+        let kept: Vec<f32> = bs.beam.iter().map(|s| s.objective).collect();
+        let best_two: Vec<f32> = all[..2].iter().map(|s| s.objective).collect();
+        assert_eq!(kept, best_two, "the beam kept the wrong candidates");
+
+        assert_eq!(state.solution.objective, all[0].objective);
+        assert_eq!(state.best_solution.objective, all[0].objective);
+    }
+
+    /// A beam wider than the neighborhood must not trim, and the run has to
+    /// end on the budget rather than on the beam running out.
+    #[test]
+    fn a_beam_wider_than_the_neighborhood_keeps_everything() {
+        let mc = path5();
+        let mut state = SearchState::new_with_seed(&mc, 3);
+
+        let mut bs = beam_search(100, 4);
+        bs.run(&mut state).unwrap();
+
+        assert_eq!(state.iteration, 4);
+        assert!(!bs.beam.is_empty());
+        assert!(bs.beam.len() <= 100);
+        assert_eq!(
+            state.best_solution.objective,
+            mc.calculate_cut_size(&state.best_solution.x)
+        );
+    }
+
+    /// With no edges there are no vertices and so no moves. The run has to
+    /// charge the iteration anyway or it never meets its budget.
+    #[test]
+    fn an_empty_neighborhood_still_charges_its_iteration() {
+        let mc = MaxCut::new(crate::common::Graph::new());
+        let mut state = SearchState::new_with_seed(&mc, 1);
+
+        let mut bs = beam_search(3, 5);
+        bs.run(&mut state).unwrap();
+
+        assert_eq!(state.iteration, 5);
+    }
+
+    #[test]
+    #[should_panic(expected = "beam_width must be greater than 0")]
+    fn a_zero_width_beam_panics_at_construction() {
+        let _ = beam_search(0, 1);
+    }
+}

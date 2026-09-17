@@ -390,13 +390,6 @@ mod tests {
     }
 
     #[test]
-    fn test_n_clauses() {
-        let sat = make_sat();
-        assert_eq!(sat.n_clauses(), 3);
-        assert_eq!(sat.n_vars(), 3);
-    }
-
-    #[test]
     #[should_panic(expected = "out of range")]
     fn test_add_clause_rejects_out_of_range_literal() {
         let mut sat = Sat::new(3);

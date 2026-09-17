@@ -461,13 +461,33 @@ mod validate_tests {
         }
     }
 
+    /// A config that asks for no work at all is a mistake, not a no-op run:
+    /// a benchmark that writes an empty report looks like it succeeded.
     #[test]
-    fn validate_accepts_compatible_problem_and_neighbor() {
-        let c = cfg(
-            vec![instance(ProblemKind::MaxCut)],
-            vec![local_search(NeighborKind::Flip)],
-        );
-        validate_config(&c).expect("MaxCut x Flip is valid");
+    fn validate_rejects_a_config_that_would_run_nothing() {
+        let ok = || {
+            cfg(
+                vec![instance(ProblemKind::MaxCut)],
+                vec![local_search(NeighborKind::Flip)],
+            )
+        };
+
+        let mut zero_runs = ok();
+        zero_runs.num_runs = 0;
+        let err = validate_config(&zero_runs).expect_err("num_runs = 0 must fail");
+        assert!(err.to_string().contains("num_runs"), "{err}");
+
+        let mut no_instances = ok();
+        no_instances.instances.clear();
+        let err = validate_config(&no_instances).expect_err("no instances must fail");
+        assert!(err.to_string().contains("instances"), "{err}");
+
+        let mut no_heuristics = ok();
+        no_heuristics.heuristics.clear();
+        let err = validate_config(&no_heuristics).expect_err("no heuristics must fail");
+        assert!(err.to_string().contains("heuristics"), "{err}");
+
+        validate_config(&ok()).expect("a config with all three is valid");
     }
 
     #[test]
@@ -484,15 +504,6 @@ mod validate_tests {
             msg.contains("TwoOpt"),
             "error suggests valid neighbors: {msg}"
         );
-    }
-
-    #[test]
-    fn validate_rejects_jobshop_with_flip() {
-        let c = cfg(
-            vec![instance(ProblemKind::JobShop)],
-            vec![local_search(NeighborKind::Flip)],
-        );
-        validate_config(&c).expect_err("JobShop x Flip must fail");
     }
 
     #[test]
@@ -602,65 +613,6 @@ max_duration_secs = 30.0
     }
 
     #[test]
-    fn parses_random_walk_toml() {
-        let h: HeuristicConfig = toml::from_str(
-            r#"
-kind = "RandomWalk"
-neighbor = "Swap"
-
-[stop_condition]
-max_iteration = 5
-"#,
-        )
-        .expect("RandomWalk TOML parses");
-        match &h {
-            HeuristicConfig::RandomWalk {
-                neighbor,
-                stop_condition,
-            } => {
-                assert_eq!(*neighbor, NeighborKind::Swap);
-                assert_eq!(stop_condition.max_iteration, Some(5));
-            }
-            other => panic!("wrong variant: {other:?}"),
-        }
-    }
-
-    #[test]
-    fn parses_vns_nested_steps_toml() {
-        let h: HeuristicConfig = toml::from_str(
-            r#"
-kind = "VariableNeighborhoodSearch"
-
-[stop_condition]
-max_iteration = 100
-
-[[steps]]
-kind = "LocalSearch"
-neighbor = "Flip"
-
-[[steps]]
-kind = "RandomWalk"
-neighbor = "Flip"
-
-[steps.stop_condition]
-max_iteration = 1
-
-[[steps]]
-kind = "RandomWalk"
-neighbor = "Swap"
-
-[steps.stop_condition]
-max_iteration = 2
-"#,
-        )
-        .expect("VariableNeighborhoodSearch TOML parses");
-        assert_eq!(h.kind_name(), "VariableNeighborhoodSearch");
-        assert_eq!(h.steps().len(), 3);
-        assert_eq!(h.steps()[1].kind_name(), "RandomWalk");
-        assert_eq!(h.steps()[2].neighbor(), Some(&NeighborKind::Swap));
-    }
-
-    #[test]
     fn missing_required_field_fails_at_parse_time() {
         let err = toml::from_str::<HeuristicConfig>(
             r#"
@@ -675,10 +627,32 @@ neighbor = "Flip"
         );
     }
 
+    /// The two halves of the compatibility contract, which pull in opposite
+    /// directions and so are easiest to read side by side: a kind that does
+    /// not exist is an error, because it names a search nobody can run, while
+    /// a field that no longer exists is not, because an old TOML naming a
+    /// dropped option should degrade to the current defaults rather than stop
+    /// loading. `plateau_prob` went with the plateau perturbations.
     #[test]
-    fn unknown_kind_fails_at_parse_time() {
+    fn an_unknown_kind_fails_to_parse_but_an_unknown_field_does_not() {
         toml::from_str::<HeuristicConfig>(r#"kind = "NoSuchHeuristic""#)
             .expect_err("unknown kind must fail");
+
+        let with_dropped_option = r#"
+kind = "BreakoutLocalSearch"
+tabu_tenure = [2, 5]
+t = 100
+l0 = 3
+p0 = 0.8
+q = 0.5
+plateau_prob = 0.4
+"#;
+        let parsed: HeuristicConfig =
+            toml::from_str(with_dropped_option).expect("a dropped option must not break parsing");
+        assert!(matches!(
+            parsed,
+            HeuristicConfig::BreakoutLocalSearch { l0: 3, .. }
+        ));
     }
 
     #[test]

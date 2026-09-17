@@ -313,6 +313,8 @@ impl Graph {
     /// assert!(g.has_edge(0, 1));
     /// assert!(g.has_edge(1, 0));  // symmetric
     /// assert!(!g.has_edge(0, 2));
+    /// assert!(!g.has_edge(0, 0));  // no self-loops
+    /// assert!(!g.has_edge(5, 6));  // out of bounds
     /// ```
     pub fn has_edge(&self, i: usize, j: usize) -> bool {
         i < self.adj.len() && self.adj[i].binary_search_by_key(&j, |&(v, _)| v).is_ok()
@@ -510,6 +512,7 @@ impl std::ops::Index<(usize, usize)> for Graph {
     /// assert_eq!(g[(0, 1)], 3.0);
     /// assert_eq!(g[(1, 0)], 3.0); // symmetric
     /// assert_eq!(g[(0, 2)], 0.0); // non-existent edge
+    /// assert_eq!(g[(5, 6)], 0.0); // out of bounds
     /// ```
     fn index(&self, (i, j): (usize, usize)) -> &f32 {
         if i < self.adj.len()
@@ -646,37 +649,6 @@ mod tests {
     }
 
     #[test]
-    fn test_blank_graph() {
-        let g = Graph::new();
-        assert_eq!(g.len(), 0);
-        assert!(g.is_empty());
-    }
-
-    #[test]
-    fn test_set_and_get_weight() {
-        let mut g = Graph::new();
-        g.add_weight(0, 1, 1.0);
-        g.add_weight(0, 2, 1.0);
-        g.add_weight(0, 1, 2.0);
-
-        assert_eq!(g.len(), 3);
-
-        assert_eq!(g.get_weight(0, 1), 3.0);
-        assert_eq!(g.get_weight(0, 2), 1.0);
-    }
-
-    #[test]
-    fn test_set_weight_overwrites() {
-        let mut g = Graph::new();
-        g.set_weight(0, 1, 5.0);
-        assert_eq!(g[(0, 1)], 5.0);
-
-        g.set_weight(0, 1, 3.0);
-        assert_eq!(g[(0, 1)], 3.0); // overwritten, not 8.0
-        assert_eq!(g[(1, 0)], 3.0); // symmetric
-    }
-
-    #[test]
     fn test_set_weight_and_add_weight_interaction() {
         let mut g = Graph::new();
         g.set_weight(0, 1, 5.0);
@@ -694,46 +666,6 @@ mod tests {
         g.add_edge(0, 1); // duplicate, should be no-op
         assert_eq!(g[(0, 1)], 1.0);
         assert_eq!(g.num_edges(), 1);
-    }
-
-    #[test]
-    fn test_index_existing_edge() {
-        let g = Graph::from_edges([(0, 1, 3.0), (1, 2, 7.0)]);
-        assert_eq!(g[(0, 1)], 3.0);
-        assert_eq!(g[(1, 0)], 3.0);
-        assert_eq!(g[(1, 2)], 7.0);
-    }
-
-    #[test]
-    fn test_index_missing_edge() {
-        let g = Graph::from_edges([(0, 1, 1.0)]);
-        assert_eq!(g[(0, 2)], 0.0);
-        assert_eq!(g[(5, 6)], 0.0); // out of bounds
-    }
-
-    #[test]
-    fn test_num_vertices_and_edges() {
-        let g = Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
-        assert_eq!(g.num_vertices(), 3);
-        assert_eq!(g.num_edges(), 3);
-    }
-
-    #[test]
-    fn test_is_empty() {
-        let g = Graph::new();
-        assert!(g.is_empty());
-
-        let g = Graph::from_edges([(0, 1, 1.0)]);
-        assert!(!g.is_empty());
-    }
-
-    #[test]
-    fn test_from_edges() {
-        let g = Graph::from_edges([(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
-        assert_eq!(g[(0, 1)], 1.0);
-        assert_eq!(g[(0, 2)], 2.0);
-        assert_eq!(g[(1, 2)], 3.0);
-        assert_eq!(g.num_edges(), 3);
     }
 
     #[test]
@@ -757,25 +689,5 @@ mod tests {
         assert_eq!(g.degree(1), 2);
         assert_eq!(g.degree(2), 2);
         assert_eq!(g.degree(99), 0); // out of bounds
-    }
-
-    #[test]
-    fn test_has_edge() {
-        let g = Graph::from_edges([(0, 1, 1.0)]);
-        assert!(g.has_edge(0, 1));
-        assert!(g.has_edge(1, 0)); // symmetric
-        assert!(!g.has_edge(0, 2));
-    }
-
-    #[test]
-    fn test_display_empty() {
-        let g = Graph::new();
-        assert_eq!(format!("{g}"), "Graph(empty)");
-    }
-
-    #[test]
-    fn test_display_nonempty() {
-        let g = Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
-        assert_eq!(format!("{g}"), "Graph(vertices: 3, edges: 3)");
     }
 }

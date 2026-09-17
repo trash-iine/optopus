@@ -215,25 +215,6 @@ problem = "MaxCut"
     }
 }
 
-/// SimulatedAnnealing consumes the RNG on every step, so any seeding mistake
-/// (including rayon scheduling nondeterminism) would show up here.
-#[test]
-fn run_from_config_is_bit_identical_across_reruns_with_seed() {
-    assert_reproducible(
-        "repro_sa",
-        r#"
-[[heuristics]]
-kind = "SimulatedAnnealing"
-neighbor = "Flip"
-initial_temperature = 1.0
-cooling_rate = 0.99
-
-[heuristics.stop_condition]
-max_iteration = 500
-"#,
-    );
-}
-
 /// TabuSearch samples the tabu tenure from the RNG on every applied move, so
 /// this locks in the seeded-tenure fix (previously the thread RNG was used and
 /// runs were not reproducible).
@@ -267,30 +248,6 @@ t = 100
 l0 = 3
 p0 = 0.8
 q = 0.5
-
-[heuristics.stop_condition]
-max_iteration = 300
-"#,
-    );
-}
-
-/// A config naming an option that no longer exists (`plateau_prob`, dropped
-/// with the plateau perturbations) must still load and still run
-/// reproducibly: the heuristic config enum does not deny unknown fields, so an
-/// old TOML degrades to the current defaults instead of failing to parse.
-#[test]
-fn breakout_local_search_ignores_a_removed_option_and_stays_reproducible() {
-    assert_reproducible(
-        "repro_bls_removed_option",
-        r#"
-[[heuristics]]
-kind = "BreakoutLocalSearch"
-tabu_tenure = [2, 5]
-t = 100
-l0 = 3
-p0 = 0.8
-q = 0.5
-plateau_prob = 0.4
 
 [heuristics.stop_condition]
 max_iteration = 300

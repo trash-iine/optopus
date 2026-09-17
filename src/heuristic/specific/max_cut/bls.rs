@@ -487,7 +487,7 @@ mod tests {
     /// independent set, the strong kick must advance iterations without
     /// panicking, because `RandomWalk` would draw from an empty range.
     #[test]
-    fn the_strong_kick_progresses_on_an_edgeless_graph() {
+    fn an_edgeless_graph_neither_stalls_the_kick_nor_the_loop() {
         let mc = MaxCut::new(crate::common::Graph::new());
         let mut state = SearchState::new_with_seed(&mc, 0);
         let mut bls = BreakoutLocalSearch::new(
@@ -502,6 +502,21 @@ mod tests {
         let before = state.iteration;
         bls.kick(&mut state, PerturbationType::Strong, 5).unwrap();
         assert_eq!(state.iteration - before, 5);
+
+        // And the whole loop over the same graph, which additionally puts the
+        // descent through the empty neighborhood: `LocalSearch` has to raise
+        // `no_best_move` there rather than spin, or this never returns.
+        let mut bls = BreakoutLocalSearch::new(
+            StopCondition::iterations(10_000).with_failed_updates(500),
+            (3, 15),
+            1_000,
+            5,
+            0.8,
+            0.5,
+        );
+        bls.run(&mut state)
+            .expect("BLS must terminate on an edgeless graph");
+        assert!(state.iteration > before + 5, "the loop charged nothing");
     }
 
     /// Regression test: BLS must run to completion without erroring.
@@ -513,8 +528,13 @@ mod tests {
     #[test]
     fn bls_runs_without_error_and_improves() {
         let mc = small_instance();
-        for _ in 0..10 {
-            let mut state = SearchState::new(&mc);
+        // Seeded per iteration rather than drawn from the OS: a failure here
+        // has to be reproducible, and a positive cut is too weak a claim to
+        // be worth an irreproducible one. The claim made instead is that the
+        // search leaves its own starting point behind.
+        for seed in 0..10u64 {
+            let mut state = SearchState::new_with_seed(&mc, seed);
+            let initial = state.best_solution.objective;
             let mut bls = BreakoutLocalSearch::new(
                 StopCondition::iterations(5_000),
                 (3, 15),
@@ -525,31 +545,10 @@ mod tests {
             );
             bls.run(&mut state).expect("BLS must not error");
             assert!(
-                state.best_solution.objective > 0.0,
-                "BLS should find a positive cut, got {}",
-                state.best_solution.objective
+                state.best_solution.objective > initial,
+                "seed {seed}: BLS did not improve on its start ({initial})"
             );
         }
-    }
-
-    /// On a graph with no edged vertices, as produced by
-    /// `SubProblemBasedCrossover` when the two parents disagree only on an
-    /// independent set, a full BLS run must terminate cleanly via its stop
-    /// condition. (The operator-level counterpart lives in `ops`.)
-    #[test]
-    fn bls_terminates_on_edgeless_graph() {
-        let mc = MaxCut::new(crate::common::Graph::new());
-        let mut state = SearchState::new_with_seed(&mc, 0);
-        let mut bls = BreakoutLocalSearch::new(
-            StopCondition::iterations(10_000).with_failed_updates(500),
-            (3, 15),
-            1_000,
-            5,
-            0.8,
-            0.5,
-        );
-        bls.run(&mut state)
-            .expect("BLS must terminate on an edgeless graph");
     }
 
     /// Every draw in the schedule comes from `state.rng`, so a seeded run must

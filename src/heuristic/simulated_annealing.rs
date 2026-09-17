@@ -188,29 +188,21 @@ mod tests {
         MaxCut::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)])
     }
 
+    /// The two deterministic ends of the Metropolis rule need one draw each,
+    /// not a hundred: an improving move takes the short-circuit before the RNG
+    /// is touched, and at 1e-12 the exponential underflows to exactly 0.0, so
+    /// no draw can clear it. Only the warm end is statistical.
     #[test]
-    fn boltzmann_accept_always_accepts_improving_moves() {
+    fn boltzmann_accept_follows_the_metropolis_rule() {
         let mut rng = SmallRng::seed_from_u64(42);
-        for _ in 0..100 {
-            assert!(boltzmann_accept(Evaluable::Maximize(1.0), 1e-12, &mut rng));
-        }
-    }
 
-    #[test]
-    fn boltzmann_accept_rejects_worsening_at_low_temperature() {
-        let mut rng = SmallRng::seed_from_u64(42);
-        for _ in 0..100 {
-            assert!(!boltzmann_accept(
-                Evaluable::Maximize(-1.0),
-                1e-12,
-                &mut rng
-            ));
-        }
-    }
+        assert!(boltzmann_accept(Evaluable::Maximize(1.0), 1e-12, &mut rng));
+        assert!(!boltzmann_accept(
+            Evaluable::Maximize(-1.0),
+            1e-12,
+            &mut rng
+        ));
 
-    #[test]
-    fn boltzmann_accept_mostly_accepts_worsening_at_high_temperature() {
-        let mut rng = SmallRng::seed_from_u64(42);
         let accepted = (0..1000)
             .filter(|_| boltzmann_accept(Evaluable::Maximize(-1.0), 1e9, &mut rng))
             .count();
@@ -231,20 +223,45 @@ mod tests {
         assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
     }
 
+    /// What makes this bang-bang rather than plain annealing is the schedule,
+    /// so the schedule is what the test reads. Stepping `run_once` and
+    /// recording the temperature shows both phases and both turning points;
+    /// asserting on the counters instead would pass with `is_going_down`
+    /// deleted and the heuristic silently reduced to a monotone cooling.
     #[test]
-    fn bang_bang_keeps_counter_invariant_across_wave_switches() {
+    fn bang_bang_oscillates_between_its_wave_thresholds() {
         let mc = triangle();
-        let mut state = SearchState::new(&mc);
-        // Fast cooling with a narrow wave band forces frequent phase switches.
+        let mut state = SearchState::new_with_seed(&mc, 42);
+        // Halving per step over a band of one octave: the phase turns often
+        // enough that 40 steps cover several full waves.
+        let (min_wave, max_wave, cooling) = (0.1, 0.8, 0.5);
         let mut sa = BangBangSimulatedAnnealing::<MaxCutFlipNeighbor>::new(
-            StopCondition::iterations(200),
+            StopCondition::iterations(40),
             1.0,
-            0.5,
-            0.1,
-            2.0,
+            cooling,
+            min_wave,
+            max_wave,
         );
-        sa.run(&mut state).unwrap();
-        assert_eq!(state.iteration, 200);
+
+        let mut temperatures = vec![sa.current_temperature];
+        while !sa.is_done(&state) {
+            sa.run_once(&mut state).unwrap();
+            temperatures.push(sa.current_temperature);
+        }
+
+        let steps: Vec<f64> = temperatures.windows(2).map(|w| w[1] - w[0]).collect();
+        assert!(steps.iter().any(|&d| d < 0.0), "never cooled");
+        assert!(steps.iter().any(|&d| d > 0.0), "never reheated");
+
+        // A turn happens one step past the threshold, so the band the walk
+        // stays inside is the thresholds widened by one step each way.
+        let coldest = temperatures.iter().cloned().fold(f64::MAX, f64::min);
+        let hottest = temperatures.iter().cloned().fold(f64::MIN, f64::max);
+        assert!(coldest < min_wave, "never reached the cold turning point");
+        assert!(coldest >= min_wave * cooling, "overshot below the band");
+        assert!(hottest > max_wave, "never reached the hot turning point");
+        assert!(hottest <= 1.0f64.max(max_wave / cooling), "overshot above");
+
         assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
     }
 }

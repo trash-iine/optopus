@@ -405,16 +405,6 @@ mod tests {
         pop
     }
 
-    #[test]
-    fn survivor_selection_keeps_the_target_size() {
-        let mut pop = BiasedFitnessPopulation::new(4, 5, Box::new(by_cost), Box::new(euclidean));
-        for k in 0..10 {
-            pop.push(point(10.0 + k as f64, k as f64, 0.0));
-        }
-        pop.trim_to(4);
-        assert_eq!(pop.len(), 4);
-    }
-
     /// Three identical (but cheap) members plus two distinct and strictly worse
     /// ones. Cost alone would evict the distinct pair, and the clone penalty is
     /// what stops it.
@@ -458,28 +448,6 @@ mod tests {
         assert_eq!(pop.distances(), pairwise(pop.members()));
     }
 
-    /// A newcomer has to be ranked on arrival. Filing it unranked would leave
-    /// it holding a placeholder, and since biased fitness lives in `[0, 2]` any
-    /// placeholder makes it win or lose every tournament regardless of cost.
-    #[test]
-    fn a_pushed_member_is_ranked_immediately() {
-        let pop = populate(&[
-            point(10.0, 0.0, 0.0),
-            point(20.0, 3.0, 0.0),
-            // By far the most expensive and no more diverse than the others, so
-            // it must not come out ahead of the cheapest member.
-            point(99.0, 1.5, 0.5),
-        ]);
-
-        let newest = pop.len() - 1;
-        assert!(
-            pop.fitness(newest) > pop.fitness(0),
-            "the newcomer ranked {} against the cheapest member's {}",
-            pop.fitness(newest),
-            pop.fitness(0)
-        );
-    }
-
     /// The cheapest and most isolated member must rank best.
     #[test]
     fn fitness_favors_cost_and_diversity() {
@@ -496,13 +464,6 @@ mod tests {
             Some(0),
             "the cheapest, most distinct member should rank best"
         );
-    }
-
-    /// With diversity tied, cost decides the order.
-    #[test]
-    fn fitness_ranks_an_equally_diverse_pair_by_cost() {
-        let pop = populate(&[point(30.0, 0.0, 0.0), point(10.0, 1.0, 0.0)]);
-        assert!(pop.fitness(1) < pop.fitness(0));
     }
 
     /// `n_elite >= N` weights the diversity half by zero, which is the

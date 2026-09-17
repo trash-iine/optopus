@@ -627,8 +627,34 @@ mod tests {
         let mut search =
             HybridGeneticSearch::new(StopCondition::iterations(150), 8, 10, 10, 0.2, Some(5));
         search.run(&mut state).unwrap();
-        // Restarts must not lose the best solution found before them.
-        assert_eq!(state.best_solution.overload, 0);
-        prob.validate_routes(&state.best_solution.routes).unwrap();
+
+        // The best is held by the search state, not by the populations, which
+        // is what makes a wipe safe.
+        let best_before = state.best_solution.clone();
+        assert_eq!(best_before.overload, 0);
+        prob.validate_routes(&best_before.routes).unwrap();
+
+        // The run above leaves a populated search whether or not it happened
+        // to meet the limit, so the wipe itself is driven here. Reading the
+        // populations afterwards is the only way to see it: every outward
+        // measure of the run is the same with `maybe_restart` emptied out.
+        assert!(!search.feasible.is_empty() || !search.infeasible.is_empty());
+        search.set_penalty(search.initial_penalty * PENALTY_MAX_FACTOR);
+        search.generations_without_improvement = 5;
+        search.maybe_restart();
+
+        assert!(search.feasible.is_empty(), "feasible survived the restart");
+        assert!(
+            search.infeasible.is_empty(),
+            "infeasible survived the restart"
+        );
+        assert_eq!(search.penalty_capacity, search.initial_penalty);
+        assert_eq!(search.generations_without_improvement, 0);
+        assert_eq!(search.best_cost, f64::INFINITY);
+        assert!(
+            search.warm_started,
+            "a restart must not re-seed from the incumbent"
+        );
+        assert_eq!(state.best_solution.routes, best_before.routes);
     }
 }

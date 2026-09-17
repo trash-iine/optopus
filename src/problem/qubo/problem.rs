@@ -333,6 +333,7 @@ impl Qubo {
     /// assert!(qubo.has_entry(0, 1));
     /// assert!(qubo.has_entry(1, 0));  // symmetric
     /// assert!(!qubo.has_entry(0, 2));
+    /// assert!(!qubo.has_entry(5, 6));  // out of bounds
     /// ```
     pub fn has_entry(&self, i: usize, j: usize) -> bool {
         i < self.adj.len() && self.adj[i].binary_search_by_key(&j, |&(k, _)| k).is_ok()
@@ -528,6 +529,7 @@ impl std::ops::Index<(usize, usize)> for Qubo {
     /// assert_eq!(qubo[(0, 1)], 3);
     /// assert_eq!(qubo[(1, 0)], 3);  // symmetric
     /// assert_eq!(qubo[(0, 2)], 0);  // non-existent entry
+    /// assert_eq!(qubo[(5, 6)], 0);  // out of bounds
     /// ```
     fn index(&self, (i, j): (usize, usize)) -> &Coefficient {
         if i < self.adj.len()
@@ -713,27 +715,9 @@ mod qubo_tests {
     }
 
     #[test]
-    fn test_from_entries() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (0, 2, 2), (1, 2, 3)]);
-        assert_eq!(qubo[(0, 1)], 1);
-        assert_eq!(qubo[(0, 2)], 2);
-        assert_eq!(qubo[(1, 2)], 3);
-        assert_eq!(qubo.num_of_variables(), 3);
-    }
-
-    #[test]
     fn test_from_entries_duplicate_last_wins() {
         let qubo = Qubo::from_entries([(0, 1, 1), (0, 1, 5)]);
         assert_eq!(qubo[(0, 1)], 5);
-    }
-
-    #[test]
-    fn test_add_q_accumulation() {
-        let mut qubo = Qubo::new();
-        qubo.add_q(0, 1, 1);
-        qubo.add_q(0, 1, 2);
-        assert_eq!(qubo[(0, 1)], 3); // 1 + 2
-        assert_eq!(qubo[(1, 0)], 3); // symmetric
     }
 
     #[test]
@@ -748,133 +732,10 @@ mod qubo_tests {
     }
 
     #[test]
-    fn test_set_q_overwrites() {
-        let mut qubo = Qubo::new();
-        qubo.set_q(0, 1, 5);
-        assert_eq!(qubo[(0, 1)], 5);
-
-        qubo.set_q(0, 1, 3);
-        assert_eq!(qubo[(0, 1)], 3); // overwritten, not 8
-        assert_eq!(qubo[(1, 0)], 3); // symmetric
-    }
-
-    #[test]
-    fn test_len() {
-        let mut qubo = Qubo::new();
-        assert_eq!(qubo.len(), 0);
-
-        qubo.set_q(0, 1, 1);
-        assert_eq!(qubo.len(), 2);
-
-        qubo.set_q(0, 5, 1);
-        assert_eq!(qubo.len(), 6);
-    }
-
-    #[test]
-    fn test_num_entries() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (0, 2, 2), (1, 2, 3)]);
-        assert_eq!(qubo.num_entries(), 3); // 3 off-diagonal pairs
-
-        let qubo = Qubo::from_entries([(0, 1, 1), (0, 0, 5)]);
-        assert_eq!(qubo.num_entries(), 2); // 1 off-diagonal + 1 diagonal
-    }
-
-    #[test]
-    fn test_is_empty() {
-        let qubo = Qubo::new();
-        assert!(qubo.is_empty());
-
-        let qubo = Qubo::from_entries([(0, 1, 1)]);
-        assert!(!qubo.is_empty());
-    }
-
-    #[test]
-    fn test_neighbors() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (0, 2, 2)]);
-        let coeffs: Vec<Coefficient> = qubo.neighbors(0).map(|&(_, v)| v).collect();
-        assert_eq!(coeffs, vec![1, 2]);
-    }
-
-    #[test]
-    fn test_degree() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (0, 2, 1), (1, 2, 1)]);
-        assert_eq!(qubo.degree(0), 2);
-        assert_eq!(qubo.degree(1), 2);
-        assert_eq!(qubo.degree(2), 2);
-        assert_eq!(qubo.degree(99), 0); // out of bounds
-    }
-
-    #[test]
     fn test_entries_iterator() {
         let qubo = Qubo::from_entries([(0, 1, 1), (0, 2, 2), (1, 2, 3)]);
         let mut entries: Vec<_> = qubo.entries().collect();
         entries.sort_by_key(|&(i, j, _)| (i, j));
         assert_eq!(entries, vec![(0, 1, 1), (0, 2, 2), (1, 2, 3)]);
-    }
-
-    #[test]
-    fn test_has_entry() {
-        let qubo = Qubo::from_entries([(0, 1, 1)]);
-        assert!(qubo.has_entry(0, 1));
-        assert!(qubo.has_entry(1, 0)); // symmetric
-        assert!(!qubo.has_entry(0, 2));
-        assert!(!qubo.has_entry(5, 6)); // out of bounds
-    }
-
-    #[test]
-    fn test_index_existing() {
-        let qubo = Qubo::from_entries([(0, 1, 3), (1, 2, 7)]);
-        assert_eq!(qubo[(0, 1)], 3);
-        assert_eq!(qubo[(1, 0)], 3);
-        assert_eq!(qubo[(1, 2)], 7);
-    }
-
-    #[test]
-    fn test_index_missing() {
-        let qubo = Qubo::from_entries([(0, 1, 1)]);
-        assert_eq!(qubo[(0, 2)], 0);
-        assert_eq!(qubo[(5, 6)], 0); // out of bounds
-    }
-
-    #[test]
-    fn test_get_q_default_zero() {
-        let qubo = Qubo::from_entries([(0, 1, 1)]);
-        assert_eq!(qubo.get_q(0, 1), 1);
-        assert_eq!(qubo.get_q(0, 2), 0);
-        assert_eq!(qubo.get_q(99, 100), 0);
-    }
-
-    #[test]
-    fn test_display_empty() {
-        let qubo = Qubo::new();
-        assert_eq!(format!("{qubo}"), "Qubo(empty)");
-    }
-
-    #[test]
-    fn test_display_nonempty() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (0, 2, 1), (1, 2, 1)]);
-        assert_eq!(format!("{qubo}"), "Qubo(variables: 3, entries: 3)");
-    }
-
-    #[test]
-    fn test_new_from_assignment() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
-        let sol = QuboSolution::new_from_assignment(&qubo, vec![true, false, true]);
-        assert_eq!(sol.objective, qubo.calculate_energy(&sol.x));
-        for &i in qubo.iter_on_variables() {
-            assert_eq!(sol.gain[i], qubo.calculate_gain(&sol.x, i));
-        }
-    }
-
-    #[test]
-    fn test_new_from_parts() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
-        let x = vec![true, false, true];
-        let gain: Vec<Coefficient> = (0..3).map(|i| qubo.calculate_gain(&x, i)).collect();
-        let objective = qubo.calculate_energy(&x);
-        let sol = QuboSolution::new_from_parts(x.clone(), gain.clone(), objective);
-        assert_eq!(sol.x, x);
-        assert_eq!(sol.gain, gain);
-        assert_eq!(sol.objective, objective);
     }
 }

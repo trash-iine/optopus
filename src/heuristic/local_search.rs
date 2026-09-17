@@ -155,16 +155,4 @@ mod tests {
             "a warm start must descend, not return on the first check"
         );
     }
-
-    #[test]
-    fn local_search_clear_resets_no_best_move() {
-        let mc = small_maxcut();
-        let mut state = SearchState::new_with_seed(&mc, 7);
-        let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1_000));
-        ls.run(&mut state).unwrap();
-        assert!(ls.no_best_move, "run must end at a local optimum");
-
-        ls.clear();
-        assert!(!ls.no_best_move);
-    }
 }

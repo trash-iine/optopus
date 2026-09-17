@@ -498,6 +498,7 @@ impl Heuristic<Vrp> for AdaptiveLargeNeighborhoodSearch {
 mod tests {
     use super::*;
     use crate::problem::vrp::Vrp;
+    use rand::SeedableRng;
 
     fn ring_vrp() -> Vrp {
         // 8 customers on a circle around the depot; capacity 2, 4 vehicles.
@@ -509,6 +510,104 @@ mod tests {
             demands.push(1);
         }
         Vrp::new("ring", coords, demands, 2, 4)
+    }
+
+    /// Roulette selection is proportional to the weights, which is the whole
+    /// of "adaptive": with every weight equal the bank is a uniform draw, and
+    /// with one weight dominant that operator is the one that gets picked. A
+    /// selection that ignored the weights would still run and still improve.
+    #[test]
+    fn roulette_follows_the_weights() {
+        let mut rng = SmallRng::seed_from_u64(1);
+
+        let uniform = [1.0, 1.0, 1.0];
+        let mut counts = [0usize; 3];
+        for _ in 0..3_000 {
+            counts[AlnsOps::roulette(&uniform, &mut rng)] += 1;
+        }
+        for (i, &c) in counts.iter().enumerate() {
+            assert!((800..1_200).contains(&c), "arm {i} drawn {c} times of 3000");
+        }
+
+        let skewed = [100.0, 1.0, 1.0];
+        let hits = (0..1_000)
+            .filter(|_| AlnsOps::roulette(&skewed, &mut rng) == 0)
+            .count();
+        assert!(hits > 900, "the dominant arm was drawn only {hits} times");
+
+        // All-zero weights fall back to a uniform draw rather than always
+        // returning the last index.
+        let zeros = [0.0, 0.0, 0.0];
+        let mut seen = std::collections::HashSet::new();
+        for _ in 0..100 {
+            seen.insert(AlnsOps::roulette(&zeros, &mut rng));
+        }
+        assert_eq!(seen.len(), 3, "a dead bank must still reach every operator");
+
+        // And the two selectors have to read the bank's own weights, not a
+        // uniform stand-in: that substitution leaves every run working and
+        // every result plausible, and turns the search back into plain LNS.
+        let mut ops = AlnsOps::new();
+        ops.destroy_weights = [1.0, 100.0, 1.0];
+        ops.repair_weights = [1.0, 100.0];
+        let destroys = (0..1_000)
+            .filter(|_| ops.select_destroy(&mut rng) == 1)
+            .count();
+        let repairs = (0..1_000)
+            .filter(|_| ops.select_repair(&mut rng) == 1)
+            .count();
+        assert!(
+            destroys > 900,
+            "select_destroy ignored its weights: {destroys}"
+        );
+        assert!(
+            repairs > 900,
+            "select_repair ignored its weights: {repairs}"
+        );
+    }
+
+    /// Weights move only at a segment boundary, and then toward the operator's
+    /// average score. An operator that scored nothing in the segment keeps its
+    /// weight rather than decaying to zero, or one unlucky segment would
+    /// retire it for the rest of the run.
+    #[test]
+    fn weights_move_only_at_a_segment_boundary_and_only_toward_what_scored() {
+        let mut ops = AlnsOps::new();
+        let before = ops.destroy_weights;
+
+        // One short of a segment: nothing moves yet.
+        for _ in 0..(SEGMENT_LEN - 1) {
+            ops.record(0, 0, SIGMA_BEST);
+        }
+        ops.maybe_update_weights();
+        assert_eq!(ops.destroy_weights, before, "moved before the boundary");
+
+        ops.record(0, 0, SIGMA_BEST);
+        ops.maybe_update_weights();
+
+        let expected = (1.0 - REACTION) * before[0] + REACTION * SIGMA_BEST;
+        assert!(
+            (ops.destroy_weights[0] - expected).abs() < 1e-12,
+            "{} vs {expected}",
+            ops.destroy_weights[0]
+        );
+        assert_eq!(
+            ops.destroy_weights[1], before[1],
+            "an operator that never ran kept its weight"
+        );
+        assert_eq!(ops.segment_iter, 0, "the segment did not restart");
+        assert_eq!(ops.destroy_scores[0], 0.0, "scores were not cleared");
+
+        // A well-scoring operator climbs; a poorly scoring one falls.
+        let climbed = ops.destroy_weights[0];
+        for _ in 0..SEGMENT_LEN {
+            ops.record(0, 0, SIGMA_ACCEPT);
+        }
+        ops.maybe_update_weights();
+        assert!(
+            ops.destroy_weights[0] < climbed,
+            "a weak segment must lower the weight"
+        );
     }
 
     #[test]

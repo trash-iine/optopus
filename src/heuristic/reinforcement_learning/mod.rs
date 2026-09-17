@@ -285,132 +285,66 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::problem::{MaxCut, MaxCutFlipNeighbor};
+    use crate::search_state::SearchState;
 
+    /// The three claims about `softmax_in_place` share one call each: it
+    /// normalises, it is monotone in the score, and it survives inputs whose
+    /// exponentials would overflow. Only the last needs large numbers, and
+    /// only the last is why the log-sum-exp shift is there.
     #[test]
-    fn softmax_uniform_for_equal_scores() {
-        let mut scores = vec![1.0, 1.0, 1.0];
-        softmax_in_place(&mut scores);
-        assert_eq!(scores.len(), 3);
-        for p in &scores {
-            assert!((p - 1.0 / 3.0).abs() < 1e-10);
+    fn softmax_normalises_and_survives_large_scores() {
+        let mut equal = vec![1.0, 1.0, 1.0];
+        softmax_in_place(&mut equal);
+        for p in &equal {
+            assert!((p - 1.0 / 3.0).abs() < 1e-10, "{equal:?}");
         }
+
+        let mut peaked = vec![0.0, 0.0, 100.0];
+        softmax_in_place(&mut peaked);
+        assert!(peaked[2] > 0.99, "{peaked:?}");
+
+        // Without the shift these exponentiate to infinity and the result is NaN.
+        let mut large = vec![1000.0, 1001.0, 999.0];
+        softmax_in_place(&mut large);
+        let sum: f64 = large.iter().sum();
+        assert!((sum - 1.0).abs() < 1e-10, "{large:?}");
+        assert!(large[1] > large[0] && large[0] > large[2], "{large:?}");
     }
 
+    /// The ledger is what the improvement-ratio feature reads, and it has to start
+    /// empty on every episode or a `Restart` carries the previous one's
+    /// worsening into the next. Driving a real search rather than assigning to
+    /// the fields is what makes this a test of `run_once` as well: a run that
+    /// never touched the ledger would leave it at zero and fail the first
+    /// assertion.
     #[test]
-    fn softmax_concentrates_on_max() {
-        let mut scores = vec![0.0, 0.0, 100.0];
-        softmax_in_place(&mut scores);
-        assert!(scores[2] > 0.99);
-    }
-
-    #[test]
-    fn softmax_numerical_stability() {
-        // Large values should not cause overflow
-        let mut scores = vec![1000.0, 1001.0, 999.0];
-        softmax_in_place(&mut scores);
-        let sum: f64 = scores.iter().sum();
-        assert!((sum - 1.0).abs() < 1e-10);
-    }
-
-    #[test]
-    fn sample_categorical_valid_index() {
-        let probs = vec![0.2, 0.3, 0.5];
-        let mut rng = rand::rng();
-        for _ in 0..100 {
-            let idx = sample_categorical(&probs, &mut rng);
-            assert!(idx < 3);
-        }
-    }
-
-    #[test]
-    fn online_update_moves_weights() {
-        let mut rl = ReinforcementLearningSearch::<()>::new(
-            StopCondition::iterations(100),
+    fn the_ledger_accumulates_over_a_run_and_clear_empties_it() {
+        let mc = MaxCut::from_edges((0..30).map(|i| (i, (i + 1) % 30, 1.0)));
+        let mut state = SearchState::new_with_seed(&mc, 4);
+        let mut rl = ReinforcementLearningSearch::<MaxCutFlipNeighbor>::new(
+            StopCondition::iterations(200),
             0.1,
             1.0,
-            RewardShaping::Raw,
+            RewardShaping::Normalized,
             None,
         );
 
-        // Simulate online update: positive reward with feature[0] = 1.0
-        let mut features_good = [0.0; NUM_FEATURES];
-        features_good[0] = 1.0;
-        let reward_good = 1.0;
-        let advantage = reward_good - rl.baseline;
-        rl.baseline_count += 1;
-        rl.baseline += (reward_good - rl.baseline) / rl.baseline_count as f64;
-        rl.policy
-            .update(&features_good, advantage, rl.learning_rate);
+        rl.run(&mut state).unwrap();
 
-        // Simulate online update: negative reward with feature[1] = 1.0
-        let mut features_bad = [0.0; NUM_FEATURES];
-        features_bad[1] = 1.0;
-        let reward_bad = -1.0;
-        let advantage = reward_bad - rl.baseline;
-        rl.baseline_count += 1;
-        rl.baseline += (reward_bad - rl.baseline) / rl.baseline_count as f64;
-        rl.policy.update(&features_bad, advantage, rl.learning_rate);
-
-        // Weight for feature 0 should be positive (positive reward),
-        // weight for feature 1 should be negative (negative reward)
-        assert!(rl.policy.weights[0] > 0.0);
-        assert!(rl.policy.weights[1] < 0.0);
-    }
-
-    #[test]
-    fn ledger_improvement_ratio_resets_on_clear() {
-        let mut rl = ReinforcementLearningSearch::<()>::new(
-            StopCondition::iterations(100),
-            0.1,
-            1.0,
-            RewardShaping::Raw,
-            None,
+        assert!(
+            rl.cum_abs_worsening > 0.0,
+            "the run recorded no move at all"
         );
-        // Two improving moves (worsening -2, -1) and one worsening move (+1):
-        // ratio = -(-2 - 1 + 1) / (2 + 1 + 1) = 0.5
-        for w in [-2.0, -1.0, 1.0] {
-            rl.cum_worsening += w;
-            rl.cum_abs_worsening += f64::abs(w);
-        }
         let ratio = -rl.cum_worsening / rl.cum_abs_worsening.max(EPSILON);
-        assert!((ratio - 0.5).abs() < 1e-10);
+        assert!((-1.0..=1.0).contains(&ratio), "ratio out of range: {ratio}");
+        assert!(
+            rl.policy.weights.iter().any(|&w| w != 0.0),
+            "the policy never learned anything"
+        );
 
-        <ReinforcementLearningSearch<()> as Heuristic<DummyProblem>>::clear(&mut rl);
+        Heuristic::<MaxCut>::clear(&mut rl);
         assert_eq!(rl.cum_worsening, 0.0);
         assert_eq!(rl.cum_abs_worsening, 0.0);
-    }
-
-    /// Minimal problem/neighbor pair so `clear` (a `Heuristic` method) can be
-    /// called on `ReinforcementLearningSearch<()>` in tests.
-    struct DummyProblem;
-    #[derive(Clone)]
-    struct DummySolution;
-    impl crate::trait_defs::Evaluate for DummySolution {
-        fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
-            crate::trait_defs::Evaluable::Minimize(0.0)
-        }
-    }
-    impl crate::trait_defs::ProblemTrait for DummyProblem {
-        type Solution = DummySolution;
-        fn new_solution(&self, _rng: &mut impl rand::Rng) -> DummySolution {
-            DummySolution
-        }
-    }
-    impl MoveToNeighbor<DummyProblem> for () {
-        fn iter(_prob: &DummyProblem, _sol: &DummySolution) -> impl Iterator<Item = Self> + Send {
-            std::iter::empty()
-        }
-        fn apply_to_solution(
-            &self,
-            _prob: &DummyProblem,
-            _sol: &mut DummySolution,
-        ) -> Result<(), OptError> {
-            Ok(())
-        }
-    }
-    impl crate::trait_defs::Evaluate for () {
-        fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
-            crate::trait_defs::Evaluable::Minimize(0.0)
-        }
     }
 }

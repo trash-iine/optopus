@@ -191,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn extract_features_improving_move() {
+    fn extract_features_lays_out_the_move_and_its_interactions() {
         let ctx = StepContext {
             max_abs_worsening: 4.0,
             min_worsening: -4.0,
@@ -204,34 +204,19 @@ mod tests {
             improvement_ratio: -0.1,
         };
 
-        let features = extract_features(-2.0, 0.0, &ctx);
-
         let block = 1 + STATE_FEATURES;
+
+        // An improving move, ranked best.
+        let features = extract_features(-2.0, 0.0, &ctx);
         assert!((features[0] - 0.5).abs() < 1e-10); // normalized_gain = 2/4
         assert!((features[block] - 1.0).abs() < 1e-10); // is_improving
         assert!((features[2 * block] - 0.0).abs() < 1e-10); // rank_ratio = best
         // Interaction terms: move feature × state feature.
         assert!((features[1] - 0.5 * ctx.progress).abs() < 1e-10);
         assert!((features[block + 2] - 1.0 * ctx.stagnation).abs() < 1e-10);
-    }
 
-    #[test]
-    fn extract_features_worsening_move() {
-        let ctx = StepContext {
-            max_abs_worsening: 4.0,
-            min_worsening: -4.0,
-            max_worsening: 4.0,
-            fraction_improving: 0.5,
-            mean_worsening_normalized: 0.0,
-            std_worsening_normalized: 0.5,
-            progress: 0.5,
-            stagnation: 0.1,
-            improvement_ratio: 0.0,
-        };
-
+        // A worsening move, ranked worst, in the same layout.
         let features = extract_features(2.0, 1.0, &ctx);
-
-        let block = 1 + STATE_FEATURES;
         assert!((features[0] - (-0.5)).abs() < 1e-10); // normalized_gain = -2/4
         assert!((features[block] - 0.0).abs() < 1e-10); // not improving
         assert!((features[2 * block] - 1.0).abs() < 1e-10); // rank_ratio = worst

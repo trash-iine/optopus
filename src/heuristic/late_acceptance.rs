@@ -106,6 +106,7 @@ mod tests {
     use crate::problem::MaxCutFlipNeighbor;
     use crate::problem::max_cut::MaxCut;
     use crate::search_state::SearchState;
+    use crate::trait_defs::Rankable;
 
     fn small_maxcut() -> MaxCut {
         MaxCut::from_edges([
@@ -121,38 +122,38 @@ mod tests {
         ])
     }
 
+    /// The late acceptance is the `candidate_score >= history_score` half of
+    /// the rule, and it is the only reason this is not hill climbing: it is
+    /// what lets the current score fall. Drop that term and the score is
+    /// monotone, so a run in which it never falls proves nothing. Stepping
+    /// `run_once` and watching `current_score` is what separates the two.
     #[test]
-    fn lahc_improves_maxcut() {
+    fn the_history_window_lets_the_current_score_fall() {
         let mc = small_maxcut();
-        let mut state = SearchState::new(&mc);
-        let initial_obj = state.best_solution.objective;
-
+        let mut state = SearchState::new_with_seed(&mc, 11);
         let mut lahc = LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
-            StopCondition::iterations(10_000),
-            100,
+            StopCondition::iterations(300),
+            20,
         );
-        lahc.run(&mut state).unwrap();
+
+        let mut fell = false;
+        while !lahc.is_done(&state) {
+            let before = lahc.current_score;
+            lahc.run_once(&mut state).unwrap();
+            if lahc.current_score < before {
+                fell = true;
+            }
+        }
 
         assert!(
-            state.best_solution.objective >= initial_obj,
-            "LAHC should not worsen the best solution"
+            fell,
+            "the current score never fell, so the history window never accepted anything"
         );
-        assert!(state.iteration >= 10_000);
-    }
-
-    #[test]
-    fn lahc_respects_stop_condition() {
-        let mc = small_maxcut();
-        let mut state = SearchState::new(&mc);
-
-        let mut lahc = LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
-            StopCondition::iterations(500),
-            50,
-        );
-        lahc.run(&mut state).unwrap();
-
-        assert!(state.iteration >= 500);
-        assert!(state.iteration <= 600); // some slack for iteration counting
+        // The window is circular: it is allocated once and reused, so its
+        // length stays put however far the index runs.
+        assert_eq!(lahc.history.len(), 20);
+        assert!(lahc.history_index > 20);
+        assert!(!state.solution.is_better_than(&state.best_solution));
     }
 
     #[test]
@@ -176,21 +177,5 @@ mod tests {
     #[should_panic(expected = "history_length must be at least 1")]
     fn lahc_history_length_zero_panics() {
         LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100), 0);
-    }
-
-    #[test]
-    fn lahc_history_length_one_behaves_like_hc() {
-        // With history_length=1, LAHC should behave similarly to hill climbing
-        // (only accepts improvements or lateral moves)
-        let mc = small_maxcut();
-        let mut state = SearchState::new(&mc);
-
-        let mut lahc = LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
-            StopCondition::iterations(1_000),
-            1,
-        );
-        lahc.run(&mut state).unwrap();
-
-        assert!(state.best_solution.objective >= 0.0);
     }
 }

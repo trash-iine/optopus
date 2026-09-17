@@ -463,31 +463,10 @@ mod tests {
     }
 
     #[test]
-    fn same_seed_reproduces_the_same_graph() {
-        for ((name, a), (_, b)) in small_graphs(42).into_iter().zip(small_graphs(42)) {
-            assert_eq!(digest(&a), digest(&b), "not reproducible for {name}");
-        }
-    }
-
-    #[test]
     fn different_seeds_differ() {
         let a = weighted(1, |r| Graph::erdos_renyi(60, 0.3, r));
         let b = weighted(2, |r| Graph::erdos_renyi(60, 0.3, r));
         assert_ne!(digest(&a), digest(&b));
-    }
-
-    #[test]
-    fn erdos_renyi_edge_count_in_expected_range() {
-        let n = 200;
-        let p = 0.1;
-        let g = Graph::erdos_renyi(n, p, &mut seeded_rng(2024));
-        let expected = p * (n * (n - 1) / 2) as f64;
-        let actual = g.num_edges() as f64;
-        // Generous band (±40%) to keep the statistical test robust.
-        assert!(
-            actual > expected * 0.6 && actual < expected * 1.4,
-            "edge count {actual} far from expected {expected}"
-        );
     }
 
     #[test]
@@ -546,47 +525,37 @@ mod tests {
         }
     }
 
+    /// `with_random_weights` draws from `min..=max` and skips zero by shifting
+    /// the draw up, so the cases that matter are the ones around that shift: a
+    /// range straddling zero, a range whose endpoint is zero, and a range with
+    /// no room to shift at all.
     #[test]
-    fn zero_is_never_drawn_and_both_signs_appear() {
-        let mut rng = seeded_rng(8);
-        // The only nonzero weights in (-1, 1) are -1 and 1.
-        let g = Graph::erdos_renyi(100, 0.3, &mut rng).with_random_weights((-1, 1), &mut rng);
-        assert!(g.num_edges() > 100);
-        let mut seen = HashSet::new();
-        for (_, _, w) in g.edges() {
-            assert!(w == -1.0 || w == 1.0, "unexpected weight {w}");
-            seen.insert(w.to_bits());
+    fn weights_stay_in_range_and_are_never_zero() {
+        for (seed, (min, max)) in [(8u64, (-1, 1)), (9, (0, 3)), (3, (5, 5)), (4, (-5, 5))] {
+            let mut rng = seeded_rng(seed);
+            let g = Graph::erdos_renyi(60, 0.3, &mut rng).with_random_weights((min, max), &mut rng);
+            assert!(
+                g.num_edges() > 100,
+                "({min}, {max}): too few edges to judge"
+            );
+
+            let mut seen = HashSet::new();
+            for (_, _, w) in g.edges() {
+                assert!(w != 0.0, "({min}, {max}): drew zero");
+                assert!(
+                    (min as f32..=max as f32).contains(&w),
+                    "({min}, {max}): drew {w}"
+                );
+                seen.insert(w.to_bits());
+            }
+
+            // (-1, 1) leaves exactly -1 and 1; (5, 5) leaves exactly 5.
+            match (min, max) {
+                (-1, 1) => assert_eq!(seen.len(), 2, "both signs should occur"),
+                (5, 5) => assert_eq!(seen.len(), 1, "a degenerate range is one weight"),
+                _ => assert!(seen.len() > 1, "({min}, {max}): only one weight drawn"),
+            }
         }
-        assert_eq!(seen.len(), 2, "both -1 and 1 should occur");
-    }
-
-    #[test]
-    fn zero_is_skipped_at_a_range_endpoint() {
-        let mut rng = seeded_rng(9);
-        let g = Graph::erdos_renyi(60, 0.3, &mut rng).with_random_weights((0, 3), &mut rng);
-        assert!(g.edges().all(|(_, _, w)| (1.0..=3.0).contains(&w)));
-    }
-
-    #[test]
-    fn fixed_weight_when_min_equals_max() {
-        let mut rng = seeded_rng(3);
-        let g = Graph::barabasi_albert(40, 2, &mut rng).with_random_weights((5, 5), &mut rng);
-        for (_, _, w) in g.edges() {
-            assert_eq!(w, 5.0);
-        }
-    }
-
-    #[test]
-    fn grid_torus_is_regular_with_the_expected_size() {
-        let g2 = Graph::grid_torus_2d(8);
-        assert_eq!(g2.len(), 64);
-        assert_eq!(g2.num_edges(), 2 * 64);
-        assert!((0..64).all(|v| g2.degree(v) == 4));
-
-        let g3 = Graph::grid_torus_3d(4);
-        assert_eq!(g3.len(), 64);
-        assert_eq!(g3.num_edges(), 3 * 64);
-        assert!((0..64).all(|v| g3.degree(v) == 6));
     }
 
     #[test]

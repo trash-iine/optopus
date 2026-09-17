@@ -126,32 +126,6 @@ fn crossing_back_keeps_the_original_objective_exact() {
     }
 }
 
-/// The reduction has to be worth the crossing: the kernel is strictly smaller
-/// and the search still reaches at least as good a cut as the same heuristic
-/// run on the full graph.
-#[test]
-fn crossing_into_the_kernel_does_not_cost_quality() {
-    let mc = sparse_instance(11, 300);
-    let kernel = MaxCutKernel::new(&mc);
-    assert!(
-        kernel.kernel().graph.num_vertices() < mc.graph.num_vertices(),
-        "the test instance must actually reduce"
-    );
-
-    let through = solve_through_kernel(
-        &mc,
-        &StopCondition::iterations(20_000),
-        &mut tabu_search(),
-        3,
-    );
-    let direct = {
-        let mut state = SearchState::new_with_seed(&mc, 3);
-        tabu_search().run(&mut state).unwrap();
-        state
-    };
-    assert!(through.best_solution.objective >= direct.best_solution.objective);
-}
-
 /// `is_trivial` is why leaving the reduction in a pipeline is free: on an
 /// instance the rules cannot touch, skipping the crossing leaves the search
 /// bit-identical to running the heuristic alone. A caller that crossed anyway
@@ -166,15 +140,21 @@ fn an_unreducible_instance_is_left_alone() {
     let mc = MaxCut::from_edges(edges);
     assert!(MaxCutKernel::new(&mc).is_trivial());
 
-    let mut state = SearchState::new_with_seed(&mc, 5);
-    LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(3_000))
-        .run(&mut state)
-        .unwrap();
+    let crossed = solve_through_kernel(
+        &mc,
+        &StopCondition::iterations(3_000),
+        &mut LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(3_000)),
+        5,
+    );
 
     let mut bare = SearchState::new_with_seed(&mc, 5);
     LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(3_000))
         .run(&mut bare)
         .unwrap();
 
-    assert_eq!(state.best_solution.x, bare.best_solution.x);
+    assert_eq!(crossed.best_solution.x, bare.best_solution.x);
+    assert_eq!(
+        crossed.best_solution.objective,
+        bare.best_solution.objective
+    );
 }

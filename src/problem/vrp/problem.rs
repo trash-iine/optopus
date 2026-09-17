@@ -595,26 +595,12 @@ mod tests {
     }
 
     #[test]
-    fn get_n_excludes_depot() {
-        assert_eq!(square_vrp().get_n(), 4);
-    }
-
-    #[test]
     fn route_distance_includes_depot_legs() {
         let vrp = square_vrp();
         // depot(0,0) -> c1(1,0) -> c2(0,1) -> depot : 1 + sqrt(2) + 1
         let d = vrp.route_distance(&[1, 2]);
         assert!((d - (2.0 + 2.0_f64.sqrt())).abs() < 1e-9);
         assert_eq!(vrp.route_distance(&[]), 0.0);
-    }
-
-    #[test]
-    fn solution_from_routes_computes_fields() {
-        let vrp = square_vrp();
-        let sol = vrp.solution_from_routes(vec![vec![1, 2], vec![3, 4]]);
-        assert_eq!(sol.route_loads, vec![2, 2]);
-        assert_eq!(sol.overload, 0);
-        assert!((sol.objective - sol.distance).abs() < 1e-9);
     }
 
     #[test]

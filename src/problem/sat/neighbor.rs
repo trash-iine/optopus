@@ -210,7 +210,6 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::search_state::SearchState;
 
     /// (x1 ∨ x2), (¬x1 ∨ x3), (¬x2 ∨ ¬x3)
     fn make_sat() -> Sat {
@@ -223,12 +222,6 @@ mod tests {
 
     fn make_solution(sat: &Sat, x: Vec<bool>) -> SatSolution {
         SatSolution::new_from_assignment(sat, x)
-    }
-
-    #[test]
-    fn test_search_state_new() {
-        let sat = make_sat();
-        let _state = SearchState::new(&sat);
     }
 
     #[test]

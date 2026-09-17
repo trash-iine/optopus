@@ -509,47 +509,42 @@ mod tests {
         (state, before)
     }
 
+    /// The three things a descent owes its caller, checked on the descent that
+    /// produced them rather than on three separate ones: the cost does not
+    /// rise, the cached distance, excess and loads still match a fresh
+    /// recompute, and the routes are still a partition of the customers over
+    /// the fleet. They are properties of the same walk, so running it three
+    /// times to assert them one at a time buys nothing.
     #[test]
-    fn local_search_is_monotone() {
-        for seed in 0..30u64 {
-            let mut rng = SmallRng::seed_from_u64(seed);
-            let prob = random_vrp(&mut rng, 25, 10, 5);
-            let penalty = 100.0;
-            let (state, before) = descend(&prob, &mut rng, penalty, 8);
-            assert!(
-                state.cost(penalty) <= before + 1e-9,
-                "seed {seed}: cost rose from {before} to {}",
-                state.cost(penalty)
-            );
-        }
-    }
+    fn a_descent_lowers_the_cost_and_leaves_its_caches_and_routes_intact() {
+        for penalty in [50.0, 100.0] {
+            for seed in 0..30u64 {
+                let mut rng = SmallRng::seed_from_u64(seed);
+                let prob = random_vrp(&mut rng, 25, 10, 5);
+                let (state, before) = descend(&prob, &mut rng, penalty, 8);
+                let at = || format!("penalty {penalty}, seed {seed}");
 
-    #[test]
-    fn caches_stay_consistent() {
-        for seed in 0..30u64 {
-            let mut rng = SmallRng::seed_from_u64(1000 + seed);
-            let prob = random_vrp(&mut rng, 25, 10, 5);
-            let (state, _) = descend(&prob, &mut rng, 50.0, 8);
-            let fresh = RouteState::from_routes(&prob, state.routes.clone());
-            assert!(
-                (fresh.distance - state.distance).abs() < 1e-6,
-                "seed {seed}: distance {} vs recomputed {}",
-                state.distance,
-                fresh.distance
-            );
-            assert_eq!(fresh.excess, state.excess, "seed {seed}: excess");
-            assert_eq!(fresh.loads, state.loads, "seed {seed}: loads");
-        }
-    }
+                assert!(
+                    state.cost(penalty) <= before + 1e-9,
+                    "{}: cost rose from {before} to {}",
+                    at(),
+                    state.cost(penalty)
+                );
 
-    #[test]
-    fn local_search_keeps_a_valid_partition() {
-        for seed in 0..30u64 {
-            let mut rng = SmallRng::seed_from_u64(2000 + seed);
-            let prob = random_vrp(&mut rng, 25, 10, 5);
-            let (state, _) = descend(&prob, &mut rng, 50.0, 8);
-            assert_eq!(state.routes.len(), prob.num_vehicles);
-            prob.validate_routes(&state.routes).unwrap();
+                let fresh = RouteState::from_routes(&prob, state.routes.clone());
+                assert!(
+                    (fresh.distance - state.distance).abs() < 1e-6,
+                    "{}: distance {} vs recomputed {}",
+                    at(),
+                    state.distance,
+                    fresh.distance
+                );
+                assert_eq!(fresh.excess, state.excess, "{}: excess", at());
+                assert_eq!(fresh.loads, state.loads, "{}: loads", at());
+
+                assert_eq!(state.routes.len(), prob.num_vehicles, "{}", at());
+                prob.validate_routes(&state.routes).unwrap();
+            }
         }
     }
 

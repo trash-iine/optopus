@@ -351,7 +351,7 @@ mod tests {
     use crate::heuristic::Heuristic;
     use crate::problem::max_cut::MaxCutFlipNeighbor;
     use crate::problem::qubo::QuboFlipNeighbor;
-    use crate::problem::tsp_2d::{TspTwoOptNeighbor, TspWithCoordinates};
+
     use crate::problem::{MaxCut, Qubo};
     use crate::search_state::SearchState;
 
@@ -375,32 +375,20 @@ mod tests {
     #[test]
     fn pa_runs_without_error_and_improves() {
         let mc = small_instance();
-        for seed in 0..10 {
+        // Two seeds rather than ten: they walk the same code, and the exact
+        // trajectory of a third is pinned in `tests/pa_trajectory.rs`. The
+        // claim is improvement on the starting cut, not a positive one --
+        // every edge here weighs 1, so a positive cut proves nothing.
+        for seed in 0..2 {
             let mut state = SearchState::new_with_seed(&mc, seed);
-            let mut pa = new_pa(StopCondition::iterations(2_000));
+            let initial = state.best_solution.objective;
+            let mut pa = new_pa(StopCondition::iterations(500));
             pa.run(&mut state).expect("PA must not error");
             assert!(
-                state.best_solution.objective > 0.0,
-                "PA should find a positive cut, got {}",
-                state.best_solution.objective
+                state.best_solution.objective > initial,
+                "seed {seed}: PA did not improve on its start ({initial})"
             );
         }
-    }
-
-    #[test]
-    fn pa_seeded_runs_are_deterministic() {
-        let mc = small_instance();
-        let run = || {
-            let mut state = SearchState::new_with_seed(&mc, 42);
-            let mut pa = new_pa(StopCondition::iterations(1_500));
-            pa.run(&mut state).unwrap();
-            (
-                state.best_solution.objective,
-                state.best_iteration,
-                state.best_solution.x.clone(),
-            )
-        };
-        assert_eq!(run(), run());
     }
 
     /// One sweep is one pass over the neighborhood, measured once per episode.
@@ -459,7 +447,9 @@ mod tests {
     fn clear_resets_population() {
         let mc = small_instance();
         let mut state = SearchState::new_with_seed(&mc, 1);
-        let mut pa = new_pa(StopCondition::iterations(500));
+        // One iteration is enough to populate it; the point is what `clear`
+        // does afterwards.
+        let mut pa = new_pa(StopCondition::iterations(1));
         pa.run(&mut state).unwrap();
         assert!(!pa.population.is_empty());
         pa.clear();
@@ -491,31 +481,6 @@ mod tests {
         assert!(
             state.best_solution.objective <= initial,
             "QUBO minimizes, so the best objective must not rise"
-        );
-    }
-
-    /// Population annealing reads an energy and a move, never a variable. TSP
-    /// is not a tuned or measured combination; what this states is that the
-    /// search compiles and runs with nothing binary in reach.
-    #[test]
-    fn pa_runs_on_a_non_binary_problem() {
-        use rand::SeedableRng;
-        let mut rng = SmallRng::seed_from_u64(9);
-        let coordinates: Vec<(f64, f64)> = (0..40)
-            .map(|_| (rng.random_range(0.0..100.0), rng.random_range(0.0..100.0)))
-            .collect();
-        let tsp = TspWithCoordinates::new("pa-non-binary".to_string(), coordinates);
-        let mut state = SearchState::new_with_seed(&tsp, 4);
-        let initial = state.solution.objective;
-        // 2-opt has an O(n²) neighborhood, so the sweep length is pinned rather
-        // than counted.
-        let mut pa: PopulationAnnealing<TspWithCoordinates, TspTwoOptNeighbor> =
-            PopulationAnnealing::new(StopCondition::iterations(2_000), 8, 0.05, 0.02, 5, Some(50))
-                .with_sweep_length(40);
-        pa.run(&mut state).expect("PA must run on TSP");
-        assert!(
-            state.best_solution.objective <= initial,
-            "TSP minimizes, so the best tour length must not rise"
         );
     }
 }

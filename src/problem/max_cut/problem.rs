@@ -299,13 +299,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_blank_graph() {
-        let mc = MaxCut::new(Graph::new());
-        assert_eq!(mc.graph.len(), 0);
-        assert!(mc.graph.is_empty());
-    }
-
-    #[test]
     fn test_load_file_roundtrip() {
         use std::io::Write;
         let mut path = std::env::temp_dir();
@@ -322,19 +315,6 @@ mod tests {
         assert_eq!(mc.graph.num_vertices(), 3);
         assert_eq!(mc.graph.num_edges(), 3);
         let _ = std::fs::remove_file(&path);
-    }
-
-    #[test]
-    fn test_set_and_get_weight() {
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.add_weight(0, 1, 1.0);
-        mc.graph.add_weight(0, 2, 1.0);
-        mc.graph.add_weight(0, 1, 2.0);
-
-        assert_eq!(mc.graph.len(), 3);
-
-        assert_eq!(mc.graph.get_weight(0, 1), 3.0);
-        assert_eq!(mc.graph.get_weight(0, 2), 1.0);
     }
 
     #[test]
@@ -360,115 +340,5 @@ mod tests {
             let cut = vec![true, true, false];
             assert_eq!(mc.calculate_cut_size(&cut), 5.0);
         }
-    }
-
-    #[test]
-    fn test_calculate_gain_list() {
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.add_weight(0, 1, 1.0);
-        mc.graph.add_weight(0, 2, 2.0);
-        mc.graph.add_weight(1, 2, 3.0);
-
-        let cut = vec![false, false, false];
-        assert_eq!(mc.calculate_gain(&cut, 0), 3.0);
-        assert_eq!(mc.calculate_gain(&cut, 1), 4.0);
-        assert_eq!(mc.calculate_gain(&cut, 2), 5.0);
-    }
-
-    #[test]
-    fn test_set_weight_overwrites() {
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.set_weight(0, 1, 5.0);
-        assert_eq!(mc.graph[(0, 1)], 5.0);
-
-        mc.graph.set_weight(0, 1, 3.0);
-        assert_eq!(mc.graph[(0, 1)], 3.0); // overwritten, not 8.0
-        assert_eq!(mc.graph[(1, 0)], 3.0); // symmetric
-    }
-
-    #[test]
-    fn test_set_weight_and_add_weight_interaction() {
-        let mut mc = MaxCut::new(Graph::new());
-        mc.graph.set_weight(0, 1, 5.0);
-        mc.graph.add_weight(0, 1, 2.0);
-        assert_eq!(mc.graph[(0, 1)], 7.0); // 5.0 + 2.0
-
-        mc.graph.set_weight(0, 1, 1.0); // overwrite back
-        assert_eq!(mc.graph[(0, 1)], 1.0);
-    }
-
-    #[test]
-    fn test_index_existing_edge() {
-        let mc = MaxCut::from_edges([(0, 1, 3.0), (1, 2, 7.0)]);
-        assert_eq!(mc.graph[(0, 1)], 3.0);
-        assert_eq!(mc.graph[(1, 0)], 3.0);
-        assert_eq!(mc.graph[(1, 2)], 7.0);
-    }
-
-    #[test]
-    fn test_index_missing_edge() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0)]);
-        assert_eq!(mc.graph[(0, 2)], 0.0);
-        assert_eq!(mc.graph[(5, 6)], 0.0); // out of bounds
-    }
-
-    #[test]
-    fn test_num_vertices_and_edges() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
-        assert_eq!(mc.graph.num_vertices(), 3);
-        assert_eq!(mc.graph.num_edges(), 3);
-    }
-
-    #[test]
-    fn test_is_empty() {
-        let mc = MaxCut::new(Graph::new());
-        assert!(mc.graph.is_empty());
-
-        let mc = MaxCut::from_edges([(0, 1, 1.0)]);
-        assert!(!mc.graph.is_empty());
-    }
-
-    #[test]
-    fn test_from_edges() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
-        assert_eq!(mc.graph[(0, 1)], 1.0);
-        assert_eq!(mc.graph[(0, 2)], 2.0);
-        assert_eq!(mc.graph[(1, 2)], 3.0);
-        assert_eq!(mc.graph.num_edges(), 3);
-    }
-
-    #[test]
-    fn test_from_edges_duplicate_last_wins() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 1, 5.0)]);
-        assert_eq!(mc.graph[(0, 1)], 5.0);
-    }
-
-    #[test]
-    fn test_edges_iterator() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
-        let mut edges: Vec<_> = mc.graph.edges().collect();
-        edges.sort_by_key(|&(i, j, _)| (i, j));
-        assert_eq!(edges, vec![(0, 1, 1.0), (0, 2, 2.0), (1, 2, 3.0)]);
-    }
-
-    #[test]
-    fn test_degree() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
-        assert_eq!(mc.graph.degree(0), 2);
-        assert_eq!(mc.graph.degree(1), 2);
-        assert_eq!(mc.graph.degree(2), 2);
-        assert_eq!(mc.graph.degree(99), 0); // out of bounds
-    }
-
-    #[test]
-    fn test_display_empty() {
-        let mc = MaxCut::new(Graph::new());
-        assert_eq!(format!("{mc}"), "MaxCut(empty)");
-    }
-
-    #[test]
-    fn test_display_nonempty() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
-        assert_eq!(format!("{mc}"), "MaxCut(vertices: 3, edges: 3)");
     }
 }

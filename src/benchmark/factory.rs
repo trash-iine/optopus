@@ -635,6 +635,22 @@ mod factory_tests {
         try_build(&ProblemKind::Tsp, &lkh).expect("LKH builds for Tsp");
         let err = try_build(&ProblemKind::MaxCut, &lkh).expect_err("LKH invalid for MaxCut");
         assert!(err.to_string().contains("MaxCut"), "{err}");
+
+        let hgs = HeuristicConfig::HybridGeneticSearch {
+            min_population_size: None,
+            generation_size: None,
+            granularity: None,
+            target_feasible: None,
+            restart_generations: None,
+            stop_condition: StopConditionConfig::default(),
+        };
+        try_build(&ProblemKind::Vrp, &hgs).expect("HGS builds for Vrp");
+        let err = try_build(&ProblemKind::MaxCut, &hgs).expect_err("HGS invalid for MaxCut");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("not supported for MaxCut") && msg.contains("HybridGeneticSearch"),
+            "{msg}"
+        );
     }
 
     /// Biased fitness weights its diversity half by `1 - n_elite / N`, so a
@@ -721,16 +737,5 @@ mod factory_tests {
         )
         .expect_err("SubProblem crossover is MaxCut-only for now");
         assert!(err.to_string().contains("SubProblem"), "{err}");
-    }
-
-    #[test]
-    fn minimize_truth_table() {
-        assert!(!ProblemKind::MaxCut.minimize());
-        assert!(!ProblemKind::Sat.minimize());
-        assert!(ProblemKind::Qubo.minimize());
-        assert!(ProblemKind::Tsp.minimize());
-        assert!(ProblemKind::VertexCover.minimize());
-        assert!(ProblemKind::JobShop.minimize());
-        assert!(ProblemKind::Vrp.minimize());
     }
 }

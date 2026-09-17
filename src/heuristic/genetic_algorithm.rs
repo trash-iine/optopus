@@ -432,6 +432,7 @@ mod tests {
     use crate::common::Graph;
     use crate::heuristic::{LocalSearch, TabuSearch};
     use crate::problem::{MaxCut, MaxCutFlipNeighbor, MaxCutSolution};
+    use rand::SeedableRng;
 
     struct CloneFirstParent;
 
@@ -447,61 +448,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn genetic_algorithm_fills_population_and_reports_a_best() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
-        let mut state = SearchState::new(&mc);
-        let mut ga = GeneticAlgorithm::new(
-            StopCondition::iterations(1),
-            4,
-            CloneFirstParent,
-            Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
-                StopCondition::failed_updates(1),
-            )),
-            ParentSelection::Tournament,
-        );
-
-        ga.run(&mut state).unwrap();
-
-        assert_eq!(ga.population.len(), 4);
-        assert!(state.best_solution.objective >= 0.0);
-    }
-
-    #[test]
-    fn genetic_algorithm_with_init_improvement_refines_initial_population() {
-        let mc = MaxCut::new(Graph::from_edges([
-            (0, 1, 1.0),
-            (0, 2, 1.0),
-            (1, 2, 1.0),
-            (1, 3, 1.0),
-            (2, 3, 1.0),
-        ]));
-        let mut state = SearchState::new(&mc);
-
-        let mut hea = GeneticAlgorithm::new(
-            StopCondition::iterations(4),
-            4,
-            CloneFirstParent,
-            Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
-                StopCondition::failed_updates(1),
-                (1, 5),
-            )),
-            ParentSelection::Tournament,
-        )
-        .with_init_improvement(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
-            StopCondition::failed_updates(1),
-            (1, 5),
-        )));
-
-        hea.run(&mut state).unwrap();
-
-        assert_eq!(hea.population.len(), 4);
-        assert!(state.best_solution.objective >= 0.0);
-    }
-
-    #[test]
-    fn genetic_algorithm_distant_top_k_runs_and_keeps_population_invariant() {
-        let mc = MaxCut::new(Graph::from_edges([
+    fn triangle_plus_tail() -> MaxCut {
+        MaxCut::new(Graph::from_edges([
             (0, 1, 1.0),
             (0, 2, 1.0),
             (1, 2, 1.0),
@@ -509,22 +457,97 @@ mod tests {
             (2, 3, 1.0),
             (3, 4, 1.0),
             (4, 5, 1.0),
-        ]));
-        let mut state = SearchState::new(&mc);
+        ]))
+    }
+
+    /// Every selection strategy, and the optional initial-improvement pass,
+    /// has to carry a generation through without leaving the population the
+    /// wrong size. This is a smoke test and says so: the interesting claim
+    /// about `DistantTopK` is the one below it.
+    #[test]
+    fn every_parent_selection_completes_a_generation() {
+        for (name, selection, init_improvement) in [
+            ("tournament", ParentSelection::Tournament, false),
+            ("tournament + init", ParentSelection::Tournament, true),
+            (
+                "distant top k",
+                ParentSelection::DistantTopK { top_k: 2 },
+                false,
+            ),
+        ] {
+            let mc = triangle_plus_tail();
+            let mut state = SearchState::new_with_seed(&mc, 7);
+            let mut ga = GeneticAlgorithm::new(
+                StopCondition::iterations(20),
+                4,
+                CloneFirstParent,
+                Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+                    StopCondition::failed_updates(1),
+                )),
+                selection,
+            );
+            if init_improvement {
+                ga = ga.with_init_improvement(Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
+                    StopCondition::failed_updates(1),
+                    (1, 5),
+                )));
+            }
+
+            ga.run(&mut state).unwrap();
+
+            assert_eq!(ga.population.len(), 4, "{name}");
+            assert_eq!(
+                state.best_solution.objective,
+                mc.calculate_cut_size(&state.best_solution.x),
+                "{name}: the reported best is not the cut it carries"
+            );
+        }
+    }
+
+    /// With `top_k = 1` the second parent is determined: it is the member
+    /// furthest from the first. A selection that ignored the distances, or
+    /// sorted them the wrong way round, would still fill the population and
+    /// still report a best, which is all the smoke test above can see.
+    #[test]
+    fn distant_top_k_of_one_picks_the_furthest_member() {
+        let mc = triangle_plus_tail();
+        // Hamming distances chosen so each member has a unique furthest peer.
+        let assignments = [
+            vec![false, false, false, false, false, false],
+            vec![true, false, false, false, false, false],
+            vec![true, true, false, false, false, false],
+            vec![true, true, true, true, true, true],
+        ];
+
         let mut ga = GeneticAlgorithm::new(
-            StopCondition::iterations(50),
+            StopCondition::iterations(1),
             4,
             CloneFirstParent,
             Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
                 StopCondition::failed_updates(1),
             )),
-            ParentSelection::DistantTopK { top_k: 2 },
+            ParentSelection::DistantTopK { top_k: 1 },
         );
+        for x in &assignments {
+            ga.admit(MaxCutSolution::new_from_assignment(&mc, x.clone()));
+        }
 
-        ga.run(&mut state).unwrap();
-
-        assert_eq!(ga.population.len(), 4);
-        assert!(state.best_solution.objective >= 0.0);
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+        let mut seen_first_parents = std::collections::HashSet::new();
+        for _ in 0..50 {
+            let (a, b) = ga.distant_top_k_indices(&mut rng, 1);
+            seen_first_parents.insert(a);
+            let furthest = (0..4)
+                .filter(|&j| j != a)
+                .max_by_key(|&j| ga.population[a].distance(&ga.population[j]))
+                .unwrap();
+            assert_eq!(b, furthest, "first parent {a} paired with {b}");
+        }
+        assert_eq!(
+            seen_first_parents.len(),
+            4,
+            "every member should have been drawn as the first parent"
+        );
     }
 
     #[test]

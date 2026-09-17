@@ -49,16 +49,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn zero_weights_give_zero_score() {
-        let policy = LinearPolicy::new();
-        let mut features = [0.0; NUM_FEATURES];
-        for (i, f) in features.iter_mut().enumerate() {
-            *f = (i + 1) as f64;
-        }
-        assert_eq!(policy.score(&features), 0.0);
-    }
-
-    #[test]
     fn score_is_dot_product() {
         let mut weights = [0.0; NUM_FEATURES];
         weights[0] = 1.0;

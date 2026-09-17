@@ -285,7 +285,6 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::search_state::SearchState;
 
     fn make_qubo() -> Qubo {
         let mut q = Qubo::new();
@@ -390,24 +389,6 @@ mod tests {
                 "swap ({},{}): gain={} expected delta={}",
                 neighbor.i, neighbor.j, neighbor.gain, expected_delta
             );
-        }
-    }
-
-    #[test]
-    fn test_search_state_new() {
-        let qubo = make_qubo();
-        let _state = SearchState::new(&qubo);
-    }
-
-    #[test]
-    fn test_random_neighbor() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
-        let mut state = SearchState::new(&qubo);
-        for _ in 0..20 {
-            let flip = QuboFlipNeighbor::random_neighbor(&qubo, &state.solution, &mut state.rng)
-                .expect("a non-empty QUBO has a flip");
-            assert!(flip.i < qubo.len(), "random neighbor index out of bounds");
-            assert_eq!(flip.gain, state.solution.gain[flip.i]);
         }
     }
 

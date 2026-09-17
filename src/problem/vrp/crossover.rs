@@ -79,16 +79,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn identical_parents_preserve_customers() {
-        let prob = vrp();
-        let s = prob.solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5]]);
-        let mut cx = VrpOrderCrossover;
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
-        let child = cx.crossover(&prob, &s, &s, &mut rng).unwrap();
-        prob.validate_routes(&child.routes).unwrap();
-    }
-
     /// From identical parents OX reproduces the parent's own customer order, and
     /// the parent's routes are one way of cutting that order, so the optimal
     /// decoder cannot come back with anything worse. (The greedy splitter this
