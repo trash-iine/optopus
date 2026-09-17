@@ -1099,9 +1099,11 @@ mod tests {
             }
         }
 
-        /// Not implementing [`EnabledTabu`] must cost nothing at the point a
-        /// move is applied, which is what keeps tabu an opt-in trait rather
-        /// than a tax on every problem.
+        /// A move that does not implement [`EnabledTabu`] cannot reach the
+        /// memory at all: `tabu_allows` and `record_tabu` are bounded on the
+        /// trait, so asking is a compile error rather than a runtime one. What
+        /// stays checkable is that such a move still applies normally, which is
+        /// what keeps tabu an opt-in trait rather than a tax on every problem.
         #[test]
         fn a_move_without_tabu_support_applies_normally() {
             let prob = Untabued;
@@ -1110,20 +1112,6 @@ mod tests {
             state.apply_move_only(&Increment).unwrap();
             assert_eq!(state.solution.0, 2);
             assert_eq!(state.n_accepted, 2);
-        }
-
-        /// A move that does not implement [`EnabledTabu`] cannot reach the
-        /// memory at all: `tabu_allows` and `record_tabu` are bounded on the
-        /// trait, so asking is a compile error rather than a runtime one. What
-        /// stays checkable is that such a move still applies normally, tabu is
-        /// opt-in, and a problem that never wanted it pays nothing.
-        #[test]
-        fn a_move_without_tabu_support_still_applies() {
-            let prob = Untabued;
-            let mut state = SearchState::new_with_seed(&prob, 1);
-            state.apply(&Increment).unwrap();
-            state.apply_move_only(&Increment).unwrap();
-            assert_eq!(state.solution.0, 2);
         }
 
         /// `apply` is what records, so a move is forbidden for exactly the

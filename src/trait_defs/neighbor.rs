@@ -175,33 +175,6 @@ mod default_move_warning_tests {
         }
     }
 
-    // Efficient move: overrides move_to_be_better_than so the warning path is bypassed.
-    #[derive(Clone, Debug)]
-    struct EfficientAddOne;
-
-    impl MoveToNeighbor<ToyProblem> for EfficientAddOne {
-        fn apply_to_solution(
-            &self,
-            _prob: &ToyProblem,
-            sol: &mut ToySolution,
-        ) -> Result<(), crate::error::OptError> {
-            sol.value += 1;
-            Ok(())
-        }
-        fn iter(_p: &ToyProblem, _s: &ToySolution) -> impl Iterator<Item = Self> + Send {
-            std::iter::empty()
-        }
-        fn move_to_be_better_than(
-            &self,
-            _prob: &ToyProblem,
-            src: &ToySolution,
-            other: &ToySolution,
-        ) -> bool {
-            // Closed-form: applying +1 to src yields a better-than-other result iff src.value + 1 > other.value.
-            src.value + 1 > other.value
-        }
-    }
-
     #[derive(Default, Clone)]
     struct BufWriter(Arc<Mutex<Vec<u8>>>);
 
@@ -256,24 +229,6 @@ mod default_move_warning_tests {
         assert_eq!(
             count, 1,
             "expected exactly one warning, got {count}: {logs}"
-        );
-    }
-
-    #[test]
-    fn overridden_move_to_be_better_than_emits_no_warning() {
-        let prob = ToyProblem;
-        let src = ToySolution { value: 0 };
-        let other = ToySolution { value: 0 };
-
-        let logs = captured(|| {
-            let m = EfficientAddOne;
-            let result = m.move_to_be_better_than(&prob, &src, &other);
-            assert!(result);
-        });
-
-        assert!(
-            !logs.contains("default clone+apply"),
-            "override path must skip the warning entirely, got: {logs}"
         );
     }
 

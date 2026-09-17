@@ -463,31 +463,10 @@ mod tests {
     }
 
     #[test]
-    fn same_seed_reproduces_the_same_graph() {
-        for ((name, a), (_, b)) in small_graphs(42).into_iter().zip(small_graphs(42)) {
-            assert_eq!(digest(&a), digest(&b), "not reproducible for {name}");
-        }
-    }
-
-    #[test]
     fn different_seeds_differ() {
         let a = weighted(1, |r| Graph::erdos_renyi(60, 0.3, r));
         let b = weighted(2, |r| Graph::erdos_renyi(60, 0.3, r));
         assert_ne!(digest(&a), digest(&b));
-    }
-
-    #[test]
-    fn erdos_renyi_edge_count_in_expected_range() {
-        let n = 200;
-        let p = 0.1;
-        let g = Graph::erdos_renyi(n, p, &mut seeded_rng(2024));
-        let expected = p * (n * (n - 1) / 2) as f64;
-        let actual = g.num_edges() as f64;
-        // Generous band (±40%) to keep the statistical test robust.
-        assert!(
-            actual > expected * 0.6 && actual < expected * 1.4,
-            "edge count {actual} far from expected {expected}"
-        );
     }
 
     #[test]

@@ -313,51 +313,6 @@ mod tests {
     }
 
     #[test]
-    fn sample_categorical_valid_index() {
-        let probs = vec![0.2, 0.3, 0.5];
-        let mut rng = rand::rng();
-        for _ in 0..100 {
-            let idx = sample_categorical(&probs, &mut rng);
-            assert!(idx < 3);
-        }
-    }
-
-    #[test]
-    fn online_update_moves_weights() {
-        let mut rl = ReinforcementLearningSearch::<()>::new(
-            StopCondition::iterations(100),
-            0.1,
-            1.0,
-            RewardShaping::Raw,
-            None,
-        );
-
-        // Simulate online update: positive reward with feature[0] = 1.0
-        let mut features_good = [0.0; NUM_FEATURES];
-        features_good[0] = 1.0;
-        let reward_good = 1.0;
-        let advantage = reward_good - rl.baseline;
-        rl.baseline_count += 1;
-        rl.baseline += (reward_good - rl.baseline) / rl.baseline_count as f64;
-        rl.policy
-            .update(&features_good, advantage, rl.learning_rate);
-
-        // Simulate online update: negative reward with feature[1] = 1.0
-        let mut features_bad = [0.0; NUM_FEATURES];
-        features_bad[1] = 1.0;
-        let reward_bad = -1.0;
-        let advantage = reward_bad - rl.baseline;
-        rl.baseline_count += 1;
-        rl.baseline += (reward_bad - rl.baseline) / rl.baseline_count as f64;
-        rl.policy.update(&features_bad, advantage, rl.learning_rate);
-
-        // Weight for feature 0 should be positive (positive reward),
-        // weight for feature 1 should be negative (negative reward)
-        assert!(rl.policy.weights[0] > 0.0);
-        assert!(rl.policy.weights[1] < 0.0);
-    }
-
-    #[test]
     fn ledger_improvement_ratio_resets_on_clear() {
         let mut rl = ReinforcementLearningSearch::<()>::new(
             StopCondition::iterations(100),

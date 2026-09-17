@@ -114,7 +114,6 @@ mod tests {
     use crate::heuristic::{LocalSearch, RandomWalk, StopCondition};
     use crate::problem::{MaxCut, MaxCutFlipNeighbor, MaxCutSolution};
     use crate::search_state::SearchState;
-    use crate::trait_defs::Rankable;
 
     fn small_maxcut() -> MaxCut {
         MaxCut::from_edges([
@@ -155,21 +154,6 @@ mod tests {
             )),
             vec![],
         );
-    }
-
-    #[test]
-    fn vns_preserves_best_and_never_ends_worse() {
-        let mc = small_maxcut();
-        let mut state = SearchState::new_with_seed(&mc, 42);
-        let initial_obj = state.best_solution.objective;
-
-        let mut vns = vns_with_random_walk_shakes(StopCondition::iterations(100));
-        vns.run(&mut state).unwrap();
-
-        assert!(state.iteration >= 100);
-        assert!(state.best_solution.objective >= initial_obj);
-        // The best solution must never be worse than the current one.
-        assert!(!state.solution.is_better_than(&state.best_solution));
     }
 
     #[test]

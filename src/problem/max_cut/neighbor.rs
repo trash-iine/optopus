@@ -328,12 +328,6 @@ mod tests {
     use crate::search_state::SearchState;
 
     #[test]
-    fn test_new() {
-        let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
-        let _ = SearchState::new(&mc);
-    }
-
-    #[test]
     fn test_flip_neighbor() {
         let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
 

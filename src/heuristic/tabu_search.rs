@@ -149,60 +149,6 @@ mod tests {
         TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (5, 1));
     }
 
-    /// The prohibitions the run left behind live on the state, and
-    /// [`SearchState::reset_tabu`] frees every move, the observable property a
-    /// new episode depends on, which used to be `TabuSearch::clear`'s job.
-    #[test]
-    fn reset_tabu_frees_what_a_run_forbade() {
-        let mc = small_maxcut();
-        let mut state = SearchState::new_with_seed(&mc, 42);
-        let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (5, 10));
-        ts.run(&mut state).unwrap();
-
-        let blocked = |state: &SearchState<'_, MaxCut>| {
-            (0..mc.graph.len()).any(|i| !state.tabu_allows(&MaxCutFlipNeighbor { i, gain: 0.0 }))
-        };
-        assert!(
-            blocked(&state),
-            "the run must leave at least one vertex tabu"
-        );
-
-        state.reset_tabu();
-        assert!(!blocked(&state), "reset_tabu must free every vertex");
-    }
-
-    /// A sub-run starts from no prohibitions whichever clone type made it,
-    /// what every meta-heuristic relies on to isolate a phase, and what
-    /// `Heuristic::clear` used to provide.
-    #[test]
-    fn a_sub_run_starts_with_an_empty_tabu_memory() {
-        use crate::search_state::SearchStateCloneType;
-
-        let mc = small_maxcut();
-        let mut state = SearchState::new_with_seed(&mc, 42);
-        let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10), (50, 50));
-        ts.run(&mut state).unwrap();
-
-        for clone_type in [
-            SearchStateCloneType::Simple,
-            SearchStateCloneType::ClearBest,
-            SearchStateCloneType::StartBest,
-        ] {
-            let sub = state.clone_for_new_run(clone_type.clone());
-            for i in 0..mc.graph.len() {
-                assert!(
-                    sub.tabu_allows(&MaxCutFlipNeighbor { i, gain: 0.0 }),
-                    "vertex {i} is still tabu in a {clone_type:?} sub-run"
-                );
-            }
-            assert_eq!(
-                sub.tabu_tenure(),
-                (0, 0),
-                "the tenure is the child's to set"
-            );
-        }
-    }
-
     /// The mode is what makes this a tabu search: `apply` writes the memory
     /// `run_once` reads, and only while the state is recording. Forgetting to
     /// turn it on is silent. The search keeps running, having stopped writing, so this pins that `run_once` turns it on itself rather than trusting

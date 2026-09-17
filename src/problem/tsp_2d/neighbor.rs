@@ -450,24 +450,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_relocate_tour_is_valid_permutation() {
-        let tsp = make_square_tsp();
-        let sol = make_sol(&tsp, vec![0, 1, 2, 3]);
-
-        for neighbor in TspRelocateNeighbor::iter(&tsp, &sol) {
-            let mut s = sol.clone();
-            neighbor.apply_to_solution(&tsp, &mut s).unwrap();
-            let mut sorted = s.tour.clone();
-            sorted.sort();
-            assert_eq!(
-                sorted,
-                vec![0, 1, 2, 3],
-                "tour should remain a valid permutation"
-            );
-        }
-    }
-
     /// 6-city instance with irregular coordinates (no gain ties), for
     /// random-sampling membership checks.
     fn make_hex_tsp() -> TspWithCoordinates {

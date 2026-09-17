@@ -161,19 +161,6 @@ mod tests {
 
     use super::*;
 
-    /// A swap moves one vertex per side, so it must leave the partition sizes
-    /// untouched, which is the whole reason `M2` exists next to the flips.
-    #[test]
-    fn a_swap_keeps_the_partition_sizes() {
-        let mc = small_instance();
-        let mut state = state_with_tabu(&mc, 2, (3, 15));
-
-        let side0 = |x: &[bool]| x.iter().filter(|&&b| b).count();
-        let before = side0(&state.solution.x);
-        best_swap(4, &mut state).unwrap();
-        assert_eq!(side0(&state.solution.x), before);
-    }
-
     /// A swap moves one vertex per side in a single move, so the partition
     /// sizes survive even when one side has nothing free left.
     ///

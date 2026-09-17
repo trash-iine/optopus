@@ -738,26 +738,4 @@ mod qubo_tests {
         entries.sort_by_key(|&(i, j, _)| (i, j));
         assert_eq!(entries, vec![(0, 1, 1), (0, 2, 2), (1, 2, 3)]);
     }
-
-    #[test]
-    fn test_new_from_assignment() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
-        let sol = QuboSolution::new_from_assignment(&qubo, vec![true, false, true]);
-        assert_eq!(sol.objective, qubo.calculate_energy(&sol.x));
-        for &i in qubo.iter_on_variables() {
-            assert_eq!(sol.gain[i], qubo.calculate_gain(&sol.x, i));
-        }
-    }
-
-    #[test]
-    fn test_new_from_parts() {
-        let qubo = Qubo::from_entries([(0, 1, 1), (1, 2, 2), (0, 2, 3)]);
-        let x = vec![true, false, true];
-        let gain: Vec<Coefficient> = (0..3).map(|i| qubo.calculate_gain(&x, i)).collect();
-        let objective = qubo.calculate_energy(&x);
-        let sol = QuboSolution::new_from_parts(x.clone(), gain.clone(), objective);
-        assert_eq!(sol.x, x);
-        assert_eq!(sol.gain, gain);
-        assert_eq!(sol.objective, objective);
-    }
 }

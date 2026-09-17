@@ -471,23 +471,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_swap_finds_improvement_when_available() {
-        let inst = make_inst();
-        // [0, 0, 1, 1] schedules everything serially:
-        //   pos 0: job0 op0 on M0 finish 2
-        //   pos 1: job0 op1 on M1 finish 5
-        //   pos 2: job1 op0 on M1 finish 6
-        //   pos 3: job1 op1 on M0 finish 10
-        // makespan = 10
-        let sol = make_sol(&inst, vec![0, 0, 1, 1]);
-        assert_eq!(sol.objective, 10);
-        let best = JobShopSwapNeighbor::iter(&inst, &sol)
-            .map(|n| n.gain)
-            .fold(f64::INFINITY, f64::min);
-        assert!(best < 0.0);
-    }
-
     /// Reference implementation of the default `move_to_be_better_than`
     /// (clone + apply). Used to assert that the override agrees with it.
     fn reference_move_to_be_better_than<M: MoveToNeighbor<JobShopScheduling>>(

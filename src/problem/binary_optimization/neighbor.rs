@@ -248,7 +248,6 @@ mod tests {
     use crate::problem::binary_optimization::problem::{
         Constraint, ConstraintRel, Expr, FormulaProblem, OptDirection,
     };
-    use crate::search_state::SearchState;
 
     fn make_problem() -> FormulaProblem {
         let objective = Expr::Add(vec![
@@ -267,12 +266,6 @@ mod tests {
 
     fn make_solution(prob: &FormulaProblem, x: Vec<bool>) -> FormulaSolution {
         FormulaSolution::new_from_assignment(prob, x)
-    }
-
-    #[test]
-    fn test_search_state_new() {
-        let prob = make_problem();
-        let _state = SearchState::new(&prob);
     }
 
     #[test]

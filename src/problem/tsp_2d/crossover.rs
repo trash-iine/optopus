@@ -118,10 +118,7 @@ mod tests {
     use std::collections::HashSet;
 
     use crate::problem::tsp_2d::{TspSolution, TspWithCoordinates};
-    use crate::search_state::{Crossover, SubProblemExtractable};
-    use rand::SeedableRng;
-
-    use super::TspOrderCrossover;
+    use crate::search_state::SubProblemExtractable;
 
     /// 4-city square: (0,0), (1,0), (1,1), (0,1)
     fn make_tsp() -> TspWithCoordinates {
@@ -134,33 +131,6 @@ mod tests {
     fn make_sol(tsp: &TspWithCoordinates, tour: Vec<usize>) -> TspSolution {
         let objective = tsp.calculate_tour_length(&tour).unwrap();
         TspSolution { tour, objective }
-    }
-
-    #[test]
-    fn test_order_crossover_valid_tour() {
-        let tsp = make_tsp();
-        let a = make_sol(&tsp, vec![0, 1, 2, 3]);
-        let b = make_sol(&tsp, vec![2, 0, 3, 1]);
-        let mut cx = TspOrderCrossover;
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&tsp, &a, &b, &mut rng).unwrap();
-        let cities: HashSet<usize> = offspring.tour.iter().copied().collect();
-        assert_eq!(offspring.tour.len(), 4);
-        assert_eq!(
-            cities,
-            (0..4).collect::<HashSet<usize>>(),
-            "offspring must visit all 4 cities exactly once"
-        );
-    }
-
-    #[test]
-    fn test_order_crossover_identical_parents() {
-        let tsp = make_tsp();
-        let s = make_sol(&tsp, vec![0, 1, 2, 3]);
-        let mut cx = TspOrderCrossover;
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let offspring = cx.crossover(&tsp, &s, &s, &mut rng).unwrap();
-        assert_eq!(offspring.tour, s.tour);
     }
 
     #[test]

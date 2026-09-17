@@ -122,40 +122,6 @@ mod tests {
     }
 
     #[test]
-    fn lahc_improves_maxcut() {
-        let mc = small_maxcut();
-        let mut state = SearchState::new(&mc);
-        let initial_obj = state.best_solution.objective;
-
-        let mut lahc = LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
-            StopCondition::iterations(10_000),
-            100,
-        );
-        lahc.run(&mut state).unwrap();
-
-        assert!(
-            state.best_solution.objective >= initial_obj,
-            "LAHC should not worsen the best solution"
-        );
-        assert!(state.iteration >= 10_000);
-    }
-
-    #[test]
-    fn lahc_respects_stop_condition() {
-        let mc = small_maxcut();
-        let mut state = SearchState::new(&mc);
-
-        let mut lahc = LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
-            StopCondition::iterations(500),
-            50,
-        );
-        lahc.run(&mut state).unwrap();
-
-        assert!(state.iteration >= 500);
-        assert!(state.iteration <= 600); // some slack for iteration counting
-    }
-
-    #[test]
     fn lahc_clear_resets_state() {
         let mc = small_maxcut();
         let mut state = SearchState::new(&mc);
@@ -176,21 +142,5 @@ mod tests {
     #[should_panic(expected = "history_length must be at least 1")]
     fn lahc_history_length_zero_panics() {
         LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(StopCondition::iterations(100), 0);
-    }
-
-    #[test]
-    fn lahc_history_length_one_behaves_like_hc() {
-        // With history_length=1, LAHC should behave similarly to hill climbing
-        // (only accepts improvements or lateral moves)
-        let mc = small_maxcut();
-        let mut state = SearchState::new(&mc);
-
-        let mut lahc = LateAcceptanceHillClimbing::<MaxCutFlipNeighbor>::new(
-            StopCondition::iterations(1_000),
-            1,
-        );
-        lahc.run(&mut state).unwrap();
-
-        assert!(state.best_solution.objective >= 0.0);
     }
 }

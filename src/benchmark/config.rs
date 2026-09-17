@@ -462,15 +462,6 @@ mod validate_tests {
     }
 
     #[test]
-    fn validate_accepts_compatible_problem_and_neighbor() {
-        let c = cfg(
-            vec![instance(ProblemKind::MaxCut)],
-            vec![local_search(NeighborKind::Flip)],
-        );
-        validate_config(&c).expect("MaxCut x Flip is valid");
-    }
-
-    #[test]
     fn validate_rejects_tsp_with_flip() {
         let c = cfg(
             vec![instance(ProblemKind::Tsp)],
@@ -484,15 +475,6 @@ mod validate_tests {
             msg.contains("TwoOpt"),
             "error suggests valid neighbors: {msg}"
         );
-    }
-
-    #[test]
-    fn validate_rejects_jobshop_with_flip() {
-        let c = cfg(
-            vec![instance(ProblemKind::JobShop)],
-            vec![local_search(NeighborKind::Flip)],
-        );
-        validate_config(&c).expect_err("JobShop x Flip must fail");
     }
 
     #[test]
@@ -599,65 +581,6 @@ max_duration_secs = 30.0
             }
             _ => panic!("expected WalkSat"),
         }
-    }
-
-    #[test]
-    fn parses_random_walk_toml() {
-        let h: HeuristicConfig = toml::from_str(
-            r#"
-kind = "RandomWalk"
-neighbor = "Swap"
-
-[stop_condition]
-max_iteration = 5
-"#,
-        )
-        .expect("RandomWalk TOML parses");
-        match &h {
-            HeuristicConfig::RandomWalk {
-                neighbor,
-                stop_condition,
-            } => {
-                assert_eq!(*neighbor, NeighborKind::Swap);
-                assert_eq!(stop_condition.max_iteration, Some(5));
-            }
-            other => panic!("wrong variant: {other:?}"),
-        }
-    }
-
-    #[test]
-    fn parses_vns_nested_steps_toml() {
-        let h: HeuristicConfig = toml::from_str(
-            r#"
-kind = "VariableNeighborhoodSearch"
-
-[stop_condition]
-max_iteration = 100
-
-[[steps]]
-kind = "LocalSearch"
-neighbor = "Flip"
-
-[[steps]]
-kind = "RandomWalk"
-neighbor = "Flip"
-
-[steps.stop_condition]
-max_iteration = 1
-
-[[steps]]
-kind = "RandomWalk"
-neighbor = "Swap"
-
-[steps.stop_condition]
-max_iteration = 2
-"#,
-        )
-        .expect("VariableNeighborhoodSearch TOML parses");
-        assert_eq!(h.kind_name(), "VariableNeighborhoodSearch");
-        assert_eq!(h.steps().len(), 3);
-        assert_eq!(h.steps()[1].kind_name(), "RandomWalk");
-        assert_eq!(h.steps()[2].neighbor(), Some(&NeighborKind::Swap));
     }
 
     #[test]

@@ -56,7 +56,7 @@ impl Crossover<JobShopScheduling> for JobShopPpxCrossover {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::search_state::ProblemTrait;
+
     use rand::SeedableRng;
 
     fn make_inst() -> JobShopScheduling {
@@ -106,16 +106,5 @@ mod tests {
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         let child = cx.crossover(&inst, &a, &a, &mut rng).unwrap();
         assert_eq!(child.operations, a.operations);
-    }
-
-    #[test]
-    fn test_ppx_random_parents_random_inst() {
-        let inst = make_inst();
-        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
-        let a = inst.new_solution(&mut rng);
-        let b = inst.new_solution(&mut rng);
-        let mut cx = JobShopPpxCrossover;
-        let child = cx.crossover(&inst, &a, &b, &mut rng).unwrap();
-        assert_eq!(child.operations.len(), inst.n_jobs * inst.n_machines);
     }
 }

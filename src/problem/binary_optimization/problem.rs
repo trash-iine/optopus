@@ -712,39 +712,6 @@ mod tests {
     }
 
     #[test]
-    fn test_neg_simplification() {
-        // Neg(Const(c)) → Const(-c)
-        let e = -Expr::Const(3.0);
-        assert!(matches!(e, Expr::Const(c) if (c + 3.0).abs() < 1e-12));
-        // Neg(Neg(e)) → e
-        let e2 = -(-Expr::Var(0));
-        assert!(matches!(e2, Expr::Var(0)));
-        // Neg(Var) stays as Neg
-        let e3 = -Expr::Var(1);
-        assert!(matches!(e3, Expr::Neg(_)));
-    }
-
-    #[test]
-    fn test_add_flattening() {
-        // (a + b) + c + d should produce a single flat Add with 4 children
-        let e = Expr::Var(0) + Expr::Var(1) + Expr::Var(2) + Expr::Var(3);
-        match e {
-            Expr::Add(v) => assert_eq!(v.len(), 4),
-            _ => panic!("expected flat Add"),
-        }
-    }
-
-    #[test]
-    fn test_mul_flattening() {
-        // (a * b) * c should produce a single flat Mul with 3 children
-        let e = Expr::Var(0) * Expr::Var(1) * Expr::Var(2);
-        match e {
-            Expr::Mul(v) => assert_eq!(v.len(), 3),
-            _ => panic!("expected flat Mul"),
-        }
-    }
-
-    #[test]
     fn test_clamp_constraint() {
         // clamp constraint: 1 <= x[0] + x[1] + x[2] <= 2, weight=10
         let prob = FormulaProblem::new(

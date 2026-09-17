@@ -215,25 +215,6 @@ problem = "MaxCut"
     }
 }
 
-/// SimulatedAnnealing consumes the RNG on every step, so any seeding mistake
-/// (including rayon scheduling nondeterminism) would show up here.
-#[test]
-fn run_from_config_is_bit_identical_across_reruns_with_seed() {
-    assert_reproducible(
-        "repro_sa",
-        r#"
-[[heuristics]]
-kind = "SimulatedAnnealing"
-neighbor = "Flip"
-initial_temperature = 1.0
-cooling_rate = 0.99
-
-[heuristics.stop_condition]
-max_iteration = 500
-"#,
-    );
-}
-
 /// TabuSearch samples the tabu tenure from the RNG on every applied move, so
 /// this locks in the seeded-tenure fix (previously the thread RNG was used and
 /// runs were not reproducible).

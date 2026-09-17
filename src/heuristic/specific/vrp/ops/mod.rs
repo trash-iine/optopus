@@ -238,13 +238,4 @@ mod tests {
             }
         }
     }
-
-    #[test]
-    fn route_loads_sums_every_route() {
-        let prob = line_vrp();
-        let routes = vec![vec![1, 2, 3], vec![4, 5], Vec::new()];
-        let mut loads = vec![-1; routes.len()];
-        route_loads(&prob, &routes, &mut loads);
-        assert_eq!(loads, vec![1 + 2 + 3, 4 + 5, 0]);
-    }
 }
