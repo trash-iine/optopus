@@ -9,6 +9,7 @@
 use rand::Rng;
 use rand::rngs::SmallRng;
 use std::collections::HashMap;
+use std::hash::{BuildHasherDefault, Hasher};
 
 /// What a move forbids: the thing that has to stay put for a while after the
 /// move is applied.
@@ -47,6 +48,37 @@ impl From<(usize, usize)> for TabuKey {
 impl From<(usize, usize, usize)> for TabuKey {
     fn from((a, b, c): (usize, usize, usize)) -> Self {
         TabuKey::Triple(a, b, c)
+    }
+}
+
+/// Hasher for [`TabuKey`], a multiply-xor mix of the words the key is made of.
+///
+/// The keys are two or three machine words that a tabu scan looks up once per
+/// candidate move, so the default SipHash costs more than the gain computation
+/// it guards. This mixes with the multiplier from splitmix64, which spreads the
+/// low bits the indices vary in across the whole word.
+#[derive(Default)]
+pub struct TabuKeyHasher(u64);
+
+impl Hasher for TabuKeyHasher {
+    fn write_usize(&mut self, n: usize) {
+        self.0 = (self.0 ^ n as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        self.0 ^= self.0 >> 29;
+    }
+
+    fn write_u8(&mut self, n: u8) {
+        // The derived `Hash` writes the enum discriminant through here.
+        self.write_usize(n as usize);
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            self.write_u8(b);
+        }
+    }
+
+    fn finish(&self) -> u64 {
+        self.0
     }
 }
 
@@ -97,7 +129,7 @@ pub struct TabuMemory {
     // Stored inline rather than boxed. The arrangement the allocator draws for
     // this struct once cost TabuSearch a large slowdown under thin LTO; see
     // decisions/0004.
-    sparse: HashMap<TabuKey, u64>,
+    sparse: HashMap<TabuKey, u64, BuildHasherDefault<TabuKeyHasher>>,
     tenure: (u64, u64),
 }
 
@@ -290,6 +322,22 @@ mod tests {
 
     /// `forbid` must grow the dense space rather than silently dropping the
     /// entry, so a default-constructed memory still works.
+    /// The compound keys share one map, so a hasher that folded two of them
+    /// together would silently forbid moves nothing applied.
+    #[test]
+    fn the_compound_key_spaces_stay_apart() {
+        let mut tabu = memory((5, 5));
+        tabu.forbid((1usize, 2usize), 0, &mut rng());
+        tabu.forbid((3usize, 4usize, 5usize), 0, &mut rng());
+        assert!(!tabu.is_enabled((1usize, 2usize), 1));
+        assert!(!tabu.is_enabled((3usize, 4usize, 5usize), 1));
+        // Same words, different shape or order: all still free.
+        assert!(tabu.is_enabled((2usize, 1usize), 1));
+        assert!(tabu.is_enabled(1usize, 1));
+        assert!(tabu.is_enabled((1usize, 2usize, 0usize), 1));
+        assert!(tabu.is_enabled((3usize, 5usize, 4usize), 1));
+    }
+
     #[test]
     fn forbid_grows_the_dense_space() {
         let mut tabu = memory((2, 2));
