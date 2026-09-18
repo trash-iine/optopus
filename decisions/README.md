@@ -24,6 +24,7 @@ Read the table, open the one file you need.
 | [0014](0014-documentation-is-split-three-ways.md) | all | adopted | Documentation is split three ways, and each part has one audience |
 | [0016](0016-population-annealing-drops-the-cluster-move.md) | heuristic, max_cut, qubo | adopted | Population annealing drops the non-local cluster move and runs on every problem |
 | [0017](0017-rankable-is-derived-from-evaluate.md) | heuristic, all | adopted | Rankable is derived from Evaluate, and the derivation costs nothing |
+| [0018](0018-alns-on-routes-needs-the-local-repair.md) | vrp | reference | Ruin-and-recreate on routes needs the local repair, and needs it most on large instances |
 
 ## Writing a new record
 

@@ -50,10 +50,10 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Reinforcement Learning Search](heuristics/rl_search.md)
 - [Genetic Algorithm](heuristics/genetic_algorithm.md) (including `Crossover` trait)
 - [Population Annealing](heuristics/population_annealing.md)
+- [Adaptive Large Neighborhood Search](heuristics/alns.md)
 - [Meta-heuristics](heuristics/meta.md) (Sequential, Iterated (ILS), VNS, Restart)
 - [Breakout Local Search (MaxCut)](heuristics/breakout_local_search.md)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
 - [WalkSAT (MaxSAT)](heuristics/walksat.md)
 - [Hybrid Genetic Search (CVRP)](heuristics/hgs.md)
-- [Adaptive Large Neighborhood Search (CVRP)](heuristics/alns.md)
 
