@@ -73,7 +73,7 @@ const DEFAULT_REACTION: f64 = 0.1;
 /// [`with_max_removal`](AdaptiveLargeNeighborhoodSearch::with_max_removal) exists.
 const DEFAULT_MAX_REMOVAL: usize = 50;
 
-/// Adaptive Large Neighborhood Search (Ropke & Pisinger).
+/// Adaptive Large Neighborhood Search.
 ///
 /// Each iteration *ruins* part of the incumbent with a destroy operator and
 /// *recreates* it with a repair operator, choosing both by a roulette wheel

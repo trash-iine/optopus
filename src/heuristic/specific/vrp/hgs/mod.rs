@@ -1,6 +1,6 @@
 //! Hybrid Genetic Search (HGS) for the Capacitated VRP.
 //!
-//! HGS (Vidal et al.) is the strongest known general-purpose CVRP metaheuristic.
+//! HGS is the strongest known general-purpose CVRP metaheuristic.
 //! It combines three ideas, each in its own layer here:
 //!
 //! - [`Descent`], the granular descent shared with ALNS,

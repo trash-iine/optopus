@@ -264,7 +264,8 @@ where
     }
 
     /// Returns indices of the two parents according to `self.parent_selection`.
-    /// May return the same index twice (rare, but allowed, matches the original tournament).
+    /// May return the same index twice, which is rare and allowed, since a
+    /// tournament draws its candidates with replacement.
     fn select_parent_indices(&self, rng: &mut impl rand::Rng) -> (usize, usize)
     where
         P::Solution: Distance,
