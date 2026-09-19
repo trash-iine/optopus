@@ -84,8 +84,9 @@ Each `run_once` produces one candidate:
 3. Repair, re-insert all of them.
 4. Descend, run the problem's `LocalRepair` over the recreated solution,
    anchored at the re-inserted elements (see below).
-5. Accept, simulated-annealing criterion on the penalty-augmented
-   objective. The temperature is initialized so that a solution 5% worse is
+5. Accept, simulated-annealing criterion on the problem's `partial_energy`,
+   the objective with CVRP's capacity penalty folded in. The temperature is
+   initialized so that a solution 5% worse is
    accepted with probability ≈ 0.5, then cooled by `cooling_rate` each
    iteration.
 6. Score, reward the operator pair: `4` for a new global best, `2` for
@@ -151,8 +152,8 @@ Only the ratios between the three rewards matter, since the weights are a
 convex blend of segment averages.
 
 `clear()` resets the operator weights and the temperature but keeps what the
-builders set. A `LocalRepair`'s own instance-derived caches, such as VRP's
-candidate lists, are its own to keep or drop.
+builders set. A `LocalRepair`'s own instance-derived caches, the candidate
+lists both descents hold, are its own to keep or drop.
 
 ## Benchmark config
 

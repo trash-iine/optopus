@@ -9,8 +9,9 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition,
-    SubProblemBasedCrossover, WalkSatForSat, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
+    DEFAULT_COOLING_RATE, DEFAULT_REMOVAL_FRACTION, Heuristic, HybridGeneticSearchForVrp,
+    LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover, WalkSatForSat,
+    alns_for_tsp, alns_for_vrp, bls_for_max_cut,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -366,8 +367,8 @@ impl ConfigurableProblem for TspWithCoordinates {
                 ..
             } => Ok(Box::new(alns_for_tsp(
                 cond,
-                removal_fraction.unwrap_or(0.15),
-                cooling_rate.unwrap_or(0.9995),
+                removal_fraction.unwrap_or(DEFAULT_REMOVAL_FRACTION),
+                cooling_rate.unwrap_or(DEFAULT_COOLING_RATE),
             ))),
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for Tsp",
@@ -418,8 +419,8 @@ impl ConfigurableProblem for Vrp {
                 ..
             } => Ok(Box::new(alns_for_vrp(
                 cond,
-                removal_fraction.unwrap_or(0.15),
-                cooling_rate.unwrap_or(0.9995),
+                removal_fraction.unwrap_or(DEFAULT_REMOVAL_FRACTION),
+                cooling_rate.unwrap_or(DEFAULT_COOLING_RATE),
             ))),
             HeuristicConfig::HybridGeneticSearch {
                 min_population_size,

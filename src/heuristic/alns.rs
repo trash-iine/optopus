@@ -73,6 +73,15 @@ const DEFAULT_REACTION: f64 = 0.1;
 /// [`with_max_removal`](AdaptiveLargeNeighborhoodSearch::with_max_removal) exists.
 const DEFAULT_MAX_REMOVAL: usize = 50;
 
+/// The `removal_fraction` a benchmark config gets when it names none.
+///
+/// Public so every problem's registration reads the same number, rather than
+/// each arm carrying its own literal.
+pub const DEFAULT_REMOVAL_FRACTION: f64 = 0.15;
+
+/// The `cooling_rate` a benchmark config gets when it names none.
+pub const DEFAULT_COOLING_RATE: f64 = 0.9995;
+
 /// Adaptive Large Neighborhood Search.
 ///
 /// Each iteration *ruins* part of the incumbent with a destroy operator and

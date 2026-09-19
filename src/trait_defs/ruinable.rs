@@ -128,8 +128,8 @@ pub trait Ruinable: ProblemTrait {
     /// How many distinct positions `bucket` offers.
     ///
     /// `1` when the container is a set rather than a sequence (a bin, an agent,
-    /// a colour class), and `len + 1` when the order inside it matters (a
-    /// route).
+    /// a colour class), `len + 1` when the order inside it matters (a
+    /// route), and `len` when the sequence is cyclic (a tour).
     fn num_places(&self, partial: &Self::Partial, bucket: usize) -> usize;
 
     /// The cost of placing `element` at `(bucket, place)`.

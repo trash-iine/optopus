@@ -418,24 +418,31 @@ max_iteration = 200
         instance.display()
     );
 
-    let first = run_benchmark(&config_toml);
-    let second = run_benchmark(&config_toml);
+    let first = assert_reruns_are_bit_identical(&config_toml);
     let _ = std::fs::remove_file(&instance);
-
-    for (a, b) in first.results[0].runs.iter().zip(&second.results[0].runs) {
-        assert_eq!(a.status, "success");
-        assert_eq!(a.best_objective, b.best_objective, "objective diverged");
-        assert_eq!(a.best_iteration, b.best_iteration, "iteration diverged");
-        assert_eq!(a.solution, b.solution, "run {} diverged", a.run_index);
+    for run in &first.results[0].runs {
         // The encoding is `0, route…, 0, route…`: every customer exactly once.
-        let mut customers: Vec<usize> = a.solution.iter().copied().filter(|&c| c != 0).collect();
+        let mut customers: Vec<usize> = run.solution.iter().copied().filter(|&c| c != 0).collect();
         customers.sort_unstable();
         assert_eq!(customers, (1..=8).collect::<Vec<_>>());
     }
 }
 
-/// Writes a 24-city TSPLIB instance, two rings of twelve, so a ruin has
-/// somewhere to move cities between.
+/// Runs `config_toml` twice and asserts the per-run results are bit-identical,
+/// then hands back the first report for any further check.
+fn assert_reruns_are_bit_identical(config_toml: &str) -> BenchmarkReport {
+    let first = run_benchmark(config_toml);
+    let second = run_benchmark(config_toml);
+    for (a, b) in first.results[0].runs.iter().zip(&second.results[0].runs) {
+        assert_eq!(a.status, "success");
+        assert_eq!(a.best_objective, b.best_objective, "objective diverged");
+        assert_eq!(a.best_iteration, b.best_iteration, "iteration diverged");
+        assert_eq!(a.solution, b.solution, "run {} diverged", a.run_index);
+    }
+    first
+}
+
+/// Writes a 24-city TSPLIB instance, two rings of twelve.
 fn write_temp_tsp(tag: &str) -> std::path::PathBuf {
     let mut body = String::from(
         "NAME : e2e\nTYPE : TSP\nDIMENSION : 24\nEDGE_WEIGHT_TYPE : EUC_2D\n\
@@ -478,18 +485,9 @@ max_iteration = 300
 "#,
         instance.display()
     );
-    let first = run_benchmark(&config_toml);
-    let second = run_benchmark(&config_toml);
+    let first = assert_reruns_are_bit_identical(&config_toml);
     let _ = std::fs::remove_file(&instance);
-    let first_runs = &first.results[0].runs;
-    let second_runs = &second.results[0].runs;
-    assert_eq!(first_runs.len(), 2);
-    for (a, b) in first_runs.iter().zip(second_runs) {
-        assert_eq!(a.status, "success");
-        assert_eq!(a.best_objective, b.best_objective, "objective diverged");
-        assert_eq!(a.best_iteration, b.best_iteration, "iteration diverged");
-        assert_eq!(a.solution, b.solution, "run {} diverged", a.run_index);
-    }
+    assert_eq!(first.results[0].runs.len(), 2);
 }
 
 /// `HybridGeneticSearch` is registered only for `Vrp`; every other problem must

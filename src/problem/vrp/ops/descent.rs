@@ -22,25 +22,13 @@
 //! accepted on first improvement of `distance + penalty · excess`.
 
 use rand::rngs::SmallRng;
-use rand::seq::SliceRandom;
 
 use super::{RouteState, before, node_at};
+use crate::common::anchored_sweep::{AnchoredSweep, MIN_IMPROVEMENT};
 use crate::problem::Vrp;
-
-/// Improvements smaller than this are treated as numerical noise, which keeps
-/// the descent from cycling on ties.
-const MIN_IMPROVEMENT: f64 = 1e-10;
 
 /// Longest customer segment relocated or swapped as a unit.
 const MAX_SEGMENT: usize = 2;
-
-/// Partners of an anchor that [`Descent::run_around`] sweeps along with it.
-///
-/// Deliberately far below `granularity`: the anchors of a large ruin, widened by
-/// a full candidate list of 20, already cover most of a mid-sized instance, and
-/// a sweep that touches everything is the full descent the caller was trying not
-/// to pay for. The nearest handful is where a displaced customer actually lands.
-const ANCHOR_RING: usize = 5;
 
 /// The descent, plus the two things it needs kept between calls: the granular
 /// candidate lists (instance-derived, O(n²) to build) and the sweep buffers.
@@ -52,11 +40,7 @@ const ANCHOR_RING: usize = 5;
 #[derive(Debug, Default)]
 pub(crate) struct Descent {
     neighbors: Vec<Vec<usize>>,
-    /// The customers a pass visits, shuffled in place each time.
-    order: Vec<usize>,
-    /// Membership marks that keep [`Descent::run_around`]'s sweep list free of
-    /// duplicates without sorting it.
-    seen: Vec<bool>,
+    sweep: AnchoredSweep,
 }
 
 impl Descent {
@@ -72,7 +56,7 @@ impl Descent {
     pub(crate) fn ensure(&mut self, prob: &Vrp, granularity: usize) {
         if self.neighbors.len() != prob.get_n() + 1 {
             self.neighbors = super::build_neighbor_lists(prob, granularity);
-            self.seen = vec![false; prob.get_n() + 1];
+            self.sweep.ensure(prob.get_n() + 1);
         }
     }
 
@@ -96,9 +80,8 @@ impl Descent {
         if n == 0 {
             return;
         }
-        self.order.clear();
-        self.order.extend(1..=n);
-        self.sweep(state, prob, rng, penalty, max_passes);
+        self.sweep.set_order(1..=n);
+        self.sweep_in_place(state, prob, rng, penalty, max_passes);
     }
 
     /// The same descent, anchored only at `anchors` and the customers near them.
@@ -109,7 +92,8 @@ impl Descent {
     /// descent too expensive to run every iteration. The anchor set is widened
     /// by one granular ring, so a customer displaced by the edit is
     /// reconsidered too, not only the ones the caller moved, see
-    /// [`ANCHOR_RING`] for how wide that ring is and why it is narrow.
+    /// [`ANCHOR_RING`](crate::common::anchored_sweep::ANCHOR_RING) for how
+    /// wide that ring is and why it is narrow.
     pub(crate) fn run_around(
         &mut self,
         state: &mut RouteState,
@@ -122,23 +106,13 @@ impl Descent {
         if prob.get_n() == 0 || anchors.is_empty() {
             return;
         }
-        self.order.clear();
-        for &u in anchors {
-            for &v in std::iter::once(&u).chain(self.neighbors[u].iter().take(ANCHOR_RING)) {
-                if !self.seen[v] {
-                    self.seen[v] = true;
-                    self.order.push(v);
-                }
-            }
-        }
-        for &u in &self.order {
-            self.seen[u] = false;
-        }
-        self.sweep(state, prob, rng, penalty, max_passes);
+        self.sweep
+            .collect_around(anchors, &self.neighbors, |_| true);
+        self.sweep_in_place(state, prob, rng, penalty, max_passes);
     }
 
-    /// Sweeps `order` until a pass finds nothing, or `max_passes` are spent.
-    fn sweep(
+    /// Sweeps the prepared list with the granular move set.
+    fn sweep_in_place(
         &mut self,
         state: &mut RouteState,
         prob: &Vrp,
@@ -146,18 +120,10 @@ impl Descent {
         penalty: f64,
         max_passes: usize,
     ) {
-        for _ in 0..max_passes {
-            self.order.shuffle(rng);
-            let mut improved = false;
-            for &u in &self.order {
-                if improve_around(state, prob, &self.neighbors, u, penalty) {
-                    improved = true;
-                }
-            }
-            if !improved {
-                break;
-            }
-        }
+        let neighbors = &self.neighbors;
+        self.sweep.sweep(rng, max_passes, |u| {
+            improve_around(state, prob, neighbors, u, penalty)
+        });
         #[cfg(debug_assertions)]
         state.assert_caches_consistent(prob);
     }
@@ -474,6 +440,7 @@ fn try_two_opt_star(state: &mut RouteState, prob: &Vrp, u: usize, v: usize, pena
 mod tests {
     use super::*;
     use crate::problem::split_giant_tour;
+    use rand::seq::SliceRandom;
     use rand::{Rng, SeedableRng};
 
     fn random_vrp(rng: &mut SmallRng, n: usize, capacity: i64, fleet: usize) -> Vrp {

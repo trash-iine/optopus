@@ -10,31 +10,23 @@
 //! and greedy insertion, followed by the anchored descent at the bottom.
 
 use rand::rngs::SmallRng;
-use rand::seq::SliceRandom;
 
 use super::problem::{TspSolution, TspWithCoordinates};
+use crate::common::anchored_sweep::{AnchoredSweep, MIN_IMPROVEMENT};
 use crate::trait_defs::{LocalRepair, Ruinable};
 
 /// Marks a city that is not currently on the tour in [`TspPartial::pos`].
 const NOT_PLACED: usize = usize::MAX;
 
 /// Nearest partners considered per city by the post-repair descent.
+///
+/// Twice Lin-Kernighan's default of 5, since Or-opt and 2-opt have no depth
+/// to make up for a short list, and half VRP's 20, since a tour has no second
+/// route for a partner to be in. Unmeasured beyond that.
 const GRANULARITY: usize = 10;
 
-/// Partners of an anchor that the descent sweeps along with it.
-///
-/// Deliberately below `GRANULARITY`, for the reason VRP's descent gives. The
-/// anchors of a large ruin widened by a full candidate list already cover most
-/// of a mid-sized instance, and a sweep that touches everything is the full
-/// descent the caller was trying not to pay for.
-const ANCHOR_RING: usize = 5;
-
-/// Descent passes over a recreated tour.
+/// Descent passes over a recreated tour. Matches VRP's.
 const MAX_LS_PASSES: usize = 4;
-
-/// Improvements smaller than this are treated as numerical noise, which keeps
-/// the descent from cycling on ties.
-const MIN_IMPROVEMENT: f64 = 1e-10;
 
 /// A tour mid-ruin, with the cities taken out of it.
 ///
@@ -53,29 +45,39 @@ pub struct TspPartial {
 }
 
 impl TspPartial {
-    fn reindex(&mut self) {
-        for (i, &c) in self.tour.iter().enumerate() {
-            self.pos[c] = i;
+    /// Rewrites the index for `tour[from..]`, which is every entry an edit at
+    /// `from` can have shifted.
+    fn reindex_from(&mut self, from: usize) {
+        for i in from..self.tour.len() {
+            self.pos[self.tour[i]] = i;
         }
     }
 
+    /// The index before `i`, cyclically. Written out rather than as `% n`,
+    /// since a variable modulus is an integer division and this sits inside
+    /// the insertion scan.
+    fn before(&self, i: usize) -> usize {
+        if i == 0 { self.tour.len() - 1 } else { i - 1 }
+    }
+
+    /// The index after `i`, cyclically.
+    fn after(&self, i: usize) -> usize {
+        if i + 1 == self.tour.len() { 0 } else { i + 1 }
+    }
+
     fn pred(&self, c: usize) -> usize {
-        let n = self.tour.len();
-        self.tour[(self.pos[c] + n - 1) % n]
+        self.tour[self.before(self.pos[c])]
     }
 
     fn succ(&self, c: usize) -> usize {
-        let n = self.tour.len();
-        self.tour[(self.pos[c] + 1) % n]
+        self.tour[self.after(self.pos[c])]
     }
 
-    /// What taking the city at `i` out of the tour saves.
-    fn removal_gain_at(&self, prob: &TspWithCoordinates, i: usize) -> f64 {
-        let n = self.tour.len();
-        let c = self.tour[i];
-        let a = self.tour[(i + n - 1) % n];
-        let b = self.tour[(i + 1) % n];
-        prob.distance(a, c) + prob.distance(c, b) - prob.distance(a, b)
+    /// The cyclic length of `tour`, measured from scratch.
+    fn measure(&self, prob: &TspWithCoordinates) -> f64 {
+        (0..self.tour.len())
+            .map(|i| prob.distance(self.tour[i], self.tour[self.after(i)]))
+            .sum()
     }
 
     /// What inserting `c` at `place` costs. Place `p` is between `tour[p-1]`
@@ -83,11 +85,10 @@ impl TspPartial {
     /// whose cost is the loop `c` to itself, which is what
     /// [`TspWithCoordinates::calculate_tour_length`] charges a one-city tour.
     fn insertion_cost_at(&self, prob: &TspWithCoordinates, place: usize, c: usize) -> f64 {
-        let n = self.tour.len();
-        if n == 0 {
+        if self.tour.is_empty() {
             return prob.distance(c, c);
         }
-        let prev = self.tour[(place + n - 1) % n];
+        let prev = self.tour[self.before(place)];
         let next = self.tour[place];
         prob.distance(prev, c) + prob.distance(c, next) - prob.distance(prev, next)
     }
@@ -96,19 +97,22 @@ impl TspPartial {
     /// `i` and after `j` and reconnects `tour[i]` to `tour[j]`.
     fn reverse_after(&mut self, i: usize, j: usize) {
         self.tour[i + 1..=j].reverse();
-        for k in i + 1..=j {
+        self.reindex_range(i + 1, j);
+    }
+
+    /// Rewrites the index for `tour[lo..=hi]`.
+    fn reindex_range(&mut self, lo: usize, hi: usize) {
+        for k in lo..=hi {
             self.pos[self.tour[k]] = k;
         }
     }
 
     #[cfg(debug_assertions)]
     fn assert_caches_consistent(&self, prob: &TspWithCoordinates) {
-        let mut length = 0.0;
-        let n = self.tour.len();
-        for i in 0..n {
-            length += prob.distance(self.tour[i], self.tour[(i + 1) % n]);
-            debug_assert_eq!(self.pos[self.tour[i]], i, "position index is stale");
+        for (i, &c) in self.tour.iter().enumerate() {
+            debug_assert_eq!(self.pos[c], i, "position index is stale");
         }
+        let length = self.measure(prob);
         debug_assert!(
             (length - self.length).abs() < 1e-6 * length.abs().max(1.0),
             "running length {} drifted from the tour's {length}",
@@ -127,7 +131,7 @@ impl Ruinable for TspWithCoordinates {
             pos: vec![NOT_PLACED; self.get_n()],
             length: sol.objective,
         };
-        partial.reindex();
+        partial.reindex_from(0);
         partial
     }
 
@@ -150,23 +154,22 @@ impl Ruinable for TspWithCoordinates {
         partial.tour.len()
     }
 
+    /// One compaction and one re-measurement, both O(n), rather than a
+    /// shift and a gain per city. The gains of adjacent removals do not add
+    /// up, so the running total is remeasured instead of adjusted.
     fn remove_all(&self, partial: &mut TspPartial, set: &[usize]) {
-        // Highest position first, so removing one never shifts a position
-        // still queued. Each gain is read against the tour as it stands
-        // between removals, which is what keeps the running length exact when
-        // two removed cities are adjacent.
-        let mut positions: Vec<usize> = set.iter().map(|&c| partial.pos[c]).collect();
-        positions.sort_unstable_by(|a, b| b.cmp(a));
-        for pos in positions {
-            partial.length -= partial.removal_gain_at(self, pos);
-            let c = partial.tour.remove(pos);
+        for &c in set {
             partial.pos[c] = NOT_PLACED;
         }
-        partial.reindex();
+        let pos = &partial.pos;
+        partial.tour.retain(|&c| pos[c] != NOT_PLACED);
+        partial.reindex_from(0);
+        partial.length = partial.measure(self);
     }
 
     fn removal_gain(&self, partial: &TspPartial, element: usize) -> f64 {
-        partial.removal_gain_at(self, partial.pos[element])
+        let (a, b) = (partial.pred(element), partial.succ(element));
+        self.distance(a, element) + self.distance(element, b) - self.distance(a, b)
     }
 
     /// Shaw's relatedness with nothing but geometry to read, so it is the
@@ -198,7 +201,7 @@ impl Ruinable for TspWithCoordinates {
     fn insert(&self, partial: &mut TspPartial, _bucket: usize, place: usize, element: usize) {
         partial.length += partial.insertion_cost_at(self, place, element);
         partial.tour.insert(place, element);
-        partial.reindex();
+        partial.reindex_from(place);
     }
 
     fn partial_energy(&self, partial: &TspPartial) -> f64 {
@@ -214,62 +217,52 @@ impl Ruinable for TspWithCoordinates {
 /// next to a near one and reversing the path between two near ones, tried
 /// first-improvement over the granular pairs, the same shape as VRP's
 /// [`AnchoredRouteDescent`](crate::problem::vrp::AnchoredRouteDescent).
+#[derive(Debug, Default)]
 pub struct AnchoredTourDescent {
     neighbors: Vec<Vec<usize>>,
-    /// The cities a pass visits, shuffled in place each time.
-    order: Vec<usize>,
-    /// Membership marks that keep `order` free of duplicates without sorting.
-    seen: Vec<bool>,
+    sweep: AnchoredSweep,
 }
 
 impl AnchoredTourDescent {
     pub fn new() -> Self {
-        Self {
-            neighbors: Vec::new(),
-            order: Vec::new(),
-            seen: Vec::new(),
-        }
+        Self::default()
     }
 
     fn ensure(&mut self, prob: &TspWithCoordinates) {
         if self.neighbors.len() != prob.get_n() {
             self.neighbors = prob.nearest_neighbors(GRANULARITY);
-            self.seen = vec![false; prob.get_n()];
+            self.sweep.ensure(prob.get_n());
         }
-    }
-
-    /// Tries every granular move anchored at `u`, applying the first improving
-    /// one.
-    fn improve_around(
-        &self,
-        partial: &mut TspPartial,
-        prob: &TspWithCoordinates,
-        u: usize,
-    ) -> bool {
-        for &v in &self.neighbors[u] {
-            if partial.pos[v] == NOT_PLACED {
-                continue;
-            }
-            // Read before any move is tried. A move that applies returns
-            // early, so the pair is only used against the tour it was read
-            // from.
-            let (pu, pv) = (partial.pred(u), partial.pred(v));
-            if try_relocate(partial, prob, u, v, true)
-                || try_relocate(partial, prob, u, v, false)
-                || try_two_opt(partial, prob, u, v)
-                || try_two_opt(partial, prob, pu, pv)
-            {
-                return true;
-            }
-        }
-        false
     }
 }
 
-impl Default for AnchoredTourDescent {
-    fn default() -> Self {
-        Self::new()
+/// Tries every granular move anchored at `u`, applying the first improving
+/// one.
+fn improve_around(
+    partial: &mut TspPartial,
+    prob: &TspWithCoordinates,
+    neighbors: &[usize],
+    u: usize,
+) -> bool {
+    for &v in neighbors {
+        if partial.pos[v] == NOT_PLACED {
+            continue;
+        }
+        // Read before any move is tried. A move that applies returns early,
+        // so the pair is only used against the tour it was read from. Moving
+        // `u` after `pred(v)` is moving it before `v`, and the 2-opt on the
+        // predecessors is the one that makes the edge `(u, v)` from the other
+        // side.
+        let (pu, pv) = (partial.pred(u), partial.pred(v));
+        if try_relocate(partial, prob, u, v)
+            || try_relocate(partial, prob, u, pv)
+            || try_two_opt(partial, prob, u, v)
+            || try_two_opt(partial, prob, pu, pv)
+        {
+            return true;
+        }
     }
+    false
 }
 
 impl LocalRepair<TspWithCoordinates> for AnchoredTourDescent {
@@ -286,72 +279,43 @@ impl LocalRepair<TspWithCoordinates> for AnchoredTourDescent {
             return;
         }
         self.ensure(prob);
-        self.order.clear();
-        for &u in anchors {
-            for &v in std::iter::once(&u).chain(self.neighbors[u].iter().take(ANCHOR_RING)) {
-                if !self.seen[v] && partial.pos[v] != NOT_PLACED {
-                    self.seen[v] = true;
-                    self.order.push(v);
-                }
-            }
-        }
-        for &u in &self.order {
-            self.seen[u] = false;
-        }
-        for _ in 0..MAX_LS_PASSES {
-            self.order.shuffle(rng);
-            let mut improved = false;
-            for i in 0..self.order.len() {
-                let u = self.order[i];
-                if self.improve_around(partial, prob, u) {
-                    improved = true;
-                }
-            }
-            if !improved {
-                break;
-            }
-        }
+        self.sweep
+            .collect_around(anchors, &self.neighbors, |v| partial.pos[v] != NOT_PLACED);
+        let neighbors = &self.neighbors;
+        self.sweep.sweep(rng, MAX_LS_PASSES, |u| {
+            improve_around(partial, prob, &neighbors[u], u)
+        });
         #[cfg(debug_assertions)]
         partial.assert_caches_consistent(prob);
     }
 }
 
-/// Moves `u` to sit directly after `v` (or before it), if that shortens the
-/// tour.
-fn try_relocate(
-    partial: &mut TspPartial,
-    prob: &TspWithCoordinates,
-    u: usize,
-    v: usize,
-    after: bool,
-) -> bool {
+/// Moves `u` to sit directly after `v`, if that shortens the tour.
+fn try_relocate(partial: &mut TspPartial, prob: &TspWithCoordinates, u: usize, v: usize) -> bool {
     let (pu, su) = (partial.pred(u), partial.succ(u));
-    // The slot `u` would go into, as the pair it would sit between.
-    let (a, b) = if after {
-        (v, partial.succ(v))
-    } else {
-        (partial.pred(v), v)
-    };
-    if a == u || b == u {
+    let sv = partial.succ(v);
+    if v == u || sv == u {
         return false;
     }
     let gain = prob.distance(pu, su) - prob.distance(pu, u) - prob.distance(u, su)
-        + prob.distance(a, u)
-        + prob.distance(u, b)
-        - prob.distance(a, b);
+        + prob.distance(v, u)
+        + prob.distance(u, sv)
+        - prob.distance(v, sv);
     if gain >= -MIN_IMPROVEMENT {
         return false;
     }
-    let i = partial.pos[u];
-    partial.tour.remove(i);
-    // `b`'s index after the removal, which is where `u` goes to sit before it.
-    let mut j = partial.pos[b];
-    if j > i {
-        j -= 1;
+    // Rotating the span between the two slots by one is the move, and only
+    // that span's index changes. `v` is a near neighbour of `u`, so on a
+    // settled tour the span is short.
+    let (i, j) = (partial.pos[u], partial.pos[v]);
+    if i < j {
+        partial.tour[i..=j].rotate_left(1);
+        partial.reindex_range(i, j);
+    } else {
+        partial.tour[j + 1..=i].rotate_right(1);
+        partial.reindex_range(j + 1, i);
     }
-    partial.tour.insert(j, u);
     partial.length += gain;
-    partial.reindex();
     true
 }
 
@@ -362,10 +326,9 @@ fn try_two_opt(partial: &mut TspPartial, prob: &TspWithCoordinates, x: usize, y:
         return false;
     }
     let (sx, sy) = (partial.succ(x), partial.succ(y));
-    // Adjacent endpoints make the move a no-op, and the gain formula below
-    // reads zero for them anyway.
-    let gain =
-        prob.distance(x, y) + prob.distance(sx, sy) - prob.distance(x, sx) - prob.distance(y, sy);
+    // Adjacent endpoints make the move a no-op, and the gain reads zero for
+    // them anyway.
+    let gain = prob.calc_2opt_gain_cities((x, sx), (y, sy));
     if gain >= -MIN_IMPROVEMENT {
         return false;
     }
@@ -394,14 +357,7 @@ mod tests {
     }
 
     fn assert_length_matches(prob: &TspWithCoordinates, partial: &TspPartial) {
-        let expected: f64 = if partial.tour.is_empty() {
-            0.0
-        } else {
-            let n = partial.tour.len();
-            (0..n)
-                .map(|i| prob.distance(partial.tour[i], partial.tour[(i + 1) % n]))
-                .sum()
-        };
+        let expected = partial.measure(prob);
         assert!(
             (partial.length - expected).abs() < 1e-9,
             "running length {} but the tour measures {expected}",
@@ -478,13 +434,8 @@ mod tests {
         let c = sol.tour[4];
         let gain = tsp.removal_gain(&partial, c);
         tsp.remove_all(&mut partial, &[c]);
-        let shorter: f64 = {
-            let t = &partial.tour;
-            (0..t.len())
-                .map(|i| tsp.distance(t[i], t[(i + 1) % t.len()]))
-                .sum()
-        };
-        assert!((sol.objective - shorter - gain).abs() < 1e-9);
+        assert_length_matches(&tsp, &partial);
+        assert!((sol.objective - partial.length - gain).abs() < 1e-9);
     }
 
     /// The descent may only shorten the tour, and has to leave it a
