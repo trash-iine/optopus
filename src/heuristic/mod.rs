@@ -32,8 +32,8 @@ pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
 pub use specific::{
     BreakoutLocalSearchForMaxCut, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp,
-    MaxCutPerturbation, WalkSatForSat, alns_for_vrp, bls_for_max_cut, max_cut_descent,
-    max_cut_perturbation,
+    MaxCutPerturbation, WalkSatForSat, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
+    max_cut_descent, max_cut_perturbation,
 };
 pub use tabu_search::TabuSearch;
 pub use variable_neighborhood_search::VariableNeighborhoodSearch;

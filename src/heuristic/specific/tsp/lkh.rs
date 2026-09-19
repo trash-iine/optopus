@@ -6,8 +6,8 @@
 //! no improving move exists for any starting city (local optimum) or
 //! when the stop condition is met.
 
-use super::super::{Heuristic, StopCondition};
 use crate::error::OptError;
+use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::tsp_2d::{TspSolution, TspWithCoordinates};
 use crate::search_state::SearchState;
 
@@ -128,18 +128,7 @@ impl LinKernighanHelsgaun {
         if !self.candidates.is_empty() {
             return;
         }
-        let n = prob.get_n();
-        self.candidates = (0..n)
-            .map(|i| {
-                let mut nbrs: Vec<(f64, usize)> = (0..n)
-                    .filter(|&j| j != i)
-                    .map(|j| (prob.distance(i, j), j))
-                    .collect();
-                nbrs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-                nbrs.truncate(self.num_neighbors);
-                nbrs.into_iter().map(|(_, j)| j).collect()
-            })
-            .collect();
+        self.candidates = prob.nearest_neighbors(self.num_neighbors);
     }
 
     fn build_position(&mut self, tour: &[usize]) {

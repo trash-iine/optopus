@@ -511,6 +511,38 @@ mod tests {
         assert_eq!(run(), run());
     }
 
+    /// The second `Ruinable`. A tour is the single-container case, and the
+    /// search still has to improve it, keep it a permutation, and replay
+    /// under a seed.
+    #[test]
+    fn alns_runs_on_a_tour() {
+        use crate::heuristic::alns_for_tsp;
+        use crate::problem::TspWithCoordinates;
+
+        let coords = (0..30)
+            .map(|i| {
+                let theta = std::f64::consts::TAU * i as f64 / 30.0;
+                (theta.cos() * 10.0, theta.sin() * 10.0)
+            })
+            .collect();
+        let tsp = TspWithCoordinates::new("ring".into(), coords);
+        let run = || {
+            let mut state = SearchState::new_with_seed(&tsp, 17);
+            let initial = state.best_solution.objective;
+            alns_for_tsp(StopCondition::iterations(500), 0.2, 0.999)
+                .run(&mut state)
+                .unwrap();
+            let best = &state.best_solution;
+            assert!(best.objective < initial, "a random ring tour has slack");
+            assert_eq!(
+                tsp.calculate_tour_length(&best.tour).unwrap(),
+                best.objective
+            );
+            best.objective
+        };
+        assert_eq!(run(), run());
+    }
+
     #[test]
     #[should_panic(expected = "scoring rewards must be non-negative")]
     fn negative_scoring_is_rejected() {

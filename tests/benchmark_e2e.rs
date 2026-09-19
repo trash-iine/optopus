@@ -434,6 +434,38 @@ max_iteration = 200
     }
 }
 
+/// Ruin-and-recreate is registered for TSP through `alns_for_tsp`, so the
+/// benchmark has to build it from a config and replay it bit for bit under a
+/// seed, the anchored descent's shuffles included.
+#[test]
+fn alns_on_tsp_is_bit_identical_across_reruns_with_seed() {
+    let config_toml = r#"
+num_runs = 2
+seed = 4242
+
+[[instances]]
+path = "data/instances/tsp/berlin52.tsp"
+problem = "Tsp"
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#;
+    let first = run_benchmark(config_toml);
+    let second = run_benchmark(config_toml);
+    let first_runs = &first.results[0].runs;
+    let second_runs = &second.results[0].runs;
+    assert_eq!(first_runs.len(), 2);
+    for (a, b) in first_runs.iter().zip(second_runs) {
+        assert_eq!(a.status, "success");
+        assert_eq!(a.best_objective, b.best_objective, "objective diverged");
+        assert_eq!(a.best_iteration, b.best_iteration, "iteration diverged");
+        assert_eq!(a.solution, b.solution, "run {} diverged", a.run_index);
+    }
+}
+
 /// `HybridGeneticSearch` is registered only for `Vrp`; every other problem must
 /// reject it when the config is validated, before any run starts, rather than
 /// silently ignoring the config.

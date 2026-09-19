@@ -96,15 +96,17 @@ src/
 │       │                     MaxCut descent and kicks), best_swap.rs (the one
 │       │                     operator with no generic equivalent)
 │       ├── vrp/              hgs/ (mod.rs driver, population.rs), alns_for_vrp
-│       ├── lkh_for_tsp.rs
+│       ├── tsp/              lkh.rs, alns_for_tsp
 │       └── walksat_for_sat.rs
 └── problem/                  each holds problem, solution, neighbors, crossover
     ├── max_cut/              + kernel.rs (MaxCutKernel, the one ProblemReduction),
     │                         planted.rs (PlantedMaxCut)
-    ├── qubo/ sat/ tsp_2d/ vertex_cover/ job_shop_scheduling/
+    ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/
     ├── vrp/                  + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
     │                         ops/ (pricing fns, RouteState, granular.rs, Descent),
     │                         ruin.rs (the Ruinable + LocalRepair impl)
+    ├── tsp_2d/               + ruin.rs (Ruinable with the tour as the one container,
+    │                         AnchoredTourDescent)
     └── binary_optimization/  FormulaProblem, Expr
 ```
 
@@ -143,7 +145,7 @@ kinds fail at parse time.
 | `PopulationAnnealing` | all | `neighbor`, `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `sweep_length` |
 | `LinKernighanHelsgaun` | TSP | | `num_neighbors`, `max_depth` |
 | `WalkSat` | SAT | | `noise`, `adaptive_noise` |
-| `AdaptiveLargeNeighborhoodSearch` | VRP | | `removal_fraction`, `cooling_rate` |
+| `AdaptiveLargeNeighborhoodSearch` | VRP, TSP | | `removal_fraction`, `cooling_rate` |
 | `HybridGeneticSearch` | VRP | | `min_population_size`, `generation_size`, `granularity`, `target_feasible`, `restart_generations` |
 | `Sequential` | all | `steps` | |
 | `Iterated` | all | `steps[0]` = search, `steps[1]` = perturbation | |

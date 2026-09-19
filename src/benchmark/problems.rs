@@ -10,7 +10,7 @@ use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
     Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition,
-    SubProblemBasedCrossover, WalkSatForSat, alns_for_vrp, bls_for_max_cut,
+    SubProblemBasedCrossover, WalkSatForSat, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -359,6 +359,15 @@ impl ConfigurableProblem for TspWithCoordinates {
                 cond,
                 num_neighbors.unwrap_or(5),
                 max_depth.unwrap_or(5),
+            ))),
+            HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
+                removal_fraction,
+                cooling_rate,
+                ..
+            } => Ok(Box::new(alns_for_tsp(
+                cond,
+                removal_fraction.unwrap_or(0.15),
+                cooling_rate.unwrap_or(0.9995),
             ))),
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for Tsp",

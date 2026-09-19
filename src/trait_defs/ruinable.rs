@@ -20,10 +20,18 @@ use super::{Evaluate, ProblemTrait};
 /// (containers are vehicles, the resource is capacity), bin packing (bins), the
 /// generalized assignment problem (agents), multiple knapsack, capacitated
 /// facility location, parallel machine scheduling, graph colouring (colour
-/// classes). What does not fit is a problem with one container, such as a
-/// single TSP tour, or with two fixed values per element, such as a binary
-/// problem where `regret = |cost(true) − cost(false)| = |gain|` carries nothing
-/// greedy did not already have.
+/// classes).
+///
+/// A problem with one container still fits the destroy side and greedy
+/// insertion, and [`TspWithCoordinates`](crate::problem::TspWithCoordinates)
+/// implements the trait that way, the tour being its only container. What it
+/// gives up is regret. With no second container the second-best placement is
+/// undefined, so regret-2 inserts the pool in the order it was removed, and
+/// the search leans on the three destroy operators, greedy insertion and its
+/// [`LocalRepair`]. What does not fit at all is a problem with two fixed
+/// values per element, such as a binary problem where
+/// `regret = |cost(true) − cost(false)| = |gain|` carries nothing greedy did
+/// not already have.
 ///
 /// # Containers may come and go
 ///

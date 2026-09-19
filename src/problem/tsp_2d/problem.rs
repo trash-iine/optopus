@@ -311,6 +311,31 @@ impl TspWithCoordinates {
         }
     }
 
+    /// For each city, its `k` nearest other cities in ascending distance.
+    ///
+    /// The candidate lists that Lin-Kernighan and the anchored tour descent
+    /// both restrict their moves to. Built in O(n² log n) from the instance
+    /// alone, so a caller holds the result across restarts and clears and
+    /// rebuilds it only when the instance changes.
+    ///
+    /// Ties are broken by city index, since the sort is stable over an
+    /// ascending index scan, which is what keeps a seeded run reproducible
+    /// on instances with repeated distances.
+    pub fn nearest_neighbors(&self, k: usize) -> Vec<Vec<usize>> {
+        let n = self.get_n();
+        (0..n)
+            .map(|i| {
+                let mut nbrs: Vec<(f64, usize)> = (0..n)
+                    .filter(|&j| j != i)
+                    .map(|j| (self.distance(i, j), j))
+                    .collect();
+                nbrs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                nbrs.truncate(k);
+                nbrs.into_iter().map(|(_, j)| j).collect()
+            })
+            .collect()
+    }
+
     /// Adds a new city with the given coordinates to the TSP instance.
     pub fn add_city(&mut self, xy: (f64, f64)) {
         self.coordinates.push(xy);
