@@ -9,9 +9,8 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    AdaptiveLargeNeighborhoodSearchForVrp, BreakoutLocalSearchForMaxCut, Heuristic,
-    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
-    WalkSatForSat,
+    BreakoutLocalSearchForMaxCut, Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp,
+    StopCondition, SubProblemBasedCrossover, WalkSatForSat, alns_for_vrp,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -408,7 +407,7 @@ impl ConfigurableProblem for Vrp {
                 removal_fraction,
                 cooling_rate,
                 ..
-            } => Ok(Box::new(AdaptiveLargeNeighborhoodSearchForVrp::new(
+            } => Ok(Box::new(alns_for_vrp(
                 cond,
                 removal_fraction.unwrap_or(0.15),
                 cooling_rate.unwrap_or(0.9995),
