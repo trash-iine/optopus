@@ -488,6 +488,12 @@ max_iteration = 300
     let first = assert_reruns_are_bit_identical(&config_toml);
     let _ = std::fs::remove_file(&instance);
     assert_eq!(first.results[0].runs.len(), 2);
+    for run in &first.results[0].runs {
+        // The reported tour visits every city exactly once.
+        let mut cities = run.solution.clone();
+        cities.sort_unstable();
+        assert_eq!(cities, (0..24).collect::<Vec<_>>());
+    }
 }
 
 /// `HybridGeneticSearch` is registered only for `Vrp`; every other problem must

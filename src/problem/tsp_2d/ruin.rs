@@ -5,9 +5,10 @@
 //! still works, since removing a set of cities and putting each back where it
 //! is cheapest is a large-neighbourhood move on a tour as much as on a route.
 //! What the single container takes away is regret. With no second container
-//! the second-best placement is undefined, so regret-2 reduces to inserting in
-//! pool order, and the operators that carry the search are the three destroys
-//! and greedy insertion, followed by the anchored descent at the bottom.
+//! the second-best placement is undefined, so regret-2 inserts the pool in a
+//! fixed order that ranks nothing, and the operators that carry the search are
+//! the three destroys and greedy insertion, followed by the anchored descent at
+//! the bottom.
 
 use rand::rngs::SmallRng;
 
@@ -45,11 +46,27 @@ pub struct TspPartial {
 }
 
 impl TspPartial {
-    /// Rewrites the index for `tour[from..]`, which is every entry an edit at
-    /// `from` can have shifted.
+    /// Rewrites the index for `tour[lo..=hi]`, the entries an edit there can
+    /// have shifted.
+    fn reindex_range(&mut self, lo: usize, hi: usize) {
+        for k in lo..=hi {
+            self.pos[self.tour[k]] = k;
+        }
+    }
+
+    /// Rewrites the index for `tour[from..]`.
     fn reindex_from(&mut self, from: usize) {
-        for i in from..self.tour.len() {
-            self.pos[self.tour[i]] = i;
+        if from < self.tour.len() {
+            self.reindex_range(from, self.tour.len() - 1);
+        }
+    }
+
+    /// Cyclic distance forward from index `from` to index `to`.
+    fn steps_forward(&self, from: usize, to: usize) -> usize {
+        if to >= from {
+            to - from
+        } else {
+            to + self.tour.len() - from
         }
     }
 
@@ -93,18 +110,53 @@ impl TspPartial {
         prob.distance(prev, c) + prob.distance(c, next) - prob.distance(prev, next)
     }
 
-    /// Reverses `tour[i+1..=j]`, the 2-opt move that removes the edges after
-    /// `i` and after `j` and reconnects `tour[i]` to `tour[j]`.
-    fn reverse_after(&mut self, i: usize, j: usize) {
-        self.tour[i + 1..=j].reverse();
-        self.reindex_range(i + 1, j);
+    /// Reverses the cyclic segment from index `start` forward to index
+    /// `end`, inclusive, wrapping past the array's end if it has to.
+    ///
+    /// The three cyclic edits here walk the segment they touch rather than
+    /// slicing the array, so a pair of cities that are near on the cycle but
+    /// sit on opposite ends of the array costs what the short arc costs, not
+    /// what the array's long side does.
+    fn reverse_cyclic(&mut self, start: usize, end: usize) {
+        let len = self.steps_forward(start, end) + 1;
+        let (mut p, mut q) = (start, end);
+        for _ in 0..len / 2 {
+            self.tour.swap(p, q);
+            self.pos[self.tour[p]] = p;
+            self.pos[self.tour[q]] = q;
+            p = self.after(p);
+            q = self.before(q);
+        }
     }
 
-    /// Rewrites the index for `tour[lo..=hi]`.
-    fn reindex_range(&mut self, lo: usize, hi: usize) {
-        for k in lo..=hi {
-            self.pos[self.tour[k]] = k;
+    /// Moves the city at `start` to `end`, shifting the cyclic segment
+    /// between them back by one.
+    fn shift_left_cyclic(&mut self, start: usize, end: usize) {
+        let first = self.tour[start];
+        let mut p = start;
+        while p != end {
+            let q = self.after(p);
+            self.tour[p] = self.tour[q];
+            self.pos[self.tour[p]] = p;
+            p = q;
         }
+        self.tour[end] = first;
+        self.pos[first] = end;
+    }
+
+    /// Moves the city at `end` to `start`, shifting the cyclic segment
+    /// between them forward by one.
+    fn shift_right_cyclic(&mut self, start: usize, end: usize) {
+        let last = self.tour[end];
+        let mut p = end;
+        while p != start {
+            let q = self.before(p);
+            self.tour[p] = self.tour[q];
+            self.pos[self.tour[p]] = p;
+            p = q;
+        }
+        self.tour[start] = last;
+        self.pos[last] = start;
     }
 
     #[cfg(debug_assertions)]
@@ -135,13 +187,18 @@ impl Ruinable for TspWithCoordinates {
         partial
     }
 
-    /// Recomputes the length rather than handing back the running total, so a
-    /// run's float drift is cut at every accepted candidate.
+    /// Re-measures the length rather than handing back the running total, so
+    /// a run's float drift is cut at every accepted candidate. The
+    /// permutation check is a debug assertion, since every edit above keeps
+    /// the tour one and a release build should not pay a hash set per accept.
     fn finish(&self, partial: &TspPartial) -> TspSolution {
         let tour = partial.tour.clone();
-        let objective = self
-            .calculate_tour_length(&tour)
-            .expect("a ruined-and-recreated tour visits every city once");
+        let objective = partial.measure(self);
+        debug_assert_eq!(
+            self.calculate_tour_length(&tour).ok(),
+            Some(objective),
+            "a ruined-and-recreated tour visits every city once"
+        );
         TspSolution { tour, objective }
     }
 
@@ -211,28 +268,20 @@ impl Ruinable for TspWithCoordinates {
 
 /// Or-opt and 2-opt, anchored at the cities a ruin just re-inserted.
 ///
-/// Holds the nearest-neighbour lists because they are instance-derived and
-/// worth keeping across iterations, restarts and clears. The moves are the
-/// two a tour has that price in O(1) from their endpoints, relocating one city
-/// next to a near one and reversing the path between two near ones, tried
-/// first-improvement over the granular pairs, the same shape as VRP's
-/// [`AnchoredRouteDescent`](crate::problem::vrp::AnchoredRouteDescent).
+/// The moves are the two a tour has that price in O(1) from their endpoints,
+/// relocating one city next to a near one and reversing the path between two
+/// near ones, tried first-improvement over the granular pairs, the same shape
+/// as VRP's [`AnchoredRouteDescent`](crate::problem::vrp::AnchoredRouteDescent).
+/// The nearest-neighbour lists it reads are cached on the instance, so this
+/// holds only its sweep buffers.
 #[derive(Debug, Default)]
 pub struct AnchoredTourDescent {
-    neighbors: Vec<Vec<usize>>,
     sweep: AnchoredSweep,
 }
 
 impl AnchoredTourDescent {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    fn ensure(&mut self, prob: &TspWithCoordinates) {
-        if self.neighbors.len() != prob.get_n() {
-            self.neighbors = prob.nearest_neighbors(GRANULARITY);
-            self.sweep.ensure(prob.get_n());
-        }
     }
 }
 
@@ -278,10 +327,12 @@ impl LocalRepair<TspWithCoordinates> for AnchoredTourDescent {
         if partial.tour.len() < 4 || anchors.is_empty() {
             return;
         }
-        self.ensure(prob);
+        // Cached on the instance, so this is a lookup after the first call
+        // and can never be another instance's lists.
+        let neighbors = prob.nearest_neighbors(GRANULARITY);
+        self.sweep.ensure(prob.get_n());
         self.sweep
-            .collect_around(anchors, &self.neighbors, |v| partial.pos[v] != NOT_PLACED);
-        let neighbors = &self.neighbors;
+            .collect_around(anchors, &neighbors, |v| partial.pos[v] != NOT_PLACED);
         self.sweep.sweep(rng, MAX_LS_PASSES, |u| {
             improve_around(partial, prob, &neighbors[u], u)
         });
@@ -292,28 +343,24 @@ impl LocalRepair<TspWithCoordinates> for AnchoredTourDescent {
 
 /// Moves `u` to sit directly after `v`, if that shortens the tour.
 fn try_relocate(partial: &mut TspPartial, prob: &TspWithCoordinates, u: usize, v: usize) -> bool {
-    let (pu, su) = (partial.pred(u), partial.succ(u));
-    let sv = partial.succ(v);
-    if v == u || sv == u {
+    if v == u || partial.succ(v) == u {
         return false;
     }
-    let gain = prob.distance(pu, su) - prob.distance(pu, u) - prob.distance(u, su)
-        + prob.distance(v, u)
-        + prob.distance(u, sv)
-        - prob.distance(v, sv);
+    let (i, j) = (partial.pos[u], partial.pos[v]);
+    // The slot after `v`, priced by the same function the repair prices it
+    // with, less what taking `u` out saves.
+    let gain = partial.insertion_cost_at(prob, partial.after(j), u) - prob.removal_gain(partial, u);
     if gain >= -MIN_IMPROVEMENT {
         return false;
     }
-    // Rotating the span between the two slots by one is the move, and only
-    // that span's index changes. `v` is a near neighbour of `u`, so on a
-    // settled tour the span is short.
-    let (i, j) = (partial.pos[u], partial.pos[v]);
-    if i < j {
-        partial.tour[i..=j].rotate_left(1);
-        partial.reindex_range(i, j);
+    // `u` can travel forward to the slot or the slot's contents can travel
+    // back to `u`. Either shifts one arc of the cycle by one city, and the
+    // two arcs add up to `n`, so the shorter one is taken.
+    let forward = partial.steps_forward(i, j);
+    if forward <= partial.tour.len() - forward {
+        partial.shift_left_cyclic(i, j);
     } else {
-        partial.tour[j + 1..=i].rotate_right(1);
-        partial.reindex_range(j + 1, i);
+        partial.shift_right_cyclic(partial.after(j), i);
     }
     partial.length += gain;
     true
@@ -332,9 +379,15 @@ fn try_two_opt(partial: &mut TspPartial, prob: &TspWithCoordinates, x: usize, y:
     if gain >= -MIN_IMPROVEMENT {
         return false;
     }
-    let (i, j) = (partial.pos[x], partial.pos[y]);
-    let (i, j) = if i < j { (i, j) } else { (j, i) };
-    partial.reverse_after(i, j);
+    // Reversing the path from `sx` to `y` and reversing its complement, the
+    // path from `sy` to `x`, give the same cycle, so the shorter is taken.
+    let (px, py) = (partial.pos[x], partial.pos[y]);
+    let path = partial.steps_forward(px, py);
+    if path <= partial.tour.len() - path {
+        partial.reverse_cyclic(partial.after(px), py);
+    } else {
+        partial.reverse_cyclic(partial.after(py), px);
+    }
     partial.length += gain;
     true
 }
@@ -456,6 +509,113 @@ mod tests {
         assert_length_matches(&tsp, &partial);
         let back = tsp.finish(&partial);
         assert!((back.objective - partial.length).abs() < 1e-9);
+    }
+
+    /// One descent object serving two instances of the same size has to read
+    /// each instance's own neighbours. The second ring is the first one
+    /// relabelled, so lists carried over from the first would point the moves
+    /// at cities that are far apart on the second.
+    #[test]
+    fn one_descent_serves_two_instances_of_one_size() {
+        let n = 40;
+        let first = ring(n);
+        let mut coords = first.coordinates.clone();
+        coords.rotate_left(n / 2);
+        coords.swap(1, 21);
+        let second = TspWithCoordinates::new("relabelled".into(), coords);
+        let mut descent = AnchoredTourDescent::new();
+        let mut rng = SmallRng::seed_from_u64(8);
+        for tsp in [&first, &second] {
+            let sol = tsp.new_solution(&mut rng);
+            let mut partial = tsp.to_partial(&sol);
+            let anchors: Vec<usize> = sol.tour[..10].to_vec();
+            descent.repair_around(tsp, &mut partial, &anchors, &mut rng);
+            assert!(partial.length < sol.objective, "{}", tsp.name);
+            assert_length_matches(tsp, &partial);
+        }
+    }
+
+    /// The three cyclic edits are checked against the plain array
+    /// operations they replace, on every pair of positions of a small tour,
+    /// so the wrap-around cases are all covered. A reversal is compared as
+    /// a cycle, since the complement reversal is the same cycle read the
+    /// other way round.
+    #[test]
+    fn cyclic_edits_match_their_array_forms() {
+        fn canonical(tour: &[usize]) -> Vec<usize> {
+            let n = tour.len();
+            let start = tour.iter().position(|&c| c == 0).unwrap();
+            let forward: Vec<usize> = (0..n).map(|k| tour[(start + k) % n]).collect();
+            let backward: Vec<usize> = (0..n).map(|k| tour[(start + n - k) % n]).collect();
+            forward.min(backward)
+        }
+        let tsp = ring(7);
+        let n = 7;
+        for i in 0..n {
+            for j in 0..n {
+                if i == j {
+                    continue;
+                }
+                let base: Vec<usize> = (0..n).collect();
+                let sol = TspSolution {
+                    tour: base.clone(),
+                    objective: tsp.calculate_tour_length(&base).unwrap(),
+                };
+
+                // Relocate city `i` to sit after city `j`, both ways round.
+                let mut expected = base.clone();
+                expected.remove(i);
+                let at = expected.iter().position(|&c| c == j).unwrap();
+                expected.insert(at + 1, i);
+                let mut partial = tsp.to_partial(&sol);
+                partial.shift_left_cyclic(i, j);
+                assert_eq!(
+                    canonical(&partial.tour),
+                    canonical(&expected),
+                    "left {i} {j}"
+                );
+                partial.length = partial.measure(&tsp);
+                partial.assert_caches_consistent(&tsp);
+                let mut partial = tsp.to_partial(&sol);
+                partial.shift_right_cyclic(partial.after(j), i);
+                assert_eq!(
+                    canonical(&partial.tour),
+                    canonical(&expected),
+                    "right {i} {j}"
+                );
+                partial.length = partial.measure(&tsp);
+                partial.assert_caches_consistent(&tsp);
+
+                // Reverse the path after `i` up to `j`, and its complement.
+                let mut expected = base.clone();
+                if i < j {
+                    expected[i + 1..=j].reverse();
+                } else {
+                    let mut rotated: Vec<usize> = (0..n).map(|k| base[(i + 1 + k) % n]).collect();
+                    let len = (j + n - i) % n;
+                    rotated[..len].reverse();
+                    expected = rotated;
+                }
+                let mut partial = tsp.to_partial(&sol);
+                partial.reverse_cyclic(partial.after(i), j);
+                assert_eq!(
+                    canonical(&partial.tour),
+                    canonical(&expected),
+                    "reverse {i} {j}"
+                );
+                partial.length = partial.measure(&tsp);
+                partial.assert_caches_consistent(&tsp);
+                let mut partial = tsp.to_partial(&sol);
+                partial.reverse_cyclic(partial.after(j), i);
+                assert_eq!(
+                    canonical(&partial.tour),
+                    canonical(&expected),
+                    "complement {i} {j}"
+                );
+                partial.length = partial.measure(&tsp);
+                partial.assert_caches_consistent(&tsp);
+            }
+        }
     }
 
     #[test]

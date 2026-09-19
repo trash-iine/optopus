@@ -10,5 +10,5 @@ mod ruin;
 
 pub use crossover::TspOrderCrossover;
 pub use neighbor::{TspRelocateNeighbor, TspTwoOptNeighbor};
-pub use problem::{EdgeWeightType, TspSolution, TspTour, TspWithCoordinates};
+pub use problem::{EdgeWeightType, NeighborLists, TspSolution, TspTour, TspWithCoordinates};
 pub use ruin::{AnchoredTourDescent, TspPartial};

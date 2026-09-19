@@ -9,9 +9,8 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    DEFAULT_COOLING_RATE, DEFAULT_REMOVAL_FRACTION, Heuristic, HybridGeneticSearchForVrp,
-    LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover, WalkSatForSat,
-    alns_for_tsp, alns_for_vrp, bls_for_max_cut,
+    Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition,
+    SubProblemBasedCrossover, WalkSatForSat, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
 };
 use crate::problem::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
@@ -29,6 +28,14 @@ use crate::problem::{
     },
 };
 use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
+
+/// What an `AdaptiveLargeNeighborhoodSearch` config gets for `removal_fraction`
+/// when it names none. One number for every problem the search is registered
+/// for, rather than a literal per arm. The `HeuristicConfig` doc quotes it.
+const ALNS_DEFAULT_REMOVAL_FRACTION: f64 = 0.15;
+
+/// The same for `cooling_rate`.
+const ALNS_DEFAULT_COOLING_RATE: f64 = 0.9995;
 
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
@@ -367,8 +374,8 @@ impl ConfigurableProblem for TspWithCoordinates {
                 ..
             } => Ok(Box::new(alns_for_tsp(
                 cond,
-                removal_fraction.unwrap_or(DEFAULT_REMOVAL_FRACTION),
-                cooling_rate.unwrap_or(DEFAULT_COOLING_RATE),
+                removal_fraction.unwrap_or(ALNS_DEFAULT_REMOVAL_FRACTION),
+                cooling_rate.unwrap_or(ALNS_DEFAULT_COOLING_RATE),
             ))),
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for Tsp",
@@ -419,8 +426,8 @@ impl ConfigurableProblem for Vrp {
                 ..
             } => Ok(Box::new(alns_for_vrp(
                 cond,
-                removal_fraction.unwrap_or(DEFAULT_REMOVAL_FRACTION),
-                cooling_rate.unwrap_or(DEFAULT_COOLING_RATE),
+                removal_fraction.unwrap_or(ALNS_DEFAULT_REMOVAL_FRACTION),
+                cooling_rate.unwrap_or(ALNS_DEFAULT_COOLING_RATE),
             ))),
             HeuristicConfig::HybridGeneticSearch {
                 min_population_size,

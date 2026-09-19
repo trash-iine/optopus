@@ -26,9 +26,9 @@ use super::{Evaluate, ProblemTrait};
 /// insertion, and [`TspWithCoordinates`](crate::problem::TspWithCoordinates)
 /// implements the trait that way, the tour being its only container. What it
 /// gives up is regret. With no second container the second-best placement is
-/// undefined, so regret-2 inserts the pool in the order it was removed, and
-/// the search leans on the three destroy operators, greedy insertion and its
-/// [`LocalRepair`]. What does not fit at all is a problem with two fixed
+/// undefined, so every regret is infinite and regret-2 inserts the pool in
+/// a fixed order that ranks nothing, and the search leans on the three
+/// destroy operators, greedy insertion and its [`LocalRepair`]. What does not fit at all is a problem with two fixed
 /// values per element, such as a binary problem where
 /// `regret = |cost(true) − cost(false)| = |gain|` carries nothing greedy did
 /// not already have.

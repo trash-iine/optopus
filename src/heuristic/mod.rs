@@ -17,7 +17,7 @@ mod specific;
 mod tabu_search;
 mod variable_neighborhood_search;
 
-pub use alns::{AdaptiveLargeNeighborhoodSearch, DEFAULT_COOLING_RATE, DEFAULT_REMOVAL_FRACTION};
+pub use alns::AdaptiveLargeNeighborhoodSearch;
 pub use beam_search::BeamSearch;
 pub use bls::{AdaptivePerturbation, BreakoutLocalSearch, PerturbationSchedule};
 pub use crossover::SubProblemBasedCrossover;

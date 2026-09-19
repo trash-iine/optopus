@@ -123,7 +123,7 @@ What each problem reads into that:
 | Element, container | customer, vehicle | city, the tour |
 | Relatedness | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` |
 | Insertion cost | detour plus the capacity penalty, so a placement is always available even when every route is full | detour |
-| Regret-2 | across routes | undefined with one container, so it inserts the pool in removal order and the destroys and greedy carry the search |
+| Regret-2 | across routes | undefined with one container, so it inserts the pool in a fixed order that ranks nothing, and the destroys and greedy carry the search |
 | `LocalRepair` | `AnchoredRouteDescent`, the granular route descent | `AnchoredTourDescent`, Or-opt and 2-opt over the nearest neighbours |
 
 ## Constructor

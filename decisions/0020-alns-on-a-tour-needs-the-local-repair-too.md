@@ -41,5 +41,5 @@ Do not drop the `LocalRepair` from the TSP registration for simplicity. It
 costs a few percent on the largest instance, the same place it does on routes.
 
 Do not read this as a case for or against regret over positions. Both arms
-ran the same degenerate pool-order regret, and a position-based one is
+ran the same degenerate regret that ranks nothing, and a position-based one is
 unmeasured.
