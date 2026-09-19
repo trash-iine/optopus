@@ -6,6 +6,10 @@ Sample a uniformly random neighbor and apply it unconditionally, no
 acceptance test, no comparison. The best solution encountered along the walk
 is still tracked in `state.best_solution`.
 
+An iteration that finds no move steps the counter and returns. An empty
+neighborhood is a state a walk can be handed rather than a failure, and
+stepping the counter is what lets an outer budget terminate.
+
 ## Example
 
 ```rust

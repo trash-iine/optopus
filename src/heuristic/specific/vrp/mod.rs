@@ -8,7 +8,7 @@
 //! [`problem::vrp::ops`](crate::problem::vrp::ops) with the problem whose
 //! routes it measures. What stayed behind is [`alns_for_vrp`], the wiring that
 //! hands that generic search the route descent it needs, the same shape
-//! `breakout_local_search_for_max_cut` has on the MaxCut side.
+//! `bls_for_max_cut` has on the MaxCut side.
 //!
 //! What keeps Hybrid Genetic Search here is the giant-tour recombination, a
 //! decode from a customer permutation into a route partition that no other

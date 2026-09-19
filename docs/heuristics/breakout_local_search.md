@@ -1,17 +1,39 @@
-# BreakoutLocalSearchForMaxCut
+# BreakoutLocalSearch
 
-**API:** [`BreakoutLocalSearchForMaxCut`](../api/optopus/heuristic/struct.BreakoutLocalSearchForMaxCut.html)
+**API:** [`BreakoutLocalSearch`](../api/optopus/heuristic/struct.BreakoutLocalSearch.html)
 
-Problem-specific heuristic for [MaxCut](../problems/max_cut.md). Alternates a
-greedy local search phase with an adaptive perturbation phase. What is BLS's own
-is the schedule below. Three of the four things a round does are the library's
-generic heuristics, the descent is a [`LocalSearch`](local_search.md), the
-strong perturbation a [`RandomWalk`](random_walk.md) and the weak flip a
-[`TabuSearch`](tabu_search.md), and only the weak swap is a hand-written
-operator (`src/heuristic/specific/max_cut/best_swap.rs`). All of them record
-into (and read) the tabu memory on the `SearchState` they are handed, which is
-what stops a perturbation undoing the descent that just ran; the generic three
-do it through `apply` on a state BLS has switched into recording mode.
+Alternates a greedy local search phase with an adaptive perturbation phase.
+
+BLS is a framework rather than one algorithm. It is a descent, a bank of
+perturbations, and a schedule that picks one of them and how far to go, and none
+of the three needs the problem to be binary. `BreakoutLocalSearch<P, S>`
+therefore takes any `P: ProblemTrait`. The paper that states the framework
+introduces BLS on the vertex separator problem, which is not a binary problem.
+
+Benlic & Hao state the framework as four procedures a concrete BLS supplies,
+and they land in three places here. `DescentBasedSearch` and `Perturb` are ordinary
+heuristics, a `Box<dyn Heuristic<P>>` for the descent and a bank of them for
+the kicks. `DetermineJumpMagnitude` and `DeterminePerturbationType`, the two
+decisions taken between a descent and the kick that follows it, are the
+[`PerturbationSchedule`](../api/optopus/heuristic/trait.PerturbationSchedule.html)
+trait, which returns an index into that bank.
+
+What is left over is not BLS's to own. The initial solution comes from
+`SearchState`, a library-wide convention, and the loop that repeats the round
+until the stopping condition is `Heuristic::run`'s. One `run_once` is one
+round, a descent, the two decisions, then the kick.
+
+The history the three procedures share is the tabu memory on the
+`SearchState`. The descent writes it, forbidding each vertex it moves for a
+tenure's worth of iterations, which is where Benlic & Hao put the write too,
+and the directed perturbations read it. That is what stops a perturbation
+undoing the descent that just ran.
+
+On [MaxCut](../problems/max_cut.md) the bank is a [`RandomWalk`](random_walk.md)
+for the strong kick, a [`TabuSearch`](tabu_search.md) for the weak flip, and a
+hand-written directed swap (`src/heuristic/specific/max_cut/best_swap.rs`),
+which is the one operator with no generic equivalent, `M2` moving one vertex per
+partition side in a single move.
 
 ## Example
 
@@ -22,7 +44,7 @@ let mut rng = seeded_rng(42);
 let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
 let mut state = SearchState::new_with_seed(&mc, 42);
 
-let mut bls = BreakoutLocalSearchForMaxCut::new(
+let mut bls = bls_for_max_cut(
     StopCondition::iterations(100_000),
     /* tabu_tenure = */ (5, 150),
     /* t           = */ 1_000,
@@ -100,16 +122,47 @@ vertex moved on its own.
 
 ## Constructor
 
+MaxCut has a builder that fills the schedule and applies the paper's reading of
+the tenure:
+
 ```rust
-BreakoutLocalSearchForMaxCut::new(
+bls_for_max_cut(
     stop_condition: StopCondition,
     tabu_tenure: (u64, u64),
     t: u64,
     l0: u64,
     p0: f64,
     q: f64,
+) -> BreakoutLocalSearchForMaxCut
+```
+
+Another problem builds one directly, supplying its own descent and schedule:
+
+```rust
+BreakoutLocalSearch::new(
+    stop_condition: StopCondition,
+    tabu_tenure: (u64, u64),
+    descent: Box<dyn Heuristic<P>>,
+    schedule: S,
 ) -> Self
 ```
+
+The schedule owns the perturbations it chooses between, so there is no bank to
+hand in and no order to agree on. `AdaptivePerturbation` takes the random one
+and a list of directed ones, each with its share of the directed probability:
+
+```rust
+AdaptivePerturbation::<P>::new(
+    t: u64,
+    l0: u64,
+    p0: f64,
+    random: Box<dyn Heuristic<P>>,
+    directed: Vec<(Box<dyn Heuristic<P>>, f64)>,
+) -> Self
+```
+
+Benlic & Hao's `q` is the two-entry case, `[(flip, q), (swap, 1 - q)]`. Any
+number of directed perturbations works, one included.
 
 | Parameter | Meaning |
 |---|---|
@@ -117,14 +170,48 @@ BreakoutLocalSearchForMaxCut::new(
 | `t` | period of the `omega` counter before it resets |
 | `l0` | initial perturbation length |
 | `p0` | minimum perturbation probability |
-| `q` | fraction of weak perturbations using flip (vs. swap) |
+| `q` | share of the directed probability the flip takes, the swap gets the rest |
 
 `clear()` resets the schedule (`omega` to 0, `l` to `l0`, the remembered local
-optimum dropped). The tabu are not its to clear, because they belong to the
-`SearchState`. But the tabu is cleared in a sub-run clone.
+optimum dropped) and clears the descent and the schedule's perturbations. The prohibitions are not
+its to clear, since they belong to the `SearchState`, and a sub-run clone starts
+with an empty tabu memory anyway.
 The remembered local optimum is dropped rather than kept because the same
 schedule may be reused on a different instance, a meta-heuristic that rebuilds
 its sub-problem every round does exactly that.
+
+## Replacing the schedule
+
+Implement `PerturbationSchedule<P>` and hand it to `BreakoutLocalSearch::new`.
+You keep the framework's loop and `Heuristic`, and what you replace is the two
+decisions plus the operators they choose between.
+
+| Method | Called |
+|---|---|
+| `determine_jump_magnitude(state)` | after the descent, with the local optimum it reached |
+| `select(state)` | straight after, returning the operator to apply |
+| `round_ended(state)` | once the kick and its `update_best` have closed the round. Defaulted to nothing |
+| `reset` / `clear_perturbations` | from `Heuristic::clear` |
+
+Both decisions are handed the state, as `Heuristic::run_once` is, so an
+operator may be picked from where the search has got to and not only from a
+draw. Draw from `state.rng` rather than an RNG of your own, which is what keeps
+a seeded run reproducible.
+
+A policy whose two answers are one decision settles it in
+`determine_jump_magnitude` and has `select` return what it chose, since the
+length is asked for first. Reading what a descent alone did means remembering
+what `round_ended` was given, which is the value the next descent starts from.
+
+On MaxCut, `max_cut_descent()` and
+`max_cut_perturbation(kind, tabu_tenure)` build the pieces, so a schedule of
+your own reuses the operators rather than rebuilding them. Note that
+`max_cut_perturbation` takes the tenure literally, while
+`bls_for_max_cut` doubles it for the `2γ` reading above,
+which belongs to the paper's schedule.
+
+[Driving BLS with a learned perturbation policy](../guide/learned_perturbation.md)
+walks through a contextual bandit written as one of these.
 
 ## Benchmark config
 
@@ -140,27 +227,10 @@ q = 0.5
 max_duration_secs = 30.0
 ```
 
-`tabu_tenure` is read as original `γ`: a vertex stays forbidden for `2γ`
-moves. This is the one kind that doubles the key, the same range under
+`tabu_tenure` is read as the original `γ`, so a vertex stays forbidden for
+`2γ` moves. This is the one kind that doubles the key, the same range under
 [`TabuSearch`](tabu_search.md) prohibits for half as long, so tuned values do
 not transfer between them.
-
-## Driving it yourself
-
-The round is also reachable in halves, for a caller that wants to keep the
-descent and the operators but replace the schedule:
-
-- `descend(state)`, the greedy descent, writing the prohibitions the kick reads.
-- `kick(state, perturbation, l)`, one [`MaxCutPerturbation`](../api/optopus/heuristic/enum.MaxCutPerturbation.html)
-  of length `l`, followed by the round's single `update_best`.
-- `externally_driven(stop_condition, tabu_tenure)`, the constructor for that
-  use, taking the tenure literally: the `2γ` doubling above belongs to the
-  paper's schedule, which such a caller replaces.
-
-`run_once` is exactly `descend` + the schedule + `kick`.
-[Driving BLS with a learned perturbation policy](../guide/learned_perturbation.md)
-walks through a controller that decides between the two halves with a
-contextual bandit.
 
 ## References
 

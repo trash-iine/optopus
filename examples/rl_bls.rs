@@ -62,12 +62,17 @@ struct PendingDecision {
 /// the inner BLS, pending decision, reward statistics) but **preserves the
 /// bandit weights and baseline**, so the policy keeps improving across
 /// `Restart` / `Iterated` episodes.
-struct RlBreakoutLocalSearch {
+struct RlPerturbation {
     stop_condition: StopCondition,
-    /// The BLS this controller drives: it owns the descent, the perturbation
-    /// operators and the tabu memory they share, and is stepped one half-round at a
-    /// time so the bandit can decide in between.
-    bls: BreakoutLocalSearchForMaxCut,
+    /// The three operators this policy chooses between, in the order
+    /// `action_to_perturbation` decodes. Held here because a
+    /// `PerturbationSchedule` owns what it selects.
+    operators: Vec<Box<dyn Heuristic<MaxCut>>>,
+    /// Which of them the last decision picked, read by `select`.
+    chosen: usize,
+    /// The global best at the end of the previous round, which is the same
+    /// value as the best before this round's descent.
+    prev_global_best: Option<f32>,
     bandit: SoftmaxBandit,
     t: u64,
     l0: u64,
@@ -81,7 +86,7 @@ struct RlBreakoutLocalSearch {
     reward_ema: f64,
 }
 
-impl RlBreakoutLocalSearch {
+impl RlPerturbation {
     /// # Panics
     ///
     /// Panics if `l0` is zero, `strength_bins` is empty or contains a
@@ -113,14 +118,17 @@ impl RlBreakoutLocalSearch {
             exploration,
         );
         Self {
-            // `externally_driven` takes the tenure literally: the doubling
-            // `BreakoutLocalSearchForMaxCut::new` applies reproduces the
-            // paper's `gamma`, which belongs to the schedule this controller
+            // The tenure is taken literally. The doubling
+            // `bls_for_max_cut` applies reproduces the
+            // paper's `gamma`, which belongs to the schedule this one
             // replaces.
-            bls: BreakoutLocalSearchForMaxCut::externally_driven(
-                stop_condition.clone(),
-                tabu_tenure,
-            ),
+            operators: vec![
+                max_cut_perturbation(MaxCutPerturbation::WeakFlip, tabu_tenure),
+                max_cut_perturbation(MaxCutPerturbation::WeakSwap, tabu_tenure),
+                max_cut_perturbation(MaxCutPerturbation::Strong, tabu_tenure),
+            ],
+            chosen: 0,
+            prev_global_best: None,
             stop_condition,
             bandit,
             t,
@@ -187,37 +195,46 @@ impl RlBreakoutLocalSearch {
         ]
     }
 
-    fn action_to_perturbation(&self, action: usize) -> (MaxCutPerturbation, u64) {
-        let ptype = match action / self.strength_bins.len() {
-            0 => MaxCutPerturbation::WeakFlip,
-            1 => MaxCutPerturbation::WeakSwap,
-            _ => MaxCutPerturbation::Strong,
-        };
+    /// Splits an action into the operator it names and how far to go, which
+    /// are the two halves a `PerturbationSchedule` answers separately.
+    fn action_to_perturbation(&self, action: usize) -> (usize, u64) {
+        let operator = (action / self.strength_bins.len()).min(self.operators.len() - 1);
         let mult = self.strength_bins[action % self.strength_bins.len()];
         let l = ((self.l0 as f64 * mult).round() as u64).max(1);
-        (ptype, l)
+        (operator, l)
     }
 }
 
-impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
-    fn clear(&mut self) {
+impl PerturbationSchedule<MaxCut> for RlPerturbation {
+    fn reset(&mut self) {
         self.omega = 0;
         self.prev_solution_objective = None;
+        self.prev_global_best = None;
         self.pending = None;
         self.reward_scale = 0.0;
         self.reward_ema = 0.0;
-        self.bls.clear();
         // Bandit weights and baseline are intentionally preserved across episodes.
     }
 
-    fn run_once<'a>(&mut self, state: &mut SearchState<'a, MaxCut>) -> Result<(), OptError> {
-        // 1. Greedy descent to a local optimum — the first half of a BLS round.
-        let best_before_descent = state.best_solution.objective;
-        self.bls.descend(state)?;
-        let descent_improved_best = state.best_solution.objective > best_before_descent;
+    fn clear_perturbations(&mut self) {
+        for op in &mut self.operators {
+            op.clear();
+        }
+    }
 
-        // 2. Update the stagnation counter (BLS omega rule: consecutive
-        //    iterations whose local optimum did not beat the previous one).
+    /// Everything the controller does happens here, at the point between the
+    /// descent and the kick. The framework calls this with the local optimum
+    /// the descent just reached, which is exactly what the policy observes.
+    fn determine_jump_magnitude(&mut self, state: &mut SearchState<'_, MaxCut>) -> u64 {
+        // 1. Did the descent move the global best? The best at the end of the
+        //    previous round is the best this round started with, since `kick`
+        //    closes a round on `update_best` and nothing runs in between.
+        let descent_improved_best = self
+            .prev_global_best
+            .is_some_and(|prev| state.best_solution.objective > prev);
+
+        // 2. The BLS omega rule: consecutive rounds whose local optimum did
+        //    not beat the previous one.
         if let Some(prev) = self.prev_solution_objective
             && prev >= state.solution.objective
         {
@@ -246,7 +263,8 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
             self.reward_ema += REWARD_EMA_BETA * (reward - self.reward_ema);
         }
 
-        // 4. Select the next perturbation.
+        // 4. Choose. `select` below only hands back what this decided, since
+        //    the framework asks for the length first and the operator second.
         let features = self.context_features(state, descent_improved_best);
         let action = self.bandit.select(&features, &mut state.rng);
         self.pending = Some(PendingDecision {
@@ -255,15 +273,26 @@ impl Heuristic<MaxCut> for RlBreakoutLocalSearch {
             localopt_objective: state.solution.objective,
             global_best_objective: state.best_solution.objective,
         });
-        let (ptype, l) = self.action_to_perturbation(action);
-
-        // 5. The second half of the round: BLS applies the kick against the
-        //    same prohibitions its descent wrote, and updates best once.
-        self.bls.kick(state, ptype, l)
+        let (operator, l) = self.action_to_perturbation(action);
+        self.chosen = operator;
+        l
     }
 
-    fn stop_condition(&self) -> &StopCondition {
-        &self.stop_condition
+    /// Hands back what `determine_jump_magnitude` decided. The state is here
+    /// for a policy that picks its operator at this point instead, which this
+    /// one cannot, since the strength it already returned names the same
+    /// action.
+    fn select<'s>(
+        &'s mut self,
+        _state: &mut SearchState<'_, MaxCut>,
+    ) -> &'s mut dyn Heuristic<MaxCut> {
+        self.operators[self.chosen].as_mut()
+    }
+
+    /// The best at the end of a round is the best the next descent starts
+    /// from, which is what `descent_improved_best` above compares against.
+    fn round_ended(&mut self, state: &SearchState<'_, MaxCut>) {
+        self.prev_global_best = Some(state.best_solution.objective);
     }
 }
 
@@ -274,7 +303,7 @@ fn main() -> Result<(), OptError> {
 
     // Baseline: BLS with Benlic & Hao's schedule. Its `tabu_tenure` is the
     // paper's gamma, so it prohibits for twice this range.
-    let mut bls = BreakoutLocalSearchForMaxCut::new(
+    let mut bls = bls_for_max_cut(
         StopCondition::iterations(iterations),
         (15, 300),
         1_000,
@@ -285,16 +314,22 @@ fn main() -> Result<(), OptError> {
     let mut bls_state = SearchState::new_with_seed(&mc, 42);
     bls.run(&mut bls_state)?;
 
-    // The same operators, driven by the learned policy.
-    let mut rl = RlBreakoutLocalSearch::new(
+    // The same framework and the same operators, with the paper's schedule
+    // swapped for the learned one. Nothing else about the round changes.
+    let mut rl = BreakoutLocalSearch::new(
         StopCondition::iterations(iterations),
         (15, 300),
-        1_000,
-        20,
-        vec![1.0, 2.0, 4.0],
-        0.1,
-        1.0,
-        0.05,
+        max_cut_descent(),
+        RlPerturbation::new(
+            StopCondition::iterations(iterations),
+            (15, 300),
+            1_000,
+            20,
+            vec![1.0, 2.0, 4.0],
+            0.1,
+            1.0,
+            0.05,
+        ),
     );
     let mut rl_state = SearchState::new_with_seed(&mc, 42);
     rl.run(&mut rl_state)?;
@@ -310,8 +345,8 @@ fn main() -> Result<(), OptError> {
     );
     println!(
         "  learned weights ({} actions x {NUM_CONTEXT_FEATURES} features): {:.3?}",
-        rl.num_actions(),
-        &rl.policy_weights()[..NUM_CONTEXT_FEATURES]
+        rl.schedule().num_actions(),
+        &rl.schedule().policy_weights()[..NUM_CONTEXT_FEATURES]
     );
     Ok(())
 }
