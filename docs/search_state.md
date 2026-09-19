@@ -79,8 +79,8 @@ state.reset_tabu();                        // drop every prohibition
 ```
 
 Arm the mode at the same rate as the tenure is decided, per iteration in
-`TabuSearch::run_once` and per half-round in
-`BreakoutLocalSearchForMaxCut::prepare`. Until it is armed the tenure is
+`TabuSearch::run_once` and twice a round in `BreakoutLocalSearch::run_once`,
+before the descent and again before the kick. Until it is armed the tenure is
 `(0, 0)`, which records a move and frees it again on the next iteration.
 `stop_record_tabu()` leaves the tenure in place, for a search that wants to
 forbid only what it hands to `record_tabu`.

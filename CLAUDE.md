@@ -87,13 +87,14 @@ src/
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── population_annealing.rs  PopulationAnnealing<P, N>
 │   ├── alns.rs               AdaptiveLargeNeighborhoodSearch<P: Ruinable>
+│   ├── bls.rs                BreakoutLocalSearch<P, S>, PerturbationSchedule,
+│   │                         AdaptivePerturbation
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
 │   ├── reinforcement_learning/  ReinforcementLearningSearch<N>
 │   └── specific/             one directory per problem once it has several
-│       ├── max_cut/          bls.rs (BreakoutLocalSearch, also descend / kick /
-│       │                     externally_driven for examples/rl_bls.rs),
-│       │                     best_swap.rs (the one operator with no generic
-│       │                     equivalent)
+│       ├── max_cut/          bls.rs (BreakoutLocalSearchForMaxCut and the
+│       │                     MaxCut descent and kicks), best_swap.rs (the one
+│       │                     operator with no generic equivalent)
 │       ├── vrp/              hgs/ (mod.rs driver, population.rs), alns_for_vrp
 │       ├── lkh_for_tsp.rs
 │       └── walksat_for_sat.rs
