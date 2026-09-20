@@ -21,10 +21,6 @@ use rand::seq::SliceRandom;
 /// a displaced vertex actually lands.
 pub const ANCHOR_RING: usize = 5;
 
-/// Improvements smaller than this are treated as numerical noise, which keeps
-/// a descent from cycling on ties.
-pub const MIN_IMPROVEMENT: f64 = 1e-10;
-
 /// The sweep list and the marks that keep it free of duplicates, kept between
 /// calls so a descent allocates nothing per iteration.
 #[derive(Debug, Default)]

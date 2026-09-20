@@ -13,7 +13,7 @@
 use rand::rngs::SmallRng;
 
 use super::problem::{TspSolution, TspWithCoordinates};
-use crate::common::anchored_sweep::{AnchoredSweep, MIN_IMPROVEMENT};
+use crate::common::{AnchoredSweep, MIN_IMPROVEMENT};
 use crate::trait_defs::{LocalRepair, Ruinable};
 
 /// Marks a city that is not currently on the tour in [`TspPartial::pos`].

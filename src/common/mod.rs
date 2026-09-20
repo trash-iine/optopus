@@ -25,3 +25,15 @@ pub use ruin_recreate::{
     worst_removal,
 };
 pub use tabu::{TabuKey, TabuMemory};
+
+/// The smallest objective change a search treats as a real improvement.
+///
+/// A descent that accepted any negative delta would cycle on ties, since two
+/// moves that undo each other can each show a delta of minus one rounding
+/// error. Lin-Kernighan's closing gain, the granular route descent, the
+/// anchored tour descent and Hybrid Genetic Search's new-best test all ask
+/// the same question of the same kind of number, so they share the answer.
+/// It is not a general epsilon. Simulated annealing's exponent floor and the
+/// strict-inequality margin of `FormulaProblem` mean something else and stay
+/// where they are reasoned out.
+pub const MIN_IMPROVEMENT: f64 = 1e-10;

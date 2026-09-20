@@ -6,6 +6,7 @@
 //! no improving move exists for any starting city (local optimum) or
 //! when the stop condition is met.
 
+use crate::common::MIN_IMPROVEMENT;
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::tsp_2d::{NeighborLists, TspSolution, TspWithCoordinates};
@@ -196,7 +197,7 @@ impl LinKernighanHelsgaun {
                     // -- closure test (depth 1 = 2-opt) --
                     let d_close = prob.distance(t4, t1);
                     let g_close = g1 + d_x2 - d_close;
-                    if g_close > 1e-10 {
+                    if g_close > MIN_IMPROVEMENT {
                         scratch.broken.clear();
                         scratch.broken.extend([(t1, t2), (t3, t4)]);
                         scratch.added.clear();
@@ -295,7 +296,7 @@ impl LinKernighanHelsgaun {
                 // -- closure test --
                 let d_close = prob.distance(t_break, t1);
                 let g_close = g_partial + d_x - d_close;
-                if g_close > 1e-10 {
+                if g_close > MIN_IMPROVEMENT {
                     scratch.broken.push((t_next, t_break));
                     scratch.added.push((t_last, t_next));
                     scratch.added.push((t_break, t1));

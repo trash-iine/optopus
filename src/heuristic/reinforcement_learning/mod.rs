@@ -223,7 +223,7 @@ where
         //    keeping each move's feature vector for the exact gradient below.
         let inv_temp = 1.0 / self.softmax_temperature;
         let range = ctx.max_worsening - ctx.min_worsening;
-        let inv_range = if range > 1e-10 { 1.0 / range } else { 0.0 };
+        let inv_range = if range > EPSILON { 1.0 / range } else { 0.0 };
         let min_w = ctx.min_worsening;
 
         self.buf_scores.clear();
@@ -250,7 +250,7 @@ where
         // 4. Compute reward and update policy online (single-step REINFORCE)
         let reward = match self.reward_shaping {
             RewardShaping::Raw => -selected_worsening,
-            RewardShaping::Normalized => -selected_worsening / ctx.max_abs_worsening.max(1e-10),
+            RewardShaping::Normalized => -selected_worsening / ctx.max_abs_worsening.max(EPSILON),
             RewardShaping::BestImprovement => {
                 if state.best_iteration == state.iteration {
                     1.0

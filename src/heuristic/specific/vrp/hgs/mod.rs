@@ -32,7 +32,7 @@ use rand::Rng;
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 
-use crate::common::order_crossover;
+use crate::common::{MIN_IMPROVEMENT, order_crossover};
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::vrp::{Vrp, split_giant_tour};
@@ -331,7 +331,7 @@ impl HybridGeneticSearch {
         state.solution = state.instance.solution_from_routes(routes);
         state.update_best();
 
-        if cost < self.best_cost - 1e-9 {
+        if cost < self.best_cost - MIN_IMPROVEMENT {
             self.best_cost = cost;
             self.generations_without_improvement = 0;
         } else {
