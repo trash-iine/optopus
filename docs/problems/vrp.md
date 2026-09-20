@@ -114,7 +114,8 @@ granular local descent).
 containers, capacity being the resource they compete for, so
 [AdaptiveLargeNeighborhoodSearch](../heuristics/alns.md) runs on it.
 `alns_for_vrp` pairs the search with `AnchoredRouteDescent`, the granular
-route descent run around the customers a ruin just re-inserted.
+route descent run around the customers a ruin just re-inserted, whose
+granularity, ring and pass count are builders described on that page.
 
 ## File format (CVRPLIB)
 

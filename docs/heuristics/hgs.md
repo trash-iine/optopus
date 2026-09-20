@@ -47,9 +47,9 @@ Each `run_once` produces one offspring:
 2. Crossover, Order Crossover (OX) on the two parents' giant tours.
 3. Decode, `split_giant_tour` under the current capacity penalty.
 4. Local search, granular descent to a local optimum.
-5. Repair, an infeasible child gets a 50% chance of a second descent at
-   10× then 100× the penalty; if that succeeds, the feasible copy is inserted
-   as well as the original.
+5. Repair, an infeasible child gets a second descent at 10× then 100× the
+   penalty with probability `repair_probability` (default 0.5); if that
+   succeeds, the feasible copy is inserted as well as the original.
 6. Survival, the child joins the feasible or infeasible sub-population.
    Each grows to `min_population_size + generation_size` and is then culled back
    to `min_population_size`.
@@ -60,11 +60,12 @@ Selecting on cost alone collapses the population onto one basin within a few
 hundred generations. Instead each individual is ranked by
 
 ```text
-fitness = rank_cost / (N−1) + (1 − N_ELITE/N) · rank_diversity / (N−1)
+fitness = rank_cost / (N−1) + (1 − n_elite/N) · rank_diversity / (N−1)
 ```
 
 where `rank_diversity` orders individuals by decreasing contribution, the
-mean broken-pairs distance to their 5 nearest neighbors in the sub-population.
+mean broken-pairs distance to their `n_closest` nearest neighbors in the
+sub-population (defaults `n_elite = 4`, `n_closest = 5`).
 A solution therefore earns its place either by being cheap or by being unlike
 the rest. Clones (distance `0` from another member) are always evicted first.
 
@@ -78,8 +79,9 @@ ranks on the directional count, which is the form Vidal defines.
 
 Feasible and infeasible individuals are kept in separate sub-populations, and
 the capacity penalty is retuned every 100 offspring to hold the feasible share
-near `target_feasible` (default 0.2): too few feasible offspring raise it, too
-many lower it.
+near `target_feasible` (default 0.2): too few feasible offspring raise it by
+1.2×, too many lower it by 0.85×, with a dead band of 0.05 either side.
+All four numbers are `with_penalty_adaptation`'s.
 
 Searching at a deliberately low feasible rate is the point, since the shortest
 path between two good feasible solutions usually crosses infeasible ground. The
@@ -123,6 +125,21 @@ HybridGeneticSearchForVrp::new(
 
 Reasonable defaults: `μ = 25`, `λ = 40`, `Γ = 20`, `target_feasible = 0.2`,
 `restart_generations = Some(20_000)`.
+
+Everything else Vidal tunes is a builder with a published default, so `new`
+stays at six arguments.
+
+| Builder | Sets | Default |
+|---|---|---|
+| `with_elite(n_elite, n_closest)` | Vidal's `nbElite` and `nbClose` in the biased fitness | `4` / `5` |
+| `with_penalty_adaptation(period, increase, decrease, tolerance)` | offspring between penalty updates, the two factors, and the dead band around `target_feasible` | `100` / `1.2` / `0.85` / `0.05` |
+| `with_repair_probability(p)` | chance an infeasible offspring is also repaired | `0.5` |
+| `with_initial_population(factor, nearest_neighbor_every)` | initial individuals as a multiple of μ, and how many of them one nearest-neighbour tour is among | `4` / `4` |
+| `with_descent_passes(p)` | passes the granular descent may spend on one offspring | `64` |
+
+The defaults are associated constants on the search,
+`HybridGeneticSearchForVrp::DEFAULT_N_ELITE` and so on. The builders are
+reachable from Rust and not from a TOML.
 
 The first individual is seeded from `state.solution`, so composing HGS inside
 `Sequential`, `Iterated`, or `Restart` carries the incumbent forward. A restart
