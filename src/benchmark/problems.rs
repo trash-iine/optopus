@@ -29,14 +29,6 @@ use crate::problem::{
 };
 use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
 
-/// What an `AdaptiveLargeNeighborhoodSearch` config gets for `removal_fraction`
-/// when it names none. One number for every problem the search is registered
-/// for, rather than a literal per arm. The `HeuristicConfig` doc quotes it.
-const ALNS_DEFAULT_REMOVAL_FRACTION: f64 = 0.15;
-
-/// The same for `cooling_rate`.
-const ALNS_DEFAULT_COOLING_RATE: f64 = 0.9995;
-
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
 // ---------------------------------------------------------------------------
@@ -374,8 +366,8 @@ impl ConfigurableProblem for TspWithCoordinates {
                 ..
             } => Ok(Box::new(alns_for_tsp(
                 cond,
-                removal_fraction.unwrap_or(ALNS_DEFAULT_REMOVAL_FRACTION),
-                cooling_rate.unwrap_or(ALNS_DEFAULT_COOLING_RATE),
+                removal_fraction.unwrap_or(0.15),
+                cooling_rate.unwrap_or(0.9995),
             ))),
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for Tsp",
@@ -426,8 +418,8 @@ impl ConfigurableProblem for Vrp {
                 ..
             } => Ok(Box::new(alns_for_vrp(
                 cond,
-                removal_fraction.unwrap_or(ALNS_DEFAULT_REMOVAL_FRACTION),
-                cooling_rate.unwrap_or(ALNS_DEFAULT_COOLING_RATE),
+                removal_fraction.unwrap_or(0.15),
+                cooling_rate.unwrap_or(0.9995),
             ))),
             HeuristicConfig::HybridGeneticSearch {
                 min_population_size,
