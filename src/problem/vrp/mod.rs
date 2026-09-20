@@ -15,7 +15,7 @@ mod split;
 
 pub use crossover::VrpOrderCrossover;
 pub use neighbor::{VrpRelocateNeighbor, VrpSwapNeighbor, VrpTwoOptNeighbor};
-pub use problem::{VRP_DIST_MATRIX_MAX_N, Vrp, VrpSolution};
+pub use problem::{Vrp, VrpSolution};
 pub use ruin::{AnchoredRouteDescent, VrpPartial};
 pub use split::split_giant_tour;
 

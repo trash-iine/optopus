@@ -3,8 +3,8 @@
 **API:** [`Vrp`](../api/optopus/problem/vrp/struct.Vrp.html)
 
 Capacitated Vehicle Routing Problem (CVRP), with a depot (customer `0`) and `n`
-customers `1, ..., n`, each with 2D coordinates and an integer demand `q_i`,
-are served by a homogeneous fleet of `K` vehicles with shared capacity `Q`,
+customers `1, ..., n`, each with an integer demand `q_i` and pairwise
+distances `d(i, j)`, are served by a homogeneous fleet of `K` vehicles with shared capacity `Q`,
 each starting and ending at the depot. Partition the customers into at most
 `K` routes `R_1, ..., R_K`, each a sequence of customers visited by one
 vehicle, so that every customer is served exactly once and no route's total
@@ -56,6 +56,34 @@ for (vehicle, route) in sol.routes.iter().enumerate() {
 
 Pass nearest-integer `EUC_2D` distances (the CVRPLIB convention) instead via
 `Vrp::with_rounding`, with the same arguments.
+
+### Distance storage
+
+The distances live in a
+[`DistanceStore`](../api/optopus/common/distance_store/struct.DistanceStore.html), the
+same store `Tsp` uses.
+
+| Constructor | Keeps | Use it when |
+|---|---|---|
+| `Vrp::new(...)`, `Vrp::with_rounding(...)` | the full `nodes × nodes` matrix, `8 nodes²` bytes | the instance has a few thousand nodes at most |
+| `Vrp::with_nearest_neighbors(name, coords, demands, capacity, num_vehicles, rounded, k)` | the `k` nearest neighbours of every node, `nodes × k` distances | the matrix would not fit |
+| `Vrp::from_distance_matrix(name, matrix, demands, capacity, num_vehicles)` | the matrix as given | the distances are not Euclidean or the coordinates are not available |
+
+A nearest-neighbour instance still answers `distance(i, j)` for every pair.
+A pair outside the lists is computed from the coordinates, so the values are
+the same as with the full matrix and only the far pairs cost more. The
+granular candidate lists the descents build read `distance` and so work on
+every store.
+
+`Vrp::from_distance_matrix` takes `Vec<Vec<f64>>` with node `0` the depot and
+rejects a matrix that is not square. Give it a symmetric matrix, since the
+2-opt gains price a segment reversal from the four exchanged edges alone.
+Such an instance has no coordinates, so `coordinates()` and `rounded()`
+return `None` on it.
+
+`Vrp::load_file` keeps the full matrix for files with at most
+`Vrp::DIST_MATRIX_MAX_N` nodes (2000) and switches to
+`Vrp::NEAREST_NEIGHBORS_ABOVE_CAP` neighbours per node (20) above that.
 
 ### Fleet size
 

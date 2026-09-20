@@ -2,6 +2,7 @@ use rand::seq::SliceRandom;
 use std::sync::OnceLock;
 
 use super::adjacency::RouteAdjacency;
+use crate::common::{DistanceStore, EdgeWeightType};
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
 
@@ -95,43 +96,47 @@ impl Distance for VrpSolution {
     }
 }
 
-/// Maximum number of nodes (depot + customers) for which the full distance
-/// matrix is precomputed (memory `nodes² × 8` bytes). Larger instances fall back
-/// to computing each distance on the fly.
-pub const VRP_DIST_MATRIX_MAX_N: usize = 2000;
-
 /// The Capacitated Vehicle Routing Problem (CVRP).
 ///
-/// A depot (node `0`) and `n` customers (`1..=n`) with 2D coordinates and
-/// integer demands are served by a homogeneous fleet of `num_vehicles` vehicles,
-/// each of capacity `capacity`. The objective is to minimize total travel
-/// distance such that every customer is visited exactly once and no route's
-/// demand exceeds capacity (the latter enforced via a penalty, see [`VrpSolution`]).
+/// A depot (node `0`) and `n` customers (`1..=n`) with integer demands are
+/// served by a homogeneous fleet of `num_vehicles` vehicles, each of capacity
+/// `capacity`. The objective is to minimize total travel distance such that
+/// every customer is visited exactly once and no route's demand exceeds
+/// capacity (the latter enforced via a penalty, see [`VrpSolution`]).
 ///
-/// Distances mirror TSPLIB semantics: `rounded` selects nearest-integer `EUC_2D`
-/// (the CVRPLIB standard, used by [`Vrp::load_file`]) versus plain Euclidean
-/// (the default for programmatically constructed instances).
+/// The distances live in a [`DistanceStore`]. An instance is built from 2D
+/// coordinates, either as the full distance matrix ([`Vrp::new`],
+/// [`Vrp::with_rounding`]) or as the `k` nearest neighbours of every node
+/// with the remaining pairs computed from the coordinates on demand
+/// ([`Vrp::with_nearest_neighbors`]), or from a distance matrix given
+/// directly ([`Vrp::from_distance_matrix`]). Distances from coordinates
+/// mirror TSPLIB semantics: rounding selects nearest-integer `EUC_2D` (the
+/// CVRPLIB standard, used by [`Vrp::load_file`]) versus plain Euclidean (the
+/// default for programmatically constructed instances).
 #[derive(Debug, Clone)]
 pub struct Vrp {
     pub name: String,
-    /// Node coordinates; index `0` is the depot, `1..=n` are the customers.
-    pub coordinates: Vec<(f64, f64)>,
     /// Node demands; `demands[0] == 0` (the depot).
     pub demands: Vec<i64>,
     /// Vehicle capacity `Q`.
     pub capacity: i64,
     /// Fixed fleet size (number of routes in every solution).
     pub num_vehicles: usize,
-    /// Whether distances are rounded to the nearest integer (`EUC_2D`).
-    pub rounded: bool,
-    /// Lazily built `nodes × nodes` distance matrix (row-major); only populated
-    /// when `nodes <= VRP_DIST_MATRIX_MAX_N`.
-    dist_matrix: OnceLock<Vec<f64>>,
+    distances: DistanceStore,
     /// Lazily computed penalty weight (see [`Vrp::penalty_weight`]).
     penalty_weight: OnceLock<f64>,
 }
 
 impl Vrp {
+    /// Largest number of nodes (depot + customers) for which [`Vrp::load_file`]
+    /// keeps the full distance matrix (memory `nodes² × 8` bytes, 32 MB at
+    /// this cap). Larger files keep [`Vrp::NEAREST_NEIGHBORS_ABOVE_CAP`]
+    /// neighbours per node.
+    pub const DIST_MATRIX_MAX_N: usize = 2000;
+    /// Neighbours per node that [`Vrp::load_file`] keeps above the cap, the
+    /// granularity the descents use by default.
+    pub const NEAREST_NEIGHBORS_ABOVE_CAP: usize = 20;
+
     /// Creates a CVRP instance with plain (non-rounded) Euclidean distances.
     ///
     /// `coordinates[0]` / `demands[0]` are the depot (demand ignored). If
@@ -178,6 +183,15 @@ impl Vrp {
         )
     }
 
+    /// The edge-weight type a `rounded` flag stands for.
+    fn edge_weight_type(rounded: bool) -> EdgeWeightType {
+        if rounded {
+            EdgeWeightType::Euc2d
+        } else {
+            EdgeWeightType::Continuous
+        }
+    }
+
     fn build(
         name: String,
         coordinates: Vec<(f64, f64)>,
@@ -186,14 +200,87 @@ impl Vrp {
         num_vehicles: usize,
         rounded: bool,
     ) -> Self {
+        Self::from_store(
+            name,
+            DistanceStore::from_coordinates(coordinates, Self::edge_weight_type(rounded)),
+            demands,
+            capacity,
+            num_vehicles,
+        )
+    }
+
+    /// Creates an instance that keeps only the `k` nearest neighbours of every
+    /// node, `nodes × k` distances instead of `nodes²`. Any other pair is
+    /// computed from the coordinates when asked for, so the instance answers
+    /// exactly like the full matrix would, only slower on pairs outside the
+    /// lists. `k` larger than `nodes - 1` keeps every other node. The other
+    /// arguments are those of [`Vrp::new`], with `rounded` selecting
+    /// nearest-integer `EUC_2D` distances as [`Vrp::with_rounding`] does.
+    ///
+    /// # Panics
+    /// As [`Vrp::new`].
+    pub fn with_nearest_neighbors(
+        name: impl Into<String>,
+        coordinates: Vec<(f64, f64)>,
+        demands: Vec<i64>,
+        capacity: i64,
+        num_vehicles: usize,
+        rounded: bool,
+        k: usize,
+    ) -> Self {
+        Self::from_store(
+            name.into(),
+            DistanceStore::nearest_from_coordinates(
+                coordinates,
+                Self::edge_weight_type(rounded),
+                k,
+            ),
+            demands,
+            capacity,
+            num_vehicles,
+        )
+    }
+
+    /// Creates an instance from a distance matrix given directly, so it has
+    /// no coordinates. `matrix[i][j]` is the distance between nodes `i` and
+    /// `j`, node `0` being the depot, and is expected to be symmetric, since
+    /// the 2-opt gains price a segment reversal from the four exchanged edges
+    /// alone. Returns an error unless the matrix is square. The other
+    /// arguments are those of [`Vrp::new`].
+    ///
+    /// # Panics
+    /// As [`Vrp::new`].
+    pub fn from_distance_matrix(
+        name: impl Into<String>,
+        matrix: Vec<Vec<f64>>,
+        demands: Vec<i64>,
+        capacity: i64,
+        num_vehicles: usize,
+    ) -> Result<Self, OptError> {
+        Ok(Self::from_store(
+            name.into(),
+            DistanceStore::from_matrix(matrix)?,
+            demands,
+            capacity,
+            num_vehicles,
+        ))
+    }
+
+    fn from_store(
+        name: String,
+        distances: DistanceStore,
+        demands: Vec<i64>,
+        capacity: i64,
+        num_vehicles: usize,
+    ) -> Self {
         assert!(
-            !coordinates.is_empty(),
+            !distances.is_empty(),
             "VRP requires at least the depot node"
         );
         assert_eq!(
-            coordinates.len(),
+            distances.len(),
             demands.len(),
-            "coordinates and demands must have the same length"
+            "distances and demands must cover the same nodes"
         );
         assert!(capacity > 0, "capacity must be positive");
 
@@ -205,56 +292,44 @@ impl Vrp {
 
         Self {
             name,
-            coordinates,
             demands,
             capacity,
             num_vehicles,
-            rounded,
-            dist_matrix: OnceLock::new(),
+            distances,
             penalty_weight: OnceLock::new(),
         }
     }
 
     /// Number of customers (excludes the depot).
     pub fn get_n(&self) -> usize {
-        self.coordinates.len() - 1
+        self.demands.len() - 1
     }
 
     /// Number of nodes (depot + customers).
     fn num_nodes(&self) -> usize {
-        self.coordinates.len()
+        self.demands.len()
     }
 
-    /// Distance between nodes `i` and `j` (either may be the depot, index `0`).
-    ///
-    /// O(1) lookup once the lazily built distance matrix is populated (instances
-    /// with at most [`VRP_DIST_MATRIX_MAX_N`] nodes); larger instances compute on
-    /// the fly.
+    /// The node coordinates the instance was built from, index `0` the
+    /// depot, `None` for an instance built from a distance matrix.
+    pub fn coordinates(&self) -> Option<&[(f64, f64)]> {
+        self.distances.coordinates()
+    }
+
+    /// Whether distances from the coordinates are rounded to the nearest
+    /// integer (`EUC_2D`), `None` for an instance built from a distance
+    /// matrix.
+    pub fn rounded(&self) -> Option<bool> {
+        self.distances
+            .edge_weight_type()
+            .map(|ewt| ewt == EdgeWeightType::Euc2d)
+    }
+
+    /// Distance between nodes `i` and `j` (either may be the depot, index
+    /// `0`), see [`DistanceStore::distance`].
     #[inline]
     pub fn distance(&self, i: usize, j: usize) -> f64 {
-        let n = self.num_nodes();
-        if n <= VRP_DIST_MATRIX_MAX_N {
-            let matrix = self.dist_matrix.get_or_init(|| {
-                let mut m = Vec::with_capacity(n * n);
-                for a in 0..n {
-                    for b in 0..n {
-                        m.push(self.compute_distance(a, b));
-                    }
-                }
-                m
-            });
-            return matrix[i * n + j];
-        }
-        self.compute_distance(i, j)
-    }
-
-    fn compute_distance(&self, i: usize, j: usize) -> f64 {
-        let (x1, y1) = self.coordinates[i];
-        let (x2, y2) = self.coordinates[j];
-        let dx = x1 - x2;
-        let dy = y1 - y2;
-        let d = (dx * dx + dy * dy).sqrt();
-        if self.rounded { d.round() } else { d }
+        self.distances.distance(i, j)
     }
 
     /// Penalty weight applied per unit of capacity overflow.
@@ -350,6 +425,10 @@ impl Vrp {
     /// `COMMENT` carrying `No of trucks: K`), followed by the
     /// `NODE_COORD_SECTION`, `DEMAND_SECTION`, and `DEPOT_SECTION`. Node `1` in
     /// the file (the depot per `DEPOT_SECTION`) is re-indexed to `0` internally.
+    ///
+    /// Files with at most [`Vrp::DIST_MATRIX_MAX_N`] nodes get the full
+    /// distance matrix, larger ones keep
+    /// [`Vrp::NEAREST_NEIGHBORS_ABOVE_CAP`] neighbours per node.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, OptError> {
         use crate::common::InstanceLines;
 
@@ -521,14 +600,19 @@ impl Vrp {
                 .to_string()
         });
 
-        Ok(Self::build(
-            name,
-            coordinates,
-            demands,
-            capacity,
-            num_vehicles,
-            true,
-        ))
+        Ok(if dim <= Self::DIST_MATRIX_MAX_N {
+            Self::build(name, coordinates, demands, capacity, num_vehicles, true)
+        } else {
+            Self::with_nearest_neighbors(
+                name,
+                coordinates,
+                demands,
+                capacity,
+                num_vehicles,
+                true,
+                Self::NEAREST_NEIGHBORS_ABOVE_CAP,
+            )
+        })
     }
 }
 
@@ -717,10 +801,87 @@ mod tests {
         assert_eq!(vrp.get_n(), 4);
         assert_eq!(vrp.capacity, 2);
         assert_eq!(vrp.num_vehicles, 2);
-        assert!(vrp.rounded);
+        assert_eq!(vrp.rounded(), Some(true));
         assert_eq!(vrp.demands, vec![0, 1, 1, 1, 1]);
         // depot at origin, customer 1 at (1,0): distance 1
         assert_eq!(vrp.distance(0, 1), 1.0);
+        let _ = std::fs::remove_file(&path);
+    }
+    /// The depot and twenty customers on a lattice, so repeated distances are
+    /// in play.
+    fn lattice() -> (Vec<(f64, f64)>, Vec<i64>) {
+        let coords: Vec<(f64, f64)> = (0..21).map(|i| ((i % 5) as f64, (i / 5) as f64)).collect();
+        let mut demands = vec![1; 21];
+        demands[0] = 0;
+        (coords, demands)
+    }
+
+    #[test]
+    fn from_distance_matrix_reads_the_matrix_as_given() {
+        let matrix = vec![
+            vec![0.0, 3.0, 7.0],
+            vec![3.0, 0.0, 5.0],
+            vec![7.0, 5.0, 0.0],
+        ];
+        let vrp = Vrp::from_distance_matrix("m", matrix, vec![0, 1, 1], 5, 1).unwrap();
+        assert_eq!(vrp.get_n(), 2);
+        assert_eq!(vrp.distance(0, 2), 7.0);
+        assert_eq!(vrp.route_distance(&[1, 2]), 3.0 + 5.0 + 7.0);
+        assert!(vrp.coordinates().is_none());
+        assert!(vrp.rounded().is_none());
+        assert!(vrp.penalty_weight() > 3.0 * 7.0);
+    }
+
+    #[test]
+    fn nearest_store_answers_like_the_full_matrix() {
+        let (coords, demands) = lattice();
+        let full = Vrp::with_rounding("full", coords.clone(), demands.clone(), 5, 0);
+        let sparse = Vrp::with_nearest_neighbors("sparse", coords, demands, 5, 0, true, 4);
+        assert_eq!(sparse.rounded(), Some(true));
+        assert_eq!(sparse.coordinates(), full.coordinates());
+        assert_eq!(sparse.num_vehicles, full.num_vehicles);
+        for i in 0..21 {
+            for j in 0..21 {
+                assert_eq!(
+                    sparse.distance(i, j),
+                    full.distance(i, j),
+                    "pair ({i}, {j})"
+                );
+            }
+        }
+        assert_eq!(sparse.penalty_weight(), full.penalty_weight());
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+        let sol = full.new_solution(&mut rng);
+        let again = sparse.solution_from_routes(sol.routes.clone());
+        assert_eq!(again.objective, sol.objective);
+    }
+
+    #[test]
+    fn load_file_above_the_cap_keeps_the_coordinates() {
+        use std::io::Write;
+        let dim = Vrp::DIST_MATRIX_MAX_N + 1;
+        let mut contents = format!(
+            "NAME : big\nTYPE : CVRP\nDIMENSION : {dim}\nEDGE_WEIGHT_TYPE : EUC_2D\nCAPACITY : 50\nNODE_COORD_SECTION\n"
+        );
+        for i in 0..dim {
+            contents.push_str(&format!("{} {} {}\n", i + 1, (i * 7) % 101, (i * 13) % 89));
+        }
+        contents.push_str("DEMAND_SECTION\n");
+        for i in 0..dim {
+            contents.push_str(&format!("{} {}\n", i + 1, if i == 0 { 0 } else { 1 }));
+        }
+        contents.push_str("DEPOT_SECTION\n1\n-1\nEOF\n");
+        let mut path = std::env::temp_dir();
+        path.push(format!("optopus_vrp_big_{}.vrp", std::process::id()));
+        std::fs::File::create(&path)
+            .unwrap()
+            .write_all(contents.as_bytes())
+            .unwrap();
+        let vrp = Vrp::load_file(&path).unwrap();
+        assert_eq!(vrp.get_n(), dim - 1);
+        assert_eq!(vrp.coordinates().map(|c| c.len()), Some(dim));
+        assert_eq!(vrp.distance(0, 1), 7f64.hypot(13.0).round());
+        assert_eq!(vrp.distance(0, 1), vrp.distance(1, 0));
         let _ = std::fs::remove_file(&path);
     }
 }
