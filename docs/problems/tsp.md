@@ -12,7 +12,9 @@ total length of that Hamiltonian tour:
 minimize  Σ_{k=1}^{n} d(π(k), π(k mod n + 1))    (π a permutation of the n cities)
 ```
 
-This crate's `Tsp` holds the distances themselves. An instance is built
+This crate's `Tsp` holds the distances themselves in a
+[`DistanceStore`](../api/optopus/common/distance_store/struct.DistanceStore.html), the
+same store `Vrp` uses. An instance is built
 from 2D coordinates and one of the standard TSPLIB distance formulas, see
 [Edge-weight types](#edge-weight-types) below, or from a distance matrix
 given directly. Which distances it keeps in memory is chosen at

@@ -4,6 +4,7 @@ pub mod adaptive_weights;
 pub mod anchored_sweep;
 pub mod biased_fitness;
 pub mod binary;
+pub mod distance_store;
 pub mod graph;
 pub mod parse;
 pub mod permutation;
@@ -17,6 +18,7 @@ pub use binary::{
     apply_swap_as_two_flips, hamming_distance, lift_binary_solution, lift_compact_binary_solution,
     uniform_binary_crossover,
 };
+pub use distance_store::{DistanceStore, EdgeWeightType};
 pub use graph::{Graph, seeded_rng};
 pub use parse::InstanceLines;
 pub use permutation::order_crossover;

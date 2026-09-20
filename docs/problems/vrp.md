@@ -59,6 +59,10 @@ Pass nearest-integer `EUC_2D` distances (the CVRPLIB convention) instead via
 
 ### Distance storage
 
+The distances live in a
+[`DistanceStore`](../api/optopus/common/distance_store/struct.DistanceStore.html), the
+same store `Tsp` uses.
+
 | Constructor | Keeps | Use it when |
 |---|---|---|
 | `Vrp::new(...)`, `Vrp::with_rounding(...)` | the full `nodes × nodes` matrix, `8 nodes²` bytes | the instance has a few thousand nodes at most |

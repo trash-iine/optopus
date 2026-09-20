@@ -11,7 +11,8 @@ mod neighbor;
 mod problem;
 mod ruin;
 
+pub use crate::common::EdgeWeightType;
 pub use crossover::TspOrderCrossover;
 pub use neighbor::{TspRelocateNeighbor, TspTwoOptNeighbor};
-pub use problem::{EdgeWeightType, NeighborLists, Tsp, TspSolution, TspTour};
+pub use problem::{NeighborLists, Tsp, TspSolution, TspTour};
 pub use ruin::{AnchoredTourDescent, TspPartial};

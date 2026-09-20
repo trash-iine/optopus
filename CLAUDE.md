@@ -69,6 +69,8 @@ src/
 ├── common/                   shared data structures and helpers; put new shared code here
 │   ├── graph/                Graph (mod.rs), random and lattice generators (generator.rs),
 │   │                         seeded_rng
+│   ├── distance_store.rs     DistanceStore (full matrix / k nearest / given matrix)
+│   │                         and EdgeWeightType, shared by Tsp and Vrp
 │   ├── binary.rs             uniform_binary_crossover, hamming_distance,
 │   │                         lift_binary_solution, lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips

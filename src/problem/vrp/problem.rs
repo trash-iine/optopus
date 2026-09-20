@@ -2,6 +2,7 @@ use rand::seq::SliceRandom;
 use std::sync::OnceLock;
 
 use super::adjacency::RouteAdjacency;
+use crate::common::{DistanceStore, EdgeWeightType};
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
 
@@ -95,62 +96,6 @@ impl Distance for VrpSolution {
     }
 }
 
-/// The coordinates an instance was built from and whether a distance is
-/// rounded to the nearest integer. Only instances built from coordinates have
-/// one, so [`Vrp::from_distance_matrix`] instances have no geometry at all.
-#[derive(Debug, Clone)]
-struct Geometry {
-    /// Node coordinates; index `0` is the depot, `1..=n` are the customers.
-    coordinates: Vec<(f64, f64)>,
-    rounded: bool,
-}
-
-impl Geometry {
-    fn distance(&self, i: usize, j: usize) -> f64 {
-        let (x1, y1) = self.coordinates[i];
-        let (x2, y2) = self.coordinates[j];
-        let dx = x1 - x2;
-        let dy = y1 - y2;
-        let d = (dx * dx + dy * dy).sqrt();
-        if self.rounded { d.round() } else { d }
-    }
-
-    /// The `k` nearest other nodes of every node with their distances, in
-    /// ascending distance, ties by node index.
-    fn nearest_rows(&self, k: usize) -> Vec<Vec<(usize, f64)>> {
-        let n = self.coordinates.len();
-        (0..n)
-            .map(|i| {
-                let mut row: Vec<(usize, f64)> = (0..n)
-                    .filter(|&j| j != i)
-                    .map(|j| (j, self.distance(i, j)))
-                    .collect();
-                row.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-                row.truncate(k);
-                row
-            })
-            .collect()
-    }
-}
-
-/// Where an instance keeps its distances.
-#[derive(Debug, Clone)]
-enum DistanceStore {
-    /// The full `nodes × nodes` matrix, row-major. The geometry is present
-    /// only when the matrix was built from coordinates.
-    Full {
-        matrix: Vec<f64>,
-        geometry: Option<Geometry>,
-    },
-    /// For each node, its `k` nearest other nodes with their distances, in
-    /// ascending distance. Any other pair is computed from the geometry, so
-    /// the geometry is not optional here.
-    Nearest {
-        rows: Vec<Vec<(usize, f64)>>,
-        geometry: Geometry,
-    },
-}
-
 /// The Capacitated Vehicle Routing Problem (CVRP).
 ///
 /// A depot (node `0`) and `n` customers (`1..=n`) with integer demands are
@@ -159,14 +104,15 @@ enum DistanceStore {
 /// every customer is visited exactly once and no route's demand exceeds
 /// capacity (the latter enforced via a penalty, see [`VrpSolution`]).
 ///
-/// An instance is built from 2D coordinates, either as the full distance
-/// matrix ([`Vrp::new`], [`Vrp::with_rounding`]) or as the `k` nearest
-/// neighbours of every node with the remaining pairs computed from the
-/// coordinates on demand ([`Vrp::with_nearest_neighbors`]), or from a
-/// distance matrix given directly ([`Vrp::from_distance_matrix`]). Distances
-/// from coordinates mirror TSPLIB semantics: rounding selects nearest-integer
-/// `EUC_2D` (the CVRPLIB standard, used by [`Vrp::load_file`]) versus plain
-/// Euclidean (the default for programmatically constructed instances).
+/// The distances live in a [`DistanceStore`]. An instance is built from 2D
+/// coordinates, either as the full distance matrix ([`Vrp::new`],
+/// [`Vrp::with_rounding`]) or as the `k` nearest neighbours of every node
+/// with the remaining pairs computed from the coordinates on demand
+/// ([`Vrp::with_nearest_neighbors`]), or from a distance matrix given
+/// directly ([`Vrp::from_distance_matrix`]). Distances from coordinates
+/// mirror TSPLIB semantics: rounding selects nearest-integer `EUC_2D` (the
+/// CVRPLIB standard, used by [`Vrp::load_file`]) versus plain Euclidean (the
+/// default for programmatically constructed instances).
 #[derive(Debug, Clone)]
 pub struct Vrp {
     pub name: String,
@@ -237,6 +183,15 @@ impl Vrp {
         )
     }
 
+    /// The edge-weight type a `rounded` flag stands for.
+    fn edge_weight_type(rounded: bool) -> EdgeWeightType {
+        if rounded {
+            EdgeWeightType::Euc2d
+        } else {
+            EdgeWeightType::Continuous
+        }
+    }
+
     fn build(
         name: String,
         coordinates: Vec<(f64, f64)>,
@@ -245,24 +200,9 @@ impl Vrp {
         num_vehicles: usize,
         rounded: bool,
     ) -> Self {
-        let geometry = Geometry {
-            coordinates,
-            rounded,
-        };
-        let nodes = geometry.coordinates.len();
-        let mut matrix = Vec::with_capacity(nodes * nodes);
-        for a in 0..nodes {
-            for b in 0..nodes {
-                matrix.push(geometry.distance(a, b));
-            }
-        }
         Self::from_store(
             name,
-            nodes,
-            DistanceStore::Full {
-                matrix,
-                geometry: Some(geometry),
-            },
+            DistanceStore::from_coordinates(coordinates, Self::edge_weight_type(rounded)),
             demands,
             capacity,
             num_vehicles,
@@ -288,16 +228,13 @@ impl Vrp {
         rounded: bool,
         k: usize,
     ) -> Self {
-        let geometry = Geometry {
-            coordinates,
-            rounded,
-        };
-        let nodes = geometry.coordinates.len();
-        let rows = geometry.nearest_rows(k.min(nodes.saturating_sub(1)));
         Self::from_store(
             name.into(),
-            nodes,
-            DistanceStore::Nearest { rows, geometry },
+            DistanceStore::nearest_from_coordinates(
+                coordinates,
+                Self::edge_weight_type(rounded),
+                k,
+            ),
             demands,
             capacity,
             num_vehicles,
@@ -320,26 +257,9 @@ impl Vrp {
         capacity: i64,
         num_vehicles: usize,
     ) -> Result<Self, OptError> {
-        let nodes = matrix.len();
-        let mut flat = Vec::with_capacity(nodes * nodes);
-        for (i, row) in matrix.into_iter().enumerate() {
-            if row.len() != nodes {
-                return Err(OptError::InvalidState(format!(
-                    "distance matrix row {} has {} entries, expected {}",
-                    i,
-                    row.len(),
-                    nodes
-                )));
-            }
-            flat.extend(row);
-        }
         Ok(Self::from_store(
             name.into(),
-            nodes,
-            DistanceStore::Full {
-                matrix: flat,
-                geometry: None,
-            },
+            DistanceStore::from_matrix(matrix)?,
             demands,
             capacity,
             num_vehicles,
@@ -348,15 +268,17 @@ impl Vrp {
 
     fn from_store(
         name: String,
-        nodes: usize,
         distances: DistanceStore,
         demands: Vec<i64>,
         capacity: i64,
         num_vehicles: usize,
     ) -> Self {
-        assert!(nodes > 0, "VRP requires at least the depot node");
+        assert!(
+            !distances.is_empty(),
+            "VRP requires at least the depot node"
+        );
         assert_eq!(
-            nodes,
+            distances.len(),
             demands.len(),
             "distances and demands must cover the same nodes"
         );
@@ -391,37 +313,23 @@ impl Vrp {
     /// The node coordinates the instance was built from, index `0` the
     /// depot, `None` for an instance built from a distance matrix.
     pub fn coordinates(&self) -> Option<&[(f64, f64)]> {
-        self.geometry().map(|g| g.coordinates.as_slice())
+        self.distances.coordinates()
     }
 
     /// Whether distances from the coordinates are rounded to the nearest
     /// integer (`EUC_2D`), `None` for an instance built from a distance
     /// matrix.
     pub fn rounded(&self) -> Option<bool> {
-        self.geometry().map(|g| g.rounded)
+        self.distances
+            .edge_weight_type()
+            .map(|ewt| ewt == EdgeWeightType::Euc2d)
     }
 
-    fn geometry(&self) -> Option<&Geometry> {
-        match &self.distances {
-            DistanceStore::Full { geometry, .. } => geometry.as_ref(),
-            DistanceStore::Nearest { geometry, .. } => Some(geometry),
-        }
-    }
-
-    /// Distance between nodes `i` and `j` (either may be the depot, index `0`).
-    ///
-    /// A full matrix answers with one lookup. A nearest-neighbour store scans
-    /// the short list of `i` and falls back to the coordinates for any pair
-    /// outside it, so the value is the same either way.
+    /// Distance between nodes `i` and `j` (either may be the depot, index
+    /// `0`), see [`DistanceStore::distance`].
     #[inline]
     pub fn distance(&self, i: usize, j: usize) -> f64 {
-        match &self.distances {
-            DistanceStore::Full { matrix, .. } => matrix[i * self.num_nodes() + j],
-            DistanceStore::Nearest { rows, geometry } => rows[i]
-                .iter()
-                .find(|(c, _)| *c == j)
-                .map_or_else(|| geometry.distance(i, j), |(_, d)| *d),
-        }
+        self.distances.distance(i, j)
     }
 
     /// Penalty weight applied per unit of capacity overflow.
@@ -899,19 +807,13 @@ mod tests {
         assert_eq!(vrp.distance(0, 1), 1.0);
         let _ = std::fs::remove_file(&path);
     }
-    /// The depot and twenty customers on a lattice, so repeated distances
-    /// exercise the tie breaking of the nearest-neighbour rows.
+    /// The depot and twenty customers on a lattice, so repeated distances are
+    /// in play.
     fn lattice() -> (Vec<(f64, f64)>, Vec<i64>) {
         let coords: Vec<(f64, f64)> = (0..21).map(|i| ((i % 5) as f64, (i / 5) as f64)).collect();
         let mut demands = vec![1; 21];
         demands[0] = 0;
         (coords, demands)
-    }
-
-    #[test]
-    fn from_distance_matrix_rejects_a_ragged_matrix() {
-        let ragged = vec![vec![0.0, 1.0], vec![1.0, 0.0, 2.0]];
-        assert!(Vrp::from_distance_matrix("ragged", ragged, vec![0, 1], 5, 1).is_err());
     }
 
     #[test]
@@ -952,21 +854,6 @@ mod tests {
         let sol = full.new_solution(&mut rng);
         let again = sparse.solution_from_routes(sol.routes.clone());
         assert_eq!(again.objective, sol.objective);
-    }
-
-    #[test]
-    fn nearest_store_clamps_k_to_the_other_nodes() {
-        let vrp = Vrp::with_nearest_neighbors(
-            "tiny",
-            vec![(0.0, 0.0), (1.0, 0.0), (0.0, 2.0)],
-            vec![0, 1, 1],
-            5,
-            1,
-            false,
-            10,
-        );
-        assert_eq!(vrp.distance(1, 2), 5f64.sqrt());
-        assert_eq!(vrp.distance(2, 0), 2.0);
     }
 
     #[test]

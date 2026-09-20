@@ -2,6 +2,7 @@ use rand::seq::SliceRandom;
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
+use crate::common::{DistanceStore, EdgeWeightType};
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
 
@@ -53,131 +54,11 @@ impl ProblemTrait for Tsp {
     }
 }
 
-/// TSPLIB `EDGE_WEIGHT_TYPE` variants supported by [`Tsp`].
-///
-/// Each variant selects the distance formula applied to the coordinates.
-/// `Continuous` is the default for programmatically constructed instances and
-/// preserves the library's historical plain-Euclidean behavior; the remaining
-/// variants match the integer-rounded formulas specified by TSPLIB so objective
-/// values are comparable to published optima.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EdgeWeightType {
-    /// Plain Euclidean distance (no rounding). Default for [`Tsp::new`].
-    Continuous,
-    /// `nint(sqrt(dx^2 + dy^2))`, TSPLIB `EUC_2D`.
-    Euc2d,
-    /// `ceil(sqrt(dx^2 + dy^2))`, TSPLIB `CEIL_2D`.
-    Ceil2d,
-    /// TSPLIB pseudo-Euclidean distance (`ATT`): `r = sqrt((dx^2+dy^2)/10); t = nint(r); d = if t<r {t+1} else {t}`.
-    Att,
-    /// TSPLIB geographical distance (`GEO`). Coordinates are `DDD.MM` → radians;
-    /// great-circle distance with Earth radius 6378.388 km, truncated.
-    Geo,
-}
-
 /// For each city, its nearest other cities in ascending distance, shared by
 /// every heuristic that reads them. See [`Tsp::nearest_neighbors`].
 pub type NeighborLists = Arc<Vec<Vec<usize>>>;
 
-/// The coordinates an instance was built from and the formula that turns a
-/// pair of them into a distance. Only instances built from coordinates have
-/// one, so [`Tsp::from_distance_matrix`] instances have no geometry at all.
-#[derive(Debug, Clone)]
-struct Geometry {
-    coordinates: Vec<(f64, f64)>,
-    edge_weight_type: EdgeWeightType,
-}
-
-/// Converts a `DDD.MM` TSPLIB coordinate to radians (GEO distance helper).
-#[inline]
-fn geo_ddmm_to_rad(xy: f64) -> f64 {
-    let deg = xy.trunc();
-    let min = xy - deg;
-    std::f64::consts::PI * (deg + 5.0 * min / 3.0) / 180.0
-}
-
-impl Geometry {
-    /// Computes the distance formula directly from the coordinates.
-    fn distance(&self, i: usize, j: usize) -> f64 {
-        let (x1, y1) = self.coordinates[i];
-        let (x2, y2) = self.coordinates[j];
-        match self.edge_weight_type {
-            EdgeWeightType::Continuous => {
-                let dx = x1 - x2;
-                let dy = y1 - y2;
-                (dx * dx + dy * dy).sqrt()
-            }
-            EdgeWeightType::Euc2d => {
-                let dx = x1 - x2;
-                let dy = y1 - y2;
-                (dx * dx + dy * dy).sqrt().round()
-            }
-            EdgeWeightType::Ceil2d => {
-                let dx = x1 - x2;
-                let dy = y1 - y2;
-                (dx * dx + dy * dy).sqrt().ceil()
-            }
-            EdgeWeightType::Att => {
-                let dx = x1 - x2;
-                let dy = y1 - y2;
-                let r = ((dx * dx + dy * dy) / 10.0).sqrt();
-                let t = r.round();
-                if t < r { t + 1.0 } else { t }
-            }
-            EdgeWeightType::Geo => {
-                // TSPLIB GEO: column 1 = latitude, column 2 = longitude, encoded DDD.MM.
-                let lat_i = geo_ddmm_to_rad(x1);
-                let long_i = geo_ddmm_to_rad(y1);
-                let lat_j = geo_ddmm_to_rad(x2);
-                let long_j = geo_ddmm_to_rad(y2);
-                const RRR: f64 = 6378.388;
-                let q1 = (long_i - long_j).cos();
-                let q2 = (lat_i - lat_j).cos();
-                let q3 = (lat_i + lat_j).cos();
-                (RRR * (0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3)).acos() + 1.0).trunc()
-            }
-        }
-    }
-
-    /// The `k` nearest other cities of every city with their distances, in
-    /// ascending distance. Ties are broken by city index, since the sort is
-    /// stable over an ascending index scan, which is what keeps a seeded run
-    /// reproducible on instances with repeated distances.
-    fn nearest_rows(&self, k: usize) -> Vec<Vec<(usize, f64)>> {
-        let n = self.coordinates.len();
-        (0..n)
-            .map(|i| {
-                let mut row: Vec<(usize, f64)> = (0..n)
-                    .filter(|&j| j != i)
-                    .map(|j| (j, self.distance(i, j)))
-                    .collect();
-                row.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-                row.truncate(k);
-                row
-            })
-            .collect()
-    }
-}
-
-/// Where an instance keeps its distances.
-#[derive(Debug, Clone)]
-enum DistanceStore {
-    /// The full `n × n` matrix, row-major. The geometry is present only when
-    /// the matrix was built from coordinates.
-    Full {
-        matrix: Vec<f64>,
-        geometry: Option<Geometry>,
-    },
-    /// For each city, its `k` nearest other cities with their distances, in
-    /// ascending distance. Any other pair is computed from the geometry, so
-    /// the geometry is not optional here.
-    Nearest {
-        rows: Vec<Vec<(usize, f64)>>,
-        geometry: Geometry,
-    },
-}
-
-/// TSP problem instance holding a distance store.
+/// TSP problem instance holding a [`DistanceStore`].
 ///
 /// An instance is built from 2D coordinates and a distance formula, either as
 /// the full distance matrix ([`Tsp::new`], [`Tsp::with_edge_weight_type`]) or
@@ -190,7 +71,6 @@ pub struct Tsp {
     /// Instance name (from the TSPLIB `NAME` header, the file stem, or
     /// user-supplied for in-memory instances).
     pub name: String,
-    n: usize,
     distances: DistanceStore,
     /// The nearest-neighbour lists built so far, one entry per `k` asked for.
     /// Kept on the instance rather than on the heuristics that read them, so
@@ -210,7 +90,6 @@ impl Clone for Tsp {
             .clone();
         Self {
             name: self.name.clone(),
-            n: self.n,
             distances: self.distances.clone(),
             neighbor_lists: Mutex::new(lists),
         }
@@ -240,24 +119,9 @@ impl Tsp {
         coordinates: Vec<(f64, f64)>,
         edge_weight_type: EdgeWeightType,
     ) -> Self {
-        let geometry = Geometry {
-            coordinates,
-            edge_weight_type,
-        };
-        let n = geometry.coordinates.len();
-        let mut matrix = Vec::with_capacity(n * n);
-        for a in 0..n {
-            for b in 0..n {
-                matrix.push(geometry.distance(a, b));
-            }
-        }
         Self::from_store(
             name,
-            n,
-            DistanceStore::Full {
-                matrix,
-                geometry: Some(geometry),
-            },
+            DistanceStore::from_coordinates(coordinates, edge_weight_type),
         )
     }
 
@@ -272,13 +136,10 @@ impl Tsp {
         edge_weight_type: EdgeWeightType,
         k: usize,
     ) -> Self {
-        let geometry = Geometry {
-            coordinates,
-            edge_weight_type,
-        };
-        let n = geometry.coordinates.len();
-        let rows = geometry.nearest_rows(k.min(n.saturating_sub(1)));
-        Self::from_store(name, n, DistanceStore::Nearest { rows, geometry })
+        Self::from_store(
+            name,
+            DistanceStore::nearest_from_coordinates(coordinates, edge_weight_type, k),
+        )
     }
 
     /// Creates an instance from a distance matrix given directly, so it has
@@ -287,33 +148,12 @@ impl Tsp {
     /// segment reversal from the four exchanged edges alone. Returns an
     /// error unless the matrix is square.
     pub fn from_distance_matrix(name: String, matrix: Vec<Vec<f64>>) -> Result<Self, OptError> {
-        let n = matrix.len();
-        let mut flat = Vec::with_capacity(n * n);
-        for (i, row) in matrix.into_iter().enumerate() {
-            if row.len() != n {
-                return Err(OptError::InvalidState(format!(
-                    "distance matrix row {} has {} entries, expected {}",
-                    i,
-                    row.len(),
-                    n
-                )));
-            }
-            flat.extend(row);
-        }
-        Ok(Self::from_store(
-            name,
-            n,
-            DistanceStore::Full {
-                matrix: flat,
-                geometry: None,
-            },
-        ))
+        Ok(Self::from_store(name, DistanceStore::from_matrix(matrix)?))
     }
 
-    fn from_store(name: String, n: usize, distances: DistanceStore) -> Self {
+    fn from_store(name: String, distances: DistanceStore) -> Self {
         Self {
             name,
-            n,
             distances,
             neighbor_lists: Mutex::default(),
         }
@@ -427,26 +267,19 @@ impl Tsp {
 
     /// Returns the number of cities.
     pub fn get_n(&self) -> usize {
-        self.n
+        self.distances.len()
     }
 
     /// The coordinates the instance was built from, `None` for an instance
     /// built from a distance matrix.
     pub fn coordinates(&self) -> Option<&[(f64, f64)]> {
-        self.geometry().map(|g| g.coordinates.as_slice())
+        self.distances.coordinates()
     }
 
     /// The distance formula applied to the coordinates, `None` for an
     /// instance built from a distance matrix.
     pub fn edge_weight_type(&self) -> Option<EdgeWeightType> {
-        self.geometry().map(|g| g.edge_weight_type)
-    }
-
-    fn geometry(&self) -> Option<&Geometry> {
-        match &self.distances {
-            DistanceStore::Full { geometry, .. } => geometry.as_ref(),
-            DistanceStore::Nearest { geometry, .. } => Some(geometry),
-        }
+        self.distances.edge_weight_type()
     }
 
     /// Returns the directed edge `(i→j)` at position `k` in the tour.
@@ -455,20 +288,11 @@ impl Tsp {
         (tour[k], tour[(k + 1) % n])
     }
 
-    /// Returns the distance between cities `i` and `j`.
-    ///
-    /// A full matrix answers with one lookup. A nearest-neighbour store scans
-    /// the short list of `i` and falls back to the coordinates for any pair
-    /// outside it, so the value is the same either way.
+    /// Returns the distance between cities `i` and `j`, see
+    /// [`DistanceStore::distance`].
     #[inline]
     pub fn distance(&self, i: usize, j: usize) -> f64 {
-        match &self.distances {
-            DistanceStore::Full { matrix, .. } => matrix[i * self.n + j],
-            DistanceStore::Nearest { rows, geometry } => rows[i]
-                .iter()
-                .find(|(c, _)| *c == j)
-                .map_or_else(|| geometry.distance(i, j), |(_, d)| *d),
-        }
+        self.distances.distance(i, j)
     }
 
     /// For each city, its `k` nearest other cities in ascending distance.
@@ -477,13 +301,8 @@ impl Tsp {
     /// both restrict their moves to. Built the first time a `k` is asked for
     /// and cached on the instance after that, so a heuristic calls this every
     /// iteration and pays a lock and a lookup, never a stale list from an
-    /// instance it ran on earlier. A nearest-neighbour store that already
-    /// holds at least `k` neighbours per city answers from its rows, any
-    /// other case costs O(n² log n) once.
-    ///
-    /// Ties are broken by city index, since the sort is stable over an
-    /// ascending index scan, which is what keeps a seeded run reproducible
-    /// on instances with repeated distances.
+    /// instance it ran on earlier. The lists themselves come from
+    /// [`DistanceStore::nearest_neighbors`], ties by city index.
     pub fn nearest_neighbors(&self, k: usize) -> NeighborLists {
         let mut lists = self
             .neighbor_lists
@@ -492,34 +311,7 @@ impl Tsp {
         if let Some((_, lists)) = lists.iter().find(|(kk, _)| *kk == k) {
             return Arc::clone(lists);
         }
-        let n = self.get_n();
-        let stored = match &self.distances {
-            DistanceStore::Nearest { rows, .. }
-                if rows
-                    .iter()
-                    .all(|row| row.len() >= k.min(n.saturating_sub(1))) =>
-            {
-                Some(rows)
-            }
-            _ => None,
-        };
-        let built: NeighborLists = Arc::new(match stored {
-            Some(rows) => rows
-                .iter()
-                .map(|row| row.iter().take(k).map(|(j, _)| *j).collect())
-                .collect(),
-            None => (0..n)
-                .map(|i| {
-                    let mut nbrs: Vec<(f64, usize)> = (0..n)
-                        .filter(|&j| j != i)
-                        .map(|j| (self.distance(i, j), j))
-                        .collect();
-                    nbrs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-                    nbrs.truncate(k);
-                    nbrs.into_iter().map(|(_, j)| j).collect()
-                })
-                .collect(),
-        });
+        let built: NeighborLists = Arc::new(self.distances.nearest_neighbors(k));
         lists.push((k, Arc::clone(&built)));
         built
     }
@@ -758,37 +550,6 @@ EOF
     }
 
     #[test]
-    fn test_distance_att_formula() {
-        // ATT formula: r = sqrt((dx^2 + dy^2) / 10); t = nint(r); d = if t<r {t+1} else {t}
-        let tsp = Tsp::with_edge_weight_type(
-            "att".into(),
-            vec![(0.0, 0.0), (10.0, 0.0)],
-            EdgeWeightType::Att,
-        );
-        // r = sqrt(100 / 10) = sqrt(10) ≈ 3.162; t = 3; 3 < 3.162 → d = 4
-        assert_eq!(tsp.distance(0, 1), 4.0);
-    }
-
-    #[test]
-    fn test_distance_geo_formula() {
-        // Two cities at (0.0, 0.0) and (0.0, 0.0) → identical location → distance ≈ 1 (acos(1)=0, +1 truncated).
-        let tsp = Tsp::with_edge_weight_type(
-            "geo".into(),
-            vec![(0.0, 0.0), (0.0, 0.0)],
-            EdgeWeightType::Geo,
-        );
-        assert_eq!(tsp.distance(0, 1), 1.0);
-
-        // Sanity: positive coordinates give a positive geodesic distance.
-        let tsp2 = Tsp::with_edge_weight_type(
-            "geo2".into(),
-            vec![(0.0, 0.0), (10.0, 10.0)],
-            EdgeWeightType::Geo,
-        );
-        assert!(tsp2.distance(0, 1) > 1.0);
-    }
-
-    #[test]
     fn test_load_file_missing_dimension() {
         let contents = "\
 NAME: nodim
@@ -824,16 +585,9 @@ EOF
         assert!((tsp.distance(0, 1) - 5.0).abs() < 1e-9);
         let _ = std::fs::remove_file(&path);
     }
-    /// Twenty cities on a lattice, so repeated distances exercise the tie
-    /// breaking of every nearest-neighbour path.
+    /// Twenty cities on a lattice, so repeated distances are in play.
     fn lattice() -> Vec<(f64, f64)> {
         (0..20).map(|i| ((i % 5) as f64, (i / 5) as f64)).collect()
-    }
-
-    #[test]
-    fn from_distance_matrix_rejects_a_ragged_matrix() {
-        let ragged = vec![vec![0.0, 1.0], vec![1.0, 0.0, 2.0]];
-        assert!(Tsp::from_distance_matrix("ragged".into(), ragged).is_err());
     }
 
     #[test]
@@ -881,35 +635,6 @@ EOF
             sparse.calculate_tour_length(&tour).unwrap(),
             full.calculate_tour_length(&tour).unwrap()
         );
-    }
-
-    #[test]
-    fn nearest_store_lists_match_the_full_matrix_below_and_above_its_k() {
-        let full = Tsp::new("full".into(), lattice());
-        let sparse =
-            Tsp::with_nearest_neighbors("sparse".into(), lattice(), EdgeWeightType::Continuous, 4);
-        for k in [1, 3, 4, 5, 19, 30] {
-            assert_eq!(
-                *sparse.nearest_neighbors(k),
-                *full.nearest_neighbors(k),
-                "k = {k}"
-            );
-        }
-    }
-
-    #[test]
-    fn nearest_store_clamps_k_to_the_other_cities() {
-        let tsp = Tsp::with_nearest_neighbors(
-            "tiny".into(),
-            vec![(0.0, 0.0), (1.0, 0.0), (0.0, 2.0)],
-            EdgeWeightType::Continuous,
-            10,
-        );
-        assert_eq!(
-            *tsp.nearest_neighbors(10),
-            vec![vec![1, 2], vec![0, 2], vec![0, 1]]
-        );
-        assert_eq!(tsp.distance(1, 2), 5f64.sqrt());
     }
 
     #[test]
