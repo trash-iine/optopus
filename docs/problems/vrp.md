@@ -108,6 +108,14 @@ separating this operator from the recombination step of
 with a capacity penalty it retunes as the search runs (and follows it with a
 granular local descent).
 
+## Ruin and recreate
+
+`Vrp` implements `Ruinable` with customers as the elements and vehicles as the
+containers, capacity being the resource they compete for, so
+[AdaptiveLargeNeighborhoodSearch](../heuristics/alns.md) runs on it.
+`alns_for_vrp` pairs the search with `AnchoredRouteDescent`, the granular
+route descent run around the customers a ruin just re-inserted.
+
 ## File format (CVRPLIB)
 
 ```text

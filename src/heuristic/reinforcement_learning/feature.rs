@@ -13,6 +13,8 @@ pub const STATE_FEATURES: usize = 6;
 /// modulate the policy's move preferences (e.g. "prefer worsening moves
 /// when stagnating").
 pub const NUM_FEATURES: usize = MOVE_FEATURES * (1 + STATE_FEATURES);
+/// The floor a normalizing denominator is held above, so a zero range does
+/// not divide to infinity and a tiny one does not swamp every other term.
 pub(crate) const EPSILON: f64 = 1e-10;
 
 /// Per-step context computed once from the full neighborhood, reused for every move's features.

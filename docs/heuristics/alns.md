@@ -7,10 +7,11 @@ it, choosing the operator pair by a roulette wheel whose weights track recent
 performance.
 
 Runs on any problem implementing [`Ruinable`](../traits.md) whose solution
-implements [`Evaluate`](../traits.md), which is [CVRP](../problems/vrp.md) so
-far. `Ruinable` describes the shape a problem needs, elements assigned to
-containers that compete for a finite resource, and names the family of problems
-that already has it.
+implements [`Evaluate`](../traits.md), which is [CVRP](../problems/vrp.md) and
+[TSP](../problems/tsp.md). `Ruinable` describes the shape a problem needs,
+elements assigned to containers that compete for a finite resource, and names
+the family of problems that already has it. A tour is the single-container
+case, and what that costs is explained under [Operators](#operators).
 
 ## Example
 
@@ -55,9 +56,23 @@ let mut alns = AdaptiveLargeNeighborhoodSearch::<Vrp>::new(
 ```
 
 Reach for it to chain the [builders](#constructor), as the last line does, or
-to hand VRP a [`LocalRepair`](../traits.md) of your own. It is also the only
-form another problem has, supplying its own repair or leaving
+to hand VRP a [`LocalRepair`](../traits.md) of your own. A problem without a
+wiring function uses this form too, supplying its own repair or leaving
 `with_local_repair` off for plain ruin-and-recreate.
+
+On TSP the wiring is `alns_for_tsp`, which pairs the search with
+`AnchoredTourDescent`, an Or-opt and 2-opt descent anchored at the
+re-inserted cities:
+
+```rust
+use optopus::prelude::*;
+
+let tsp = TspWithCoordinates::load_file("data/instances/tsp/berlin52.tsp")?;
+let mut state = SearchState::new(&tsp);
+
+alns_for_tsp(StopCondition::iterations(10_000), 0.15, 0.9995).run(&mut state)?;
+println!("tour length = {}", state.best_solution.objective);
+```
 
 ## Algorithm sketch
 
@@ -65,12 +80,13 @@ Each `run_once` produces one candidate:
 
 1. Select operators, one destroy and one repair operator, by roulette wheel
    over the adaptive weights.
-2. Destroy, remove `removal_fraction · n` customers from the incumbent.
+2. Destroy, remove `removal_fraction · n` elements from the incumbent.
 3. Repair, re-insert all of them.
-4. Descend, run the shared granular descent over the recreated routes,
-   anchored at the re-inserted customers (see below).
-5. Accept, simulated-annealing criterion on the penalty-augmented
-   objective. The temperature is initialized so that a solution 5% worse is
+4. Descend, run the problem's `LocalRepair` over the recreated solution,
+   anchored at the re-inserted elements (see below).
+5. Accept, simulated-annealing criterion on the problem's `partial_energy`,
+   the objective with CVRP's capacity penalty folded in. The temperature is
+   initialized so that a solution 5% worse is
    accepted with probability ≈ 0.5, then cooled by `cooling_rate` each
    iteration.
 6. Score, reward the operator pair: `4` for a new global best, `2` for
@@ -86,20 +102,29 @@ than through `state.apply`.
 
 | Destroy | Removes |
 |---|---|
-| Random | `k` customers drawn uniformly. |
-| Worst | the `k` customers with the largest removal gain, those whose detour costs the most. |
-| Shaw | the `k` customers most related to a random seed customer, relatedness being `distance(seed, c) + \|demand(seed) − demand(c)\|`. |
+| Random | `k` elements drawn uniformly. |
+| Worst | the `k` elements with the largest removal gain, those whose detour costs the most. |
+| Shaw | the `k` elements most related to a random seed element. |
 
 | Repair | Inserts |
 |---|---|
-| Greedy | each removed customer at its cheapest insertion point, cheapest customer first. |
-| Regret-2 | the customer with the largest regret first, the gap between its cheapest insertion and its cheapest insertion into a different route. |
+| Greedy | each removed element at its cheapest placement, in random order. |
+| Regret-2 | the element with the largest regret first, the gap between its cheapest placement and its cheapest placement in a different container. |
 
-Regret is measured across routes, not across positions. The second-cheapest
-slot is almost always the one next door in the same route, a gap of nearly
-zero for every customer, which would make regret-2 indistinguishable from
-greedy. Insertion costs are augmented with the capacity penalty, so an insertion
-is always available even when every route is full.
+Regret is measured across containers, not across positions. The
+second-cheapest slot is almost always the one next door in the same container,
+a gap of nearly zero for every element, which would make regret-2
+indistinguishable from greedy.
+
+What each problem reads into that:
+
+| | CVRP | TSP |
+|---|---|---|
+| Element, container | customer, vehicle | city, the tour |
+| Relatedness | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` |
+| Insertion cost | detour plus the capacity penalty, so a placement is always available even when every route is full | detour |
+| Regret-2 | across routes | undefined with one container, so it inserts the pool in a fixed order that ranks nothing, and the destroys and greedy carry the search |
+| `LocalRepair` | `AnchoredRouteDescent`, the granular route descent | `AnchoredTourDescent`, Or-opt and 2-opt over the nearest neighbours |
 
 ## Constructor
 
@@ -118,7 +143,7 @@ arguments.
 
 | Builder | Sets | Default |
 |---|---|---|
-| `with_local_repair(Box<dyn LocalRepair<P>>)` | the anchored post-repair local search | none, and set by `alns_for_vrp` |
+| `with_local_repair(Box<dyn LocalRepair<P>>)` | the anchored post-repair local search | none, and set by `alns_for_vrp` and `alns_for_tsp` |
 | `with_scoring(best, better, accept)` | the rewards an operator pair earns | `4.0 / 2.0 / 1.0` |
 | `with_adaptation(segment_len, reaction)` | iterations per scoring segment, and how much of its average blends into the weights | `100` / `0.1` |
 | `with_max_removal(n)` | ceiling on the per-iteration removal count | `50` |
@@ -127,8 +152,8 @@ Only the ratios between the three rewards matter, since the weights are a
 convex blend of segment averages.
 
 `clear()` resets the operator weights and the temperature but keeps what the
-builders set. A `LocalRepair`'s own instance-derived caches, such as VRP's
-candidate lists, are its own to keep or drop.
+builders set. A `LocalRepair`'s own instance-derived caches, the candidate
+lists both descents hold, are its own to keep or drop.
 
 ## Benchmark config
 

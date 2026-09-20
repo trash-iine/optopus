@@ -61,6 +61,15 @@ which is `Σ d(π(k), π(k+1))`.
 - `TspOrderCrossover`, Order Crossover (OX): copy a contiguous segment from
   one parent, fill remaining positions in order from the other parent.
 
+## Ruin and recreate
+
+`TspWithCoordinates` implements `Ruinable` with cities as the elements and the
+tour as the one container, so
+[AdaptiveLargeNeighborhoodSearch](../heuristics/alns.md) runs on it.
+`alns_for_tsp` pairs the search with `AnchoredTourDescent`, an Or-opt and
+2-opt descent over the cities a ruin just re-inserted and their nearest
+neighbours.
+
 ## Edge-weight types
 
 `EdgeWeightType` selects the distance formula:

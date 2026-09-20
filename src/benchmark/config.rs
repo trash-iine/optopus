@@ -196,9 +196,9 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
-    /// Adaptive Large Neighborhood Search (VRP only).
+    /// Adaptive Large Neighborhood Search (VRP and TSP).
     AdaptiveLargeNeighborhoodSearch {
-        /// Fraction of customers ruined each iteration. Default: 0.15.
+        /// Fraction of elements ruined each iteration. Default: 0.15.
         #[serde(skip_serializing_if = "Option::is_none")]
         removal_fraction: Option<f64>,
         /// Geometric cooling factor applied per iteration. Default: 0.9995.

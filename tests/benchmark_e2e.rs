@@ -418,19 +418,81 @@ max_iteration = 200
         instance.display()
     );
 
-    let first = run_benchmark(&config_toml);
-    let second = run_benchmark(&config_toml);
+    let first = assert_reruns_are_bit_identical(&config_toml);
     let _ = std::fs::remove_file(&instance);
+    for run in &first.results[0].runs {
+        // The encoding is `0, route…, 0, route…`: every customer exactly once.
+        let mut customers: Vec<usize> = run.solution.iter().copied().filter(|&c| c != 0).collect();
+        customers.sort_unstable();
+        assert_eq!(customers, (1..=8).collect::<Vec<_>>());
+    }
+}
 
+/// Runs `config_toml` twice and asserts the per-run results are bit-identical,
+/// then hands back the first report for any further check.
+fn assert_reruns_are_bit_identical(config_toml: &str) -> BenchmarkReport {
+    let first = run_benchmark(config_toml);
+    let second = run_benchmark(config_toml);
     for (a, b) in first.results[0].runs.iter().zip(&second.results[0].runs) {
         assert_eq!(a.status, "success");
         assert_eq!(a.best_objective, b.best_objective, "objective diverged");
         assert_eq!(a.best_iteration, b.best_iteration, "iteration diverged");
         assert_eq!(a.solution, b.solution, "run {} diverged", a.run_index);
-        // The encoding is `0, route…, 0, route…`: every customer exactly once.
-        let mut customers: Vec<usize> = a.solution.iter().copied().filter(|&c| c != 0).collect();
-        customers.sort_unstable();
-        assert_eq!(customers, (1..=8).collect::<Vec<_>>());
+    }
+    first
+}
+
+/// Writes a 24-city TSPLIB instance, two rings of twelve.
+fn write_temp_tsp(tag: &str) -> std::path::PathBuf {
+    let mut body = String::from(
+        "NAME : e2e\nTYPE : TSP\nDIMENSION : 24\nEDGE_WEIGHT_TYPE : EUC_2D\n\
+         NODE_COORD_SECTION\n",
+    );
+    for i in 0..24 {
+        let theta = 2.0 * std::f64::consts::PI * (i % 12) as f64 / 12.0;
+        let radius = if i < 12 { 10.0 } else { 25.0 };
+        body.push_str(&format!(
+            "{} {} {}\n",
+            i + 1,
+            (radius * theta.cos()).round() as i64,
+            (radius * theta.sin()).round() as i64
+        ));
+    }
+    body.push_str("EOF\n");
+    write_temp_file(tag, &body)
+}
+
+/// Ruin-and-recreate is registered for TSP through `alns_for_tsp`, so the
+/// benchmark has to build it from a config and replay it bit for bit under a
+/// seed, the anchored descent's shuffles included.
+#[test]
+fn alns_on_tsp_is_bit_identical_across_reruns_with_seed() {
+    let instance = write_temp_tsp("alns_tsp");
+    let config_toml = format!(
+        r#"
+num_runs = 2
+seed = 4242
+
+[[instances]]
+path = "{}"
+problem = "Tsp"
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#,
+        instance.display()
+    );
+    let first = assert_reruns_are_bit_identical(&config_toml);
+    let _ = std::fs::remove_file(&instance);
+    assert_eq!(first.results[0].runs.len(), 2);
+    for run in &first.results[0].runs {
+        // The reported tour visits every city exactly once.
+        let mut cities = run.solution.clone();
+        cities.sort_unstable();
+        assert_eq!(cities, (0..24).collect::<Vec<_>>());
     }
 }
 

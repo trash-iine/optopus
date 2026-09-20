@@ -6,9 +6,10 @@
 //! no improving move exists for any starting city (local optimum) or
 //! when the stop condition is met.
 
-use super::super::{Heuristic, StopCondition};
+use crate::common::MIN_IMPROVEMENT;
 use crate::error::OptError;
-use crate::problem::tsp_2d::{TspSolution, TspWithCoordinates};
+use crate::heuristic::{Heuristic, StopCondition};
+use crate::problem::tsp_2d::{NeighborLists, TspSolution, TspWithCoordinates};
 use crate::search_state::SearchState;
 
 /// Describes an improving LK move: which tour edges to remove and which to add.
@@ -105,7 +106,8 @@ pub struct LinKernighanHelsgaun {
     stop_condition: StopCondition,
     num_neighbors: usize,
     max_depth: usize,
-    candidates: Vec<Vec<usize>>,
+    /// The instance's candidate lists, re-read from it every `run_once`.
+    candidates: NeighborLists,
     position: Vec<usize>,
     scratch: LkScratch,
     no_improvement: bool,
@@ -117,29 +119,18 @@ impl LinKernighanHelsgaun {
             stop_condition,
             num_neighbors,
             max_depth,
-            candidates: Vec::new(),
+            candidates: NeighborLists::default(),
             position: Vec::new(),
             scratch: LkScratch::default(),
             no_improvement: false,
         }
     }
 
+    /// Reads the instance's candidate lists. They are cached on the
+    /// instance, so this is a lock and a lookup per iteration, and a search
+    /// reused on another instance never carries the old one's lists.
     fn ensure_candidates(&mut self, prob: &TspWithCoordinates) {
-        if !self.candidates.is_empty() {
-            return;
-        }
-        let n = prob.get_n();
-        self.candidates = (0..n)
-            .map(|i| {
-                let mut nbrs: Vec<(f64, usize)> = (0..n)
-                    .filter(|&j| j != i)
-                    .map(|j| (prob.distance(i, j), j))
-                    .collect();
-                nbrs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-                nbrs.truncate(self.num_neighbors);
-                nbrs.into_iter().map(|(_, j)| j).collect()
-            })
-            .collect();
+        self.candidates = prob.nearest_neighbors(self.num_neighbors);
     }
 
     fn build_position(&mut self, tour: &[usize]) {
@@ -206,7 +197,7 @@ impl LinKernighanHelsgaun {
                     // -- closure test (depth 1 = 2-opt) --
                     let d_close = prob.distance(t4, t1);
                     let g_close = g1 + d_x2 - d_close;
-                    if g_close > 1e-10 {
+                    if g_close > MIN_IMPROVEMENT {
                         scratch.broken.clear();
                         scratch.broken.extend([(t1, t2), (t3, t4)]);
                         scratch.added.clear();
@@ -305,7 +296,7 @@ impl LinKernighanHelsgaun {
                 // -- closure test --
                 let d_close = prob.distance(t_break, t1);
                 let g_close = g_partial + d_x - d_close;
-                if g_close > 1e-10 {
+                if g_close > MIN_IMPROVEMENT {
                     scratch.broken.push((t_next, t_break));
                     scratch.added.push((t_last, t_next));
                     scratch.added.push((t_break, t1));
@@ -604,6 +595,26 @@ mod tests {
     ) -> crate::problem::tsp_2d::TspSolution {
         let objective = prob.calculate_tour_length(&tour).unwrap();
         crate::problem::tsp_2d::TspSolution { tour, objective }
+    }
+
+    /// The candidate lists live on the instance, so one search object run
+    /// on a second instance of another size reads that instance's lists
+    /// rather than indexing the first one's.
+    #[test]
+    fn one_search_serves_instances_of_different_sizes() {
+        let mut lkh = LinKernighanHelsgaun::new(StopCondition::iterations(50), 3, 5);
+        for n in [6usize, 12, 5] {
+            let coords = (0..n)
+                .map(|i| {
+                    let theta = std::f64::consts::TAU * i as f64 / n as f64;
+                    (theta.cos(), theta.sin())
+                })
+                .collect();
+            let tsp = TspWithCoordinates::new(format!("ring{n}"), coords);
+            let mut state = SearchState::new_with_seed(&tsp, 3);
+            lkh.run(&mut state).unwrap();
+            assert!(tsp.calculate_tour_length(&state.best_solution.tour).is_ok());
+        }
     }
 
     #[test]

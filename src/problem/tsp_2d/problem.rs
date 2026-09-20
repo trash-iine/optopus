@@ -1,6 +1,6 @@
 use rand::seq::SliceRandom;
 use std::collections::HashSet;
-use std::sync::OnceLock;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
@@ -76,13 +76,18 @@ pub enum EdgeWeightType {
     Geo,
 }
 
+/// For each city, its nearest other cities in ascending distance, shared by
+/// every heuristic that reads them. See
+/// [`TspWithCoordinates::nearest_neighbors`].
+pub type NeighborLists = Arc<Vec<Vec<usize>>>;
+
 /// TSP problem instance storing city coordinates.
 ///
 /// Distances are computed via the formula selected by `edge_weight_type`.
 /// For instances with at most `DIST_MATRIX_MAX_N` cities, the full distance
 /// matrix is built lazily on first use, turning every subsequent
 /// [`TspWithCoordinates::distance`] call into an O(1) lookup.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TspWithCoordinates {
     /// Instance name (from the TSPLIB `NAME` header, the file stem, or
     /// user-supplied for in-memory instances).
@@ -96,6 +101,25 @@ pub struct TspWithCoordinates {
     /// Lazily built `n × n` distance matrix (row-major). Only populated when
     /// `n <= DIST_MATRIX_MAX_N`; reset by [`TspWithCoordinates::add_city`].
     dist_matrix: OnceLock<Vec<f64>>,
+    /// The nearest-neighbour lists built so far, one entry per `k` asked for.
+    /// Kept on the instance rather than on the heuristics that read them, so
+    /// a heuristic reused across instances can never hold another instance's
+    /// lists. Reset by [`TspWithCoordinates::add_city`].
+    neighbor_lists: Mutex<Vec<(usize, NeighborLists)>>,
+}
+
+/// A clone starts with empty caches. Sharing them would let `add_city` on one
+/// copy leave the other reading lists for coordinates it no longer has.
+impl Clone for TspWithCoordinates {
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            coordinates: self.coordinates.clone(),
+            edge_weight_type: self.edge_weight_type,
+            dist_matrix: OnceLock::new(),
+            neighbor_lists: Mutex::default(),
+        }
+    }
 }
 
 /// Maximum number of cities for which the full distance matrix is precomputed
@@ -119,6 +143,7 @@ impl TspWithCoordinates {
             coordinates,
             edge_weight_type: EdgeWeightType::Continuous,
             dist_matrix: OnceLock::new(),
+            neighbor_lists: Mutex::default(),
         }
     }
 
@@ -133,6 +158,7 @@ impl TspWithCoordinates {
             coordinates,
             edge_weight_type,
             dist_matrix: OnceLock::new(),
+            neighbor_lists: Mutex::default(),
         }
     }
 
@@ -311,11 +337,49 @@ impl TspWithCoordinates {
         }
     }
 
+    /// For each city, its `k` nearest other cities in ascending distance.
+    ///
+    /// The candidate lists that Lin-Kernighan and the anchored tour descent
+    /// both restrict their moves to. Built in O(n² log n) from the instance
+    /// alone the first time a `k` is asked for and cached on the instance
+    /// after that, so a heuristic calls this every iteration and pays a lock
+    /// and a lookup, never a stale list from an instance it ran on earlier.
+    ///
+    /// Ties are broken by city index, since the sort is stable over an
+    /// ascending index scan, which is what keeps a seeded run reproducible
+    /// on instances with repeated distances.
+    pub fn nearest_neighbors(&self, k: usize) -> NeighborLists {
+        let mut lists = self
+            .neighbor_lists
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        if let Some((_, lists)) = lists.iter().find(|(kk, _)| *kk == k) {
+            return Arc::clone(lists);
+        }
+        let n = self.get_n();
+        let built: NeighborLists = Arc::new(
+            (0..n)
+                .map(|i| {
+                    let mut nbrs: Vec<(f64, usize)> = (0..n)
+                        .filter(|&j| j != i)
+                        .map(|j| (self.distance(i, j), j))
+                        .collect();
+                    nbrs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                    nbrs.truncate(k);
+                    nbrs.into_iter().map(|(_, j)| j).collect()
+                })
+                .collect(),
+        );
+        lists.push((k, Arc::clone(&built)));
+        built
+    }
+
     /// Adds a new city with the given coordinates to the TSP instance.
     pub fn add_city(&mut self, xy: (f64, f64)) {
         self.coordinates.push(xy);
-        // The cached distance matrix (if any) is stale now.
+        // Both caches are stale now.
         self.dist_matrix = OnceLock::new();
+        self.neighbor_lists = Mutex::default();
     }
 
     /// Returns the 2-opt gain for removing edges `a→b` and `c→d` and adding `a→c` and `b→d`

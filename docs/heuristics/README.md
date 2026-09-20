@@ -46,7 +46,7 @@ they need is stated on the problem rather than on one move type.
 |---|---|---|---|
 | [PopulationAnnealing](population_annealing.md) | `PopulationAnnealing` | `Evaluate` on the solution and on the move | Replica population cooled by β, resampled per step, then swept by Metropolis. Any problem. |
 | [BreakoutLocalSearch](breakout_local_search.md) | `BreakoutLocalSearch` | none beyond `ProblemTrait`; the schedule may ask for more | Greedy descent + adaptive perturbation over a bank of heuristics. Registered for MaxCut. |
-| [AdaptiveLargeNeighborhoodSearch](alns.md) | `AdaptiveLargeNeighborhoodSearch` | `Ruinable`, `Evaluate` on the solution | Ruin-and-recreate with adaptive operator weights and SA acceptance, plus an optional anchored `LocalRepair`. CVRP so far. |
+| [AdaptiveLargeNeighborhoodSearch](alns.md) | `AdaptiveLargeNeighborhoodSearch` | `Ruinable`, `Evaluate` on the solution | Ruin-and-recreate with adaptive operator weights and SA acceptance, plus an optional anchored `LocalRepair`. Registered for CVRP and TSP. |
 
 ## Problem-specific
 

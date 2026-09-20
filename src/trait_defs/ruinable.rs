@@ -20,10 +20,18 @@ use super::{Evaluate, ProblemTrait};
 /// (containers are vehicles, the resource is capacity), bin packing (bins), the
 /// generalized assignment problem (agents), multiple knapsack, capacitated
 /// facility location, parallel machine scheduling, graph colouring (colour
-/// classes). What does not fit is a problem with one container, such as a
-/// single TSP tour, or with two fixed values per element, such as a binary
-/// problem where `regret = |cost(true) − cost(false)| = |gain|` carries nothing
-/// greedy did not already have.
+/// classes).
+///
+/// A problem with one container still fits the destroy side and greedy
+/// insertion, and [`TspWithCoordinates`](crate::problem::TspWithCoordinates)
+/// implements the trait that way, the tour being its only container. What it
+/// gives up is regret. With no second container the second-best placement is
+/// undefined, so every regret is infinite and regret-2 inserts the pool in
+/// a fixed order that ranks nothing, and the search leans on the three
+/// destroy operators, greedy insertion and its [`LocalRepair`]. What does not fit at all is a problem with two fixed
+/// values per element, such as a binary problem where
+/// `regret = |cost(true) − cost(false)| = |gain|` carries nothing greedy did
+/// not already have.
 ///
 /// # Containers may come and go
 ///
@@ -120,8 +128,8 @@ pub trait Ruinable: ProblemTrait {
     /// How many distinct positions `bucket` offers.
     ///
     /// `1` when the container is a set rather than a sequence (a bin, an agent,
-    /// a colour class), and `len + 1` when the order inside it matters (a
-    /// route).
+    /// a colour class), `len + 1` when the order inside it matters (a
+    /// route), and `len` when the sequence is cyclic (a tour).
     fn num_places(&self, partial: &Self::Partial, bucket: usize) -> usize;
 
     /// The cost of placing `element` at `(bucket, place)`.

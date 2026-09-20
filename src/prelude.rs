@@ -23,7 +23,8 @@ pub use crate::heuristic::{
     LocalSearch, MaxCutPerturbation, ParentSelection, PerturbationSchedule, RandomWalk,
     ReinforcementLearningSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing,
     StopCondition, SubProblemBasedCrossover, TabuSearch, VariableNeighborhoodSearch, WalkSatForSat,
-    alns_for_vrp, bls_for_max_cut, boltzmann_accept, max_cut_descent, max_cut_perturbation,
+    alns_for_tsp, alns_for_vrp, bls_for_max_cut, boltzmann_accept, max_cut_descent,
+    max_cut_perturbation,
 };
 
 // Traits
