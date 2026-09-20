@@ -2,7 +2,7 @@
 
 use super::problem::{GraphColoring, GraphColoringSolution};
 use crate::{
-    common::TabuMemory,
+    common::{TabuMemory, permutation::random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -214,27 +214,24 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringSwapNeighbor {
             .improves_over(src.evaluate(), other.evaluate())
     }
 
-    /// Expected O(1): rejection-samples a pair of differently colored
-    /// vertices, giving up after a bounded number of draws so a solution
-    /// colored all one color, where the neighborhood is empty, returns
-    /// `None` instead of looping.
+    /// Rejection-samples a pair of differently colored vertices, which is
+    /// uniform over the neighborhood. The expected number of draws is
+    /// `1 / P(two random vertices differ)`, O(n) in the worst case of one
+    /// vertex off-color, and the loop cannot spin on an empty neighborhood
+    /// because a solution using one color is caught first.
     fn random_neighbor(
         prob: &GraphColoring,
         sol: &GraphColoringSolution,
         rng: &mut SmallRng,
     ) -> Option<Self> {
-        let n = prob.graph.len();
-        if n < 2 {
+        if sol.colors_used < 2 {
             return None;
         }
-        for _ in 0..16 {
-            let a = rng.random_range(0..n);
-            let b = rng.random_range(0..n);
-            if a != b && sol.colors[a] != sol.colors[b] {
-                let (i, j) = (a.max(b), a.min(b));
-                return Some(Self::new(prob, sol, i, j));
+        loop {
+            let (a, b) = random_distinct_pair(prob.graph.len(), rng)?;
+            if sol.colors[a] != sol.colors[b] {
+                return Some(Self::new(prob, sol, a, b));
             }
         }
-        None
     }
 }

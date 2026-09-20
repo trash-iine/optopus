@@ -22,8 +22,6 @@ pub struct GraphColoring {
     pub graph: Graph,
     /// Palette size (number of available colors).
     pub k: usize,
-    /// Penalty applied to each conflicting edge (`n + 1`).
-    pub penalty_weight: i64,
 }
 
 /// A solution for the Graph Coloring problem.
@@ -33,9 +31,9 @@ pub struct GraphColoringSolution {
     pub colors: Vec<usize>,
     /// Flat `n * k` matrix: `gamma[v * k + c]` = number of neighbors of `v`
     /// currently colored `c` (the TabuCol Γ matrix; drives O(1) gain deltas).
-    pub(crate) gamma: Vec<u32>,
+    gamma: Vec<u32>,
     /// `class_size[c]` = number of vertices currently colored `c`.
-    pub(crate) class_size: Vec<usize>,
+    class_size: Vec<usize>,
     /// Number of non-empty color classes.
     pub colors_used: usize,
     /// Number of edges whose endpoints share a color.
@@ -54,36 +52,24 @@ impl Evaluate for GraphColoringSolution {
 /// Hamming distance over the color assignments.
 impl Distance for GraphColoringSolution {
     fn distance(&self, other: &Self) -> usize {
-        self.colors
-            .iter()
-            .zip(&other.colors)
-            .filter(|(a, b)| a != b)
-            .count()
+        crate::common::hamming_distance(&self.colors, &other.colors)
     }
 }
 
 impl GraphColoring {
     /// Creates a [`GraphColoring`] from a [`Graph`], deriving the palette size
-    /// as `max_degree + 1` (minimum 1).
+    /// as `max_degree + 1`.
     pub fn new(graph: Graph) -> Self {
         let max_degree = (0..graph.len()).map(|v| graph.degree(v)).max().unwrap_or(0);
-        let k = (max_degree + 1).max(1);
-        Self::with_palette(graph, k)
-    }
-
-    /// Creates a [`GraphColoring`] with an explicit palette size `k`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `k == 0`.
-    pub fn with_palette(graph: Graph, k: usize) -> Self {
-        assert!(k >= 1, "palette size k must be >= 1");
-        let penalty_weight = graph.len() as i64 + 1;
         Self {
             graph,
-            k,
-            penalty_weight,
+            k: max_degree + 1,
         }
+    }
+
+    /// Returns the penalty weight applied to each conflicting edge (`graph.len() + 1`).
+    pub fn penalty_weight(&self) -> i64 {
+        self.graph.len() as i64 + 1
     }
 
     /// Loads a [`GraphColoring`] instance from a file in the `N M / i j w`
@@ -112,7 +98,7 @@ impl GraphColoring {
             gamma[i * k + colors[j]] += 1;
             gamma[j * k + colors[i]] += 1;
         }
-        let objective = colors_used as i64 + self.penalty_weight * conflicts as i64;
+        let objective = colors_used as i64 + self.penalty_weight() * conflicts as i64;
         GraphColoringSolution {
             colors,
             gamma,
@@ -156,7 +142,7 @@ impl GraphColoring {
         sol.class_size[new_color] += 1;
 
         sol.colors[v] = new_color;
-        sol.objective = sol.colors_used as i64 + self.penalty_weight * sol.conflicts as i64;
+        sol.objective = sol.colors_used as i64 + self.penalty_weight() * sol.conflicts as i64;
     }
 
     /// O(1) change in `objective` if vertex `v` is recolored to `new_color`.
@@ -169,14 +155,10 @@ impl GraphColoring {
         let cur = sol.colors[v];
         let k = self.k;
         let d_conflicts = sol.gamma[v * k + new_color] as i64 - sol.gamma[v * k + cur] as i64;
-        let mut d_colors: i64 = 0;
-        if sol.class_size[cur] == 1 {
-            d_colors -= 1; // `cur` becomes empty
-        }
-        if sol.class_size[new_color] == 0 {
-            d_colors += 1; // `new_color` becomes non-empty
-        }
-        d_colors + self.penalty_weight * d_conflicts
+        // `new_color` becomes non-empty, `cur` becomes empty.
+        let d_colors =
+            i64::from(sol.class_size[new_color] == 0) - i64::from(sol.class_size[cur] == 1);
+        d_colors + self.penalty_weight() * d_conflicts
     }
 
     /// O(1) change in `objective` if the colors of `i` and `j` are exchanged.
@@ -188,13 +170,12 @@ impl GraphColoring {
         let ci = sol.colors[i];
         let cj = sol.colors[j];
         // If `i` and `j` are adjacent, each `gamma` row counts the other vertex,
-        // producing two phantom conflicts (they move simultaneously), so
-        // subtract 2.
-        let adjacent = if self.graph.has_edge(i, j) { 1i64 } else { 0 };
+        // producing two phantom conflicts (they move simultaneously).
+        let edge_correction = if self.graph.has_edge(i, j) { 2 } else { 0 };
         let d_conflicts = (sol.gamma[i * k + cj] as i64 - sol.gamma[i * k + ci] as i64)
             + (sol.gamma[j * k + ci] as i64 - sol.gamma[j * k + cj] as i64)
-            - 2 * adjacent;
-        self.penalty_weight * d_conflicts
+            - edge_correction;
+        self.penalty_weight() * d_conflicts
     }
 }
 
@@ -223,12 +204,8 @@ mod tests {
         GraphColoring::new(g)
     }
 
-    fn recompute(prob: &GraphColoring, sol: &GraphColoringSolution) -> GraphColoringSolution {
-        prob.solution_from_colors(sol.colors.clone())
-    }
-
     fn assert_consistent(prob: &GraphColoring, sol: &GraphColoringSolution) {
-        let fresh = recompute(prob, sol);
+        let fresh = prob.solution_from_colors(sol.colors.clone());
         assert_eq!(sol.gamma, fresh.gamma, "gamma drifted");
         assert_eq!(sol.class_size, fresh.class_size, "class_size drifted");
         assert_eq!(sol.colors_used, fresh.colors_used, "colors_used drifted");
@@ -241,7 +218,6 @@ mod tests {
         let prob = sample();
         // vertex 2 has degree 3 -> k = 4
         assert_eq!(prob.k, 4);
-        assert_eq!(prob.penalty_weight, prob.graph.len() as i64 + 1);
     }
 
     #[test]
