@@ -13,7 +13,7 @@
 use optopus::heuristic::{Heuristic, PopulationAnnealing, StopCondition};
 use optopus::problem::MaxCut;
 use optopus::problem::max_cut::MaxCutFlipNeighbor;
-use optopus::problem::tsp_2d::{TspTwoOptNeighbor, TspWithCoordinates};
+use optopus::problem::tsp::{Tsp, TspTwoOptNeighbor};
 use optopus::search_state::SearchState;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
@@ -29,12 +29,12 @@ fn ring_lattice(n: usize) -> MaxCut {
     MaxCut::from_edges(edges)
 }
 
-fn scattered_cities(n: usize) -> TspWithCoordinates {
+fn scattered_cities(n: usize) -> Tsp {
     let mut rng = SmallRng::seed_from_u64(77);
     let coordinates = (0..n)
         .map(|_| (rng.random_range(0.0..100.0), rng.random_range(0.0..100.0)))
         .collect();
-    TspWithCoordinates::new("pa-pin".to_string(), coordinates)
+    Tsp::new("pa-pin".to_string(), coordinates)
 }
 
 fn digest<T: std::hash::Hash>(items: &[T]) -> u64 {
@@ -66,11 +66,11 @@ fn run_max_cut(mc: &MaxCut, seed: u64) -> (u32, u64, u64, u64) {
     )
 }
 
-fn run_tsp(tsp: &TspWithCoordinates, seed: u64) -> (u64, u64, u64, u64) {
+fn run_tsp(tsp: &Tsp, seed: u64) -> (u64, u64, u64, u64) {
     let mut state = SearchState::new_with_seed(tsp, seed);
     // 2-opt has an O(n²) neighborhood, so the sweep length is pinned rather
     // than counted.
-    let mut pa = PopulationAnnealing::<TspWithCoordinates, TspTwoOptNeighbor>::new(
+    let mut pa = PopulationAnnealing::<Tsp, TspTwoOptNeighbor>::new(
         StopCondition::iterations(1_000),
         8,
         0.05,

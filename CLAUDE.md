@@ -107,7 +107,7 @@ src/
     ├── vrp/                  + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
     │                         ops/ (pricing fns, RouteState, granular.rs, Descent),
     │                         ruin.rs (the Ruinable + LocalRepair impl)
-    ├── tsp_2d/               + ruin.rs (Ruinable with the tour as the one container,
+    ├── tsp/                  + ruin.rs (Ruinable with the tour as the one container,
     │                         AnchoredTourDescent)
     └── binary_optimization/  FormulaProblem, Expr
 ```

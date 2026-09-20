@@ -5,7 +5,7 @@
 //! ring of their nearest partners, so a vertex displaced by the edit is
 //! reconsidered too, and it sweeps that list first-improvement until a pass
 //! finds nothing. Both [`vrp::ops::Descent`](crate::problem::vrp) and
-//! [`AnchoredTourDescent`](crate::problem::tsp_2d::AnchoredTourDescent) run
+//! [`AnchoredTourDescent`](crate::problem::tsp::AnchoredTourDescent) run
 //! exactly this, with only the move set differing, so the list and the loop
 //! live here and the move set comes in as a closure.
 

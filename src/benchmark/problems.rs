@@ -22,7 +22,7 @@ use crate::problem::{
     max_cut::MaxCut,
     qubo::{Qubo, QuboSolution},
     sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
-    tsp_2d::{TspRelocateNeighbor, TspSolution, TspTwoOptNeighbor, TspWithCoordinates},
+    tsp::{Tsp, TspRelocateNeighbor, TspSolution, TspTwoOptNeighbor},
     vrp::{
         Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution, VrpSwapNeighbor,
         VrpTwoOptNeighbor,
@@ -105,9 +105,9 @@ impl BenchmarkSolution for SatSolution {
     }
 }
 
-impl BenchmarkProblem for TspWithCoordinates {
+impl BenchmarkProblem for Tsp {
     fn load_instance(path: &str) -> Result<Self, OptError> {
-        TspWithCoordinates::load_file(path)
+        Tsp::load_file(path)
     }
 }
 
@@ -347,7 +347,7 @@ impl ConfigurableProblem for Sat {
     }
 }
 
-impl ConfigurableProblem for TspWithCoordinates {
+impl ConfigurableProblem for Tsp {
     const NAME: &'static str = "Tsp";
     const MINIMIZE: bool = true;
     const VALID_NEIGHBORS: &'static [NeighborKind] =
@@ -569,7 +569,7 @@ pub(crate) fn with_problem<V: ProblemVisitor>(kind: &ProblemKind, visitor: V) ->
         ProblemKind::MaxCut => visitor.visit::<MaxCut>(),
         ProblemKind::Qubo => visitor.visit::<Qubo>(),
         ProblemKind::Sat => visitor.visit::<Sat>(),
-        ProblemKind::Tsp => visitor.visit::<TspWithCoordinates>(),
+        ProblemKind::Tsp => visitor.visit::<Tsp>(),
         ProblemKind::VertexCover => visitor.visit::<VertexCover>(),
         ProblemKind::JobShop => visitor.visit::<JobShopScheduling>(),
         ProblemKind::Vrp => visitor.visit::<Vrp>(),

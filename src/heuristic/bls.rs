@@ -354,9 +354,7 @@ impl<P: ProblemTrait, S: PerturbationSchedule<P>> Heuristic<P> for BreakoutLocal
 mod tests {
     use super::*;
     use crate::heuristic::{LocalSearch, RandomWalk, TabuSearch};
-    use crate::problem::{
-        MaxCut, MaxCutFlipNeighbor, TspRelocateNeighbor, TspTwoOptNeighbor, TspWithCoordinates,
-    };
+    use crate::problem::{MaxCut, MaxCutFlipNeighbor, Tsp, TspRelocateNeighbor, TspTwoOptNeighbor};
 
     /// A schedule with one directed perturbation is an ordinary setting now,
     /// where before it was a bank the constructor accepted and `kick` panicked
@@ -419,7 +417,7 @@ mod tests {
                 (a.cos() * 100.0, a.sin() * 100.0)
             })
             .collect();
-        let tsp = TspWithCoordinates::new("ring20".to_string(), coordinates);
+        let tsp = Tsp::new("ring20".to_string(), coordinates);
         let mut state = SearchState::new_with_seed(&tsp, 7);
         let initial = state.solution.objective;
 
@@ -429,7 +427,7 @@ mod tests {
             Box::new(LocalSearch::<TspTwoOptNeighbor>::new(
                 StopCondition::iterations(u64::MAX),
             )),
-            AdaptivePerturbation::<TspWithCoordinates>::new(
+            AdaptivePerturbation::<Tsp>::new(
                 200,
                 3,
                 0.8,

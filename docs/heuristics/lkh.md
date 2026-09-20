@@ -10,7 +10,7 @@ variable-depth edge-exchange search (up to k-opt) starting from each city.
 ```rust
 use optopus::prelude::*;
 
-let tsp = TspWithCoordinates::new(
+let tsp = Tsp::new(
     "demo".to_string(),
     vec![
         (0.0, 0.0),

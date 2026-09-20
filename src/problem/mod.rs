@@ -12,7 +12,7 @@
 //! | [`max_cut`] | Maximum Cut | Maximize cut weight |
 //! | [`qubo`] | Quadratic Unconstrained Binary Optimization | Minimize energy |
 //! | [`sat`] | Maximum Satisfiability (MaxSAT) | Maximize satisfied clauses |
-//! | [`tsp_2d`] | Traveling Salesman Problem | Minimize tour length |
+//! | [`tsp`] | Traveling Salesman Problem | Minimize tour length |
 //! | [`vertex_cover`] | Minimum Vertex Cover | Minimize cover size |
 //! | [`job_shop_scheduling`] | Job Shop Scheduling | Minimize makespan |
 //! | [`vrp`] | Capacitated Vehicle Routing | Minimize total distance |
@@ -25,7 +25,7 @@ pub mod job_shop_scheduling;
 pub mod max_cut;
 pub mod qubo;
 pub mod sat;
-pub mod tsp_2d;
+pub mod tsp;
 pub mod vertex_cover;
 pub mod vrp;
 
@@ -47,9 +47,8 @@ pub use max_cut::{
 };
 pub use qubo::{Qubo, QuboFlipNeighbor, QuboSolution, QuboSwapNeighbor, QuboUniformCrossover};
 pub use sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor, SatUniformCrossover};
-pub use tsp_2d::{
-    TspOrderCrossover, TspRelocateNeighbor, TspSolution, TspTour, TspTwoOptNeighbor,
-    TspWithCoordinates,
+pub use tsp::{
+    Tsp, TspOrderCrossover, TspRelocateNeighbor, TspSolution, TspTour, TspTwoOptNeighbor,
 };
 pub use vertex_cover::{
     VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,

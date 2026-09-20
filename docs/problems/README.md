@@ -10,7 +10,7 @@ to plug into every relevant heuristic.
 | [MaxCut](max_cut.md) | Maximize | `MaxCutSolution` | Flip / Swap | `MaxCutUniformCrossover` | `Graph::load_from_file` |
 | [QUBO](qubo.md) | Minimize | `QuboSolution` | Flip / Swap | `QuboUniformCrossover` | `Qubo::load_file` |
 | [MaxSAT](sat.md) | Maximize | `SatSolution` | Flip / Swap | `SatUniformCrossover` | `Sat::load_file` (DIMACS CNF) |
-| [TSP 2D](tsp.md) | Minimize | `TspSolution` | TwoOpt / Relocate | `TspOrderCrossover` | `TspWithCoordinates::load_file` (TSPLIB) |
+| [TSP](tsp.md) | Minimize | `TspSolution` | TwoOpt / Relocate | `TspOrderCrossover` | `Tsp::load_file` (TSPLIB) |
 | [Vertex Cover](vertex_cover.md) | Minimize | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `Graph::load_from_file` |
 | [Job Shop Scheduling](job_shop_scheduling.md) | Minimize | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
 | [CVRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB) |

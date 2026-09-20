@@ -23,7 +23,7 @@ use super::{Evaluate, ProblemTrait};
 /// classes).
 ///
 /// A problem with one container still fits the destroy side and greedy
-/// insertion, and [`TspWithCoordinates`](crate::problem::TspWithCoordinates)
+/// insertion, and [`Tsp`](crate::problem::Tsp)
 /// implements the trait that way, the tour being its only container. What it
 /// gives up is regret. With no second container the second-best placement is
 /// undefined, so every regret is infinite and regret-2 inserts the pool in

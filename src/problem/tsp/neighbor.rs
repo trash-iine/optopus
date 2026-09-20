@@ -1,4 +1,4 @@
-use super::problem::{TspSolution, TspWithCoordinates};
+use super::problem::{Tsp, TspSolution};
 use crate::{
     common::TabuMemory,
     error::OptError,
@@ -46,7 +46,7 @@ impl TspTwoOptNeighbor {
     /// use optopus::prelude::*;
     ///
     /// // Unit square; the tour 0 → 1 → 3 → 2 crosses itself.
-    /// let tsp = TspWithCoordinates::new(
+    /// let tsp = Tsp::new(
     ///     "square".to_string(),
     ///     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
     /// );
@@ -63,7 +63,7 @@ impl TspTwoOptNeighbor {
     /// assert_eq!(after.tour, vec![0, 1, 2, 3]);
     /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
     /// ```
-    pub fn new(prob: &TspWithCoordinates, sol: &TspSolution, i: usize, j: usize) -> Self {
+    pub fn new(prob: &Tsp, sol: &TspSolution, i: usize, j: usize) -> Self {
         let e1 = prob.get_edge_from(&sol.tour, i);
         let e2 = prob.get_edge_from(&sol.tour, j);
         Self {
@@ -94,24 +94,20 @@ impl EnabledTabu for TspTwoOptNeighbor {
     }
 }
 
-impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
+impl MoveToNeighbor<Tsp> for TspTwoOptNeighbor {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
     /// what holds the tabu map.
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
         Some(self)
     }
 
-    fn apply_to_solution(
-        &self,
-        _prob: &TspWithCoordinates,
-        sol: &mut TspSolution,
-    ) -> Result<(), OptError> {
+    fn apply_to_solution(&self, _prob: &Tsp, sol: &mut TspSolution) -> Result<(), OptError> {
         sol.tour[self.i + 1..=self.j].reverse();
         sol.objective += self.gain;
         Ok(())
     }
 
-    fn iter(prob: &TspWithCoordinates, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
+    fn iter(prob: &Tsp, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.tour.len();
         (0..n - 1).flat_map(move |i| {
             // When i=0, j=n-1 would reverse the entire tour (trivially equivalent for undirected),
@@ -133,12 +129,7 @@ impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
         })
     }
 
-    fn move_to_be_better_than(
-        &self,
-        _: &TspWithCoordinates,
-        src: &TspSolution,
-        other: &TspSolution,
-    ) -> bool {
+    fn move_to_be_better_than(&self, _: &Tsp, src: &TspSolution, other: &TspSolution) -> bool {
         self.evaluate()
             .improves_over(src.evaluate(), other.evaluate())
     }
@@ -147,7 +138,7 @@ impl MoveToNeighbor<TspWithCoordinates> for TspTwoOptNeighbor {
     /// pair (`j ≥ i + 2`, excluding the full-tour reversal `(0, n-1)`) and
     /// computes its gain from four distance lookups.
     fn random_neighbor(
-        prob: &TspWithCoordinates,
+        prob: &Tsp,
         sol: &TspSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Option<Self> {
@@ -190,7 +181,7 @@ pub struct TspRelocateNeighbor {
 ///
 /// Depends only on `pos`, so the neighborhood scan hoists it out of the inner
 /// loop over insertion points.
-fn removal_gain(prob: &TspWithCoordinates, sol: &TspSolution, pos: usize) -> f64 {
+fn removal_gain(prob: &Tsp, sol: &TspSolution, pos: usize) -> f64 {
     let n = sol.tour.len();
     let prev = (pos + n - 1) % n;
     let next = (pos + 1) % n;
@@ -199,7 +190,7 @@ fn removal_gain(prob: &TspWithCoordinates, sol: &TspSolution, pos: usize) -> f64
 }
 
 /// Cost of splicing `tour[pos]` back in between `tour[ins]` and its successor.
-fn insertion_cost(prob: &TspWithCoordinates, sol: &TspSolution, pos: usize, ins: usize) -> f64 {
+fn insertion_cost(prob: &Tsp, sol: &TspSolution, pos: usize, ins: usize) -> f64 {
     let n = sol.tour.len();
     let ins_next = (ins + 1) % n;
     prob.distance(sol.tour[ins], sol.tour[pos]) + prob.distance(sol.tour[pos], sol.tour[ins_next])
@@ -230,7 +221,7 @@ impl TspRelocateNeighbor {
     /// use optopus::prelude::*;
     ///
     /// // Unit square; the tour 0 → 1 → 3 → 2 crosses itself.
-    /// let tsp = TspWithCoordinates::new(
+    /// let tsp = Tsp::new(
     ///     "square".to_string(),
     ///     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
     /// );
@@ -247,7 +238,7 @@ impl TspRelocateNeighbor {
     /// assert_eq!(after.tour, vec![0, 1, 2, 3]);
     /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
     /// ```
-    pub fn new(prob: &TspWithCoordinates, sol: &TspSolution, pos: usize, ins: usize) -> Self {
+    pub fn new(prob: &Tsp, sol: &TspSolution, pos: usize, ins: usize) -> Self {
         let n = sol.tour.len();
         assert!(
             pos < n && ins < n,
@@ -283,18 +274,14 @@ impl EnabledTabu for TspRelocateNeighbor {
     }
 }
 
-impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
+impl MoveToNeighbor<Tsp> for TspRelocateNeighbor {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
     /// what holds the tabu map.
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
         Some(self)
     }
 
-    fn apply_to_solution(
-        &self,
-        _prob: &TspWithCoordinates,
-        sol: &mut TspSolution,
-    ) -> Result<(), OptError> {
+    fn apply_to_solution(&self, _prob: &Tsp, sol: &mut TspSolution) -> Result<(), OptError> {
         let city = sol.tour.remove(self.pos);
         let insert_at = if self.ins < self.pos {
             self.ins + 1
@@ -306,7 +293,7 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
         Ok(())
     }
 
-    fn iter(prob: &TspWithCoordinates, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
+    fn iter(prob: &Tsp, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
         let n = prob.get_n();
         (0..n).flat_map(move |pos| {
             let prev = (pos + n - 1) % n;
@@ -329,12 +316,7 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
         })
     }
 
-    fn move_to_be_better_than(
-        &self,
-        _: &TspWithCoordinates,
-        src: &TspSolution,
-        other: &TspSolution,
-    ) -> bool {
+    fn move_to_be_better_than(&self, _: &Tsp, src: &TspSolution, other: &TspSolution) -> bool {
         self.evaluate()
             .improves_over(src.evaluate(), other.evaluate())
     }
@@ -343,7 +325,7 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
     /// `ins ∉ {pos, prev(pos)}` and computes its gain from six distance
     /// lookups.
     fn random_neighbor(
-        prob: &TspWithCoordinates,
+        prob: &Tsp,
         sol: &TspSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Option<Self> {
@@ -372,16 +354,16 @@ impl MoveToNeighbor<TspWithCoordinates> for TspRelocateNeighbor {
 mod tests {
     use super::*;
 
-    fn make_square_tsp() -> TspWithCoordinates {
+    fn make_square_tsp() -> Tsp {
         // 4 cities forming a unit square: (0,0), (1,0), (1,1), (0,1)
         // Edge length = 1, diagonal = sqrt(2)
-        TspWithCoordinates::new(
+        Tsp::new(
             "square".to_string(),
             vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
         )
     }
 
-    fn make_sol(tsp: &TspWithCoordinates, tour: Vec<usize>) -> TspSolution {
+    fn make_sol(tsp: &Tsp, tour: Vec<usize>) -> TspSolution {
         let objective = tsp.calculate_tour_length(&tour).unwrap();
         TspSolution { tour, objective }
     }
@@ -452,8 +434,8 @@ mod tests {
 
     /// 6-city instance with irregular coordinates (no gain ties), for
     /// random-sampling membership checks.
-    fn make_hex_tsp() -> TspWithCoordinates {
-        TspWithCoordinates::new(
+    fn make_hex_tsp() -> Tsp {
+        Tsp::new(
             "hex".to_string(),
             vec![
                 (0.0, 0.0),
@@ -475,10 +457,9 @@ mod tests {
 
         let two_opts: Vec<_> = TspTwoOptNeighbor::iter(&tsp, &sol).collect();
         for _ in 0..40 {
-            let m = <TspTwoOptNeighbor as MoveToNeighbor<TspWithCoordinates>>::random_neighbor(
-                &tsp, &sol, &mut rng,
-            )
-            .unwrap();
+            let m =
+                <TspTwoOptNeighbor as MoveToNeighbor<Tsp>>::random_neighbor(&tsp, &sol, &mut rng)
+                    .unwrap();
             assert!(
                 two_opts
                     .iter()
@@ -488,10 +469,9 @@ mod tests {
 
         let relocs: Vec<_> = TspRelocateNeighbor::iter(&tsp, &sol).collect();
         for _ in 0..40 {
-            let m = <TspRelocateNeighbor as MoveToNeighbor<TspWithCoordinates>>::random_neighbor(
-                &tsp, &sol, &mut rng,
-            )
-            .unwrap();
+            let m =
+                <TspRelocateNeighbor as MoveToNeighbor<Tsp>>::random_neighbor(&tsp, &sol, &mut rng)
+                    .unwrap();
             assert!(
                 relocs
                     .iter()
@@ -532,17 +512,14 @@ mod tests {
     #[test]
     fn test_random_neighbor_none_when_too_small() {
         use rand::SeedableRng;
-        let tsp =
-            TspWithCoordinates::new("tiny".to_string(), vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)]);
+        let tsp = Tsp::new("tiny".to_string(), vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)]);
         let sol = make_sol(&tsp, vec![0, 1, 2]);
         let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
         // n=3: the 2-opt neighborhood is empty (iter yields nothing).
         assert!(TspTwoOptNeighbor::iter(&tsp, &sol).next().is_none());
         assert!(
-            <TspTwoOptNeighbor as MoveToNeighbor<TspWithCoordinates>>::random_neighbor(
-                &tsp, &sol, &mut rng
-            )
-            .is_none()
+            <TspTwoOptNeighbor as MoveToNeighbor<Tsp>>::random_neighbor(&tsp, &sol, &mut rng)
+                .is_none()
         );
     }
 }

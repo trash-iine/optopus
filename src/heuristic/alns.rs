@@ -517,7 +517,7 @@ mod tests {
     #[test]
     fn alns_runs_on_a_tour() {
         use crate::heuristic::alns_for_tsp;
-        use crate::problem::TspWithCoordinates;
+        use crate::problem::Tsp;
 
         let coords = (0..30)
             .map(|i| {
@@ -525,7 +525,7 @@ mod tests {
                 (theta.cos() * 10.0, theta.sin() * 10.0)
             })
             .collect();
-        let tsp = TspWithCoordinates::new("ring".into(), coords);
+        let tsp = Tsp::new("ring".into(), coords);
         let run = || {
             let mut state = SearchState::new_with_seed(&tsp, 17);
             let initial = state.best_solution.objective;

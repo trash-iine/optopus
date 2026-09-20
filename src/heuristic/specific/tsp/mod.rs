@@ -11,8 +11,8 @@ mod lkh;
 pub use lkh::LinKernighanHelsgaun;
 
 use crate::heuristic::{AdaptiveLargeNeighborhoodSearch, StopCondition};
-use crate::problem::TspWithCoordinates;
-use crate::problem::tsp_2d::AnchoredTourDescent;
+use crate::problem::Tsp;
+use crate::problem::tsp::AnchoredTourDescent;
 
 /// Ruin-and-recreate over a tour, with the anchored Or-opt and 2-opt descent.
 ///
@@ -30,11 +30,7 @@ pub fn alns_for_tsp(
     stop_condition: StopCondition,
     removal_fraction: f64,
     cooling_rate: f64,
-) -> AdaptiveLargeNeighborhoodSearch<TspWithCoordinates> {
-    AdaptiveLargeNeighborhoodSearch::<TspWithCoordinates>::new(
-        stop_condition,
-        removal_fraction,
-        cooling_rate,
-    )
-    .with_local_repair(Box::new(AnchoredTourDescent::new()))
+) -> AdaptiveLargeNeighborhoodSearch<Tsp> {
+    AdaptiveLargeNeighborhoodSearch::<Tsp>::new(stop_condition, removal_fraction, cooling_rate)
+        .with_local_repair(Box::new(AnchoredTourDescent::new()))
 }

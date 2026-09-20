@@ -12,7 +12,7 @@
 
 use rand::rngs::SmallRng;
 
-use super::problem::{TspSolution, TspWithCoordinates};
+use super::problem::{Tsp, TspSolution};
 use crate::common::{AnchoredSweep, MIN_IMPROVEMENT};
 use crate::trait_defs::{LocalRepair, Ruinable};
 
@@ -81,7 +81,7 @@ impl TspPartial {
     }
 
     /// The cyclic length of `tour`, measured from scratch.
-    fn measure(&self, prob: &TspWithCoordinates) -> f64 {
+    fn measure(&self, prob: &Tsp) -> f64 {
         (0..self.tour.len())
             .map(|i| prob.distance(self.tour[i], self.tour[self.after(i)]))
             .sum()
@@ -90,8 +90,8 @@ impl TspPartial {
     /// What inserting `c` at `place` costs. Place `p` is between `tour[p-1]`
     /// and `tour[p]`, cyclically, so an empty tour has the one place `0`
     /// whose cost is the loop `c` to itself, which is what
-    /// [`TspWithCoordinates::calculate_tour_length`] charges a one-city tour.
-    fn insertion_cost_at(&self, prob: &TspWithCoordinates, place: usize, c: usize) -> f64 {
+    /// [`Tsp::calculate_tour_length`] charges a one-city tour.
+    fn insertion_cost_at(&self, prob: &Tsp, place: usize, c: usize) -> f64 {
         if self.tour.is_empty() {
             return prob.distance(c, c);
         }
@@ -150,7 +150,7 @@ impl TspPartial {
     }
 
     #[cfg(debug_assertions)]
-    fn assert_caches_consistent(&self, prob: &TspWithCoordinates) {
+    fn assert_caches_consistent(&self, prob: &Tsp) {
         for (i, &c) in self.tour.iter().enumerate() {
             debug_assert_eq!(self.pos[c], i, "position index is stale");
         }
@@ -163,7 +163,7 @@ impl TspPartial {
     }
 }
 
-impl Ruinable for TspWithCoordinates {
+impl Ruinable for Tsp {
     type Element = usize;
     type Partial = TspPartial;
 
@@ -338,12 +338,7 @@ impl AnchoredTourDescent {
 
 /// Tries every granular move anchored at `u`, applying the first improving
 /// one.
-fn improve_around(
-    partial: &mut TspPartial,
-    prob: &TspWithCoordinates,
-    neighbors: &[usize],
-    u: usize,
-) -> bool {
+fn improve_around(partial: &mut TspPartial, prob: &Tsp, neighbors: &[usize], u: usize) -> bool {
     for &v in neighbors {
         if partial.pos[v] == NOT_PLACED {
             continue;
@@ -365,10 +360,10 @@ fn improve_around(
     false
 }
 
-impl LocalRepair<TspWithCoordinates> for AnchoredTourDescent {
+impl LocalRepair<Tsp> for AnchoredTourDescent {
     fn repair_around(
         &mut self,
-        prob: &TspWithCoordinates,
+        prob: &Tsp,
         partial: &mut TspPartial,
         anchors: &[usize],
         rng: &mut SmallRng,
@@ -393,7 +388,7 @@ impl LocalRepair<TspWithCoordinates> for AnchoredTourDescent {
 }
 
 /// Moves `u` to sit directly after `v`, if that shortens the tour.
-fn try_relocate(partial: &mut TspPartial, prob: &TspWithCoordinates, u: usize, v: usize) -> bool {
+fn try_relocate(partial: &mut TspPartial, prob: &Tsp, u: usize, v: usize) -> bool {
     if v == u || partial.succ(v) == u {
         return false;
     }
@@ -419,7 +414,7 @@ fn try_relocate(partial: &mut TspPartial, prob: &TspWithCoordinates, u: usize, v
 
 /// Removes the edges after `x` and after `y` and reconnects `x` to `y`, if
 /// that shortens the tour.
-fn try_two_opt(partial: &mut TspPartial, prob: &TspWithCoordinates, x: usize, y: usize) -> bool {
+fn try_two_opt(partial: &mut TspPartial, prob: &Tsp, x: usize, y: usize) -> bool {
     if x == y {
         return false;
     }
@@ -446,21 +441,21 @@ fn try_two_opt(partial: &mut TspPartial, prob: &TspWithCoordinates, x: usize, y:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::problem::tsp_2d::EdgeWeightType;
+    use crate::problem::tsp::EdgeWeightType;
     use crate::search_state::ProblemTrait;
     use rand::SeedableRng;
 
-    fn ring(n: usize) -> TspWithCoordinates {
+    fn ring(n: usize) -> Tsp {
         let coords = (0..n)
             .map(|i| {
                 let theta = std::f64::consts::TAU * i as f64 / n as f64;
                 (theta.cos() * 10.0, theta.sin() * 10.0)
             })
             .collect();
-        TspWithCoordinates::new("ring".into(), coords)
+        Tsp::new("ring".into(), coords)
     }
 
-    fn assert_length_matches(prob: &TspWithCoordinates, partial: &TspPartial) {
+    fn assert_length_matches(prob: &Tsp, partial: &TspPartial) {
         let expected = partial.measure(prob);
         assert!(
             (partial.length - expected).abs() < 1e-9,
@@ -492,7 +487,7 @@ mod tests {
         for ewt in [EdgeWeightType::Continuous, EdgeWeightType::Geo] {
             let coords: Vec<(f64, f64)> =
                 (0..6).map(|i| (i as f64 * 1.5, (i % 2) as f64)).collect();
-            let tsp = TspWithCoordinates::with_edge_weight_type("t".into(), coords, ewt);
+            let tsp = Tsp::with_edge_weight_type("t".into(), coords, ewt);
             let mut rng = SmallRng::seed_from_u64(9);
             let sol = tsp.new_solution(&mut rng);
             let mut partial = tsp.to_partial(&sol);
@@ -602,10 +597,10 @@ mod tests {
     fn one_descent_serves_two_instances_of_one_size() {
         let n = 40;
         let first = ring(n);
-        let mut coords = first.coordinates.clone();
+        let mut coords = first.coordinates().unwrap().to_vec();
         coords.rotate_left(n / 2);
         coords.swap(1, 21);
-        let second = TspWithCoordinates::new("relabelled".into(), coords);
+        let second = Tsp::new("relabelled".into(), coords);
         let mut descent = AnchoredTourDescent::new();
         let mut rng = SmallRng::seed_from_u64(8);
         for tsp in [&first, &second] {
@@ -703,7 +698,7 @@ mod tests {
 
     #[test]
     fn two_opt_uncrosses_a_square() {
-        let tsp = TspWithCoordinates::new(
+        let tsp = Tsp::new(
             "square".into(),
             vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
         );
