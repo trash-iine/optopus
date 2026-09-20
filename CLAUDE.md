@@ -143,6 +143,7 @@ kinds fail at parse time.
 | `TabuSearch` | all | `tabu_tenure = [min, max]` | |
 | `SimulatedAnnealing` | all | `initial_temperature`, `cooling_rate` | |
 | `LateAcceptanceHillClimbing` | all | `history_length` | |
+| `BeamSearch` | all | `beam_width` | |
 | `RandomWalk` | all | a `stop_condition` (an empty one never terminates) | |
 | `ReinforcementLearningSearch` | all | | `learning_rate`, `softmax_temperature`, `reward_shaping`, `policy_weights`, `max_candidates` |
 | `BreakoutLocalSearch` | MaxCut | `tabu_tenure`, `t`, `l0`, `p0`, `q` | |

@@ -48,6 +48,7 @@ algorithm's own page; this table is only the index.
 | [`TabuSearch`](../heuristics/tabu_search.md#benchmark-config) | all |
 | [`SimulatedAnnealing`](../heuristics/simulated_annealing.md#benchmark-config) | all |
 | [`LateAcceptanceHillClimbing`](../heuristics/late_acceptance.md#benchmark-config) | all |
+| [`BeamSearch`](../heuristics/beam_search.md#benchmark-config) | all |
 | [`RandomWalk`](../heuristics/random_walk.md#benchmark-config) | all |
 | [`ReinforcementLearningSearch`](../heuristics/rl_search.md#benchmark-config) | all |
 | [`PopulationAnnealing`](../heuristics/population_annealing.md#benchmark-config) | all |
@@ -60,8 +61,7 @@ algorithm's own page; this table is only the index.
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
 
 Unknown kinds and missing required fields fail at parse time, before any run
-starts. [`BeamSearch`](../heuristics/beam_search.md) has no `kind`. It is
-reachable from the Rust API only.
+starts.
 
 ## Fields shared by every kind
 

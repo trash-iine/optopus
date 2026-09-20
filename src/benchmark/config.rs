@@ -113,6 +113,14 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Keeps the best `beam_width` candidates of every expanded neighborhood.
+    BeamSearch {
+        neighbor: NeighborKind,
+        /// Number of candidates kept per step. Must be >= 1.
+        beam_width: usize,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Uniform random walk with unconditional acceptance; useful as a shake /
     /// perturbation step inside a meta-heuristic. Always give it a
     /// `stop_condition` (e.g. `max_iteration`), an empty one never terminates.
@@ -310,6 +318,7 @@ impl HeuristicConfig {
             Self::TabuSearch { .. } => "TabuSearch",
             Self::SimulatedAnnealing { .. } => "SimulatedAnnealing",
             Self::LateAcceptanceHillClimbing { .. } => "LateAcceptanceHillClimbing",
+            Self::BeamSearch { .. } => "BeamSearch",
             Self::RandomWalk { .. } => "RandomWalk",
             Self::ReinforcementLearningSearch { .. } => "ReinforcementLearningSearch",
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
@@ -333,6 +342,7 @@ impl HeuristicConfig {
             | Self::TabuSearch { neighbor, .. }
             | Self::SimulatedAnnealing { neighbor, .. }
             | Self::LateAcceptanceHillClimbing { neighbor, .. }
+            | Self::BeamSearch { neighbor, .. }
             | Self::RandomWalk { neighbor, .. }
             | Self::ReinforcementLearningSearch { neighbor, .. }
             | Self::PopulationAnnealing { neighbor, .. } => Some(neighbor),
@@ -359,6 +369,7 @@ impl HeuristicConfig {
             | Self::TabuSearch { stop_condition, .. }
             | Self::SimulatedAnnealing { stop_condition, .. }
             | Self::LateAcceptanceHillClimbing { stop_condition, .. }
+            | Self::BeamSearch { stop_condition, .. }
             | Self::RandomWalk { stop_condition, .. }
             | Self::ReinforcementLearningSearch { stop_condition, .. }
             | Self::BreakoutLocalSearch { stop_condition, .. }
