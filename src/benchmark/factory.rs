@@ -9,7 +9,7 @@ use super::config::{HeuristicConfig, NeighborKind};
 use super::problems::{BenchmarkProblem, BenchmarkSolution};
 use crate::error::OptError;
 use crate::heuristic::{
-    GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
+    BeamSearch, GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
     ParentSelection, PopulationAnnealing, RandomWalk, ReinforcementLearningSearch, Restart,
     RewardShaping, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
     VariableNeighborhoodSearch,
@@ -147,6 +147,14 @@ where
                     self.cond,
                     *history_length,
                 )))
+            }
+            HeuristicConfig::BeamSearch { beam_width, .. } => {
+                if *beam_width == 0 {
+                    return Err(OptError::Config(
+                        "'beam_width' must be at least 1".to_string(),
+                    ));
+                }
+                Ok(Box::new(BeamSearch::<P, N>::new(self.cond, *beam_width)))
             }
             HeuristicConfig::RandomWalk { .. } => Ok(Box::new(RandomWalk::<N>::new(self.cond))),
             HeuristicConfig::ReinforcementLearningSearch { .. } => {
@@ -467,6 +475,7 @@ where
         | HeuristicConfig::TabuSearch { neighbor, .. }
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
         | HeuristicConfig::LateAcceptanceHillClimbing { neighbor, .. }
+        | HeuristicConfig::BeamSearch { neighbor, .. }
         | HeuristicConfig::RandomWalk { neighbor, .. }
         | HeuristicConfig::ReinforcementLearningSearch { neighbor, .. } => {
             P::with_neighbor(neighbor, BaseBuilder { config, cond })?
@@ -531,6 +540,11 @@ mod factory_tests {
                 history_length: 10,
                 stop_condition: sc(),
             },
+            HeuristicConfig::BeamSearch {
+                neighbor: neighbor.clone(),
+                beam_width: 3,
+                stop_condition: sc(),
+            },
             HeuristicConfig::RandomWalk {
                 neighbor: neighbor.clone(),
                 stop_condition: sc(),
@@ -563,6 +577,20 @@ mod factory_tests {
                 }
             }
         }
+    }
+
+    /// The constructor panics on a zero beam; a TOML value has to fail as a
+    /// config error at startup instead.
+    #[test]
+    fn beam_search_rejects_a_zero_width_beam() {
+        let beam = |beam_width| HeuristicConfig::BeamSearch {
+            neighbor: NeighborKind::Flip,
+            beam_width,
+            stop_condition: StopConditionConfig::default(),
+        };
+        try_build(&ProblemKind::MaxCut, &beam(1)).expect("a beam of one builds");
+        let err = try_build(&ProblemKind::MaxCut, &beam(0)).expect_err("beam_width = 0 must fail");
+        assert!(err.to_string().contains("beam_width"), "{err}");
     }
 
     #[test]

@@ -234,6 +234,24 @@ max_iteration = 300
     );
 }
 
+/// BeamSearch draws nothing from the RNG after the seeded start solution, so
+/// this pins that the start solution and the neighborhood order stay put.
+#[test]
+fn beam_search_is_bit_identical_across_reruns_with_seed() {
+    assert_reproducible(
+        "repro_bs",
+        r#"
+[[heuristics]]
+kind = "BeamSearch"
+neighbor = "Flip"
+beam_width = 3
+
+[heuristics.stop_condition]
+max_iteration = 20
+"#,
+    );
+}
+
 /// BLS consumes the RNG for tenure sampling, perturbation-type selection, and
 /// random flips; all three previously used the thread RNG.
 #[test]

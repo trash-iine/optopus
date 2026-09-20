@@ -55,8 +55,16 @@ neighborhoods.
 
 ## Benchmark config
 
-None: `BeamSearch` has no `kind`, so it cannot be named in a benchmark config.
-It is reachable from the Rust API only.
+```toml
+[[heuristics]]
+kind = "BeamSearch"
+neighbor = "Flip"        # required; the valid values are per-problem
+beam_width = 5           # required; must be >= 1
+[heuristics.stop_condition]
+max_iteration = 1_000
+```
+
+A `beam_width` of 0 is rejected when the config is loaded.
 
 ## References
 
