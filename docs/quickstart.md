@@ -60,7 +60,7 @@ let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 let sat = Sat::load_file("data/instances/sat/example.cnf")?;
 
 // TSP loader (TSPLIB):
-let tsp = TspWithCoordinates::load_file("data/instances/tsp/burma14.tsp")?;
+let tsp = Tsp::load_file("data/instances/tsp/burma14.tsp")?;
 
 // Job Shop Scheduling loader (Taillard / OR-Library):
 let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;

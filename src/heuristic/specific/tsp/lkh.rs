@@ -9,7 +9,7 @@
 use crate::common::MIN_IMPROVEMENT;
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
-use crate::problem::tsp_2d::{NeighborLists, TspSolution, TspWithCoordinates};
+use crate::problem::tsp::{NeighborLists, Tsp, TspSolution};
 use crate::search_state::SearchState;
 
 /// Describes an improving LK move: which tour edges to remove and which to add.
@@ -129,7 +129,7 @@ impl LinKernighanHelsgaun {
     /// Reads the instance's candidate lists. They are cached on the
     /// instance, so this is a lock and a lookup per iteration, and a search
     /// reused on another instance never carries the old one's lists.
-    fn ensure_candidates(&mut self, prob: &TspWithCoordinates) {
+    fn ensure_candidates(&mut self, prob: &Tsp) {
         self.candidates = prob.nearest_neighbors(self.num_neighbors);
     }
 
@@ -160,7 +160,7 @@ impl LinKernighanHelsgaun {
     /// state on return.
     fn find_lk_move(
         &self,
-        prob: &TspWithCoordinates,
+        prob: &Tsp,
         tour: &[usize],
         t1: usize,
         scratch: &mut LkScratch,
@@ -250,7 +250,7 @@ impl LinKernighanHelsgaun {
     #[allow(clippy::too_many_arguments)]
     fn extend_search(
         &self,
-        prob: &TspWithCoordinates,
+        prob: &Tsp,
         tour: &[usize],
         t1: usize,
         t_last: usize,
@@ -403,7 +403,7 @@ fn is_edge_in(edges: &[(usize, usize)], a: usize, b: usize) -> bool {
 
 // -- Heuristic impl ------------------------------------------------------
 
-impl Heuristic<TspWithCoordinates> for LinKernighanHelsgaun {
+impl Heuristic<Tsp> for LinKernighanHelsgaun {
     fn clear(&mut self) {
         self.no_improvement = false;
     }
@@ -414,14 +414,11 @@ impl Heuristic<TspWithCoordinates> for LinKernighanHelsgaun {
 
     /// Done when the stop condition is met or no improving LK move exists
     /// (a local optimum was reached).
-    fn is_done<'a>(&self, state: &SearchState<'a, TspWithCoordinates>) -> bool {
+    fn is_done<'a>(&self, state: &SearchState<'a, Tsp>) -> bool {
         self.stop_condition.is_done(state) || self.no_improvement
     }
 
-    fn run_once<'a>(
-        &mut self,
-        state: &mut SearchState<'a, TspWithCoordinates>,
-    ) -> Result<(), OptError> {
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, Tsp>) -> Result<(), OptError> {
         self.ensure_candidates(state.instance);
         self.build_position(&state.solution.tour);
 
@@ -582,19 +579,16 @@ mod tests {
     use crate::heuristic::Heuristic;
     use crate::search_state::SearchState;
 
-    fn make_square_tsp() -> TspWithCoordinates {
-        TspWithCoordinates::new(
+    fn make_square_tsp() -> Tsp {
+        Tsp::new(
             "square".to_string(),
             vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
         )
     }
 
-    fn make_solution(
-        prob: &TspWithCoordinates,
-        tour: Vec<usize>,
-    ) -> crate::problem::tsp_2d::TspSolution {
+    fn make_solution(prob: &Tsp, tour: Vec<usize>) -> crate::problem::tsp::TspSolution {
         let objective = prob.calculate_tour_length(&tour).unwrap();
-        crate::problem::tsp_2d::TspSolution { tour, objective }
+        crate::problem::tsp::TspSolution { tour, objective }
     }
 
     /// The candidate lists live on the instance, so one search object run
@@ -610,7 +604,7 @@ mod tests {
                     (theta.cos(), theta.sin())
                 })
                 .collect();
-            let tsp = TspWithCoordinates::new(format!("ring{n}"), coords);
+            let tsp = Tsp::new(format!("ring{n}"), coords);
             let mut state = SearchState::new_with_seed(&tsp, 3);
             lkh.run(&mut state).unwrap();
             assert!(tsp.calculate_tour_length(&state.best_solution.tour).is_ok());
@@ -683,7 +677,7 @@ mod tests {
         let coords: Vec<(f64, f64)> = (0..51)
             .map(|_| (rng.random_range(0.0..100.0), rng.random_range(0.0..100.0)))
             .collect();
-        let prob = TspWithCoordinates::new("synthetic51".to_string(), coords);
+        let prob = Tsp::new("synthetic51".to_string(), coords);
         let mut state = SearchState::new(&prob);
         let initial_obj = state.solution.objective;
 

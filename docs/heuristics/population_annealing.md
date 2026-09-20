@@ -69,7 +69,7 @@ that is the variable count and costs O(n) once. For a pairwise move such as
 it, so pin the length instead:
 
 ```rust
-let pa = PopulationAnnealing::<TspWithCoordinates, TspTwoOptNeighbor>::new(
+let pa = PopulationAnnealing::<Tsp, TspTwoOptNeighbor>::new(
     StopCondition::duration(std::time::Duration::from_secs(30)),
     50, 0.1, 0.02, 50, Some(400),
 ).with_sweep_length(1_000);

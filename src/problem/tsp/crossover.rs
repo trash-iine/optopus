@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::search_state::{Crossover, SubProblemExtractable};
 
-use super::problem::{TspSolution, TspTour, TspWithCoordinates};
+use super::problem::{Tsp, TspSolution, TspTour};
 
 /// Order Crossover (OX) for TSP.
 ///
@@ -11,10 +11,10 @@ use super::problem::{TspSolution, TspTour, TspWithCoordinates};
 /// present in the copied segment.
 pub struct TspOrderCrossover;
 
-impl Crossover<TspWithCoordinates> for TspOrderCrossover {
+impl Crossover<Tsp> for TspOrderCrossover {
     fn crossover(
         &mut self,
-        prob: &TspWithCoordinates,
+        prob: &Tsp,
         sol1: &TspSolution,
         sol2: &TspSolution,
         rng: &mut rand::rngs::SmallRng,
@@ -35,8 +35,8 @@ impl Crossover<TspWithCoordinates> for TspOrderCrossover {
 /// A city is "free" if at least one of its two adjacent edges in `sol1`'s tour
 /// is not common to both parent tours (considering edges as undirected).
 /// "Fixed" cities have both incident edges shared across both parents and inherit
-/// `sol1`'s position in [`TspWithCoordinates::lift_solution`].
-fn free_cities(prob: &TspWithCoordinates, sol1: &TspSolution, sol2: &TspSolution) -> Vec<usize> {
+/// `sol1`'s position in [`Tsp::lift_solution`].
+fn free_cities(prob: &Tsp, sol1: &TspSolution, sol2: &TspSolution) -> Vec<usize> {
     let n = prob.get_n();
 
     let make_edge_set = |tour: &TspTour| -> HashSet<(usize, usize)> {
@@ -69,15 +69,21 @@ fn free_cities(prob: &TspWithCoordinates, sol1: &TspSolution, sol2: &TspSolution
         .collect()
 }
 
-impl SubProblemExtractable for TspWithCoordinates {
+impl SubProblemExtractable for Tsp {
     /// Creates a sub-TSP containing only the "free" cities, those whose incident
     /// edges differ between the two parent tours.
     ///
-    /// Sub-problem city `i` corresponds to `free_cities(...)[i]` in the original problem.
-    fn extract_sub_problem(&self, sol1: &TspSolution, sol2: &TspSolution) -> TspWithCoordinates {
+    /// Sub-problem city `i` corresponds to `free_cities(...)[i]` in the original
+    /// problem, and its distances are read from this instance, so the sub-problem
+    /// measures tours the way its parent does whatever the parent's store.
+    fn extract_sub_problem(&self, sol1: &TspSolution, sol2: &TspSolution) -> Tsp {
         let free = free_cities(self, sol1, sol2);
-        let sub_coords: Vec<(f64, f64)> = free.iter().map(|&c| self.coordinates[c]).collect();
-        TspWithCoordinates::new(format!("{}_sub", self.name), sub_coords)
+        let matrix: Vec<Vec<f64>> = free
+            .iter()
+            .map(|&a| free.iter().map(|&b| self.distance(a, b)).collect())
+            .collect();
+        Tsp::from_distance_matrix(format!("{}_sub", self.name), matrix)
+            .expect("a matrix built row by row over one city list is square")
     }
 
     /// Lifts the sub-problem solution back to the full solution space.
@@ -117,18 +123,18 @@ impl SubProblemExtractable for TspWithCoordinates {
 mod tests {
     use std::collections::HashSet;
 
-    use crate::problem::tsp_2d::{TspSolution, TspWithCoordinates};
+    use crate::problem::tsp::{Tsp, TspSolution};
     use crate::search_state::SubProblemExtractable;
 
     /// 4-city square: (0,0), (1,0), (1,1), (0,1)
-    fn make_tsp() -> TspWithCoordinates {
-        TspWithCoordinates::new(
+    fn make_tsp() -> Tsp {
+        Tsp::new(
             "test".to_string(),
             vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],
         )
     }
 
-    fn make_sol(tsp: &TspWithCoordinates, tour: Vec<usize>) -> TspSolution {
+    fn make_sol(tsp: &Tsp, tour: Vec<usize>) -> TspSolution {
         let objective = tsp.calculate_tour_length(&tour).unwrap();
         TspSolution { tour, objective }
     }

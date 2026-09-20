@@ -71,12 +71,12 @@ pub use crate::problem::{
     SatFlipNeighbor,
     SatSolution,
     SatSwapNeighbor,
+    Tsp,
     // TSP
     TspRelocateNeighbor,
     TspSolution,
     TspTour,
     TspTwoOptNeighbor,
-    TspWithCoordinates,
     // Vertex Cover
     VertexCover,
     VertexCoverFlipNeighbor,

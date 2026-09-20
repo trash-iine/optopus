@@ -40,7 +40,7 @@ file-based loading.
 | [Max Cut](docs/problems/max_cut.md) | `MaxCut` | `MaxCutFlipNeighbor`, `MaxCutSwapNeighbor` |
 | [QUBO](docs/problems/qubo.md) | `Qubo` | `QuboFlipNeighbor`, `QuboSwapNeighbor` |
 | [MaxSAT](docs/problems/sat.md) | `Sat` | `SatFlipNeighbor`, `SatSwapNeighbor` |
-| [TSP](docs/problems/tsp.md) | `TspWithCoordinates` | `TspTwoOptNeighbor`, `TspRelocateNeighbor` |
+| [TSP](docs/problems/tsp.md) | `Tsp` | `TspTwoOptNeighbor`, `TspRelocateNeighbor` |
 | [Vertex Cover](docs/problems/vertex_cover.md) | `VertexCover` | `VertexCoverFlipNeighbor`, `VertexCoverSwapNeighbor` |
 | [Job Shop Scheduling](docs/problems/job_shop_scheduling.md) | `JobShopScheduling` | `JobShopSwapNeighbor`, `JobShopRelocateNeighbor` |
 | [CVRP](docs/problems/vrp.md) | `Vrp` | `VrpRelocateNeighbor`, `VrpSwapNeighbor`, `VrpTwoOptNeighbor` |

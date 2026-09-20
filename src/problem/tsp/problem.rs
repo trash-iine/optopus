@@ -1,6 +1,6 @@
 use rand::seq::SliceRandom;
 use std::collections::HashSet;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex};
 
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
@@ -14,9 +14,8 @@ pub type TspEdge = (usize, usize);
 /// - `tour`, ordered sequence of city indices forming the tour
 /// - `objective`, total tour length
 ///
-/// Move gains are computed on the fly from [`TspWithCoordinates::distance`]
-/// (backed by the lazily built distance matrix), so no per-solution gain
-/// cache is kept.
+/// Move gains are computed on the fly from [`Tsp::distance`], so no
+/// per-solution gain cache is kept.
 #[derive(Debug, Clone)]
 pub struct TspSolution {
     /// Ordered sequence of city indices representing the tour.
@@ -41,7 +40,7 @@ impl Distance for TspSolution {
     }
 }
 
-impl ProblemTrait for TspWithCoordinates {
+impl ProblemTrait for Tsp {
     type Solution = TspSolution;
 
     fn new_solution(&self, rng: &mut impl rand::Rng) -> TspSolution {
@@ -54,16 +53,16 @@ impl ProblemTrait for TspWithCoordinates {
     }
 }
 
-/// TSPLIB `EDGE_WEIGHT_TYPE` variants supported by [`TspWithCoordinates`].
+/// TSPLIB `EDGE_WEIGHT_TYPE` variants supported by [`Tsp`].
 ///
-/// Each variant selects the distance formula used by [`TspWithCoordinates::distance`].
+/// Each variant selects the distance formula applied to the coordinates.
 /// `Continuous` is the default for programmatically constructed instances and
 /// preserves the library's historical plain-Euclidean behavior; the remaining
 /// variants match the integer-rounded formulas specified by TSPLIB so objective
 /// values are comparable to published optima.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EdgeWeightType {
-    /// Plain Euclidean distance (no rounding). Default for [`TspWithCoordinates::new`].
+    /// Plain Euclidean distance (no rounding). Default for [`Tsp::new`].
     Continuous,
     /// `nint(sqrt(dx^2 + dy^2))`, TSPLIB `EUC_2D`.
     Euc2d,
@@ -77,55 +76,17 @@ pub enum EdgeWeightType {
 }
 
 /// For each city, its nearest other cities in ascending distance, shared by
-/// every heuristic that reads them. See
-/// [`TspWithCoordinates::nearest_neighbors`].
+/// every heuristic that reads them. See [`Tsp::nearest_neighbors`].
 pub type NeighborLists = Arc<Vec<Vec<usize>>>;
 
-/// TSP problem instance storing city coordinates.
-///
-/// Distances are computed via the formula selected by `edge_weight_type`.
-/// For instances with at most `DIST_MATRIX_MAX_N` cities, the full distance
-/// matrix is built lazily on first use, turning every subsequent
-/// [`TspWithCoordinates::distance`] call into an O(1) lookup.
-#[derive(Debug)]
-pub struct TspWithCoordinates {
-    /// Instance name (from the TSPLIB `NAME` header, the file stem, or
-    /// user-supplied for in-memory instances).
-    pub name: String,
-    /// City coordinates, 0-indexed. Interpretation depends on
-    /// `edge_weight_type`, e.g. `Geo` expects `DDD.MM` degrees-minutes,
-    /// the others expect plane coordinates.
-    pub coordinates: Vec<(f64, f64)>,
-    /// Selects the distance formula used by [`TspWithCoordinates::distance`].
-    pub edge_weight_type: EdgeWeightType,
-    /// Lazily built `n × n` distance matrix (row-major). Only populated when
-    /// `n <= DIST_MATRIX_MAX_N`; reset by [`TspWithCoordinates::add_city`].
-    dist_matrix: OnceLock<Vec<f64>>,
-    /// The nearest-neighbour lists built so far, one entry per `k` asked for.
-    /// Kept on the instance rather than on the heuristics that read them, so
-    /// a heuristic reused across instances can never hold another instance's
-    /// lists. Reset by [`TspWithCoordinates::add_city`].
-    neighbor_lists: Mutex<Vec<(usize, NeighborLists)>>,
+/// The coordinates an instance was built from and the formula that turns a
+/// pair of them into a distance. Only instances built from coordinates have
+/// one, so [`Tsp::from_distance_matrix`] instances have no geometry at all.
+#[derive(Debug, Clone)]
+struct Geometry {
+    coordinates: Vec<(f64, f64)>,
+    edge_weight_type: EdgeWeightType,
 }
-
-/// A clone starts with empty caches. Sharing them would let `add_city` on one
-/// copy leave the other reading lists for coordinates it no longer has.
-impl Clone for TspWithCoordinates {
-    fn clone(&self) -> Self {
-        Self {
-            name: self.name.clone(),
-            coordinates: self.coordinates.clone(),
-            edge_weight_type: self.edge_weight_type,
-            dist_matrix: OnceLock::new(),
-            neighbor_lists: Mutex::default(),
-        }
-    }
-}
-
-/// Maximum number of cities for which the full distance matrix is precomputed
-/// (memory: `n² × 8` bytes, i.e. 32 MB at the 2000-city cap). Larger instances
-/// fall back to computing each distance on the fly.
-pub const DIST_MATRIX_MAX_N: usize = 2000;
 
 /// Converts a `DDD.MM` TSPLIB coordinate to radians (GEO distance helper).
 #[inline]
@@ -135,34 +96,234 @@ fn geo_ddmm_to_rad(xy: f64) -> f64 {
     std::f64::consts::PI * (deg + 5.0 * min / 3.0) / 180.0
 }
 
-impl TspWithCoordinates {
-    /// Creates a new instance with [`EdgeWeightType::Continuous`] distances.
-    pub fn new(name: String, coordinates: Vec<(f64, f64)>) -> Self {
-        Self {
-            name,
-            coordinates,
-            edge_weight_type: EdgeWeightType::Continuous,
-            dist_matrix: OnceLock::new(),
-            neighbor_lists: Mutex::default(),
+impl Geometry {
+    /// Computes the distance formula directly from the coordinates.
+    fn distance(&self, i: usize, j: usize) -> f64 {
+        let (x1, y1) = self.coordinates[i];
+        let (x2, y2) = self.coordinates[j];
+        match self.edge_weight_type {
+            EdgeWeightType::Continuous => {
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                (dx * dx + dy * dy).sqrt()
+            }
+            EdgeWeightType::Euc2d => {
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                (dx * dx + dy * dy).sqrt().round()
+            }
+            EdgeWeightType::Ceil2d => {
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                (dx * dx + dy * dy).sqrt().ceil()
+            }
+            EdgeWeightType::Att => {
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                let r = ((dx * dx + dy * dy) / 10.0).sqrt();
+                let t = r.round();
+                if t < r { t + 1.0 } else { t }
+            }
+            EdgeWeightType::Geo => {
+                // TSPLIB GEO: column 1 = latitude, column 2 = longitude, encoded DDD.MM.
+                let lat_i = geo_ddmm_to_rad(x1);
+                let long_i = geo_ddmm_to_rad(y1);
+                let lat_j = geo_ddmm_to_rad(x2);
+                let long_j = geo_ddmm_to_rad(y2);
+                const RRR: f64 = 6378.388;
+                let q1 = (long_i - long_j).cos();
+                let q2 = (lat_i - lat_j).cos();
+                let q3 = (lat_i + lat_j).cos();
+                (RRR * (0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3)).acos() + 1.0).trunc()
+            }
         }
     }
 
-    /// Creates a new instance with an explicit TSPLIB edge-weight type.
+    /// The `k` nearest other cities of every city with their distances, in
+    /// ascending distance. Ties are broken by city index, since the sort is
+    /// stable over an ascending index scan, which is what keeps a seeded run
+    /// reproducible on instances with repeated distances.
+    fn nearest_rows(&self, k: usize) -> Vec<Vec<(usize, f64)>> {
+        let n = self.coordinates.len();
+        (0..n)
+            .map(|i| {
+                let mut row: Vec<(usize, f64)> = (0..n)
+                    .filter(|&j| j != i)
+                    .map(|j| (j, self.distance(i, j)))
+                    .collect();
+                row.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                row.truncate(k);
+                row
+            })
+            .collect()
+    }
+}
+
+/// Where an instance keeps its distances.
+#[derive(Debug, Clone)]
+enum DistanceStore {
+    /// The full `n × n` matrix, row-major. The geometry is present only when
+    /// the matrix was built from coordinates.
+    Full {
+        matrix: Vec<f64>,
+        geometry: Option<Geometry>,
+    },
+    /// For each city, its `k` nearest other cities with their distances, in
+    /// ascending distance. Any other pair is computed from the geometry, so
+    /// the geometry is not optional here.
+    Nearest {
+        rows: Vec<Vec<(usize, f64)>>,
+        geometry: Geometry,
+    },
+}
+
+/// TSP problem instance holding a distance store.
+///
+/// An instance is built from 2D coordinates and a distance formula, either as
+/// the full distance matrix ([`Tsp::new`], [`Tsp::with_edge_weight_type`]) or
+/// as the `k` nearest neighbours of every city with the remaining pairs
+/// computed from the coordinates on demand ([`Tsp::with_nearest_neighbors`]),
+/// or from a distance matrix given directly ([`Tsp::from_distance_matrix`]).
+/// Every store answers [`Tsp::distance`] for any pair of cities.
+#[derive(Debug)]
+pub struct Tsp {
+    /// Instance name (from the TSPLIB `NAME` header, the file stem, or
+    /// user-supplied for in-memory instances).
+    pub name: String,
+    n: usize,
+    distances: DistanceStore,
+    /// The nearest-neighbour lists built so far, one entry per `k` asked for.
+    /// Kept on the instance rather than on the heuristics that read them, so
+    /// a heuristic reused across instances can never hold another instance's
+    /// lists.
+    neighbor_lists: Mutex<Vec<(usize, NeighborLists)>>,
+}
+
+/// The lists built so far are shared by the clone, which is safe because an
+/// instance is never modified after construction.
+impl Clone for Tsp {
+    fn clone(&self) -> Self {
+        let lists = self
+            .neighbor_lists
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone();
+        Self {
+            name: self.name.clone(),
+            n: self.n,
+            distances: self.distances.clone(),
+            neighbor_lists: Mutex::new(lists),
+        }
+    }
+}
+
+impl Tsp {
+    /// Largest number of cities for which [`Tsp::load_file`] keeps the full
+    /// distance matrix (memory `n² × 8` bytes, 32 MB at this cap). Larger
+    /// files keep [`Tsp::NEAREST_NEIGHBORS_ABOVE_CAP`] neighbours per city.
+    pub const DIST_MATRIX_MAX_N: usize = 2000;
+    /// Neighbours per city that [`Tsp::load_file`] keeps above the cap,
+    /// enough for the candidate lists Lin-Kernighan and the anchored tour
+    /// descent ask for by default.
+    pub const NEAREST_NEIGHBORS_ABOVE_CAP: usize = 20;
+
+    /// Creates an instance with the full distance matrix and
+    /// [`EdgeWeightType::Continuous`] distances.
+    pub fn new(name: String, coordinates: Vec<(f64, f64)>) -> Self {
+        Self::with_edge_weight_type(name, coordinates, EdgeWeightType::Continuous)
+    }
+
+    /// Creates an instance with the full distance matrix and an explicit
+    /// TSPLIB edge-weight type.
     pub fn with_edge_weight_type(
         name: String,
         coordinates: Vec<(f64, f64)>,
         edge_weight_type: EdgeWeightType,
     ) -> Self {
-        Self {
-            name,
+        let geometry = Geometry {
             coordinates,
             edge_weight_type,
-            dist_matrix: OnceLock::new(),
+        };
+        let n = geometry.coordinates.len();
+        let mut matrix = Vec::with_capacity(n * n);
+        for a in 0..n {
+            for b in 0..n {
+                matrix.push(geometry.distance(a, b));
+            }
+        }
+        Self::from_store(
+            name,
+            n,
+            DistanceStore::Full {
+                matrix,
+                geometry: Some(geometry),
+            },
+        )
+    }
+
+    /// Creates an instance that keeps only the `k` nearest neighbours of every
+    /// city, `n × k` distances instead of `n²`. Any other pair is computed
+    /// from the coordinates when asked for, so the instance answers exactly
+    /// like the full matrix would, only slower on pairs outside the lists.
+    /// `k` larger than `n - 1` keeps every other city.
+    pub fn with_nearest_neighbors(
+        name: String,
+        coordinates: Vec<(f64, f64)>,
+        edge_weight_type: EdgeWeightType,
+        k: usize,
+    ) -> Self {
+        let geometry = Geometry {
+            coordinates,
+            edge_weight_type,
+        };
+        let n = geometry.coordinates.len();
+        let rows = geometry.nearest_rows(k.min(n.saturating_sub(1)));
+        Self::from_store(name, n, DistanceStore::Nearest { rows, geometry })
+    }
+
+    /// Creates an instance from a distance matrix given directly, so it has
+    /// no coordinates. `matrix[i][j]` is the distance between cities `i` and
+    /// `j` and is expected to be symmetric, since the 2-opt gains price a
+    /// segment reversal from the four exchanged edges alone. Returns an
+    /// error unless the matrix is square.
+    pub fn from_distance_matrix(name: String, matrix: Vec<Vec<f64>>) -> Result<Self, OptError> {
+        let n = matrix.len();
+        let mut flat = Vec::with_capacity(n * n);
+        for (i, row) in matrix.into_iter().enumerate() {
+            if row.len() != n {
+                return Err(OptError::InvalidState(format!(
+                    "distance matrix row {} has {} entries, expected {}",
+                    i,
+                    row.len(),
+                    n
+                )));
+            }
+            flat.extend(row);
+        }
+        Ok(Self::from_store(
+            name,
+            n,
+            DistanceStore::Full {
+                matrix: flat,
+                geometry: None,
+            },
+        ))
+    }
+
+    fn from_store(name: String, n: usize, distances: DistanceStore) -> Self {
+        Self {
+            name,
+            n,
+            distances,
             neighbor_lists: Mutex::default(),
         }
     }
 
     /// Loads a TSP instance from a TSPLIB-format file.
+    ///
+    /// Files with at most [`Tsp::DIST_MATRIX_MAX_N`] cities get the full
+    /// distance matrix, larger ones keep
+    /// [`Tsp::NEAREST_NEIGHBORS_ABOVE_CAP`] neighbours per city.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
         use crate::common::InstanceLines;
 
@@ -257,12 +418,35 @@ impl TspWithCoordinates {
             coord.push((x, y));
         }
 
-        Ok(Self::with_edge_weight_type(name, coord, ewt))
+        Ok(if n <= Self::DIST_MATRIX_MAX_N {
+            Self::with_edge_weight_type(name, coord, ewt)
+        } else {
+            Self::with_nearest_neighbors(name, coord, ewt, Self::NEAREST_NEIGHBORS_ABOVE_CAP)
+        })
     }
 
     /// Returns the number of cities.
     pub fn get_n(&self) -> usize {
-        self.coordinates.len()
+        self.n
+    }
+
+    /// The coordinates the instance was built from, `None` for an instance
+    /// built from a distance matrix.
+    pub fn coordinates(&self) -> Option<&[(f64, f64)]> {
+        self.geometry().map(|g| g.coordinates.as_slice())
+    }
+
+    /// The distance formula applied to the coordinates, `None` for an
+    /// instance built from a distance matrix.
+    pub fn edge_weight_type(&self) -> Option<EdgeWeightType> {
+        self.geometry().map(|g| g.edge_weight_type)
+    }
+
+    fn geometry(&self) -> Option<&Geometry> {
+        match &self.distances {
+            DistanceStore::Full { geometry, .. } => geometry.as_ref(),
+            DistanceStore::Nearest { geometry, .. } => Some(geometry),
+        }
     }
 
     /// Returns the directed edge `(i→j)` at position `k` in the tour.
@@ -271,79 +455,31 @@ impl TspWithCoordinates {
         (tour[k], tour[(k + 1) % n])
     }
 
-    /// Returns the distance between cities `i` and `j` using the formula selected
-    /// by `self.edge_weight_type`.
+    /// Returns the distance between cities `i` and `j`.
     ///
-    /// For instances with at most `DIST_MATRIX_MAX_N` cities, the full
-    /// distance matrix is built lazily on the first call and subsequent calls
-    /// are O(1) lookups; larger instances compute the formula on the fly.
+    /// A full matrix answers with one lookup. A nearest-neighbour store scans
+    /// the short list of `i` and falls back to the coordinates for any pair
+    /// outside it, so the value is the same either way.
     #[inline]
     pub fn distance(&self, i: usize, j: usize) -> f64 {
-        let n = self.coordinates.len();
-        if n <= DIST_MATRIX_MAX_N {
-            let matrix = self.dist_matrix.get_or_init(|| {
-                let mut m = Vec::with_capacity(n * n);
-                for a in 0..n {
-                    for b in 0..n {
-                        m.push(self.compute_distance(a, b));
-                    }
-                }
-                m
-            });
-            return matrix[i * n + j];
-        }
-        self.compute_distance(i, j)
-    }
-
-    /// Computes the distance formula directly from the coordinates.
-    fn compute_distance(&self, i: usize, j: usize) -> f64 {
-        let (x1, y1) = self.coordinates[i];
-        let (x2, y2) = self.coordinates[j];
-        match self.edge_weight_type {
-            EdgeWeightType::Continuous => {
-                let dx = x1 - x2;
-                let dy = y1 - y2;
-                (dx * dx + dy * dy).sqrt()
-            }
-            EdgeWeightType::Euc2d => {
-                let dx = x1 - x2;
-                let dy = y1 - y2;
-                (dx * dx + dy * dy).sqrt().round()
-            }
-            EdgeWeightType::Ceil2d => {
-                let dx = x1 - x2;
-                let dy = y1 - y2;
-                (dx * dx + dy * dy).sqrt().ceil()
-            }
-            EdgeWeightType::Att => {
-                let dx = x1 - x2;
-                let dy = y1 - y2;
-                let r = ((dx * dx + dy * dy) / 10.0).sqrt();
-                let t = r.round();
-                if t < r { t + 1.0 } else { t }
-            }
-            EdgeWeightType::Geo => {
-                // TSPLIB GEO: column 1 = latitude, column 2 = longitude, encoded DDD.MM.
-                let lat_i = geo_ddmm_to_rad(x1);
-                let long_i = geo_ddmm_to_rad(y1);
-                let lat_j = geo_ddmm_to_rad(x2);
-                let long_j = geo_ddmm_to_rad(y2);
-                const RRR: f64 = 6378.388;
-                let q1 = (long_i - long_j).cos();
-                let q2 = (lat_i - lat_j).cos();
-                let q3 = (lat_i + lat_j).cos();
-                (RRR * (0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3)).acos() + 1.0).trunc()
-            }
+        match &self.distances {
+            DistanceStore::Full { matrix, .. } => matrix[i * self.n + j],
+            DistanceStore::Nearest { rows, geometry } => rows[i]
+                .iter()
+                .find(|(c, _)| *c == j)
+                .map_or_else(|| geometry.distance(i, j), |(_, d)| *d),
         }
     }
 
     /// For each city, its `k` nearest other cities in ascending distance.
     ///
     /// The candidate lists that Lin-Kernighan and the anchored tour descent
-    /// both restrict their moves to. Built in O(n² log n) from the instance
-    /// alone the first time a `k` is asked for and cached on the instance
-    /// after that, so a heuristic calls this every iteration and pays a lock
-    /// and a lookup, never a stale list from an instance it ran on earlier.
+    /// both restrict their moves to. Built the first time a `k` is asked for
+    /// and cached on the instance after that, so a heuristic calls this every
+    /// iteration and pays a lock and a lookup, never a stale list from an
+    /// instance it ran on earlier. A nearest-neighbour store that already
+    /// holds at least `k` neighbours per city answers from its rows, any
+    /// other case costs O(n² log n) once.
     ///
     /// Ties are broken by city index, since the sort is stable over an
     /// ascending index scan, which is what keeps a seeded run reproducible
@@ -357,8 +493,22 @@ impl TspWithCoordinates {
             return Arc::clone(lists);
         }
         let n = self.get_n();
-        let built: NeighborLists = Arc::new(
-            (0..n)
+        let stored = match &self.distances {
+            DistanceStore::Nearest { rows, .. }
+                if rows
+                    .iter()
+                    .all(|row| row.len() >= k.min(n.saturating_sub(1))) =>
+            {
+                Some(rows)
+            }
+            _ => None,
+        };
+        let built: NeighborLists = Arc::new(match stored {
+            Some(rows) => rows
+                .iter()
+                .map(|row| row.iter().take(k).map(|(j, _)| *j).collect())
+                .collect(),
+            None => (0..n)
                 .map(|i| {
                     let mut nbrs: Vec<(f64, usize)> = (0..n)
                         .filter(|&j| j != i)
@@ -369,17 +519,9 @@ impl TspWithCoordinates {
                     nbrs.into_iter().map(|(_, j)| j).collect()
                 })
                 .collect(),
-        );
+        });
         lists.push((k, Arc::clone(&built)));
         built
-    }
-
-    /// Adds a new city with the given coordinates to the TSP instance.
-    pub fn add_city(&mut self, xy: (f64, f64)) {
-        self.coordinates.push(xy);
-        // Both caches are stale now.
-        self.dist_matrix = OnceLock::new();
-        self.neighbor_lists = Mutex::default();
     }
 
     /// Returns the 2-opt gain for removing edges `a→b` and `c→d` and adding `a→c` and `b→d`
@@ -471,17 +613,17 @@ mod tsp_coord_tests {
     #[test]
     fn test_load_file() {
         let path = make_test_tsp_file();
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
         assert_eq!(tsp.name, "test");
-        assert_eq!(tsp.coordinates.len(), 4);
-        assert_eq!(tsp.edge_weight_type, EdgeWeightType::Euc2d);
+        assert_eq!(tsp.coordinates().unwrap().len(), 4);
+        assert_eq!(tsp.edge_weight_type(), Some(EdgeWeightType::Euc2d));
         let _ = std::fs::remove_file(&path);
     }
 
     #[test]
     fn test_distance() {
         let path = make_test_tsp_file();
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
         assert_eq!(tsp.distance(0, 1), 1.0);
         assert_eq!(tsp.distance(1, 2), 2.0);
         let _ = std::fs::remove_file(&path);
@@ -490,7 +632,7 @@ mod tsp_coord_tests {
     #[test]
     fn test_not_match_size_tour() {
         let path = make_test_tsp_file();
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
         assert!(tsp.calculate_tour_length(&vec![0, 1]).is_err());
         let _ = std::fs::remove_file(&path);
     }
@@ -498,7 +640,7 @@ mod tsp_coord_tests {
     #[test]
     fn test_duplicated_tour() {
         let path = make_test_tsp_file();
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
         assert!(tsp.calculate_tour_length(&vec![0, 1, 0, 2]).is_err());
         let _ = std::fs::remove_file(&path);
     }
@@ -506,7 +648,7 @@ mod tsp_coord_tests {
     #[test]
     fn test_tour_length() {
         let path = make_test_tsp_file();
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
         assert_eq!(tsp.calculate_tour_length(&vec![0, 1, 2, 3]).unwrap(), 6.0);
         let _ = std::fs::remove_file(&path);
     }
@@ -528,9 +670,9 @@ NODE_COORD_SECTION
 EOF
 ";
         let path = write_tmp(contents);
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
         assert_eq!(tsp.name, "multi");
-        assert_eq!(tsp.coordinates.len(), 3);
+        assert_eq!(tsp.coordinates().unwrap().len(), 3);
         let _ = std::fs::remove_file(&path);
     }
 
@@ -548,7 +690,7 @@ NODE_COORD_SECTION
 EOF
 ";
         let path = write_tmp(contents);
-        let result = TspWithCoordinates::load_file(path.to_str().unwrap());
+        let result = Tsp::load_file(path.to_str().unwrap());
         assert!(result.is_err(), "EXPLICIT should be rejected");
         let _ = std::fs::remove_file(&path);
     }
@@ -566,9 +708,9 @@ EOF
              3 5.0 5.0\n\
              EOF\n",
         );
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
-        assert_eq!(tsp.coordinates.len(), 3);
-        assert_eq!(tsp.edge_weight_type, EdgeWeightType::Att);
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.coordinates().unwrap().len(), 3);
+        assert_eq!(tsp.edge_weight_type(), Some(EdgeWeightType::Att));
         // r = sqrt(100 / 10) ≈ 3.162; t = 3; 3 < 3.162 → d = 4
         assert_eq!(tsp.distance(0, 1), 4.0);
         let _ = std::fs::remove_file(&path);
@@ -587,9 +729,9 @@ EOF
              2 14.05 98.12\n\
              EOF\n",
         );
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
-        assert_eq!(tsp.coordinates.len(), 2);
-        assert_eq!(tsp.edge_weight_type, EdgeWeightType::Geo);
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.coordinates().unwrap().len(), 2);
+        assert_eq!(tsp.edge_weight_type(), Some(EdgeWeightType::Geo));
         let d = tsp.distance(0, 1);
         assert!(d > 0.0);
         assert_eq!(d, d.trunc(), "GEO distances must be integer-valued");
@@ -608,8 +750,8 @@ EOF
              2 1.0 1.0\n\
              EOF\n",
         );
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
-        assert_eq!(tsp.edge_weight_type, EdgeWeightType::Ceil2d);
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.edge_weight_type(), Some(EdgeWeightType::Ceil2d));
         // ceil(sqrt(2)) = 2, whereas EUC_2D would round to 1.
         assert_eq!(tsp.distance(0, 1), 2.0);
         let _ = std::fs::remove_file(&path);
@@ -618,7 +760,7 @@ EOF
     #[test]
     fn test_distance_att_formula() {
         // ATT formula: r = sqrt((dx^2 + dy^2) / 10); t = nint(r); d = if t<r {t+1} else {t}
-        let tsp = TspWithCoordinates::with_edge_weight_type(
+        let tsp = Tsp::with_edge_weight_type(
             "att".into(),
             vec![(0.0, 0.0), (10.0, 0.0)],
             EdgeWeightType::Att,
@@ -630,7 +772,7 @@ EOF
     #[test]
     fn test_distance_geo_formula() {
         // Two cities at (0.0, 0.0) and (0.0, 0.0) → identical location → distance ≈ 1 (acos(1)=0, +1 truncated).
-        let tsp = TspWithCoordinates::with_edge_weight_type(
+        let tsp = Tsp::with_edge_weight_type(
             "geo".into(),
             vec![(0.0, 0.0), (0.0, 0.0)],
             EdgeWeightType::Geo,
@@ -638,7 +780,7 @@ EOF
         assert_eq!(tsp.distance(0, 1), 1.0);
 
         // Sanity: positive coordinates give a positive geodesic distance.
-        let tsp2 = TspWithCoordinates::with_edge_weight_type(
+        let tsp2 = Tsp::with_edge_weight_type(
             "geo2".into(),
             vec![(0.0, 0.0), (10.0, 10.0)],
             EdgeWeightType::Geo,
@@ -657,7 +799,7 @@ NODE_COORD_SECTION
 1 0.0 0.0
 ";
         let path = write_tmp(contents);
-        let result = TspWithCoordinates::load_file(path.to_str().unwrap());
+        let result = Tsp::load_file(path.to_str().unwrap());
         assert!(result.is_err(), "missing DIMENSION should error");
         let _ = std::fs::remove_file(&path);
     }
@@ -676,10 +818,115 @@ NODE_COORD_SECTION
 EOF
 ";
         let path = write_tmp(contents);
-        let tsp = TspWithCoordinates::load_file(path.to_str().unwrap()).unwrap();
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
         assert_eq!(tsp.name, "permuted");
-        assert_eq!(tsp.coordinates.len(), 2);
+        assert_eq!(tsp.coordinates().unwrap().len(), 2);
         assert!((tsp.distance(0, 1) - 5.0).abs() < 1e-9);
+        let _ = std::fs::remove_file(&path);
+    }
+    /// Twenty cities on a lattice, so repeated distances exercise the tie
+    /// breaking of every nearest-neighbour path.
+    fn lattice() -> Vec<(f64, f64)> {
+        (0..20).map(|i| ((i % 5) as f64, (i / 5) as f64)).collect()
+    }
+
+    #[test]
+    fn from_distance_matrix_rejects_a_ragged_matrix() {
+        let ragged = vec![vec![0.0, 1.0], vec![1.0, 0.0, 2.0]];
+        assert!(Tsp::from_distance_matrix("ragged".into(), ragged).is_err());
+    }
+
+    #[test]
+    fn from_distance_matrix_reads_the_matrix_as_given() {
+        let matrix = vec![
+            vec![0.0, 3.0, 7.0],
+            vec![2.0, 0.0, 5.0],
+            vec![9.0, 4.0, 0.0],
+        ];
+        let tsp = Tsp::from_distance_matrix("m".into(), matrix).unwrap();
+        assert_eq!(tsp.get_n(), 3);
+        assert_eq!(tsp.distance(0, 1), 3.0);
+        assert_eq!(tsp.distance(1, 0), 2.0);
+        assert_eq!(
+            tsp.calculate_tour_length(&vec![0, 1, 2]).unwrap(),
+            3.0 + 5.0 + 9.0
+        );
+        assert!(tsp.coordinates().is_none());
+        assert!(tsp.edge_weight_type().is_none());
+        assert_eq!(
+            *tsp.nearest_neighbors(2),
+            vec![vec![1, 2], vec![0, 2], vec![1, 0]]
+        );
+    }
+
+    #[test]
+    fn nearest_store_answers_like_the_full_matrix() {
+        let full = Tsp::with_edge_weight_type("full".into(), lattice(), EdgeWeightType::Euc2d);
+        let sparse =
+            Tsp::with_nearest_neighbors("sparse".into(), lattice(), EdgeWeightType::Euc2d, 4);
+        assert_eq!(sparse.edge_weight_type(), Some(EdgeWeightType::Euc2d));
+        assert_eq!(sparse.coordinates(), full.coordinates());
+        for i in 0..20 {
+            for j in 0..20 {
+                assert_eq!(
+                    sparse.distance(i, j),
+                    full.distance(i, j),
+                    "pair ({i}, {j})"
+                );
+            }
+        }
+        let mut rng = <rand::rngs::SmallRng as rand::SeedableRng>::seed_from_u64(3);
+        let tour = full.new_solution(&mut rng).tour;
+        assert_eq!(
+            sparse.calculate_tour_length(&tour).unwrap(),
+            full.calculate_tour_length(&tour).unwrap()
+        );
+    }
+
+    #[test]
+    fn nearest_store_lists_match_the_full_matrix_below_and_above_its_k() {
+        let full = Tsp::new("full".into(), lattice());
+        let sparse =
+            Tsp::with_nearest_neighbors("sparse".into(), lattice(), EdgeWeightType::Continuous, 4);
+        for k in [1, 3, 4, 5, 19, 30] {
+            assert_eq!(
+                *sparse.nearest_neighbors(k),
+                *full.nearest_neighbors(k),
+                "k = {k}"
+            );
+        }
+    }
+
+    #[test]
+    fn nearest_store_clamps_k_to_the_other_cities() {
+        let tsp = Tsp::with_nearest_neighbors(
+            "tiny".into(),
+            vec![(0.0, 0.0), (1.0, 0.0), (0.0, 2.0)],
+            EdgeWeightType::Continuous,
+            10,
+        );
+        assert_eq!(
+            *tsp.nearest_neighbors(10),
+            vec![vec![1, 2], vec![0, 2], vec![0, 1]]
+        );
+        assert_eq!(tsp.distance(1, 2), 5f64.sqrt());
+    }
+
+    #[test]
+    fn load_file_above_the_cap_keeps_the_coordinates() {
+        let n = Tsp::DIST_MATRIX_MAX_N + 1;
+        let mut contents = format!(
+            "NAME: big\nTYPE: TSP\nDIMENSION: {n}\nEDGE_WEIGHT_TYPE: EUC_2D\nNODE_COORD_SECTION\n"
+        );
+        for i in 0..n {
+            contents.push_str(&format!("{} {} {}\n", i + 1, (i * 7) % 101, (i * 13) % 89));
+        }
+        let path = write_tmp(&contents);
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
+        assert_eq!(tsp.get_n(), n);
+        assert_eq!(tsp.coordinates().map(|c| c.len()), Some(n));
+        assert_eq!(tsp.distance(0, 1), 7f64.hypot(13.0).round());
+        assert_eq!(tsp.distance(0, 1), tsp.distance(1, 0));
         let _ = std::fs::remove_file(&path);
     }
 }

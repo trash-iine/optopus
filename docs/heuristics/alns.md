@@ -67,7 +67,7 @@ re-inserted cities:
 ```rust
 use optopus::prelude::*;
 
-let tsp = TspWithCoordinates::load_file("data/instances/tsp/berlin52.tsp")?;
+let tsp = Tsp::load_file("data/instances/tsp/berlin52.tsp")?;
 let mut state = SearchState::new(&tsp);
 
 alns_for_tsp(StopCondition::iterations(10_000), 0.15, 0.9995).run(&mut state)?;
