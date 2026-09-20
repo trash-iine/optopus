@@ -22,7 +22,7 @@ seed = 42                              # optional master seed; when set, reruns 
 
 [[instances]]
 path = "data/instances/max_cut/G*"     # file path or glob (Gset files have no extension)
-problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | Vrp
+problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | Vrp | GraphColoring
 
 [[heuristics]]
 kind = "LocalSearch"                   # see kinds below

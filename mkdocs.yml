@@ -80,6 +80,7 @@ nav:
       - Vertex Cover: problems/vertex_cover.md
       - Job Shop Scheduling: problems/job_shop_scheduling.md
       - CVRP: problems/vrp.md
+      - Graph Coloring: problems/graph_coloring.md
       - Formula: problems/formula.md
   - Heuristics:
       - Overview: heuristics/README.md

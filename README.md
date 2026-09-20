@@ -3,7 +3,8 @@
 A metaheuristic optimization library for combinatorial problems.
 Provides a uniform interface for applying local search, tabu search, simulated
 annealing, beam search, genetic algorithms, and more to MaxCut, QUBO, MaxSAT,
-TSP, Vertex Cover, Job Shop Scheduling, CVRP, and user-defined problems.
+TSP, Vertex Cover, Job Shop Scheduling, CVRP, Graph Coloring, and user-defined
+problems.
 
 ## Quick Start
 
@@ -43,6 +44,7 @@ file-based loading.
 | [Vertex Cover](docs/problems/vertex_cover.md) | `VertexCover` | `VertexCoverFlipNeighbor`, `VertexCoverSwapNeighbor` |
 | [Job Shop Scheduling](docs/problems/job_shop_scheduling.md) | `JobShopScheduling` | `JobShopSwapNeighbor`, `JobShopRelocateNeighbor` |
 | [CVRP](docs/problems/vrp.md) | `Vrp` | `VrpRelocateNeighbor`, `VrpSwapNeighbor`, `VrpTwoOptNeighbor` |
+| [Graph Coloring](docs/problems/graph_coloring.md) | `GraphColoring` | `GraphColoringRecolorNeighbor`, `GraphColoringSwapNeighbor` |
 | [Formula](docs/problems/formula.md) | `FormulaProblem` | `FormulaFlipNeighbor`, `FormulaSwapNeighbor` |
 
 ## Available Heuristics

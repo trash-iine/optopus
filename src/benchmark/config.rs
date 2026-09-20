@@ -23,6 +23,7 @@ pub enum ProblemKind {
     VertexCover,
     JobShop,
     Vrp,
+    GraphColoring,
 }
 
 impl ProblemKind {
@@ -35,6 +36,7 @@ impl ProblemKind {
         ProblemKind::VertexCover,
         ProblemKind::JobShop,
         ProblemKind::Vrp,
+        ProblemKind::GraphColoring,
     ];
 }
 

@@ -67,6 +67,8 @@ mod tests {
             Sat => SatSwapNeighbor { i: 0, j: 1, gain: 0 },
             VertexCover => VertexCoverFlipNeighbor { i: 0, gain: 0 },
             VertexCover => VertexCoverSwapNeighbor { i: 0, j: 1, gain: 0 },
+            GraphColoring => GraphColoringRecolorNeighbor { v: 0, new_color: 1, gain: 0 },
+            GraphColoring => GraphColoringSwapNeighbor { i: 0, j: 1, gain: 0 },
             TspWithCoordinates => TspTwoOptNeighbor { i: 0, j: 1, gain: 0.0 },
             TspWithCoordinates => TspRelocateNeighbor { pos: 0, ins: 2, gain: 0.0 },
             JobShopScheduling => JobShopSwapNeighbor { i: 0, gain: 0.0 },
