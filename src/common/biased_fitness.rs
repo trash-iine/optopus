@@ -116,6 +116,16 @@ impl<T> BiasedFitnessPopulation<T> {
         self.rerank();
     }
 
+    /// How many members the cost rank alone keeps alive.
+    pub fn n_elite(&self) -> usize {
+        self.n_elite
+    }
+
+    /// How many nearest members the diversity contribution averages.
+    pub fn n_closest(&self) -> usize {
+        self.n_closest
+    }
+
     pub fn len(&self) -> usize {
         self.members.len()
     }

@@ -77,13 +77,6 @@ impl Individual {
 /// penalized by a capacity weight the search adapts as it runs.
 pub(super) type Subpopulation = BiasedFitnessPopulation<Individual>;
 
-// Vidal's published nbElite and nbClose: how many members the cost rank alone
-// keeps alive, and how many nearest members are averaged into a diversity
-// contribution. Fixed here rather than exposed, HGS being the algorithm they
-// were published for. `GeneticAlgorithm` takes both from its config.
-const N_ELITE: usize = 4;
-const N_CLOSEST: usize = 5;
-
 /// The diversity metric, as the shared component wants it.
 fn broken_pairs(a: &Individual, b: &Individual) -> f64 {
     a.broken_pairs_distance(b)
@@ -98,11 +91,12 @@ pub(super) fn penalized(penalty: f64) -> CostFn<Individual> {
     Box::new(move |m| m.cost(penalty))
 }
 
-/// An empty sub-population ranked under `penalty`.
-pub(super) fn sub_population(penalty: f64) -> Subpopulation {
+/// An empty sub-population ranked under `penalty`, with Vidal's `nbElite` and
+/// `nbClose` as the search was built with.
+pub(super) fn sub_population(penalty: f64, n_elite: usize, n_closest: usize) -> Subpopulation {
     BiasedFitnessPopulation::new(
-        N_ELITE,
-        N_CLOSEST,
+        n_elite,
+        n_closest,
         penalized(penalty),
         Box::new(broken_pairs),
     )
@@ -143,7 +137,7 @@ mod tests {
     #[test]
     fn the_penalty_reaches_the_cost_the_ranking_reads() {
         let n = 6;
-        let mut pop = sub_population(1.0);
+        let mut pop = sub_population(1.0, 4, 5);
         // Short but over capacity, against long but feasible.
         let short_infeasible = individual(n, vec![vec![1, 2, 3], vec![4, 5, 6]], 10.0, 5);
         let long_feasible = individual(n, vec![vec![1, 4, 5], vec![2, 3, 6]], 20.0, 0);

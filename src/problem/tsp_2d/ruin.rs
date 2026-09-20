@@ -19,16 +19,6 @@ use crate::trait_defs::{LocalRepair, Ruinable};
 /// Marks a city that is not currently on the tour in [`TspPartial::pos`].
 const NOT_PLACED: usize = usize::MAX;
 
-/// Nearest partners considered per city by the post-repair descent.
-///
-/// Twice Lin-Kernighan's default of 5, since Or-opt and 2-opt have no depth
-/// to make up for a short list, and half VRP's 20, since a tour has no second
-/// route for a partner to be in. Unmeasured beyond that.
-const GRANULARITY: usize = 10;
-
-/// Descent passes over a recreated tour. Matches VRP's.
-const MAX_LS_PASSES: usize = 4;
-
 /// A tour mid-ruin, with the cities taken out of it.
 ///
 /// The tour is kept as the sequence it will be handed back as, plus the
@@ -273,15 +263,76 @@ impl Ruinable for TspWithCoordinates {
 /// near ones, tried first-improvement over the granular pairs, the same shape
 /// as VRP's [`AnchoredRouteDescent`](crate::problem::vrp::AnchoredRouteDescent).
 /// The nearest-neighbour lists it reads are cached on the instance, so this
-/// holds only its sweep buffers.
-#[derive(Debug, Default)]
+/// holds only its sweep buffers and its three tunables, each behind a builder
+/// with a published default.
+#[derive(Debug)]
 pub struct AnchoredTourDescent {
     sweep: AnchoredSweep,
+    granularity: usize,
+    max_passes: usize,
+}
+
+impl Default for AnchoredTourDescent {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AnchoredTourDescent {
+    /// Nearest partners considered per city, unless
+    /// [`with_granularity`](Self::with_granularity) says otherwise.
+    ///
+    /// Twice Lin-Kernighan's default of 5, since Or-opt and 2-opt have no
+    /// depth to make up for a short list, and half VRP's 20, since a tour has
+    /// no second route for a partner to be in. Unmeasured beyond that.
+    pub const DEFAULT_GRANULARITY: usize = 10;
+
+    /// Descent passes over a recreated tour, unless
+    /// [`with_max_passes`](Self::with_max_passes) says otherwise. Matches
+    /// VRP's.
+    pub const DEFAULT_MAX_PASSES: usize = 4;
+
+    /// A descent with the published defaults.
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            sweep: AnchoredSweep::new(),
+            granularity: Self::DEFAULT_GRANULARITY,
+            max_passes: Self::DEFAULT_MAX_PASSES,
+        }
+    }
+
+    /// Builder-style: how many nearest partners of each city the moves
+    /// consider. Defaults to [`DEFAULT_GRANULARITY`](Self::DEFAULT_GRANULARITY).
+    ///
+    /// # Panics
+    ///
+    /// Panics if `granularity` is zero, since a descent with no partners
+    /// can make no move.
+    pub fn with_granularity(mut self, granularity: usize) -> Self {
+        assert!(granularity >= 1, "granularity must be at least 1");
+        self.granularity = granularity;
+        self
+    }
+
+    /// Builder-style: how many nearest partners of each anchor the sweep
+    /// visits along with it. Defaults to [`AnchoredSweep::DEFAULT_RING`], and
+    /// zero sweeps the anchors alone.
+    pub fn with_ring(mut self, ring: usize) -> Self {
+        self.sweep = std::mem::take(&mut self.sweep).with_ring(ring);
+        self
+    }
+
+    /// Builder-style: how many passes over the sweep list a repair may
+    /// spend. Defaults to [`DEFAULT_MAX_PASSES`](Self::DEFAULT_MAX_PASSES).
+    ///
+    /// # Panics
+    ///
+    /// Panics if `max_passes` is zero, since a repair with no pass repairs
+    /// nothing.
+    pub fn with_max_passes(mut self, max_passes: usize) -> Self {
+        assert!(max_passes >= 1, "max_passes must be at least 1");
+        self.max_passes = max_passes;
+        self
     }
 }
 
@@ -329,11 +380,11 @@ impl LocalRepair<TspWithCoordinates> for AnchoredTourDescent {
         }
         // Cached on the instance, so this is a lookup after the first call
         // and can never be another instance's lists.
-        let neighbors = prob.nearest_neighbors(GRANULARITY);
+        let neighbors = prob.nearest_neighbors(self.granularity);
         self.sweep.ensure(prob.get_n());
         self.sweep
             .collect_around(anchors, &neighbors, |v| partial.pos[v] != NOT_PLACED);
-        self.sweep.sweep(rng, MAX_LS_PASSES, |u| {
+        self.sweep.sweep(rng, self.max_passes, |u| {
             improve_around(partial, prob, &neighbors[u], u)
         });
         #[cfg(debug_assertions)]
@@ -489,6 +540,38 @@ mod tests {
         tsp.remove_all(&mut partial, &[c]);
         assert_length_matches(&tsp, &partial);
         assert!((sol.objective - partial.length - gain).abs() < 1e-9);
+    }
+
+    /// The builders have to reach the sweep, not merely be stored. The
+    /// narrowest descent, one partner, no ring, one pass, still repairs a
+    /// random ring tour and leaves it valid.
+    #[test]
+    fn the_narrowest_descent_still_repairs() {
+        let tsp = ring(40);
+        let mut rng = SmallRng::seed_from_u64(5);
+        let sol = tsp.new_solution(&mut rng);
+        let mut partial = tsp.to_partial(&sol);
+        let anchors: Vec<usize> = sol.tour[..8].to_vec();
+        let mut descent = AnchoredTourDescent::new()
+            .with_granularity(1)
+            .with_ring(0)
+            .with_max_passes(1);
+        assert_eq!(descent.sweep.ring(), 0);
+        descent.repair_around(&tsp, &mut partial, &anchors, &mut rng);
+        assert!(partial.length < sol.objective);
+        assert_length_matches(&tsp, &partial);
+    }
+
+    #[test]
+    #[should_panic(expected = "granularity must be at least 1")]
+    fn zero_granularity_is_rejected() {
+        let _ = AnchoredTourDescent::new().with_granularity(0);
+    }
+
+    #[test]
+    #[should_panic(expected = "max_passes must be at least 1")]
+    fn zero_passes_are_rejected() {
+        let _ = AnchoredTourDescent::new().with_max_passes(0);
     }
 
     /// The descent may only shorten the tour, and has to leave it a

@@ -68,7 +68,8 @@ tour as the one container, so
 [AdaptiveLargeNeighborhoodSearch](../heuristics/alns.md) runs on it.
 `alns_for_tsp` pairs the search with `AnchoredTourDescent`, an Or-opt and
 2-opt descent over the cities a ruin just re-inserted and their nearest
-neighbours.
+neighbours, whose granularity, ring and pass count are builders described on
+that page.
 
 ## Edge-weight types
 

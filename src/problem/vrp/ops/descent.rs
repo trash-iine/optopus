@@ -60,6 +60,12 @@ impl Descent {
         }
     }
 
+    /// Sets how many partners of each anchor [`Descent::run_around`] widens
+    /// the anchors by.
+    pub(crate) fn set_ring(&mut self, ring: usize) {
+        self.sweep = std::mem::take(&mut self.sweep).with_ring(ring);
+    }
+
     /// The candidate lists, for callers that also build tours from them.
     pub(crate) fn neighbors(&self) -> &[Vec<usize>] {
         &self.neighbors
@@ -92,8 +98,8 @@ impl Descent {
     /// descent too expensive to run every iteration. The anchor set is widened
     /// by one granular ring, so a customer displaced by the edit is
     /// reconsidered too, not only the ones the caller moved, see
-    /// [`ANCHOR_RING`](crate::common::anchored_sweep::ANCHOR_RING) for how
-    /// wide that ring is and why it is narrow.
+    /// [`AnchoredSweep::DEFAULT_RING`] for how wide that ring is by default
+    /// and why it is narrow.
     pub(crate) fn run_around(
         &mut self,
         state: &mut RouteState,

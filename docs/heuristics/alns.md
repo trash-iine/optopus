@@ -151,6 +151,22 @@ arguments.
 Only the ratios between the three rewards matter, since the weights are a
 convex blend of segment averages.
 
+The two local repairs carry their own builders, with the same shape.
+`AnchoredRouteDescent::new()` and `AnchoredTourDescent::new()` give the
+published defaults, and each chains any of
+
+| Builder | Sets | Default |
+|---|---|---|
+| `with_granularity(k)` | nearest partners each move considers | `20` on routes, `10` on a tour |
+| `with_ring(r)` | partners of each anchor swept along with it, `0` for the anchors alone | `5` |
+| `with_max_passes(p)` | passes over the sweep list per repair | `4` |
+
+The defaults are associated constants on each descent
+(`AnchoredTourDescent::DEFAULT_GRANULARITY` and so on, the ring's being
+`AnchoredSweep::DEFAULT_RING`). A tuned descent is handed to
+`with_local_repair` in place of the one `alns_for_vrp` or `alns_for_tsp`
+would have built.
+
 `clear()` resets the operator weights and the temperature but keeps what the
 builders set. A `LocalRepair`'s own instance-derived caches, the candidate
 lists both descents hold, are its own to keep or drop.
@@ -166,9 +182,9 @@ cooling_rate = 0.9995      # optional (default shown)
 max_duration_secs = 30.0
 ```
 
-Those two keys are the whole config surface. The builders above are reachable
-from Rust and not from a TOML, so a config naming one of them is accepted and
-then ignored.
+Those two keys are the whole config surface. The builders above, the
+search's and the descents' alike, are reachable from Rust and not from a TOML,
+so a config naming one of them is accepted and then ignored.
 
 ## References
 

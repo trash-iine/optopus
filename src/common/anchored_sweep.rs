@@ -12,28 +12,54 @@
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 
-/// Partners of an anchor that a sweep visits along with it.
-///
-/// Deliberately far below the granularity of the candidate lists: the anchors
-/// of a large ruin, widened by a full candidate list of 20, already cover most
-/// of a mid-sized instance, and a sweep that touches everything is the full
-/// descent the caller was trying not to pay for. The nearest handful is where
-/// a displaced vertex actually lands.
-pub const ANCHOR_RING: usize = 5;
-
 /// The sweep list and the marks that keep it free of duplicates, kept between
 /// calls so a descent allocates nothing per iteration.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct AnchoredSweep {
     /// The vertices a pass visits, shuffled in place each time.
     order: Vec<usize>,
     /// Membership marks that keep `order` free of duplicates without sorting it.
     seen: Vec<bool>,
+    /// How many partners of each anchor join the list.
+    ring: usize,
+}
+
+impl Default for AnchoredSweep {
+    fn default() -> Self {
+        Self {
+            order: Vec::new(),
+            seen: Vec::new(),
+            ring: Self::DEFAULT_RING,
+        }
+    }
 }
 
 impl AnchoredSweep {
+    /// Partners of an anchor that a sweep visits along with it, unless
+    /// [`with_ring`](Self::with_ring) says otherwise.
+    ///
+    /// Deliberately far below the granularity of the candidate lists: the
+    /// anchors of a large ruin, widened by a full candidate list of 20,
+    /// already cover most of a mid-sized instance, and a sweep that touches
+    /// everything is the full descent the caller was trying not to pay for.
+    /// The nearest handful is where a displaced vertex actually lands.
+    pub const DEFAULT_RING: usize = 5;
+
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Builder-style: how many nearest partners of each anchor the sweep
+    /// visits along with it. Defaults to [`DEFAULT_RING`](Self::DEFAULT_RING).
+    /// Zero sweeps the anchors alone.
+    pub fn with_ring(mut self, ring: usize) -> Self {
+        self.ring = ring;
+        self
+    }
+
+    /// The ring width in force.
+    pub fn ring(&self) -> usize {
+        self.ring
     }
 
     /// Sizes the marks for vertex ids below `n`. Cheap to call every time,
@@ -50,9 +76,9 @@ impl AnchoredSweep {
         self.order.extend(all);
     }
 
-    /// Makes the sweep list the anchors plus the first [`ANCHOR_RING`]
-    /// partners of each, in that order and without repeats, dropping any
-    /// vertex `keep` rejects (one not currently placed, say).
+    /// Makes the sweep list the anchors plus the first `ring` partners of
+    /// each, in that order and without repeats, dropping any vertex `keep`
+    /// rejects (one not currently placed, say).
     ///
     /// # Panics
     ///
@@ -66,7 +92,7 @@ impl AnchoredSweep {
     ) {
         self.order.clear();
         for &u in anchors {
-            for &v in std::iter::once(&u).chain(neighbors[u].iter().take(ANCHOR_RING)) {
+            for &v in std::iter::once(&u).chain(neighbors[u].iter().take(self.ring)) {
                 if !self.seen[v] && keep(v) {
                     self.seen[v] = true;
                     self.order.push(v);
@@ -120,6 +146,22 @@ mod tests {
         sweep.collect_around(&[3], &neighbors, |v| v != 0);
         assert_eq!(sweep.order, vec![3]);
         assert!(sweep.seen.iter().all(|&s| !s), "marks are reset after use");
+    }
+
+    /// The ring width bounds how far each anchor is widened. Zero is the
+    /// anchors alone, one adds each anchor's nearest partner.
+    #[test]
+    fn with_ring_bounds_the_widening() {
+        let neighbors = vec![vec![1, 2], vec![0, 2], vec![0, 1], vec![0]];
+        let mut alone = AnchoredSweep::new().with_ring(0);
+        alone.ensure(4);
+        alone.collect_around(&[0, 3], &neighbors, |_| true);
+        assert_eq!(alone.order, vec![0, 3]);
+
+        let mut one = AnchoredSweep::new().with_ring(1);
+        one.ensure(4);
+        one.collect_around(&[3], &neighbors, |_| true);
+        assert_eq!(one.order, vec![3, 0]);
     }
 
     /// A pass that improves nothing ends the sweep, whatever `max_passes`
