@@ -3,7 +3,7 @@
 //! The search itself is generic
 //! ([`BreakoutLocalSearch`](crate::heuristic::BreakoutLocalSearch)). What is
 //! here is the three operators MaxCut fills its perturbation bank with, and the
-//! reading of `tabu_tenure` that Benlic & Hao's schedule asks for.
+//! builder that wires them into Benlic & Hao's schedule.
 
 use super::best_swap::BestSwap;
 use crate::heuristic::{
@@ -79,8 +79,10 @@ pub fn max_cut_perturbation(
 ///
 /// # Parameters
 ///
-/// - `tabu_tenure`, the paper's `gamma`, doubled on the way in so a vertex
-///   stays forbidden for `2 gamma` as the paper has it
+/// - `tabu_tenure`, the prohibition length the tabu memory stores, the same
+///   meaning it has under [`TabuSearch`]. The paper's `gamma` is counted twice,
+///   once when a vertex is recorded and once more in the eligibility test, so
+///   its `rand[3, |V|/10]` on the G-set is `(6, |V|/5)` here
 /// - `t`, period of the `omega` counter before it resets
 /// - `l0`, initial perturbation length
 /// - `p0`, minimum probability of a directed perturbation
@@ -98,47 +100,27 @@ pub fn bls_for_max_cut(
     p0: f64,
     q: f64,
 ) -> BreakoutLocalSearchForMaxCut {
-    let effective = paper_effective_tenure(tabu_tenure);
     BreakoutLocalSearch::new(
         stop_condition,
-        effective,
+        tabu_tenure,
         max_cut_descent(),
         AdaptivePerturbation::new(
             t,
             l0,
             p0,
-            max_cut_perturbation(PerturbationType::Strong, effective),
+            max_cut_perturbation(PerturbationType::Strong, tabu_tenure),
             vec![
                 (
-                    max_cut_perturbation(PerturbationType::WeakFlip, effective),
+                    max_cut_perturbation(PerturbationType::WeakFlip, tabu_tenure),
                     q,
                 ),
                 (
-                    max_cut_perturbation(PerturbationType::WeakSwap, effective),
+                    max_cut_perturbation(PerturbationType::WeakSwap, tabu_tenure),
                     1.0 - q,
                 ),
             ],
         ),
     )
-}
-
-/// Converts Benlic & Hao's tenure parameter `gamma` into the prohibition length
-/// the engine's tabu map actually stores.
-///
-/// The paper's tabu list `H` holds "the iteration when the vertex was last
-/// moved plus gamma", and the eligibility predicate of the directed
-/// perturbations then asks for `(H_m + gamma) < Iter`, so `gamma` is counted
-/// twice and a vertex stays forbidden for `2 gamma`.
-/// [`TabuMemory`](crate::common::TabuMemory) stores the first iteration at which
-/// a move is allowed again, one tenure exactly, so reproducing the paper means
-/// handing it twice the caller's range. `tabu_tenure` therefore keeps the
-/// paper's meaning, `rand[3, |V|/10]` on the G-set, instead of silently meaning
-/// something else.
-///
-/// Doubling only the upper bound does not reproduce the paper. The whole range
-/// has to scale.
-fn paper_effective_tenure((min, max): (u64, u64)) -> (u64, u64) {
-    (min * 2, max * 2)
 }
 
 #[cfg(test)]
@@ -151,7 +133,7 @@ mod tests {
     fn bls(iterations: u64) -> BreakoutLocalSearchForMaxCut {
         bls_for_max_cut(
             StopCondition::iterations(iterations),
-            (5, 15),
+            (10, 30),
             1_000,
             8,
             0.8,
@@ -235,7 +217,7 @@ mod tests {
         // rather than spin, or this never returns.
         let mut whole = bls_for_max_cut(
             StopCondition::iterations(10_000).with_failed_updates(500),
-            (3, 15),
+            (6, 30),
             1_000,
             5,
             0.8,

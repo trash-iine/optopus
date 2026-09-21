@@ -118,10 +118,6 @@ impl RlPerturbation {
             exploration,
         );
         Self {
-            // The tenure is taken literally. The doubling
-            // `bls_for_max_cut` applies reproduces the
-            // paper's `gamma`, which belongs to the schedule this one
-            // replaces.
             operators: vec![
                 max_cut_perturbation(MaxCutPerturbation::WeakFlip, tabu_tenure),
                 max_cut_perturbation(MaxCutPerturbation::WeakSwap, tabu_tenure),
@@ -301,11 +297,10 @@ fn main() -> Result<(), OptError> {
     let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
     let iterations = 20_000;
 
-    // Baseline: BLS with Benlic & Hao's schedule. Its `tabu_tenure` is the
-    // paper's gamma, so it prohibits for twice this range.
+    // Baseline: BLS with Benlic & Hao's schedule.
     let mut bls = bls_for_max_cut(
         StopCondition::iterations(iterations),
-        (15, 300),
+        (30, 600),
         1_000,
         20,
         0.8,

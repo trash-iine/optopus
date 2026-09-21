@@ -55,7 +55,7 @@ fn run(mc: &MaxCut, seed: u64, iterations: u64) -> Trace {
     let mut state = SearchState::new_with_seed(mc, seed);
     let mut bls = bls_for_max_cut(
         StopCondition::iterations(iterations),
-        (5, 15),
+        (10, 30),
         1_000,
         8,
         0.8,

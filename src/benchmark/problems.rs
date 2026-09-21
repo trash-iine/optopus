@@ -252,7 +252,7 @@ impl ConfigurableProblem for MaxCut {
             "SubProblem" => Ok(Box::new(SubProblemBasedCrossover {
                 sub_heuristic: Box::new(bls_for_max_cut(
                     StopCondition::iterations(50_000).with_failed_updates(10_000),
-                    (3, 50),
+                    (6, 100),
                     1_000,
                     20,
                     0.8,

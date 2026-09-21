@@ -46,7 +46,7 @@ let mut state = SearchState::new_with_seed(&mc, 42);
 
 let mut bls = bls_for_max_cut(
     StopCondition::iterations(100_000),
-    /* tabu_tenure = */ (5, 150),
+    /* tabu_tenure = */ (10, 300),
     /* t           = */ 1_000,
     /* l0          = */ 8,          // 0.01 * |V|
     /* p0          = */ 0.8,
@@ -87,12 +87,12 @@ println!("cut weight = {}", state.best_solution.objective);
 This implementation follows Benlic and Hao closely, and each departure below was
 checked against the cut values they publish.
 
-- The tenure parameter is doubled on the way in. The original tenure is
-  added once when a vertex is recorded and once more in the eligibility test, so
-  a vertex stays forbidden for twice it. `TabuMemory` stores a single tenure, so
-  `paper_effective_tenure` doubles the caller's range and `tabu_tenure` keeps
-  the original meaning, `rand[3, n/10]` on the G-set. Doubling only the upper
-  bound does not reproduce it, the whole range has to scale.
+- `tabu_tenure` is the prohibition length itself, as it is under
+  [`TabuSearch`](tabu_search.md). The original tenure `γ` is added once when a
+  vertex is recorded and once more in the eligibility test, so a vertex stays
+  forbidden for `2γ`. `TabuMemory` stores that length directly, so the paper's
+  `rand[3, n/10]` on the G-set is written `[6, n/5]` here. Doubling only the
+  upper bound does not reproduce it, the whole range has to scale.
 - No bucket sort. The original buckets vertices by gain, so selecting a
   maximum-gain move is O(1) and a move costs only the O(degree(v)) rebucketing
   its gain update already implies. Here every selection is a linear scan over
@@ -122,8 +122,7 @@ vertex moved on its own.
 
 ## Constructor
 
-MaxCut has a builder that fills the schedule and applies the paper's reading of
-the tenure:
+MaxCut has a builder that fills the schedule:
 
 ```rust
 bls_for_max_cut(
@@ -205,10 +204,7 @@ what `round_ended` was given, which is the value the next descent starts from.
 
 On MaxCut, `max_cut_descent()` and
 `max_cut_perturbation(kind, tabu_tenure)` build the pieces, so a schedule of
-your own reuses the operators rather than rebuilding them. Note that
-`max_cut_perturbation` takes the tenure literally, while
-`bls_for_max_cut` doubles it for the `2γ` reading above,
-which belongs to the paper's schedule.
+your own reuses the operators rather than rebuilding them.
 
 [Driving BLS with a learned perturbation policy](../guide/learned_perturbation.md)
 walks through a contextual bandit written as one of these.
@@ -218,7 +214,7 @@ walks through a contextual bandit written as one of these.
 ```toml
 [[heuristics]]
 kind = "BreakoutLocalSearch"
-tabu_tenure = [3, 80]     # density-scaled; see docs/benchmarks
+tabu_tenure = [6, 160]    # the paper's rand[3, |V|/10], counted twice
 t = 1000
 l0 = 80                   # 0.01 * |V|
 p0 = 0.8
@@ -227,10 +223,10 @@ q = 0.5
 max_duration_secs = 30.0
 ```
 
-`tabu_tenure` is read as the original `γ`, so a vertex stays forbidden for
-`2γ` moves. This is the one kind that doubles the key, the same range under
-[`TabuSearch`](tabu_search.md) prohibits for half as long, so tuned values do
-not transfer between them.
+`tabu_tenure` means the same thing under every kind, a move stays forbidden
+for that many iterations, so a range tuned under [`TabuSearch`](tabu_search.md)
+carries over as it is. A value quoted from the paper is doubled on the way into
+the file, as above.
 
 ## References
 

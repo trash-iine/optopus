@@ -28,6 +28,7 @@ Read the table, open the one file you need.
 | [0018](0018-alns-on-routes-needs-the-local-repair.md) | vrp | reference | Ruin-and-recreate on routes needs the local repair, and needs it most on large instances |
 | [0019](0019-the-stagnation-test-compares-solutions-not-objectives.md) | max_cut, heuristic | adopted | The BLS stagnation test compares solutions, not their objectives |
 | [0020](0020-alns-on-a-tour-needs-the-local-repair-too.md) | tsp | reference | The second `Ruinable` needs its anchored descent for the same reason the first did |
+| [0021](0021-tabu-tenure-means-one-thing.md) | max_cut, benchmark | adopted | `tabu_tenure` means one thing under every kind, and the paper's `2γ` is written into the config |
 
 ## Writing a new record
 

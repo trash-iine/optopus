@@ -38,10 +38,9 @@ The prohibitions the descent writes are the ones the weak perturbations must
 not undo.
 
 `max_cut_perturbation`, which builds those operators, takes `tabu_tenure`
-literally, unlike
-[`bls_for_max_cut`](../heuristics/breakout_local_search.md#benchmark-config),
-which reads the same range as the paper's `γ` and forbids for `2γ`. The
-doubling belongs to the paper's schedule, which your rule replaces.
+literally, as
+[`bls_for_max_cut`](../heuristics/breakout_local_search.md#benchmark-config)
+does.
 
 ## The full example: a contextual bandit
 
