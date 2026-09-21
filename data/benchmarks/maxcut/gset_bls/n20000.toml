@@ -6,7 +6,7 @@ problem = "MaxCut"
 
 [[heuristics]]
 kind = "BreakoutLocalSearch"
-tabu_tenure = [3, 2000]
+tabu_tenure = [6, 4000]
 t = 1000
 l0 = 200
 p0 = 0.8

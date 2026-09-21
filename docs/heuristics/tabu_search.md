@@ -84,9 +84,8 @@ tabu_tenure = [5, 10]    # required; (min, max), drawn uniformly per move
 max_duration_secs = 30.0
 ```
 
-The tenure is taken literally: a move stays forbidden for that many iterations.
-(`BreakoutLocalSearch` reads the same key as the paper's `γ` and forbids for
-`2γ`, so tuned values are not interchangeable between the two kinds.)
+The tenure is taken literally, a move stays forbidden for that many
+iterations, and the key means the same under every kind that takes it.
 
 ## References
 
