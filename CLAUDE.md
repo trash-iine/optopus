@@ -96,9 +96,9 @@ src/
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
 │   ├── reinforcement_learning/  ReinforcementLearningSearch<N>
 │   └── specific/             one directory per problem once it has several
-│       ├── max_cut/          bls.rs (BreakoutLocalSearchForMaxCut and the
-│       │                     MaxCut descent and kicks), best_swap.rs (the one
-│       │                     operator with no generic equivalent)
+│       ├── max_cut/          mod.rs (bls_for_max_cut and the MaxCut descent
+│       │                     and kicks), best_swap.rs (the one operator with
+│       │                     no generic equivalent)
 │       ├── vrp/              hgs/ (mod.rs driver, population.rs), alns_for_vrp
 │       ├── tsp/              lkh.rs, alns_for_tsp
 │       └── walksat_for_sat.rs

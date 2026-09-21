@@ -3,7 +3,7 @@
 - Status: adopted
 - Area: max_cut
 - Date: 2026-09-07
-- Code: src/heuristic/specific/max_cut/bls.rs
+- Code: src/heuristic/specific/max_cut/mod.rs
 
 ## Decision
 

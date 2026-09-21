@@ -3,7 +3,7 @@
 - Status: adopted
 - Area: max_cut, benchmark
 - Date: 2026-09-21
-- Code: src/heuristic/specific/max_cut/bls.rs (`bls_for_max_cut`),
+- Code: src/heuristic/specific/max_cut/mod.rs (`bls_for_max_cut`),
   data/benchmarks/maxcut/gset_bls/*.toml
 
 ## Decision
