@@ -64,8 +64,9 @@ let tsp = Tsp::load_file("data/instances/tsp/burma14.tsp")?;
 // Job Shop Scheduling ローダ (Taillard / OR-Library):
 let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 
-// CVRP ローダ (CVRPLIB):
+// VRP ローダ (CVRPLIB、または拡張子で選ばれる異種フリートの TOML):
 let vrp = Vrp::load_file("data/instances/vrp/X-n101-k25.vrp")?;
+let fleet = Vrp::load_file("data/instances/vrp/demo_fleet.toml")?;
 ```
 
 各ローダのファイル形式は、対応する問題のページに書かれています。

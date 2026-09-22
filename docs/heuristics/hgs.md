@@ -2,8 +2,10 @@
 
 **API:** [`HybridGeneticSearchForVrp`](../api/optopus/heuristic/struct.HybridGeneticSearchForVrp.html)
 
-Problem-specific heuristic for [CVRP](../problems/vrp.md). Hybrid Genetic
-Search is the strongest known general-purpose CVRP metaheuristic.
+Problem-specific heuristic for the [VRP](../problems/vrp.md). Hybrid Genetic
+Search is the strongest known general-purpose CVRP metaheuristic, and runs
+unchanged on a heterogeneous fleet, since the decoder and the descent price
+every route with the vehicle type of the slot that drives it.
 
 ## Example
 
@@ -88,10 +90,12 @@ path between two good feasible solutions usually crosses infeasible ground. The
 penalty starts at the instance's average distance per unit of demand, which
 makes it scale-free, and is clamped to a few decades either side.
 
-HGS therefore keeps its own individuals rather than `VrpSolution`s, since
-`Vrp::penalty_weight()` is a fixed constant large enough to make any optimum
-feasible. `Vrp::solution_from_routes` converts back when writing to the search
-state, so reported objectives stay comparable with every other heuristic.
+The one penalty weighs the whole violation the objective charges, overload,
+route-time excess and minimum-count shortfall alike. HGS therefore keeps its
+own individuals rather than `VrpSolution`s, since `Vrp::penalty_weight()` is a
+fixed constant large enough to make any optimum feasible.
+`Vrp::solution_from_routes` converts back when writing to the search state,
+so reported objectives stay comparable with every other heuristic.
 
 ### Granular local search
 

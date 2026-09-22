@@ -99,7 +99,7 @@ nav:
       - TSP: problems/tsp.md
       - Vertex Cover: problems/vertex_cover.md
       - Job Shop Scheduling: problems/job_shop_scheduling.md
-      - CVRP: problems/vrp.md
+      - VRP: problems/vrp.md
       - Graph Coloring: problems/graph_coloring.md
       - Formula: problems/formula.md
       - Integer variables: problems/integer.md
@@ -119,7 +119,7 @@ nav:
       - Meta-heuristics: heuristics/meta.md
       - Lin-Kernighan-Helsgaun (TSP): heuristics/lkh.md
       - WalkSAT (MaxSAT): heuristics/walksat.md
-      - Hybrid Genetic Search (CVRP): heuristics/hgs.md
+      - Hybrid Genetic Search (VRP): heuristics/hgs.md
   - Guides:
       - Stop conditions: guide/stop_conditions.md
       - Benchmarking: guide/benchmarking.md
@@ -147,7 +147,7 @@ nav:
           - TSP: ja/problems/tsp.md
           - Vertex Cover: ja/problems/vertex_cover.md
           - Job Shop Scheduling: ja/problems/job_shop_scheduling.md
-          - CVRP: ja/problems/vrp.md
+          - VRP: ja/problems/vrp.md
           - Graph Coloring: ja/problems/graph_coloring.md
           - Formula: ja/problems/formula.md
           - 整数変数: ja/problems/integer.md
@@ -167,7 +167,7 @@ nav:
           - Meta-heuristics: ja/heuristics/meta.md
           - Lin-Kernighan-Helsgaun (TSP): ja/heuristics/lkh.md
           - WalkSAT (MaxSAT): ja/heuristics/walksat.md
-          - Hybrid Genetic Search (CVRP): ja/heuristics/hgs.md
+          - Hybrid Genetic Search (VRP): ja/heuristics/hgs.md
       - ガイド:
           - 停止条件: ja/guide/stop_conditions.md
           - ベンチマーク: ja/guide/benchmarking.md

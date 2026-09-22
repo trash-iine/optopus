@@ -6,7 +6,7 @@ Adaptive Large Neighborhood Search は、現在解の一部を壊して (ruin) �
 オペレータの組は、最近の成績を追跡する重みを持つルーレットで選びます。
 
 [`Ruinable`](../traits.md) を実装し、その解が [`Evaluate`](../traits.md) を実装している任意の問題で動きます。
-現在それに当たるのは [CVRP](../problems/vrp.md) と [TSP](../problems/tsp.md) です。
+現在それに当たるのは [VRP](../problems/vrp.md) (同種フリートでも異種フリートでも) と [TSP](../problems/tsp.md) です。
 `Ruinable` は問題に必要な形、つまり有限の資源を奪い合うコンテナに要素が割り当てられているという形を表し、すでにその形を持つ問題の族を名指ししています。
 巡回路はコンテナが一つの場合で、それが何を犠牲にするかは [オペレータ](#operators) で説明します。
 

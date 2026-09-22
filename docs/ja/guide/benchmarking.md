@@ -60,6 +60,9 @@ max_failed_update = 5_000
 
 未知の kind や必須フィールドの欠落は、実行が始まる前のパースの時点でエラーになります。
 
+[VRP](../problems/vrp.md) のインスタンスは CVRPLIB か、パスが `.toml` で終わるときは異種フリートです。
+上の表で片方に使える `kind` は、もう片方でもそのまま使えます。
+
 ## すべての kind に共通のフィールド { #fields-shared-by-every-kind }
 
 `stop_condition` は `max_iteration`、`max_duration_secs`、`max_failed_update` を任意に組み合わせて受け取り、
@@ -149,4 +152,4 @@ BenchmarkReport
 | TSP | 都市の訪問順 |
 | VertexCover | 被覆に含まれる頂点のインデックス |
 | JobShop | 作業の列 (ジョブのインデックスを、それぞれ `n_machines` 回ずつ並べたもの) |
-| VRP | すべてのルートをデポ (`0`) を区切りにして平たくしたもの。`0, r0…, 0, r1…, 0` (空のルートは省略) |
+| VRP | すべてのルートをデポ (`0`) を区切りにして平たくしたもの。`0, r0…, 0, r1…, 0` (空いているスロットは省略) |

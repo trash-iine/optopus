@@ -1,11 +1,13 @@
-//! Hybrid Genetic Search (HGS) for the Capacitated VRP.
+//! Hybrid Genetic Search (HGS) for the VRP.
 //!
-//! HGS is the strongest known general-purpose CVRP metaheuristic.
+//! HGS is the strongest known general-purpose CVRP metaheuristic, and runs
+//! unchanged on the heterogeneous fleet, since the decoder and the descent
+//! price every route with the vehicle type of the slot that drives it.
 //! It combines three ideas, each in its own layer here:
 //!
 //! - [`Descent`], the granular descent shared with ALNS,
-//!   which turns every offspring into a local optimum under the capacity
-//!   penalty this driver adapts at runtime.
+//!   which turns every offspring into a local optimum under the penalty
+//!   this driver adapts at runtime.
 //! - [`population`], biased fitness, which ranks individuals by cost and
 //!   by how much diversity they contribute, so the population does not collapse.
 //! - this module, the generational loop, the adaptive penalty, and the
@@ -57,9 +59,11 @@ const PENALTY_MAX_FACTOR: f64 = 1e4;
 /// Sub-populations grow to `min_population_size + generation_size` and are then
 /// culled back to `min_population_size`, clones first.
 ///
-/// The capacity penalty is retuned every `penalty_period` offspring to
-/// hold the feasible share near `target_feasible`: too few feasible offspring
-/// raises it, too many lowers it. Searching at a deliberately low feasible rate
+/// The penalty, one weight over every violation the objective charges
+/// (overload, route-time excess, minimum-count shortfall), is retuned every
+/// `penalty_period` offspring to hold the feasible share near
+/// `target_feasible`: too few feasible offspring raises it, too many lowers
+/// it. Searching at a deliberately low feasible rate
 /// is the point, the shortest route through solution space between two good
 /// feasible solutions usually crosses infeasible ground.
 ///
@@ -351,8 +355,8 @@ impl HybridGeneticSearch {
         self
     }
 
-    /// Starting capacity penalty: the average distance per unit of demand, so it
-    /// is on the same scale as the objective regardless of the instance.
+    /// Starting penalty: the average distance per unit of demand, so it is on
+    /// the same scale as the objective regardless of the instance.
     fn scale_free_penalty(prob: &Vrp) -> f64 {
         let n = prob.get_n();
         if n == 0 {
@@ -397,7 +401,7 @@ impl HybridGeneticSearch {
     /// Decodes a giant tour, improves it, repairs it, and files the result.
     fn spawn(&mut self, prob: &Vrp, tour: Vec<usize>, rng: &mut SmallRng) {
         let routes = split_giant_tour(prob, &tour, self.penalty_capacity);
-        let mut child = RouteState::from_routes(prob, routes);
+        let mut child = RouteState::from_routes(prob, routes, self.penalty_capacity);
         self.descent.run(
             &mut child,
             prob,
@@ -407,7 +411,7 @@ impl HybridGeneticSearch {
         );
 
         self.recent_total += 1;
-        if child.excess == 0 {
+        if child.sol.violation() == 0.0 {
             self.recent_feasible += 1;
             self.absorb(prob, child);
             return;
@@ -425,7 +429,7 @@ impl HybridGeneticSearch {
                     self.penalty_capacity * boost,
                     self.descent_passes,
                 );
-                if repaired.excess == 0 {
+                if repaired.sol.violation() == 0.0 {
                     self.absorb(prob, repaired);
                     break;
                 }
@@ -438,8 +442,11 @@ impl HybridGeneticSearch {
     fn absorb(&mut self, prob: &Vrp, child: RouteState) {
         let capacity = self.min_population_size + self.generation_size;
         let target = self.min_population_size;
-        let (distance, excess) = (child.distance, child.excess);
-        let individual = Individual::new(prob.get_n(), child.into_routes(), distance, excess);
+        let sol = child.sol;
+        // Priced at zero penalty, so the individual carries the objective's
+        // unpenalized part and the search supplies its own weight.
+        let (base, violation) = (prob.objective_under(&sol, 0.0), sol.violation());
+        let individual = Individual::new(prob.get_n(), sol.routes, base, violation);
 
         let pool = if individual.is_feasible() {
             &mut self.feasible
@@ -679,7 +686,7 @@ mod tests {
             "a feasible fleet must yield a feasible best"
         );
         prob.validate_routes(&state.best_solution.routes).unwrap();
-        assert_eq!(state.best_solution.routes.len(), prob.num_vehicles);
+        assert_eq!(state.best_solution.routes.len(), prob.num_slots());
     }
 
     #[test]

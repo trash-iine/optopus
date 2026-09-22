@@ -15,7 +15,7 @@
 //! | [`tsp`] | Traveling Salesman Problem | Minimize tour length |
 //! | [`vertex_cover`] | Minimum Vertex Cover | Minimize cover size |
 //! | [`job_shop_scheduling`] | Job Shop Scheduling | Minimize makespan |
-//! | [`vrp`] | Capacitated Vehicle Routing | Minimize total distance |
+//! | [`vrp`] | Capacitated + heterogeneous-fleet Vehicle Routing | Minimize total distance / time + cost |
 //! | [`graph_coloring`] | Graph Coloring | Minimize colors used |
 //! | [`integer`] | Any problem over bounded integer variables, by a closure or a formula | Configurable |
 
@@ -56,6 +56,6 @@ pub use vertex_cover::{
     VertexCoverUniformCrossover,
 };
 pub use vrp::{
-    Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution, VrpSwapNeighbor, VrpTwoOptNeighbor,
-    split_giant_tour,
+    ObjectiveMode, VehicleType, Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution,
+    VrpSwapNeighbor, VrpTwoOptNeighbor, split_giant_tour,
 };
