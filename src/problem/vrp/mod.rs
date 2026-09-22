@@ -1,9 +1,12 @@
-//! Capacitated Vehicle Routing Problem (CVRP) definition and neighborhoods.
+//! Vehicle Routing Problem definitions and neighborhoods.
 //!
-//! A depot and `n` customers with 2D coordinates and demands are served by a
-//! fixed fleet of capacity-limited vehicles. The goal is to minimize total
-//! travel distance such that every customer is visited exactly once and no
-//! route exceeds capacity (enforced with a penalty, see [`VrpSolution`]).
+//! A depot and `n` customers with 2D coordinates, demands and service times
+//! are served by a fleet of one or more [`VehicleType`]s, each with its own
+//! capacity, speed, costs, minimum usage and route-time limit. The
+//! homogeneous CVRP is the one-type instance. The objective is a time term,
+//! the total of all route durations or the longest one, plus the fleet's
+//! cost, with capacity, route time and minimum fleet usage enforced through a
+//! penalty, see [`Vrp`].
 
 mod adjacency;
 mod crossover;
@@ -15,13 +18,9 @@ mod split;
 
 pub use crossover::VrpOrderCrossover;
 pub use neighbor::{VrpRelocateNeighbor, VrpSwapNeighbor, VrpTwoOptNeighbor};
-pub use problem::{Vrp, VrpSolution};
+pub use problem::{ObjectiveMode, VehicleType, Vrp, VrpSolution};
 pub use ruin::{AnchoredRouteDescent, VrpPartial};
 pub use split::split_giant_tour;
-
-/// The capacity overflow of a route load, shared with the VRP heuristics so the
-/// penalty they search under is computed exactly as [`VrpSolution`]'s is.
-pub(crate) use problem::overload_of;
 
 /// Who each customer is served between, shared with the VRP heuristics so that
 /// solution diversity means one thing in this crate, see

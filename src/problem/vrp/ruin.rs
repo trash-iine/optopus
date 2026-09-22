@@ -8,37 +8,52 @@
 
 use rand::rngs::SmallRng;
 
-use super::ops::{self, Descent, RouteState};
+use super::ops::pricing::SlotEdit;
+use super::ops::{Descent, RouteState};
 use super::problem::{Vrp, VrpSolution};
 use crate::trait_defs::{LocalRepair, Ruinable};
 
-/// A route partition mid-ruin, with the capacity penalty every placement is
-/// priced at.
+/// A route partition mid-ruin, priced at the penalty every placement is
+/// charged with.
 ///
-/// The descent's own `RouteState` inside carries the routes, their loads, the
-/// running distance and excess totals, and the position index that makes
+/// The descent's own `RouteState` inside carries the routes, every cache of
+/// the solution they form, and the position index that makes
 /// [`Ruinable::removal_gain`] an O(1) question. The trait asks for the gain of
 /// removing a customer, not of removing position `i` of route `r`, so without
 /// an index worst-removal would scan for each of the `n` candidates and cost
 /// O(n²). The index is refreshed per touched route by the same `reindex` the
 /// descent uses.
+///
+/// The state's penalty is `Vrp::penalty_weight()`, read once per conversion.
+/// The weight is behind a `OnceLock`, so reading it is an atomic load, and
+/// `insertion_cost` is called once per candidate place. Regret-2 alone asks
+/// O(k² · places) times per iteration, which is where an atomic load stops
+/// being free. Everything that prices a move within one iteration reads it
+/// from the state, the two `Ruinable` methods that charge violations and the
+/// anchored descent alike, so nothing can improve against one weight and
+/// score against another.
 pub struct VrpPartial {
     state: RouteState,
-    /// `Vrp::penalty_weight()`, read once per conversion.
-    ///
-    /// The weight is behind a `OnceLock`, so reading it is an atomic load, and
-    /// `insertion_cost` is called once per candidate place. Regret-2 alone asks
-    /// O(k² · places) times per iteration, which is where an atomic load stops
-    /// being free.
-    ///
-    /// **Everything that prices a move within one iteration reads it from
-    /// here**, the two `Ruinable` methods that charge overload and the anchored
-    /// descent alike. A caller that read the weight from the problem instead
-    /// would agree with this field today, since the weight is a constant of the
-    /// instance, and would stop agreeing the moment anything moved it. A
-    /// descent that improves against one weight and a candidate scored against
-    /// another both look correct from the outside.
-    penalty: f64,
+}
+
+impl Vrp {
+    /// The edit that puts `element` before `place` of route `bucket`, which
+    /// [`Ruinable::insertion_cost`] prices and [`Ruinable::insert`] applies.
+    fn placement(
+        &self,
+        state: &RouteState,
+        bucket: usize,
+        place: usize,
+        element: usize,
+    ) -> [SlotEdit; 1] {
+        [SlotEdit::insert(
+            bucket,
+            state.insertion_cost(self, bucket, place, element, element),
+            self.demands[element],
+            self.service_times[element],
+            1,
+        )]
+    }
 }
 
 impl Ruinable for Vrp {
@@ -47,32 +62,31 @@ impl Ruinable for Vrp {
 
     fn to_partial(&self, sol: &VrpSolution) -> VrpPartial {
         VrpPartial {
-            state: RouteState::from_routes(self, sol.routes.clone()),
-            penalty: self.penalty_weight(),
+            state: RouteState::from_solution(self, sol.clone(), self.penalty_weight()),
         }
     }
 
     fn finish(&self, partial: &VrpPartial) -> VrpSolution {
-        self.solution_from_routes(partial.state.routes.clone())
+        // The solution alone, not the whole state: its position indexes and
+        // cumulative distances are the descent's, and cloning them here would
+        // allocate one vector per route to throw away.
+        let mut sol = partial.state.sol.clone();
+        sol.objective = self.objective_under(&sol, self.penalty_weight());
+        sol
     }
 
     fn elements(&self, partial: &VrpPartial, out: &mut Vec<usize>) {
         out.clear();
-        out.extend(partial.state.routes.iter().flatten().copied());
+        out.extend(partial.state.routes().iter().flatten().copied());
     }
 
-    /// Summed over the routes rather than by listing the customers, so this is
-    /// a pass over the fleet instead of over the instance.
     fn num_elements(&self, partial: &VrpPartial) -> usize {
-        partial.state.routes.iter().map(Vec::len).sum()
+        partial.state.routes().iter().map(Vec::len).sum()
     }
 
     fn remove_all(&self, partial: &mut VrpPartial, set: &[usize]) {
         let state = &mut partial.state;
-        // Group by route and read every position before removing anything
-        // in that route. Removal shifts everything after it, so a position
-        // read after an earlier removal in the same route would be stale.
-        let mut by_route: Vec<Vec<usize>> = vec![Vec::new(); state.routes.len()];
+        let mut by_route: Vec<Vec<usize>> = vec![Vec::new(); state.routes().len()];
         for &c in set {
             let (r, pos) = state.locate(c);
             by_route[r].push(pos);
@@ -84,21 +98,26 @@ impl Ruinable for Vrp {
             // Descending, so removing one position never invalidates a
             // position still queued in the same route.
             positions.sort_unstable_by(|a, b| b.cmp(a));
-            let mut removed_demand = 0i64;
             for &pos in positions.iter() {
-                // Committed per position rather than summed and committed
-                // once, since the gains are read against the route as it
-                // stands between removals and floating-point addition is not
-                // associative.
+                // Priced and applied per position rather than summed and
+                // applied once, since the gains are read against the route
+                // as it stands between removals and floating-point addition
+                // is not associative.
+                let c = state.routes()[r][pos];
                 let gain = state.removal_gain(self, r, pos, 1);
-                state.commit(-gain, 0);
-                removed_demand += self.demands[state.routes[r][pos]];
-                state.routes[r].remove(pos);
+                let edit = [SlotEdit::remove(
+                    r,
+                    -gain,
+                    self.demands[c],
+                    self.service_times[c],
+                    1,
+                )];
+                let price = state.price(self, &edit);
+                state.sol.routes[r].remove(pos);
+                state.apply_unindexed(self, &edit, &price);
             }
-            let excess_delta =
-                ops::excess_delta_insert(self.capacity, state.loads[r], -removed_demand);
-            state.loads[r] -= removed_demand;
-            state.commit(0.0, excess_delta);
+            // The positions were removed back to front, so only the state
+            // the route is left in is ever read.
             state.reindex(r);
         }
     }
@@ -115,20 +134,22 @@ impl Ruinable for Vrp {
 
     /// The fleet is fixed, so this is constant per instance, but an unused
     /// vehicle is an empty route, which is what satisfies the trait's
-    /// "somewhere new to put an element" requirement without a special case.
+    /// "a bucket may be empty" and lets a customer open a fresh route.
     fn num_buckets(&self, partial: &VrpPartial) -> usize {
-        partial.state.routes.len()
+        partial.state.routes().len()
     }
 
-    /// A route is a sequence, so a customer can go before any of its stops or
-    /// after the last one.
+    /// Every gap of the route, including both ends. An empty slot offers one
+    /// place, and only the first empty slot of its vehicle type does: the
+    /// others would offer the same route under another label.
     fn num_places(&self, partial: &VrpPartial, bucket: usize) -> usize {
-        partial.state.routes[bucket].len() + 1
+        let len = partial.state.routes()[bucket].len();
+        if len == 0 && !partial.state.is_idle_representative(self, bucket) {
+            return 0;
+        }
+        len + 1
     }
 
-    /// The detour, plus the capacity overflow this insertion would add at the
-    /// weight the objective already charges overload at. Folding the penalty in
-    /// is what keeps a placement available even when every vehicle is full.
     fn insertion_cost(
         &self,
         partial: &VrpPartial,
@@ -136,30 +157,24 @@ impl Ruinable for Vrp {
         place: usize,
         element: usize,
     ) -> f64 {
-        let state = &partial.state;
-        let detour = state.insertion_cost(self, bucket, place, element, element);
-        let overflow =
-            ops::excess_delta_insert(self.capacity, state.loads[bucket], self.demands[element]);
-        detour + partial.penalty * overflow as f64
+        let edit = self.placement(&partial.state, bucket, place, element);
+        partial.state.price(self, &edit).gain
     }
 
     fn insert(&self, partial: &mut VrpPartial, bucket: usize, place: usize, element: usize) {
+        let edit = self.placement(&partial.state, bucket, place, element);
         let state = &mut partial.state;
-        let demand = self.demands[element];
-        let detour = state.insertion_cost(self, bucket, place, element, element);
-        let excess_delta = ops::excess_delta_insert(self.capacity, state.loads[bucket], demand);
-        state.commit(detour, excess_delta);
-        state.loads[bucket] += demand;
-        state.routes[bucket].insert(place, element);
-        state.reindex(bucket);
+        let price = state.price(self, &edit);
+        state.sol.routes[bucket].insert(place, element);
+        state.apply(self, &edit, &price);
     }
 
-    /// `distance + penalty_weight * excess`, exactly [`VrpSolution::objective`]'s
-    /// definition, read off the running totals [`remove_all`](Self::remove_all)
-    /// / [`insert`](Self::insert) / the anchored descent maintain instead of
-    /// rebuilding a [`VrpSolution`] to ask.
+    /// The objective under the partial's penalty, read off the running caches
+    /// [`remove_all`](Self::remove_all) / [`insert`](Self::insert) / the
+    /// anchored descent maintain instead of rebuilding a [`VrpSolution`] to
+    /// ask.
     fn partial_energy(&self, partial: &VrpPartial) -> f64 {
-        partial.state.distance + partial.penalty * partial.state.excess as f64
+        partial.state.energy(self)
     }
 }
 
@@ -249,12 +264,13 @@ impl LocalRepair<Vrp> for AnchoredRouteDescent {
         rng: &mut SmallRng,
     ) {
         self.descent.ensure(prob, self.granularity);
+        let penalty = partial.state.penalty;
         self.descent.run_around(
             &mut partial.state,
             prob,
             anchors,
             rng,
-            partial.penalty,
+            penalty,
             self.max_passes,
         );
     }

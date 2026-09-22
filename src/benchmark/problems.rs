@@ -133,12 +133,10 @@ impl BenchmarkSolution for VrpSolution {
         self.objective
     }
     fn encode_as_indices(&self) -> Vec<usize> {
-        // Flatten routes, using the depot (0) as a separator: `0, r0…, 0, r1…, 0`.
+        // Flatten with the depot (0) as the separator, `0, r0…, 0, r1…, 0`;
+        // an idle slot leaves no trace.
         let mut out = vec![0];
-        for route in &self.routes {
-            if route.is_empty() {
-                continue;
-            }
+        for route in self.routes.iter().filter(|route| !route.is_empty()) {
             out.extend_from_slice(route);
             out.push(0);
         }

@@ -18,12 +18,14 @@
 //! | 2-opt (reverse a sub-path) | intra-route |
 //! | 2-opt\* (exchange route tails) | inter-route |
 //!
-//! Every move is evaluated in O(1) from the distances at its endpoints and
-//! accepted on first improvement of `distance + penalty · excess`.
+//! Every move is evaluated in O(1) from the distances at its endpoints, priced
+//! through [`super::pricing`] under the penalty the caller hands in, and
+//! accepted on first improvement of the objective under that penalty.
 
 use rand::rngs::SmallRng;
 
-use super::{RouteState, before, node_at};
+use super::pricing::{EditPrice, SlotEdit};
+use super::{RouteState, node_at};
 use crate::common::{AnchoredSweep, MIN_IMPROVEMENT};
 use crate::problem::Vrp;
 
@@ -86,8 +88,9 @@ impl Descent {
         if n == 0 {
             return;
         }
+        state.set_penalty(prob, penalty);
         self.sweep.set_order(1..=n);
-        self.sweep_in_place(state, prob, rng, penalty, max_passes);
+        self.sweep_in_place(state, prob, rng, max_passes);
     }
 
     /// The same descent, anchored only at `anchors` and the customers near them.
@@ -112,9 +115,10 @@ impl Descent {
         if prob.get_n() == 0 || anchors.is_empty() {
             return;
         }
+        state.set_penalty(prob, penalty);
         self.sweep
             .collect_around(anchors, &self.neighbors, |_| true);
-        self.sweep_in_place(state, prob, rng, penalty, max_passes);
+        self.sweep_in_place(state, prob, rng, max_passes);
     }
 
     /// Sweeps the prepared list with the granular move set.
@@ -123,12 +127,11 @@ impl Descent {
         state: &mut RouteState,
         prob: &Vrp,
         rng: &mut SmallRng,
-        penalty: f64,
         max_passes: usize,
     ) {
         let neighbors = &self.neighbors;
         self.sweep.sweep(rng, max_passes, |u| {
-            improve_around(state, prob, neighbors, u, penalty)
+            improve_around(state, prob, neighbors, u)
         });
         #[cfg(debug_assertions)]
         state.assert_caches_consistent(prob);
@@ -136,47 +139,57 @@ impl Descent {
 }
 
 /// Tries every granular move anchored at `u`, applying the first improving one.
-fn improve_around(
-    state: &mut RouteState,
-    prob: &Vrp,
-    neighbors: &[Vec<usize>],
-    u: usize,
-    penalty: f64,
-) -> bool {
+fn improve_around(state: &mut RouteState, prob: &Vrp, neighbors: &[Vec<usize>], u: usize) -> bool {
     for &v in &neighbors[u] {
         for len in 1..=MAX_SEGMENT {
             for reverse in [false, true] {
-                if try_relocate(state, prob, u, v, len, reverse, penalty) {
+                if try_relocate(state, prob, u, v, len, reverse) {
                     return true;
                 }
             }
         }
         for len_u in 1..=MAX_SEGMENT {
             for len_v in 1..=MAX_SEGMENT {
-                if try_swap(state, prob, u, v, len_u, len_v, penalty) {
+                if try_swap(state, prob, u, v, len_u, len_v) {
                     return true;
                 }
             }
         }
-        if try_two_opt(state, prob, u, v, penalty) {
+        if try_two_opt(state, prob, u, v) {
             return true;
         }
-        if try_two_opt_star(state, prob, u, v, penalty) {
+        if try_two_opt_star(state, prob, u, v) {
             return true;
         }
     }
-    // A fixed fleet means idle vehicles are free capacity; give the segment
-    // anchored at `u` a chance to claim one.
     for len in 1..=MAX_SEGMENT {
-        if try_relocate_to_idle(state, prob, u, len, penalty) {
+        if try_relocate_to_idle(state, prob, u, len) {
             return true;
         }
     }
     false
 }
 
-/// Moves the `len` customers starting at `u` to just after `v`, optionally
-/// reversed. Handles both the inter-route and the intra-route (Or-opt) case.
+/// Improving means the priced gain clears [`MIN_IMPROVEMENT`].
+#[inline]
+fn improves(gain: f64) -> bool {
+    gain <= -MIN_IMPROVEMENT
+}
+
+/// Applies an accepted move and keeps the cumulative distances the tail
+/// exchange reads current for the routes it touched.
+#[inline]
+fn commit<const N: usize>(
+    state: &mut RouteState,
+    prob: &Vrp,
+    edits: &[SlotEdit; N],
+    price: &EditPrice,
+) {
+    state.apply(prob, edits, price);
+}
+
+/// Moves the segment of `len` customers starting at `u`, optionally reversed,
+/// to right after `v`. Intra-route when `v` sits in `u`'s route.
 fn try_relocate(
     state: &mut RouteState,
     prob: &Vrp,
@@ -184,19 +197,16 @@ fn try_relocate(
     v: usize,
     len: usize,
     reverse: bool,
-    penalty: f64,
 ) -> bool {
     if reverse && len == 1 {
         return false; // Reversing a single customer is the same move.
     }
     let (from, pos) = state.locate(u);
-    if pos + len > state.routes[from].len() {
+    if pos + len > state.routes()[from].len() {
         return false;
     }
     let (to, v_pos) = state.locate(v);
     let target = v_pos + 1;
-    // The insertion point must lie outside the segment, and re-inserting it
-    // exactly where it came from is a no-op.
     if from == to && target >= pos && target <= pos + len {
         return false;
     }
@@ -208,84 +218,89 @@ fn try_relocate(
         (first, last)
     };
     let gain = state.removal_gain(prob, from, pos, len);
+    let insertion = state.insertion_cost(prob, to, target, head, tail);
 
-    let (delta_distance, delta_excess) = if from == to {
-        // Same route: the removal and insertion edges are disjoint (checked
-        // above), so the two O(1) deltas still compose.
-        (state.insertion_cost(prob, to, target, head, tail) - gain, 0)
-    } else {
-        let demand = state.segment_demand(prob, from, pos, len);
-        (
-            state.insertion_cost(prob, to, target, head, tail) - gain,
-            state.excess_delta_transfer(prob, from, to, demand),
-        )
+    let relocation = Relocation {
+        from,
+        pos,
+        len,
+        to,
+        target,
+        reverse,
     };
-    let delta = delta_distance + penalty * delta_excess as f64;
-    if delta > -MIN_IMPROVEMENT {
-        return false;
+    if from == to {
+        let edit = [SlotEdit::reorder(from, insertion - gain)];
+        let price = state.price(prob, &edit);
+        if !improves(price.gain) {
+            return false;
+        }
+        relocate_routes(state, &relocation);
+        commit(state, prob, &edit, &price);
+    } else {
+        // The segment carries its inner edges from one route to the other.
+        let inner = state.segment_internal(prob, from, pos, len);
+        let (demand, service) = state.segment_load(prob, from, pos, len);
+        let edits = [
+            SlotEdit::remove(from, -gain - inner, demand, service, len),
+            SlotEdit::insert(to, insertion + inner, demand, service, len),
+        ];
+        let price = state.price(prob, &edits);
+        if !improves(price.gain) {
+            return false;
+        }
+        relocate_routes(state, &relocation);
+        commit(state, prob, &edits, &price);
     }
-
-    apply_relocate(
-        state,
-        prob,
-        &Relocation {
-            from,
-            pos,
-            len,
-            to,
-            target,
-            reverse,
-        },
-    );
-    state.commit(delta_distance, delta_excess);
     true
 }
 
-/// Moves the `len` customers starting at `u` into an empty route.
-fn try_relocate_to_idle(
-    state: &mut RouteState,
-    prob: &Vrp,
-    u: usize,
-    len: usize,
-    penalty: f64,
-) -> bool {
+/// Moves the segment of `len` customers at `u` onto an idle vehicle, one
+/// representative per vehicle type, so a fleet with idle vehicles of several
+/// types is offered each type once.
+fn try_relocate_to_idle(state: &mut RouteState, prob: &Vrp, u: usize, len: usize) -> bool {
     let (from, pos) = state.locate(u);
-    if pos + len > state.routes[from].len() || state.routes[from].len() == len {
-        // Emptying one route to fill another is a relabeling, not a move.
+    if pos + len > state.routes()[from].len()
+        || state.routes()[from].len() == len
+        || !state.has_idle_vehicle()
+    {
         return false;
     }
-    let Some(to) = state.routes.iter().position(|r| r.is_empty()) else {
-        return false;
-    };
 
     let (_, first, last, _) = state.segment_ends(from, pos, len);
     let gain = state.removal_gain(prob, from, pos, len);
-    let demand = state.segment_demand(prob, from, pos, len);
-    let delta_distance = prob.distance(0, first) + prob.distance(last, 0) - gain;
-    let delta_excess = state.excess_delta_transfer(prob, from, to, demand);
-    let delta = delta_distance + penalty * delta_excess as f64;
-    if delta > -MIN_IMPROVEMENT {
-        return false;
-    }
+    let inner = state.segment_internal(prob, from, pos, len);
+    let (demand, service) = state.segment_load(prob, from, pos, len);
+    let opened = prob.distance(0, first) + prob.distance(last, 0);
 
-    apply_relocate(
-        state,
-        prob,
-        &Relocation {
-            from,
-            pos,
-            len,
-            to,
-            target: 0,
-            reverse: false,
-        },
-    );
-    state.commit(delta_distance, delta_excess);
-    true
+    for t in 0..prob.vehicle_types().len() {
+        let Some(to) = state.idle_representative_of(t) else {
+            continue;
+        };
+        let edits = [
+            SlotEdit::remove(from, -gain - inner, demand, service, len),
+            SlotEdit::insert(to, opened + inner, demand, service, len),
+        ];
+        let price = state.price(prob, &edits);
+        if !improves(price.gain) {
+            continue;
+        }
+        relocate_routes(
+            state,
+            &Relocation {
+                from,
+                pos,
+                len,
+                to,
+                target: 0,
+                reverse: false,
+            },
+        );
+        commit(state, prob, &edits, &price);
+        return true;
+    }
+    false
 }
 
-/// The `len` customers at `routes[from][pos..]` move to just before position
-/// `target` of route `to`, reversed if `reverse`.
 struct Relocation {
     from: usize,
     pos: usize,
@@ -295,28 +310,21 @@ struct Relocation {
     reverse: bool,
 }
 
-/// Splices the segment described by `mv` into its target route.
-fn apply_relocate(state: &mut RouteState, prob: &Vrp, mv: &Relocation) {
-    let mut segment: Vec<usize> = state.routes[mv.from]
+/// Edits the routes of a relocation; the caches follow through `apply`.
+fn relocate_routes(state: &mut RouteState, mv: &Relocation) {
+    let mut segment: Vec<usize> = state.sol.routes[mv.from]
         .drain(mv.pos..mv.pos + mv.len)
         .collect();
     if mv.reverse {
         segment.reverse();
     }
-    let demand: i64 = segment.iter().map(|&c| prob.demands[c]).sum();
     // Removing from earlier in the same route shifts the insertion point left.
     let target = if mv.from == mv.to && mv.target > mv.pos {
         mv.target - mv.len
     } else {
         mv.target
     };
-    state.routes[mv.to].splice(target..target, segment);
-    if mv.from != mv.to {
-        state.loads[mv.from] -= demand;
-        state.loads[mv.to] += demand;
-    }
-    state.reindex(mv.from);
-    state.reindex(mv.to);
+    state.sol.routes[mv.to].splice(target..target, segment);
 }
 
 /// Exchanges the segment of `len_u` customers at `u` with the segment of `len_v`
@@ -329,48 +337,50 @@ fn try_swap(
     v: usize,
     len_u: usize,
     len_v: usize,
-    penalty: f64,
 ) -> bool {
     let (ru, pu) = state.locate(u);
     let (rv, pv) = state.locate(v);
     if ru == rv {
         return false;
     }
-    if pu + len_u > state.routes[ru].len() || pv + len_v > state.routes[rv].len() {
+    if pu + len_u > state.routes()[ru].len() || pv + len_v > state.routes()[rv].len() {
         return false;
     }
 
     let (bu, fu, lu, au) = state.segment_ends(ru, pu, len_u);
     let (bv, fv, lv, av) = state.segment_ends(rv, pv, len_v);
-    let delta_distance = prob.distance(bu, fv) + prob.distance(lv, au)
+    // Each route trades its segment's inner edges for the other's.
+    let inner_u = state.segment_internal(prob, ru, pu, len_u);
+    let inner_v = state.segment_internal(prob, rv, pv, len_v);
+    let delta_u = prob.distance(bu, fv) + inner_v + prob.distance(lv, au)
         - prob.distance(bu, fu)
-        - prob.distance(lu, au)
-        + prob.distance(bv, fu)
-        + prob.distance(lu, av)
+        - inner_u
+        - prob.distance(lu, au);
+    let delta_v = prob.distance(bv, fu) + inner_u + prob.distance(lu, av)
         - prob.distance(bv, fv)
+        - inner_v
         - prob.distance(lv, av);
-    let demand_u = state.segment_demand(prob, ru, pu, len_u);
-    let demand_v = state.segment_demand(prob, rv, pv, len_v);
-    let delta_excess = state.excess_delta_exchange(prob, ru, rv, demand_u, demand_v);
-    let delta = delta_distance + penalty * delta_excess as f64;
-    if delta > -MIN_IMPROVEMENT {
+    let (demand_u, service_u) = state.segment_load(prob, ru, pu, len_u);
+    let (demand_v, service_v) = state.segment_load(prob, rv, pv, len_v);
+    let edits = SlotEdit::exchange(
+        (ru, delta_u, (demand_u, service_u, len_u)),
+        (rv, delta_v, (demand_v, service_v, len_v)),
+    );
+    let price = state.price(prob, &edits);
+    if !improves(price.gain) {
         return false;
     }
 
-    let seg_u: Vec<usize> = state.routes[ru][pu..pu + len_u].to_vec();
-    let seg_v: Vec<usize> = state.routes[rv][pv..pv + len_v].to_vec();
-    state.routes[ru].splice(pu..pu + len_u, seg_v);
-    state.routes[rv].splice(pv..pv + len_v, seg_u);
-    state.loads[ru] += demand_v - demand_u;
-    state.loads[rv] += demand_u - demand_v;
-    state.reindex(ru);
-    state.reindex(rv);
-    state.commit(delta_distance, delta_excess);
+    let seg_u: Vec<usize> = state.sol.routes[ru][pu..pu + len_u].to_vec();
+    let seg_v: Vec<usize> = state.sol.routes[rv][pv..pv + len_v].to_vec();
+    state.sol.routes[ru].splice(pu..pu + len_u, seg_v);
+    state.sol.routes[rv].splice(pv..pv + len_v, seg_u);
+    commit(state, prob, &edits, &price);
     true
 }
 
-/// Reverses the sub-path between `u` and `v` within their shared route.
-fn try_two_opt(state: &mut RouteState, prob: &Vrp, u: usize, v: usize, penalty: f64) -> bool {
+/// Reverses the sub-path between `u` and `v` of one route.
+fn try_two_opt(state: &mut RouteState, prob: &Vrp, u: usize, v: usize) -> bool {
     let (r, pu) = state.locate(u);
     let (rv, pv) = state.locate(v);
     if rv != r {
@@ -381,64 +391,63 @@ fn try_two_opt(state: &mut RouteState, prob: &Vrp, u: usize, v: usize, penalty: 
         return false;
     }
 
-    let route = &state.routes[r];
-    let (before, after) = (before(route, i), node_at(route, j + 1));
-    let (first, last) = (route[i], route[j]);
-    let delta_distance = prob.distance(before, last) + prob.distance(first, after)
-        - prob.distance(before, first)
-        - prob.distance(last, after);
-    // Reversal keeps the route's customer set, so loads and excess are untouched.
-    if delta_distance > -MIN_IMPROVEMENT {
+    let edit = [SlotEdit::reorder(
+        r,
+        super::reversal_delta(prob, &state.routes()[r], i, j),
+    )];
+    let price = state.price(prob, &edit);
+    if !improves(price.gain) {
         return false;
     }
-    let _ = penalty;
 
-    state.routes[r][i..=j].reverse();
-    state.reindex(r);
-    state.commit(delta_distance, 0);
+    state.sol.routes[r][i..=j].reverse();
+    commit(state, prob, &edit, &price);
     true
 }
 
-/// Exchanges the tails of the routes of `u` and `v`: the customers after `u` are
-/// served by `v`'s vehicle and vice versa.
-fn try_two_opt_star(state: &mut RouteState, prob: &Vrp, u: usize, v: usize, penalty: f64) -> bool {
+/// Exchanges the tails after `u` and after `v` between their two routes.
+///
+/// Each route's distance moves by the tail it gives up against the tail it
+/// receives, read from the cumulative distances the state keeps, so the
+/// exchange is priced without walking either tail.
+fn try_two_opt_star(state: &mut RouteState, prob: &Vrp, u: usize, v: usize) -> bool {
     let (ru, pu) = state.locate(u);
     let (rv, pv) = state.locate(v);
     if ru == rv {
         return false;
     }
-    let tail_u = node_at(&state.routes[ru], pu + 1);
-    let tail_v = node_at(&state.routes[rv], pv + 1);
+    let tail_u = node_at(&state.routes()[ru], pu + 1);
+    let tail_v = node_at(&state.routes()[rv], pv + 1);
     if tail_u == 0 && tail_v == 0 {
         return false; // Both tails empty: nothing to exchange.
     }
 
-    let delta_distance = prob.distance(u, tail_v) + prob.distance(v, tail_u)
-        - prob.distance(u, tail_u)
-        - prob.distance(v, tail_v);
-    let moved_u: i64 = state.routes[ru][pu + 1..]
-        .iter()
-        .map(|&c| prob.demands[c])
-        .sum();
-    let moved_v: i64 = state.routes[rv][pv + 1..]
-        .iter()
-        .map(|&c| prob.demands[c])
-        .sum();
-    let delta_excess = state.excess_delta_exchange(prob, ru, rv, moved_u, moved_v);
-    let delta = delta_distance + penalty * delta_excess as f64;
-    if delta > -MIN_IMPROVEMENT {
+    // Each route gives up the tail it carries and receives the other's.
+    let (kept_u, kept_v) = (state.tail_cost(prob, ru, pu), state.tail_cost(prob, rv, pv));
+    let own_u = prob.distance(u, tail_u) + kept_u;
+    let own_v = prob.distance(v, tail_v) + kept_v;
+    let new_u = prob.distance(u, tail_v) + kept_v;
+    let new_v = prob.distance(v, tail_u) + kept_u;
+    let (len_u, len_v) = (
+        state.routes()[ru].len() - pu - 1,
+        state.routes()[rv].len() - pv - 1,
+    );
+    let (moved_u, service_u) = state.segment_load(prob, ru, pu + 1, len_u);
+    let (moved_v, service_v) = state.segment_load(prob, rv, pv + 1, len_v);
+    let edits = SlotEdit::exchange(
+        (ru, new_u - own_u, (moved_u, service_u, len_u)),
+        (rv, new_v - own_v, (moved_v, service_v, len_v)),
+    );
+    let price = state.price(prob, &edits);
+    if !improves(price.gain) {
         return false;
     }
 
-    let suffix_u: Vec<usize> = state.routes[ru].split_off(pu + 1);
-    let suffix_v: Vec<usize> = state.routes[rv].split_off(pv + 1);
-    state.routes[ru].extend(suffix_v);
-    state.routes[rv].extend(suffix_u);
-    state.loads[ru] += moved_v - moved_u;
-    state.loads[rv] += moved_u - moved_v;
-    state.reindex(ru);
-    state.reindex(rv);
-    state.commit(delta_distance, delta_excess);
+    let suffix_u: Vec<usize> = state.sol.routes[ru].split_off(pu + 1);
+    let suffix_v: Vec<usize> = state.sol.routes[rv].split_off(pv + 1);
+    state.sol.routes[ru].extend(suffix_v);
+    state.sol.routes[rv].extend(suffix_u);
+    commit(state, prob, &edits, &price);
     true
 }
 
@@ -474,8 +483,8 @@ mod tests {
     ) -> (RouteState, f64) {
         let giant = random_tour(rng, prob.get_n());
         let routes = split_giant_tour(prob, &giant, penalty);
-        let mut state = RouteState::from_routes(prob, routes);
-        let before = state.cost(penalty);
+        let mut state = RouteState::from_routes(prob, routes, penalty);
+        let before = state.energy(prob);
         let mut descent = Descent::new();
         descent.ensure(prob, granularity);
         descent.run(&mut state, prob, rng, penalty, 64);
@@ -498,25 +507,14 @@ mod tests {
                 let at = || format!("penalty {penalty}, seed {seed}");
 
                 assert!(
-                    state.cost(penalty) <= before + 1e-9,
+                    state.energy(&prob) <= before + 1e-9,
                     "{}: cost rose from {before} to {}",
                     at(),
-                    state.cost(penalty)
+                    state.energy(&prob)
                 );
-
-                let fresh = RouteState::from_routes(&prob, state.routes.clone());
-                assert!(
-                    (fresh.distance - state.distance).abs() < 1e-6,
-                    "{}: distance {} vs recomputed {}",
-                    at(),
-                    state.distance,
-                    fresh.distance
-                );
-                assert_eq!(fresh.excess, state.excess, "{}: excess", at());
-                assert_eq!(fresh.loads, state.loads, "{}: loads", at());
-
-                assert_eq!(state.routes.len(), prob.num_vehicles, "{}", at());
-                prob.validate_routes(&state.routes).unwrap();
+                state.assert_caches_consistent(&prob);
+                assert_eq!(state.routes().len(), prob.num_slots(), "{}", at());
+                prob.validate_routes(state.routes()).unwrap();
             }
         }
     }
@@ -530,9 +528,9 @@ mod tests {
             let prob = random_vrp(&mut rng, 20, 10, 8);
             let (state, _) = descend(&prob, &mut rng, 1e6, 10);
             assert_eq!(
-                state.excess, 0,
+                state.sol.overload, 0,
                 "seed {seed}: an expensive penalty left {} units of overload",
-                state.excess
+                state.sol.overload
             );
         }
     }
@@ -557,12 +555,12 @@ mod tests {
         for seed in 0..20u64 {
             let mut rng = SmallRng::seed_from_u64(4000 + seed);
             let giant = random_tour(&mut rng, n);
-            let mut state = RouteState::from_routes(&prob, vec![giant]);
+            let mut state = RouteState::from_routes(&prob, vec![giant], 1.0);
             descent.run(&mut state, &prob, &mut rng, 1.0, 64);
             assert!(
-                (state.distance - optimum).abs() < 1e-9,
+                (state.sol.total_distance() - optimum).abs() < 1e-9,
                 "seed {seed}: got {}, optimum {optimum}",
-                state.distance
+                state.sol.total_distance()
             );
         }
     }
@@ -572,7 +570,7 @@ mod tests {
         let mut rng = SmallRng::seed_from_u64(5);
         let prob = random_vrp(&mut rng, 30, 12, 6);
         let (state, _) = descend(&prob, &mut rng, 100.0, 1);
-        prob.validate_routes(&state.routes).unwrap();
+        prob.validate_routes(state.routes()).unwrap();
     }
 
     /// Splitting a route never shortens it (triangle inequality), so an idle
@@ -593,9 +591,9 @@ mod tests {
             2,
             2,
         );
-        let mut state = RouteState::from_routes(&prob, vec![vec![1, 2, 3, 4], Vec::new()]);
+        let mut state = RouteState::from_routes(&prob, vec![vec![1, 2, 3, 4], Vec::new()], 100.0);
         assert_eq!(
-            state.excess, 2,
+            state.sol.overload, 2,
             "one vehicle cannot carry four unit demands"
         );
 
@@ -605,11 +603,12 @@ mod tests {
         descent.run(&mut state, &prob, &mut rng, 100.0, 64);
 
         assert_eq!(
-            state.excess, 0,
+            state.sol.overload,
+            0,
             "the idle vehicle should have taken the excess: {:?}",
-            state.routes
+            state.routes()
         );
-        assert!(state.routes.iter().all(|r| !r.is_empty()));
+        assert!(state.routes().iter().all(|r| !r.is_empty()));
     }
 
     /// An anchored sweep must reach the same local optimum as a full one when
@@ -623,23 +622,23 @@ mod tests {
 
         // Take two customers out of a settled solution and put them back at the
         // ends of the first route, then descend around exactly those two.
-        let mut routes = settled.routes.clone();
+        let mut routes = settled.routes().to_vec();
         let moved: Vec<usize> = routes[1].drain(..2).collect();
         routes[0].insert(0, moved[0]);
         routes[0].push(moved[1]);
-        let mut state = RouteState::from_routes(&prob, routes);
-        let damaged = state.cost(100.0);
+        let mut state = RouteState::from_routes(&prob, routes, 100.0);
+        let damaged = state.energy(&prob);
 
         let mut descent = Descent::new();
         descent.ensure(&prob, 8);
         descent.run_around(&mut state, &prob, &moved, &mut rng, 100.0, 64);
 
         assert!(
-            state.cost(100.0) < damaged,
+            state.energy(&prob) < damaged,
             "the anchored sweep left the damage in place: {damaged} -> {}",
-            state.cost(100.0)
+            state.energy(&prob)
         );
-        prob.validate_routes(&state.routes).unwrap();
+        prob.validate_routes(state.routes()).unwrap();
     }
 
     /// Anchors are a hint, not a contract: an empty set and an anchor whose
@@ -649,13 +648,13 @@ mod tests {
         let mut rng = SmallRng::seed_from_u64(23);
         let prob = random_vrp(&mut rng, 20, 10, 4);
         let (mut state, _) = descend(&prob, &mut rng, 100.0, 8);
-        let before = state.cost(100.0);
+        let before = state.energy(&prob);
 
         let mut descent = Descent::new();
         descent.ensure(&prob, 8);
         descent.run_around(&mut state, &prob, &[], &mut rng, 100.0, 64);
 
-        assert_eq!(state.cost(100.0), before);
-        prob.validate_routes(&state.routes).unwrap();
+        assert_eq!(state.energy(&prob), before);
+        prob.validate_routes(state.routes()).unwrap();
     }
 }

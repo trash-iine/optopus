@@ -13,7 +13,7 @@ to plug into every relevant heuristic.
 | [TSP](tsp.md) | Minimize | `TspSolution` | TwoOpt / Relocate | `TspOrderCrossover` | `Tsp::load_file` (TSPLIB) |
 | [Vertex Cover](vertex_cover.md) | Minimize | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `Graph::load_from_file` |
 | [Job Shop Scheduling](job_shop_scheduling.md) | Minimize | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
-| [CVRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB) |
+| [VRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB, or a TOML fleet file) |
 | [Graph Coloring](graph_coloring.md) | Minimize | `GraphColoringSolution` | Flip (recolor) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |
 | [Formula](formula.md) | Configurable | `FormulaSolution` | Flip / Swap | `FormulaUniformCrossover` | (none, built from `Expr` AST) |
 

@@ -1,43 +1,58 @@
-//! The route-level operators for the CVRP, read by both searches that work on
+//! The route-level operators for the VRP, read by both searches that work on
 //! its routes.
 //!
 //! They live with the problem rather than with either search, because VRP's
 //! [`Ruinable`](crate::trait_defs::Ruinable) impl is built out of them and a
 //! problem's trait impls have no business reaching into a heuristic.
 //!
-//! Four layers, each a module: this one prices a route edit, [`route_state`]
-//! keeps a route partition and its caches, [`granular`] says which customer
-//! pairs are worth considering at all, and [`descent`] walks downhill over the
-//! moves those pairs allow.
+//! Five layers, each a module: this one is the distance arithmetic a route
+//! edit is built from, [`pricing`] turns such an edit into what it costs the
+//! objective, [`route_state`] keeps a route partition and its caches,
+//! [`granular`] says which customer pairs are worth considering at all, and
+//! [`descent`] walks downhill over the moves those pairs allow.
 //!
-//! Everything here is parameterized by the capacity penalty rather than
-//! reading [`Vrp::penalty_weight`](crate::problem::vrp::Vrp::penalty_weight),
-//! which is what lets one descent serve both callers: ALNS hands it the fixed
-//! weight its objective already uses, HGS hands it the weight it is currently
+//! A price is taken under a penalty the caller hands in rather than under
+//! [`Vrp::penalty_weight`](crate::problem::vrp::Vrp::penalty_weight), which is
+//! what lets one descent serve both callers: ALNS hands it the fixed weight
+//! its objective already uses, HGS hands it the weight it is currently
 //! tuning, and neither has to own a copy of the move set. What each caller
 //! still decides for itself is when to descend and over which customers,
 //! HGS over every one of a freshly decoded offspring, ALNS only around the ones
 //! it has just re-inserted.
 //!
-//! The pricing functions below are free rather than methods because they are
+//! The functions below are free rather than methods because they are
 //! arithmetic over a route slice and nothing else. [`RouteState`] wraps them
 //! for the routes it holds, and the tests here check them against from-scratch
 //! route lengths with no state in sight. Sharing them is not cosmetic. These
-//! are the formulas that decide what a move costs, so a second copy is a second
-//! answer to "how long is this route". [`Descent`] does have a receiver,
-//! because it owns caches (the candidate lists, the sweep buffers) that both
-//! callers were otherwise keeping their own copy of.
+//! are the formulas that decide what an edit moves, so a second copy is a
+//! second answer to "how long is this route". [`Descent`] does have a
+//! receiver, because it owns caches (the candidate lists, the sweep buffers)
+//! that both callers were otherwise keeping their own copy of.
 
 mod descent;
 mod granular;
+pub(crate) mod pricing;
 mod route_state;
 
 pub(crate) use descent::Descent;
 use granular::build_neighbor_lists;
 pub(crate) use route_state::RouteState;
 
+use crate::common::DistanceStore;
 use crate::problem::Vrp;
-use crate::problem::vrp::overload_of;
+
+/// Distance of a single route, `depot → route[0] → … → route[last] → depot`,
+/// with the depot at node `0`. An empty route has distance `0`.
+pub(crate) fn route_distance(distances: &DistanceStore, route: &[usize]) -> f64 {
+    let Some((&first, _)) = route.split_first() else {
+        return 0.0;
+    };
+    let mut d = distances.distance(0, first);
+    for w in route.windows(2) {
+        d += distances.distance(w[0], w[1]);
+    }
+    d + distances.distance(route[route.len() - 1], 0)
+}
 
 /// The node at `pos` of `route`, or the depot when `pos` is past its end.
 #[inline]
@@ -94,45 +109,16 @@ pub(crate) fn insertion_cost(
     prob.distance(before, first) + prob.distance(last, after) - prob.distance(before, after)
 }
 
-/// Total demand of `route[pos..pos + len]`.
+/// Distance saved by reversing `route[i..=j]`: the two edges at the ends of
+/// the segment are exchanged, and its internal edges are traversed backwards,
+/// which costs the same on a symmetric instance.
 #[inline]
-pub(crate) fn segment_demand(prob: &Vrp, route: &[usize], pos: usize, len: usize) -> i64 {
-    route[pos..pos + len].iter().map(|&c| prob.demands[c]).sum()
-}
-
-/// Recomputes every route's load in place.
-pub(crate) fn route_loads(prob: &Vrp, routes: &[Vec<usize>], loads: &mut [i64]) {
-    for (r, route) in routes.iter().enumerate() {
-        loads[r] = route.iter().map(|&c| prob.demands[c]).sum();
-    }
-}
-
-/// Change in total overflow when `demand` is added to a route carrying `load`.
-#[inline]
-pub(crate) fn excess_delta_insert(capacity: i64, load: i64, demand: i64) -> i64 {
-    overload_of(load + demand, capacity) - overload_of(load, capacity)
-}
-
-/// Change in total overflow when `demand` moves from one route to another.
-#[inline]
-pub(crate) fn excess_delta_transfer(capacity: i64, from: i64, to: i64, demand: i64) -> i64 {
-    overload_of(from - demand, capacity) - overload_of(from, capacity)
-        + overload_of(to + demand, capacity)
-        - overload_of(to, capacity)
-}
-
-/// Change in total overflow when two routes exchange `demand_a` for `demand_b`.
-#[inline]
-pub(crate) fn excess_delta_exchange(
-    capacity: i64,
-    load_a: i64,
-    load_b: i64,
-    demand_a: i64,
-    demand_b: i64,
-) -> i64 {
-    overload_of(load_a - demand_a + demand_b, capacity) - overload_of(load_a, capacity)
-        + overload_of(load_b - demand_b + demand_a, capacity)
-        - overload_of(load_b, capacity)
+pub(crate) fn reversal_delta(prob: &Vrp, route: &[usize], i: usize, j: usize) -> f64 {
+    let (before, after) = (before(route, i), node_at(route, j + 1));
+    let (first, last) = (route[i], route[j]);
+    prob.distance(before, last) + prob.distance(first, after)
+        - prob.distance(before, first)
+        - prob.distance(last, after)
 }
 
 #[cfg(test)]
@@ -205,40 +191,9 @@ mod tests {
     }
 
     #[test]
-    fn segment_ends_and_demand_read_the_route() {
-        let prob = line_vrp();
+    fn segment_ends_read_the_route() {
         let route = vec![1, 2, 3, 4, 5];
         assert_eq!(segment_ends(&route, 0, 2), (0, 1, 2, 3));
         assert_eq!(segment_ends(&route, 3, 2), (3, 4, 5, 0));
-        assert_eq!(segment_demand(&prob, &route, 1, 3), 2 + 3 + 4);
-    }
-
-    /// The three excess deltas must agree with recomputing total overflow, which
-    /// is what the accepted move's `excess` cache is later checked against.
-    #[test]
-    fn excess_deltas_match_a_recompute() {
-        let capacity = 10;
-        let total = |a: i64, b: i64| overload_of(a, capacity) + overload_of(b, capacity);
-        for load_a in [0, 5, 10, 14] {
-            for load_b in [0, 8, 12] {
-                for demand in [1, 4, 7] {
-                    assert_eq!(
-                        excess_delta_insert(capacity, load_a, demand),
-                        overload_of(load_a + demand, capacity) - overload_of(load_a, capacity)
-                    );
-                    assert_eq!(
-                        excess_delta_transfer(capacity, load_a, load_b, demand),
-                        total(load_a - demand, load_b + demand) - total(load_a, load_b)
-                    );
-                    for other in [2, 6] {
-                        assert_eq!(
-                            excess_delta_exchange(capacity, load_a, load_b, demand, other),
-                            total(load_a - demand + other, load_b - other + demand)
-                                - total(load_a, load_b)
-                        );
-                    }
-                }
-            }
-        }
     }
 }

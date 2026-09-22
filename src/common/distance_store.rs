@@ -258,6 +258,33 @@ impl DistanceStore {
         }
     }
 
+    /// The largest distance between any two nodes, `0.0` for fewer than two.
+    ///
+    /// Every pair is asked for, so a nearest-neighbour store reads the
+    /// coordinates directly rather than scanning its short lists for a hit
+    /// it would compute the same value for.
+    pub fn max_distance(&self) -> f64 {
+        let mut max = 0.0_f64;
+        let mut fold = |d: f64| max = max.max(d);
+        match &self.store {
+            Store::Full { matrix, .. } => {
+                for i in 0..self.n {
+                    for j in (i + 1)..self.n {
+                        fold(matrix[i * self.n + j]);
+                    }
+                }
+            }
+            Store::Nearest { geometry, .. } => {
+                for i in 0..self.n {
+                    for j in (i + 1)..self.n {
+                        fold(geometry.distance(i, j));
+                    }
+                }
+            }
+        }
+        max
+    }
+
     /// For each node, its `k` nearest other nodes in ascending distance, ties
     /// by node index. A nearest-neighbour store that already holds at least
     /// `k` neighbours per node answers from its rows, any other store costs

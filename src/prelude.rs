@@ -60,6 +60,8 @@ pub use crate::problem::{
     MaxCutFlipNeighbor,
     MaxCutSolution,
     MaxCutSwapNeighbor,
+    // VRP objective selector
+    ObjectiveMode,
     OptDirection,
     // QUBO
     Qubo,
@@ -77,6 +79,8 @@ pub use crate::problem::{
     TspSolution,
     TspTour,
     TspTwoOptNeighbor,
+    // VRP fleet description
+    VehicleType,
     // Vertex Cover
     VertexCover,
     VertexCoverFlipNeighbor,

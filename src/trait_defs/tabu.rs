@@ -46,6 +46,16 @@ mod tests {
     fn every_built_in_move_hands_over_its_tabu_policy() {
         use crate::problem::*;
 
+        // The VRP moves cache a priced edit, so they are built on an instance.
+        let vrp = Vrp::new(
+            "t",
+            vec![(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (3.0, 0.0)],
+            vec![0, 1, 1, 1],
+            2,
+            2,
+        );
+        let vrp_sol = vrp.solution_from_routes(vec![vec![1, 2], vec![3]]);
+
         macro_rules! assert_policy {
             ($($problem:ty => $mv:expr),+ $(,)?) => {
                 $(
@@ -73,15 +83,9 @@ mod tests {
             Tsp => TspRelocateNeighbor { pos: 0, ins: 2, gain: 0.0 },
             JobShopScheduling => JobShopSwapNeighbor { i: 0, gain: 0.0 },
             JobShopScheduling => JobShopRelocateNeighbor { from: 0, to: 1, gain: 0.0 },
-            Vrp => VrpRelocateNeighbor {
-                from_r: 0, from_i: 0, to_r: 1, to_i: 0,
-                customer: 1, gain: 0.0, overload_delta: 0,
-            },
-            Vrp => VrpSwapNeighbor {
-                r1: 0, i1: 0, r2: 1, i2: 0,
-                c1: 1, c2: 2, gain: 0.0, overload_delta: 0,
-            },
-            Vrp => VrpTwoOptNeighbor { r: 0, p: 0, q: 1, gain: 0.0 },
+            Vrp => VrpRelocateNeighbor::new(&vrp, &vrp_sol, 0, 0, 1, 0),
+            Vrp => VrpSwapNeighbor::new(&vrp, &vrp_sol, 0, 0, 1, 0),
+            Vrp => VrpTwoOptNeighbor::new(&vrp, &vrp_sol, 0, 0, 1),
             FormulaProblem => FormulaFlipNeighbor { i: 0, gain: 0.0 },
             FormulaProblem => FormulaSwapNeighbor { i: 0, j: 1, gain: 0.0 },
         }

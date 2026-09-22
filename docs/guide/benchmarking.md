@@ -63,6 +63,10 @@ algorithm's own page; this table is only the index.
 Unknown kinds and missing required fields fail at parse time, before any run
 starts.
 
+A [VRP](../problems/vrp.md) instance is CVRPLIB or, when the path ends in
+`.toml`, a heterogeneous fleet; every `kind` above that runs on the one runs
+on the other.
+
 ## Fields shared by every kind
 
 `stop_condition` accepts any subset of `max_iteration`, `max_duration_secs`,
@@ -156,4 +160,4 @@ Solution encoding:
 | TSP | city visit order |
 | VertexCover | vertex indices in the cover |
 | JobShop | operation sequence (job indices, each repeated `n_machines` times) |
-| VRP | all routes flattened with the depot (`0`) as separator: `0, r0…, 0, r1…, 0` (empty routes omitted) |
+| VRP | all routes flattened with the depot (`0`) as separator: `0, r0…, 0, r1…, 0` (idle slots omitted) |

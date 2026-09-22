@@ -1,0 +1,64 @@
+name = "demo_fleet"
+objective_mode = "TotalTime"
+cost_weight = 1.0
+
+[depot]
+x = 0.0
+y = 0.0
+
+[[vehicle_types]]
+name = "truck"
+capacity = 6
+speed = 1.0
+fixed_cost = 10.0
+variable_cost_per_distance = 0.1
+min_count = 1
+max_count = 2
+max_route_time = 40.0
+
+[[vehicle_types]]
+name = "van"
+capacity = 3
+speed = 2.0
+fixed_cost = 2.0
+variable_cost_per_distance = 0.4
+max_count = 2
+
+[[customers]]
+id = 1
+x = 4.0
+y = 1.0
+demand = 2
+service_time = 1.0
+
+[[customers]]
+id = 2
+x = 5.0
+y = -2.0
+demand = 3
+
+[[customers]]
+id = 3
+x = -3.0
+y = 3.0
+demand = 2
+service_time = 0.5
+
+[[customers]]
+id = 4
+x = -4.0
+y = -1.0
+demand = 1
+
+[[customers]]
+id = 5
+x = 1.0
+y = 5.0
+demand = 2
+service_time = 2.0
+
+[[customers]]
+id = 6
+x = -1.0
+y = -5.0
+demand = 1
