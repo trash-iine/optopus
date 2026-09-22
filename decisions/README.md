@@ -29,6 +29,7 @@ Read the table, open the one file you need.
 | [0019](0019-the-stagnation-test-compares-solutions-not-objectives.md) | max_cut, heuristic | adopted | The BLS stagnation test compares solutions, not their objectives |
 | [0020](0020-alns-on-a-tour-needs-the-local-repair-too.md) | tsp | reference | The second `Ruinable` needs its anchored descent for the same reason the first did |
 | [0021](0021-tabu-tenure-means-one-thing.md) | max_cut, benchmark | adopted | `tabu_tenure` means one thing under every kind, and the paper's `2γ` is written into the config |
+| [0022](0022-vrp-is-one-problem-with-a-fleet.md) | vrp | adopted | The VRP is one problem, homogeneous and heterogeneous fleet alike, and the unification cost nothing once the layout was fixed |
 
 ## Writing a new record
 

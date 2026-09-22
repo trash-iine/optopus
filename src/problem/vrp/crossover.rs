@@ -9,14 +9,16 @@ use crate::search_state::Crossover;
 /// concatenated in order). A random contiguous segment is copied from parent 1,
 /// the remaining customers are filled in parent 2's relative order (classic OX,
 /// mirroring [`crate::problem::TspOrderCrossover`]), and the resulting giant tour
-/// is decoded into exactly `num_vehicles` routes by [`split_giant_tour`], which
-/// picks the cut positions optimally for that order.
+/// is decoded into exactly `num_slots()` routes by [`split_giant_tour`], which
+/// picks the cut positions optimally for that order, each route priced with
+/// the vehicle type of the slot that drives it.
 ///
 /// The decode runs under [`Vrp::penalty_weight`], so the quantity Split minimizes
-/// is exactly the offspring's [`VrpSolution::objective`]. That fixed penalty is
-/// the only thing separating this operator from the recombination step of
-/// [`crate::heuristic::HybridGeneticSearchForVrp`], which drives the same decoder
-/// with a penalty it retunes as the search runs.
+/// is exactly the offspring's [`VrpSolution::objective`] (up to the makespan
+/// proxy and the shortfall term Split does not price, see there). That fixed
+/// penalty is the only thing separating this operator from the recombination
+/// step of [`crate::heuristic::HybridGeneticSearchForVrp`], which drives the
+/// same decoder with a penalty it retunes as the search runs.
 pub struct VrpOrderCrossover;
 
 /// Concatenates all routes into a single customer sequence.
@@ -74,7 +76,7 @@ mod tests {
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         for _ in 0..20 {
             let child = cx.crossover(&prob, &a, &b, &mut rng).unwrap();
-            assert_eq!(child.routes.len(), prob.num_vehicles);
+            assert_eq!(child.routes.len(), prob.num_slots());
             prob.validate_routes(&child.routes).unwrap();
         }
     }

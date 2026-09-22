@@ -106,9 +106,12 @@ src/
     ├── max_cut/              + kernel.rs (MaxCutKernel, the one ProblemReduction),
     │                         planted.rs (PlantedMaxCut)
     ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/
-    ├── vrp/                  + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
-    │                         ops/ (pricing fns, RouteState, granular.rs, Descent),
-    │                         ruin.rs (the Ruinable + LocalRepair impl)
+    ├── vrp/                  one problem for the homogeneous and the heterogeneous
+    │                         fleet (VehicleType slots, service time, TotalTime or
+    │                         Makespan; CVRPLIB or TOML instances; decisions/0022)
+    │                         + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
+    │                         ops/ (pricing.rs = the one route-edit price, RouteState,
+    │                         granular.rs, Descent), ruin.rs (Ruinable + LocalRepair)
     ├── tsp/                  + ruin.rs (Ruinable with the tour as the one container,
     │                         AnchoredTourDescent)
     └── binary_optimization/  FormulaProblem, Expr

@@ -121,9 +121,9 @@ mod tests {
         let n = prob.get_n();
         let mut customers: Vec<usize> = (1..=n).collect();
         customers.shuffle(rng);
-        let mut routes = vec![Vec::new(); prob.num_vehicles];
+        let mut routes = vec![Vec::new(); prob.num_slots()];
         for c in customers {
-            let r = rng.random_range(0..prob.num_vehicles);
+            let r = rng.random_range(0..prob.num_slots());
             routes[r].push(c);
         }
         routes

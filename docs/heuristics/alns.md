@@ -7,8 +7,8 @@ it, choosing the operator pair by a roulette wheel whose weights track recent
 performance.
 
 Runs on any problem implementing [`Ruinable`](../traits.md) whose solution
-implements [`Evaluate`](../traits.md), which is [CVRP](../problems/vrp.md) and
-[TSP](../problems/tsp.md). `Ruinable` describes the shape a problem needs,
+implements [`Evaluate`](../traits.md), which is the [VRP](../problems/vrp.md),
+homogeneous or heterogeneous fleet, and [TSP](../problems/tsp.md). `Ruinable` describes the shape a problem needs,
 elements assigned to containers that compete for a finite resource, and names
 the family of problems that already has it. A tour is the single-container
 case, and what that costs is explained under [Operators](#operators).
