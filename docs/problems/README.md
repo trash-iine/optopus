@@ -16,7 +16,7 @@ to plug into every relevant heuristic.
 | [CVRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB) |
 | [Graph Coloring](graph_coloring.md) | Minimize | `GraphColoringSolution` | Flip (recolor) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |
 | [Formula](formula.md) | Configurable | `FormulaSolution` | Flip / Swap | `FormulaUniformCrossover` | (none, built from `Expr` AST) |
-| [Integer variables](integer.md) | Configurable | `IntSolution` | `IntChangeNeighbor` | (none) | (none, implement `IntegerProblem`) |
+| [Integer variables](integer.md) | Configurable | `IntSolution` | Change / Swap / Reverse | (none) | (none, implement `IntegerProblem`) |
 
 Type names are exported from `optopus::prelude`. See each page for the
 `Solution` struct fields, the file format, and which optional traits the

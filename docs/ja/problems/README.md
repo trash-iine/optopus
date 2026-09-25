@@ -15,7 +15,7 @@
 | [CVRP](vrp.md) | 最小化 | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB) |
 | [Graph Coloring](graph_coloring.md) | 最小化 | `GraphColoringSolution` | Flip (再彩色) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |
 | [Formula](formula.md) | 設定可能 | `FormulaSolution` | Flip / Swap | `FormulaUniformCrossover` | (なし、`Expr` の AST から作る) |
-| [整数変数](integer.md) | 設定可能 | `IntSolution` | `IntChangeNeighbor` | (なし) | (なし、`IntegerProblem` を実装する) |
+| [整数変数](integer.md) | 設定可能 | `IntSolution` | Change / Swap / Reverse | (なし) | (なし、`IntegerProblem` を実装する) |
 
 型名は `optopus::prelude` からエクスポートされています。`Solution` 構造体のフィールド、ファイル形式、
 その問題が実装している任意のトレイトは各ページを参照してください。
