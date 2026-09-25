@@ -67,6 +67,7 @@ impl IntVar {
 pub struct IntVars {
     vars: Vec<IntVar>,
     cum_changes: Vec<u64>,
+    all_different: bool,
 }
 
 impl IntVars {
@@ -84,7 +85,32 @@ impl IntVars {
                 total
             })
             .collect();
-        Self { vars, cum_changes }
+        Self {
+            vars,
+            cum_changes,
+            all_different: false,
+        }
+    }
+
+    /// `n` variables in `0..=n-1` that take different values, so that a
+    /// solution is a permutation of `0..n`. Variable `p` is what sits at
+    /// position `p`, the city visited `p`th in a tour for instance.
+    ///
+    /// A random solution is a uniformly random permutation. Only moves that
+    /// keep a permutation apply, [`IntSwapNeighbor`](super::IntSwapNeighbor)
+    /// and [`IntReverseNeighbor`](super::IntReverseNeighbor), and
+    /// [`IntChangeNeighbor`](super::IntChangeNeighbor) has no moves here.
+    pub fn permutation(n: usize) -> Self {
+        let top = n.saturating_sub(1) as i64;
+        Self {
+            all_different: true,
+            ..Self::new(vec![IntVar::new(0, top); n])
+        }
+    }
+
+    /// Whether the variables were built by [`permutation`](Self::permutation).
+    pub fn is_permutation(&self) -> bool {
+        self.all_different
     }
 
     /// How many single variable changes there are in total, the size of every
@@ -120,8 +146,8 @@ impl FromIterator<IntVar> for IntVars {
 /// The fields are private so that the objective cannot fall out of step with
 /// the values. A solution is built by
 /// [`new_solution`](ProblemTrait::new_solution) or
-/// [`IntegerProblem::solution_from`] and changed only by
-/// [`IntChangeNeighbor`](super::IntChangeNeighbor).
+/// [`IntegerProblem::solution_from`] and changed only by the moves of this
+/// module.
 #[derive(Clone, Debug)]
 pub struct IntSolution {
     values: Vec<i64>,
@@ -145,6 +171,24 @@ impl IntSolution {
         self.values[i] = value;
         self.objective = with_value(self.objective, raw(self.objective) + delta);
     }
+
+    /// Exchanges the values of `i` and `j` and moves the objective by `delta`.
+    pub(crate) fn swap(&mut self, i: usize, j: usize, delta: f64) {
+        self.values.swap(i, j);
+        self.objective = with_value(self.objective, raw(self.objective) + delta);
+    }
+
+    /// Reverses the values of `i..=j` and moves the objective by `delta`.
+    pub(crate) fn reverse(&mut self, i: usize, j: usize, delta: f64) {
+        self.values[i..=j].reverse();
+        self.objective = with_value(self.objective, raw(self.objective) + delta);
+    }
+}
+
+/// Builds the solution with `values` and their objective.
+fn build_solution<P: IntegerProblem + ?Sized>(prob: &P, values: Vec<i64>) -> IntSolution {
+    let objective = prob.objective(&values);
+    IntSolution { values, objective }
 }
 
 impl Evaluate for IntSolution {
@@ -157,9 +201,15 @@ impl Evaluate for IntSolution {
 ///
 /// Implementing this is all a problem needs. [`ProblemTrait`] follows from it,
 /// with [`IntSolution`] as the solution and a uniformly random initial value
-/// for every variable, and [`IntChangeNeighbor`](super::IntChangeNeighbor) is
-/// the move that sets one variable to another value in its range. On binary
-/// variables that move is a flip.
+/// for every variable, or a uniformly random permutation when the variables
+/// are [one](IntVars::permutation). [`IntAssignment`](super::IntAssignment)
+/// follows too, and with it every move of this module.
+///
+/// Each move asks the problem what it would change. The defaults evaluate the
+/// whole objective again, which is correct for any objective and costs a full
+/// evaluation per candidate. [`delta`](Self::delta),
+/// [`swap_delta`](Self::swap_delta) and [`reverse_delta`](Self::reverse_delta)
+/// are there to be overridden with what the move touches.
 ///
 /// ```
 /// use optopus::prelude::*;
@@ -222,11 +272,46 @@ pub trait IntegerProblem: Sync {
         raw(self.objective(&values)) - raw(sol.objective)
     }
 
+    /// How much the raw objective changes when the values of variables `i`
+    /// and `j` are exchanged, new minus old. The default copies the values and
+    /// evaluates the whole objective, and warns once at runtime that it does.
+    fn swap_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
+        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+        WARNED.get_or_init(|| {
+            tracing::warn!(
+                problem_type = std::any::type_name::<Self>(),
+                "Using the default implementation of IntegerProblem::swap_delta, \
+                 which evaluates the whole objective for every candidate move."
+            );
+        });
+        let mut values = sol.values.clone();
+        values.swap(i, j);
+        raw(self.objective(&values)) - raw(sol.objective)
+    }
+
+    /// How much the raw objective changes when the values of variables
+    /// `i..=j` are reversed, new minus old. The default copies the values and
+    /// evaluates the whole objective, and warns once at runtime that it does.
+    fn reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
+        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+        WARNED.get_or_init(|| {
+            tracing::warn!(
+                problem_type = std::any::type_name::<Self>(),
+                "Using the default implementation of IntegerProblem::reverse_delta, \
+                 which evaluates the whole objective for every candidate move."
+            );
+        });
+        let mut values = sol.values.clone();
+        values[i..=j].reverse();
+        raw(self.objective(&values)) - raw(sol.objective)
+    }
+
     /// A solution with the given values, for starting a search somewhere other
     /// than a random assignment.
     ///
-    /// Fails if the number of values differs from the number of variables or a
-    /// value lies outside its variable's range.
+    /// Fails if the number of values differs from the number of variables, if
+    /// a value lies outside its variable's range, or if the variables are a
+    /// permutation and a value repeats.
     fn solution_from(&self, values: Vec<i64>) -> Result<IntSolution, OptError> {
         let vars = self.variables();
         if values.len() != vars.len() {
@@ -248,23 +333,39 @@ pub trait IntegerProblem: Sync {
                 v.upper()
             )));
         }
-        let objective = self.objective(&values);
-        Ok(IntSolution { values, objective })
+        if vars.is_permutation() {
+            let mut seen = vec![false; values.len()];
+            if let Some(x) = values
+                .iter()
+                .find(|&&x| std::mem::replace(&mut seen[x as usize], true))
+            {
+                return Err(OptError::Config(format!(
+                    "value {x} appears twice in a permutation"
+                )));
+            }
+        }
+        Ok(build_solution(self, values))
     }
 }
 
 impl<P: IntegerProblem> ProblemTrait for P {
     type Solution = IntSolution;
 
-    /// Draws every variable uniformly from its range.
+    /// Draws every variable uniformly from its range, or a uniformly random
+    /// permutation when the variables are one.
     fn new_solution(&self, rng: &mut impl Rng) -> IntSolution {
+        if self.variables().is_permutation() {
+            use rand::seq::SliceRandom;
+            let mut values: Vec<i64> = (0..self.variables().len() as i64).collect();
+            values.shuffle(rng);
+            return build_solution(self, values);
+        }
         let values: Vec<i64> = self
             .variables()
             .iter()
             .map(|v| rng.random_range(v.lower()..=v.upper()))
             .collect();
-        let objective = self.objective(&values);
-        IntSolution { values, objective }
+        build_solution(self, values)
     }
 }
 

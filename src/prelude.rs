@@ -50,8 +50,11 @@ pub use crate::problem::{
     GraphColoringSolution,
     GraphColoringSwapNeighbor,
     // Integer variables
+    IntAssignment,
     IntChangeNeighbor,
+    IntReverseNeighbor,
     IntSolution,
+    IntSwapNeighbor,
     IntVar,
     IntVars,
     IntegerProblem,

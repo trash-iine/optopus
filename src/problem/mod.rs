@@ -39,7 +39,10 @@ pub use graph_coloring::{
     GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
     GraphColoringUniformCrossover,
 };
-pub use integer::{IntChangeNeighbor, IntSolution, IntVar, IntVars, IntegerProblem};
+pub use integer::{
+    IntAssignment, IntChangeNeighbor, IntReverseNeighbor, IntSolution, IntSwapNeighbor, IntVar,
+    IntVars, IntegerProblem,
+};
 pub use job_shop_scheduling::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
     JobShopSwapNeighbor,

@@ -97,6 +97,8 @@ mod tests {
             OneInt => IntChangeNeighbor {
                 var: 0, value: 1, gain: crate::trait_defs::Evaluable::Maximize(0.0),
             },
+            OneInt => IntSwapNeighbor { i: 0, j: 1, gain: crate::trait_defs::Evaluable::Maximize(0.0) },
+            OneInt => IntReverseNeighbor { i: 0, j: 1, gain: crate::trait_defs::Evaluable::Maximize(0.0) },
         }
     }
 }

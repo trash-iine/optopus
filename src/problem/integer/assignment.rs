@@ -1,0 +1,140 @@
+use super::problem::{IntSolution, IntVars, IntegerProblem, raw};
+use crate::search_state::{Evaluate, ProblemTrait};
+
+/// A problem whose solutions, of the problem's own type, assign an integer to
+/// each variable.
+///
+/// Reading and writing one value is all the moves of this module need, and
+/// the swap and the reversal have defaults built from those two. The solution
+/// is yours, so it can keep whatever makes pricing a move cheap, such as a per
+/// variable gain updated in [`assign`](Self::assign) and read back in
+/// [`assign_delta`](Self::assign_delta).
+///
+/// [`IntegerProblem`] is the shortcut that brings its own solution, and every
+/// [`IntegerProblem`] is one of these.
+pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
+    /// The variables, fixed for the life of the problem.
+    fn domains(&self) -> &IntVars;
+
+    /// The value of variable `i` in `sol`.
+    fn get(sol: &Self::Solution, i: usize) -> i64;
+
+    /// Sets variable `i` of `sol` to `value`, keeping the solution's
+    /// objective, and anything else it caches, up to date.
+    fn assign(&self, sol: &mut Self::Solution, i: usize, value: i64);
+
+    /// How much the raw objective changes when variable `i` of `sol` is set to
+    /// `value`, new minus old.
+    ///
+    /// The default copies the solution and calls [`assign`](Self::assign) on
+    /// the copy, and warns once at runtime that it does.
+    fn assign_delta(&self, sol: &Self::Solution, i: usize, value: i64) -> f64 {
+        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+        WARNED.get_or_init(|| {
+            tracing::warn!(
+                problem_type = std::any::type_name::<Self>(),
+                "Using the default implementation of IntAssignment::assign_delta, \
+                 which copies the solution for every candidate move."
+            );
+        });
+        let mut copy = sol.clone();
+        self.assign(&mut copy, i, value);
+        raw(copy.evaluate()) - raw(sol.evaluate())
+    }
+
+    /// Exchanges the values of variables `i` and `j`. The default is two
+    /// [`assign`](Self::assign) calls.
+    fn assign_swap(&self, sol: &mut Self::Solution, i: usize, j: usize) {
+        let (a, b) = (Self::get(sol, i), Self::get(sol, j));
+        self.assign(sol, i, b);
+        self.assign(sol, j, a);
+    }
+
+    /// How much the raw objective changes when `i` and `j` are exchanged. The
+    /// default copies the solution, and warns once at runtime that it does.
+    fn assign_swap_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> f64 {
+        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+        WARNED.get_or_init(|| {
+            tracing::warn!(
+                problem_type = std::any::type_name::<Self>(),
+                "Using the default implementation of IntAssignment::assign_swap_delta, \
+                 which copies the solution for every candidate move."
+            );
+        });
+        let mut copy = sol.clone();
+        self.assign_swap(&mut copy, i, j);
+        raw(copy.evaluate()) - raw(sol.evaluate())
+    }
+
+    /// Reverses the values of variables `i..=j`. The default swaps from both
+    /// ends inwards.
+    fn assign_reverse(&self, sol: &mut Self::Solution, i: usize, j: usize) {
+        let (mut a, mut b) = (i, j);
+        while a < b {
+            self.assign_swap(sol, a, b);
+            a += 1;
+            b -= 1;
+        }
+    }
+
+    /// How much the raw objective changes when `i..=j` is reversed. The
+    /// default copies the solution, and warns once at runtime that it does.
+    fn assign_reverse_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> f64 {
+        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+        WARNED.get_or_init(|| {
+            tracing::warn!(
+                problem_type = std::any::type_name::<Self>(),
+                "Using the default implementation of IntAssignment::assign_reverse_delta, \
+                 which copies the solution for every candidate move."
+            );
+        });
+        let mut copy = sol.clone();
+        self.assign_reverse(&mut copy, i, j);
+        raw(copy.evaluate()) - raw(sol.evaluate())
+    }
+}
+
+impl<P: IntegerProblem> IntAssignment for P {
+    #[inline]
+    fn domains(&self) -> &IntVars {
+        self.variables()
+    }
+
+    #[inline]
+    fn get(sol: &IntSolution, i: usize) -> i64 {
+        sol.value(i)
+    }
+
+    #[inline]
+    fn assign(&self, sol: &mut IntSolution, i: usize, value: i64) {
+        let delta = self.delta(sol, i, value);
+        sol.set(i, value, delta);
+    }
+
+    #[inline]
+    fn assign_delta(&self, sol: &IntSolution, i: usize, value: i64) -> f64 {
+        self.delta(sol, i, value)
+    }
+
+    #[inline]
+    fn assign_swap(&self, sol: &mut IntSolution, i: usize, j: usize) {
+        let delta = IntegerProblem::swap_delta(self, sol, i, j);
+        sol.swap(i, j, delta);
+    }
+
+    #[inline]
+    fn assign_swap_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
+        IntegerProblem::swap_delta(self, sol, i, j)
+    }
+
+    #[inline]
+    fn assign_reverse(&self, sol: &mut IntSolution, i: usize, j: usize) {
+        let delta = IntegerProblem::reverse_delta(self, sol, i, j);
+        sol.reverse(i, j, delta);
+    }
+
+    #[inline]
+    fn assign_reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
+        IntegerProblem::reverse_delta(self, sol, i, j)
+    }
+}
