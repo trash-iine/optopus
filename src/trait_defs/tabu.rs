@@ -46,6 +46,16 @@ mod tests {
     fn every_built_in_move_hands_over_its_tabu_policy() {
         use crate::problem::*;
 
+        struct OneInt(IntVars);
+        impl IntegerProblem for OneInt {
+            fn variables(&self) -> &IntVars {
+                &self.0
+            }
+            fn objective(&self, values: &[i64]) -> crate::trait_defs::Evaluable<f64> {
+                crate::trait_defs::Evaluable::Maximize(values[0] as f64)
+            }
+        }
+
         macro_rules! assert_policy {
             ($($problem:ty => $mv:expr),+ $(,)?) => {
                 $(
@@ -84,6 +94,9 @@ mod tests {
             Vrp => VrpTwoOptNeighbor { r: 0, p: 0, q: 1, gain: 0.0 },
             FormulaProblem => FormulaFlipNeighbor { i: 0, gain: 0.0 },
             FormulaProblem => FormulaSwapNeighbor { i: 0, j: 1, gain: 0.0 },
+            OneInt => IntChangeNeighbor {
+                var: 0, value: 1, gain: crate::trait_defs::Evaluable::Maximize(0.0),
+            },
         }
     }
 }

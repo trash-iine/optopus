@@ -49,6 +49,12 @@ pub use crate::problem::{
     GraphColoringRecolorNeighbor,
     GraphColoringSolution,
     GraphColoringSwapNeighbor,
+    // Integer variables
+    IntChangeNeighbor,
+    IntSolution,
+    IntVar,
+    IntVars,
+    IntegerProblem,
     // Job Shop Scheduling
     JobShopPpxCrossover,
     JobShopRelocateNeighbor,

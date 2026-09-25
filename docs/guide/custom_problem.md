@@ -10,6 +10,10 @@ The full runnable example lives at
 [`examples/custom_problem.rs`](https://github.com/trash-iine/optopus/blob/main/examples/custom_problem.rs)
 (`cargo run --example custom_problem`).
 
+If every variable of your problem is an integer in a fixed range, implement
+[`IntegerProblem`](../problems/integer.md) instead. It asks for the ranges and
+the objective only and comes with a ready made move.
+
 ## Required traits
 
 | Trait | On | Required method(s) |
