@@ -27,7 +27,6 @@ let mut ga = GeneticAlgorithm::new(
     /* mutation         = */ Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
         StopCondition::failed_updates(100),
         (5, 10),
-        None,
     )),
     ParentSelection::Tournament,
 )
