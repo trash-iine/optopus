@@ -196,3 +196,12 @@ inline in the prose, never as another `**API:**` line. Adding a problem or
 heuristic means adding that one line to the new page too — `--strict` catches a
 wrong path, not a missing line.
 
+`docs/ja/` is the Japanese edition: every page of `docs/` except `benchmarks/`,
+at the same relative path, listed under the `日本語` section of the nav. The
+rustdoc stays English and is shared, so a ja page's `**API:**` line is the
+English one with one more `../`. A change to an English page updates its ja
+counterpart in the same PR, and a new page gets a ja page and a nav entry in
+both sections. Algorithm and problem names stay in English there. A translated
+heading that something links to keeps the English anchor with `{ #id }`, so
+links between pages read the same in both editions.
+

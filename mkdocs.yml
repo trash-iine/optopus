@@ -24,6 +24,26 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
 
+# `docs/ja/` is the Japanese edition of every page but the benchmarks. The
+# language menu in the header switches between the two front pages; the links
+# are relative to the site root, which `url` resolves per page.
+extra:
+  alternate:
+    - name: English
+      link: ./
+      lang: en
+    - name: 日本語
+      link: ja/
+      lang: ja
+
+# The default search tokenizer splits on whitespace only, which leaves Japanese
+# text unsearchable; listing `ja` adds its segmenter.
+plugins:
+  - search:
+      lang:
+        - en
+        - ja
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -108,3 +128,47 @@ nav:
       - Driving BLS with a learned perturbation policy: guide/learned_perturbation.md
   - Benchmarks:
       - How the runs were made: benchmarks/README.md
+  - 日本語:
+      - ホーム: ja/README.md
+      - API リファレンス (rustdoc): api/optopus/index.html
+      - はじめに:
+          - クイックスタート: ja/quickstart.md
+          - 基本概念: ja/concepts.md
+          - SearchState API: ja/search_state.md
+          - コアトレイト: ja/traits.md
+      - 問題:
+          - 概要: ja/problems/README.md
+          - MaxCut: ja/problems/max_cut.md
+          - MaxCut kernelization: ja/problems/max_cut_kernel.md
+          - QUBO: ja/problems/qubo.md
+          - MaxSAT: ja/problems/sat.md
+          - TSP: ja/problems/tsp.md
+          - Vertex Cover: ja/problems/vertex_cover.md
+          - Job Shop Scheduling: ja/problems/job_shop_scheduling.md
+          - CVRP: ja/problems/vrp.md
+          - Graph Coloring: ja/problems/graph_coloring.md
+          - Formula: ja/problems/formula.md
+      - ヒューリスティクス:
+          - 概要: ja/heuristics/README.md
+          - Local Search: ja/heuristics/local_search.md
+          - Simulated Annealing: ja/heuristics/simulated_annealing.md
+          - Late Acceptance Hill Climbing: ja/heuristics/late_acceptance.md
+          - Tabu Search: ja/heuristics/tabu_search.md
+          - Random Walk: ja/heuristics/random_walk.md
+          - Beam Search: ja/heuristics/beam_search.md
+          - Reinforcement Learning Search: ja/heuristics/rl_search.md
+          - Genetic Algorithm: ja/heuristics/genetic_algorithm.md
+          - Population Annealing: ja/heuristics/population_annealing.md
+          - Adaptive Large Neighborhood Search: ja/heuristics/alns.md
+          - Breakout Local Search: ja/heuristics/breakout_local_search.md
+          - Meta-heuristics: ja/heuristics/meta.md
+          - Lin-Kernighan-Helsgaun (TSP): ja/heuristics/lkh.md
+          - WalkSAT (MaxSAT): ja/heuristics/walksat.md
+          - Hybrid Genetic Search (CVRP): ja/heuristics/hgs.md
+      - ガイド:
+          - 停止条件: ja/guide/stop_conditions.md
+          - ベンチマーク: ja/guide/benchmarking.md
+          - エラー処理: ja/guide/error_handling.md
+          - 独自の問題を定義する: ja/guide/custom_problem.md
+          - 独自のヒューリスティクスを定義する: ja/guide/custom_heuristic.md
+          - 学習した摂動方策で BLS を動かす: ja/guide/learned_perturbation.md
