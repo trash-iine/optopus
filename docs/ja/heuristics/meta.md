@@ -38,7 +38,6 @@ let mut ils = Iterated::<MaxCut>::new(
     /* search       = */ Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
         StopCondition::failed_updates(500),
         (5, 10),
-        None,
     )),
     /* perturbation = */ Box::new(RandomWalk::<MaxCutFlipNeighbor>::new(
         StopCondition::iterations(5),
@@ -77,7 +76,6 @@ let mut seq = Sequential::<MaxCut>::new(
         Box::new(TabuSearch::<MaxCutFlipNeighbor>::new(
             StopCondition::failed_updates(500),
             (5, 10),
-            None,
         )),
     ],
 );
