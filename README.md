@@ -31,7 +31,8 @@ println!("best cut = {}", state.best_solution.objective);
 ```
 
 See [`docs/quickstart.md`](docs/quickstart.md) for a longer tour, including
-file-based loading.
+file-based loading. The documentation is also available in Japanese, starting
+at [`docs/ja/README.md`](docs/ja/README.md).
 
 ## Supported Problems
 
