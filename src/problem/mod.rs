@@ -17,10 +17,8 @@
 //! | [`job_shop_scheduling`] | Job Shop Scheduling | Minimize makespan |
 //! | [`vrp`] | Capacitated Vehicle Routing | Minimize total distance |
 //! | [`graph_coloring`] | Graph Coloring | Minimize colors used |
-//! | [`binary_optimization`] | Formula-based binary optimization | Configurable |
-//! | [`integer`] | Any problem over bounded integer variables | Configurable |
+//! | [`integer`] | Any problem over bounded integer variables, by a closure or a formula | Configurable |
 
-pub mod binary_optimization;
 pub mod graph_coloring;
 pub mod integer;
 pub mod job_shop_scheduling;
@@ -31,16 +29,13 @@ pub mod tsp;
 pub mod vertex_cover;
 pub mod vrp;
 
-pub use binary_optimization::{
-    Constraint, ConstraintRel, Expr, FormulaFlipNeighbor, FormulaProblem, FormulaSolution,
-    FormulaSwapNeighbor, FormulaUniformCrossover, OptDirection,
-};
 pub use graph_coloring::{
     GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
     GraphColoringUniformCrossover,
 };
 pub use integer::{
-    IntAssignment, IntChangeNeighbor, IntReverseNeighbor, IntSolution, IntSwapNeighbor, IntVar,
+    Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntAssignment,
+    IntChangeNeighbor, IntCrossover, IntReverseNeighbor, IntSolution, IntSwapNeighbor, IntVar,
     IntVars, IntegerProblem,
 };
 pub use job_shop_scheduling::{

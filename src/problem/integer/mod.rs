@@ -17,11 +17,19 @@
 //! The moves are written against [`IntAssignment`], which asks only to read
 //! and write one value of a solution. A problem that wants a solution of its
 //! own, to keep whatever makes a move cheap to price, implements that instead.
+//!
+//! [`FormulaProblem`] is the other way in. Its objective and constraints are
+//! [`Expr`]essions, and it derives the price of every move from them.
+//! [`IntCrossover`] brings the genetic algorithm to both.
 
 mod assignment;
+mod crossover;
+mod formula;
 mod neighbor;
 mod problem;
 
 pub use assignment::IntAssignment;
+pub use crossover::IntCrossover;
+pub use formula::{Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution};
 pub use neighbor::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor};
 pub use problem::{ChangeDelta, IntSolution, IntVar, IntVars, IntegerProblem, NoDelta, PairDelta};

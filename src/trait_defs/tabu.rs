@@ -84,13 +84,11 @@ mod tests {
                 c1: 1, c2: 2, gain: 0.0, overload_delta: 0,
             },
             Vrp => VrpTwoOptNeighbor { r: 0, p: 0, q: 1, gain: 0.0 },
-            FormulaProblem => FormulaFlipNeighbor { i: 0, gain: 0.0 },
-            FormulaProblem => FormulaSwapNeighbor { i: 0, j: 1, gain: 0.0 },
             OneInt => IntChangeNeighbor {
-                var: 0, value: 1, gain: crate::trait_defs::Evaluable::Maximize(0.0),
+                var: 0, value: 1, cost: 0.0,
             },
-            OneInt => IntSwapNeighbor { i: 0, j: 1, gain: crate::trait_defs::Evaluable::Maximize(0.0) },
-            OneInt => IntReverseNeighbor { i: 0, j: 1, gain: crate::trait_defs::Evaluable::Maximize(0.0) },
+            OneInt => IntSwapNeighbor { i: 0, j: 1, cost: 0.0 },
+            OneInt => IntReverseNeighbor { i: 0, j: 1, cost: 0.0 },
         }
     }
 }

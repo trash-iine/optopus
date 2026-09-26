@@ -1,5 +1,5 @@
 //! Generic machinery shared by the binary-variable problems
-//! (MaxCut / QUBO / MaxSAT / Formula / VertexCover).
+//! (MaxCut / QUBO / MaxSAT / VertexCover).
 
 use rand::Rng;
 
@@ -70,7 +70,7 @@ pub fn lift_binary_solution<P: BinaryProblem>(
 }
 
 /// Shared body for `SubProblemExtractable::lift_solution` when the sub-problem
-/// re-indexes the free variables compactly (MaxSAT, Formula): the k-th
+/// re-indexes the free variables compactly (MaxSAT): the k-th
 /// disagreeing variable of the parents corresponds to variable `k` of `sub_sol`.
 pub fn lift_compact_binary_solution<P: BinaryProblem>(
     prob: &P,

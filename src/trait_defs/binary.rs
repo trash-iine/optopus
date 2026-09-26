@@ -5,8 +5,7 @@ use super::{MoveToNeighbor, ProblemTrait};
 /// A problem whose solutions assign a boolean value to each variable and cache
 /// a per-variable flip gain.
 ///
-/// MaxCut, QUBO, MaxSAT, [`FormulaProblem`](crate::problem::binary_optimization::FormulaProblem),
-/// and Vertex Cover all fit this shape. Implementing this trait gives a problem
+/// MaxCut, QUBO, MaxSAT and Vertex Cover all fit this shape. Implementing this trait gives a problem
 /// access to the generic binary-variable machinery in [`crate::common`], such as
 /// [`uniform_binary_crossover`](crate::common::uniform_binary_crossover).
 pub trait BinaryProblem: ProblemTrait + Sized {

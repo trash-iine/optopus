@@ -69,6 +69,10 @@ pub struct IntVars {
     vars: Vec<IntVar>,
     cum_changes: Vec<u64>,
     all_different: bool,
+    /// The number of changes of every variable when all of them have the
+    /// same range, so that moving values between variables always keeps them
+    /// in range and a change is located by arithmetic alone.
+    common_width: Option<u64>,
 }
 
 impl IntVars {
@@ -86,10 +90,16 @@ impl IntVars {
                 total
             })
             .collect();
+        let common_width = if vars.windows(2).all(|w| w[0] == w[1]) {
+            vars.first().map(IntVar::num_changes)
+        } else {
+            None
+        };
         Self {
             vars,
             cum_changes,
             all_different: false,
+            common_width,
         }
     }
 
@@ -114,6 +124,17 @@ impl IntVars {
         self.all_different
     }
 
+    /// Whether every variable has the same range.
+    pub(crate) fn same_range(&self) -> bool {
+        self.common_width.is_some() || self.vars.is_empty()
+    }
+
+    /// `lower + upper` when every variable ranges over the same two values,
+    /// so that the one change of a variable is to that minus its value.
+    pub(crate) fn flip_sum(&self) -> Option<i64> {
+        (self.common_width == Some(1)).then(|| self.vars[0].lower() + self.vars[0].upper())
+    }
+
     /// How many single variable changes there are in total, the size of every
     /// solution's neighborhood.
     pub fn total_changes(&self) -> u64 {
@@ -123,8 +144,85 @@ impl IntVars {
     /// The variable holding the `r`th change when the changes of every
     /// variable are laid out in index order. `r` must be below
     /// [`total_changes`](Self::total_changes).
+    #[inline]
     pub(crate) fn var_of_change(&self, r: u64) -> usize {
-        self.cum_changes.partition_point(|&c| c <= r)
+        match self.common_width {
+            Some(1) => r as usize,
+            Some(w) => (r / w) as usize,
+            None => self.cum_changes.partition_point(|&c| c <= r),
+        }
+    }
+
+    /// Checks that `values` assigns every variable a value in its range, and
+    /// a permutation when the variables are one.
+    pub(crate) fn check(&self, values: &[i64]) -> Result<(), OptError> {
+        if values.len() != self.len() {
+            return Err(OptError::Config(format!(
+                "{} values given for {} variables",
+                values.len(),
+                self.len()
+            )));
+        }
+        if let Some((i, (v, x))) = self
+            .iter()
+            .zip(values)
+            .enumerate()
+            .find(|(_, (v, x))| !v.contains(**x))
+        {
+            return Err(OptError::Config(format!(
+                "value {x} of variable {i} lies outside [{}, {}]",
+                v.lower(),
+                v.upper()
+            )));
+        }
+        if self.is_permutation() {
+            let mut seen = vec![false; values.len()];
+            if let Some(x) = values
+                .iter()
+                .find(|&&x| std::mem::replace(&mut seen[x as usize], true))
+            {
+                return Err(OptError::Config(format!(
+                    "value {x} appears twice in a permutation"
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    /// Every variable drawn uniformly from its range, or a uniformly random
+    /// permutation when the variables are one.
+    pub(crate) fn random_values(&self, rng: &mut impl Rng) -> Vec<i64> {
+        if self.is_permutation() {
+            use rand::seq::SliceRandom;
+            let mut values: Vec<i64> = (0..self.len() as i64).collect();
+            values.shuffle(rng);
+            return values;
+        }
+        self.iter()
+            .map(|v| rng.random_range(v.lower()..=v.upper()))
+            .collect()
+    }
+
+    /// Where the changes of variable `var` start when every variable's
+    /// changes are laid out in index order.
+    #[inline]
+    pub(crate) fn row_start(&self, var: usize) -> usize {
+        match self.common_width {
+            Some(w) => var * w as usize,
+            None => (self.cum_changes[var] - self.vars[var].num_changes()) as usize,
+        }
+    }
+
+    /// Where the change of `var` from `current` to `value` sits among the
+    /// changes laid out by [`row_start`](Self::row_start).
+    #[inline]
+    pub(crate) fn change_slot(&self, var: usize, current: i64, value: i64) -> usize {
+        if self.common_width == Some(1) {
+            return var;
+        }
+        let k = value.abs_diff(self.vars[var].lower()) as usize;
+        let k = if value > current { k - 1 } else { k };
+        self.row_start(var) + k
     }
 }
 
@@ -189,6 +287,13 @@ impl IntSolution {
 impl Evaluate for IntSolution {
     fn evaluate(&self) -> Evaluable<f64> {
         self.objective
+    }
+}
+
+impl crate::search_state::Distance for IntSolution {
+    /// The number of variables whose values differ.
+    fn distance(&self, other: &Self) -> usize {
+        crate::common::hamming_distance(&self.values, &other.values)
     }
 }
 
@@ -383,37 +488,7 @@ where
     /// a value lies outside its variable's range, or if the variables are a
     /// permutation and a value repeats.
     pub fn solution_from(&self, values: Vec<i64>) -> Result<IntSolution, OptError> {
-        let vars = &self.vars;
-        if values.len() != vars.len() {
-            return Err(OptError::Config(format!(
-                "{} values given for {} variables",
-                values.len(),
-                vars.len()
-            )));
-        }
-        if let Some((i, (v, x))) = vars
-            .iter()
-            .zip(&values)
-            .enumerate()
-            .find(|(_, (v, x))| !v.contains(**x))
-        {
-            return Err(OptError::Config(format!(
-                "value {x} of variable {i} lies outside [{}, {}]",
-                v.lower(),
-                v.upper()
-            )));
-        }
-        if vars.is_permutation() {
-            let mut seen = vec![false; values.len()];
-            if let Some(x) = values
-                .iter()
-                .find(|&&x| std::mem::replace(&mut seen[x as usize], true))
-            {
-                return Err(OptError::Config(format!(
-                    "value {x} appears twice in a permutation"
-                )));
-            }
-        }
+        self.vars.check(&values)?;
         Ok(self.build(values))
     }
 
@@ -453,18 +528,7 @@ where
     /// Draws every variable uniformly from its range, or a uniformly random
     /// permutation when the variables are one.
     fn new_solution(&self, rng: &mut impl Rng) -> IntSolution {
-        if self.vars.is_permutation() {
-            use rand::seq::SliceRandom;
-            let mut values: Vec<i64> = (0..self.vars.len() as i64).collect();
-            values.shuffle(rng);
-            return self.build(values);
-        }
-        let values: Vec<i64> = self
-            .vars
-            .iter()
-            .map(|v| rng.random_range(v.lower()..=v.upper()))
-            .collect();
-        self.build(values)
+        self.build(self.vars.random_values(rng))
     }
 }
 

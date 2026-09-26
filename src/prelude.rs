@@ -35,23 +35,20 @@ pub use crate::trait_defs::{
 
 // Problem and neighbor types
 pub use crate::problem::{
-    // Formula
+    // Integer variables, by a closure or a formula
     Constraint,
     ConstraintRel,
     Expr,
-    FormulaFlipNeighbor,
     FormulaProblem,
     FormulaSolution,
-    FormulaSwapNeighbor,
-    FormulaUniformCrossover,
     // Graph Coloring
     GraphColoring,
     GraphColoringRecolorNeighbor,
     GraphColoringSolution,
     GraphColoringSwapNeighbor,
-    // Integer variables
     IntAssignment,
     IntChangeNeighbor,
+    IntCrossover,
     IntReverseNeighbor,
     IntSolution,
     IntSwapNeighbor,
@@ -69,7 +66,6 @@ pub use crate::problem::{
     MaxCutFlipNeighbor,
     MaxCutSolution,
     MaxCutSwapNeighbor,
-    OptDirection,
     // QUBO
     Qubo,
     QuboFlipNeighbor,
