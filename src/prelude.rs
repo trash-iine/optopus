@@ -35,7 +35,7 @@ pub use crate::trait_defs::{
 
 // Problem and neighbor types
 pub use crate::problem::{
-    // Integer variables, by a closure or a formula
+    // Formula
     Constraint,
     ConstraintRel,
     Expr,
@@ -46,6 +46,7 @@ pub use crate::problem::{
     GraphColoringRecolorNeighbor,
     GraphColoringSolution,
     GraphColoringSwapNeighbor,
+    // Integer variables
     IntAssignment,
     IntChangeNeighbor,
     IntCrossover,
@@ -76,8 +77,8 @@ pub use crate::problem::{
     SatFlipNeighbor,
     SatSolution,
     SatSwapNeighbor,
-    Tsp,
     // TSP
+    Tsp,
     TspRelocateNeighbor,
     TspSolution,
     TspTour,
