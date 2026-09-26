@@ -643,12 +643,22 @@ impl FormulaProblem {
             values,
             objective,
             constraint_vals,
-            deltas: vec![0.0; self.vars.total_changes() as usize],
+            deltas: vec![],
         };
-        for var in 0..sol.values.len() {
-            self.fill_row(&mut sol, var);
+        if self.keeps_deltas() {
+            sol.deltas = vec![0.0; self.vars.total_changes() as usize];
+            for var in 0..sol.values.len() {
+                self.fill_row(&mut sol, var);
+            }
         }
         sol
+    }
+
+    /// Whether solutions keep the delta table. A permutation has no single
+    /// change, so the table would never be read, and its `n(n-1)` entries
+    /// would still be filled and copied with every solution.
+    fn keeps_deltas(&self) -> bool {
+        !self.vars.is_permutation()
     }
 
     /// The change of setting `x[i]` to `b`, penalties included, as the
@@ -785,12 +795,18 @@ impl IntAssignment for FormulaProblem {
     /// Moves the constraint values and the objective, then refreshes the
     /// deltas of `i` and of every variable that interacts with it.
     fn assign(&self, sol: &mut FormulaSolution, i: usize, value: i64) {
+        if value == sol.values[i] {
+            return;
+        }
         let delta = self.assign_delta(sol, i, value);
         for &c in &self.var_constraints[i] {
             sol.constraint_vals[c] += self.constraint_polys[c].change_delta(&sol.values, i, value);
         }
         sol.values[i] = value;
         sol.objective = super::problem::with_value(sol.objective, raw(sol.objective) + delta);
+        if !self.keeps_deltas() {
+            return;
+        }
         if self.vars[i].num_changes() == 1 {
             // A binary variable's one change is to go back, which undoes this.
             sol.deltas[self.vars.row_start(i)] = -delta;
@@ -802,9 +818,18 @@ impl IntAssignment for FormulaProblem {
         }
     }
 
+    /// Read from the table, computed when there is none, and `0.0` when
+    /// `value` is the current value, which is no change.
     #[inline]
     fn assign_delta(&self, sol: &FormulaSolution, i: usize, value: i64) -> f64 {
-        sol.deltas[self.vars.change_slot(i, sol.values[i], value)]
+        let current = sol.values[i];
+        if value == current {
+            0.0
+        } else if self.keeps_deltas() {
+            sol.deltas[self.vars.change_slot(i, current, value)]
+        } else {
+            self.change_delta(&sol.values, &sol.constraint_vals, i, value)
+        }
     }
 
     #[inline]
@@ -818,10 +843,38 @@ impl IntAssignment for FormulaProblem {
         self.priced(
             self.objective_poly.swap_delta(x, i, j),
             &sol.constraint_vals,
-            0..self.constraints.len(),
+            union_sorted(&self.var_constraints[i], &self.var_constraints[j]),
             |p| p.swap_delta(x, i, j),
         )
     }
+}
+
+/// The union of two ascending lists, ascending and without repeats.
+fn union_sorted<'a>(a: &'a [usize], b: &'a [usize]) -> impl Iterator<Item = usize> + 'a {
+    let (mut i, mut j) = (0, 0);
+    std::iter::from_fn(move || {
+        let next = match (a.get(i), b.get(j)) {
+            (Some(&x), Some(&y)) if x == y => {
+                i += 1;
+                j += 1;
+                x
+            }
+            (Some(&x), Some(&y)) if x < y => {
+                i += 1;
+                x
+            }
+            (_, Some(&y)) => {
+                j += 1;
+                y
+            }
+            (Some(&x), None) => {
+                i += 1;
+                x
+            }
+            (None, None) => return None,
+        };
+        Some(next)
+    })
 }
 
 impl SubProblemExtractable for FormulaProblem {
@@ -892,7 +945,7 @@ impl SubProblemExtractable for FormulaProblem {
 mod tests {
     use super::*;
     use crate::heuristic::{Heuristic, StopCondition, TabuSearch};
-    use crate::problem::{IntChangeNeighbor, IntSwapNeighbor, IntVar};
+    use crate::problem::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor, IntVar};
     use crate::search_state::{MoveToNeighbor, Rankable, SearchState};
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
@@ -1040,12 +1093,20 @@ mod tests {
             + x2.clone() * x2.clone() * x2.clone()
             + 0.5 * x3.clone()
             - x0.clone() * x3.clone();
-        FormulaProblem::minimize(vars, objective).with_constraint(Constraint::Clamp {
-            expr: x0 + x1 + x2 * 2.0 + x3,
-            lo: 2.0,
-            hi: 7.0,
-            penalty_weight: 4.0,
-        })
+        FormulaProblem::minimize(vars, objective)
+            .with_constraint(Constraint::Clamp {
+                expr: x0.clone() + x1.clone() + x2 * 2.0 + x3,
+                lo: 2.0,
+                hi: 7.0,
+                penalty_weight: 4.0,
+            })
+            // Reads only x0 and x1, so a swap or change elsewhere leaves it be.
+            .with_constraint(Constraint::Comparison {
+                lhs: x0 * x1,
+                rel: ConstraintRel::Le,
+                rhs: Expr::Const(3.0),
+                penalty_weight: 2.5,
+            })
     }
 
     /// The change from `x` to `y` as a cost, lower being better.
@@ -1142,5 +1203,92 @@ mod tests {
         let lifted = prob.lift_solution(&a, &b, &sub_sol);
         assert_eq!(lifted.values(), &[1, 0, 3, -2]);
         check_table(&prob, &lifted);
+    }
+
+    /// Every reversal of `sol`, priced and then applied to a copy, against the
+    /// objective evaluated from scratch.
+    fn check_reversals(prob: &FormulaProblem, sol: &FormulaSolution) {
+        for m in IntReverseNeighbor::iter(prob, sol) {
+            let mut x = sol.values().to_vec();
+            x[m.i..=m.j].reverse();
+            let want = cost(prob, sol.values(), &x);
+            assert!((m.cost - want).abs() < 1e-9, "{m:?} want {want}");
+            let mut after = sol.clone();
+            m.apply_to_solution(prob, &mut after).unwrap();
+            assert_eq!(after.values(), &x[..]);
+            check_table(prob, &after);
+        }
+    }
+
+    /// A reversal swaps its ends inwards, and ends that hold the same value
+    /// used to be "changed" to the value they already had, which read the
+    /// delta table at the wrong slot.
+    #[test]
+    fn a_reversal_over_equal_ends_keeps_the_objective_and_the_table() {
+        let objective = Expr::Var(0) * Expr::Var(1) - 2.0 * Expr::Var(1) * Expr::Var(2)
+            + 3.0 * Expr::Var(2)
+            - Expr::Var(0);
+        let prob = FormulaProblem::maximize(binary(3), objective);
+        check_reversals(&prob, &prob.solution_from(vec![1, 0, 1]).unwrap());
+        check_reversals(
+            &make_problem(),
+            &make_problem().solution_from(vec![1, 0, 1]).unwrap(),
+        );
+    }
+
+    #[test]
+    fn reversals_on_integer_variables_keep_the_objective_and_the_table() {
+        let prob = integer_problem();
+        let mut sol = prob.new_solution(&mut SmallRng::seed_from_u64(6));
+        let mut r = SmallRng::seed_from_u64(7);
+        for _ in 0..50 {
+            check_reversals(&prob, &sol);
+            let m = IntChangeNeighbor::random_neighbor(&prob, &sol, &mut r).unwrap();
+            m.apply_to_solution(&prob, &mut sol).unwrap();
+        }
+    }
+
+    /// A formula over a permutation keeps no delta table, since a permutation
+    /// has no single change, and swaps and reversals still price and apply
+    /// exactly.
+    #[test]
+    fn a_permutation_formula_keeps_no_table_and_moves_exactly() {
+        let n = 6;
+        let objective = (0..n - 1)
+            .map(|p| (p as f64 + 1.0) * Expr::Var(p) * Expr::Var(p + 1))
+            .fold(Expr::Const(0.0), |a, b| a + b);
+        let prob = FormulaProblem::minimize(IntVars::permutation(n), objective);
+        let mut sol = prob.new_solution(&mut SmallRng::seed_from_u64(8));
+        assert!(sol.deltas.is_empty());
+        assert_eq!(IntChangeNeighbor::iter(&prob, &sol).count(), 0);
+        let mut r = SmallRng::seed_from_u64(9);
+        for step in 0..100 {
+            let (want, applied) = if step % 2 == 0 {
+                let m = IntSwapNeighbor::random_neighbor(&prob, &sol, &mut r).unwrap();
+                let mut x = sol.values().to_vec();
+                x.swap(m.i, m.j);
+                assert!((m.cost - cost(&prob, sol.values(), &x)).abs() < 1e-9);
+                m.apply_to_solution(&prob, &mut sol).unwrap();
+                (x, sol.values().to_vec())
+            } else {
+                let m = IntReverseNeighbor::random_neighbor(&prob, &sol, &mut r).unwrap();
+                let mut x = sol.values().to_vec();
+                x[m.i..=m.j].reverse();
+                assert!((m.cost - cost(&prob, sol.values(), &x)).abs() < 1e-9);
+                m.apply_to_solution(&prob, &mut sol).unwrap();
+                (x, sol.values().to_vec())
+            };
+            assert_eq!(want, applied);
+            assert!((raw(sol.evaluate()) - raw_of(&prob, sol.values())).abs() < 1e-9);
+        }
+    }
+
+    #[test]
+    fn union_sorted_merges_without_repeats() {
+        let u = |a: &[usize], b: &[usize]| union_sorted(a, b).collect::<Vec<_>>();
+        assert_eq!(u(&[0, 2, 5], &[1, 2, 6, 7]), vec![0, 1, 2, 5, 6, 7]);
+        assert_eq!(u(&[], &[3]), vec![3]);
+        assert_eq!(u(&[4], &[]), vec![4]);
+        assert!(u(&[], &[]).is_empty());
     }
 }

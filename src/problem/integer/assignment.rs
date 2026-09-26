@@ -54,8 +54,10 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
     /// [`assign`](Self::assign) calls.
     fn assign_swap(&self, sol: &mut Self::Solution, i: usize, j: usize) {
         let (a, b) = (Self::get(sol, i), Self::get(sol, j));
-        self.assign(sol, i, b);
-        self.assign(sol, j, a);
+        if a != b {
+            self.assign(sol, i, b);
+            self.assign(sol, j, a);
+        }
     }
 
     /// How much the raw objective changes when `i` and `j` are exchanged. The

@@ -259,16 +259,16 @@ impl EnabledTabu for IntSwapNeighbor {
     }
 }
 
-/// A pair `i < j` drawn uniformly among those `ok` accepts, `None` when there
-/// is none. Up to 64 draws of two distinct positions are tried, and after
-/// that one move is chosen from `all`, the whole neighborhood, so a sparse
-/// neighborhood is still sampled uniformly.
+/// A pair `i < j` drawn uniformly among those `ok` accepts, built into a move
+/// by `build`, or `None` when there is none. Up to 64 draws of two distinct
+/// positions are tried, and after that one pair is chosen among every pair
+/// `ok` accepts, so a sparse neighborhood is still sampled uniformly. Only
+/// the chosen pair is priced.
 fn sample_pair<M>(
     n: usize,
     rng: &mut SmallRng,
     ok: impl Fn(usize, usize) -> bool,
     build: impl Fn(usize, usize) -> M,
-    all: impl Iterator<Item = M>,
 ) -> Option<M> {
     for _ in 0..64 {
         let (a, b) = random_distinct_pair(n, rng)?;
@@ -278,7 +278,11 @@ fn sample_pair<M>(
         }
     }
     use rand::seq::IteratorRandom;
-    all.choose(rng)
+    (0..n)
+        .flat_map(|i| (i + 1..n).map(move |j| (i, j)))
+        .filter(|&(i, j)| ok(i, j))
+        .choose(rng)
+        .map(|(i, j)| build(i, j))
 }
 
 /// Whether exchanging `i` and `j` changes the solution and keeps both values
@@ -323,7 +327,6 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
             rng,
             |i, j| swappable(prob, sol, i, j),
             |i, j| Self::new(prob, sol, i, j),
-            Self::iter(prob, sol),
         )
     }
 }
@@ -416,7 +419,6 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntReverseNeighbor {
             rng,
             |i, j| reversible(prob, sol, i, j),
             |i, j| Self::new(prob, sol, i, j),
-            Self::iter(prob, sol),
         )
     }
 }
@@ -784,6 +786,27 @@ mod tests {
             .map(|m| (m.i, m.j))
             .collect();
         assert_eq!(reversals, vec![(0, 2)]);
+    }
+
+    /// A sparse neighborhood makes the 64 draws miss, and the fallback still
+    /// picks only real moves, uniformly, and `None` when there is none.
+    #[test]
+    fn a_sparse_swap_neighborhood_is_sampled_from_its_moves() {
+        let vars: IntVars = (0..30).map(|_| IntVar::binary()).collect();
+        let prob = IntegerProblem::minimize(vars, |x: &[i64]| x.iter().sum::<i64>() as f64);
+        let mut one = vec![0; 30];
+        one[7] = 1;
+        let sol = prob.solution_from(one).unwrap();
+        let mut r = rng(40);
+        let mut seen = std::collections::HashSet::new();
+        for _ in 0..2_000 {
+            let m = IntSwapNeighbor::random_neighbor(&prob, &sol, &mut r).unwrap();
+            assert!(m.i == 7 || m.j == 7, "{m:?} is not a move");
+            seen.insert((m.i, m.j));
+        }
+        assert_eq!(seen.len(), 29);
+        let flat = prob.solution_from(vec![0; 30]).unwrap();
+        assert!(IntSwapNeighbor::random_neighbor(&prob, &flat, &mut r).is_none());
     }
 
     #[test]
