@@ -1,13 +1,13 @@
 # Integer variables
 
-**API:** [`IntegerProblem`](../api/optopus/problem/integer/trait.IntegerProblem.html)
+**API:** [`IntegerProblem`](../api/optopus/problem/integer/struct.IntegerProblem.html)
 
 `IntegerProblem` is for a problem you would rather not write a move for. Its
-variables are integers, each ranging over `lower..=upper`, and implementing the
-trait means stating those ranges and the objective. Everything else follows.
+variables are integers, each ranging over `lower..=upper`, and building one
+takes those ranges and the objective, a closure. There is nothing to implement.
 
-- `ProblemTrait` is implemented for every `IntegerProblem`, with `IntSolution`
-  as the solution. The initial solution draws each variable uniformly from its
+- `ProblemTrait` comes with every `IntegerProblem`, with `IntSolution` as the
+  solution. The initial solution draws each variable uniformly from its
   range, or is a uniformly random permutation when the variables are one.
 - Three moves come with it, and each implements everything `LocalSearch`,
   `SimulatedAnnealing`, `LateAcceptanceHillClimbing`, `TabuSearch`,
@@ -24,19 +24,12 @@ trait means stating those ranges and the objective. Everything else follows.
 ```rust
 use optopus::prelude::*;
 
-/// Minimize the sum of (x_i - 3)^2 over five variables in 0..=10.
-struct Target { vars: IntVars }
+// Minimize the sum of (x_i - 3)^2 over five variables in 0..=10.
+let vars: IntVars = (0..5).map(|_| IntVar::new(0, 10)).collect();
+let prob = IntegerProblem::minimize(vars, |x: &[i64]| {
+    x.iter().map(|&v| ((v - 3) * (v - 3)) as f64).sum()
+});
 
-impl IntegerProblem for Target {
-    fn variables(&self) -> &IntVars {
-        &self.vars
-    }
-    fn objective(&self, values: &[i64]) -> Evaluable<f64> {
-        Evaluable::Minimize(values.iter().map(|&x| ((x - 3) * (x - 3)) as f64).sum())
-    }
-}
-
-let prob = Target { vars: (0..5).map(|_| IntVar::new(0, 10)).collect() };
 let mut state = SearchState::new(&prob);
 LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))
     .run(&mut state)
@@ -44,8 +37,8 @@ LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))
 println!("{:?}", state.best_solution.values());
 ```
 
-The objective states the direction, by returning `Evaluable::Maximize` or
-`Evaluable::Minimize`, and must return the same variant for every assignment.
+`IntegerProblem::minimize` and `IntegerProblem::maximize` fix the direction,
+and the closure returns the plain value.
 
 [`examples/integer_problem.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_problem.rs)
 solves a bounded knapsack this way (`cargo run --example integer_problem`).
@@ -57,20 +50,14 @@ different values. Read variable `p` as the city visited `p`th and a solution is
 a tour.
 
 ```rust
-struct Tour { vars: IntVars, dist: Vec<Vec<f64>> }
-
-impl IntegerProblem for Tour {
-    fn variables(&self) -> &IntVars {
-        &self.vars // IntVars::permutation(n)
-    }
-    fn objective(&self, v: &[i64]) -> Evaluable<f64> {
-        let n = v.len();
-        Evaluable::Minimize((0..n).map(|p| self.dist[v[p] as usize][v[(p + 1) % n] as usize]).sum())
-    }
-}
+let tour_len = |v: &[i64]| {
+    let n = v.len();
+    (0..n).map(|p| dist[v[p] as usize][v[(p + 1) % n] as usize]).sum()
+};
+let prob = IntegerProblem::minimize(IntVars::permutation(n), tour_len);
 
 LocalSearch::<IntReverseNeighbor>::new(StopCondition::iterations(1_000))
-    .run(&mut state)?;
+    .run(&mut SearchState::new(&prob))?;
 ```
 
 Changing one value of a permutation always repeats another, so
@@ -80,30 +67,31 @@ values that repeat.
 
 ## Making it fast
 
-Every candidate move asks the problem what it would change. The defaults copy
-the values and evaluate the whole objective, which is correct for any objective
-and warns once at runtime. Override the one your move uses with the change
-computed from what it touches, as the difference of the raw objective, new
-minus old.
+Every candidate move asks the problem what it would change. Unless told
+otherwise the problem copies the values and evaluates the whole objective,
+which is correct for any objective and warns once at runtime. Hand it the
+change your move makes, computed from what the move touches, as the difference
+of the plain objective, new minus old.
 
-| Move | Override |
+| Move | Builder |
 |---|---|
-| `IntChangeNeighbor` | `delta(sol, i, value)` |
-| `IntSwapNeighbor` | `swap_delta(sol, i, j)` |
-| `IntReverseNeighbor` | `reverse_delta(sol, i, j)` |
+| `IntChangeNeighbor` | `with_delta(\|sol, i, value\| ...)` |
+| `IntSwapNeighbor` | `with_swap_delta(\|sol, i, j\| ...)` |
+| `IntReverseNeighbor` | `with_reverse_delta(\|sol, i, j\| ...)` |
 
 For the tour above, four distance lookups price a reversal.
 
 ```rust
-fn reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-    let (v, n) = (sol.values(), sol.values().len());
-    if j - i + 1 >= n - 1 {
-        return 0.0; // reversing all but at most one city leaves the tour as it was
-    }
-    let d = |a: i64, b: i64| self.dist[a as usize][b as usize];
-    let (prev, next) = (v[(i + n - 1) % n], v[(j + 1) % n]);
-    d(prev, v[j]) + d(v[i], next) - d(prev, v[i]) - d(v[j], next)
-}
+let prob = IntegerProblem::minimize(IntVars::permutation(n), tour_len)
+    .with_reverse_delta(|sol: &IntSolution, i, j| {
+        let (v, n) = (sol.values(), sol.values().len());
+        if j - i + 1 >= n - 1 {
+            return 0.0; // reversing all but at most one city leaves the tour as it was
+        }
+        let d = |a: i64, b: i64| dist[a as usize][b as usize];
+        let (prev, next) = (v[(i + n - 1) % n], v[(j + 1) % n]);
+        d(prev, v[j]) + d(v[i], next) - d(prev, v[i]) - d(v[j], next)
+    });
 ```
 
 Applying a move adds its change to the solution's objective rather than
@@ -113,7 +101,7 @@ evaluating it again.
 
 Some problems price a move quickly only from something the solution keeps, such
 as the gain of flipping each variable of a MaxCut. `IntSolution` holds values
-and the objective and nothing more, so such a problem implements
+and the objective and nothing more, so such a problem implements the trait
 `IntAssignment` instead, with a solution type of its own.
 
 | Method | Required | What it does |
@@ -126,8 +114,7 @@ and the objective and nothing more, so such a problem implements
 
 Its `ProblemTrait` and the solution's `Evaluate` are written as for any
 [custom problem](../guide/custom_problem.md). The three moves then work as
-they do on an `IntegerProblem`, and every `IntegerProblem` is an
-`IntAssignment` already.
+they do on an `IntegerProblem`, which is itself an `IntAssignment`.
 
 ## Starting from a given assignment
 

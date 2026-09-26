@@ -11,9 +11,10 @@ The full runnable example lives at
 (`cargo run --example custom_problem`).
 
 If every variable of your problem is an integer in a fixed range, or the
-solution is a permutation such as a tour, implement
-[`IntegerProblem`](../problems/integer.md) instead. It asks for the ranges and
-the objective only and comes with ready made moves.
+solution is a permutation such as a tour, build an
+[`IntegerProblem`](../problems/integer.md) instead. It takes the ranges and the
+objective as a closure, with nothing to implement, and comes with ready made
+moves.
 
 ## Required traits
 

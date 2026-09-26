@@ -6,10 +6,14 @@
 - Code: src/problem/integer/
 
 ## Decision
-`IntegerProblem` (ranges plus objective, optional `delta` / `swap_delta` / `reverse_delta`) sits on `IntAssignment`
-(read and write one value of a solution of the problem's own type). The three moves are written once against the lower
-layer. A problem that needs a cache to price moves keeps it in its own solution. The framework offers no switchable
-gain cache and no term model.
+`IntegerProblem` is a struct built from the ranges and an objective closure, with optional `with_delta` /
+`with_swap_delta` / `with_reverse_delta` closures, and implements the trait `IntAssignment` (read and write one value
+of a solution of the problem's own type). The three moves are written once against that trait. A problem that needs a
+cache to price moves keeps it in its own solution. The framework offers no switchable gain cache and no term model.
+The struct replaced an `IntegerProblem` trait, which fixed the direction in the constructor. A delta not given is the
+type `NoDelta`, not an `Option`, because the `Option` check cost 11 to 24% on Tabu and 2-opt scans. Against the trait,
+built with `-align-all-functions=6` as in 0003, five of six LS/Tabu cases on MaxCut G1/G22/G43 and dsj1000 were within
+1.02. G43 LocalSearch stayed 7 to 13% slower in aligned and unaligned builds, not yet attributed.
 
 ## Measurement
 Per-iteration time against the native move, median of 5, same seed and start, fat LTO. Every variant reached the

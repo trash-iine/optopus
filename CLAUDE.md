@@ -106,9 +106,9 @@ src/
     ├── max_cut/              + kernel.rs (MaxCutKernel, the one ProblemReduction),
     │                         planted.rs (PlantedMaxCut)
     ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/
-    ├── integer/              IntegerProblem (blanket ProblemTrait) over IntAssignment
-    │                         (own solution), IntVars (+ permutation), IntSolution,
-    │                         Change / Swap / Reverse moves, no move to write
+    ├── integer/              IntegerProblem (a struct built from a closure) and the
+    │                         IntAssignment trait (own solution), IntVars (+ permutation),
+    │                         IntSolution, Change / Swap / Reverse moves
     ├── vrp/                  + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
     │                         ops/ (pricing fns, RouteState, granular.rs, Descent),
     │                         ruin.rs (the Ruinable + LocalRepair impl)
