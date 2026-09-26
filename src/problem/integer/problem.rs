@@ -56,6 +56,23 @@ impl IntVar {
     pub fn num_changes(&self) -> u64 {
         self.upper.abs_diff(self.lower)
     }
+
+    /// The `k`th value in ascending order other than `current`, for `k` below
+    /// [`num_changes`](Self::num_changes). The inverse of
+    /// [`other_index`](Self::other_index).
+    #[inline]
+    pub(crate) fn nth_other(&self, k: u64, current: i64) -> i64 {
+        let value = self.lower.wrapping_add_unsigned(k);
+        if value >= current { value + 1 } else { value }
+    }
+
+    /// Where `value` sits among the values other than `current`, in ascending
+    /// order. The inverse of [`nth_other`](Self::nth_other).
+    #[inline]
+    pub(crate) fn other_index(&self, current: i64, value: i64) -> u64 {
+        let k = value.abs_diff(self.lower);
+        if value > current { k - 1 } else { k }
+    }
 }
 
 /// The variables of an [`IntegerProblem`], indexed `0..n`.
@@ -147,7 +164,6 @@ impl IntVars {
     #[inline]
     pub(crate) fn var_of_change(&self, r: u64) -> usize {
         match self.common_width {
-            Some(1) => r as usize,
             Some(w) => (r / w) as usize,
             None => self.cum_changes.partition_point(|&c| c <= r),
         }
@@ -217,12 +233,7 @@ impl IntVars {
     /// changes laid out by [`row_start`](Self::row_start).
     #[inline]
     pub(crate) fn change_slot(&self, var: usize, current: i64, value: i64) -> usize {
-        if self.common_width == Some(1) {
-            return var;
-        }
-        let k = value.abs_diff(self.vars[var].lower()) as usize;
-        let k = if value > current { k - 1 } else { k };
-        self.row_start(var) + k
+        self.row_start(var) + self.vars[var].other_index(current, value) as usize
     }
 }
 
@@ -262,25 +273,6 @@ impl IntSolution {
     /// The value of variable `i`.
     pub fn value(&self, i: usize) -> i64 {
         self.values[i]
-    }
-
-    /// Sets variable `i` and moves the cached objective by `delta`, a change
-    /// in the raw objective value.
-    pub(crate) fn set(&mut self, i: usize, value: i64, delta: f64) {
-        self.values[i] = value;
-        self.objective = with_value(self.objective, raw(self.objective) + delta);
-    }
-
-    /// Exchanges the values of `i` and `j` and moves the objective by `delta`.
-    pub(crate) fn swap(&mut self, i: usize, j: usize, delta: f64) {
-        self.values.swap(i, j);
-        self.objective = with_value(self.objective, raw(self.objective) + delta);
-    }
-
-    /// Reverses the values of `i..=j` and moves the objective by `delta`.
-    pub(crate) fn reverse(&mut self, i: usize, j: usize, delta: f64) {
-        self.values[i..=j].reverse();
-        self.objective = with_value(self.objective, raw(self.objective) + delta);
     }
 }
 
@@ -497,12 +489,20 @@ where
         IntSolution { values, objective }
     }
 
+    /// Applies `edit` to the values, moving the objective by `delta` when the
+    /// move's delta was given and evaluating it once otherwise.
+    #[inline]
+    fn apply(&self, sol: &mut IntSolution, delta: Option<f64>, edit: impl FnOnce(&mut [i64])) {
+        edit(&mut sol.values);
+        sol.objective = match delta {
+            Some(d) => with_value(sol.objective, raw(sol.objective) + d),
+            None => self.objective(&sol.values),
+        };
+    }
+
     /// The change `edit` makes, found by evaluating the whole objective on a
-    /// copy of the values. What every move falls back on when its delta was
-    /// not given. Kept out of line so that the priced path stays small where
-    /// a delta was given.
-    #[cold]
-    #[inline(never)]
+    /// copy of the values. What every move is priced by when its delta was
+    /// not given.
     fn full_delta(&self, sol: &IntSolution, move_name: &str, edit: impl FnOnce(&mut [i64])) -> f64 {
         static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
         WARNED.get_or_init(|| {
@@ -551,8 +551,8 @@ where
 
     #[inline]
     fn assign(&self, sol: &mut IntSolution, i: usize, value: i64) {
-        let delta = self.assign_delta(sol, i, value);
-        sol.set(i, value, delta);
+        let delta = self.delta.change_delta(sol, i, value);
+        self.apply(sol, delta, |v| v[i] = value);
     }
 
     #[inline]
@@ -565,8 +565,8 @@ where
 
     #[inline]
     fn assign_swap(&self, sol: &mut IntSolution, i: usize, j: usize) {
-        let delta = self.assign_swap_delta(sol, i, j);
-        sol.swap(i, j, delta);
+        let delta = self.swap_delta.pair_delta(sol, i, j);
+        self.apply(sol, delta, |v| v.swap(i, j));
     }
 
     #[inline]
@@ -579,8 +579,8 @@ where
 
     #[inline]
     fn assign_reverse(&self, sol: &mut IntSolution, i: usize, j: usize) {
-        let delta = self.assign_reverse_delta(sol, i, j);
-        sol.reverse(i, j, delta);
+        let delta = self.reverse_delta.pair_delta(sol, i, j);
+        self.apply(sol, delta, |v| v[i..=j].reverse());
     }
 
     #[inline]

@@ -523,6 +523,9 @@ pub struct FormulaProblem {
     /// in any constraint with `i`, since a penalty is not linear in the value
     /// of its expression.
     interaction_neighbors: Vec<Vec<usize>>,
+    /// For each variable, the constraints whose expressions read it, in
+    /// ascending order. The others do not move when it changes.
+    var_constraints: Vec<Vec<usize>>,
 }
 
 impl FormulaProblem {
@@ -572,6 +575,14 @@ impl FormulaProblem {
             .map(|c| Poly::compile(&c.tracked(), n))
             .collect();
         let interaction_neighbors = interaction_neighbors(&objective_poly, &constraint_polys, n);
+        let mut var_constraints = vec![vec![]; n];
+        for (c, poly) in constraint_polys.iter().enumerate() {
+            for (v, terms) in poly.var_terms.iter().enumerate() {
+                if !terms.is_empty() {
+                    var_constraints[v].push(c);
+                }
+            }
+        }
         Self {
             vars,
             maximize,
@@ -580,6 +591,7 @@ impl FormulaProblem {
             objective_poly,
             constraint_polys,
             interaction_neighbors,
+            var_constraints,
         }
     }
 
@@ -631,7 +643,7 @@ impl FormulaProblem {
             values,
             objective,
             constraint_vals,
-            gains: vec![0.0; self.vars.total_changes() as usize],
+            deltas: vec![0.0; self.vars.total_changes() as usize],
         };
         for var in 0..sol.values.len() {
             self.fill_row(&mut sol, var);
@@ -643,13 +655,30 @@ impl FormulaProblem {
     /// difference of the raw objective.
     #[inline]
     fn change_delta(&self, x: &[i64], cv: &[f64], i: usize, b: i64) -> f64 {
-        let d_obj = self.objective_poly.change_delta(x, i, b);
-        let d_pen: f64 = self
-            .constraints
-            .iter()
-            .zip(cv)
-            .zip(&self.constraint_polys)
-            .map(|((c, &v), p)| c.penalty(v + p.change_delta(x, i, b)) - c.penalty(v))
+        self.priced(
+            self.objective_poly.change_delta(x, i, b),
+            cv,
+            self.var_constraints[i].iter().copied(),
+            |p| p.change_delta(x, i, b),
+        )
+    }
+
+    /// The change of the raw objective when the objective expression moves by
+    /// `d_obj` and each constraint in `touched` moves by `d` of its
+    /// polynomial, from the values `cv`.
+    #[inline]
+    fn priced(
+        &self,
+        d_obj: f64,
+        cv: &[f64],
+        touched: impl Iterator<Item = usize>,
+        d: impl Fn(&Poly) -> f64,
+    ) -> f64 {
+        let d_pen: f64 = touched
+            .map(|c| {
+                let (con, v) = (&self.constraints[c], cv[c]);
+                con.penalty(v + d(&self.constraint_polys[c])) - con.penalty(v)
+            })
             .sum();
         if self.maximize {
             d_obj - d_pen
@@ -664,10 +693,8 @@ impl FormulaProblem {
         let start = self.vars.row_start(var);
         let cur = sol.values[var];
         for k in 0..v.num_changes() {
-            let value = v.lower().wrapping_add_unsigned(k);
-            let value = if value >= cur { value + 1 } else { value };
-            sol.gains[start + k as usize] =
-                self.change_delta(&sol.values, &sol.constraint_vals, var, value);
+            sol.deltas[start + k as usize] =
+                self.change_delta(&sol.values, &sol.constraint_vals, var, v.nth_other(k, cur));
         }
     }
 }
@@ -708,8 +735,9 @@ pub struct FormulaSolution {
     objective: Evaluable<f64>,
     /// The value of each constraint's expression, `lhs - rhs` or `expr`.
     constraint_vals: Vec<f64>,
-    /// The delta of every change, laid out like `IntVars::row_start`.
-    gains: Vec<f64>,
+    /// The raw objective's change for every change of a variable, laid out
+    /// like `IntVars::row_start`.
+    deltas: Vec<f64>,
 }
 
 impl FormulaSolution {
@@ -758,14 +786,14 @@ impl IntAssignment for FormulaProblem {
     /// deltas of `i` and of every variable that interacts with it.
     fn assign(&self, sol: &mut FormulaSolution, i: usize, value: i64) {
         let delta = self.assign_delta(sol, i, value);
-        for (cv, poly) in sol.constraint_vals.iter_mut().zip(&self.constraint_polys) {
-            *cv += poly.change_delta(&sol.values, i, value);
+        for &c in &self.var_constraints[i] {
+            sol.constraint_vals[c] += self.constraint_polys[c].change_delta(&sol.values, i, value);
         }
         sol.values[i] = value;
         sol.objective = super::problem::with_value(sol.objective, raw(sol.objective) + delta);
         if self.vars[i].num_changes() == 1 {
             // A binary variable's one change is to go back, which undoes this.
-            sol.gains[self.vars.row_start(i)] = -delta;
+            sol.deltas[self.vars.row_start(i)] = -delta;
         } else {
             self.fill_row(sol, i);
         }
@@ -776,25 +804,23 @@ impl IntAssignment for FormulaProblem {
 
     #[inline]
     fn assign_delta(&self, sol: &FormulaSolution, i: usize, value: i64) -> f64 {
-        sol.gains[self.vars.change_slot(i, sol.values[i], value)]
+        sol.deltas[self.vars.change_slot(i, sol.values[i], value)]
+    }
+
+    #[inline]
+    fn slot_delta(&self, sol: &FormulaSolution, slot: usize, _: usize, _: i64) -> f64 {
+        sol.deltas[slot]
     }
 
     /// Priced from the monomials and constraints reading `i` or `j`.
     fn assign_swap_delta(&self, sol: &FormulaSolution, i: usize, j: usize) -> f64 {
         let x = &sol.values;
-        let d_obj = self.objective_poly.swap_delta(x, i, j);
-        let d_pen: f64 = self
-            .constraints
-            .iter()
-            .zip(&sol.constraint_vals)
-            .zip(&self.constraint_polys)
-            .map(|((c, &v), p)| c.penalty(v + p.swap_delta(x, i, j)) - c.penalty(v))
-            .sum();
-        if self.maximize {
-            d_obj - d_pen
-        } else {
-            d_obj + d_pen
-        }
+        self.priced(
+            self.objective_poly.swap_delta(x, i, j),
+            &sol.constraint_vals,
+            0..self.constraints.len(),
+            |p| p.swap_delta(x, i, j),
+        )
     }
 }
 
@@ -1038,7 +1064,7 @@ mod tests {
     }
 
     #[test]
-    fn integer_gains_stay_exact_along_random_moves() {
+    fn integer_deltas_stay_exact_along_random_moves() {
         let prob = integer_problem();
         let mut sol = prob.new_solution(&mut SmallRng::seed_from_u64(1));
         let mut r = SmallRng::seed_from_u64(2);
@@ -1070,7 +1096,7 @@ mod tests {
     }
 
     #[test]
-    fn binary_gains_stay_exact_along_random_moves() {
+    fn binary_deltas_stay_exact_along_random_moves() {
         let prob = make_problem();
         let mut sol = prob.new_solution(&mut SmallRng::seed_from_u64(3));
         let mut r = SmallRng::seed_from_u64(4);

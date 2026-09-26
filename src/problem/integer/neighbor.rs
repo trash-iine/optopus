@@ -1,9 +1,10 @@
 //! The moves every [`IntAssignment`] gets.
 
 use super::assignment::IntAssignment;
+use super::problem::IntVar;
 use super::problem::with_value;
 use crate::{
-    common::TabuMemory,
+    common::{TabuMemory, permutation::random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -11,18 +12,35 @@ use rand::Rng;
 use rand::rngs::SmallRng;
 
 /// Every value but the current one of every variable, in index order and
-/// ascending, as one flat walk over the changes.
+/// ascending, as one flat walk over the changes. The walk's position is the
+/// change's slot, which is how [`IntAssignment::slot_delta`] finds it.
 struct Changes<'p, 's, P: IntAssignment> {
     prob: &'p P,
     sol: &'s P::Solution,
-    var: usize,
-    k: u64,
+    /// The slot of the next change.
+    slot: usize,
     /// `-1.0` on a maximized objective and `1.0` on a minimized one, read
     /// once so that no candidate branches on the direction.
     sign: f64,
-    /// `lower + upper` when every variable ranges over the same two values,
-    /// so that the one change of a variable is to `flip - current`.
-    flip: Option<i64>,
+    walk: Walk,
+}
+
+/// How the walk finds the change at a slot.
+enum Walk {
+    /// Every variable ranges over the same two values, whose sum this is, so
+    /// slot `v` is variable `v` going to the other value. `end` is the number
+    /// of variables.
+    Flip { sum: i64, end: usize },
+    /// Any ranges. The variable being walked, its range and its current value,
+    /// read once when the walk enters it, and the slots its changes occupy.
+    Rows {
+        next_var: usize,
+        var: usize,
+        range: IntVar,
+        current: i64,
+        row_start: usize,
+        row_end: usize,
+    },
 }
 
 /// The factor that turns a change in the raw objective of `sol` into a cost,
@@ -32,42 +50,75 @@ fn direction<S: Evaluate>(sol: &S) -> f64 {
     with_value(sol.evaluate(), 1.0).minimized()
 }
 
+impl<'p, 's, P: IntAssignment> Changes<'p, 's, P> {
+    fn new(prob: &'p P, sol: &'s P::Solution) -> Self {
+        let vars = prob.domains();
+        // A permutation has no single change, so its walk is empty.
+        let first = if vars.is_permutation() { vars.len() } else { 0 };
+        let walk = match vars.flip_sum() {
+            Some(sum) if first == 0 => Walk::Flip {
+                sum,
+                end: vars.len(),
+            },
+            _ => Walk::Rows {
+                next_var: first,
+                var: 0,
+                range: IntVar::binary(),
+                current: 0,
+                row_start: 0,
+                row_end: 0,
+            },
+        };
+        Self {
+            prob,
+            sol,
+            slot: 0,
+            sign: direction(sol),
+            walk,
+        }
+    }
+}
+
 impl<P: IntAssignment> Iterator for Changes<'_, '_, P> {
     type Item = IntChangeNeighbor;
 
     #[inline]
     fn next(&mut self) -> Option<IntChangeNeighbor> {
-        let vars = self.prob.domains();
-        if let Some(flip) = self.flip {
-            let var = self.var;
-            if var >= vars.len() {
-                return None;
+        let slot = self.slot;
+        let (var, value) = match &mut self.walk {
+            Walk::Flip { sum, end } => {
+                if slot == *end {
+                    return None;
+                }
+                (slot, *sum - P::get(self.sol, slot))
             }
-            self.var += 1;
-            let value = flip - P::get(self.sol, var);
-            return Some(IntChangeNeighbor {
+            Walk::Rows {
+                next_var,
                 var,
-                value,
-                cost: self.sign * self.prob.assign_delta(self.sol, var, value),
-            });
-        }
-        loop {
-            let v = vars.get(self.var)?;
-            if self.k < v.num_changes() {
-                let var = self.var;
-                let cur = P::get(self.sol, var);
-                let value = v.lower().wrapping_add_unsigned(self.k);
-                let value = if value >= cur { value + 1 } else { value };
-                self.k += 1;
-                return Some(IntChangeNeighbor {
-                    var,
-                    value,
-                    cost: self.sign * self.prob.assign_delta(self.sol, var, value),
-                });
+                range,
+                current,
+                row_start,
+                row_end,
+            } => {
+                while slot == *row_end {
+                    // On to the next variable with a change, past any fixed one.
+                    let v = *self.prob.domains().get(*next_var)?;
+                    *var = *next_var;
+                    *next_var += 1;
+                    *row_start = *row_end;
+                    *row_end += v.num_changes() as usize;
+                    *range = v;
+                    *current = P::get(self.sol, *var);
+                }
+                (*var, range.nth_other((slot - *row_start) as u64, *current))
             }
-            self.var += 1;
-            self.k = 0;
-        }
+        };
+        self.slot += 1;
+        Some(IntChangeNeighbor {
+            var,
+            value,
+            cost: self.sign * self.prob.slot_delta(self.sol, slot, var, value),
+        })
     }
 }
 
@@ -89,8 +140,7 @@ pub struct IntChangeNeighbor {
 
 impl IntChangeNeighbor {
     /// Builds the move setting `var` to `value`, its cost from
-    /// [`IntAssignment::assign_delta`]. Every construction site goes through
-    /// here.
+    /// [`IntAssignment::assign_delta`].
     pub fn new<P: IntAssignment>(prob: &P, sol: &P::Solution, var: usize, value: i64) -> Self {
         Self {
             var,
@@ -136,15 +186,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
     /// Empty on a [permutation](super::IntVars::permutation), where changing
     /// one value always repeats another.
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
-        let vars = prob.domains();
-        Changes {
-            prob,
-            sol,
-            var: if vars.is_permutation() { vars.len() } else { 0 },
-            k: 0,
-            sign: direction(sol),
-            flip: vars.flip_sum(),
-        }
+        Changes::new(prob, sol)
     }
 
     fn move_to_be_better_than(&self, _: &P, src: &P::Solution, other: &P::Solution) -> bool {
@@ -152,32 +194,24 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
             .improves_over(src.evaluate(), other.evaluate())
     }
 
-    /// `O(log n)`. A variable is drawn with weight equal to its number of
-    /// changes, then a value other than its current one uniformly, so every
-    /// move [`iter`](MoveToNeighbor::iter) yields is equally likely.
+    /// One draw of a slot, uniform over every move
+    /// [`iter`](MoveToNeighbor::iter) yields. Finding its variable is `O(1)`
+    /// when every variable has the same range and `O(log n)` otherwise.
     fn random_neighbor(prob: &P, sol: &P::Solution, rng: &mut SmallRng) -> Option<Self> {
         let vars = prob.domains();
         let total = vars.total_changes();
         if total == 0 || vars.is_permutation() {
             return None;
         }
-        let var = vars.var_of_change(rng.random_range(0..total));
-        let v = vars[var];
-        let cur = P::get(sol, var);
-        // Uniform in `lower..=upper` excluding the current value. A binary
-        // variable has one other value, and drawing it would only spend the RNG.
-        let offset = match v.num_changes() {
-            1 => 0,
-            m => rng.random_range(0..m),
-        };
-        let mut value = v
-            .lower()
-            .checked_add_unsigned(offset)
-            .expect("stays below upper");
-        if value >= cur {
-            value += 1;
-        }
-        Some(Self::new(prob, sol, var, value))
+        let slot = rng.random_range(0..total);
+        let var = vars.var_of_change(slot);
+        let k = slot - vars.row_start(var) as u64;
+        let value = vars[var].nth_other(k, P::get(sol, var));
+        Some(Self {
+            var,
+            value,
+            cost: direction(sol) * prob.slot_delta(sol, slot as usize, var, value),
+        })
     }
 }
 
@@ -225,6 +259,28 @@ impl EnabledTabu for IntSwapNeighbor {
     }
 }
 
+/// A pair `i < j` drawn uniformly among those `ok` accepts, `None` when there
+/// is none. Up to 64 draws of two distinct positions are tried, and after
+/// that one move is chosen from `all`, the whole neighborhood, so a sparse
+/// neighborhood is still sampled uniformly.
+fn sample_pair<M>(
+    n: usize,
+    rng: &mut SmallRng,
+    ok: impl Fn(usize, usize) -> bool,
+    build: impl Fn(usize, usize) -> M,
+    all: impl Iterator<Item = M>,
+) -> Option<M> {
+    for _ in 0..64 {
+        let (a, b) = random_distinct_pair(n, rng)?;
+        let (i, j) = (a.min(b), a.max(b));
+        if ok(i, j) {
+            return Some(build(i, j));
+        }
+    }
+    use rand::seq::IteratorRandom;
+    all.choose(rng)
+}
+
 /// Whether exchanging `i` and `j` changes the solution and keeps both values
 /// in range.
 #[inline]
@@ -259,22 +315,16 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
             .improves_over(src.evaluate(), other.evaluate())
     }
 
-    /// Rejection-samples a pair with different values, falling back to the
-    /// full neighborhood after 64 misses.
+    /// Draws two distinct positions until they form a move, up to 64 times,
+    /// then picks uniformly from the whole neighborhood.
     fn random_neighbor(prob: &P, sol: &P::Solution, rng: &mut SmallRng) -> Option<Self> {
-        let n = prob.domains().len();
-        if n < 2 {
-            return None;
-        }
-        for _ in 0..64 {
-            let (a, b) = (rng.random_range(0..n), rng.random_range(0..n));
-            let (i, j) = (a.min(b), a.max(b));
-            if i != j && swappable(prob, sol, i, j) {
-                return Some(Self::new(prob, sol, i, j));
-            }
-        }
-        use rand::seq::IteratorRandom;
-        Self::iter(prob, sol).choose(rng)
+        sample_pair(
+            prob.domains().len(),
+            rng,
+            |i, j| swappable(prob, sol, i, j),
+            |i, j| Self::new(prob, sol, i, j),
+            Self::iter(prob, sol),
+        )
     }
 }
 
@@ -357,23 +407,17 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntReverseNeighbor {
             .improves_over(src.evaluate(), other.evaluate())
     }
 
-    /// Rejection-samples two distinct ends, falling back to the full
-    /// neighborhood after 64 misses. When every variable has the same range a
-    /// draw succeeds with probability `1 - 1/n`.
+    /// Draws two distinct ends until they form a move, up to 64 times, then
+    /// picks uniformly from the whole neighborhood. When every variable has
+    /// the same range the first draw always is one.
     fn random_neighbor(prob: &P, sol: &P::Solution, rng: &mut SmallRng) -> Option<Self> {
-        let n = prob.domains().len();
-        if n < 2 {
-            return None;
-        }
-        for _ in 0..64 {
-            let (a, b) = (rng.random_range(0..n), rng.random_range(0..n));
-            let (i, j) = (a.min(b), a.max(b));
-            if i != j && reversible(prob, sol, i, j) {
-                return Some(Self::new(prob, sol, i, j));
-            }
-        }
-        use rand::seq::IteratorRandom;
-        Self::iter(prob, sol).choose(rng)
+        sample_pair(
+            prob.domains().len(),
+            rng,
+            |i, j| reversible(prob, sol, i, j),
+            |i, j| Self::new(prob, sol, i, j),
+            Self::iter(prob, sol),
+        )
     }
 }
 
@@ -564,11 +608,7 @@ mod tests {
     impl ProblemTrait for Own {
         type Solution = OwnSolution;
         fn new_solution(&self, rng: &mut impl rand::Rng) -> OwnSolution {
-            let x: Vec<i64> = self
-                .0
-                .iter()
-                .map(|v| rng.random_range(v.lower()..=v.upper()))
-                .collect();
+            let x = self.0.random_values(rng);
             let terms: Vec<f64> = x.iter().enumerate().map(|(i, &v)| term(i, v)).collect();
             let total = terms.iter().sum();
             OwnSolution { x, terms, total }
@@ -609,14 +649,14 @@ mod tests {
 
     #[test]
     fn default_assign_delta_agrees_with_the_cached_one() {
-        struct NoDelta(Own);
-        impl ProblemTrait for NoDelta {
+        struct DefaultDelta(Own);
+        impl ProblemTrait for DefaultDelta {
             type Solution = OwnSolution;
             fn new_solution(&self, rng: &mut impl rand::Rng) -> OwnSolution {
                 self.0.new_solution(rng)
             }
         }
-        impl IntAssignment for NoDelta {
+        impl IntAssignment for DefaultDelta {
             fn domains(&self) -> &IntVars {
                 self.0.domains()
             }
@@ -627,7 +667,7 @@ mod tests {
                 self.0.assign(sol, i, value)
             }
         }
-        let prob = NoDelta(Own(target_vars()));
+        let prob = DefaultDelta(Own(target_vars()));
         let sol = prob.new_solution(&mut rng(8));
         for m in IntChangeNeighbor::iter(&prob, &sol) {
             assert_eq!(m.cost, prob.0.assign_delta(&sol, m.var, m.value));

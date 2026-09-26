@@ -37,9 +37,17 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
                  which copies the solution for every candidate move."
             );
         });
-        let mut copy = sol.clone();
-        self.assign(&mut copy, i, value);
-        raw(copy.evaluate()) - raw(sol.evaluate())
+        copied_delta(sol, |copy| self.assign(copy, i, value))
+    }
+
+    /// [`assign_delta`](Self::assign_delta) for the change that sits at
+    /// `slot` when the changes of every variable are laid out in index order,
+    /// each variable's other values ascending. A solution that keeps a table
+    /// of deltas in that layout is read here, and the default ignores `slot`.
+    #[inline]
+    fn slot_delta(&self, sol: &Self::Solution, slot: usize, i: usize, value: i64) -> f64 {
+        let _ = slot;
+        self.assign_delta(sol, i, value)
     }
 
     /// Exchanges the values of variables `i` and `j`. The default is two
@@ -61,9 +69,7 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
                  which copies the solution for every candidate move."
             );
         });
-        let mut copy = sol.clone();
-        self.assign_swap(&mut copy, i, j);
-        raw(copy.evaluate()) - raw(sol.evaluate())
+        copied_delta(sol, |copy| self.assign_swap(copy, i, j))
     }
 
     /// Reverses the values of variables `i..=j`. The default swaps from both
@@ -88,8 +94,14 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
                  which copies the solution for every candidate move."
             );
         });
-        let mut copy = sol.clone();
-        self.assign_reverse(&mut copy, i, j);
-        raw(copy.evaluate()) - raw(sol.evaluate())
+        copied_delta(sol, |copy| self.assign_reverse(copy, i, j))
     }
+}
+
+/// The change `edit` makes to `sol`, found on a copy. What the defaults above
+/// price a move by.
+fn copied_delta<S: Clone + Evaluate>(sol: &S, edit: impl FnOnce(&mut S)) -> f64 {
+    let mut copy = sol.clone();
+    edit(&mut copy);
+    raw(copy.evaluate()) - raw(sol.evaluate())
 }
