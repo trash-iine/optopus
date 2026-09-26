@@ -122,8 +122,20 @@ they do on an `IntegerProblem`, which is itself an `IntAssignment`.
 fails if one lies outside its range. Hand it to `SearchState::with_solution` to
 start a search there.
 
+## Genetic algorithm
+
+`IntSolution` implements `Distance`, and `IntCrossover` takes each variable
+from either parent, or on a permutation keeps a segment of one parent and
+fills the rest in the other's order. So `GeneticAlgorithm` runs with
+`IntCrossover` as its crossover.
+
+## Objectives written as formulas
+
+When the objective and the constraints are arithmetic over the variables,
+[`FormulaProblem`](formula.md) takes them as expressions and derives every
+delta, with nothing to write by hand.
+
 ## What it does not do
 
-There is no crossover or `Distance`, so `GeneticAlgorithm` does not run on an
-`IntegerProblem`, and it cannot be registered with the CLI benchmark, which
-reads problems from instance files.
+It cannot be registered with the CLI benchmark, which reads problems from
+instance files.

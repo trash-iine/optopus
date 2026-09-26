@@ -1,60 +1,57 @@
 # Formula
 
-**API:** [`FormulaProblem`](../../api/optopus/problem/binary_optimization/struct.FormulaProblem.html)
+**API:** [`FormulaProblem`](../../api/optopus/problem/integer/struct.FormulaProblem.html)
 
-`FormulaProblem` は、上の名前付きの問題のどれにも当てはまらない目的関数のための、設定可能な二値最適化問題です。
-`n` 個の二値変数 `x ∈ {0,1}^n` 上の任意の算術式を目的関数として宣言し、`Maximize` か `Minimize` かを選び、
-ペナルティ重み付きの制約をいくつでも追加できます。内部ではどちらの向きも、大きいほど良い一つの `score` の最大化として最適化されるので、
-ヒューリスティクスは利用者がどちらの向きを選んだかを知る必要がありません。
+`FormulaProblem` は、整数変数の算術式で書ける目的関数のための問題です。目的関数を式として宣言し、最大化か最小化かを選び、
+ペナルティ重み付きの制約をいくつでも追加できます。変数は [`IntegerProblem`](integer.md) と同じ `IntVars` なので、
+binary でも任意の整数範囲でもよく、変数全体を順列にすることもできます。
+
+差分を書く必要はありません。問題を作るときに式を単項式にコンパイルし、一つの変数の変化はその変数が現れる単項式と制約だけから求めます。
+さらに各解は、どの変数をどの値に変えたら何が変わるかの表を持っています。近傍を選ぶときはその表を読み、
+適用したときは影響しうる変数の分だけを計算し直します。
 
 ```text
-Maximize:  score(x) = objective(x) − Σ_c penalty_weight_c · violation_c(x)
-Minimize:  score(x) = −objective(x) − Σ_c penalty_weight_c · violation_c(x)
+最大化:  objective(x) − Σ_c penalty_weight_c · violation_c(x)
+最小化:  objective(x) + Σ_c penalty_weight_c · violation_c(x)
 ```
 
 ## 例 { #example }
 
-探索を実行し、割り当て、その生の目的関数値、順位付けに使う内部の `score` を読み出します。
-
 ```rust
 use optopus::prelude::*;
 
-// x[0] + 2*x[1] + 3*x[2] を最大化する。制約は x[0] + x[1] + x[2] <= 2
+// binary の x について x[0] + 2*x[1] + 3*x[2] を最大化する。制約は x[0] + x[1] + x[2] <= 2
+let vars: IntVars = (0..3).map(|_| IntVar::binary()).collect();
 let objective = Expr::Var(0) + 2.0 * Expr::Var(1) + 3.0 * Expr::Var(2);
-let constraint = Constraint::Comparison {
+let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint::Comparison {
     lhs: Expr::Var(0) + Expr::Var(1) + Expr::Var(2),
     rel: ConstraintRel::Le,
     rhs: Expr::Const(2.0),
     penalty_weight: 10.0,
-};
-let prob = FormulaProblem::new(3, objective, OptDirection::Maximize, vec![constraint]);
+});
 
 let mut state = SearchState::new(&prob);
-LocalSearch::<FormulaFlipNeighbor>::new(StopCondition::iterations(10_000))
+TabuSearch::<IntChangeNeighbor>::new(StopCondition::iterations(1_000), (1, 2))
     .run(&mut state)
     .unwrap();
 
-let sol = &state.best_solution;
-println!("assignment = {:?}", sol.x);
-println!("objective value = {}", prob.eval_objective(&sol.x)); // 利用者が宣言した式の、ペナルティを引く前の値
-println!("score = {}", sol.score); // 大きいほど良い内部の順位付けの値。`evaluate` が返すのはこれ
+let values = state.best_solution.values();
+println!("assignment = {values:?}");
+println!("objective = {}", prob.eval_objective(values)); // 式の値。ペナルティを引く前
+println!("penalty = {}", prob.eval_penalty(values));
 ```
 
-ファイルローダはありません。上のように `Expr` の AST からプログラムで問題を作ります。
+ファイルローダはありません。上のようにコードで問題を作ります。
 
 ## 解 { #solution }
 
-[`FormulaSolution`](../../api/optopus/problem/binary_optimization/struct.FormulaSolution.html)
-は上の定義の割り当て `x` (`x ∈ {0,1}^n`)、変数ごとの `gain` (その変数を反転したときの `score` の変化)、
-そして上で定義した `score(x)` である `score` を持ちます。`score` は `objective(x)` そのものではありません。
-フィールドの一覧は rustdoc を参照してください。
-`Evaluate` はこれを `Evaluable::Maximize(score)` として返します。`score` には式自身の向きがすでに畳み込まれているので、ここでは常に大きいほど良い値です。
+`FormulaSolution` は各変数の値を持ち、`values()` で読めます。`Evaluate` は問題の向き付きのペナルティ込みの目的値を返します。
+最大化なら `Evaluable::Maximize(objective − penalty)`、最小化なら `Evaluable::Minimize(objective + penalty)` で、探索はこれで順位を付けます。
+二つの部分はそれぞれ `eval_objective` と `eval_penalty` で得られます。
 
 ## 式 { #expressions }
 
-目的関数と制約の両辺は [`Expr`](../../api/optopus/problem/binary_optimization/enum.Expr.html)
-の AST から作ります。正確な種類の一覧は rustdoc を参照してください。`Expr` は標準の算術演算子 (`+ - * /`) を
-`Expr × Expr` と `Expr × f64` の両方についてオーバーロードしていて、普通はそれを使って組み立てます。
+目的関数と制約の両辺は `Expr` です。`Expr × Expr` と `Expr × f64` について算術演算子をオーバーロードしていて、普通はそれを使って組み立てます。
 
 ```rust
 use optopus::problem::Expr;
@@ -62,17 +59,19 @@ use optopus::problem::Expr;
 // 線形結合 2*x[0] + x[1] - 3
 let linear = 2.0 * Expr::Var(0) + Expr::Var(1) - 3.0;
 
-// 二つの二値変数の AND ({0,1} の値では Mul ≡ AND)
+// 積。binary 変数では AND
 let and_of_two = Expr::Var(0) * Expr::Var(1);
+
+// 整数変数では冪がそのまま残る
+let square = Expr::Var(2) * Expr::Var(2);
 ```
 
-`Add` と `Mul` は自動的に平たくされます。除算は定数で割る場合だけ対応しています。
+`Expr::Var(i)` は変数 `i` の値として評価されます。`Add` と `Mul` は組み立てるときに平たくされます。除算は定数で割る場合だけ対応しています。
+`IntVars` の外の変数を読む式で問題を作ると panic します。
 
 ## 制約 { #constraints }
 
-制約は [`Constraint`](../../api/optopus/problem/binary_optimization/enum.Constraint.html)
-から作ります (正確な種類の一覧は rustdoc を参照してください)。違反には `violation * penalty_weight` のペナルティがかかります。
-`violation` は制約に違反している量です (満たしていれば `0`)。
+`Constraint` は違反に `violation * penalty_weight` のペナルティをかけます。`violation` は違反している量で、満たしていれば `0` です。
 
 ```rust
 use optopus::problem::{Constraint, ConstraintRel, Expr};
@@ -86,37 +85,25 @@ let constraint = Constraint::Comparison {
 };
 ```
 
-`Lt` と `Gt` は小さな `STRICT_EPSILON` を使うので、等号は違反として数えられます。
+`Constraint::Clamp` は式を `lo..=hi` に収めます。`Lt` と `Gt` は等号のときに小さなペナルティをかけるので、狭義の関係では等号が無料になりません。
 
-## 近傍 { #neighbors }
+## 近傍 { #moves }
 
-| 型 | move |
+近傍は整数変数の問題すべてに付いてくるものと同じです。
+
+| 近傍 | 何をするか |
 |---|---|
-| `FormulaFlipNeighbor` | 変数を一つ反転する。 |
-| `FormulaSwapNeighbor` | 二つの変数を入れ替える。 |
+| `IntChangeNeighbor` | 一つの変数を範囲内の別の値にする。binary 変数なら Flip |
+| `IntSwapNeighbor` | 二つの変数の値を交換する |
+| `IntReverseNeighbor` | 変数の区間の値の並びを反転する |
 
-どちらも `Evaluate<f64>` と `Evaluate<i32>` (整数版はスコアを離散化します。係数がすべて整数値のときに向いています)、
-そして `EnabledTabu` を実装しています。gain の差分更新の仕組みと反復コストは
-[`FormulaFlipNeighbor`](../../api/optopus/problem/binary_optimization/struct.FormulaFlipNeighbor.html) /
-[`FormulaSwapNeighbor`](../../api/optopus/problem/binary_optimization/struct.FormulaSwapNeighbor.html)
-の rustdoc を参照してください。
+`IntChangeNeighbor` は解の表から値を読みます。Swap はどちらかの変数を読む単項式と制約だけから求めます。
+Reverse は解の複製を評価します。式の問題で Reverse を使うことはほとんどないためです。
 
-## 交叉 { #crossover }
+## 交叉と部分問題 { #crossover-and-sub-problems }
 
-- `FormulaUniformCrossover`。変数ごとにランダムに親を選びます。
+`IntCrossover` は各変数をどちらかの親からとり、`FormulaSolution` は `Distance` を実装しているので、`FormulaProblem` で `GeneticAlgorithm` が動きます。
 
-## 任意のトレイト { #optional-traits }
-
-- `Distance`。`x` 上のハミング距離です。
-- `Evaluate<f64>` と `Evaluate<i32>`。`Evaluable` の両方の向きに対応します。
-
-## 補足 { #notes }
-
-`CompiledPoly` と `interaction_neighbors` は非公開 (`pub(super)`) の実装の詳細なので、公開される rustdoc には出てきません。
-利用者向けに説明しているのはここだけです。
-
-- 事前にコンパイルした多項式の形 (`CompiledPoly`) により、反転一回あたりの gain の差分が O(d) で求まります。d は反転した変数を含む単項式の数です。
-- `interaction_neighbors[i]` は `i` を反転したときに gain が変わりうる変数を並べたものです。
-  目的関数で単項式を共有する変数と、どれかの制約式に一緒に現れる変数からなります。gain の更新はそれ以外の変数をすべて飛ばします。
-
-(ソースを読むコントリビュータへ。どちらも `src/problem/binary_optimization/problem.rs` に説明があります。)
+`FormulaProblem` は `SubProblemExtractable` も実装しています。親どうしで値が違う変数だけが小さな `FormulaProblem` になり、
+それ以外の変数は式の中で値に置き換えられるので、`SubProblemBasedCrossover` も動きます。
+ただし変数が順列であってはいけません。順列の一部の位置を固定すると、残りは順列でなくなるためです。

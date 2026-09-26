@@ -46,7 +46,8 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [Job Shop Scheduling](docs/problems/job_shop_scheduling.md) | `JobShopScheduling` | `JobShopSwapNeighbor`, `JobShopRelocateNeighbor` |
 | [CVRP](docs/problems/vrp.md) | `Vrp` | `VrpRelocateNeighbor`, `VrpSwapNeighbor`, `VrpTwoOptNeighbor` |
 | [Graph Coloring](docs/problems/graph_coloring.md) | `GraphColoring` | `GraphColoringRecolorNeighbor`, `GraphColoringSwapNeighbor` |
-| [Formula](docs/problems/formula.md) | `FormulaProblem` | `FormulaFlipNeighbor`, `FormulaSwapNeighbor` |
+| [Formula](docs/problems/formula.md) | `FormulaProblem` | `IntChangeNeighbor`, `IntSwapNeighbor` |
+| [Integer variables](docs/problems/integer.md) | `IntegerProblem` | `IntChangeNeighbor`, `IntSwapNeighbor`, `IntReverseNeighbor` |
 
 ## Available Heuristics
 

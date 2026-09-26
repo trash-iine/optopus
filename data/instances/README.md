@@ -142,9 +142,9 @@ it bakes in.
 
 ## Excluded
 
-- `FormulaProblem` (`src/problem/binary_optimization/`) is not wired into
-  `ProblemKind` in `src/benchmark/config.rs`, so no benchmark instance files
-  are required. The problem is library-API only.
+- `FormulaProblem` and `IntegerProblem` (`src/problem/integer/`) are not
+  wired into `ProblemKind` in `src/benchmark/config.rs`, so no benchmark
+  instance files are required. Both are library-API only.
 - OR-Library `bqp2500.txt` returned an HTML error page at fetch time and is
   excluded.
 

@@ -106,15 +106,15 @@ src/
     ├── max_cut/              + kernel.rs (MaxCutKernel, the one ProblemReduction),
     │                         planted.rs (PlantedMaxCut)
     ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/
-    ├── integer/              IntegerProblem (a struct built from a closure) and the
+    ├── integer/              IntegerProblem (a struct built from a closure),
+    │                         formula.rs (FormulaProblem, Expr, Constraint), the
     │                         IntAssignment trait (own solution), IntVars (+ permutation),
-    │                         IntSolution, Change / Swap / Reverse moves
+    │                         Change / Swap / Reverse moves, crossover.rs (IntCrossover)
     ├── vrp/                  + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
     │                         ops/ (pricing fns, RouteState, granular.rs, Descent),
     │                         ruin.rs (the Ruinable + LocalRepair impl)
-    ├── tsp/                  + ruin.rs (Ruinable with the tour as the one container,
-    │                         AnchoredTourDescent)
-    └── binary_optimization/  FormulaProblem, Expr
+    └── tsp/                  + ruin.rs (Ruinable with the tour as the one container,
+                              AnchoredTourDescent)
 ```
 
 ## Benchmarking (`src/benchmark/`)

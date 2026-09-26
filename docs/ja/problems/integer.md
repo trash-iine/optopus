@@ -108,7 +108,15 @@ let prob = IntegerProblem::minimize(IntVars::permutation(n), tour_len)
 `IntegerProblem::solution_from` は指定した値から解を作り、範囲外の値があれば失敗します。
 それを `SearchState::with_solution` に渡すとそこから探索を始められます。
 
+## 遺伝的アルゴリズム { #genetic-algorithm }
+
+`IntSolution` は `Distance` を実装しています。`IntCrossover` は各変数をどちらかの親からとり、順列なら一方の親の区間を残して残りをもう一方の親の順に埋めます。
+そのため `IntCrossover` を交叉にして `GeneticAlgorithm` が動きます。
+
+## 式で書ける目的関数 { #objectives-written-as-formulas }
+
+目的関数と制約が変数の算術式で書けるなら、[`FormulaProblem`](formula.md) がそれを式として受け取り、差分をすべて自動で求めます。手で書くものはありません。
+
 ## できないこと { #what-it-does-not-do }
 
-交叉と `Distance` がないので `GeneticAlgorithm` は `IntegerProblem` では動きません。
-またインスタンスファイルから問題を読む CLI ベンチマークには登録できません。
+インスタンスファイルから問題を読む CLI ベンチマークには登録できません。
