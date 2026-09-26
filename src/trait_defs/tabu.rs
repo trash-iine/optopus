@@ -46,15 +46,7 @@ mod tests {
     fn every_built_in_move_hands_over_its_tabu_policy() {
         use crate::problem::*;
 
-        struct OneInt(IntVars);
-        impl IntegerProblem for OneInt {
-            fn variables(&self) -> &IntVars {
-                &self.0
-            }
-            fn objective(&self, values: &[i64]) -> crate::trait_defs::Evaluable<f64> {
-                crate::trait_defs::Evaluable::Maximize(values[0] as f64)
-            }
-        }
+        type OneInt = IntegerProblem<fn(&[i64]) -> f64>;
 
         macro_rules! assert_policy {
             ($($problem:ty => $mv:expr),+ $(,)?) => {

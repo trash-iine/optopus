@@ -1,4 +1,4 @@
-use super::problem::{IntSolution, IntVars, IntegerProblem, raw};
+use super::problem::{IntVars, raw};
 use crate::search_state::{Evaluate, ProblemTrait};
 
 /// A problem whose solutions, of the problem's own type, assign an integer to
@@ -10,8 +10,8 @@ use crate::search_state::{Evaluate, ProblemTrait};
 /// variable gain updated in [`assign`](Self::assign) and read back in
 /// [`assign_delta`](Self::assign_delta).
 ///
-/// [`IntegerProblem`] is the shortcut that brings its own solution, and every
-/// [`IntegerProblem`] is one of these.
+/// [`IntegerProblem`](super::IntegerProblem) is the shortcut that brings its
+/// own solution, and is one of these.
 pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
     /// The variables, fixed for the life of the problem.
     fn domains(&self) -> &IntVars;
@@ -91,50 +91,5 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
         let mut copy = sol.clone();
         self.assign_reverse(&mut copy, i, j);
         raw(copy.evaluate()) - raw(sol.evaluate())
-    }
-}
-
-impl<P: IntegerProblem> IntAssignment for P {
-    #[inline]
-    fn domains(&self) -> &IntVars {
-        self.variables()
-    }
-
-    #[inline]
-    fn get(sol: &IntSolution, i: usize) -> i64 {
-        sol.value(i)
-    }
-
-    #[inline]
-    fn assign(&self, sol: &mut IntSolution, i: usize, value: i64) {
-        let delta = self.delta(sol, i, value);
-        sol.set(i, value, delta);
-    }
-
-    #[inline]
-    fn assign_delta(&self, sol: &IntSolution, i: usize, value: i64) -> f64 {
-        self.delta(sol, i, value)
-    }
-
-    #[inline]
-    fn assign_swap(&self, sol: &mut IntSolution, i: usize, j: usize) {
-        let delta = IntegerProblem::swap_delta(self, sol, i, j);
-        sol.swap(i, j, delta);
-    }
-
-    #[inline]
-    fn assign_swap_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-        IntegerProblem::swap_delta(self, sol, i, j)
-    }
-
-    #[inline]
-    fn assign_reverse(&self, sol: &mut IntSolution, i: usize, j: usize) {
-        let delta = IntegerProblem::reverse_delta(self, sol, i, j);
-        sol.reverse(i, j, delta);
-    }
-
-    #[inline]
-    fn assign_reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-        IntegerProblem::reverse_delta(self, sol, i, j)
     }
 }

@@ -317,62 +317,48 @@ mod tests {
     use super::*;
     use crate::heuristic::{Heuristic, LocalSearch, StopCondition, TabuSearch};
     use crate::problem::integer::problem::raw;
-    use crate::problem::{IntAssignment, IntSolution, IntegerProblem};
-    use crate::problem::{IntVar, IntVars};
+    use crate::problem::{IntAssignment, IntSolution, IntVar, IntVars, IntegerProblem};
     use crate::search_state::{ProblemTrait, SearchState};
     use rand::SeedableRng;
 
     /// Minimizes the sum of (x_i - t_i)^2, with ranges of different widths and
-    /// one fixed variable. Keeps the default `delta`.
-    struct Target {
-        vars: IntVars,
-        targets: Vec<i64>,
+    /// one fixed variable.
+    const TARGETS: [i64; 5] = [4, -2, 7, 1, 13];
+
+    fn target_vars() -> IntVars {
+        [(0, 5), (-3, 3), (7, 7), (0, 1), (-10, 20)]
+            .into_iter()
+            .map(|(l, u)| IntVar::new(l, u))
+            .collect()
     }
 
-    impl Target {
-        fn new() -> Self {
-            Self {
-                vars: [(0, 5), (-3, 3), (7, 7), (0, 1), (-10, 20)]
-                    .into_iter()
-                    .map(|(l, u)| IntVar::new(l, u))
-                    .collect(),
-                targets: vec![4, -2, 7, 1, 13],
-            }
-        }
-
-        fn term(&self, i: usize, x: i64) -> f64 {
-            ((x - self.targets[i]) * (x - self.targets[i])) as f64
-        }
+    fn term(i: usize, x: i64) -> f64 {
+        ((x - TARGETS[i]) * (x - TARGETS[i])) as f64
     }
 
-    impl IntegerProblem for Target {
-        fn variables(&self) -> &IntVars {
-            &self.vars
-        }
-        fn objective(&self, values: &[i64]) -> Evaluable<f64> {
-            Evaluable::Minimize(
-                values
-                    .iter()
-                    .enumerate()
-                    .map(|(i, &x)| self.term(i, x))
-                    .sum(),
-            )
-        }
+    fn target_sum(x: &[i64]) -> f64 {
+        x.iter().enumerate().map(|(i, &v)| term(i, v)).sum()
     }
 
-    /// The same problem with an incremental `delta`.
-    struct Fast(Target);
+    /// The objective and delta types of the test problems, named so that the
+    /// helpers below can return them.
+    type Objective = fn(&[i64]) -> f64;
+    type ChangeFn = fn(&IntSolution, usize, i64) -> f64;
+    type PairFn = fn(&IntSolution, usize, usize) -> f64;
 
-    impl IntegerProblem for Fast {
-        fn variables(&self) -> &IntVars {
-            &self.0.vars
-        }
-        fn objective(&self, values: &[i64]) -> Evaluable<f64> {
-            self.0.objective(values)
-        }
-        fn delta(&self, sol: &IntSolution, i: usize, value: i64) -> f64 {
-            self.0.term(i, value) - self.0.term(i, sol.value(i))
-        }
+    /// The target problem pricing every change by the whole objective.
+    fn slow() -> IntegerProblem<Objective> {
+        IntegerProblem::minimize(target_vars(), target_sum)
+    }
+
+    fn target_delta(sol: &IntSolution, i: usize, value: i64) -> f64 {
+        term(i, value) - term(i, sol.value(i))
+    }
+
+    /// The same problem with an incremental delta.
+    fn fast() -> IntegerProblem<Objective, ChangeFn> {
+        IntegerProblem::minimize(target_vars(), target_sum as Objective)
+            .with_delta(target_delta as ChangeFn)
     }
 
     fn rng(seed: u64) -> SmallRng {
@@ -381,10 +367,10 @@ mod tests {
 
     #[test]
     fn new_solution_is_in_range_and_caches_its_objective() {
-        let prob = Fast(Target::new());
+        let prob = fast();
         for seed in 0..20 {
             let sol = prob.new_solution(&mut rng(seed));
-            for (v, &x) in prob.0.vars.iter().zip(sol.values()) {
+            for (v, &x) in prob.variables().iter().zip(sol.values()) {
                 assert!(v.contains(x));
             }
             assert_eq!(raw(sol.evaluate()), raw(prob.objective(sol.values())));
@@ -392,18 +378,27 @@ mod tests {
     }
 
     #[test]
+    fn the_direction_is_the_constructor_s() {
+        let min = IntegerProblem::minimize(target_vars(), target_sum);
+        let max = IntegerProblem::maximize(target_vars(), target_sum);
+        let x = [0, 0, 7, 0, 0];
+        assert!(matches!(min.objective(&x), Evaluable::Minimize(_)));
+        assert!(matches!(max.objective(&x), Evaluable::Maximize(_)));
+    }
+
+    #[test]
     fn iter_yields_every_other_value_of_every_variable() {
-        let prob = Fast(Target::new());
+        let prob = fast();
         let sol = prob.new_solution(&mut rng(3));
         let moves: Vec<_> = IntChangeNeighbor::iter(&prob, &sol).collect();
-        assert_eq!(moves.len() as u64, prob.0.vars.total_changes());
-        assert_eq!(prob.0.vars.total_changes(), 42); // 5 + 6 + 0 + 1 + 30
+        assert_eq!(moves.len() as u64, prob.variables().total_changes());
+        assert_eq!(prob.variables().total_changes(), 42); // 5 + 6 + 0 + 1 + 30
         assert!(moves.iter().all(|m| m.value != sol.value(m.var)));
     }
 
     #[test]
     fn applying_a_move_keeps_the_cached_objective_exact() {
-        let prob = Fast(Target::new());
+        let prob = fast();
         let mut sol = prob.new_solution(&mut rng(5));
         let mut r = rng(6);
         for _ in 0..200 {
@@ -414,9 +409,8 @@ mod tests {
     }
 
     #[test]
-    fn default_delta_agrees_with_the_incremental_one() {
-        let fast = Fast(Target::new());
-        let slow = Target::new();
+    fn the_whole_objective_fallback_agrees_with_the_given_delta() {
+        let (fast, slow) = (fast(), slow());
         let sol = fast.new_solution(&mut rng(9));
         for (a, b) in IntChangeNeighbor::iter(&fast, &sol).zip(IntChangeNeighbor::iter(&slow, &sol))
         {
@@ -426,7 +420,7 @@ mod tests {
 
     #[test]
     fn random_neighbor_is_uniform_over_iter() {
-        let prob = Fast(Target::new());
+        let prob = fast();
         let sol = prob.new_solution(&mut rng(11));
         let moves: Vec<_> = IntChangeNeighbor::iter(&prob, &sol)
             .map(|m| (m.var, m.value))
@@ -451,20 +445,10 @@ mod tests {
 
     #[test]
     fn all_fixed_variables_have_no_neighbor() {
-        struct Fixed(IntVars);
-        impl IntegerProblem for Fixed {
-            fn variables(&self) -> &IntVars {
-                &self.0
-            }
-            fn objective(&self, _: &[i64]) -> Evaluable<f64> {
-                Evaluable::Maximize(0.0)
-            }
-        }
-        let prob = Fixed(
-            [IntVar::new(2, 2), IntVar::new(-1, -1)]
-                .into_iter()
-                .collect(),
-        );
+        let vars = [IntVar::new(2, 2), IntVar::new(-1, -1)]
+            .into_iter()
+            .collect();
+        let prob = IntegerProblem::maximize(vars, |_: &[i64]| 0.0);
         let sol = prob.new_solution(&mut rng(0));
         assert!(IntChangeNeighbor::random_neighbor(&prob, &sol, &mut rng(1)).is_none());
         assert_eq!(IntChangeNeighbor::iter(&prob, &sol).count(), 0);
@@ -472,32 +456,32 @@ mod tests {
 
     #[test]
     fn solution_from_rejects_bad_values() {
-        let prob = Fast(Target::new());
+        let prob = fast();
         assert!(prob.solution_from(vec![0; 4]).is_err());
         assert!(prob.solution_from(vec![0, 0, 6, 0, 0]).is_err());
-        let sol = prob.solution_from(vec![4, -2, 7, 1, 13]).unwrap();
+        let sol = prob.solution_from(TARGETS.to_vec()).unwrap();
         assert_eq!(raw(sol.evaluate()), 0.0);
     }
 
     #[test]
     fn local_search_and_tabu_search_reach_the_optimum() {
-        let prob = Fast(Target::new());
+        let prob = fast();
         let mut state = SearchState::new_with_seed(&prob, 1);
         LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(50))
             .run(&mut state)
             .unwrap();
-        assert_eq!(state.best_solution.values(), &prob.0.targets[..]);
+        assert_eq!(state.best_solution.values(), &TARGETS[..]);
 
         let mut state = SearchState::new_with_seed(&prob, 2);
         TabuSearch::<IntChangeNeighbor>::new(StopCondition::iterations(50), (1, 2))
             .run(&mut state)
             .unwrap();
-        assert_eq!(state.best_solution.values(), &prob.0.targets[..]);
+        assert_eq!(state.best_solution.values(), &TARGETS[..]);
     }
 
-    /// `Fast` written against `IntAssignment` with a solution of its own,
-    /// which caches each variable's term.
-    struct Own(Target);
+    /// The target problem written against `IntAssignment` with a solution of
+    /// its own, which caches each variable's term.
+    struct Own(IntVars);
 
     #[derive(Clone)]
     struct OwnSolution {
@@ -517,15 +501,10 @@ mod tests {
         fn new_solution(&self, rng: &mut impl rand::Rng) -> OwnSolution {
             let x: Vec<i64> = self
                 .0
-                .vars
                 .iter()
                 .map(|v| rng.random_range(v.lower()..=v.upper()))
                 .collect();
-            let terms: Vec<f64> = x
-                .iter()
-                .enumerate()
-                .map(|(i, &v)| self.0.term(i, v))
-                .collect();
+            let terms: Vec<f64> = x.iter().enumerate().map(|(i, &v)| term(i, v)).collect();
             let total = terms.iter().sum();
             OwnSolution { x, terms, total }
         }
@@ -533,26 +512,26 @@ mod tests {
 
     impl IntAssignment for Own {
         fn domains(&self) -> &IntVars {
-            &self.0.vars
+            &self.0
         }
         fn get(sol: &OwnSolution, i: usize) -> i64 {
             sol.x[i]
         }
         fn assign(&self, sol: &mut OwnSolution, i: usize, value: i64) {
-            let t = self.0.term(i, value);
+            let t = term(i, value);
             sol.total += t - sol.terms[i];
             sol.terms[i] = t;
             sol.x[i] = value;
         }
         fn assign_delta(&self, sol: &OwnSolution, i: usize, value: i64) -> f64 {
-            self.0.term(i, value) - sol.terms[i]
+            term(i, value) - sol.terms[i]
         }
     }
 
     #[test]
     fn own_solution_follows_the_integer_problem_trajectory() {
-        let own = Own(Target::new());
-        let kit = Fast(Target::new());
+        let own = Own(target_vars());
+        let kit = fast();
         let mut a = SearchState::new_with_seed(&own, 4);
         let init = kit.solution_from(a.solution.x.clone()).unwrap();
         let mut b = SearchState::with_solution_and_seed(&kit, init, 4);
@@ -583,86 +562,65 @@ mod tests {
                 self.0.assign(sol, i, value)
             }
         }
-        let prob = NoDelta(Own(Target::new()));
+        let prob = NoDelta(Own(target_vars()));
         let sol = prob.new_solution(&mut rng(8));
         for m in IntChangeNeighbor::iter(&prob, &sol) {
             assert_eq!(raw(m.gain), prob.0.assign_delta(&sol, m.var, m.value));
         }
     }
 
-    /// A tour over eight points on a grid, positions as variables. `fast`
-    /// overrides the swap and reverse deltas with the local edge change.
-    struct Tour {
-        vars: IntVars,
-        pts: Vec<(i64, i64)>,
-        fast: bool,
+    /// A tour over eight points on a grid, positions as variables.
+    const PTS: [(i64, i64); 8] = [
+        (0, 0),
+        (3, 1),
+        (5, 4),
+        (2, 6),
+        (7, 7),
+        (1, 3),
+        (6, 2),
+        (4, 5),
+    ];
+
+    fn d(a: i64, b: i64) -> f64 {
+        let (p, q) = (PTS[a as usize], PTS[b as usize]);
+        ((p.0 - q.0).abs() + (p.1 - q.1).abs()) as f64
     }
 
-    impl Tour {
-        fn new(fast: bool) -> Self {
-            let pts = vec![
-                (0, 0),
-                (3, 1),
-                (5, 4),
-                (2, 6),
-                (7, 7),
-                (1, 3),
-                (6, 2),
-                (4, 5),
-            ];
-            Self {
-                vars: IntVars::permutation(pts.len()),
-                pts,
-                fast,
-            }
-        }
-        fn d(&self, a: i64, b: i64) -> f64 {
-            let (p, q) = (self.pts[a as usize], self.pts[b as usize]);
-            ((p.0 - q.0).abs() + (p.1 - q.1).abs()) as f64
-        }
-        /// The edge leaving position `p`.
-        fn edge(&self, v: &[i64], p: usize) -> f64 {
-            self.d(v[p], v[(p + 1) % v.len()])
-        }
+    /// The edge leaving position `p`.
+    fn edge(v: &[i64], p: usize) -> f64 {
+        d(v[p], v[(p + 1) % v.len()])
     }
 
-    impl IntegerProblem for Tour {
-        fn variables(&self) -> &IntVars {
-            &self.vars
+    fn tour_len(v: &[i64]) -> f64 {
+        (0..v.len()).map(|p| edge(v, p)).sum()
+    }
+
+    fn swap_local(sol: &IntSolution, i: usize, j: usize) -> f64 {
+        let n = sol.values().len();
+        let mut edges = vec![(i + n - 1) % n, i, (j + n - 1) % n, j];
+        edges.sort_unstable();
+        edges.dedup();
+        let mut v = sol.values().to_vec();
+        let before: f64 = edges.iter().map(|&p| edge(&v, p)).sum();
+        v.swap(i, j);
+        let after: f64 = edges.iter().map(|&p| edge(&v, p)).sum();
+        after - before
+    }
+
+    fn reverse_local(sol: &IntSolution, i: usize, j: usize) -> f64 {
+        let v = sol.values();
+        let n = v.len();
+        if j - i + 1 >= n - 1 {
+            return 0.0;
         }
-        fn objective(&self, v: &[i64]) -> Evaluable<f64> {
-            Evaluable::Minimize((0..v.len()).map(|p| self.edge(v, p)).sum())
-        }
-        fn swap_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-            if !self.fast {
-                let mut v = sol.values().to_vec();
-                v.swap(i, j);
-                return raw(self.objective(&v)) - raw(sol.evaluate());
-            }
-            let n = sol.values().len();
-            let mut edges = vec![(i + n - 1) % n, i, (j + n - 1) % n, j];
-            edges.sort_unstable();
-            edges.dedup();
-            let mut v = sol.values().to_vec();
-            let before: f64 = edges.iter().map(|&p| self.edge(&v, p)).sum();
-            v.swap(i, j);
-            let after: f64 = edges.iter().map(|&p| self.edge(&v, p)).sum();
-            after - before
-        }
-        fn reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-            let v = sol.values();
-            let n = v.len();
-            if !self.fast {
-                let mut w = v.to_vec();
-                w[i..=j].reverse();
-                return raw(self.objective(&w)) - raw(sol.evaluate());
-            }
-            if j - i + 1 >= n - 1 {
-                return 0.0;
-            }
-            let (prev, next) = (v[(i + n - 1) % n], v[(j + 1) % n]);
-            self.d(prev, v[j]) + self.d(v[i], next) - self.d(prev, v[i]) - self.d(v[j], next)
-        }
+        let (prev, next) = (v[(i + n - 1) % n], v[(j + 1) % n]);
+        d(prev, v[j]) + d(v[i], next) - d(prev, v[i]) - d(v[j], next)
+    }
+
+    fn tour() -> IntegerProblem<Objective, crate::problem::integer::NoDelta, PairFn, PairFn> {
+        IntegerProblem::minimize(IntVars::permutation(PTS.len()), tour_len as Objective)
+            .with_swap_delta(swap_local as PairFn)
+            .with_reverse_delta(reverse_local as PairFn)
     }
 
     fn is_permutation(v: &[i64]) -> bool {
@@ -673,7 +631,7 @@ mod tests {
 
     #[test]
     fn permutation_moves_keep_a_permutation_and_its_objective() {
-        let prob = Tour::new(true);
+        let prob = tour();
         let mut sol = prob.new_solution(&mut rng(30));
         assert!(is_permutation(sol.values()));
         let mut r = rng(31);
@@ -691,8 +649,9 @@ mod tests {
     }
 
     #[test]
-    fn local_swap_and_reverse_deltas_agree_with_the_defaults() {
-        let (fast, slow) = (Tour::new(true), Tour::new(false));
+    fn local_swap_and_reverse_deltas_agree_with_the_whole_objective() {
+        let fast = tour();
+        let slow = IntegerProblem::minimize(IntVars::permutation(PTS.len()), tour_len);
         let sol = fast.new_solution(&mut rng(32));
         for (a, b) in IntSwapNeighbor::iter(&fast, &sol).zip(IntSwapNeighbor::iter(&slow, &sol)) {
             assert_eq!(raw(a.gain), raw(b.gain), "swap {} {}", a.i, a.j);
@@ -706,7 +665,7 @@ mod tests {
 
     #[test]
     fn a_permutation_has_no_single_value_change() {
-        let prob = Tour::new(true);
+        let prob = tour();
         let sol = prob.new_solution(&mut rng(33));
         assert_eq!(IntChangeNeighbor::iter(&prob, &sol).count(), 0);
         assert!(IntChangeNeighbor::random_neighbor(&prob, &sol, &mut rng(34)).is_none());
@@ -715,7 +674,7 @@ mod tests {
 
     #[test]
     fn two_opt_local_search_uncrosses_the_tour() {
-        let prob = Tour::new(true);
+        let prob = tour();
         let mut state = SearchState::new_with_seed(&prob, 5);
         let start = raw(state.solution.evaluate());
         LocalSearch::<IntReverseNeighbor>::new(StopCondition::iterations(100))

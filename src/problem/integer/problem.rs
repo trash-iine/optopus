@@ -1,3 +1,4 @@
+use super::assignment::IntAssignment;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
 use rand::Rng;
@@ -185,48 +186,79 @@ impl IntSolution {
     }
 }
 
-/// Builds the solution with `values` and their objective.
-fn build_solution<P: IntegerProblem + ?Sized>(prob: &P, values: Vec<i64>) -> IntSolution {
-    let objective = prob.objective(&values);
-    IntSolution { values, objective }
-}
-
 impl Evaluate for IntSolution {
     fn evaluate(&self) -> Evaluable<f64> {
         self.objective
     }
 }
 
-/// A problem over bounded integer variables.
+/// The delta of an [`IntegerProblem`] that was not given one. Every move is
+/// then priced by evaluating the whole objective.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct NoDelta;
+
+/// What [`IntegerProblem::with_delta`] takes, a closure
+/// `(sol, i, value) -> f64`, or [`NoDelta`].
+pub trait ChangeDelta: Sync {
+    /// The change of setting variable `i` of `sol` to `value`, or `None` when
+    /// none was given.
+    fn change_delta(&self, sol: &IntSolution, i: usize, value: i64) -> Option<f64>;
+}
+
+impl ChangeDelta for NoDelta {
+    #[inline(always)]
+    fn change_delta(&self, _: &IntSolution, _: usize, _: i64) -> Option<f64> {
+        None
+    }
+}
+
+impl<D: Fn(&IntSolution, usize, i64) -> f64 + Sync> ChangeDelta for D {
+    #[inline(always)]
+    fn change_delta(&self, sol: &IntSolution, i: usize, value: i64) -> Option<f64> {
+        Some(self(sol, i, value))
+    }
+}
+
+/// What [`IntegerProblem::with_swap_delta`] and
+/// [`IntegerProblem::with_reverse_delta`] take, a closure
+/// `(sol, i, j) -> f64`, or [`NoDelta`].
+pub trait PairDelta: Sync {
+    /// The change of the move on `i` and `j`, or `None` when none was given.
+    fn pair_delta(&self, sol: &IntSolution, i: usize, j: usize) -> Option<f64>;
+}
+
+impl PairDelta for NoDelta {
+    #[inline(always)]
+    fn pair_delta(&self, _: &IntSolution, _: usize, _: usize) -> Option<f64> {
+        None
+    }
+}
+
+impl<D: Fn(&IntSolution, usize, usize) -> f64 + Sync> PairDelta for D {
+    #[inline(always)]
+    fn pair_delta(&self, sol: &IntSolution, i: usize, j: usize) -> Option<f64> {
+        Some(self(sol, i, j))
+    }
+}
+
+/// A problem over bounded integer variables, built from the variables and the
+/// objective.
 ///
-/// Implementing this is all a problem needs. [`ProblemTrait`] follows from it,
-/// with [`IntSolution`] as the solution and a uniformly random initial value
-/// for every variable, or a uniformly random permutation when the variables
-/// are [one](IntVars::permutation). [`IntAssignment`](super::IntAssignment)
-/// follows too, and with it every move of this module.
-///
-/// Each move asks the problem what it would change. The defaults evaluate the
-/// whole objective again, which is correct for any objective and costs a full
-/// evaluation per candidate. [`delta`](Self::delta),
-/// [`swap_delta`](Self::swap_delta) and [`reverse_delta`](Self::reverse_delta)
-/// are there to be overridden with what the move touches.
+/// Nothing needs implementing. [`ProblemTrait`] comes with it, with
+/// [`IntSolution`] as the solution and a uniformly random initial value for
+/// every variable, or a uniformly random permutation when the variables are
+/// [one](IntVars::permutation). So does [`IntAssignment`], and with it every
+/// move of this module.
 ///
 /// ```
 /// use optopus::prelude::*;
 ///
-/// /// Minimize the sum of (x_i - 3)^2 over five variables in 0..=10.
-/// struct Target { vars: IntVars }
+/// // Minimize the sum of (x_i - 3)^2 over five variables in 0..=10.
+/// let vars: IntVars = (0..5).map(|_| IntVar::new(0, 10)).collect();
+/// let prob = IntegerProblem::minimize(vars, |x: &[i64]| {
+///     x.iter().map(|&v| ((v - 3) * (v - 3)) as f64).sum()
+/// });
 ///
-/// impl IntegerProblem for Target {
-///     fn variables(&self) -> &IntVars {
-///         &self.vars
-///     }
-///     fn objective(&self, values: &[i64]) -> Evaluable<f64> {
-///         Evaluable::Minimize(values.iter().map(|&x| ((x - 3) * (x - 3)) as f64).sum())
-///     }
-/// }
-///
-/// let prob = Target { vars: (0..5).map(|_| IntVar::new(0, 10)).collect() };
 /// let mut state = SearchState::new_with_seed(&prob, 1);
 /// LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))
 ///     .run(&mut state)
@@ -234,76 +266,114 @@ impl Evaluate for IntSolution {
 /// assert_eq!(state.best_solution.values(), &[3; 5]);
 /// ```
 ///
-/// `Sync` because [`MoveToNeighbor::iter`](crate::search_state::MoveToNeighbor::iter)
-/// hands out a `Send` iterator that borrows the problem.
-pub trait IntegerProblem: Sync {
-    /// The variables, fixed for the life of the problem.
-    fn variables(&self) -> &IntVars;
+/// Each move asks the problem what it would change. Unless told otherwise the
+/// problem copies the values and evaluates the whole objective again, which is
+/// correct for any objective, costs a full evaluation per candidate and warns
+/// once at runtime. [`with_delta`](Self::with_delta),
+/// [`with_swap_delta`](Self::with_swap_delta) and
+/// [`with_reverse_delta`](Self::with_reverse_delta) hand it the change
+/// computed from what the move touches.
+pub struct IntegerProblem<F, D = NoDelta, S = NoDelta, R = NoDelta> {
+    vars: IntVars,
+    maximize: bool,
+    objective: F,
+    delta: D,
+    swap_delta: S,
+    reverse_delta: R,
+}
 
-    /// The objective of an assignment, `values[i]` being the value of variable
-    /// `i`. Whether it is maximized or minimized is stated here, by the
-    /// [`Evaluable`] variant, and must be the same for every assignment.
-    fn objective(&self, values: &[i64]) -> Evaluable<f64>;
-
-    /// How much the raw objective changes when variable `i` of `sol` is set to
-    /// `value`, new minus old.
-    ///
-    /// <div class="warning">
-    /// The default copies the values and calls
-    /// <a href="#tymethod.objective"><code>objective</code></a> on the copy,
-    /// which costs a full evaluation for every candidate move. Override it
-    /// with the change computed from what variable <code>i</code> touches.
-    /// A one shot <code>tracing::warn!</code> is emitted the first time the
-    /// default runs in a process.
-    /// </div>
-    fn delta(&self, sol: &IntSolution, i: usize, value: i64) -> f64 {
-        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
-        WARNED.get_or_init(|| {
-            tracing::warn!(
-                problem_type = std::any::type_name::<Self>(),
-                "Using the default implementation of IntegerProblem::delta, \
-                 which evaluates the whole objective for every candidate move. \
-                 Override it with an incremental computation for hot-path \
-                 heuristics."
-            );
-        });
-        let mut values = sol.values.clone();
-        values[i] = value;
-        raw(self.objective(&values)) - raw(sol.objective)
+impl<F: Fn(&[i64]) -> f64 + Sync> IntegerProblem<F> {
+    /// A problem that minimizes `objective`, `objective(values)` being the
+    /// value of the assignment with `values[i]` for variable `i`.
+    pub fn minimize(vars: IntVars, objective: F) -> Self {
+        Self::with_direction(vars, false, objective)
     }
 
-    /// How much the raw objective changes when the values of variables `i`
-    /// and `j` are exchanged, new minus old. The default copies the values and
-    /// evaluates the whole objective, and warns once at runtime that it does.
-    fn swap_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
-        WARNED.get_or_init(|| {
-            tracing::warn!(
-                problem_type = std::any::type_name::<Self>(),
-                "Using the default implementation of IntegerProblem::swap_delta, \
-                 which evaluates the whole objective for every candidate move."
-            );
-        });
-        let mut values = sol.values.clone();
-        values.swap(i, j);
-        raw(self.objective(&values)) - raw(sol.objective)
+    /// A problem that maximizes `objective`.
+    pub fn maximize(vars: IntVars, objective: F) -> Self {
+        Self::with_direction(vars, true, objective)
     }
 
-    /// How much the raw objective changes when the values of variables
-    /// `i..=j` are reversed, new minus old. The default copies the values and
-    /// evaluates the whole objective, and warns once at runtime that it does.
-    fn reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
-        WARNED.get_or_init(|| {
-            tracing::warn!(
-                problem_type = std::any::type_name::<Self>(),
-                "Using the default implementation of IntegerProblem::reverse_delta, \
-                 which evaluates the whole objective for every candidate move."
-            );
-        });
-        let mut values = sol.values.clone();
-        values[i..=j].reverse();
-        raw(self.objective(&values)) - raw(sol.objective)
+    fn with_direction(vars: IntVars, maximize: bool, objective: F) -> Self {
+        Self {
+            vars,
+            maximize,
+            objective,
+            delta: NoDelta,
+            swap_delta: NoDelta,
+            reverse_delta: NoDelta,
+        }
+    }
+}
+
+impl<F, D, S, R> IntegerProblem<F, D, S, R>
+where
+    F: Fn(&[i64]) -> f64 + Sync,
+{
+    /// Prices [`IntChangeNeighbor`](super::IntChangeNeighbor) with
+    /// `delta(sol, i, value)`, how much the objective changes when variable
+    /// `i` of `sol` is set to `value`, new minus old.
+    pub fn with_delta<D2>(self, delta: D2) -> IntegerProblem<F, D2, S, R>
+    where
+        D2: Fn(&IntSolution, usize, i64) -> f64 + Sync,
+    {
+        IntegerProblem {
+            vars: self.vars,
+            maximize: self.maximize,
+            objective: self.objective,
+            delta,
+            swap_delta: self.swap_delta,
+            reverse_delta: self.reverse_delta,
+        }
+    }
+
+    /// Prices [`IntSwapNeighbor`](super::IntSwapNeighbor) with
+    /// `swap_delta(sol, i, j)`, how much the objective changes when the values
+    /// of variables `i` and `j` are exchanged, new minus old.
+    pub fn with_swap_delta<S2>(self, swap_delta: S2) -> IntegerProblem<F, D, S2, R>
+    where
+        S2: Fn(&IntSolution, usize, usize) -> f64 + Sync,
+    {
+        IntegerProblem {
+            vars: self.vars,
+            maximize: self.maximize,
+            objective: self.objective,
+            delta: self.delta,
+            swap_delta,
+            reverse_delta: self.reverse_delta,
+        }
+    }
+
+    /// Prices [`IntReverseNeighbor`](super::IntReverseNeighbor) with
+    /// `reverse_delta(sol, i, j)`, how much the objective changes when the
+    /// values of variables `i..=j` are reversed, new minus old.
+    pub fn with_reverse_delta<R2>(self, reverse_delta: R2) -> IntegerProblem<F, D, S, R2>
+    where
+        R2: Fn(&IntSolution, usize, usize) -> f64 + Sync,
+    {
+        IntegerProblem {
+            vars: self.vars,
+            maximize: self.maximize,
+            objective: self.objective,
+            delta: self.delta,
+            swap_delta: self.swap_delta,
+            reverse_delta,
+        }
+    }
+
+    /// The variables.
+    pub fn variables(&self) -> &IntVars {
+        &self.vars
+    }
+
+    /// The objective of an assignment, with the direction of the problem.
+    pub fn objective(&self, values: &[i64]) -> Evaluable<f64> {
+        let value = (self.objective)(values);
+        if self.maximize {
+            Evaluable::Maximize(value)
+        } else {
+            Evaluable::Minimize(value)
+        }
     }
 
     /// A solution with the given values, for starting a search somewhere other
@@ -312,8 +382,8 @@ pub trait IntegerProblem: Sync {
     /// Fails if the number of values differs from the number of variables, if
     /// a value lies outside its variable's range, or if the variables are a
     /// permutation and a value repeats.
-    fn solution_from(&self, values: Vec<i64>) -> Result<IntSolution, OptError> {
-        let vars = self.variables();
+    pub fn solution_from(&self, values: Vec<i64>) -> Result<IntSolution, OptError> {
+        let vars = &self.vars;
         if values.len() != vars.len() {
             return Err(OptError::Config(format!(
                 "{} values given for {} variables",
@@ -344,28 +414,117 @@ pub trait IntegerProblem: Sync {
                 )));
             }
         }
-        Ok(build_solution(self, values))
+        Ok(self.build(values))
+    }
+
+    fn build(&self, values: Vec<i64>) -> IntSolution {
+        let objective = self.objective(&values);
+        IntSolution { values, objective }
+    }
+
+    /// The change `edit` makes, found by evaluating the whole objective on a
+    /// copy of the values. What every move falls back on when its delta was
+    /// not given. Kept out of line so that the priced path stays small where
+    /// a delta was given.
+    #[cold]
+    #[inline(never)]
+    fn full_delta(&self, sol: &IntSolution, move_name: &str, edit: impl FnOnce(&mut [i64])) -> f64 {
+        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+        WARNED.get_or_init(|| {
+            tracing::warn!(
+                move_name,
+                "An IntegerProblem without a delta for this move evaluates \
+                 the whole objective for every candidate. Give it one with \
+                 with_delta, with_swap_delta or with_reverse_delta."
+            );
+        });
+        let mut values = sol.values.clone();
+        edit(&mut values);
+        (self.objective)(&values) - raw(sol.objective)
     }
 }
 
-impl<P: IntegerProblem> ProblemTrait for P {
+impl<F, D, S, R> ProblemTrait for IntegerProblem<F, D, S, R>
+where
+    F: Fn(&[i64]) -> f64 + Sync,
+{
     type Solution = IntSolution;
 
     /// Draws every variable uniformly from its range, or a uniformly random
     /// permutation when the variables are one.
     fn new_solution(&self, rng: &mut impl Rng) -> IntSolution {
-        if self.variables().is_permutation() {
+        if self.vars.is_permutation() {
             use rand::seq::SliceRandom;
-            let mut values: Vec<i64> = (0..self.variables().len() as i64).collect();
+            let mut values: Vec<i64> = (0..self.vars.len() as i64).collect();
             values.shuffle(rng);
-            return build_solution(self, values);
+            return self.build(values);
         }
         let values: Vec<i64> = self
-            .variables()
+            .vars
             .iter()
             .map(|v| rng.random_range(v.lower()..=v.upper()))
             .collect();
-        build_solution(self, values)
+        self.build(values)
+    }
+}
+
+impl<F, D, S, R> IntAssignment for IntegerProblem<F, D, S, R>
+where
+    F: Fn(&[i64]) -> f64 + Sync,
+    D: ChangeDelta,
+    S: PairDelta,
+    R: PairDelta,
+{
+    #[inline]
+    fn domains(&self) -> &IntVars {
+        &self.vars
+    }
+
+    #[inline]
+    fn get(sol: &IntSolution, i: usize) -> i64 {
+        sol.values[i]
+    }
+
+    #[inline]
+    fn assign(&self, sol: &mut IntSolution, i: usize, value: i64) {
+        let delta = self.assign_delta(sol, i, value);
+        sol.set(i, value, delta);
+    }
+
+    #[inline]
+    fn assign_delta(&self, sol: &IntSolution, i: usize, value: i64) -> f64 {
+        match self.delta.change_delta(sol, i, value) {
+            Some(d) => d,
+            None => self.full_delta(sol, "IntChangeNeighbor", |v| v[i] = value),
+        }
+    }
+
+    #[inline]
+    fn assign_swap(&self, sol: &mut IntSolution, i: usize, j: usize) {
+        let delta = self.assign_swap_delta(sol, i, j);
+        sol.swap(i, j, delta);
+    }
+
+    #[inline]
+    fn assign_swap_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
+        match self.swap_delta.pair_delta(sol, i, j) {
+            Some(d) => d,
+            None => self.full_delta(sol, "IntSwapNeighbor", |v| v.swap(i, j)),
+        }
+    }
+
+    #[inline]
+    fn assign_reverse(&self, sol: &mut IntSolution, i: usize, j: usize) {
+        let delta = self.assign_reverse_delta(sol, i, j);
+        sol.reverse(i, j, delta);
+    }
+
+    #[inline]
+    fn assign_reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
+        match self.reverse_delta.pair_delta(sol, i, j) {
+            Some(d) => d,
+            None => self.full_delta(sol, "IntReverseNeighbor", |v| v[i..=j].reverse()),
+        }
     }
 }
 

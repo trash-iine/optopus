@@ -1,8 +1,9 @@
-//! Example of a problem written with `IntegerProblem` alone.
+//! Example of a problem built with `IntegerProblem` alone.
 //!
 //! Bounded knapsack, take up to `limit_i` copies of item `i` to maximize the
-//! total value without exceeding the capacity. There is no move type here,
-//! `IntChangeNeighbor` comes with `IntegerProblem`.
+//! total value without exceeding the capacity. There is no move type and no
+//! trait impl here, the problem is the variables and a closure, and
+//! `IntChangeNeighbor` comes with it.
 //!
 //! Run with:
 //! ```
@@ -11,57 +12,9 @@
 
 use optopus::prelude::*;
 
-struct BoundedKnapsack {
-    vars: IntVars,
-    values: Vec<f64>,
-    weights: Vec<f64>,
-    capacity: f64,
-}
-
-impl BoundedKnapsack {
-    /// Every unit of weight over the capacity costs more than any item is
-    /// worth, so the optimum is feasible.
-    const PENALTY: f64 = 100.0;
-
-    fn new(items: &[(f64, f64, i64)], capacity: f64) -> Self {
-        Self {
-            vars: items
-                .iter()
-                .map(|&(_, _, limit)| IntVar::new(0, limit))
-                .collect(),
-            values: items.iter().map(|&(v, _, _)| v).collect(),
-            weights: items.iter().map(|&(_, w, _)| w).collect(),
-            capacity,
-        }
-    }
-
-    fn weight(&self, counts: &[i64]) -> f64 {
-        counts
-            .iter()
-            .zip(&self.weights)
-            .map(|(&c, w)| c as f64 * w)
-            .sum()
-    }
-}
-
-impl IntegerProblem for BoundedKnapsack {
-    fn variables(&self) -> &IntVars {
-        &self.vars
-    }
-
-    fn objective(&self, counts: &[i64]) -> Evaluable<f64> {
-        let value: f64 = counts
-            .iter()
-            .zip(&self.values)
-            .map(|(&c, v)| c as f64 * v)
-            .sum();
-        let overweight = (self.weight(counts) - self.capacity).max(0.0);
-        Evaluable::Maximize(value - Self::PENALTY * overweight)
-    }
-
-    // `delta` is left to its default, which evaluates the whole objective.
-    // Override it when every evaluation counts.
-}
+/// Every unit of weight over the capacity costs more than any item is worth,
+/// so the optimum is feasible.
+const PENALTY: f64 = 100.0;
 
 fn main() {
     // (value, weight, how many copies there are)
@@ -72,26 +25,55 @@ fn main() {
         (30.0, 5.0, 5),
         (45.0, 9.0, 4),
     ];
-    let prob = BoundedKnapsack::new(&items, 100.0);
+    let capacity = 100.0;
+
+    let vars: IntVars = items
+        .iter()
+        .map(|&(_, _, limit)| IntVar::new(0, limit))
+        .collect();
+    let weight = move |counts: &[i64]| -> f64 {
+        counts
+            .iter()
+            .zip(&items)
+            .map(|(&c, &(_, w, _))| c as f64 * w)
+            .sum()
+    };
+    // No delta is given, so every candidate is priced by the whole objective.
+    // `with_delta` takes one when every evaluation counts.
+    let prob = IntegerProblem::maximize(vars, move |counts: &[i64]| {
+        let value: f64 = counts
+            .iter()
+            .zip(&items)
+            .map(|(&c, &(v, _, _))| c as f64 * v)
+            .sum();
+        value - PENALTY * (weight(counts) - capacity).max(0.0)
+    });
 
     let mut state = SearchState::new_with_seed(&prob, 42);
     LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(1_000))
         .run(&mut state)
         .unwrap();
-    report("LocalSearch", &prob, &state.best_solution);
+    report(
+        "LocalSearch",
+        weight(state.best_solution.values()),
+        &state.best_solution,
+    );
 
     let mut state = SearchState::new_with_seed(&prob, 42);
     SimulatedAnnealing::<IntChangeNeighbor>::new(StopCondition::iterations(50_000), 50.0, 0.9999)
         .run(&mut state)
         .unwrap();
-    report("SimulatedAnnealing", &prob, &state.best_solution);
+    report(
+        "SimulatedAnnealing",
+        weight(state.best_solution.values()),
+        &state.best_solution,
+    );
 }
 
-fn report(name: &str, prob: &BoundedKnapsack, sol: &IntSolution) {
+fn report(name: &str, weight: f64, sol: &IntSolution) {
     println!(
-        "{name:>18}: counts = {:?}, weight = {}, objective = {:?}",
+        "{name:>18}: counts = {:?}, weight = {weight}, objective = {:?}",
         sol.values(),
-        prob.weight(sol.values()),
         sol.evaluate()
     );
 }

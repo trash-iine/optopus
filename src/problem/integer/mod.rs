@@ -1,7 +1,7 @@
 //! Problems over bounded integer variables, with the moves built in.
 //!
-//! A problem that implements [`IntegerProblem`] states its variables and its
-//! objective and nothing else. [`ProblemTrait`](crate::search_state::ProblemTrait)
+//! An [`IntegerProblem`] is built from its variables and its objective, a
+//! closure, and nothing else. [`ProblemTrait`](crate::search_state::ProblemTrait)
 //! comes with it, and so do three moves, so
 //! [`LocalSearch`](crate::heuristic::LocalSearch),
 //! [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing),
@@ -24,4 +24,4 @@ mod problem;
 
 pub use assignment::IntAssignment;
 pub use neighbor::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor};
-pub use problem::{IntSolution, IntVar, IntVars, IntegerProblem};
+pub use problem::{ChangeDelta, IntSolution, IntVar, IntVars, IntegerProblem, NoDelta, PairDelta};
