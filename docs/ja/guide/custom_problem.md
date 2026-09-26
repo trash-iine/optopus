@@ -10,6 +10,9 @@
 [`examples/custom_problem.rs`](https://github.com/trash-iine/optopus/blob/main/examples/custom_problem.rs)
 にあります (`cargo run --example custom_problem`)。
 
+問題のすべての変数が決まった範囲の整数か、解が巡回路のような順列なら、代わりに [`IntegerProblem`](../problems/integer.md) を作ってください。
+範囲とクロージャで書いた目的関数を渡すだけで実装するものはなく、近傍は最初から用意されています。
+
 ## 必須のトレイト { #required-traits }
 
 | トレイト | 実装先 | 必須のメソッド |

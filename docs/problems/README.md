@@ -15,7 +15,8 @@ to plug into every relevant heuristic.
 | [Job Shop Scheduling](job_shop_scheduling.md) | Minimize | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
 | [CVRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB) |
 | [Graph Coloring](graph_coloring.md) | Minimize | `GraphColoringSolution` | Flip (recolor) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |
-| [Formula](formula.md) | Configurable | `FormulaSolution` | Flip / Swap | `FormulaUniformCrossover` | (none, built from `Expr` AST) |
+| [Formula](formula.md) | Configurable | `FormulaSolution` | Change / Swap / Reverse | `IntCrossover` | (none, built from an `Expr`) |
+| [Integer variables](integer.md) | Configurable | `IntSolution` | Change / Swap / Reverse | `IntCrossover` | (none, built from a closure) |
 
 Type names are exported from `optopus::prelude`. See each page for the
 `Solution` struct fields, the file format, and which optional traits the

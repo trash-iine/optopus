@@ -1,0 +1,35 @@
+//! Problems over bounded integer variables, with the moves built in.
+//!
+//! An [`IntegerProblem`] is built from its variables and its objective, a
+//! closure, and nothing else. [`ProblemTrait`](crate::search_state::ProblemTrait)
+//! comes with it, and so do three moves, so
+//! [`LocalSearch`](crate::heuristic::LocalSearch),
+//! [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing),
+//! [`TabuSearch`](crate::heuristic::TabuSearch) and the other move based
+//! heuristics run on it directly.
+//!
+//! - [`IntChangeNeighbor`] sets one variable to another value in its range,
+//!   which on a binary variable is a flip.
+//! - [`IntSwapNeighbor`] exchanges the values of two variables.
+//! - [`IntReverseNeighbor`] reverses the values of a range of variables, which
+//!   on a [permutation](IntVars::permutation) read as a tour is a 2-opt move.
+//!
+//! The moves are written against [`IntAssignment`], which asks only to read
+//! and write one value of a solution. A problem that wants a solution of its
+//! own, to keep whatever makes a move cheap to price, implements that instead.
+//!
+//! [`FormulaProblem`] is the other way in. Its objective and constraints are
+//! [`Expr`]essions, and it derives the price of every move from them.
+//! [`IntCrossover`] brings the genetic algorithm to both.
+
+mod assignment;
+mod crossover;
+mod formula;
+mod neighbor;
+mod problem;
+
+pub use assignment::IntAssignment;
+pub use crossover::IntCrossover;
+pub use formula::{Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution};
+pub use neighbor::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor};
+pub use problem::{ChangeDelta, IntSolution, IntVar, IntVars, IntegerProblem, NoDelta, PairDelta};

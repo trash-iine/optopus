@@ -102,6 +102,7 @@ nav:
       - CVRP: problems/vrp.md
       - Graph Coloring: problems/graph_coloring.md
       - Formula: problems/formula.md
+      - Integer variables: problems/integer.md
   - Heuristics:
       - Overview: heuristics/README.md
       - Local Search: heuristics/local_search.md
@@ -148,6 +149,7 @@ nav:
           - CVRP: ja/problems/vrp.md
           - Graph Coloring: ja/problems/graph_coloring.md
           - Formula: ja/problems/formula.md
+          - 整数変数: ja/problems/integer.md
       - ヒューリスティクス:
           - 概要: ja/heuristics/README.md
           - Local Search: ja/heuristics/local_search.md

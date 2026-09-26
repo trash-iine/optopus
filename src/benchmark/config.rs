@@ -11,9 +11,9 @@ use crate::heuristic::StopCondition;
 
 /// Problem type discriminant used in config files.
 ///
-/// `FormulaProblem` is intentionally absent: it is library-only, constructed
-/// in code from an [`Expr`](crate::problem::Expr) AST, and has no instance
-/// file format for the benchmark runner to load.
+/// `FormulaProblem` and `IntegerProblem` are intentionally absent. They are
+/// library-only, built in code from an [`Expr`](crate::problem::Expr) or a
+/// closure, and have no instance file format for the benchmark runner to load.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum ProblemKind {
     MaxCut,

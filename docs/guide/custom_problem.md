@@ -10,6 +10,12 @@ The full runnable example lives at
 [`examples/custom_problem.rs`](https://github.com/trash-iine/optopus/blob/main/examples/custom_problem.rs)
 (`cargo run --example custom_problem`).
 
+If every variable of your problem is an integer in a fixed range, or the
+solution is a permutation such as a tour, build an
+[`IntegerProblem`](../problems/integer.md) instead. It takes the ranges and the
+objective as a closure, with nothing to implement, and comes with ready made
+moves.
+
 ## Required traits
 
 | Trait | On | Required method(s) |

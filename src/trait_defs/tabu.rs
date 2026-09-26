@@ -46,6 +46,8 @@ mod tests {
     fn every_built_in_move_hands_over_its_tabu_policy() {
         use crate::problem::*;
 
+        type OneInt = IntegerProblem<fn(&[i64]) -> f64>;
+
         macro_rules! assert_policy {
             ($($problem:ty => $mv:expr),+ $(,)?) => {
                 $(
@@ -82,8 +84,11 @@ mod tests {
                 c1: 1, c2: 2, gain: 0.0, overload_delta: 0,
             },
             Vrp => VrpTwoOptNeighbor { r: 0, p: 0, q: 1, gain: 0.0 },
-            FormulaProblem => FormulaFlipNeighbor { i: 0, gain: 0.0 },
-            FormulaProblem => FormulaSwapNeighbor { i: 0, j: 1, gain: 0.0 },
+            OneInt => IntChangeNeighbor {
+                var: 0, value: 1, cost: 0.0,
+            },
+            OneInt => IntSwapNeighbor { i: 0, j: 1, cost: 0.0 },
+            OneInt => IntReverseNeighbor { i: 0, j: 1, cost: 0.0 },
         }
     }
 }
