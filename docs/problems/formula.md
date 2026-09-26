@@ -15,6 +15,13 @@ constraints it appears in, and every solution keeps the change of each value
 each variable could take. Picking a move reads that table, and applying one
 refreshes only the variables it can have affected.
 
+The table holds one number for every value each variable could change to, so
+its size is the sum of `upper - lower` over the variables. A variable ranging
+over millions of values makes every solution that large, and such a variable
+is better served by an [`IntegerProblem`](integer.md) with a delta written
+for it. On a permutation there is no single change, so no table is kept and a
+swap or a reversal is priced from the monomials directly.
+
 ```text
 maximize:  objective(x) − Σ_c penalty_weight_c · violation_c(x)
 minimize:  objective(x) + Σ_c penalty_weight_c · violation_c(x)
