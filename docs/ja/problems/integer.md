@@ -38,6 +38,7 @@ println!("{:?}", state.best_solution.values());
 
 [`examples/integer_problem.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_problem.rs)
 はこの方法で有界ナップサックを解きます (`cargo run --example integer_problem`)。
+ライブラリに入っているすべての問題を同じように書いた例は [整数変数で問題を書く](../guide/integer_modeling.md) にあります。
 
 ## 順列 { #permutations }
 

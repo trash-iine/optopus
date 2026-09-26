@@ -42,6 +42,8 @@ and the closure returns the plain value.
 
 [`examples/integer_problem.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_problem.rs)
 solves a bounded knapsack this way (`cargo run --example integer_problem`).
+[Writing problems with integer variables](../guide/integer_modeling.md) does
+the same for every problem the library ships.
 
 ## Permutations
 

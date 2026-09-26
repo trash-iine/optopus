@@ -18,6 +18,7 @@
 - [ベンチマーク](guide/benchmarking.md)。TOML スキーマと CLI
 - [エラー処理](guide/error_handling.md)
 - [独自の問題を定義する](guide/custom_problem.md)
+- [整数変数で問題を書く](guide/integer_modeling.md)。組み込みの問題をすべて `IntegerProblem` で書く
 - [独自のヒューリスティクスを定義する](guide/custom_heuristic.md)
 - [学習した摂動方策で BLS を動かす](guide/learned_perturbation.md)
 
