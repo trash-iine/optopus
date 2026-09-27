@@ -21,6 +21,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Benchmarking](guide/benchmarking.md), TOML schema and CLI
 - [Error handling](guide/error_handling.md)
 - [Defining a custom problem](guide/custom_problem.md)
+- [Writing problems with integer variables](guide/integer_modeling.md), every built-in problem as an `IntegerProblem`
 - [Defining a custom heuristic](guide/custom_heuristic.md)
 - [Driving BLS with a learned perturbation policy](guide/learned_perturbation.md)
 

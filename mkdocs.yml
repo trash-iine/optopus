@@ -125,6 +125,7 @@ nav:
       - Benchmarking: guide/benchmarking.md
       - Error handling: guide/error_handling.md
       - Defining a custom problem: guide/custom_problem.md
+      - Writing problems with integer variables: guide/integer_modeling.md
       - Defining a custom heuristic: guide/custom_heuristic.md
       - Driving BLS with a learned perturbation policy: guide/learned_perturbation.md
   - Benchmarks:
@@ -172,5 +173,6 @@ nav:
           - ベンチマーク: ja/guide/benchmarking.md
           - エラー処理: ja/guide/error_handling.md
           - 独自の問題を定義する: ja/guide/custom_problem.md
+          - 整数変数で問題を書く: ja/guide/integer_modeling.md
           - 独自のヒューリスティクスを定義する: ja/guide/custom_heuristic.md
           - 学習した摂動方策で BLS を動かす: ja/guide/learned_perturbation.md
