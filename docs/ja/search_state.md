@@ -83,7 +83,9 @@ move 型は [`EnabledTabu`](traits.md#core-trait-reference) を実装し、
 `trait_defs/tabu.rs` はすべての組み込み move についてこれを検査しています。
 `tabu_allows` と `record_tabu` は `EnabledTabu` を境界に持つので、方策のない move について問い合わせるとコンパイルエラーになります。
 
-move が禁止する対象は `TabuKey` です。密なインデックスには `Var(i)`、それ以外には `Pair` と `Triple` を使います。
+move が禁止する対象は `TabuKey` です。単一のインデックスには `Var(i)`、複合キーには `Pair` と `Triple` を使い、いずれもマップに入ります。
+`0..n` に収まると分かっているインデックスには `DenseVar(i)` を使い、最大のインデックスと同じ長さの配列に入ります。
+`DenseVar` は組み込みの move が使う高速な経路で、値に比例してメモリを使うので、`item * 10^15 + bin` のように呼び出し側が計算したキーは `Var` のままにします。素の `usize` は `Var` に変換されます。
 形ごとに別の空間なので、同じ形を使う二つの move 型は禁止を共有します。MaxCut の flip と swap が互いのエントリを見るのはこの仕組みによります。
 形が違えば衝突することはありません。move が読むキーと書くキーは一致している必要はありません。
 VRP の relocate は、ある顧客が移動先のルートに入ってよいかを問い合わせ、出てきたルートを禁止します。
