@@ -4,7 +4,7 @@ use rayon::prelude::*;
 
 use super::problem::{JobShopScheduling, JobShopSolution};
 use crate::{
-    common::TabuMemory,
+    common::{TabuKey, TabuMemory},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -91,12 +91,12 @@ impl Evaluate for JobShopSwapNeighbor {
 impl EnabledTabu for JobShopSwapNeighbor {
     /// The move is tabu while position `i` is still blocked at the current iteration.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(self.i, iteration)
+        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
     }
 
     /// Applying the move forbids position `i` for a tenure the memory draws.
     fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(self.i, iteration, rng);
+        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
     }
 }
 

@@ -14,23 +14,45 @@ use std::hash::{BuildHasherDefault, Hasher};
 /// What a move forbids: the thing that has to stay put for a while after the
 /// move is applied.
 ///
-/// The three shapes are what the library's moves actually key on, a variable
-/// or vertex index, an (endpoint, endpoint) or (customer, route) pair, a
-/// (route, position, position) triple. They live in separate key spaces, so a
-/// `Var(3)` and a `Pair(3, 0)` never collide, while two move types that key on
-/// the same shape do share prohibitions, which is exactly what Breakout Local
-/// Search's flips and swaps rely on.
+/// The shapes are what the library's moves actually key on, a variable or
+/// vertex index, an (endpoint, endpoint) or (customer, route) pair, a (route,
+/// position, position) triple. They live in separate key spaces, so a `Var(3)`,
+/// a `DenseVar(3)` and a `Pair(3, 0)` never collide, while two move types that
+/// key on the same shape do share prohibitions, which is exactly what Breakout
+/// Local Search's flips and swaps rely on.
 ///
-/// The `From` impls are what let a move write `tabu.forbid(self.i, ..)` instead
-/// of spelling the variant out.
+/// Every shape but [`DenseVar`](Self::DenseVar) is kept in a map, so it costs
+/// memory per key recorded whatever its value. `DenseVar` is the one special
+/// case: an array indexed by the key, the fastest lookup, for an index known to
+/// lie in `0..n`.
+///
+/// The `From` impls are what let a move write `tabu.forbid((a, b), ..)` instead
+/// of spelling the variant out. A bare `usize` becomes a [`Var`](Self::Var),
+/// the shape that is safe for any value; a move over a dense index says
+/// `DenseVar` explicitly.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TabuKey {
     /// A dense index in `0..n`: a variable, a vertex, a position.
-    Var(usize),
+    ///
+    /// Stored in an array as long as the largest index recorded, which makes
+    /// it the fastest key and makes a large index cost memory in proportion to
+    /// its value. Use it only where the index is bounded by the instance; any
+    /// other single index is a [`Var`](Self::Var).
+    ///
+    /// Which of the two a key is, the caller decides by the variant rather than
+    /// the memory by the value: a threshold on the value would put a branch on
+    /// the path every scan takes per candidate, for a cutoff the library cannot
+    /// choose for problems it does not see.
+    DenseVar(usize),
     /// A pair of indices, e.g. the two endpoints of an edge.
     Pair(usize, usize),
     /// A triple of indices, e.g. a route and two positions in it.
     Triple(usize, usize, usize),
+    /// A single index of any size, kept in the map with the compound keys.
+    //
+    // Last, so adding it left the discriminants the other shapes hash with as
+    // they were.
+    Var(usize),
 }
 
 impl From<usize> for TabuKey {
@@ -122,9 +144,9 @@ impl Hasher for TabuKeyHasher {
 /// ```
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TabuMemory {
-    /// `dense[i]` = first iteration at which `Var(i)` is free again.
+    /// `dense[i]` = first iteration at which `DenseVar(i)` is free again.
     dense: Vec<u64>,
-    /// The compound keys, the ones that are not a dense index.
+    /// Every key but [`TabuKey::DenseVar`].
     //
     // Stored inline rather than boxed. The arrangement the allocator draws for
     // this struct once cost TabuSearch a large slowdown under thin LTO; see
@@ -158,7 +180,7 @@ impl TabuMemory {
         self.sparse.clear();
     }
 
-    /// Grows the dense space to hold `Var(0..n)`. Never shrinks.
+    /// Grows the dense space to hold `DenseVar(0..n)`. Never shrinks.
     ///
     /// Pure pre-allocation: [`forbid`](Self::forbid) grows on demand anyway,
     /// and does so without changing what it draws.
@@ -201,7 +223,7 @@ impl TabuMemory {
     #[inline]
     pub fn is_enabled(&self, key: impl Into<TabuKey>, iteration: u64) -> bool {
         match key.into() {
-            TabuKey::Var(i) => self.dense.get(i).is_none_or(|&until| iteration >= until),
+            TabuKey::DenseVar(i) => self.dense.get(i).is_none_or(|&until| iteration >= until),
             key => self
                 .sparse
                 .get(&key)
@@ -221,7 +243,7 @@ impl TabuMemory {
         // `iteration + d`, so the first iteration that frees it is one past.
         let until = iteration + tabu_duration + 1;
         match key.into() {
-            TabuKey::Var(i) => {
+            TabuKey::DenseVar(i) => {
                 if i >= self.dense.len() {
                     self.dense.resize(i + 1, 0);
                 }
@@ -267,15 +289,20 @@ mod tests {
         memory
     }
 
+    fn dense(i: usize) -> TabuKey {
+        TabuKey::DenseVar(i)
+    }
+
     /// A tenure of `d` drawn at `iteration` must forbid exactly the next `d`
     /// iterations, blocked through `iteration + d`, free at `iteration + d + 1`,
-    /// and it must do so identically in both key spaces.
+    /// and it must do so identically in the array and in the map.
     #[test]
     fn a_tenure_of_d_blocks_exactly_d_iterations() {
         for key in [
-            TabuKey::Var(0),
+            TabuKey::DenseVar(0),
             TabuKey::Pair(1, 2),
             TabuKey::Triple(1, 2, 3),
+            TabuKey::Var(1 << 40),
         ] {
             let mut tabu = memory((3, 3));
             tabu.forbid(key, 100, &mut rng());
@@ -287,16 +314,27 @@ mod tests {
         }
     }
 
-    /// The three shapes are separate spaces: recording one must say nothing
-    /// about the others, however similar the indices look.
+    /// The shapes are separate spaces: recording one must say nothing about
+    /// the others, however similar the indices look.
     #[test]
     fn the_key_spaces_do_not_collide() {
         let mut tabu = memory((50, 50));
-        tabu.forbid(3usize, 0, &mut rng());
+        tabu.forbid(dense(3), 0, &mut rng());
 
-        assert!(!tabu.is_enabled(3usize, 10));
+        assert!(!tabu.is_enabled(dense(3), 10));
+        assert!(tabu.is_enabled(3usize, 10), "a var is not a dense var");
         assert!(tabu.is_enabled((3, 0), 10), "a pair is not a var");
         assert!(tabu.is_enabled((3, 0, 0), 10), "a triple is not a pair");
+
+        tabu.forbid(7usize, 0, &mut rng());
+        assert!(!tabu.is_enabled(7usize, 10));
+        assert!(tabu.is_enabled(dense(7), 10), "a dense var is not a var");
+    }
+
+    /// A bare `usize` is a `Var`, the shape that is safe for any value.
+    #[test]
+    fn a_usize_converts_to_a_var() {
+        assert_eq!(TabuKey::from(5usize), TabuKey::Var(5));
     }
 
     /// Unseen keys are movable, and `clear` returns every key to that state.
@@ -304,73 +342,98 @@ mod tests {
     fn unseen_and_cleared_keys_are_movable() {
         let mut tabu = memory((50, 50));
         assert!(
-            tabu.is_enabled(999usize, 0),
+            tabu.is_enabled(dense(999), 0),
             "an unseen key must be movable"
         );
 
         tabu.reserve_vars(4);
+        tabu.forbid(dense(1), 0, &mut rng());
         tabu.forbid(1usize, 0, &mut rng());
         tabu.forbid((1, 2), 0, &mut rng());
+        assert!(!tabu.is_enabled(dense(1), 10));
         assert!(!tabu.is_enabled(1usize, 10));
         assert!(!tabu.is_enabled((1, 2), 10));
 
         tabu.clear();
+        assert!(tabu.is_enabled(dense(1), 10));
         assert!(tabu.is_enabled(1usize, 10));
         assert!(tabu.is_enabled((1, 2), 10));
         assert_eq!(tabu.tenure(), (50, 50), "clear must not touch the tenure");
     }
 
-    /// `forbid` must grow the dense space rather than silently dropping the
-    /// entry, so a default-constructed memory still works.
-    /// The compound keys share one map, so a hasher that folded two of them
+    /// A `Var` is as large as the caller likes: it lands in the map, so an
+    /// index near `usize::MAX` must not allocate by its value.
+    #[test]
+    fn a_var_of_any_size_is_a_map_entry() {
+        let mut tabu = memory((3, 3));
+        let huge = 1_000_000_000_000_000usize;
+        tabu.forbid(huge, 100, &mut rng());
+        tabu.forbid(usize::MAX, 100, &mut rng());
+
+        assert!(tabu.dense.is_empty(), "a Var must not grow the dense array");
+        assert!(!tabu.is_enabled(huge, 103));
+        assert!(tabu.is_enabled(huge, 104));
+        assert!(!tabu.is_enabled(usize::MAX, 103));
+    }
+
+    /// The map's keys share one hasher, so a hasher that folded two of them
     /// together would silently forbid moves nothing applied.
     #[test]
-    fn the_compound_key_spaces_stay_apart() {
+    fn the_map_key_spaces_stay_apart() {
         let mut tabu = memory((5, 5));
         tabu.forbid((1usize, 2usize), 0, &mut rng());
         tabu.forbid((3usize, 4usize, 5usize), 0, &mut rng());
+        tabu.forbid(6usize, 0, &mut rng());
         assert!(!tabu.is_enabled((1usize, 2usize), 1));
         assert!(!tabu.is_enabled((3usize, 4usize, 5usize), 1));
+        assert!(!tabu.is_enabled(6usize, 1));
         // Same words, different shape or order: all still free.
         assert!(tabu.is_enabled((2usize, 1usize), 1));
         assert!(tabu.is_enabled(1usize, 1));
         assert!(tabu.is_enabled((1usize, 2usize, 0usize), 1));
         assert!(tabu.is_enabled((3usize, 5usize, 4usize), 1));
+        assert!(tabu.is_enabled((6usize, 0usize), 1));
     }
 
+    /// `forbid` must grow the dense space rather than silently dropping the
+    /// entry, so a default-constructed memory still works.
     #[test]
     fn forbid_grows_the_dense_space() {
         let mut tabu = memory((2, 2));
-        tabu.forbid(5usize, 0, &mut rng());
-        assert!(!tabu.is_enabled(5usize, 1));
+        tabu.forbid(dense(5), 0, &mut rng());
+        assert!(!tabu.is_enabled(dense(5), 1));
         assert!(
-            tabu.is_enabled(4usize, 1),
+            tabu.is_enabled(dense(4), 1),
             "growth must not block its neighbors"
         );
     }
 
     /// Inheriting carries the remaining prohibition, not the boundary: a key
     /// blocked for 3 more iterations at the parent's 100 must be blocked for 3
-    /// more at the child's 0, not for 103.
+    /// more at the child's 0, not for 103. It does so in the array and in the
+    /// map alike.
     #[test]
     fn inheriting_carries_the_remaining_tenure_into_the_new_frame() {
         let mut parent = memory((3, 3));
-        parent.forbid(1usize, 100, &mut rng());
+        parent.forbid(dense(1), 100, &mut rng());
         parent.forbid((4, 5), 100, &mut rng());
-        parent.forbid(2usize, 0, &mut rng()); // long expired by iteration 100
+        parent.forbid(1usize << 40, 100, &mut rng());
+        parent.forbid(dense(2), 0, &mut rng()); // long expired by iteration 100
 
         let mut child = TabuMemory::default();
         child.inherit(&parent, 100, 0);
 
         assert_eq!(child.tenure(), (3, 3), "the tenure crosses too");
         for it in 0..=3 {
-            assert!(!child.is_enabled(1usize, it), "still blocked at {it}");
+            assert!(!child.is_enabled(dense(1), it), "still blocked at {it}");
             assert!(!child.is_enabled((4, 5), it), "still blocked at {it}");
+            assert!(!child.is_enabled(1usize << 40, it), "still blocked at {it}");
         }
-        assert!(child.is_enabled(1usize, 4), "and free at 4");
+        assert!(child.is_enabled(dense(1), 4), "and free at 4");
         assert!(child.is_enabled((4, 5), 4), "and free at 4");
+        assert!(child.is_enabled(1usize << 40, 4), "and free at 4");
         assert!(
-            child.is_enabled(2usize, 0),
+            child.is_enabled(dense(2), 0),
             "a prohibition the parent had already outlived must arrive free"
         );
     }

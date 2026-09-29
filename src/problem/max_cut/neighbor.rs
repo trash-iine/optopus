@@ -18,7 +18,7 @@
 use super::{MaxCut, MaxCutSolution};
 use crate::{
     common::{
-        TabuMemory,
+        TabuKey, TabuMemory,
         binary::{differing_pairs, random_differing_pair},
     },
     error::OptError,
@@ -56,12 +56,12 @@ pub struct MaxCutFlipNeighbor {
 impl EnabledTabu for MaxCutFlipNeighbor {
     /// The move is tabu while vertex `i` is still blocked at the current iteration.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(self.i, iteration)
+        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
     }
 
     /// Applying the move forbids vertex `i` for a tenure the memory draws.
     fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(self.i, iteration, rng);
+        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
     }
 }
 
@@ -260,13 +260,14 @@ impl Evaluate for MaxCutSwapNeighbor {
 impl EnabledTabu for MaxCutSwapNeighbor {
     /// A swap is tabu unless both vertexs it moves are free.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
+        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
+            && tabu.is_enabled(TabuKey::DenseVar(self.j), iteration)
     }
 
     /// Applying the swap forbids both vertexs, each for its own drawn tenure.
     fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(self.i, iteration, rng);
-        tabu.forbid(self.j, iteration, rng);
+        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
+        tabu.forbid(TabuKey::DenseVar(self.j), iteration, rng);
     }
 }
 
