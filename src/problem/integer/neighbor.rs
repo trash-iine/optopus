@@ -4,7 +4,7 @@ use super::assignment::IntAssignment;
 use super::problem::IntVar;
 use super::problem::with_value;
 use crate::{
-    common::{TabuMemory, permutation::random_distinct_pair},
+    common::{TabuKey, TabuMemory, permutation::random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -162,12 +162,12 @@ impl EnabledTabu for IntChangeNeighbor {
     /// The move is tabu while variable `var` is still blocked at the current
     /// iteration.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(self.var, iteration)
+        tabu.is_enabled(TabuKey::DenseVar(self.var), iteration)
     }
 
     /// Applying the move forbids variable `var` for a tenure the memory draws.
     fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(self.var, iteration, rng);
+        tabu.forbid(TabuKey::DenseVar(self.var), iteration, rng);
     }
 }
 

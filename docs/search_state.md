@@ -94,8 +94,13 @@ it records nothing and `TabuSearch` runs with an empty list and no complaint;
 `record_tabu` are bounded on `EnabledTabu`, so asking about a move that has no
 policy is a compile error.
 
-What a move forbids is a `TabuKey`, either `Var(i)` for a dense index or `Pair`
-and `Triple` for the rest. The shapes are separate spaces, so two move types
+What a move forbids is a `TabuKey`: `Var(i)` for a single index, `Pair` and
+`Triple` for compound keys, all kept in a map, and `DenseVar(i)` for an index
+known to lie in `0..n`, kept in an array as long as the largest one. `DenseVar`
+is the fast path the built-in moves take, and the one that costs memory in
+proportion to the value, so a key a caller computes, such as
+`item * 10^15 + bin`, stays a `Var`. A bare `usize` converts to `Var`. The
+shapes are separate spaces, so two move types
 over the same shape share prohibitions, which is how MaxCut's flip and swap see
 each other's entries, while different shapes never collide. The keys a move
 reads and the keys it writes need not agree. A VRP relocate asks whether a

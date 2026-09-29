@@ -568,7 +568,8 @@ where
             .inherit(&parent.tabu, parent.iteration, self.iteration);
     }
 
-    /// Grows the tabu memory's dense key space to `0..n` up front.
+    /// Grows the tabu memory's dense key space, `TabuKey::DenseVar(0..n)`, up
+    /// front.
     ///
     /// Pure pre-allocation, recording grows it on demand, and does so without
     /// changing what it draws, for a heuristic that knows the instance size
@@ -1152,7 +1153,7 @@ mod tests {
             assert!(state.tabu_allows(&MaxCutFlipNeighbor { i: m.i, gain: 0.0 }));
         }
 
-        /// Flip and swap both key on `TabuKey::Var`, so a vertex a flip forbade is
+        /// Flip and swap both key on `TabuKey::DenseVar`, so a vertex a flip forbade is
         /// forbidden to the swap too. Breakout Local Search is built on this:
         /// its weak swap must not undo what the descent's flips wrote.
         #[test]

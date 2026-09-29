@@ -2,7 +2,7 @@
 
 use super::problem::{GraphColoring, GraphColoringSolution};
 use crate::{
-    common::{TabuMemory, permutation::random_distinct_pair},
+    common::{TabuKey, TabuMemory, permutation::random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -50,12 +50,12 @@ impl Evaluate for GraphColoringRecolorNeighbor {
 impl EnabledTabu for GraphColoringRecolorNeighbor {
     /// The move is tabu while vertex `v` is still blocked at the current iteration.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(self.v, iteration)
+        tabu.is_enabled(TabuKey::DenseVar(self.v), iteration)
     }
 
     /// Applying the move forbids vertex `v` for a tenure the memory draws.
     fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(self.v, iteration, rng);
+        tabu.forbid(TabuKey::DenseVar(self.v), iteration, rng);
     }
 }
 
@@ -159,13 +159,14 @@ impl Evaluate for GraphColoringSwapNeighbor {
 impl EnabledTabu for GraphColoringSwapNeighbor {
     /// A swap is tabu unless both vertices it recolors are free.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(self.i, iteration) && tabu.is_enabled(self.j, iteration)
+        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
+            && tabu.is_enabled(TabuKey::DenseVar(self.j), iteration)
     }
 
     /// Applying the swap forbids both vertices, each for its own drawn tenure.
     fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(self.i, iteration, rng);
-        tabu.forbid(self.j, iteration, rng);
+        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
+        tabu.forbid(TabuKey::DenseVar(self.j), iteration, rng);
     }
 }
 
