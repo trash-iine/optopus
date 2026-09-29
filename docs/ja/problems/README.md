@@ -12,7 +12,7 @@
 | [TSP](tsp.md) | 最小化 | `TspSolution` | TwoOpt / Relocate | `TspOrderCrossover` | `Tsp::load_file` (TSPLIB) |
 | [Vertex Cover](vertex_cover.md) | 最小化 | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `Graph::load_from_file` |
 | [Job Shop Scheduling](job_shop_scheduling.md) | 最小化 | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
-| [CVRP](vrp.md) | 最小化 | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB) |
+| [VRP](vrp.md) | 最小化 | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB、または TOML のフリート記述) |
 | [Graph Coloring](graph_coloring.md) | 最小化 | `GraphColoringSolution` | Flip (再彩色) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |
 | [Formula](formula.md) | 設定可能 | `FormulaSolution` | Change / Swap / Reverse | `IntCrossover` | (なし、`Expr` から作る) |
 | [整数変数](integer.md) | 設定可能 | `IntSolution` | Change / Swap / Reverse | `IntCrossover` | (なし、クロージャから作る) |

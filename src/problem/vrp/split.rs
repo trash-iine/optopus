@@ -6,11 +6,19 @@
 //! found exactly by dynamic programming, which is what makes the giant-tour
 //! encoding usable as a genetic representation. The decoder is optimal, so the
 //! search only has to get the customer order right.
+//!
+//! The DP row `k` stands for slot `k - 1`, so each route is priced with the
+//! vehicle type that would drive it, and a limited heterogeneous fleet costs
+//! nothing beyond what Prins' limited-fleet formulation already pays.
 
-use super::problem::{Vrp, overload_of};
+use super::problem::{Vrp, overload_of, time_excess_of};
 
-/// Splits a giant customer tour into exactly `prob.num_vehicles` routes,
-/// minimizing `distance + penalty · overload` over all ways of cutting it.
+/// Splits a giant customer tour into exactly `prob.num_slots()` routes,
+/// minimizing the additive objective over all ways of cutting it: each route's
+/// time under the slot's speed and service times, its fixed and variable cost
+/// weighted by `cost_weight`, and `penalty` per unit of overload and of
+/// route-time excess. The minimum-count shortfall is not priced, since it is
+/// a property of the whole partition rather than of one cut.
 ///
 /// The customer order within `giant` is preserved; only the cut positions are
 /// chosen. Capacity is soft: a route may overflow, paying `penalty` per unit.
@@ -18,15 +26,21 @@ use super::problem::{Vrp, overload_of};
 /// arbitrary tour order frequently admits no feasible split at all, returning
 /// an overloaded partition is the useful answer there, not a failure.
 ///
-/// `penalty` is the cost per unit of capacity overflow. Pass
-/// [`Vrp::penalty_weight`] to reproduce the objective of [`super::VrpSolution`]
-/// (which makes any feasible split beat every infeasible one), or an adaptive
-/// value when the caller manages its own penalty, as Hybrid Genetic Search does.
+/// Under [`super::ObjectiveMode::Makespan`] the split decodes with the same additive
+/// total-time objective, as a proxy: a maximum over routes added to sums over
+/// routes is not a scalar shortest path. The descent that follows a decoded
+/// offspring optimizes the true objective, and a crossover only has to hand
+/// it a sensible start.
 ///
-/// The result always has length `prob.num_vehicles` (padded with empty routes)
+/// `penalty` is the cost per unit of violation. Pass [`Vrp::penalty_weight`]
+/// to reproduce the objective of [`super::VrpSolution`] (which makes any
+/// feasible split beat every infeasible one), or an adaptive value when the
+/// caller manages its own penalty, as Hybrid Genetic Search does.
+///
+/// The result always has length `prob.num_slots()` (padded with empty routes)
 /// and visits every customer of `giant` exactly once.
 pub fn split_giant_tour(prob: &Vrp, giant: &[usize], penalty: f64) -> Vec<Vec<usize>> {
-    let fleet = prob.num_vehicles;
+    let fleet = prob.num_slots();
     if giant.is_empty() {
         return vec![Vec::new(); fleet];
     }
@@ -51,7 +65,7 @@ pub fn split_giant_tour(prob: &Vrp, giant: &[usize], penalty: f64) -> Vec<Vec<us
 /// since they are never worth keeping.
 fn split_dp(prob: &Vrp, giant: &[usize], penalty: f64) -> Vec<Vec<usize>> {
     let n = giant.len();
-    let fleet = prob.num_vehicles;
+    let fleet = prob.num_slots();
     let width = n + 1;
     let max_overloaded_len = 2 * n.div_ceil(fleet).max(1);
 
@@ -64,6 +78,9 @@ fn split_dp(prob: &Vrp, giant: &[usize], penalty: f64) -> Vec<Vec<usize>> {
     for k in 1..=fleet {
         let row = k * width;
         let prev = (k - 1) * width;
+        // Row `k` is slot `k - 1` taking the segment, priced with its type.
+        let vt = prob.vehicle_type_of_slot(k - 1);
+        let capacity = vt.capacity;
 
         // Carry over states reachable with fewer routes.
         for j in 0..=n {
@@ -79,16 +96,24 @@ fn split_dp(prob: &Vrp, giant: &[usize], penalty: f64) -> Vec<Vec<usize>> {
                 continue;
             }
             let mut load = 0i64;
+            let mut service = 0.0;
             let mut route_distance = 0.0;
             for j in i..n {
                 let c = giant[j];
                 load += prob.demands[c];
-                if load > prob.capacity && j - i + 1 > max_overloaded_len {
+                service += prob.service_times[c];
+                if load > capacity && j - i + 1 > max_overloaded_len {
                     break;
                 }
                 route_distance = extend_route(prob, route_distance, giant, i, j);
-                let candidate =
-                    base + route_distance + penalty * overload_of(load, prob.capacity) as f64;
+                let time = route_distance / vt.speed + service;
+                let cost_of_route = prob.cost_weight()
+                    * (vt.fixed_cost + vt.variable_cost_per_distance * route_distance);
+                let violation =
+                    overload_of(load, capacity) as f64 + time_excess_of(time, vt.max_route_time);
+                // Left to right, so the plain CVRP's `base + distance +
+                // penalty * overload` keeps its association.
+                let candidate = base + time + cost_of_route + penalty * violation;
                 if candidate < cost[row + j + 1] {
                     cost[row + j + 1] = candidate;
                     pred[row + j + 1] = Some(i);
@@ -204,7 +229,7 @@ mod tests {
             }
             let feasible = routes.iter().all(|r| {
                 let load: i64 = r.iter().map(|&c| prob.demands[c]).sum();
-                load <= prob.capacity
+                load <= prob.vehicle_type_of_slot(0).capacity
             });
             if !feasible {
                 continue;
@@ -236,9 +261,9 @@ mod tests {
                 Some(want) => {
                     assert_eq!(sol.overload, 0, "seed {seed}: a feasible split exists");
                     assert!(
-                        (sol.distance - want).abs() < 1e-9,
+                        (sol.total_distance() - want).abs() < 1e-9,
                         "seed {seed}: split gave {}, brute force {want}",
-                        sol.distance
+                        sol.total_distance()
                     );
                 }
                 None => assert!(
@@ -257,7 +282,7 @@ mod tests {
             let prob = random_vrp(&mut rng, n, 5, 4);
             let giant = random_tour(&mut rng, n);
             let routes = split_giant_tour(&prob, &giant, prob.penalty_weight());
-            assert_eq!(routes.len(), prob.num_vehicles);
+            assert_eq!(routes.len(), prob.num_slots());
             prob.validate_routes(&routes).unwrap();
         }
     }
@@ -269,7 +294,11 @@ mod tests {
         let giant: Vec<usize> = (1..=8).collect();
         let sol = prob.solution_from_routes(split_giant_tour(&prob, &giant, prob.penalty_weight()));
         assert_eq!(sol.overload, 0);
-        assert!(sol.route_loads.iter().all(|&l| l <= prob.capacity));
+        assert!(
+            sol.route_loads
+                .iter()
+                .all(|&l| l <= prob.vehicle_type_of_slot(0).capacity)
+        );
     }
 
     #[test]
@@ -313,7 +342,7 @@ mod tests {
             cheap.overload >= dear.overload,
             "a cheap penalty must not buy less overload than an expensive one"
         );
-        assert!(cheap.distance <= dear.distance + 1e-9);
+        assert!(cheap.total_distance() <= dear.total_distance() + 1e-9);
     }
 
     #[test]

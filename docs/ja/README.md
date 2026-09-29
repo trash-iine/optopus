@@ -33,7 +33,7 @@
 - [TSP](problems/tsp.md)
 - [Vertex Cover](problems/vertex_cover.md)
 - [Job Shop Scheduling](problems/job_shop_scheduling.md)
-- [CVRP](problems/vrp.md)
+- [VRP](problems/vrp.md)
 - [Graph Coloring](problems/graph_coloring.md)
 - [Formula](problems/formula.md)
 
@@ -54,4 +54,4 @@
 - [Meta-heuristics](heuristics/meta.md) (Sequential, Iterated (ILS), VNS, Restart)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
 - [WalkSAT (MaxSAT)](heuristics/walksat.md)
-- [Hybrid Genetic Search (CVRP)](heuristics/hgs.md)
+- [Hybrid Genetic Search (VRP)](heuristics/hgs.md)

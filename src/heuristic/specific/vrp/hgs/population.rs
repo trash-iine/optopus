@@ -19,30 +19,36 @@ pub(super) use crate::common::binary_tournament;
 #[derive(Debug, Clone)]
 pub(super) struct Individual {
     pub routes: Vec<Vec<usize>>,
-    pub distance: f64,
-    pub excess: i64,
+    /// Everything the objective charges except the penalty term: the time
+    /// component plus the weighted fleet cost, what
+    /// [`Vrp::objective_under`](crate::problem::Vrp::objective_under) adds
+    /// the penalty to.
+    pub base: f64,
+    /// `overload + time_excess + shortfall`, what the penalty multiplies;
+    /// `0.0` exactly when feasible.
+    pub violation: f64,
     adjacency: RouteAdjacency,
 }
 
 impl Individual {
     /// Builds an individual from a route partition and its evaluated caches.
-    pub(super) fn new(n: usize, routes: Vec<Vec<usize>>, distance: f64, excess: i64) -> Self {
+    pub(super) fn new(n: usize, routes: Vec<Vec<usize>>, base: f64, violation: f64) -> Self {
         let adjacency = RouteAdjacency::from_routes(n, &routes);
         Self {
             routes,
-            distance,
-            excess,
+            base,
+            violation,
             adjacency,
         }
     }
 
     /// The penalized objective under the caller's current capacity penalty.
     pub(super) fn cost(&self, penalty: f64) -> f64 {
-        self.distance + penalty * self.excess as f64
+        self.base + penalty * self.violation
     }
 
     pub(super) fn is_feasible(&self) -> bool {
-        self.excess == 0
+        self.violation == 0.0
     }
 
     /// Flattens the routes into a giant tour (route boundaries are dropped).
@@ -107,7 +113,7 @@ mod tests {
     use super::*;
 
     fn individual(n: usize, routes: Vec<Vec<usize>>, distance: f64, excess: i64) -> Individual {
-        Individual::new(n, routes, distance, excess)
+        Individual::new(n, routes, distance, excess as f64)
     }
 
     #[test]
@@ -145,14 +151,14 @@ mod tests {
         pop.push(long_feasible);
 
         assert_eq!(
-            pop.best().map(|m| m.distance),
+            pop.best().map(|m| m.base),
             Some(10.0),
             "at a penalty of 1 the excess costs 5, so the short route wins"
         );
 
         pop.set_cost(penalized(10.0));
         assert_eq!(
-            pop.best().map(|m| m.distance),
+            pop.best().map(|m| m.base),
             Some(20.0),
             "at a penalty of 10 the excess costs 50, so the feasible route wins"
         );

@@ -31,6 +31,7 @@ Read the table, open the one file you need.
 | [0021](0021-tabu-tenure-means-one-thing.md) | max_cut, benchmark | adopted | `tabu_tenure` means one thing under every kind, and the paper's `2γ` is written into the config |
 | [0022](0022-integer-problems-have-two-layers-and-no-framework-cache.md) | integer | adopted | `IntegerProblem` sits on `IntAssignment`; a move-pricing cache lives in the user's solution, not the framework |
 | [0023](0023-formula-problem-moved-onto-the-integer-layer.md) | integer | adopted | `FormulaProblem` runs on `IntAssignment` and the binary module is deleted, with identical trajectories |
+| [0024](0024-vrp-is-one-problem-with-a-fleet.md) | vrp | adopted | The VRP is one problem, homogeneous and heterogeneous fleet alike, and the unification cost nothing once the layout was fixed |
 
 ## Writing a new record
 

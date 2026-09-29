@@ -453,6 +453,7 @@ fn assert_reruns_are_bit_identical(config_toml: &str) -> BenchmarkReport {
     let second = run_benchmark(config_toml);
     for (a, b) in first.results[0].runs.iter().zip(&second.results[0].runs) {
         assert_eq!(a.status, "success");
+        assert_eq!(a.seed, b.seed, "derived per-run seed must be stable");
         assert_eq!(a.best_objective, b.best_objective, "objective diverged");
         assert_eq!(a.best_iteration, b.best_iteration, "iteration diverged");
         assert_eq!(a.solution, b.solution, "run {} diverged", a.run_index);
@@ -568,4 +569,40 @@ max_iteration = 10
     let config: BenchmarkConfig = toml::from_str(config_toml).expect("config parses");
     let result = Benchmark::run_from_config(config, "benchmark_e2e");
     assert!(result.is_err(), "empty glob must be rejected");
+}
+
+/// A heterogeneous-fleet instance goes through the same pipeline as a CVRPLIB
+/// one, the TOML format being chosen by the file extension. This pins the
+/// whole path: `ProblemKind::Vrp` with a `.toml` path, `Vrp::load_file`, a
+/// generic heuristic over a `Relocate` neighborhood, the report's
+/// depot-separated solution encoding, and bit-identical reruns under a fixed
+/// seed.
+#[test]
+fn a_fleet_vrp_instance_runs_from_toml_and_is_reproducible() {
+    let config_toml = r#"
+num_runs = 2
+seed = 2024
+
+[[instances]]
+path = "data/instances/vrp/demo_fleet.toml"
+problem = "Vrp"
+
+[[heuristics]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[heuristics.stop_condition]
+max_iteration = 2000
+"#;
+
+    let report = assert_reruns_are_bit_identical(config_toml);
+    let runs = &report.results[0].runs;
+    assert_eq!(runs.len(), 2);
+    for run in runs {
+        // The encoding is depot-separated: `0, route…, 0, route…, 0`, so every
+        // customer 1..=6 appears exactly once and the rest are depots.
+        let mut customers: Vec<usize> = run.solution.iter().copied().filter(|&c| c != 0).collect();
+        customers.sort_unstable();
+        assert_eq!(customers, (1..=6).collect::<Vec<_>>(), "{:?}", run.solution);
+    }
 }

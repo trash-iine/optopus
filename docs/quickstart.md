@@ -65,8 +65,9 @@ let tsp = Tsp::load_file("data/instances/tsp/burma14.tsp")?;
 // Job Shop Scheduling loader (Taillard / OR-Library):
 let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 
-// CVRP loader (CVRPLIB):
+// VRP loader (CVRPLIB, or a heterogeneous-fleet TOML file by extension):
 let vrp = Vrp::load_file("data/instances/vrp/X-n101-k25.vrp")?;
+let fleet = Vrp::load_file("data/instances/vrp/demo_fleet.toml")?;
 ```
 
 Each loader's file format is documented on the corresponding problem page.
