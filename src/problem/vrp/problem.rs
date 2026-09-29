@@ -389,8 +389,17 @@ impl Vrp {
         }
     }
 
-    /// Validates that `routes` visits every customer `1..=n` exactly once.
+    /// Validates that `routes` is a solution of this instance: one route per
+    /// vehicle, empty ones included, visiting every customer `1..=n` exactly
+    /// once.
     pub fn validate_routes(&self, routes: &[Vec<usize>]) -> Result<(), OptError> {
+        if routes.len() != self.num_vehicles {
+            return Err(OptError::InvalidState(format!(
+                "{} routes for a fleet of {} vehicles; give one route per vehicle, empty ones included",
+                routes.len(),
+                self.num_vehicles
+            )));
+        }
         let n = self.get_n();
         let mut seen = vec![false; n + 1];
         let mut count = 0;
@@ -725,6 +734,20 @@ mod tests {
         assert!(vrp.validate_routes(&[vec![1, 1, 3, 4], vec![]]).is_err());
         assert!(vrp.validate_routes(&[vec![1, 2, 3], vec![]]).is_err());
         assert!(vrp.validate_routes(&[vec![1, 2, 3, 5], vec![]]).is_err());
+    }
+
+    /// The fleet is part of the instance, so a partition with more routes than
+    /// vehicles, or fewer, is not a solution of it.
+    #[test]
+    fn validate_routes_detects_a_route_count_other_than_the_fleet() {
+        let vrp = square_vrp();
+        assert_eq!(vrp.num_vehicles, 2);
+        assert!(vrp.validate_routes(&[vec![1, 2, 3, 4]]).is_err());
+        assert!(
+            vrp.validate_routes(&[vec![1, 2], vec![3], vec![4]])
+                .is_err()
+        );
+        assert!(vrp.validate_routes(&[vec![], vec![1, 2, 3, 4]]).is_ok());
     }
 
     #[test]
