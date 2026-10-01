@@ -69,10 +69,10 @@ pub struct BranchAndBound<P, R> {
     pub heuristic: Box<dyn Heuristic<P>>,
     /// The bound a node is pruned by.
     pub relaxation: R,
+    /// The nodes not yet taken. A run starts from the whole problem with no
+    /// bound, so it is searched before anything is bounded and the first
+    /// bounds are computed against a searched incumbent.
     open: BinaryHeap<Node>,
-    /// Whether the whole problem is still to be opened, which the first
-    /// iteration of a run does since only the state knows the problem.
-    root_pending: bool,
 }
 
 /// An open node, the ranges narrowed from the whole problem's and the bound
@@ -85,6 +85,14 @@ struct Node {
 }
 
 impl Node {
+    /// The whole problem, not yet bounded.
+    fn root() -> Self {
+        Node {
+            bound: f64::NEG_INFINITY,
+            narrowed: vec![],
+        }
+    }
+
     fn ranges(&self, whole: &IntVars) -> IntVars {
         narrow(whole, &self.narrowed)
     }
@@ -137,8 +145,7 @@ impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
             stop_condition,
             heuristic,
             relaxation,
-            open: BinaryHeap::new(),
-            root_pending: true,
+            open: BinaryHeap::from([Node::root()]),
         }
     }
 
@@ -148,11 +155,7 @@ impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
     /// problem has been searched and split once.
     pub fn dual_bound(&self, incumbent: &P::Solution) -> Evaluable<f64> {
         let incumbent = incumbent.evaluate();
-        let open = if self.root_pending {
-            f64::NEG_INFINITY
-        } else {
-            self.open.peek().map_or(f64::INFINITY, |n| n.bound)
-        };
+        let open = self.open.peek().map_or(f64::INFINITY, |n| n.bound);
         directed_like(incumbent, open.min(incumbent.minimized()))
     }
 
@@ -160,7 +163,7 @@ impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
     /// a bound.
     pub fn is_proven_optimal(&self, incumbent: &P::Solution) -> bool {
         let best = incumbent.evaluate().minimized();
-        !self.root_pending && self.open.peek().is_none_or(|n| n.bound >= best)
+        self.open.peek().is_none_or(|n| n.bound >= best)
     }
 
     /// The bound of `vars`, lower being better, after checking the relaxation
@@ -193,7 +196,7 @@ fn directed_like(like: Evaluable<f64>, minimized: f64) -> Evaluable<f64> {
 impl<P: BranchSpace, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
     fn clear(&mut self) {
         self.open.clear();
-        self.root_pending = true;
+        self.open.push(Node::root());
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -202,7 +205,7 @@ impl<P: BranchSpace, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
 
     /// Done when the stop condition is met, or when no node is left open.
     fn is_done<'a>(&self, state: &SearchState<'a, P>) -> bool {
-        self.stop_condition.is_done(state) || (!self.root_pending && self.open.is_empty())
+        self.stop_condition.is_done(state) || self.open.is_empty()
     }
 
     /// Takes the open node with the best bound, and prunes, evaluates or
@@ -211,26 +214,16 @@ impl<P: BranchSpace, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
         let prob = state.instance;
         let whole = prob.ranges();
         let whole = whole.as_ref();
-        if self.root_pending {
-            if whole.is_permutation() {
-                return Err(OptError::Config(
-                    "BranchAndBound narrows one variable at a time, which a permutation \
-                     does not allow"
-                        .into(),
-                ));
-            }
-            // The whole problem is searched before anything is bounded, so the
-            // first bounds are computed against a searched incumbent rather than
-            // the state's starting solution.
-            self.open.push(Node {
-                bound: f64::NEG_INFINITY,
-                narrowed: vec![],
-            });
-            self.root_pending = false;
-        }
         let Some(node) = self.open.pop() else {
             return Ok(());
         };
+        if node.narrowed.is_empty() && whole.is_permutation() {
+            return Err(OptError::Config(
+                "BranchAndBound narrows one variable at a time, which a permutation \
+                 does not allow"
+                    .into(),
+            ));
+        }
         state.progress_iteration();
         if node.bound >= state.best_solution.evaluate().minimized() {
             return Ok(());

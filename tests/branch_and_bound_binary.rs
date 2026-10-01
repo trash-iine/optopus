@@ -415,21 +415,14 @@ fn max_cut_optimum_is_proven_with_the_eigenvalue_bound() {
     let mut rng = SmallRng::seed_from_u64(11);
     for seed in 0..4 {
         let prob = random_max_cut(&mut rng, 14);
-        let mut bnb = BranchAndBound::new(
-            StopCondition::new(None, None, None),
+        check_proves_optimum(
+            &prob,
             Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
                 StopCondition::iterations(50),
             )),
             EigenvalueRelaxation::new(),
+            seed,
         );
-        let mut state = SearchState::new_with_seed(&prob, seed);
-        bnb.run(&mut state).unwrap();
-        let enumerated = best(&objectives_within(
-            &prob,
-            &vec![None; variable_slots(&prob)],
-        ));
-        assert!((state.best_solution.evaluate().minimized() - enumerated).abs() < 1e-6);
-        assert!(bnb.is_proven_optimal(&state.best_solution));
     }
 }
 

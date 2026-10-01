@@ -2,7 +2,7 @@
 
 use super::problem::MaxCut;
 use crate::problem::branch::{Relaxation, fixed_by};
-use crate::problem::integer::IntVars;
+use crate::problem::integer::{IntVars, raw};
 use crate::trait_defs::{Evaluable, FixVariables};
 
 /// The eigenvalue bound of Delorme and Poljak, a [`Relaxation`] of MaxCut much
@@ -109,9 +109,7 @@ impl EigenvalueRelaxation {
     /// found so far if any.
     fn cut_bound(&self, prob: &MaxCut, vars: &IntVars, incumbent: Option<f64>) -> f64 {
         let fixed = prob.fix(&fixed_by(vars));
-        let positive = match fixed.target.trivial_bound() {
-            Evaluable::Maximize(b) | Evaluable::Minimize(b) => fixed.offset + b,
-        };
+        let positive = fixed.offset + raw(fixed.target.trivial_bound());
         let lap = Laplacian::of(&fixed.target);
         if lap.n == 0 || lap.n > self.certify_limit {
             return positive;
@@ -123,6 +121,11 @@ impl EigenvalueRelaxation {
             if integral { goal + 1.0 } else { goal }
         });
         let best = self.subgradient(&lap, prune_below);
+        // A certified bound is above the estimate, so an estimate already at
+        // the positive weights cannot improve on them.
+        if fixed.offset + best.value >= positive {
+            return positive;
+        }
         let Some(certified) = certify(&lap, &best) else {
             return positive;
         };
@@ -134,39 +137,22 @@ impl EigenvalueRelaxation {
     /// `prune_below` when there is one.
     fn subgradient(&self, lap: &Laplacian, prune_below: Option<f64>) -> Estimate {
         let n = lap.n as f64;
+        let value_at = |theta: f64, u: &[f64]| 0.25 * n * theta - 0.25 * u.iter().sum::<f64>();
         let mean = lap.diag.iter().sum::<f64>() / n;
         let mut u: Vec<f64> = lap.diag.iter().map(|d| mean - d).collect();
-        let mut v: Vec<f64> = (0..lap.n).map(start_component).collect();
-        let mut best: Option<Estimate> = None;
+        let start: Vec<f64> = (0..lap.n).map(start_component).collect();
+        let (mut theta, mut v) = lanczos_top(lap, &u, &start, self.lanczos_steps);
+        let mut value = value_at(theta, &u);
+        let mut best = Estimate {
+            value,
+            theta,
+            u: u.clone(),
+            v: v.clone(),
+        };
         let mut mu = 2.0;
         let mut since_improved = 0;
-        for _ in 0..self.max_iterations {
-            let (theta, top) = lanczos_top(lap, &u, &v, self.lanczos_steps);
-            v = top;
-            let value = 0.25 * n * theta - 0.25 * u.iter().sum::<f64>();
-            match &best {
-                Some(b) if value >= b.value - 1e-9 * b.value.abs() => {
-                    since_improved += 1;
-                    if since_improved >= PATIENCE {
-                        mu /= 2.0;
-                        since_improved = 0;
-                    }
-                }
-                _ => {
-                    best = Some(Estimate {
-                        value,
-                        theta,
-                        u: u.clone(),
-                        v: v.clone(),
-                    });
-                    since_improved = 0;
-                }
-            }
-            let best_value = best.as_ref().map_or(value, |b| b.value);
-            if mu < MIN_STEP_SCALE {
-                break;
-            }
-            if prune_below.is_some_and(|stop| best_value < stop) {
+        for _ in 1..self.max_iterations {
+            if mu < MIN_STEP_SCALE || prune_below.is_some_and(|stop| best.value < stop) {
                 break;
             }
             let g: Vec<f64> = v.iter().map(|x| 0.25 * n * (x * x - 1.0 / n)).collect();
@@ -177,7 +163,7 @@ impl EigenvalueRelaxation {
             // Aim at the incumbent, but no lower than a little below the best
             // estimate: a target far below the bound makes Polyak's steps
             // overshoot, and the node is not pruned anyway.
-            let own = best_value - 0.05 * best_value.abs() - 1.0;
+            let own = best.value - 0.05 * best.value.abs() - 1.0;
             let aim = match prune_below {
                 Some(stop) if stop < value => stop.max(own),
                 _ => own,
@@ -186,8 +172,25 @@ impl EigenvalueRelaxation {
             for (ui, gi) in u.iter_mut().zip(&g) {
                 *ui -= step * gi;
             }
+            (theta, v) = lanczos_top(lap, &u, &v, self.lanczos_steps);
+            value = value_at(theta, &u);
+            if value < best.value - 1e-9 * best.value.abs() {
+                best = Estimate {
+                    value,
+                    theta,
+                    u: u.clone(),
+                    v: v.clone(),
+                };
+                since_improved = 0;
+            } else {
+                since_improved += 1;
+                if since_improved >= PATIENCE {
+                    mu /= 2.0;
+                    since_improved = 0;
+                }
+            }
         }
-        best.expect("at least one iteration runs")
+        best
     }
 }
 
@@ -235,8 +238,6 @@ struct Laplacian {
     adj: Vec<Vec<(usize, f64)>>,
     /// The weighted degrees, `L_ii`.
     diag: Vec<f64>,
-    /// `Σ_j |w_ij|`, which bounds the rounding of `diag`.
-    abs_row: Vec<f64>,
     weights_integral: bool,
 }
 
@@ -263,15 +264,10 @@ impl Laplacian {
             .iter()
             .map(|row| row.iter().map(|e| e.1).sum())
             .collect();
-        let abs_row = adj
-            .iter()
-            .map(|row| row.iter().map(|e| e.1.abs()).sum())
-            .collect();
         Self {
             n,
             adj,
             diag,
-            abs_row,
             weights_integral,
         }
     }
@@ -454,7 +450,8 @@ fn is_positive_definite_shifted(lap: &Laplacian, u: &[f64], s: f64) -> bool {
         // The weighted degree carries at most deg·eps·Σ|w| of rounding, the two
         // subtractions eps of their operands each. Doubled for the products.
         let deg = lap.adj[i].len() as f64;
-        err[i] = 2.0 * (deg + 4.0) * EPS * (s.abs() + u[i].abs() + lap.abs_row[i]);
+        let abs_row: f64 = lap.adj[i].iter().map(|e| e.1.abs()).sum();
+        err[i] = 2.0 * (deg + 4.0) * EPS * (s.abs() + u[i].abs() + abs_row);
         if d - err[i] <= 0.0 {
             return false;
         }
@@ -499,7 +496,7 @@ fn cholesky_completes(a: &mut [f64], n: usize) -> bool {
     for j in 0..n {
         let row_j = &a[j * n..j * n + j];
         let pivot = a[j * n + j] - dot(row_j, row_j);
-        if pivot.is_nan() || pivot <= 0.0 || !pivot.is_finite() {
+        if pivot <= 0.0 || !pivot.is_finite() {
             return false;
         }
         let pivot = pivot.sqrt();
