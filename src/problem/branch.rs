@@ -14,8 +14,8 @@
 
 use std::borrow::Cow;
 
-use super::integer::{IntAssignment, IntVar, IntVars};
-use crate::common::{BinaryFixing, binary_solution_from_values, variable_slots};
+use super::integer::{IntAssignment, IntVar, IntVars, raw, with_value};
+use crate::common::{BinaryFixing, variable_slots};
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
 use crate::trait_defs::{BinaryProblem, FixVariables, ProblemReduction};
 use rand::SeedableRng;
@@ -93,7 +93,7 @@ pub fn binary_node<P: FixVariables>(prob: &P, ranges: &IntVars) -> BinaryFixing<
 /// [`BranchSpace::solution_with`] of a binary problem.
 pub fn binary_solution_with<P: BinaryProblem>(prob: &P, values: Vec<i64>) -> P::Solution {
     let values: Vec<bool> = values.into_iter().map(|v| v != 0).collect();
-    binary_solution_from_values(prob, &values)
+    prob.solution_from_assignment(&values)
 }
 
 /// The value each variable is held at, where its range holds one.
@@ -144,10 +144,8 @@ pub struct BinaryRelaxation;
 impl<P: FixVariables> Relaxation<P> for BinaryRelaxation {
     fn bound(&mut self, prob: &P, vars: &IntVars) -> Evaluable<f64> {
         let fixed = prob.fix(&fixed_by(vars));
-        match fixed.target.trivial_bound() {
-            Evaluable::Maximize(b) => Evaluable::Maximize(b + fixed.offset),
-            Evaluable::Minimize(b) => Evaluable::Minimize(b + fixed.offset),
-        }
+        let b = fixed.target.trivial_bound();
+        with_value(b, raw(b) + fixed.offset)
     }
 }
 

@@ -103,54 +103,46 @@ pub fn variable_slots<P: BinaryProblem>(prob: &P) -> usize {
     prob.variable_indices().max().map_or(0, |i| i + 1)
 }
 
-/// The solution of `prob` assigning `values[i]` to each variable `i`, built
-/// from a solution drawn with a fixed seed by flipping the variables that
-/// differ. The flips keep whatever the solution caches up to date, so this
-/// needs nothing of the problem beyond [`BinaryProblem`].
-pub fn binary_solution_from_values<P: BinaryProblem>(prob: &P, values: &[bool]) -> P::Solution {
-    use rand::SeedableRng;
-    let mut sol = prob.new_solution(&mut rand::rngs::SmallRng::seed_from_u64(0));
-    let indices: Vec<usize> = prob.variable_indices().collect();
-    for i in indices {
-        if P::variable(&sol, i) != values[i] {
-            P::flip_move(&sol, i)
-                .apply_to_solution(prob, &mut sol)
-                .expect("flip on a valid variable index cannot fail");
-        }
-    }
-    sol
-}
-
 /// Variables fixed by [`FixVariables::fix`] as a map from the whole problem
 /// onto the folded instance, so that a heuristic of the problem crosses into
 /// it and back through
 /// [`SearchState::open_reduction`](crate::search_state::SearchState::open_reduction)
 /// and [`close_reduction`](crate::search_state::SearchState::close_reduction).
 pub struct BinaryFixing<P> {
+    /// Every `Placed::Free(t)` and the reference name a variable of the
+    /// folded instance, which `new` sees to.
     fixed: FixedVariables<P>,
-    /// Whether each index of the folded instance is one of its variables. A
-    /// free variable the folding left with no terms is not, and reads as
-    /// `false`, which costs nothing since it changes no objective.
-    present: Vec<bool>,
+    /// The folded instance's number of variable indices.
+    slots: usize,
 }
 
 impl<P: FixVariables> BinaryFixing<P> {
     /// `fixed` as a map onto its folded instance.
-    pub fn new(fixed: FixedVariables<P>) -> Self {
-        let mut present = vec![false; variable_slots(&fixed.target)];
+    ///
+    /// A free variable the folding left with no terms is not a variable of
+    /// the folded instance, and is held at `false` instead, which changes no
+    /// objective.
+    pub fn new(mut fixed: FixedVariables<P>) -> Self {
+        let slots = variable_slots(&fixed.target);
+        let mut present = vec![false; slots];
         for i in fixed.target.variable_indices() {
             present[i] = true;
         }
-        Self { fixed, present }
+        let is_variable = |t: usize| present.get(t).copied().unwrap_or(false);
+        for placed in &mut fixed.placed {
+            if let Placed::Free(t) = *placed
+                && !is_variable(t)
+            {
+                *placed = Placed::Fixed(false);
+            }
+        }
+        fixed.reference = fixed.reference.filter(|&r| is_variable(r));
+        Self { fixed, slots }
     }
 
     /// What the folded instance contributes on top of its own objective.
     pub fn offset(&self) -> f64 {
         self.fixed.offset
-    }
-
-    fn read(&self, sol: &P::Solution, t: usize) -> bool {
-        self.present.get(t).copied().unwrap_or(false) && P::variable(sol, t)
     }
 }
 
@@ -165,30 +157,28 @@ impl<P: FixVariables> ProblemReduction for BinaryFixing<P> {
     /// The free variables keep their values, read against a reference
     /// variable held at `false`.
     fn project(&self, sol: &P::Solution) -> P::Solution {
-        let mut values = vec![false; self.present.len()];
+        let mut values = vec![false; self.slots];
         for (i, placed) in self.fixed.placed.iter().enumerate() {
-            if let Placed::Free(t) = *placed
-                && t < values.len()
-            {
+            if let Placed::Free(t) = *placed {
                 values[t] = P::variable(sol, i);
             }
         }
-        binary_solution_from_values(&self.fixed.target, &values)
+        self.fixed.target.solution_from_assignment(&values)
     }
 
     /// The fixed variables at their values, the free ones read from `sol`.
     fn lift(&self, source: &P, _base: &P::Solution, sol: &P::Solution) -> P::Solution {
-        let flip = self.fixed.reference.is_some_and(|r| self.read(sol, r));
+        let flip = self.fixed.reference.is_some_and(|r| P::variable(sol, r));
         let values: Vec<bool> = self
             .fixed
             .placed
             .iter()
             .map(|placed| match *placed {
                 Placed::Fixed(value) => value,
-                Placed::Free(t) => self.read(sol, t) != flip,
+                Placed::Free(t) => P::variable(sol, t) != flip,
             })
             .collect();
-        binary_solution_from_values(source, &values)
+        source.solution_from_assignment(&values)
     }
 }
 

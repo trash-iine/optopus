@@ -24,7 +24,7 @@
 | `Crossover<P>` | `GeneticAlgorithm` (`Distance` も必要、下を参照) | `fn crossover(&mut self, prob, sol1, sol2, rng: &mut SmallRng) -> Result<P::Solution, OptError>` (`&mut self` なので状態を持つオペレータがサブヒューリスティクスを走らせられる) |
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
 | `Distance` (`Solution` に実装) | `GeneticAlgorithm`。`ParentSelection::DistantTopK` に限らずどの選択戦略でも必要 | `fn distance(&self, other: &Self) -> usize` |
-| `BinaryProblem` | `common::binary` にある共通の二値機構 | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip` |
+| `BinaryProblem` | `common::binary` にある共通の二値機構 | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip`<br>`fn solution_from_assignment(&self, values: &[bool]) -> Solution` (既定はシード付きの解からの flip) |
 | `FixVariables` | 二値問題での `BranchAndBound` | `fn fix(&self, fixed: &[Option<bool>]) -> FixedVariables<Self>;`<br>`fn trivial_bound(&self) -> Evaluable<f64>` |
 | `Branchable` | 整数問題での `BranchAndBound` | `fn restricted(&self, vars: IntVars) -> Self;`<br>`fn solution_from_values(&self, values: Vec<i64>) -> Solution` (既定あり) |
 | `Relaxation<P>` | `BranchAndBound` | `fn bound(&mut self, prob: &P, vars: &IntVars) -> Evaluable<f64>;`<br>`fn branch_hint(&mut self, prob: &P, vars: &IntVars) -> Option<usize>` (既定は `None`)。クロージャ `\|prob, vars\| -> Evaluable<f64>` も緩和になります。 |

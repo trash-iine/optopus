@@ -35,3 +35,4 @@ pub use formula::{
 };
 pub use neighbor::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor};
 pub use problem::{ChangeDelta, IntSolution, IntVar, IntVars, IntegerProblem, NoDelta, PairDelta};
+pub(crate) use problem::{raw, with_value};

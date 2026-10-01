@@ -171,6 +171,10 @@ impl crate::trait_defs::BinaryProblem for VertexCover {
             gain: sol.gain[i],
         }
     }
+
+    fn solution_from_assignment(&self, values: &[bool]) -> VertexCoverSolution {
+        VertexCover::solution_from_assignment(self, values)
+    }
 }
 
 #[cfg(test)]

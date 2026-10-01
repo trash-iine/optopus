@@ -23,6 +23,25 @@ pub trait BinaryProblem: ProblemTrait + Sized {
 
     /// Returns the flip move for variable `i`, carrying the gain cached in `sol`.
     fn flip_move(sol: &Self::Solution, i: usize) -> Self::Flip;
+
+    /// The solution assigning `values[i]` to each variable `i`, `values`
+    /// covering every variable index.
+    ///
+    /// The default starts from a solution drawn with a fixed seed and flips
+    /// each variable that differs, which keeps whatever the solution caches up
+    /// to date. The built-in problems build the solution directly instead.
+    fn solution_from_assignment(&self, values: &[bool]) -> Self::Solution {
+        use rand::SeedableRng;
+        let mut sol = self.new_solution(&mut rand::rngs::SmallRng::seed_from_u64(0));
+        for i in self.variable_indices() {
+            if Self::variable(&sol, i) != values[i] {
+                Self::flip_move(&sol, i)
+                    .apply_to_solution(self, &mut sol)
+                    .expect("flip on a valid variable index cannot fail");
+            }
+        }
+        sol
+    }
 }
 
 /// A binary problem that can fix some of its variables and fold them into a

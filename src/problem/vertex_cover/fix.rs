@@ -14,12 +14,6 @@ impl FixVariables for VertexCover {
     /// whole one does, its penalty following its own size, so the two agree on
     /// the best solution rather than on every one.
     fn fix(&self, fixed: &[Option<bool>]) -> FixedVariables<VertexCover> {
-        let mut placed = vec![Placed::Fixed(false); fixed.len()];
-        for &v in self.graph.iter_on_vertices() {
-            if let Some(value) = fixed[v] {
-                placed[v] = Placed::Fixed(value);
-            }
-        }
         let mut forced = vec![false; fixed.len()];
         for (u, v, _) in self.graph.edges() {
             match (fixed[u], fixed[v]) {
@@ -28,16 +22,17 @@ impl FixVariables for VertexCover {
                 _ => {}
             }
         }
+        let mut placed = vec![Placed::Fixed(false); fixed.len()];
         let mut free = 0;
         for &v in self.graph.iter_on_vertices() {
-            if fixed[v].is_none() {
-                placed[v] = if forced[v] {
-                    Placed::Fixed(true)
-                } else {
+            placed[v] = match fixed[v] {
+                Some(value) => Placed::Fixed(value),
+                None if forced[v] => Placed::Fixed(true),
+                None => {
                     free += 1;
                     Placed::Free(free - 1)
-                };
-            }
+                }
+            };
         }
         let mut graph = Graph::new();
         let mut uncovered = 0;

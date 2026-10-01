@@ -3,7 +3,7 @@
 //! of a node, and the optimum a native heuristic helps prove is the one
 //! enumeration finds.
 
-use optopus::common::{BinaryFixing, binary_solution_from_values, variable_slots};
+use optopus::common::{BinaryFixing, variable_slots};
 use optopus::prelude::*;
 use optopus::problem::{BranchSpace, Relaxation};
 use optopus::trait_defs::{BinaryProblem, FixVariables, ProblemReduction};
@@ -52,15 +52,7 @@ fn random_sat(rng: &mut SmallRng, n: usize) -> Sat {
 }
 
 fn random_vertex_cover(rng: &mut SmallRng, n: usize) -> VertexCover {
-    let mut graph = Graph::new();
-    for i in 0..n {
-        for j in i + 1..n {
-            if rng.random_bool(0.35) {
-                graph.add_edge(i, j);
-            }
-        }
-    }
-    VertexCover::new(graph)
+    VertexCover::new(Graph::erdos_renyi(n, 0.35, rng))
 }
 
 /// A random partial assignment, every index that is not a variable at `false`.
@@ -99,7 +91,7 @@ fn objectives_within<P: FixVariables>(prob: &P, fixed: &[Option<bool>]) -> Vec<f
             for (k, &i) in free.iter().enumerate() {
                 values[i] = mask >> k & 1 == 1;
             }
-            binary_solution_from_values(prob, &values)
+            prob.solution_from_assignment(&values)
                 .evaluate()
                 .minimized()
         })
@@ -112,8 +104,7 @@ fn best(objectives: &[f64]) -> f64 {
 
 /// The offset added to the folded objective, lower being better.
 fn offset_minimized<P: FixVariables>(prob: &P, reduction: &BinaryFixing<P>) -> f64 {
-    let whole = binary_solution_from_values(prob, &vec![false; variable_slots(prob)]);
-    match whole.evaluate() {
+    match prob.trivial_bound() {
         Evaluable::Maximize(_) => -reduction.offset(),
         Evaluable::Minimize(_) => reduction.offset(),
     }
@@ -125,14 +116,14 @@ fn check_exact_folding<P: FixVariables>(prob: &P, fixed: &[Option<bool>]) {
     let reduction = BinaryFixing::new(prob.fix(fixed));
     let offset = offset_minimized(prob, &reduction);
     let target = reduction.target();
-    let base = binary_solution_from_values(prob, &vec![false; variable_slots(prob)]);
+    let base = prob.solution_from_assignment(&vec![false; variable_slots(prob)]);
     let vars: Vec<usize> = target.variable_indices().collect();
     for mask in 0..1u32 << vars.len() {
         let mut values = vec![false; variable_slots(target)];
         for (k, &t) in vars.iter().enumerate() {
             values[t] = mask >> k & 1 == 1;
         }
-        let folded = binary_solution_from_values(target, &values);
+        let folded = target.solution_from_assignment(&values);
         let lifted = reduction.lift(prob, &base, &folded);
         for (i, f) in fixed.iter().enumerate() {
             if let Some(v) = f {
@@ -173,17 +164,17 @@ fn check_bound_covers_the_node<P: FixVariables>(prob: &P, fixed: &[Option<bool>]
     );
 }
 
-/// Runs branch-and-bound with `inner` and checks it proves the enumerated
-/// optimum.
-fn check_proves_optimum<P>(prob: &P, inner: Box<dyn Heuristic<P>>, seed: u64)
-where
+/// Runs branch-and-bound with `inner` and `relaxation` and checks it proves
+/// the enumerated optimum.
+fn check_proves_optimum<P>(
+    prob: &P,
+    inner: Box<dyn Heuristic<P>>,
+    relaxation: impl Relaxation<P>,
+    seed: u64,
+) where
     P: FixVariables + BranchSpace,
 {
-    let mut bnb = BranchAndBound::new(
-        StopCondition::new(None, None, None),
-        inner,
-        BinaryRelaxation,
-    );
+    let mut bnb = BranchAndBound::new(StopCondition::new(None, None, None), inner, relaxation);
     let mut state = SearchState::new_with_seed(prob, seed);
     bnb.run(&mut state).unwrap();
     let found = state.best_solution.evaluate().minimized();
@@ -249,6 +240,7 @@ fn max_cut_optimum_is_proven_with_native_heuristics() {
             Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
                 StopCondition::iterations(50),
             )),
+            BinaryRelaxation,
             seed,
         );
         check_proves_optimum(
@@ -257,6 +249,7 @@ fn max_cut_optimum_is_proven_with_native_heuristics() {
                 StopCondition::iterations(30),
                 (2, 4),
             )),
+            BinaryRelaxation,
             seed,
         );
         check_proves_optimum(
@@ -269,6 +262,7 @@ fn max_cut_optimum_is_proven_with_native_heuristics() {
                 0.5,
                 0.5,
             )),
+            BinaryRelaxation,
             seed,
         );
     }
@@ -285,6 +279,7 @@ fn qubo_optimum_is_proven_with_native_heuristics() {
                 StopCondition::iterations(30),
                 (2, 4),
             )),
+            BinaryRelaxation,
             seed,
         );
         check_proves_optimum(
@@ -294,6 +289,7 @@ fn qubo_optimum_is_proven_with_native_heuristics() {
                 2.0,
                 0.98,
             )),
+            BinaryRelaxation,
             seed,
         );
     }
@@ -309,6 +305,7 @@ fn sat_optimum_is_proven_with_native_heuristics() {
             Box::new(LocalSearch::<SatFlipNeighbor>::new(
                 StopCondition::iterations(50),
             )),
+            BinaryRelaxation,
             seed,
         );
         check_proves_optimum(
@@ -318,6 +315,7 @@ fn sat_optimum_is_proven_with_native_heuristics() {
                 0.3,
                 false,
             )),
+            BinaryRelaxation,
             seed,
         );
     }
@@ -333,6 +331,7 @@ fn vertex_cover_optimum_is_proven_with_native_heuristics() {
             Box::new(LocalSearch::<VertexCoverFlipNeighbor>::new(
                 StopCondition::iterations(50),
             )),
+            BinaryRelaxation,
             seed,
         );
     }

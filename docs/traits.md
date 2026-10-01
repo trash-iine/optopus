@@ -29,7 +29,7 @@ the section below the table.
 | `Crossover<P>` | `GeneticAlgorithm` (which also requires `Distance`, see below) | `fn crossover(&mut self, prob, sol1, sol2, rng: &mut SmallRng) -> Result<P::Solution, OptError>` (`&mut self` lets stateful operators run a sub-heuristic) |
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
 | `Distance` (on `Solution`) | `GeneticAlgorithm`, any selection strategy, not only `ParentSelection::DistantTopK` | `fn distance(&self, other: &Self) -> usize` |
-| `BinaryProblem` | the shared binary machinery in `common::binary` | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip` |
+| `BinaryProblem` | the shared binary machinery in `common::binary` | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip`<br>`fn solution_from_assignment(&self, values: &[bool]) -> Solution` (default: flips from a seeded solution) |
 | `FixVariables` | `BranchAndBound` on a binary problem | `fn fix(&self, fixed: &[Option<bool>]) -> FixedVariables<Self>;`<br>`fn trivial_bound(&self) -> Evaluable<f64>` |
 | `Branchable` | `BranchAndBound` on an integer problem | `fn restricted(&self, vars: IntVars) -> Self;`<br>`fn solution_from_values(&self, values: Vec<i64>) -> Solution` (defaulted) |
 | `Relaxation<P>` | `BranchAndBound` | `fn bound(&mut self, prob: &P, vars: &IntVars) -> Evaluable<f64>;`<br>`fn branch_hint(&mut self, prob: &P, vars: &IntVars) -> Option<usize>` (default `None`). A closure `\|prob, vars\| -> Evaluable<f64>` is one. |
