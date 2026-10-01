@@ -131,6 +131,13 @@ from either parent, or on a permutation keeps a segment of one parent and
 fills the rest in the other's order. So `GeneticAlgorithm` runs with
 `IntCrossover` as its crossover.
 
+## Proving an optimum
+
+[`BranchAndBound`](../heuristics/branch_and_bound.md) searches an
+`IntegerProblem` exactly, given a bound on what narrower ranges can hold. A
+solution type of your own takes part by implementing `Branchable`, whose one
+required method returns the same problem over narrower ranges.
+
 ## Objectives written as formulas
 
 When the objective and the constraints are arithmetic over the variables,
