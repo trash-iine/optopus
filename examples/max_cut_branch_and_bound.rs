@@ -3,22 +3,32 @@
 //!
 //! The fixed vertices of a node are folded into one reference vertex, so the
 //! node is itself a MaxCut and any MaxCut heuristic searches it. The bound is
-//! the folding's constant plus the positive weights left, which is weak, so
-//! the instance is kept to a few dozen vertices.
+//! the eigenvalue bound of the folded graph, or with `positive` the positive
+//! weights left, which is far weaker.
 //!
 //! Run with:
 //! ```
-//! cargo run --release --example max_cut_branch_and_bound
+//! cargo run --release --example max_cut_branch_and_bound -- [vertices] [eigen|positive]
 //! ```
 
 use optopus::prelude::*;
+use optopus::problem::Relaxation;
 
 fn main() {
     let n: usize = std::env::args()
         .nth(1)
         .map_or(24, |a| a.parse().expect("the number of vertices"));
+    let relaxation = std::env::args().nth(2).unwrap_or_else(|| "eigen".into());
     let prob = MaxCut::new(Graph::erdos_renyi(n, 0.3, &mut seeded_rng(1)));
+    match relaxation.as_str() {
+        "eigen" => solve(&prob, EigenvalueRelaxation::new()),
+        "positive" => solve(&prob, BinaryRelaxation),
+        other => panic!("unknown relaxation {other}, expected eigen or positive"),
+    }
+}
 
+fn solve(prob: &MaxCut, relaxation: impl Relaxation<MaxCut>) {
+    let n = prob.graph.len();
     let mut bnb = BranchAndBound::new(
         StopCondition::new(None, None, None),
         Box::new(bls_for_max_cut(
@@ -29,9 +39,9 @@ fn main() {
             0.8,
             0.5,
         )),
-        BinaryRelaxation,
+        relaxation,
     );
-    let mut state = SearchState::new_with_seed(&prob, 42);
+    let mut state = SearchState::new_with_seed(prob, 42);
     bnb.run(&mut state).unwrap();
 
     println!("vertices = {n}, edges = {}", prob.graph.num_edges());
