@@ -103,3 +103,6 @@ pub use crate::problem::{
     VrpSwapNeighbor,
     VrpTwoOptNeighbor,
 };
+
+// The eigenvalue bound of MaxCut, a relaxation for BranchAndBound
+pub use crate::problem::EigenvalueRelaxation;

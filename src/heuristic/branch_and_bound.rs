@@ -144,8 +144,8 @@ impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
 
     /// The best objective an assignment not yet ruled out could reach, in the
     /// direction of `incumbent`. It equals the incumbent's objective once the
-    /// search has proven it optimal, and before the first iteration it is
-    /// unbounded.
+    /// search has proven it optimal, and it is unbounded until the whole
+    /// problem has been searched and split once.
     pub fn dual_bound(&self, incumbent: &P::Solution) -> Evaluable<f64> {
         let incumbent = incumbent.evaluate();
         let open = if self.root_pending {
@@ -171,7 +171,7 @@ impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
         vars: &IntVars,
         incumbent: Evaluable<f64>,
     ) -> Result<f64, OptError> {
-        let bound = self.relaxation.bound(prob, vars);
+        let bound = self.relaxation.bound_against(prob, vars, incumbent);
         if std::mem::discriminant(&bound) != std::mem::discriminant(&incumbent) {
             return Err(OptError::Config(format!(
                 "BranchAndBound: the relaxation returned {bound:?} for a problem whose \
@@ -219,9 +219,11 @@ impl<P: BranchSpace, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
                         .into(),
                 ));
             }
-            let bound = self.bound(prob, whole, state.best_solution.evaluate())?;
+            // The whole problem is searched before anything is bounded, so the
+            // first bounds are computed against a searched incumbent rather than
+            // the state's starting solution.
             self.open.push(Node {
-                bound,
+                bound: f64::NEG_INFINITY,
                 narrowed: vec![],
             });
             self.root_pending = false;
