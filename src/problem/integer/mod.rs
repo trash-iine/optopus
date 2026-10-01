@@ -23,15 +23,12 @@
 //! [`IntCrossover`] brings the genetic algorithm to both.
 
 mod assignment;
-mod branch;
 mod crossover;
 mod formula;
 mod neighbor;
 mod problem;
 
 pub use assignment::IntAssignment;
-pub(crate) use branch::DomainRestriction;
-pub use branch::{Branchable, Relaxation};
 pub use crossover::IntCrossover;
 pub use formula::{
     Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntervalRelaxation,

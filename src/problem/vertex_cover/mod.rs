@@ -8,6 +8,7 @@
 //! `penalty_weight = n + 1` so the global optimum is always feasible.
 
 mod crossover;
+mod fix;
 mod neighbor;
 mod problem;
 

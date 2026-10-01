@@ -18,7 +18,11 @@
 //! | [`vrp`] | Capacitated + heterogeneous-fleet Vehicle Routing | Minimize total distance / time + cost |
 //! | [`graph_coloring`] | Graph Coloring | Minimize colors used |
 //! | [`integer`] | Any problem over bounded integer variables, by a closure or a formula | Configurable |
+//!
+//! [`branch`] is what [`BranchAndBound`](crate::heuristic::BranchAndBound) asks of
+//! a problem, implemented for the integer problems and for the binary ones.
 
+pub mod branch;
 pub mod graph_coloring;
 pub mod integer;
 pub mod job_shop_scheduling;
@@ -29,14 +33,15 @@ pub mod tsp;
 pub mod vertex_cover;
 pub mod vrp;
 
+pub use branch::{BinaryRelaxation, BranchSpace, Branchable, Relaxation};
 pub use graph_coloring::{
     GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
     GraphColoringUniformCrossover,
 };
 pub use integer::{
-    Branchable, Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntAssignment,
+    Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntAssignment,
     IntChangeNeighbor, IntCrossover, IntReverseNeighbor, IntSolution, IntSwapNeighbor, IntVar,
-    IntVars, IntegerProblem, IntervalRelaxation, Relaxation,
+    IntVars, IntegerProblem, IntervalRelaxation,
 };
 pub use job_shop_scheduling::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
