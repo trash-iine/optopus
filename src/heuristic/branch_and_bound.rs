@@ -85,12 +85,18 @@ struct Node {
 
 impl Node {
     fn ranges(&self, whole: &IntVars) -> IntVars {
-        let mut vars: Vec<IntVar> = whole.to_vec();
-        for &(i, range) in &self.narrowed {
-            vars[i] = range;
-        }
-        IntVars::new(vars)
+        narrow(whole, &self.narrowed)
     }
+}
+
+/// `whole` with each range in `narrowed` replacing its variable's, later
+/// entries over earlier ones.
+fn narrow(whole: &IntVars, narrowed: &[(usize, IntVar)]) -> IntVars {
+    let mut vars: Vec<IntVar> = whole.to_vec();
+    for &(i, range) in narrowed {
+        vars[i] = range;
+    }
+    IntVars::new(vars)
 }
 
 /// The heap pops the best bound first, and among equal bounds the deepest
@@ -256,15 +262,11 @@ impl<P: Branchable, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
         ] {
             let mut narrowed = node.narrowed.clone();
             narrowed.push((var, half));
-            let child = Node {
-                bound: 0.0,
-                narrowed,
-            };
             let bound = self
-                .bound(prob, &child.ranges(whole), incumbent)?
+                .bound(prob, &narrow(whole, &narrowed), incumbent)?
                 .max(node.bound);
             if bound < incumbent.minimized() {
-                self.open.push(Node { bound, ..child });
+                self.open.push(Node { bound, narrowed });
             }
         }
         Ok(())
