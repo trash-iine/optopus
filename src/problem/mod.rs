@@ -34,9 +34,9 @@ pub use graph_coloring::{
     GraphColoringUniformCrossover,
 };
 pub use integer::{
-    Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntAssignment,
+    Branchable, Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntAssignment,
     IntChangeNeighbor, IntCrossover, IntReverseNeighbor, IntSolution, IntSwapNeighbor, IntVar,
-    IntVars, IntegerProblem,
+    IntVars, IntegerProblem, IntervalRelaxation, Relaxation,
 };
 pub use job_shop_scheduling::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
