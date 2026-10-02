@@ -293,8 +293,13 @@ impl BinaryProblem for MaxCut {
         }
     }
 
+    /// `values` covers the vertices with an edge, and the graph may run
+    /// past them, so the assignment is padded to the graph's length with
+    /// `false`, the side every solution gives a vertex without an edge.
     fn solution_from_assignment(&self, values: &[bool]) -> MaxCutSolution {
-        MaxCutSolution::new_from_assignment(self, values.to_vec())
+        let mut x = values.to_vec();
+        x.resize(self.graph.len(), false);
+        MaxCutSolution::new_from_assignment(self, x)
     }
 }
 

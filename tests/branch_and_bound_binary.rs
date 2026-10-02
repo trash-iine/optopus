@@ -361,3 +361,31 @@ fn a_seeded_binary_run_is_reproducible() {
     };
     assert_eq!(run(), run());
 }
+
+/// A graph sized past its last vertex with an edge, as the generators leave
+/// one, still gets solutions as long as the graph from a node.
+#[test]
+fn a_max_cut_with_trailing_isolated_vertices_keeps_full_length_solutions() {
+    let mut graph = Graph::erdos_renyi(6, 0.0, &mut seeded_rng(0));
+    graph.add_weight(0, 1, 1.0);
+    graph.add_weight(1, 2, 2.0);
+    let prob = MaxCut::new(graph);
+    assert_eq!(variable_slots(&prob), 3);
+    assert_eq!(prob.graph.len(), 6);
+
+    let sol = prob.solution_from_assignment(&[true, false, true]);
+    assert_eq!((sol.x.len(), sol.gain.len()), (6, 6));
+
+    let mut bnb = BranchAndBound::new(
+        StopCondition::new(None, None, None),
+        Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+            StopCondition::iterations(10),
+        )),
+        BinaryRelaxation,
+    );
+    let mut state = SearchState::new_with_seed(&prob, 0);
+    bnb.run(&mut state).unwrap();
+    assert_eq!(state.best_solution.x.len(), 6);
+    assert_eq!(state.best_solution.objective, 3.0);
+    assert!(bnb.is_proven_optimal(&state.best_solution));
+}
