@@ -49,9 +49,33 @@ struct WalkSatScratch {
     /// `pos_in_unsat[c]` = index of `c` within `unsat_clauses`, or
     /// [`NOT_IN_UNSAT`] when clause `c` is satisfied. Enables `O(1)` membership.
     pos_in_unsat: Vec<usize>,
-    /// `var_clause_lits[v]` = `(clause index, literal is positive)` for every
-    /// occurrence of variable `v`. Drives both break-count and incremental update.
-    var_clause_lits: Vec<Vec<(u32, bool)>>,
+    /// `var_clauses[v]` = one entry per clause holding variable `v`, with how
+    /// many of its literals are `v` and how many `¬v`. A clause may hold `v`
+    /// more than once, repeated or negated, and is judged on all of its
+    /// occurrences together. Drives both break-count and incremental update.
+    var_clauses: Vec<Vec<VarInClause>>,
+}
+
+/// Variable `v`'s occurrences in one clause.
+#[derive(Clone, Copy, Debug)]
+struct VarInClause {
+    clause: u32,
+    /// Occurrences of the literal `v`.
+    positive: u32,
+    /// Occurrences of the literal `¬v`.
+    negative: u32,
+}
+
+impl VarInClause {
+    /// `(true, false)` occurrence counts when `v` takes `value`.
+    #[inline]
+    fn split(self, value: bool) -> (u32, u32) {
+        if value {
+            (self.positive, self.negative)
+        } else {
+            (self.negative, self.positive)
+        }
+    }
 }
 
 impl WalkSatScratch {
@@ -61,13 +85,30 @@ impl WalkSatScratch {
         let n_vars = instance.n_vars();
 
         let mut true_count = vec![0u32; n_clauses];
-        let mut var_clause_lits: Vec<Vec<(u32, bool)>> = vec![Vec::new(); n_vars];
+        let mut var_clauses: Vec<Vec<VarInClause>> = vec![Vec::new(); n_vars];
 
         for (c, clause) in instance.all_clauses().enumerate() {
             for &lit in clause {
                 let v = lit.unsigned_abs() as usize - 1;
                 let lit_positive = lit > 0;
-                var_clause_lits[v].push((c as u32, lit_positive));
+                // Clauses are walked in order, so this clause's entry for `v`,
+                // if any, is the last one.
+                let entry = match var_clauses[v].last_mut() {
+                    Some(e) if e.clause == c as u32 => e,
+                    _ => {
+                        var_clauses[v].push(VarInClause {
+                            clause: c as u32,
+                            positive: 0,
+                            negative: 0,
+                        });
+                        var_clauses[v].last_mut().expect("just pushed")
+                    }
+                };
+                if lit_positive {
+                    entry.positive += 1;
+                } else {
+                    entry.negative += 1;
+                }
                 if x[v] == lit_positive {
                     true_count[c] += 1;
                 }
@@ -87,16 +128,20 @@ impl WalkSatScratch {
             true_count,
             unsat_clauses,
             pos_in_unsat,
-            var_clause_lits,
+            var_clauses,
         }
     }
 
     /// Number of clauses that variable `v` currently satisfies alone, flipping
     /// `v` would break exactly these. Computed against the pre-flip assignment `x`.
+    ///
+    /// A clause breaks when every literal now true in it is an occurrence of
+    /// `v`, and no occurrence of `v` becomes true.
     fn break_count(&self, x: &[bool], v: usize) -> u32 {
         let mut breaks = 0;
-        for &(c, lit_positive) in &self.var_clause_lits[v] {
-            if x[v] == lit_positive && self.true_count[c as usize] == 1 {
+        for e in &self.var_clauses[v] {
+            let (now_true, becomes_true) = e.split(x[v]);
+            if becomes_true == 0 && now_true > 0 && self.true_count[e.clause as usize] == now_true {
                 breaks += 1;
             }
         }
@@ -110,25 +155,23 @@ impl WalkSatScratch {
     fn apply_flip(&mut self, x: &[bool], v: usize) -> (u32, u32) {
         let mut made = 0;
         let mut broke = 0;
-        // Snapshot the occurrence list length to avoid holding a borrow of
-        // `self.var_clause_lits` while mutating the other fields.
-        for idx in 0..self.var_clause_lits[v].len() {
-            let (c, lit_positive) = self.var_clause_lits[v][idx];
-            let c = c as usize;
-            if x[v] == lit_positive {
-                // This occurrence became satisfying.
-                self.true_count[c] += 1;
-                if self.true_count[c] == 1 {
-                    self.remove_from_unsat(c);
-                    made += 1;
-                }
-            } else {
-                // This occurrence stopped satisfying the clause.
-                self.true_count[c] -= 1;
-                if self.true_count[c] == 0 {
-                    self.add_to_unsat(c);
-                    broke += 1;
-                }
+        // Index rather than iterate, to avoid holding a borrow of
+        // `self.var_clauses` while mutating the other fields.
+        for idx in 0..self.var_clauses[v].len() {
+            let e = self.var_clauses[v][idx];
+            let c = e.clause as usize;
+            // Read against the post-flip value, so the true occurrences are
+            // the ones that became true.
+            let (became_true, became_false) = e.split(x[v]);
+            let before = self.true_count[c];
+            let after = before + became_true - became_false;
+            self.true_count[c] = after;
+            if before == 0 && after > 0 {
+                self.remove_from_unsat(c);
+                made += 1;
+            } else if before > 0 && after == 0 {
+                self.add_to_unsat(c);
+                broke += 1;
             }
         }
         (made, broke)
@@ -381,6 +424,58 @@ mod tests {
     use crate::problem::Sat;
     use crate::search_state::SearchState;
     use std::time::Duration;
+
+    /// The clauses each flip would break, counted by recomputing the
+    /// satisfied clauses rather than through the scratch state.
+    fn breaks_by_recount(sat: &Sat, x: &[bool], v: usize) -> u32 {
+        let mut flipped = x.to_vec();
+        flipped[v] = !flipped[v];
+        sat.all_clauses()
+            .filter(|c| Sat::is_clause_satisfied(c, x) && !Sat::is_clause_satisfied(c, &flipped))
+            .count() as u32
+    }
+
+    #[test]
+    fn break_count_holds_with_tautologies_and_repeated_literals() {
+        let mut sat = Sat::new(3);
+        sat.add_clause([1, -1]);
+        sat.add_clause([2, 2]);
+        sat.add_clause([1, -1, 2]);
+        sat.add_clause([-3, 3, -3]);
+        sat.add_clause([-2, -2, 3]);
+        for bits in 0..8u32 {
+            let x: Vec<bool> = (0..3).map(|k| bits >> k & 1 == 1).collect();
+            let scratch = WalkSatScratch::build(&sat, &x);
+            for v in 0..3 {
+                assert_eq!(
+                    scratch.break_count(&x, v),
+                    breaks_by_recount(&sat, &x, v),
+                    "variable {v} at {x:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn flips_keep_counts_with_tautologies_and_repeated_literals() {
+        let mut sat = Sat::new(4);
+        sat.add_clause([1, -1]);
+        sat.add_clause([2, 2]);
+        sat.add_clause([1, -1, 2]);
+        sat.add_clause([-3, 3, -3]);
+        sat.add_clause([-2, -2, 4]);
+        sat.add_clause([-4, -1]);
+        let mut state = SearchState::new_with_seed(&sat, 5);
+        let mut walksat = WalkSat::new(StopCondition::iterations(u64::MAX), 0.5, false);
+        for _ in 0..100 {
+            walksat.run_once(&mut state).unwrap();
+            assert!(walksat.scratch_is_consistent(&sat, &state.solution.x));
+            assert_eq!(
+                state.solution.n_satisfied,
+                sat.calc_satisfied(&state.solution.x)
+            );
+        }
+    }
 
     /// A small satisfiable formula over 3 variables.
     fn satisfiable_instance() -> Sat {

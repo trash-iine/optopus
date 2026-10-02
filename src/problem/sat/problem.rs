@@ -219,36 +219,21 @@ impl Sat {
     /// The gain of flipping variable `i` under the assignment `x_at` reads.
     /// `calc_gain` reads the assignment as is, the virtual-flip variant reads
     /// one variable inverted; the clause walk is the same.
+    ///
+    /// Each clause holding `i` is judged whole before and after the flip, so a
+    /// clause that holds `i` more than once counts right. One that holds `i`
+    /// and its negation is satisfied either way, and one that repeats a
+    /// literal of `i` loses all its occurrences at once.
     fn gain_of(&self, i: usize, x_at: impl Fn(usize) -> bool) -> i64 {
         let mut gain = 0i64;
         for &clause_idx in &self.clauses_per_var[i] {
-            let clause = &self.clauses[clause_idx];
-
-            let i_lit = match clause
-                .iter()
-                .find(|&&lit| lit.unsigned_abs() as usize - 1 == i)
-            {
-                Some(&lit) => lit,
-                None => unreachable!(
-                    "Sat::clauses_per_var invariant broken: variable {i} listed \
-                     as in clause {clause_idx} but no literal there references \
-                     it. This is a library bug — please report."
-                ),
-            };
-            let i_lit_sat = x_at(i) == (i_lit > 0);
-
-            // check if any literal other than i satisfies the clause
-            let other_sat = clause.iter().any(|&lit| {
+            let (mut was_sat, mut will_be_sat) = (false, false);
+            for &lit in &self.clauses[clause_idx] {
                 let var = lit.unsigned_abs() as usize - 1;
-                if var == i {
-                    return false;
-                }
-                x_at(var) == (lit > 0)
-            });
-
-            let was_sat = i_lit_sat || other_sat;
-            let will_be_sat = !i_lit_sat || other_sat; // after flipping i
-
+                let sat_now = x_at(var) == (lit > 0);
+                was_sat |= sat_now;
+                will_be_sat |= sat_now != (var == i);
+            }
             gain += will_be_sat as i64 - was_sat as i64;
         }
         gain

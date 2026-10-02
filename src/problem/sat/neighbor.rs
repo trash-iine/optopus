@@ -225,6 +225,46 @@ mod tests {
         SatSolution::new_from_assignment(sat, x)
     }
 
+    /// Clauses that hold a variable together with its negation, which are
+    /// always satisfied, and clauses that repeat a literal.
+    fn make_degenerate_sat() -> Sat {
+        let mut sat = Sat::new(3);
+        sat.add_clause([1, -1]);
+        sat.add_clause([2, 2]);
+        sat.add_clause([1, -1, 2]);
+        sat.add_clause([-3, 3, -3]);
+        sat.add_clause([1, 2, 3]);
+        sat.add_clause([-2, -2, 3]);
+        sat
+    }
+
+    #[test]
+    fn flips_and_swaps_keep_counts_with_tautologies_and_repeated_literals() {
+        use rand::{Rng, SeedableRng};
+        let sat = make_degenerate_sat();
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
+        let mut sol = make_solution(&sat, vec![false; 3]);
+        for _ in 0..200 {
+            let i = rng.random_range(0..3);
+            if rng.random_bool(0.5) {
+                SatFlipNeighbor::new(&sat, &sol, i)
+                    .apply_to_solution(&sat, &mut sol)
+                    .unwrap();
+            } else {
+                SatSwapNeighbor::new(&sat, &sol, i, (i + 1) % 3)
+                    .apply_to_solution(&sat, &mut sol)
+                    .unwrap();
+            }
+            assert_eq!(sol.n_satisfied, sat.calc_satisfied(&sol.x));
+            for k in 0..3 {
+                let mut flipped = sol.x.clone();
+                flipped[k] = !flipped[k];
+                let gain = sat.calc_satisfied(&flipped) as i64 - sol.n_satisfied as i64;
+                assert_eq!(sol.gain[k], gain, "gain of variable {k} at {:?}", sol.x);
+            }
+        }
+    }
+
     #[test]
     fn test_flip_gain_matches_energy_delta() {
         let sat = make_sat();
