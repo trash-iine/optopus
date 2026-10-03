@@ -18,7 +18,7 @@ mod reduction;
 mod ruinable;
 mod tabu;
 
-pub use binary::BinaryProblem;
+pub use binary::{BinaryProblem, FixVariables, FixedVariables, Placed};
 pub use crossover::{Crossover, SubProblemExtractable};
 pub use evaluate::{Evaluable, Evaluate};
 pub use neighbor::MoveToNeighbor;

@@ -4,6 +4,7 @@
 //! that maximizes the number of satisfied clauses.
 
 mod crossover;
+mod fix;
 mod neighbor;
 mod problem;
 

@@ -337,6 +337,10 @@ impl crate::trait_defs::BinaryProblem for Sat {
             gain: sol.gain[i],
         }
     }
+
+    fn solution_from_assignment(&self, values: &[bool]) -> SatSolution {
+        SatSolution::new_from_assignment(self, values.to_vec())
+    }
 }
 
 #[cfg(test)]

@@ -36,6 +36,7 @@ pub use crate::trait_defs::{
 // Problem and neighbor types
 pub use crate::problem::{
     // Branch-and-bound
+    BinaryRelaxation,
     Branchable,
     // Formula
     Constraint,

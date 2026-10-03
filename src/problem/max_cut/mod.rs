@@ -32,6 +32,7 @@
 //! covers the file format, the planted-optimum suites and worked examples.
 
 mod crossover;
+mod fix;
 mod kernel;
 mod neighbor;
 mod planted;

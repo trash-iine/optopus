@@ -4,7 +4,9 @@
 use rand::Rng;
 
 use crate::error::OptError;
-use crate::trait_defs::{BinaryProblem, MoveToNeighbor};
+use crate::trait_defs::{
+    BinaryProblem, FixVariables, FixedVariables, MoveToNeighbor, Placed, ProblemReduction,
+};
 
 /// Uniform crossover over binary variables.
 ///
@@ -93,6 +95,91 @@ pub fn lift_compact_binary_solution<P: BinaryProblem>(
         sub_idx += 1;
     }
     sol
+}
+
+/// The number of variable indices of `prob`, one past the largest, which is
+/// how long a solution's assignment is.
+pub fn variable_slots<P: BinaryProblem>(prob: &P) -> usize {
+    prob.variable_indices().max().map_or(0, |i| i + 1)
+}
+
+/// Variables fixed by [`FixVariables::fix`] as a map from the whole problem
+/// onto the folded instance, so that a heuristic of the problem crosses into
+/// it and back through
+/// [`SearchState::open_reduction`](crate::search_state::SearchState::open_reduction)
+/// and [`close_reduction`](crate::search_state::SearchState::close_reduction).
+pub struct BinaryFixing<P> {
+    /// Every `Placed::Free(t)` and the reference name a variable of the
+    /// folded instance, which `new` sees to.
+    fixed: FixedVariables<P>,
+    /// The folded instance's number of variable indices.
+    slots: usize,
+}
+
+impl<P: FixVariables> BinaryFixing<P> {
+    /// `fixed` as a map onto its folded instance.
+    ///
+    /// A free variable the folding left with no terms is not a variable of
+    /// the folded instance, and is held at `false` instead, which changes no
+    /// objective.
+    pub fn new(mut fixed: FixedVariables<P>) -> Self {
+        let slots = variable_slots(&fixed.target);
+        let mut present = vec![false; slots];
+        for i in fixed.target.variable_indices() {
+            present[i] = true;
+        }
+        let is_variable = |t: usize| present.get(t).copied().unwrap_or(false);
+        for placed in &mut fixed.placed {
+            if let Placed::Free(t) = *placed
+                && !is_variable(t)
+            {
+                *placed = Placed::Fixed(false);
+            }
+        }
+        fixed.reference = fixed.reference.filter(|&r| is_variable(r));
+        Self { fixed, slots }
+    }
+
+    /// What the folded instance contributes on top of its own objective.
+    pub fn offset(&self) -> f64 {
+        self.fixed.offset
+    }
+}
+
+impl<P: FixVariables> ProblemReduction for BinaryFixing<P> {
+    type Source = P;
+    type Target = P;
+
+    fn target(&self) -> &P {
+        &self.fixed.target
+    }
+
+    /// The free variables keep their values, read against a reference
+    /// variable held at `false`.
+    fn project(&self, sol: &P::Solution) -> P::Solution {
+        let mut values = vec![false; self.slots];
+        for (i, placed) in self.fixed.placed.iter().enumerate() {
+            if let Placed::Free(t) = *placed {
+                values[t] = P::variable(sol, i);
+            }
+        }
+        self.fixed.target.solution_from_assignment(&values)
+    }
+
+    /// The fixed variables at their values, the free ones read from `sol`.
+    fn lift(&self, source: &P, _base: &P::Solution, sol: &P::Solution) -> P::Solution {
+        let flip = self.fixed.reference.is_some_and(|r| P::variable(sol, r));
+        let values: Vec<bool> = self
+            .fixed
+            .placed
+            .iter()
+            .map(|placed| match *placed {
+                Placed::Fixed(value) => value,
+                Placed::Free(t) => P::variable(sol, t) != flip,
+            })
+            .collect();
+        source.solution_from_assignment(&values)
+    }
 }
 
 /// Applies a swap move as two sequential flips (`i` then `j`).
