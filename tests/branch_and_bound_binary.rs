@@ -35,16 +35,14 @@ fn random_qubo(rng: &mut SmallRng, n: usize) -> Qubo {
     Qubo::from_entries(entries)
 }
 
-/// Clauses over distinct variables. A clause holding a variable and its
-/// negation is always satisfied, which the incremental count of a `Sat`
-/// solution does not follow through a flip.
+/// Literals drawn with replacement, so some clauses hold a variable twice,
+/// repeated or together with its negation.
 fn random_sat(rng: &mut SmallRng, n: usize) -> Sat {
     let mut sat = Sat::new(n);
     for _ in 0..3 * n {
-        let mut vars: Vec<i64> = (1..=n as i64).collect();
         let len = rng.random_range(1..=3);
         sat.add_clause((0..len).map(|_| {
-            let var = vars.swap_remove(rng.random_range(0..vars.len()));
+            let var = rng.random_range(1..=n) as i64;
             if rng.random_bool(0.5) { var } else { -var }
         }));
     }
