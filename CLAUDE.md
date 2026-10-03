@@ -91,6 +91,7 @@ src/
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── population_annealing.rs  PopulationAnnealing<P, N>
 │   ├── alns.rs               AdaptiveLargeNeighborhoodSearch<P: Ruinable>
+│   ├── branch_and_bound.rs   BranchAndBound<P: Branchable, R: Relaxation<P>>
 │   ├── bls.rs                BreakoutLocalSearch<P, S>, PerturbationSchedule,
 │   │                         AdaptivePerturbation
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
@@ -110,6 +111,8 @@ src/
     │                         formula.rs (FormulaProblem, Expr, Constraint), the
     │                         IntAssignment trait (own solution), IntVars (+ permutation),
     │                         Change / Swap / Reverse moves, crossover.rs (IntCrossover)
+    │                         branch.rs (Branchable, Relaxation), IntervalRelaxation
+    │                         lives in formula.rs
     ├── vrp/                  one problem for the homogeneous and the heterogeneous
     │                         fleet (VehicleType slots, service time, TotalTime or
     │                         Makespan; CVRPLIB or TOML instances; decisions/0024)
