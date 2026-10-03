@@ -55,12 +55,14 @@ assert!(bnb.is_proven_optimal(&state.best_solution));
 ```
 
 `examples/max_cut_branch_and_bound.rs` runs Breakout Local Search in every node
-of a 24 vertex MaxCut.
+of a MaxCut, bounded by `EigenvalueRelaxation` or by the positive weights.
 
 ## Algorithm sketch
 
 A node is the problem with the ranges of some variables narrowed. The open
-nodes are kept by their bound, and each `run_once` takes the best of them.
+nodes are kept by their bound, and each `run_once` takes the best of them. The
+whole problem is searched before anything is bounded, so the first bounds are
+computed against a searched incumbent.
 
 1. If the node's bound cannot beat the best solution found so far, the node
    is dropped.
@@ -125,8 +127,21 @@ time. A bound in the wrong direction is reported as an error.
   MaxSAT and a greedy maximal matching for vertex cover. These prove optima of
   a few dozen variables, a 24 vertex MaxCut in a fraction of a second, and not
   of benchmark instances.
+- `EigenvalueRelaxation` works on MaxCut. It folds the node and bounds the
+  folded graph by `(n/4) λ_max(L + diag(u)) − ¼ Σu`, where `L` is its
+  Laplacian, improving the correction `u` by subgradient steps. The bound is
+  certified in floating point by a Cholesky factorization with Rump's safety
+  shift, and falls back to the positive weights where it cannot be, or where
+  the folded graph has more vertices than `with_certify_limit`. The
+  factorization is dense and its cost grows with the cube of that size. With
+  integer weights the bound is rounded down. It proves random graphs of about
+  60 vertices where the positive weights stop near 30.
 - A closure `|prob, vars| -> Evaluable<f64>` is a relaxation, and is the way
   in for a bound that knows the problem.
+- `bound_against` is `bound` told the objective of the best solution so far,
+  and by default ignores it. `EigenvalueRelaxation` uses it as the target of
+  its subgradient steps, and stops as soon as the bound falls to it, since the
+  node is pruned then whatever further steps would give.
 - `branch_hint` may name the variable to split next. By default the search
   splits the lowest numbered variable that still has a choice.
 

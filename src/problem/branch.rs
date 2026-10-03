@@ -97,7 +97,7 @@ pub fn binary_solution_with<P: BinaryProblem>(prob: &P, values: Vec<i64>) -> P::
 }
 
 /// The value each variable is held at, where its range holds one.
-fn fixed_by(ranges: &IntVars) -> Vec<Option<bool>> {
+pub(crate) fn fixed_by(ranges: &IntVars) -> Vec<Option<bool>> {
     ranges
         .iter()
         .map(|r| (r.num_changes() == 0).then(|| r.lower() != 0))
@@ -213,6 +213,23 @@ pub trait Relaxation<P> {
     /// The bound over the assignments with each variable in its range in
     /// `vars`, which are ranges of `prob`'s variables.
     fn bound(&mut self, prob: &P, vars: &IntVars) -> Evaluable<f64>;
+
+    /// [`bound`](Self::bound), told the objective of the best solution found
+    /// so far. The default ignores it.
+    ///
+    /// A relaxation that is itself an optimization uses it to stop as soon as
+    /// the bound falls to the incumbent, where the node is pruned whatever the
+    /// bound would have tightened to, or to aim its steps at it. The value
+    /// returned must be a bound whatever `incumbent` is.
+    fn bound_against(
+        &mut self,
+        prob: &P,
+        vars: &IntVars,
+        incumbent: Evaluable<f64>,
+    ) -> Evaluable<f64> {
+        let _ = incumbent;
+        self.bound(prob, vars)
+    }
 
     /// The variable to split next, among those whose range in `vars` holds
     /// more than one value. `None`, the default, leaves the choice to the

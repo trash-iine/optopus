@@ -47,11 +47,11 @@ bnb.run(&mut state)?;
 assert!(bnb.is_proven_optimal(&state.best_solution));
 ```
 
-`examples/max_cut_branch_and_bound.rs` は、24 頂点の MaxCut の各ノードで Breakout Local Search を走らせます。
+`examples/max_cut_branch_and_bound.rs` は、MaxCut の各ノードで Breakout Local Search を走らせ、`EigenvalueRelaxation` か正の重みの和で上界を与えます。
 
 ## アルゴリズムの概要 { #algorithm-sketch }
 
-ノードは、いくつかの変数の値域を狭めた問題です。未処理のノードは上界の順に保持され、`run_once` のたびに最良のものを 1 つ取り出します。
+ノードは、いくつかの変数の値域を狭めた問題です。未処理のノードは上界の順に保持され、`run_once` のたびに最良のものを 1 つ取り出します。問題全体を一度探索してから上界を計算するので、最初の上界は探索済みの暫定解に対して計算されます。
 
 1. ノードの上界がこれまでの最良解を上回れなければ、そのノードは捨てます。
 2. ノードのすべての変数が 1 つの値しか取らなければ、その割り当てを評価して終わりです。
@@ -83,7 +83,9 @@ assert!(bnb.is_proven_optimal(&state.best_solution));
 
 - `IntervalRelaxation` は任意の `FormulaProblem` で使えます。各単項式の変数の値域を掛け合わせ、各制約にはその式が取りうる最小のペナルティを課します。どの式でも妥当ですが、多くの式では弱い上界です。複数の単項式に現れる変数を、それぞれの単項式で最悪の値に取るためです。
 - `BinaryRelaxation` は任意の二値問題で使えます。ノードを畳み込み、畳み込んだインスタンスの `trivial_bound` にオフセットを足します。MaxCut では正の重みの和、QUBO では負の係数の和、MaxSAT では節の数、vertex cover では貪欲な極大マッチングの大きさです。証明できるのは数十変数までで、24 頂点の MaxCut なら 1 秒もかかりませんが、ベンチマークのインスタンスは証明できません。
+- `EigenvalueRelaxation` は MaxCut で使えます。ノードを畳み込み、畳み込んだグラフのラプラシアンを `L` として `(n/4) λ_max(L + diag(u)) − ¼ Σu` で抑え、補正 `u` を劣勾配法で改善します。上界は Rump の安全シフト付き Cholesky 分解で浮動小数点のまま証明され、証明できないときや、畳み込んだグラフの頂点数が `with_certify_limit` を超えるときは正の重みの和に戻ります。分解は密なので、コストはその頂点数の 3 乗で増えます。重みが整数なら上界は切り捨てます。正の重みの和では 30 頂点前後が限界のランダムグラフで、60 頂点前後まで証明できます。
 - クロージャ `|prob, vars| -> Evaluable<f64>` は緩和になります。問題を知っている上界はこの形で渡します。
+- `bound_against` は、これまでの最良解の目的関数値を受け取る `bound` で、既定では無視します。`EigenvalueRelaxation` はこれを劣勾配法の目標値に使い、上界がそこまで下がった時点で止めます。そのノードは、それ以上締めても刈られることに変わりがないためです。
 - `branch_hint` は次に分ける変数を指定できます。既定では、まだ選択の余地がある変数のうち番号が最小のものを分けます。
 
 ## コンストラクタ { #constructor }

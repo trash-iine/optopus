@@ -5,7 +5,7 @@
 
 use optopus::common::{BinaryFixing, variable_slots};
 use optopus::prelude::*;
-use optopus::problem::{BranchSpace, Relaxation};
+use optopus::problem::{BranchSpace, EigenvalueRelaxation, Relaxation};
 use optopus::trait_defs::{BinaryProblem, FixVariables, ProblemReduction};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
@@ -358,6 +358,72 @@ fn a_seeded_binary_run_is_reproducible() {
         )
     };
     assert_eq!(run(), run());
+}
+
+fn random_fractional_max_cut(rng: &mut SmallRng, n: usize) -> MaxCut {
+    let mut edges = vec![];
+    for i in 0..n {
+        for j in i + 1..n {
+            if rng.random_bool(0.5) {
+                edges.push((i, j, rng.random_range(-2.0..4.0) as f32));
+            }
+        }
+    }
+    MaxCut::new(Graph::from_edges(edges))
+}
+
+#[test]
+fn the_eigenvalue_bound_covers_every_node() {
+    let mut rng = SmallRng::seed_from_u64(10);
+    for case in 0..60 {
+        let prob = if case % 2 == 0 {
+            random_max_cut(&mut rng, 11)
+        } else {
+            random_fractional_max_cut(&mut rng, 11)
+        };
+        let fixed = if case % 3 == 0 {
+            vec![None; variable_slots(&prob)]
+        } else {
+            random_fixing(&mut rng, &prob)
+        };
+        let node_best = best(&objectives_within(&prob, &fixed));
+        let ranges = ranges_of(&fixed);
+        let plain = EigenvalueRelaxation::new()
+            .bound(&prob, &ranges)
+            .minimized();
+        // An incumbent at the node's best stops the descent early, which
+        // must not make the bound invalid.
+        let aimed = EigenvalueRelaxation::new()
+            .bound_against(&prob, &ranges, Evaluable::Maximize(-node_best))
+            .minimized();
+        for bound in [plain, aimed] {
+            assert!(
+                bound <= node_best + 1e-6,
+                "case {case}: bound {bound} above the node's best {node_best}"
+            );
+        }
+        let positive = BinaryRelaxation.bound(&prob, &ranges).minimized();
+        assert!(
+            plain >= positive - 1e-9,
+            "never looser than the positive weights"
+        );
+    }
+}
+
+#[test]
+fn max_cut_optimum_is_proven_with_the_eigenvalue_bound() {
+    let mut rng = SmallRng::seed_from_u64(11);
+    for seed in 0..4 {
+        let prob = random_max_cut(&mut rng, 14);
+        check_proves_optimum(
+            &prob,
+            Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
+                StopCondition::iterations(50),
+            )),
+            EigenvalueRelaxation::new(),
+            seed,
+        );
+    }
 }
 
 /// A graph sized past its last vertex with an edge, as the generators leave

@@ -107,6 +107,7 @@ src/
     ├── branch.rs             BranchSpace (what BranchAndBound asks), Branchable (integer,
     │                         one method), Relaxation, BinaryRelaxation, the binary glue
     ├── max_cut/              + kernel.rs (MaxCutKernel, an exact ProblemReduction),
+    │                         eigen.rs (EigenvalueRelaxation, certified by Cholesky),
     │                         planted.rs (PlantedMaxCut)
     ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/
     │                         (max_cut, qubo, sat, vertex_cover each add fix.rs, FixVariables)
