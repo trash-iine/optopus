@@ -3,7 +3,8 @@ use std::collections::BinaryHeap;
 
 use super::{Heuristic, StopCondition};
 use crate::error::OptError;
-use crate::problem::integer::{Branchable, IntVar, IntVars, Relaxation};
+use crate::problem::branch::{BranchSpace, Relaxation};
+use crate::problem::integer::{IntVar, IntVars};
 use crate::search_state::{Evaluable, Evaluate, SearchState};
 
 /// Branch-and-bound over integer variables, with any heuristic finding the
@@ -124,7 +125,7 @@ impl PartialEq for Node {
 
 impl Eq for Node {}
 
-impl<P: Branchable, R: Relaxation<P>> BranchAndBound<P, R> {
+impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
     /// A search that stops when no open node can beat the best solution, or
     /// earlier at `stop_condition`, whose fields may all be `None`.
     pub fn new(
@@ -189,7 +190,7 @@ fn directed_like(like: Evaluable<f64>, minimized: f64) -> Evaluable<f64> {
     }
 }
 
-impl<P: Branchable, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
+impl<P: BranchSpace, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
     fn clear(&mut self) {
         self.open.clear();
         self.root_pending = true;
@@ -208,7 +209,8 @@ impl<P: Branchable, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
     /// searches and splits it.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let prob = state.instance;
-        let whole = prob.domains();
+        let whole = prob.ranges();
+        let whole = whole.as_ref();
         if self.root_pending {
             if whole.is_permutation() {
                 return Err(OptError::Config(
@@ -235,14 +237,12 @@ impl<P: Branchable, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
         let vars = node.ranges(whole);
         let Some(first_free) = vars.iter().position(|v| v.num_changes() > 0) else {
             let values = vars.iter().map(IntVar::lower).collect();
-            state.solution = prob.solution_from_values(values);
+            state.solution = prob.solution_with(values);
             state.update_best();
             return Ok(());
         };
 
-        let reduction = crate::problem::integer::DomainRestriction {
-            target: prob.restricted(vars.clone()),
-        };
+        let reduction = prob.node(&vars);
         state.solution = state.best_solution.clone();
         let mut sub = state.open_reduction(&reduction);
         self.heuristic.run(&mut sub)?;
@@ -254,7 +254,7 @@ impl<P: Branchable, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
             .filter(|&i| vars.get(i).is_some_and(|v| v.num_changes() > 0))
             .unwrap_or(first_free);
         let range = vars[var];
-        let split = P::get(&state.best_solution, var).clamp(range.lower(), range.upper() - 1);
+        let split = P::value(&state.best_solution, var).clamp(range.lower(), range.upper() - 1);
         let incumbent = state.best_solution.evaluate();
         for half in [
             IntVar::new(range.lower(), split),

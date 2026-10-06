@@ -4,9 +4,9 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use super::assignment::IntAssignment;
-use super::branch::{Branchable, Relaxation};
 use super::problem::{IntVars, raw};
 use crate::error::OptError;
+use crate::problem::branch::{Branchable, Relaxation};
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
 use rand::Rng;
 

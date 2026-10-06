@@ -32,6 +32,7 @@
 //! file format and worked examples.
 
 mod crossover;
+mod fix;
 mod neighbor;
 mod problem;
 

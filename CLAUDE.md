@@ -63,7 +63,7 @@ src/
 │   ├── evaluate.rs           Evaluable, Evaluate
 │   ├── crossover.rs          Crossover, SubProblemExtractable
 │   ├── tabu.rs               EnabledTabu (object safe on purpose)
-│   ├── binary.rs             BinaryProblem
+│   ├── binary.rs             BinaryProblem, FixVariables (folding fixed variables)
 │   ├── ruinable.rs           Ruinable, LocalRepair
 │   └── reduction.rs          ProblemReduction
 ├── common/                   shared data structures and helpers; put new shared code here
@@ -71,7 +71,7 @@ src/
 │   │                         seeded_rng
 │   ├── distance_store.rs     DistanceStore (full matrix / k nearest / given matrix)
 │   │                         and EdgeWeightType, shared by Tsp and Vrp
-│   ├── binary.rs             uniform_binary_crossover, hamming_distance,
+│   ├── binary.rs             uniform_binary_crossover, hamming_distance, BinaryFixing,
 │   │                         lift_binary_solution, lift_compact_binary_solution,
 │   │                         apply_swap_as_two_flips
 │   ├── tabu.rs               TabuKey (Var / Pair / Triple), TabuMemory
@@ -91,7 +91,7 @@ src/
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── population_annealing.rs  PopulationAnnealing<P, N>
 │   ├── alns.rs               AdaptiveLargeNeighborhoodSearch<P: Ruinable>
-│   ├── branch_and_bound.rs   BranchAndBound<P: Branchable, R: Relaxation<P>>
+│   ├── branch_and_bound.rs   BranchAndBound<P: BranchSpace, R: Relaxation<P>>
 │   ├── bls.rs                BreakoutLocalSearch<P, S>, PerturbationSchedule,
 │   │                         AdaptivePerturbation
 │   ├── crossover.rs          SubProblemBasedCrossover<P>
@@ -104,15 +104,17 @@ src/
 │       ├── tsp/              lkh.rs, alns_for_tsp
 │       └── walksat_for_sat.rs
 └── problem/                  each holds problem, solution, neighbors, crossover
-    ├── max_cut/              + kernel.rs (MaxCutKernel, the one ProblemReduction),
+    ├── branch.rs             BranchSpace (what BranchAndBound asks), Branchable (integer,
+    │                         one method), Relaxation, BinaryRelaxation, the binary glue
+    ├── max_cut/              + kernel.rs (MaxCutKernel, an exact ProblemReduction),
     │                         planted.rs (PlantedMaxCut)
     ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/
+    │                         (max_cut, qubo, sat, vertex_cover each add fix.rs, FixVariables)
     ├── integer/              IntegerProblem (a struct built from a closure),
     │                         formula.rs (FormulaProblem, Expr, Constraint), the
     │                         IntAssignment trait (own solution), IntVars (+ permutation),
     │                         Change / Swap / Reverse moves, crossover.rs (IntCrossover)
-    │                         branch.rs (Branchable, Relaxation), IntervalRelaxation
-    │                         lives in formula.rs
+    │                         IntervalRelaxation in formula.rs
     ├── vrp/                  one problem for the homogeneous and the heterogeneous
     │                         fleet (VehicleType slots, service time, TotalTime or
     │                         Makespan; CVRPLIB or TOML instances; decisions/0024)

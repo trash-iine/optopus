@@ -597,6 +597,10 @@ impl BinaryProblem for Qubo {
             gain: sol.gain[i],
         }
     }
+
+    fn solution_from_assignment(&self, values: &[bool]) -> QuboSolution {
+        QuboSolution::new_from_assignment(self, values.to_vec())
+    }
 }
 
 pub fn make_sub_problem_from(qubo: &Qubo, parents: &[&QuboSolution]) -> Qubo {

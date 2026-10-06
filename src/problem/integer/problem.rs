@@ -1,6 +1,6 @@
 use super::assignment::IntAssignment;
-use super::branch::Branchable;
 use crate::error::OptError;
+use crate::problem::branch::Branchable;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
 use rand::Rng;
 
