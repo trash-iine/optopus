@@ -7,6 +7,14 @@
 //! [`SubProblemExtractable`] / [`Distance`] (GeneticAlgorithm) unlock additional
 //! heuristics. [`Rankable`] is derived from [`Evaluate`] rather than
 //! implemented.
+//!
+//! Every trait the problem side implements and a heuristic calls is defined
+//! here, including the ones of one family of problems, such as
+//! [`BinaryProblem`] and [`IntAssignment`], and the operators a problem
+//! supplies to one heuristic, such as [`Relaxation`] and [`LocalRepair`]. A
+//! trait implemented and called within one layer stays beside its type, as
+//! [`Heuristic`](crate::heuristic::Heuristic) and
+//! [`PerturbationSchedule`](crate::heuristic::PerturbationSchedule) do.
 
 mod binary;
 mod branch;

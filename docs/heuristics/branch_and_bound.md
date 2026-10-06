@@ -96,7 +96,7 @@ The search crosses into that instance and back by building each solution from
 its assignment with `BinaryProblem::solution_from_assignment`, so whatever the
 solution caches is computed afresh. A binary problem of your own implements
 `FixVariables`, and `BranchSpace` by handing each method to the function of the
-same name in `optopus::problem::branch`.
+same name in `optopus::common`.
 
 | Problem | How fixing folds |
 |---|---|
