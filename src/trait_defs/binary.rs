@@ -51,7 +51,7 @@ pub trait BinaryProblem: ProblemTrait + Sized {
 ///
 /// Moving between the node and the whole problem, and the bound a node is
 /// pruned by, are written once over this trait in
-/// [`crate::problem::branch`]. What a problem supplies is how fixing folds
+/// [`crate::common::binary`]. What a problem supplies is how fixing folds
 /// into its instance, and a bound on a whole instance.
 pub trait FixVariables: BinaryProblem<Solution: super::Evaluate> {
     /// The instance over the variables `fixed` leaves free, with what the

@@ -1,13 +1,12 @@
 //! The eigenvalue bound of MaxCut, certified in floating point.
 
 use super::problem::MaxCut;
-use crate::problem::branch::{Relaxation, fixed_by};
-use crate::problem::integer::{IntVars, raw};
-use crate::trait_defs::{Evaluable, FixVariables};
+use crate::common::{IntVars, binary::fixed_by};
+use crate::trait_defs::{Evaluable, FixVariables, Relaxation, raw};
 
 /// The eigenvalue bound of Delorme and Poljak, a [`Relaxation`] of MaxCut much
 /// tighter than the positive weights
-/// [`BinaryRelaxation`](crate::problem::BinaryRelaxation) sums.
+/// [`BinaryRelaxation`](crate::common::BinaryRelaxation) sums.
 ///
 /// With `L` the weighted Laplacian of a graph on `n` vertices, a cut of sides
 /// `x ∈ {±1}ⁿ` weighs `¼ xᵀLx`, and since `xᵀ diag(u) x = Σ u` for any `u`,
@@ -47,7 +46,7 @@ use crate::trait_defs::{Evaluable, FixVariables};
 ///
 /// ```
 /// use optopus::prelude::*;
-/// use optopus::problem::{BranchSpace, Relaxation};
+/// use optopus::trait_defs::{BranchSpace, Relaxation};
 ///
 /// // a 5-cycle cuts at most 4 of its edges, and the eigenvalue bound shows
 /// // it where the positive weights say 5

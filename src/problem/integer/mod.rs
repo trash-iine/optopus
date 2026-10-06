@@ -12,27 +12,27 @@
 //!   which on a binary variable is a flip.
 //! - [`IntSwapNeighbor`] exchanges the values of two variables.
 //! - [`IntReverseNeighbor`] reverses the values of a range of variables, which
-//!   on a [permutation](IntVars::permutation) read as a tour is a 2-opt move.
+//!   on a [permutation](crate::common::IntVars::permutation) read as a tour is
+//!   a 2-opt move.
 //!
-//! The moves are written against [`IntAssignment`], which asks only to read
-//! and write one value of a solution. A problem that wants a solution of its
-//! own, to keep whatever makes a move cheap to price, implements that instead.
+//! The moves are written against
+//! [`IntAssignment`](crate::trait_defs::IntAssignment), which asks only to
+//! read and write one value of a solution. A problem that wants a solution of
+//! its own, to keep whatever makes a move cheap to price, implements that
+//! instead.
 //!
 //! [`FormulaProblem`] is the other way in. Its objective and constraints are
 //! [`Expr`]essions, and it derives the price of every move from them.
 //! [`IntCrossover`] brings the genetic algorithm to both.
 
-mod assignment;
 mod crossover;
 mod formula;
 mod neighbor;
 mod problem;
 
-pub use assignment::IntAssignment;
 pub use crossover::IntCrossover;
 pub use formula::{
     Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntervalRelaxation,
 };
 pub use neighbor::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor};
-pub use problem::{ChangeDelta, IntSolution, IntVar, IntVars, IntegerProblem, NoDelta, PairDelta};
-pub(crate) use problem::{raw, with_value};
+pub use problem::{ChangeDelta, IntSolution, IntegerProblem, NoDelta, PairDelta};

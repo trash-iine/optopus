@@ -55,15 +55,20 @@ src/
 │   ├── runner.rs             run_from_config, run loop, per-run seed derivation
 │   └── report.rs             SingleRunResult, Summary, BenchmarkReport
 ├── search_state/mod.rs       SearchState<'a, P>, SearchStateCloneType
-├── trait_defs/               core traits, re-exported via search_state and prelude
+├── trait_defs/               every trait the problem side implements and a heuristic calls;
+│                             a trait both implemented and used inside one layer
+│                             (Heuristic, PerturbationSchedule, ChangeDelta) stays by its type
 │   ├── rankable.rs           Rankable (blanket impl over Evaluate), rank_cmp,
 │   │                         filter_best, Distance
 │   ├── problem.rs            ProblemTrait
 │   ├── neighbor.rs           MoveToNeighbor
-│   ├── evaluate.rs           Evaluable, Evaluate
+│   ├── evaluate.rs           Evaluable, Evaluate (+ crate-internal raw, with_value)
 │   ├── crossover.rs          Crossover, SubProblemExtractable
 │   ├── tabu.rs               EnabledTabu (object safe on purpose)
 │   ├── binary.rs             BinaryProblem, FixVariables (folding fixed variables)
+│   ├── int_assignment.rs     IntAssignment (read / write one integer of an own solution)
+│   ├── branch.rs             BranchSpace (what BranchAndBound asks), Branchable
+│   │                         (integer), Relaxation
 │   ├── ruinable.rs           Ruinable, LocalRepair
 │   └── reduction.rs          ProblemReduction
 ├── common/                   shared data structures and helpers; put new shared code here
@@ -73,7 +78,11 @@ src/
 │   │                         and EdgeWeightType, shared by Tsp and Vrp
 │   ├── binary.rs             uniform_binary_crossover, hamming_distance, BinaryFixing,
 │   │                         lift_binary_solution, lift_compact_binary_solution,
-│   │                         apply_swap_as_two_flips
+│   │                         apply_swap_as_two_flips, BinaryRelaxation, the binary
+│   │                         BranchSpace glue (binary_ranges etc. and the
+│   │                         binary_branch_space! macro each fix.rs calls)
+│   ├── integer.rs            IntVar, IntVars (+ permutation), DomainRestriction and the
+│   │                         BranchSpace blanket impl over Branchable
 │   ├── tabu.rs               TabuKey (Var / Pair / Triple), TabuMemory
 │   ├── biased_fitness.rs     BiasedFitnessPopulation, binary_tournament
 │   ├── ruin_recreate.rs      the five destroy / repair operators over any Ruinable
@@ -104,17 +113,16 @@ src/
 │       ├── tsp/              lkh.rs, alns_for_tsp
 │       └── walksat_for_sat.rs
 └── problem/                  each holds problem, solution, neighbors, crossover
-    ├── branch.rs             BranchSpace (what BranchAndBound asks), Branchable (integer,
-    │                         one method), Relaxation, BinaryRelaxation, the binary glue
     ├── max_cut/              + kernel.rs (MaxCutKernel, an exact ProblemReduction),
     │                         eigen.rs (EigenvalueRelaxation, certified by Cholesky),
     │                         planted.rs (PlantedMaxCut)
     ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/
-    │                         (max_cut, qubo, sat, vertex_cover each add fix.rs, FixVariables)
+    │                         (max_cut, qubo, sat, vertex_cover each add fix.rs,
+    │                         FixVariables and BranchSpace)
     ├── integer/              IntegerProblem (a struct built from a closure),
-    │                         formula.rs (FormulaProblem, Expr, Constraint), the
-    │                         IntAssignment trait (own solution), IntVars (+ permutation),
-    │                         Change / Swap / Reverse moves, crossover.rs (IntCrossover)
+    │                         formula.rs (FormulaProblem, Expr, Constraint),
+    │                         Change / Swap / Reverse moves over IntAssignment,
+    │                         crossover.rs (IntCrossover)
     │                         IntervalRelaxation in formula.rs
     ├── vrp/                  one problem for the homogeneous and the heterogeneous
     │                         fleet (VehicleType slots, service time, TotalTime or

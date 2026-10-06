@@ -1,5 +1,5 @@
-use super::problem::{IntVars, raw};
-use crate::search_state::{Evaluate, ProblemTrait};
+use super::{Evaluate, ProblemTrait, raw};
+use crate::common::IntVars;
 
 /// A problem whose solutions, of the problem's own type, assign an integer to
 /// each variable.
@@ -10,8 +10,8 @@ use crate::search_state::{Evaluate, ProblemTrait};
 /// variable gain updated in [`assign`](Self::assign) and read back in
 /// [`assign_delta`](Self::assign_delta).
 ///
-/// [`IntegerProblem`](super::IntegerProblem) is the shortcut that brings its
-/// own solution, and is one of these.
+/// [`IntegerProblem`](crate::problem::IntegerProblem) is the shortcut that
+/// brings its own solution, and is one of these.
 pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
     /// The variables, fixed for the life of the problem.
     fn domains(&self) -> &IntVars;

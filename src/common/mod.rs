@@ -6,6 +6,7 @@ pub mod biased_fitness;
 pub mod binary;
 pub mod distance_store;
 pub mod graph;
+pub mod integer;
 pub mod parse;
 pub mod permutation;
 pub mod ruin_recreate;
@@ -15,11 +16,13 @@ pub use adaptive_weights::AdaptiveWeights;
 pub use anchored_sweep::AnchoredSweep;
 pub use biased_fitness::{BiasedFitnessPopulation, CostFn, DistanceFn, binary_tournament};
 pub use binary::{
-    BinaryFixing, apply_swap_as_two_flips, hamming_distance, lift_binary_solution,
+    BinaryFixing, BinaryRelaxation, apply_swap_as_two_flips, binary_node, binary_ranges,
+    binary_solution_with, binary_value, hamming_distance, lift_binary_solution,
     lift_compact_binary_solution, uniform_binary_crossover, variable_slots,
 };
 pub use distance_store::{DistanceStore, EdgeWeightType};
 pub use graph::{Graph, seeded_rng};
+pub use integer::{DomainRestriction, IntVar, IntVars};
 pub use parse::InstanceLines;
 pub use permutation::order_crossover;
 pub use ruin_recreate::{

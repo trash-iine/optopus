@@ -5,7 +5,7 @@
 [基本概念](concepts.md) の補足リファレンスです。問題型や move 型が実装できるすべてのトレイトの完全なシグネチャと、
 それぞれがどのヒューリスティクスを使えるようにするかを一覧にしています。
 
-これらのトレイトはすべて `optopus::trait_defs` で定義され、`optopus::search_state` と prelude から再エクスポートされています。
+これらのトレイトはすべて `optopus::trait_defs` で定義され、よく使うものは prelude からも再エクスポートされています。
 最初の三つは入場券です。これがなければどのヒューリスティクスも動きませんが、これだけで十分というわけでもありません。
 下の表で `Rankable` が解と move の二か所に別々の impl として現れること、そしてそれ以外のトレイトはそれぞれ特定のアルゴリズム群を使えるようにすることに注意してください。
 「X を動かすには何を実装すればよいか」の正式な答えは「必要とするもの」の列です。
@@ -26,6 +26,8 @@
 | `Distance` (`Solution` に実装) | `GeneticAlgorithm`。`ParentSelection::DistantTopK` に限らずどの選択戦略でも必要 | `fn distance(&self, other: &Self) -> usize` |
 | `BinaryProblem` | `common::binary` にある共通の二値機構 | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip`<br>`fn solution_from_assignment(&self, values: &[bool]) -> Solution` (既定はシード付きの解からの flip) |
 | `FixVariables` | 二値問題での `BranchAndBound` | `fn fix(&self, fixed: &[Option<bool>]) -> FixedVariables<Self>;`<br>`fn trivial_bound(&self) -> Evaluable<f64>` |
+| `IntAssignment` | `IntChangeNeighbor`、`IntSwapNeighbor`、`IntReverseNeighbor`、および `Branchable` を通じて `BranchAndBound` | `fn domains(&self) -> &IntVars;`<br>`fn get(sol, i) -> i64;`<br>`fn assign(&self, sol, i, value)`<br>`assign_delta`、`slot_delta`、`assign_swap`、`assign_swap_delta`、`assign_reverse`、`assign_reverse_delta` (既定あり。変化量は解のコピーに move を適用して求める) |
+| `BranchSpace` | `BranchAndBound` | `type Node: ProblemReduction<Source = Self, Target = Self>;`<br>`fn ranges(&self) -> Cow<IntVars>;`<br>`fn value(sol, i) -> i64;`<br>`fn node(&self, ranges: &IntVars) -> Self::Node;`<br>`fn solution_with(&self, values: Vec<i64>) -> Solution`。整数問題は `Branchable` から得るので、ここでは何も実装しません。二値問題は手で実装し、各メソッドを `optopus::common` の同名の関数 (`binary_ranges` など) に渡します。 |
 | `Branchable` | 整数問題での `BranchAndBound` | `fn restricted(&self, vars: IntVars) -> Self;`<br>`fn solution_from_values(&self, values: Vec<i64>) -> Solution` (既定あり) |
 | `Relaxation<P>` | `BranchAndBound` | `fn bound(&mut self, prob: &P, vars: &IntVars) -> Evaluable<f64>;`<br>`fn bound_against(&mut self, prob, vars, incumbent: Evaluable<f64>) -> Evaluable<f64>` (既定は暫定解を無視して `bound`)<br>`fn branch_hint(&mut self, prob: &P, vars: &IntVars) -> Option<usize>` (既定は `None`)。クロージャ `\|prob, vars\| -> Evaluable<f64>` も緩和になります。 |
 | `Ruinable` | `AdaptiveLargeNeighborhoodSearch` | `type Element: Copy + Eq; type Partial;`<br>`to_partial` / `finish`, `elements` / `remove_all`,<br>`removal_gain` / `relatedness` (破壊),<br>`num_buckets` / `num_places` / `insertion_cost` / `insert` (修復),<br>`num_elements` / `partial_energy` (どちらも既定あり) |

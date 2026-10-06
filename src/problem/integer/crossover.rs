@@ -1,7 +1,8 @@
 //! Crossover for the problems of this module.
 
 use super::formula::{FormulaProblem, FormulaSolution};
-use super::problem::{ChangeDelta, IntSolution, IntVars, IntegerProblem, PairDelta};
+use super::problem::{ChangeDelta, IntSolution, IntegerProblem, PairDelta};
+use crate::common::IntVars;
 use crate::common::permutation::order_crossover;
 use crate::error::OptError;
 use crate::search_state::Crossover;
@@ -77,11 +78,12 @@ impl Crossover<FormulaProblem> for IntCrossover {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::IntVar;
     use crate::heuristic::{
         GeneticAlgorithm, Heuristic, LocalSearch, ParentSelection, StopCondition,
         SubProblemBasedCrossover,
     };
-    use crate::problem::{Constraint, ConstraintRel, Expr, IntChangeNeighbor, IntVar};
+    use crate::problem::{Constraint, ConstraintRel, Expr, IntChangeNeighbor};
     use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SearchState};
     use rand::SeedableRng;
 

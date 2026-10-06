@@ -6,8 +6,8 @@ Companion reference for [Concepts](concepts.md). This page lists the full
 signatures of every trait a problem or move type can implement, and which
 heuristic each one unlocks.
 
-All of these traits are defined in `optopus::trait_defs` and re-exported from
-`optopus::search_state` and the prelude. The first three are the entry ticket:
+All of these traits are defined in `optopus::trait_defs`, and the prelude
+re-exports the ones most code needs. The first three are the entry ticket:
 no heuristic runs without them, but they are not sufficient on their own. Note
 that `Rankable` appears twice below, once on the solution and once on the move,
 as two separate impls, and that each further trait unlocks a specific family of
@@ -31,6 +31,8 @@ the section below the table.
 | `Distance` (on `Solution`) | `GeneticAlgorithm`, any selection strategy, not only `ParentSelection::DistantTopK` | `fn distance(&self, other: &Self) -> usize` |
 | `BinaryProblem` | the shared binary machinery in `common::binary` | `type Flip;`<br>`fn variable_indices(&self) -> Range<usize>;`<br>`fn variable(sol, i) -> bool;`<br>`fn flip_move(sol, i) -> Self::Flip`<br>`fn solution_from_assignment(&self, values: &[bool]) -> Solution` (default: flips from a seeded solution) |
 | `FixVariables` | `BranchAndBound` on a binary problem | `fn fix(&self, fixed: &[Option<bool>]) -> FixedVariables<Self>;`<br>`fn trivial_bound(&self) -> Evaluable<f64>` |
+| `IntAssignment` | `IntChangeNeighbor`, `IntSwapNeighbor`, `IntReverseNeighbor`, and `BranchAndBound` through `Branchable` | `fn domains(&self) -> &IntVars;`<br>`fn get(sol, i) -> i64;`<br>`fn assign(&self, sol, i, value)`<br>`assign_delta`, `slot_delta`, `assign_swap`, `assign_swap_delta`, `assign_reverse`, `assign_reverse_delta` (defaulted, each delta by applying the move to a copy) |
+| `BranchSpace` | `BranchAndBound` | `type Node: ProblemReduction<Source = Self, Target = Self>;`<br>`fn ranges(&self) -> Cow<IntVars>;`<br>`fn value(sol, i) -> i64;`<br>`fn node(&self, ranges: &IntVars) -> Self::Node;`<br>`fn solution_with(&self, values: Vec<i64>) -> Solution`. An integer problem gets it from `Branchable` and implements nothing here. A binary problem implements it by hand, handing each method to the function of the same name in `optopus::common`, such as `binary_ranges`. |
 | `Branchable` | `BranchAndBound` on an integer problem | `fn restricted(&self, vars: IntVars) -> Self;`<br>`fn solution_from_values(&self, values: Vec<i64>) -> Solution` (defaulted) |
 | `Relaxation<P>` | `BranchAndBound` | `fn bound(&mut self, prob: &P, vars: &IntVars) -> Evaluable<f64>;`<br>`fn bound_against(&mut self, prob, vars, incumbent: Evaluable<f64>) -> Evaluable<f64>` (default: `bound`, the incumbent ignored)<br>`fn branch_hint(&mut self, prob: &P, vars: &IntVars) -> Option<usize>` (default `None`). A closure `\|prob, vars\| -> Evaluable<f64>` is one. |
 | `Ruinable` | `AdaptiveLargeNeighborhoodSearch` | `type Element: Copy + Eq; type Partial;`<br>`to_partial` / `finish`, `elements` / `remove_all`,<br>`removal_gain` / `relatedness` (destroy),<br>`num_buckets` / `num_places` / `insertion_cost` / `insert` (repair),<br>`num_elements` / `partial_energy` (both defaulted) |

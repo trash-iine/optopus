@@ -7,7 +7,7 @@
 //! ```
 
 // Common types
-pub use crate::common::{Graph, seeded_rng};
+pub use crate::common::{BinaryRelaxation, Graph, IntVar, IntVars, seeded_rng};
 
 // Error type
 pub use crate::error::OptError;
@@ -29,15 +29,12 @@ pub use crate::heuristic::{
 
 // Traits
 pub use crate::trait_defs::{
-    Crossover, Distance, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
-    SubProblemExtractable,
+    Branchable, Crossover, Distance, EnabledTabu, Evaluable, Evaluate, IntAssignment,
+    MoveToNeighbor, ProblemTrait, Rankable, SubProblemExtractable,
 };
 
 // Problem and neighbor types
 pub use crate::problem::{
-    // Branch-and-bound
-    BinaryRelaxation,
-    Branchable,
     // Formula
     Constraint,
     ConstraintRel,
@@ -50,14 +47,11 @@ pub use crate::problem::{
     GraphColoringSolution,
     GraphColoringSwapNeighbor,
     // Integer variables
-    IntAssignment,
     IntChangeNeighbor,
     IntCrossover,
     IntReverseNeighbor,
     IntSolution,
     IntSwapNeighbor,
-    IntVar,
-    IntVars,
     IntegerProblem,
     IntervalRelaxation,
     // Job Shop Scheduling

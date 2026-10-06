@@ -2,6 +2,8 @@ use crate::trait_defs::{Evaluable, FixVariables, FixedVariables, Placed};
 
 use super::problem::Qubo;
 
+crate::common::binary::binary_branch_space!(Qubo);
+
 impl FixVariables for Qubo {
     /// The free variables under their own indices. A product of a free
     /// variable with one fixed at `1` becomes a linear term of the free one,

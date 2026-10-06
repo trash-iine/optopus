@@ -5,8 +5,8 @@
 
 use optopus::common::{BinaryFixing, variable_slots};
 use optopus::prelude::*;
-use optopus::problem::{BranchSpace, EigenvalueRelaxation, Relaxation};
-use optopus::trait_defs::{BinaryProblem, FixVariables, ProblemReduction};
+use optopus::problem::EigenvalueRelaxation;
+use optopus::trait_defs::{BinaryProblem, BranchSpace, FixVariables, ProblemReduction, Relaxation};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 

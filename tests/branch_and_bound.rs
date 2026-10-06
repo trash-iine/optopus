@@ -3,7 +3,8 @@
 //! relaxation is a bound on every assignment it covers.
 
 use optopus::prelude::*;
-use optopus::problem::{IntervalRelaxation, Relaxation};
+use optopus::problem::IntervalRelaxation;
+use optopus::trait_defs::Relaxation;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
