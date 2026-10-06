@@ -6,7 +6,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::common::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
-use crate::trait_defs::{Branchable, IntAssignment, Relaxation, raw, with_value};
+use crate::trait_defs::{Branchable, IntAssignment, Relaxation};
 use rand::Rng;
 
 /// An arithmetic expression over integer variables.
@@ -850,7 +850,7 @@ impl IntAssignment for FormulaProblem {
             sol.constraint_vals[c] += self.constraint_polys[c].change_delta(&sol.values, i, value);
         }
         sol.values[i] = value;
-        sol.objective = with_value(sol.objective, raw(sol.objective) + delta);
+        sol.objective = sol.objective.with_value(sol.objective.raw() + delta);
         if !self.keeps_deltas() {
             return;
         }
@@ -1098,7 +1098,7 @@ mod tests {
     }
 
     fn raw_of(prob: &FormulaProblem, x: &[i64]) -> f64 {
-        raw(prob.objective(x))
+        prob.objective(x).raw()
     }
 
     #[test]
@@ -1247,7 +1247,7 @@ mod tests {
     }
 
     fn check_table(prob: &FormulaProblem, sol: &FormulaSolution) {
-        assert!((raw(sol.evaluate()) - raw_of(prob, sol.values())).abs() < 1e-9);
+        assert!((sol.evaluate().raw() - raw_of(prob, sol.values())).abs() < 1e-9);
         for m in IntChangeNeighbor::iter(prob, sol) {
             let mut x = sol.values().to_vec();
             x[m.var] = m.value;
@@ -1331,7 +1331,7 @@ mod tests {
         assert_eq!(sub.variables().len(), 2);
         let sub_sol = sub.solution_from(vec![0, -2]).unwrap();
         // The sub-problem's objective is the full one with the fixed values in.
-        assert!((raw(sub_sol.evaluate()) - raw_of(&prob, &[1, 0, 3, -2])).abs() < 1e-9);
+        assert!((sub_sol.evaluate().raw() - raw_of(&prob, &[1, 0, 3, -2])).abs() < 1e-9);
         let lifted = prob.lift_solution(&a, &b, &sub_sol);
         assert_eq!(lifted.values(), &[1, 0, 3, -2]);
         check_table(&prob, &lifted);
@@ -1411,7 +1411,7 @@ mod tests {
                 (x, sol.values().to_vec())
             };
             assert_eq!(want, applied);
-            assert!((raw(sol.evaluate()) - raw_of(&prob, sol.values())).abs() < 1e-9);
+            assert!((sol.evaluate().raw() - raw_of(&prob, sol.values())).abs() < 1e-9);
         }
     }
 

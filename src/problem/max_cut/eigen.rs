@@ -2,7 +2,7 @@
 
 use super::problem::MaxCut;
 use crate::common::{IntVars, binary::fixed_by};
-use crate::trait_defs::{Evaluable, FixVariables, Relaxation, raw};
+use crate::trait_defs::{Evaluable, FixVariables, Relaxation};
 
 /// The eigenvalue bound of Delorme and Poljak, a [`Relaxation`] of MaxCut much
 /// tighter than the positive weights
@@ -108,7 +108,7 @@ impl EigenvalueRelaxation {
     /// found so far if any.
     fn cut_bound(&self, prob: &MaxCut, vars: &IntVars, incumbent: Option<f64>) -> f64 {
         let fixed = prob.fix(&fixed_by(vars));
-        let positive = fixed.offset + raw(fixed.target.trivial_bound());
+        let positive = fixed.offset + fixed.target.trivial_bound().raw();
         let lap = Laplacian::of(&fixed.target);
         if lap.n == 0 || lap.n > self.certify_limit {
             return positive;
