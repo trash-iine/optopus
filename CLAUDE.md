@@ -81,12 +81,13 @@ src/
 │   │   ├── distance_store.rs DistanceStore (full matrix / k nearest / given matrix)
 │   │   │                     and EdgeWeightType, shared by Tsp and Vrp
 │   │   └── parse.rs          InstanceLines
-│   ├── representation/       helpers per kind of decision variable
-│   │   ├── binary.rs         uniform_binary_crossover, hamming_distance, BinaryFixing,
-│   │   │                     lift_binary_solution, lift_compact_binary_solution,
-│   │   │                     apply_swap_as_two_flips, BinaryRelaxation, the binary
-│   │   │                     BranchSpace glue (binary_ranges etc. and the
-│   │   │                     exported binary_branch_space! macro each fix.rs calls)
+│   ├── representation/       helpers per kind of decision variable, and hamming_distance (mod.rs)
+│   │   ├── binary/           crossover.rs (uniform_binary_crossover, lift_binary_solution,
+│   │   │                     lift_compact_binary_solution), fix.rs (BinaryFixing,
+│   │   │                     BinaryRelaxation, the binary BranchSpace glue: binary_ranges
+│   │   │                     etc. and the exported binary_branch_space! macro each
+│   │   │                     problem's fix.rs calls), neighbor.rs (apply_swap_as_two_flips,
+│   │   │                     differing_pairs, random_differing_pair)
 │   │   ├── integer.rs        IntVar, IntVars (+ permutation), DomainRestriction and the
 │   │   │                     BranchSpace blanket impl over Branchable
 │   │   └── permutation.rs    order_crossover (OX), random_distinct_pair
