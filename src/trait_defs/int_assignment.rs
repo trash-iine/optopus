@@ -10,8 +10,8 @@ use crate::common::IntVars;
 /// variable gain updated in [`assign`](Self::assign) and read back in
 /// [`assign_delta`](Self::assign_delta).
 ///
-/// [`IntegerProblem`](crate::problem::IntegerProblem) is the shortcut that brings its
-/// own solution, and is one of these.
+/// [`IntegerProblem`](crate::problem::IntegerProblem) is the shortcut that
+/// brings its own solution, and is one of these.
 pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
     /// The variables, fixed for the life of the problem.
     fn domains(&self) -> &IntVars;

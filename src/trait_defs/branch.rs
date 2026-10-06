@@ -52,8 +52,8 @@ pub trait BranchSpace: ProblemTrait<Solution: Evaluate> {
 /// An integer problem that can be rebuilt over narrower ranges.
 ///
 /// [`IntegerProblem`](crate::problem::IntegerProblem) and
-/// [`FormulaProblem`](crate::problem::FormulaProblem) implement it. A problem of your
-/// own implements [`restricted`](Self::restricted), and
+/// [`FormulaProblem`](crate::problem::FormulaProblem) implement it. A problem
+/// of your own implements [`restricted`](Self::restricted), and
 /// [`solution_from_values`](Self::solution_from_values) has a default.
 ///
 /// A node of the search is the problem with some ranges narrowed, and the

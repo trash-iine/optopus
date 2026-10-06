@@ -12,11 +12,14 @@
 //!   which on a binary variable is a flip.
 //! - [`IntSwapNeighbor`] exchanges the values of two variables.
 //! - [`IntReverseNeighbor`] reverses the values of a range of variables, which
-//!   on a [permutation](crate::common::IntVars::permutation) read as a tour is a 2-opt move.
+//!   on a [permutation](crate::common::IntVars::permutation) read as a tour is
+//!   a 2-opt move.
 //!
-//! The moves are written against [`IntAssignment`](crate::trait_defs::IntAssignment), which asks only to read
-//! and write one value of a solution. A problem that wants a solution of its
-//! own, to keep whatever makes a move cheap to price, implements that instead.
+//! The moves are written against
+//! [`IntAssignment`](crate::trait_defs::IntAssignment), which asks only to
+//! read and write one value of a solution. A problem that wants a solution of
+//! its own, to keep whatever makes a move cheap to price, implements that
+//! instead.
 //!
 //! [`FormulaProblem`] is the other way in. Its objective and constraints are
 //! [`Expr`]essions, and it derives the price of every move from them.

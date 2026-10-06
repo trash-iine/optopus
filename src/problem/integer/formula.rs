@@ -6,8 +6,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::common::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
-use crate::trait_defs::raw;
-use crate::trait_defs::{Branchable, IntAssignment, Relaxation};
+use crate::trait_defs::{Branchable, IntAssignment, Relaxation, raw, with_value};
 use rand::Rng;
 
 /// An arithmetic expression over integer variables.
@@ -851,7 +850,7 @@ impl IntAssignment for FormulaProblem {
             sol.constraint_vals[c] += self.constraint_polys[c].change_delta(&sol.values, i, value);
         }
         sol.values[i] = value;
-        sol.objective = crate::trait_defs::with_value(sol.objective, raw(sol.objective) + delta);
+        sol.objective = with_value(sol.objective, raw(sol.objective) + delta);
         if !self.keeps_deltas() {
             return;
         }

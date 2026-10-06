@@ -1,12 +1,10 @@
 //! The moves every [`IntAssignment`] gets.
 
-use crate::common::IntVar;
-use crate::trait_defs::IntAssignment;
-use crate::trait_defs::with_value;
 use crate::{
-    common::{TabuKey, TabuMemory, permutation::random_distinct_pair},
+    common::{IntVar, TabuKey, TabuMemory, permutation::random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    trait_defs::{IntAssignment, with_value},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -183,8 +181,8 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
         Ok(())
     }
 
-    /// Empty on a [permutation](crate::common::IntVars::permutation), where changing
-    /// one value always repeats another.
+    /// Empty on a [permutation](crate::common::IntVars::permutation), where
+    /// changing one value always repeats another.
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
         Changes::new(prob, sol)
     }
@@ -333,8 +331,8 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
 
 /// Reverses the order of the values of variables `i..=j`, `i < j`, when each
 /// value fits its new variable's range. On a
-/// [permutation](crate::common::IntVars::permutation) read as a tour this is a 2-opt
-/// move, and the result is again a permutation.
+/// [permutation](crate::common::IntVars::permutation) read as a tour this is a
+/// 2-opt move, and the result is again a permutation.
 #[derive(Debug, Clone, Copy)]
 pub struct IntReverseNeighbor {
     /// The first variable of the range.

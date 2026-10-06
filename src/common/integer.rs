@@ -79,12 +79,16 @@ impl IntVar {
     }
 }
 
-/// The variables of an [`IntegerProblem`](crate::problem::IntegerProblem), indexed `0..n`.
+/// Integer variables indexed `0..n`, those of an
+/// [`IntegerProblem`](crate::problem::IntegerProblem) or a
+/// [`FormulaProblem`](crate::problem::FormulaProblem), and the ranges a node
+/// of [`BranchAndBound`](crate::heuristic::BranchAndBound) is stated in,
+/// whatever the problem.
 ///
 /// Dereferences to `[IntVar]`. It also keeps the running total of
 /// [`IntVar::num_changes`], which is what lets
-/// [`IntChangeNeighbor`](crate::problem::IntChangeNeighbor) draw a uniformly random
-/// move in `O(log n)`.
+/// [`IntChangeNeighbor`](crate::problem::IntChangeNeighbor) draw a uniformly
+/// random move in `O(log n)`.
 #[derive(Clone, Debug)]
 pub struct IntVars {
     vars: Vec<IntVar>,
@@ -129,9 +133,11 @@ impl IntVars {
     /// position `p`, the city visited `p`th in a tour for instance.
     ///
     /// A random solution is a uniformly random permutation. Only moves that
-    /// keep a permutation apply, [`IntSwapNeighbor`](crate::problem::IntSwapNeighbor)
-    /// and [`IntReverseNeighbor`](crate::problem::IntReverseNeighbor), and
-    /// [`IntChangeNeighbor`](crate::problem::IntChangeNeighbor) has no moves here.
+    /// keep a permutation apply,
+    /// [`IntSwapNeighbor`](crate::problem::IntSwapNeighbor) and
+    /// [`IntReverseNeighbor`](crate::problem::IntReverseNeighbor), and
+    /// [`IntChangeNeighbor`](crate::problem::IntChangeNeighbor) has no moves
+    /// here.
     pub fn permutation(n: usize) -> Self {
         let top = n.saturating_sub(1) as i64;
         Self {
