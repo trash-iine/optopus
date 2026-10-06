@@ -5,7 +5,7 @@ use std::borrow::Cow;
 
 use rand::Rng;
 
-use crate::common::{IntVar, IntVars};
+use crate::building_blocks::{IntVar, IntVars};
 use crate::error::OptError;
 use crate::trait_defs::{
     BinaryProblem, Evaluable, FixVariables, FixedVariables, MoveToNeighbor, Placed,
@@ -227,7 +227,7 @@ pub(crate) fn fixed_by(ranges: &IntVars) -> Vec<Option<bool>> {
 
 /// Implements [`BranchSpace`](crate::trait_defs::BranchSpace) for each binary
 /// problem given, every method handed to the function of the same name in
-/// [`common`](crate::common), such as [`binary_ranges`](crate::common::binary_ranges).
+/// [`building_blocks`](crate::building_blocks), such as [`binary_ranges`](crate::building_blocks::binary_ranges).
 ///
 /// A binary problem of your own calls `optopus::binary_branch_space!(MyProblem);`
 /// beside its [`FixVariables`](crate::trait_defs::FixVariables) impl, and
@@ -239,25 +239,25 @@ pub(crate) fn fixed_by(ranges: &IntVars) -> Vec<Option<bool>> {
 macro_rules! binary_branch_space {
     ($($problem:ty),*) => {$(
         impl $crate::trait_defs::BranchSpace for $problem {
-            type Node = $crate::common::BinaryFixing<$problem>;
+            type Node = $crate::building_blocks::BinaryFixing<$problem>;
 
-            fn ranges(&self) -> ::std::borrow::Cow<'_, $crate::common::IntVars> {
-                $crate::common::binary_ranges(self)
+            fn ranges(&self) -> ::std::borrow::Cow<'_, $crate::building_blocks::IntVars> {
+                $crate::building_blocks::binary_ranges(self)
             }
 
             fn value(sol: &Self::Solution, i: usize) -> i64 {
-                $crate::common::binary_value::<$problem>(sol, i)
+                $crate::building_blocks::binary_value::<$problem>(sol, i)
             }
 
             fn node(
                 &self,
-                ranges: &$crate::common::IntVars,
-            ) -> $crate::common::BinaryFixing<$problem> {
-                $crate::common::binary_node(self, ranges)
+                ranges: &$crate::building_blocks::IntVars,
+            ) -> $crate::building_blocks::BinaryFixing<$problem> {
+                $crate::building_blocks::binary_node(self, ranges)
             }
 
             fn solution_with(&self, values: Vec<i64>) -> Self::Solution {
-                $crate::common::binary_solution_with(self, values)
+                $crate::building_blocks::binary_solution_with(self, values)
             }
         }
     )*};

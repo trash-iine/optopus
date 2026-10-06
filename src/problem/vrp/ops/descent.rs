@@ -26,7 +26,7 @@ use rand::rngs::SmallRng;
 
 use super::pricing::{EditPrice, SlotEdit};
 use super::{RouteState, node_at};
-use crate::common::{AnchoredSweep, MIN_IMPROVEMENT};
+use crate::building_blocks::{AnchoredSweep, MIN_IMPROVEMENT};
 use crate::problem::Vrp;
 
 /// Longest customer segment relocated or swapped as a unit.

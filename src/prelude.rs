@@ -7,7 +7,7 @@
 //! ```
 
 // Common types
-pub use crate::common::{BinaryRelaxation, Graph, IntVar, IntVars, seeded_rng};
+pub use crate::building_blocks::{BinaryRelaxation, Graph, IntVar, IntVars, seeded_rng};
 
 // Error type
 pub use crate::error::OptError;

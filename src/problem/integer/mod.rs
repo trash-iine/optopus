@@ -12,7 +12,7 @@
 //!   which on a binary variable is a flip.
 //! - [`IntSwapNeighbor`] exchanges the values of two variables.
 //! - [`IntReverseNeighbor`] reverses the values of a range of variables, which
-//!   on a [permutation](crate::common::IntVars::permutation) read as a tour is
+//!   on a [permutation](crate::building_blocks::IntVars::permutation) read as a tour is
 //!   a 2-opt move.
 //!
 //! The moves are written against

@@ -1,6 +1,6 @@
 use super::problem::{Vrp, VrpSolution};
 use super::split::split_giant_tour;
-use crate::common::order_crossover;
+use crate::building_blocks::order_crossover;
 use crate::search_state::Crossover;
 
 /// Order-crossover (OX) for VRP over the "giant tour" encoding.

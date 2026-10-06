@@ -1,7 +1,7 @@
 //! The moves every [`IntAssignment`] gets.
 
 use crate::{
-    common::{IntVar, TabuKey, TabuMemory, permutation::random_distinct_pair},
+    building_blocks::{IntVar, TabuKey, TabuMemory, permutation::random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
     trait_defs::IntAssignment,
@@ -181,7 +181,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
         Ok(())
     }
 
-    /// Empty on a [permutation](crate::common::IntVars::permutation), where
+    /// Empty on a [permutation](crate::building_blocks::IntVars::permutation), where
     /// changing one value always repeats another.
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
         Changes::new(prob, sol)
@@ -215,7 +215,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
 
 /// Exchanges the values of variables `i` and `j`. Only pairs whose values
 /// differ and fit each other's range are moves. On a
-/// [permutation](crate::common::IntVars::permutation) the result is again one.
+/// [permutation](crate::building_blocks::IntVars::permutation) the result is again one.
 #[derive(Debug, Clone, Copy)]
 pub struct IntSwapNeighbor {
     /// The smaller of the two variables.
@@ -331,7 +331,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
 
 /// Reverses the order of the values of variables `i..=j`, `i < j`, when each
 /// value fits its new variable's range. On a
-/// [permutation](crate::common::IntVars::permutation) read as a tour this is a
+/// [permutation](crate::building_blocks::IntVars::permutation) read as a tour this is a
 /// 2-opt move, and the result is again a permutation.
 #[derive(Debug, Clone, Copy)]
 pub struct IntReverseNeighbor {
@@ -424,7 +424,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntReverseNeighbor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::{IntVar, IntVars};
+    use crate::building_blocks::{IntVar, IntVars};
     use crate::heuristic::{Heuristic, LocalSearch, StopCondition, TabuSearch};
     use crate::problem::{IntSolution, IntegerProblem};
     use crate::search_state::{ProblemTrait, SearchState};

@@ -1,4 +1,4 @@
-use crate::common::{lift_compact_binary_solution, uniform_binary_crossover};
+use crate::building_blocks::{lift_compact_binary_solution, uniform_binary_crossover};
 use crate::search_state::{Crossover, SubProblemExtractable};
 
 use super::problem::{Sat, SatSolution};

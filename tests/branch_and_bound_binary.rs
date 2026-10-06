@@ -3,7 +3,7 @@
 //! of a node, and the optimum a native heuristic helps prove is the one
 //! enumeration finds.
 
-use optopus::common::{BinaryFixing, variable_slots};
+use optopus::building_blocks::{BinaryFixing, variable_slots};
 use optopus::prelude::*;
 use optopus::problem::EigenvalueRelaxation;
 use optopus::trait_defs::{BinaryProblem, BranchSpace, FixVariables, ProblemReduction, Relaxation};

@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 
 use super::adjacency::RouteAdjacency;
 use super::ops;
-use crate::common::{DistanceStore, EdgeWeightType};
+use crate::building_blocks::{DistanceStore, EdgeWeightType};
 use crate::error::OptError;
 use crate::trait_defs::{Distance, Evaluable, Evaluate, ProblemTrait};
 
@@ -1172,7 +1172,7 @@ impl Vrp {
     /// Reads the CVRPLIB format regardless of the file's name, the reader
     /// [`Vrp::load_file`] picks by extension.
     pub fn load_cvrplib(path: &std::path::Path) -> Result<Self, OptError> {
-        use crate::common::InstanceLines;
+        use crate::building_blocks::InstanceLines;
 
         let mut lines = InstanceLines::open(path)?;
 

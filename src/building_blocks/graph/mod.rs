@@ -14,7 +14,7 @@ static ZERO_WEIGHT: f32 = 0.0;
 /// # Construction
 ///
 /// ```
-/// use optopus::common::Graph;
+/// use optopus::building_blocks::Graph;
 ///
 /// // From edge list
 /// let g = Graph::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
@@ -47,7 +47,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::new();
+    /// let g = optopus::building_blocks::Graph::new();
     /// assert!(g.is_empty());
     /// ```
     pub fn new() -> Self {
@@ -64,7 +64,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::from_edges([
+    /// let g = optopus::building_blocks::Graph::from_edges([
     ///     (0, 1, 1.0),
     ///     (0, 2, 2.0),
     ///     (1, 2, 3.0),
@@ -89,7 +89,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let mut g = optopus::common::Graph::new();
+    /// let mut g = optopus::building_blocks::Graph::new();
     /// assert_eq!(g.len(), 0);
     ///
     /// g.add_weight(0, 1, 1.0);
@@ -105,7 +105,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0)]);
+    /// let g = optopus::building_blocks::Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0)]);
     /// assert_eq!(g.num_vertices(), 3);
     /// ```
     pub fn num_vertices(&self) -> usize {
@@ -117,7 +117,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+    /// let g = optopus::building_blocks::Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
     /// assert_eq!(g.num_edges(), 3);
     /// ```
     pub fn num_edges(&self) -> usize {
@@ -129,7 +129,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::new();
+    /// let g = optopus::building_blocks::Graph::new();
     /// assert!(g.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
@@ -141,7 +141,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let mut g = optopus::common::Graph::new();
+    /// let mut g = optopus::building_blocks::Graph::new();
     /// g.add_weight(0, 1, 1.0);
     /// g.add_weight(0, 2, 1.0);
     ///
@@ -158,7 +158,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::from_edges([(0, 1, 1.0), (0, 2, 2.0)]);
+    /// let g = optopus::building_blocks::Graph::from_edges([(0, 1, 1.0), (0, 2, 2.0)]);
     /// for &(j, w) in g.iter_on_adjacency(0) {
     ///     println!("{} {}", j, w);
     /// }
@@ -183,7 +183,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
+    /// let g = optopus::building_blocks::Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]);
     /// assert_eq!(g.degree(0), 2);
     /// assert_eq!(g.degree(1), 2);
     /// ```
@@ -202,7 +202,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::from_edges([(0, 1, 1.0), (0, 2, 2.0)]);
+    /// let g = optopus::building_blocks::Graph::from_edges([(0, 1, 1.0), (0, 2, 2.0)]);
     /// let edges: Vec<_> = g.edges().collect();
     /// assert_eq!(edges.len(), 2);
     /// ```
@@ -223,7 +223,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let mut g = optopus::common::Graph::new();
+    /// let mut g = optopus::building_blocks::Graph::new();
     /// g.add_weight(0, 1, 1.0);
     /// g.add_weight(0, 2, 1.0);
     /// g.add_weight(0, 1, 2.0);
@@ -245,7 +245,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let mut g = optopus::common::Graph::new();
+    /// let mut g = optopus::building_blocks::Graph::new();
     /// g.set_weight(0, 1, 5.0);
     /// g.set_weight(0, 1, 3.0);
     /// assert_eq!(g[(0, 1)], 3.0); // overwritten, not 8.0
@@ -267,7 +267,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let mut g = optopus::common::Graph::new();
+    /// let mut g = optopus::building_blocks::Graph::new();
     /// g.add_edge(0, 1);
     /// assert_eq!(g[(0, 1)], 1.0);
     /// assert!(g.has_edge(0, 1));
@@ -287,7 +287,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let mut g = optopus::common::Graph::new();
+    /// let mut g = optopus::building_blocks::Graph::new();
     /// g.set_weight(0, 1, 1.0);
     /// assert_eq!(g.get_weight(0, 1), 1.0);
     /// assert_eq!(g[(0, 1)], 1.0);   // equivalent
@@ -309,7 +309,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::from_edges([(0, 1, 1.0)]);
+    /// let g = optopus::building_blocks::Graph::from_edges([(0, 1, 1.0)]);
     /// assert!(g.has_edge(0, 1));
     /// assert!(g.has_edge(1, 0));  // symmetric
     /// assert!(!g.has_edge(0, 2));
@@ -329,7 +329,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// use optopus::common::Graph;
+    /// use optopus::building_blocks::Graph;
     ///
     /// let g = Graph::from_edges([(0, 1, 1.0), (1, 2, 2.0), (0, 2, 3.0)]);
     /// let sub = g.induced_subgraph(|v| v != 1);
@@ -369,7 +369,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```no_run
-    /// use optopus::common::Graph;
+    /// use optopus::building_blocks::Graph;
     ///
     /// let g = Graph::load_from_file("data/instances/max_cut/G1").unwrap();
     /// println!("{g}");
@@ -377,7 +377,7 @@ impl Graph {
     pub fn load_from_file(
         path: impl AsRef<std::path::Path>,
     ) -> Result<Self, crate::error::OptError> {
-        use crate::common::InstanceLines;
+        use crate::building_blocks::InstanceLines;
 
         let mut lines = InstanceLines::open(path)?;
         let header = lines
@@ -508,7 +508,7 @@ impl std::ops::Index<(usize, usize)> for Graph {
     /// # Examples
     ///
     /// ```
-    /// let g = optopus::common::Graph::from_edges([(0, 1, 3.0)]);
+    /// let g = optopus::building_blocks::Graph::from_edges([(0, 1, 3.0)]);
     /// assert_eq!(g[(0, 1)], 3.0);
     /// assert_eq!(g[(1, 0)], 3.0); // symmetric
     /// assert_eq!(g[(0, 2)], 0.0); // non-existent edge
@@ -529,10 +529,10 @@ impl std::ops::Index<(usize, usize)> for Graph {
 /// # Examples
 ///
 /// ```
-/// let g = optopus::common::Graph::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
+/// let g = optopus::building_blocks::Graph::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
 /// assert_eq!(format!("{g}"), "Graph(vertices: 3, edges: 2)");
 ///
-/// let empty = optopus::common::Graph::new();
+/// let empty = optopus::building_blocks::Graph::new();
 /// assert_eq!(format!("{empty}"), "Graph(empty)");
 /// ```
 impl std::fmt::Display for Graph {

@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use super::{Heuristic, StopCondition};
-use crate::common::{IntVar, IntVars};
+use crate::building_blocks::{IntVar, IntVars};
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, SearchState};
 use crate::trait_defs::{BranchSpace, Relaxation};

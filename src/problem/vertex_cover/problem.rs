@@ -1,4 +1,4 @@
-use crate::common::Graph;
+use crate::building_blocks::Graph;
 use crate::search_state::{Distance, ProblemTrait};
 
 /// The Minimum Vertex Cover problem.
@@ -38,7 +38,7 @@ impl crate::trait_defs::Evaluate for VertexCoverSolution {
 
 impl Distance for VertexCoverSolution {
     fn distance(&self, other: &Self) -> usize {
-        crate::common::hamming_distance(&self.x, &other.x)
+        crate::building_blocks::hamming_distance(&self.x, &other.x)
     }
 }
 

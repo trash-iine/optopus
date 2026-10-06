@@ -87,7 +87,7 @@ builds instances around a chosen solution, so the optimum is exact by
 construction rather than a best-known value. 
 
 ```rust
-use optopus::common::seeded_rng;
+use optopus::building_blocks::seeded_rng;
 use optopus::problem::{PlantedMaxCut, TileProbs2d};
 
 let planted = PlantedMaxCut::tile_planting_2d(

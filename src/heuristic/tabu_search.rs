@@ -46,7 +46,7 @@ where
     ///
     /// Panics if `tabu_tenure.0 > tabu_tenure.1` (an empty range).
     pub fn new(stop_condition: StopCondition, tabu_tenure: (u64, u64)) -> Self {
-        crate::common::tabu::assert_valid_tenure(tabu_tenure);
+        crate::building_blocks::tabu::assert_valid_tenure(tabu_tenure);
         Self {
             stop_condition,
             tabu_tenure,

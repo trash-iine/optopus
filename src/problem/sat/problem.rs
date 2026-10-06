@@ -55,7 +55,7 @@ impl crate::trait_defs::Evaluate for SatSolution {
 
 impl Distance for SatSolution {
     fn distance(&self, other: &Self) -> usize {
-        crate::common::hamming_distance(&self.x, &other.x)
+        crate::building_blocks::hamming_distance(&self.x, &other.x)
     }
 }
 
@@ -241,7 +241,7 @@ impl Sat {
 
     /// Loads a MaxSAT instance from a DIMACS CNF file.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
-        use crate::common::InstanceLines;
+        use crate::building_blocks::InstanceLines;
 
         let mut lines = InstanceLines::open(path)?;
 

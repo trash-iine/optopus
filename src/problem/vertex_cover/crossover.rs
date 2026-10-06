@@ -1,4 +1,4 @@
-use crate::common::{lift_binary_solution, uniform_binary_crossover};
+use crate::building_blocks::{lift_binary_solution, uniform_binary_crossover};
 use crate::search_state::{Crossover, SubProblemExtractable};
 
 use super::problem::{VertexCover, VertexCoverSolution};
@@ -49,7 +49,7 @@ impl SubProblemExtractable for VertexCover {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::Graph;
+    use crate::building_blocks::Graph;
     use rand::SeedableRng;
 
     fn make_vc() -> VertexCover {

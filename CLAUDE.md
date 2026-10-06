@@ -71,7 +71,7 @@ src/
 │   │                         (integer), Relaxation
 │   ├── ruinable.rs           Ruinable, LocalRepair
 │   └── reduction.rs          ProblemReduction
-├── common/                   shared data structures and helpers; put new shared code here
+├── building_blocks/          shared data structures and helpers; put new shared code here
 │   ├── graph/                Graph (mod.rs), random and lattice generators (generator.rs),
 │   │                         seeded_rng
 │   ├── distance_store.rs     DistanceStore (full matrix / k nearest / given matrix)

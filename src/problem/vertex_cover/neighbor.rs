@@ -2,7 +2,7 @@
 
 use super::VertexCover;
 use crate::{
-    common::{
+    building_blocks::{
         TabuKey, TabuMemory,
         binary::{differing_pairs, random_differing_pair},
     },
@@ -229,7 +229,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
         prob: &VertexCover,
         sol: &mut VertexCoverSolution,
     ) -> Result<(), OptError> {
-        crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
+        crate::building_blocks::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
@@ -263,7 +263,7 @@ mod tests {
     use crate::search_state::SearchState;
 
     fn make_triangle() -> VertexCover {
-        let mut g = crate::common::Graph::new();
+        let mut g = crate::building_blocks::Graph::new();
         g.add_edge(0, 1);
         g.add_edge(0, 2);
         g.add_edge(1, 2);

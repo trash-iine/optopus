@@ -34,7 +34,7 @@ impl crate::trait_defs::Evaluate for JobShopSolution {
 impl Distance for JobShopSolution {
     /// Position-based dissimilarity: number of positions where the job index differs.
     fn distance(&self, other: &Self) -> usize {
-        crate::common::hamming_distance(&self.operations, &other.operations)
+        crate::building_blocks::hamming_distance(&self.operations, &other.operations)
     }
 }
 
@@ -78,7 +78,7 @@ impl JobShopScheduling {
     /// ```
     /// Machine indices are 0-indexed. Empty lines and `#`-prefixed comment lines are ignored.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, OptError> {
-        use crate::common::InstanceLines;
+        use crate::building_blocks::InstanceLines;
 
         let path = path.as_ref();
         let mut lines = InstanceLines::open(path)?;
@@ -96,7 +96,7 @@ impl JobShopScheduling {
 
         let mut iter = tokens.into_iter();
         fn parse<T: std::str::FromStr>(
-            lines: &crate::common::InstanceLines,
+            lines: &crate::building_blocks::InstanceLines,
             entry: Option<(usize, String)>,
             what: &str,
         ) -> Result<T, OptError>

@@ -56,7 +56,7 @@ impl Evaluate for QuboSolution {
 
 impl Distance for QuboSolution {
     fn distance(&self, other: &Self) -> usize {
-        crate::common::hamming_distance(&self.x, &other.x)
+        crate::building_blocks::hamming_distance(&self.x, &other.x)
     }
 }
 
@@ -429,7 +429,7 @@ impl Qubo {
     /// (diagonal) coefficient. Duplicate entries follow [`set_q`](Self::set_q)
     /// semantics: the last write wins.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
-        use crate::common::InstanceLines;
+        use crate::building_blocks::InstanceLines;
 
         let mut lines = InstanceLines::open(path)?;
         let header = lines

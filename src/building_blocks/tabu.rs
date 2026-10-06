@@ -127,7 +127,7 @@ impl Hasher for TabuKeyHasher {
 /// `iteration >= until`, with no off-by-one to get wrong at each call site.
 ///
 /// ```
-/// use optopus::common::TabuMemory;
+/// use optopus::building_blocks::TabuMemory;
 /// use rand::SeedableRng;
 ///
 /// let mut rng = rand::rngs::SmallRng::seed_from_u64(0);

@@ -5,10 +5,10 @@
 //! population onto one basin within a few hundred generations; blending in a
 //! diversity rank is what lets HGS keep searching for millions of them.
 
-use crate::common::{BiasedFitnessPopulation, CostFn};
+use crate::building_blocks::{BiasedFitnessPopulation, CostFn};
 use crate::problem::vrp::RouteAdjacency;
 
-pub(super) use crate::common::binary_tournament;
+pub(super) use crate::building_blocks::binary_tournament;
 
 /// A member of the population: a route partition plus the adjacency view the
 /// diversity metric is measured on.
@@ -136,7 +136,7 @@ mod tests {
         );
     }
 
-    /// The ranking itself lives in `common::BiasedFitnessPopulation` and is
+    /// The ranking itself lives in `building_blocks::BiasedFitnessPopulation` and is
     /// tested there. What is this wrapper's own is that the penalty reaches the
     /// cost, so a member that is cheap only while infeasibility is cheap stops
     /// winning once the penalty rises, and that `set_cost` is what moves it.

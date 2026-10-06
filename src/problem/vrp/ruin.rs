@@ -228,7 +228,7 @@ impl AnchoredRouteDescent {
     }
 
     /// Builder-style: how many nearest partners of each anchor the sweep
-    /// visits along with it. Defaults to [`AnchoredSweep::DEFAULT_RING`](crate::common::AnchoredSweep::DEFAULT_RING), and
+    /// visits along with it. Defaults to [`AnchoredSweep::DEFAULT_RING`](crate::building_blocks::AnchoredSweep::DEFAULT_RING), and
     /// zero sweeps the anchors alone.
     pub fn with_ring(mut self, ring: usize) -> Self {
         self.descent.set_ring(ring);

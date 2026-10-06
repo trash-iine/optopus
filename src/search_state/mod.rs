@@ -141,7 +141,7 @@ where
     /// to them draws from.
     ///
     /// Reached only through applying a move.
-    tabu: crate::common::TabuMemory,
+    tabu: crate::building_blocks::TabuMemory,
     /// Whether [`apply`](Self::apply) and
     /// [`apply_move_only`](Self::apply_move_only) record what they apply.
     ///
@@ -221,7 +221,7 @@ where
             rng,
             trajectory: Vec::new(),
             objective_probe: None,
-            tabu: crate::common::TabuMemory::default(),
+            tabu: crate::building_blocks::TabuMemory::default(),
             record_tabu_on: false,
         }
     }
@@ -359,7 +359,7 @@ where
             rng: child_rng,
             trajectory: Vec::new(),
             objective_probe: self.objective_probe,
-            tabu: crate::common::TabuMemory::default(),
+            tabu: crate::building_blocks::TabuMemory::default(),
             record_tabu_on: false,
         }
     }
@@ -559,7 +559,7 @@ where
     /// phase that should go on avoiding what the parent just did.
     ///
     /// The boundaries are translated into this state's iteration frame, see
-    /// [`TabuMemory::inherit`](crate::common::TabuMemory::inherit). Between a
+    /// [`TabuMemory::inherit`](crate::building_blocks::TabuMemory::inherit). Between a
     /// state and its sub-run that translation is the identity, since they share
     /// the frame; it earns its keep when the two states were built separately,
     /// which is the case the method stays total for.
@@ -1279,7 +1279,7 @@ mod tests {
     /// `MaxCutKernel` is the one implementation the core library has.
     mod reduction_crossing {
         use super::*;
-        use crate::common::hamming_distance;
+        use crate::building_blocks::hamming_distance;
         use crate::problem::MaxCutKernel;
         use crate::trait_defs::ProblemReduction;
         use rand::rngs::SmallRng;

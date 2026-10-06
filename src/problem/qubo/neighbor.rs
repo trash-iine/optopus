@@ -17,7 +17,7 @@
 
 use super::problem::{Coefficient, Qubo};
 use crate::{
-    common::{
+    building_blocks::{
         TabuKey, TabuMemory,
         binary::{differing_pairs, random_differing_pair},
     },
@@ -259,7 +259,7 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
 
     /// Applies the swap by performing two sequential flips: first `i`, then `j`.
     fn apply_to_solution(&self, prob: &Qubo, sol: &mut QuboSolution) -> Result<(), OptError> {
-        crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
+        crate::building_blocks::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     /// Returns a lazy iterator over all valid swap pairs `(i, j)` where

@@ -36,14 +36,14 @@
 //!   [`SearchState`](search_state::SearchState).
 //! - [`trait_defs`] holds the core traits shared across the problem, heuristic
 //!   and search-state layers.
-//! - [`common`] holds shared data structures and helpers such as
-//!   [`Graph`](common::Graph) and the binary-solution utilities.
+//! - [`building_blocks`] holds shared data structures and helpers such as
+//!   [`Graph`](building_blocks::Graph) and the binary-solution utilities.
 //! - [`benchmark`] runs and records benchmark experiments.
 //! - [`prelude`] re-exports the commonly used types and traits.
 //! - [`error`] defines the unified error type.
 
 pub mod benchmark;
-pub mod common;
+pub mod building_blocks;
 pub mod error;
 pub mod heuristic;
 pub mod prelude;

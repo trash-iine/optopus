@@ -34,7 +34,7 @@ use rand::Rng;
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 
-use crate::common::{MIN_IMPROVEMENT, order_crossover};
+use crate::building_blocks::{MIN_IMPROVEMENT, order_crossover};
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::vrp::{Vrp, split_giant_tour};
@@ -256,7 +256,7 @@ impl HybridGeneticSearch {
     /// # Panics
     ///
     /// Panics if either is zero (checked by
-    /// [`BiasedFitnessPopulation::new`](crate::common::BiasedFitnessPopulation::new)).
+    /// [`BiasedFitnessPopulation::new`](crate::building_blocks::BiasedFitnessPopulation::new)).
     pub fn with_elite(mut self, n_elite: usize, n_closest: usize) -> Self {
         self.n_elite = n_elite;
         self.n_closest = n_closest;

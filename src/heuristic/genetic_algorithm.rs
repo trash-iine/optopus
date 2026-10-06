@@ -1,5 +1,5 @@
 use super::{Heuristic, StopCondition};
-use crate::common::{BiasedFitnessPopulation, binary_tournament};
+use crate::building_blocks::{BiasedFitnessPopulation, binary_tournament};
 use crate::error::OptError;
 use crate::search_state::{
     Crossover, Distance, Evaluate, ProblemTrait, Rankable, SearchState, SearchStateCloneType,
@@ -430,7 +430,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::Graph;
+    use crate::building_blocks::Graph;
     use crate::heuristic::{LocalSearch, TabuSearch};
     use crate::problem::{MaxCut, MaxCutFlipNeighbor, MaxCutSolution};
     use rand::SeedableRng;

@@ -56,7 +56,7 @@ VRP の relocate は、ある顧客が移動先のルートに入ってよいか
 記録は新しい状態でもすべてのサブランでもオフなので、タブーリストを手法の中心とする探索はそのことを明示しなければなりません。
 それも、どこか別の場所で一度だけではなく、それに依存するループのすぐそばで明示します。
 
-`common::TabuMemory` は唯一のストアで、`TabuKey` の形ごとに分かれています。`Var(i)`、`Pair`、`Triple` はマップに、`0..n` に収まると分かっているインデックスの `DenseVar(i)` は配列に入ります。配列は組み込みの move が使う高速な経路です。
+`building_blocks::TabuMemory` は唯一のストアで、`TabuKey` の形ごとに分かれています。`Var(i)`、`Pair`、`Triple` はマップに、`0..n` に収まると分かっているインデックスの `DenseVar(i)` は配列に入ります。配列は組み込みの move が使う高速な経路です。
 同じ形を使う二つの move 型は禁止を共有します (MaxCut の flip と swap はどちらも `DenseVar` で、Breakout Local Search
 がこの探索を weak-flip の摂動として動かすときにはこれを当てにしています)。形が違えば衝突することはありません
 (JobShop の swap は `DenseVar`、relocate は `Pair` です)。

@@ -2,7 +2,7 @@ use rand::seq::SliceRandom;
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
-use crate::common::{DistanceStore, EdgeWeightType};
+use crate::building_blocks::{DistanceStore, EdgeWeightType};
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
 
@@ -37,7 +37,7 @@ impl Distance for TspSolution {
     /// Not a metric in the strict sense, but a useful diversity proxy for GA
     /// parent selection.
     fn distance(&self, other: &Self) -> usize {
-        crate::common::hamming_distance(&self.tour, &other.tour)
+        crate::building_blocks::hamming_distance(&self.tour, &other.tour)
     }
 }
 
@@ -165,7 +165,7 @@ impl Tsp {
     /// distance matrix, larger ones keep
     /// [`Tsp::NEAREST_NEIGHBORS_ABOVE_CAP`] neighbours per city.
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
-        use crate::common::InstanceLines;
+        use crate::building_blocks::InstanceLines;
 
         let path = path.as_ref();
         let mut lines = InstanceLines::open(path)?;

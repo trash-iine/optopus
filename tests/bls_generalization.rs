@@ -8,7 +8,7 @@
 //! indexed in a different order, moves an iteration counter while leaving the
 //! cut plausible.
 
-use optopus::common::{Graph, seeded_rng};
+use optopus::building_blocks::{Graph, seeded_rng};
 use optopus::heuristic::{Heuristic, StopCondition, bls_for_max_cut};
 use optopus::problem::MaxCut;
 use optopus::search_state::SearchState;

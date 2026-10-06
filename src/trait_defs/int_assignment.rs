@@ -1,5 +1,5 @@
 use super::{Evaluate, ProblemTrait};
-use crate::common::IntVars;
+use crate::building_blocks::IntVars;
 
 /// A problem whose solutions, of the problem's own type, assign an integer to
 /// each variable.

@@ -6,15 +6,15 @@ use super::{MoveToNeighbor, ProblemTrait};
 /// a per-variable flip gain.
 ///
 /// MaxCut, QUBO, MaxSAT and Vertex Cover all fit this shape. Implementing this trait gives a problem
-/// access to the generic binary-variable machinery in [`crate::common`], such as
-/// [`uniform_binary_crossover`](crate::common::uniform_binary_crossover).
+/// access to the generic binary-variable machinery in [`crate::building_blocks`], such as
+/// [`uniform_binary_crossover`](crate::building_blocks::uniform_binary_crossover).
 pub trait BinaryProblem: ProblemTrait + Sized {
     /// The single-variable flip move for this problem.
     type Flip: MoveToNeighbor<Self>;
 
     /// Returns an iterator over the indices of the problem's binary variables.
     ///
-    /// `Send` so that the pair helpers in [`crate::common`] can build the
+    /// `Send` so that the pair helpers in [`crate::building_blocks`] can build the
     /// `Send` neighborhoods [`MoveToNeighbor::iter`] requires.
     fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_;
 
@@ -51,7 +51,7 @@ pub trait BinaryProblem: ProblemTrait + Sized {
 ///
 /// Moving between the node and the whole problem, and the bound a node is
 /// pruned by, are written once over this trait in
-/// [`crate::common::binary`]. What a problem supplies is how fixing folds
+/// [`crate::building_blocks::binary`]. What a problem supplies is how fixing folds
 /// into its instance, and a bound on a whole instance.
 pub trait FixVariables: BinaryProblem<Solution: super::Evaluate> {
     /// The instance over the variables `fixed` leaves free, with what the
