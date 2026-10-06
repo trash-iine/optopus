@@ -1,7 +1,7 @@
 use crate::common::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
-use crate::trait_defs::{Branchable, IntAssignment, raw, with_value};
+use crate::trait_defs::{Branchable, IntAssignment};
 use rand::Rng;
 
 /// An assignment of a value to every variable of an [`IntegerProblem`],
@@ -249,7 +249,7 @@ where
     fn apply(&self, sol: &mut IntSolution, delta: Option<f64>, edit: impl FnOnce(&mut [i64])) {
         edit(&mut sol.values);
         sol.objective = match delta {
-            Some(d) => with_value(sol.objective, raw(sol.objective) + d),
+            Some(d) => sol.objective.with_value(sol.objective.raw() + d),
             None => self.objective(&sol.values),
         };
     }
@@ -269,7 +269,7 @@ where
         });
         let mut values = sol.values.clone();
         edit(&mut values);
-        (self.objective)(&values) - raw(sol.objective)
+        (self.objective)(&values) - sol.objective.raw()
     }
 }
 

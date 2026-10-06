@@ -9,7 +9,7 @@ use crate::common::{IntVar, IntVars};
 use crate::error::OptError;
 use crate::trait_defs::{
     BinaryProblem, Evaluable, FixVariables, FixedVariables, MoveToNeighbor, Placed,
-    ProblemReduction, Relaxation, raw, with_value,
+    ProblemReduction, Relaxation,
 };
 
 /// Uniform crossover over binary variables.
@@ -273,7 +273,7 @@ impl<P: FixVariables> Relaxation<P> for BinaryRelaxation {
     fn bound(&mut self, prob: &P, vars: &IntVars) -> Evaluable<f64> {
         let fixed = prob.fix(&fixed_by(vars));
         let b = fixed.target.trivial_bound();
-        with_value(b, raw(b) + fixed.offset)
+        b.with_value(b.raw() + fixed.offset)
     }
 }
 

@@ -1,4 +1,4 @@
-use super::{Evaluate, ProblemTrait, raw};
+use super::{Evaluate, ProblemTrait};
 use crate::common::IntVars;
 
 /// A problem whose solutions, of the problem's own type, assign an integer to
@@ -105,5 +105,5 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
 fn copied_delta<S: Clone + Evaluate>(sol: &S, edit: impl FnOnce(&mut S)) -> f64 {
     let mut copy = sol.clone();
     edit(&mut copy);
-    raw(copy.evaluate()) - raw(sol.evaluate())
+    copy.evaluate().raw() - sol.evaluate().raw()
 }

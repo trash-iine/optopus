@@ -4,7 +4,7 @@ use crate::{
     common::{IntVar, TabuKey, TabuMemory, permutation::random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
-    trait_defs::{IntAssignment, with_value},
+    trait_defs::IntAssignment,
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -45,7 +45,7 @@ enum Walk {
 /// lower being better.
 #[inline]
 fn direction<S: Evaluate>(sol: &S) -> f64 {
-    with_value(sol.evaluate(), 1.0).minimized()
+    sol.evaluate().with_value(1.0).minimized()
 }
 
 impl<'p, 's, P: IntAssignment> Changes<'p, 's, P> {
@@ -429,7 +429,6 @@ mod tests {
     use crate::problem::{IntSolution, IntegerProblem};
     use crate::search_state::{ProblemTrait, SearchState};
     use crate::trait_defs::IntAssignment;
-    use crate::trait_defs::raw;
     use rand::SeedableRng;
 
     /// Minimizes the sum of (x_i - t_i)^2, with ranges of different widths and
@@ -484,7 +483,7 @@ mod tests {
             for (v, &x) in prob.variables().iter().zip(sol.values()) {
                 assert!(v.contains(x));
             }
-            assert_eq!(raw(sol.evaluate()), raw(prob.objective(sol.values())));
+            assert_eq!(sol.evaluate().raw(), prob.objective(sol.values()).raw());
         }
     }
 
@@ -515,7 +514,7 @@ mod tests {
         for _ in 0..200 {
             let m = IntChangeNeighbor::random_neighbor(&prob, &sol, &mut r).unwrap();
             m.apply_to_solution(&prob, &mut sol).unwrap();
-            assert_eq!(raw(sol.evaluate()), raw(prob.objective(sol.values())));
+            assert_eq!(sol.evaluate().raw(), prob.objective(sol.values()).raw());
         }
     }
 
@@ -571,7 +570,7 @@ mod tests {
         assert!(prob.solution_from(vec![0; 4]).is_err());
         assert!(prob.solution_from(vec![0, 0, 6, 0, 0]).is_err());
         let sol = prob.solution_from(TARGETS.to_vec()).unwrap();
-        assert_eq!(raw(sol.evaluate()), 0.0);
+        assert_eq!(sol.evaluate().raw(), 0.0);
     }
 
     #[test]
@@ -751,7 +750,7 @@ mod tests {
                 m.apply_to_solution(&prob, &mut sol).unwrap();
             }
             assert!(is_permutation(sol.values()));
-            assert_eq!(raw(sol.evaluate()), raw(prob.objective(sol.values())));
+            assert_eq!(sol.evaluate().raw(), prob.objective(sol.values()).raw());
         }
     }
 
@@ -822,11 +821,11 @@ mod tests {
     fn two_opt_local_search_uncrosses_the_tour() {
         let prob = tour();
         let mut state = SearchState::new_with_seed(&prob, 5);
-        let start = raw(state.solution.evaluate());
+        let start = state.solution.evaluate().raw();
         LocalSearch::<IntReverseNeighbor>::new(StopCondition::iterations(100))
             .run(&mut state)
             .unwrap();
-        assert!(raw(state.best_solution.evaluate()) < start);
+        assert!(state.best_solution.evaluate().raw() < start);
         assert!(is_permutation(state.best_solution.values()));
     }
 }

@@ -47,20 +47,20 @@ impl Evaluable<f64> {
     pub fn improves_over(self, from: Evaluable<f64>, over: Evaluable<f64>) -> bool {
         from.minimized() + self.minimized() < over.minimized()
     }
-}
 
-/// The number inside an [`Evaluable`], without its direction.
-pub(crate) fn raw(e: Evaluable<f64>) -> f64 {
-    match e {
-        Evaluable::Maximize(v) | Evaluable::Minimize(v) => v,
+    /// The number inside, without its direction.
+    pub(crate) fn raw(self) -> f64 {
+        match self {
+            Evaluable::Maximize(v) | Evaluable::Minimize(v) => v,
+        }
     }
-}
 
-/// `value` with the direction of `like`.
-pub(crate) fn with_value(like: Evaluable<f64>, value: f64) -> Evaluable<f64> {
-    match like {
-        Evaluable::Maximize(_) => Evaluable::Maximize(value),
-        Evaluable::Minimize(_) => Evaluable::Minimize(value),
+    /// `value` with the direction of `self`.
+    pub(crate) fn with_value(self, value: f64) -> Evaluable<f64> {
+        match self {
+            Evaluable::Maximize(_) => Evaluable::Maximize(value),
+            Evaluable::Minimize(_) => Evaluable::Minimize(value),
+        }
     }
 }
 

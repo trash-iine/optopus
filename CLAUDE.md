@@ -62,7 +62,7 @@ src/
 │   │                         filter_best, Distance
 │   ├── problem.rs            ProblemTrait
 │   ├── neighbor.rs           MoveToNeighbor
-│   ├── evaluate.rs           Evaluable, Evaluate (+ crate-internal raw, with_value)
+│   ├── evaluate.rs           Evaluable (+ crate-internal raw, with_value), Evaluate
 │   ├── crossover.rs          Crossover, SubProblemExtractable
 │   ├── tabu.rs               EnabledTabu (object safe on purpose)
 │   ├── binary.rs             BinaryProblem, FixVariables (folding fixed variables)
