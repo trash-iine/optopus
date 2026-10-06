@@ -1,8 +1,7 @@
-use super::assignment::IntAssignment;
 use crate::common::IntVars;
 use crate::error::OptError;
-use crate::problem::branch::Branchable;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
+use crate::trait_defs::{Branchable, IntAssignment};
 use crate::trait_defs::{raw, with_value};
 use rand::Rng;
 

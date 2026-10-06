@@ -2,6 +2,7 @@
 //! of [`BranchAndBound`](crate::heuristic::BranchAndBound) are stated in.
 
 use crate::error::OptError;
+use crate::trait_defs::{Branchable, ProblemReduction};
 use rand::Rng;
 
 /// An integer variable that takes any value in `lower..=upper`.
@@ -248,5 +249,50 @@ impl std::ops::Deref for IntVars {
 impl FromIterator<IntVar> for IntVars {
     fn from_iter<T: IntoIterator<Item = IntVar>>(iter: T) -> Self {
         Self::new(iter.into_iter().collect())
+    }
+}
+
+/// A node of the search as a map from the whole problem onto the same problem
+/// over narrower ranges, so that a heuristic crosses into it and back through
+/// [`SearchState::open_reduction`](crate::search_state::SearchState::open_reduction)
+/// and [`close_reduction`](crate::search_state::SearchState::close_reduction).
+pub struct DomainRestriction<P> {
+    target: P,
+}
+
+impl<P> DomainRestriction<P> {
+    /// The node whose problem is `target`.
+    pub(crate) fn new(target: P) -> Self {
+        Self { target }
+    }
+}
+
+impl<P: Branchable> ProblemReduction for DomainRestriction<P> {
+    type Source = P;
+    type Target = P;
+
+    fn target(&self) -> &P {
+        &self.target
+    }
+
+    /// The solution's values, each moved to the nearest end of its narrowed
+    /// range when outside it.
+    fn project(&self, sol: &P::Solution) -> P::Solution {
+        let values = self
+            .target
+            .domains()
+            .iter()
+            .enumerate()
+            .map(|(i, v)| P::get(sol, i).clamp(v.lower(), v.upper()))
+            .collect();
+        self.target.solution_from_values(values)
+    }
+
+    /// The same values, as a solution of the whole problem.
+    fn lift(&self, source: &P, _base: &P::Solution, sol: &P::Solution) -> P::Solution {
+        let values = (0..self.target.domains().len())
+            .map(|i| P::get(sol, i))
+            .collect();
+        source.solution_from_values(values)
     }
 }

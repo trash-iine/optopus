@@ -29,15 +29,14 @@ pub use crate::heuristic::{
 
 // Traits
 pub use crate::trait_defs::{
-    Crossover, Distance, EnabledTabu, Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable,
-    SubProblemExtractable,
+    Branchable, Crossover, Distance, EnabledTabu, Evaluable, Evaluate, IntAssignment,
+    MoveToNeighbor, ProblemTrait, Rankable, SubProblemExtractable,
 };
 
 // Problem and neighbor types
 pub use crate::problem::{
     // Branch-and-bound
     BinaryRelaxation,
-    Branchable,
     // Formula
     Constraint,
     ConstraintRel,
@@ -50,7 +49,6 @@ pub use crate::problem::{
     GraphColoringSolution,
     GraphColoringSwapNeighbor,
     // Integer variables
-    IntAssignment,
     IntChangeNeighbor,
     IntCrossover,
     IntReverseNeighbor,

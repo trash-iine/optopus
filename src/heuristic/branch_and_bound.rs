@@ -4,8 +4,8 @@ use std::collections::BinaryHeap;
 use super::{Heuristic, StopCondition};
 use crate::common::{IntVar, IntVars};
 use crate::error::OptError;
-use crate::problem::branch::{BranchSpace, Relaxation};
 use crate::search_state::{Evaluable, Evaluate, SearchState};
+use crate::trait_defs::{BranchSpace, Relaxation};
 
 /// Branch-and-bound over integer variables, with any heuristic finding the
 /// solutions and a [`Relaxation`] bounding what is left.

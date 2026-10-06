@@ -1,7 +1,7 @@
 //! The moves every [`IntAssignment`] gets.
 
-use super::assignment::IntAssignment;
 use crate::common::IntVar;
+use crate::trait_defs::IntAssignment;
 use crate::trait_defs::with_value;
 use crate::{
     common::{TabuKey, TabuMemory, permutation::random_distinct_pair},
@@ -428,8 +428,9 @@ mod tests {
     use super::*;
     use crate::common::{IntVar, IntVars};
     use crate::heuristic::{Heuristic, LocalSearch, StopCondition, TabuSearch};
-    use crate::problem::{IntAssignment, IntSolution, IntegerProblem};
+    use crate::problem::{IntSolution, IntegerProblem};
     use crate::search_state::{ProblemTrait, SearchState};
+    use crate::trait_defs::IntAssignment;
     use crate::trait_defs::raw;
     use rand::SeedableRng;
 

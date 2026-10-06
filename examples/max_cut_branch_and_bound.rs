@@ -12,7 +12,7 @@
 //! ```
 
 use optopus::prelude::*;
-use optopus::problem::Relaxation;
+use optopus::trait_defs::Relaxation;
 
 fn main() {
     let n: usize = std::env::args()

@@ -21,7 +21,7 @@ pub use binary::{
 };
 pub use distance_store::{DistanceStore, EdgeWeightType};
 pub use graph::{Graph, seeded_rng};
-pub use integer::{IntVar, IntVars};
+pub use integer::{DomainRestriction, IntVar, IntVars};
 pub use parse::InstanceLines;
 pub use permutation::order_crossover;
 pub use ruin_recreate::{

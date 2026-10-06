@@ -33,15 +33,15 @@ pub mod tsp;
 pub mod vertex_cover;
 pub mod vrp;
 
-pub use branch::{BinaryRelaxation, BranchSpace, Branchable, Relaxation};
+pub use branch::BinaryRelaxation;
 pub use graph_coloring::{
     GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
     GraphColoringUniformCrossover,
 };
 pub use integer::{
-    Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntAssignment,
-    IntChangeNeighbor, IntCrossover, IntReverseNeighbor, IntSolution, IntSwapNeighbor,
-    IntegerProblem, IntervalRelaxation,
+    Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntChangeNeighbor,
+    IntCrossover, IntReverseNeighbor, IntSolution, IntSwapNeighbor, IntegerProblem,
+    IntervalRelaxation,
 };
 pub use job_shop_scheduling::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,

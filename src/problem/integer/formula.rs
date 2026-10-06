@@ -3,12 +3,11 @@
 
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use super::assignment::IntAssignment;
 use crate::common::IntVars;
 use crate::error::OptError;
-use crate::problem::branch::{Branchable, Relaxation};
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
 use crate::trait_defs::raw;
+use crate::trait_defs::{Branchable, IntAssignment, Relaxation};
 use rand::Rng;
 
 /// An arithmetic expression over integer variables.

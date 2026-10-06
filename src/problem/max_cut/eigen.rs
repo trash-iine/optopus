@@ -2,7 +2,8 @@
 
 use super::problem::MaxCut;
 use crate::common::IntVars;
-use crate::problem::branch::{Relaxation, fixed_by};
+use crate::problem::branch::fixed_by;
+use crate::trait_defs::Relaxation;
 use crate::trait_defs::raw;
 use crate::trait_defs::{Evaluable, FixVariables};
 
@@ -48,7 +49,7 @@ use crate::trait_defs::{Evaluable, FixVariables};
 ///
 /// ```
 /// use optopus::prelude::*;
-/// use optopus::problem::{BranchSpace, Relaxation};
+/// use optopus::trait_defs::{BranchSpace, Relaxation};
 ///
 /// // a 5-cycle cuts at most 4 of its edges, and the eigenvalue bound shows
 /// // it where the positive weights say 5

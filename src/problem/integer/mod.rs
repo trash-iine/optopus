@@ -14,7 +14,7 @@
 //! - [`IntReverseNeighbor`] reverses the values of a range of variables, which
 //!   on a [permutation](crate::common::IntVars::permutation) read as a tour is a 2-opt move.
 //!
-//! The moves are written against [`IntAssignment`], which asks only to read
+//! The moves are written against [`IntAssignment`](crate::trait_defs::IntAssignment), which asks only to read
 //! and write one value of a solution. A problem that wants a solution of its
 //! own, to keep whatever makes a move cheap to price, implements that instead.
 //!
@@ -22,13 +22,11 @@
 //! [`Expr`]essions, and it derives the price of every move from them.
 //! [`IntCrossover`] brings the genetic algorithm to both.
 
-mod assignment;
 mod crossover;
 mod formula;
 mod neighbor;
 mod problem;
 
-pub use assignment::IntAssignment;
 pub use crossover::IntCrossover;
 pub use formula::{
     Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntervalRelaxation,
