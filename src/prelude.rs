@@ -7,7 +7,7 @@
 //! ```
 
 // Common types
-pub use crate::common::{Graph, seeded_rng};
+pub use crate::common::{Graph, IntVar, IntVars, seeded_rng};
 
 // Error type
 pub use crate::error::OptError;
@@ -56,8 +56,6 @@ pub use crate::problem::{
     IntReverseNeighbor,
     IntSolution,
     IntSwapNeighbor,
-    IntVar,
-    IntVars,
     IntegerProblem,
     IntervalRelaxation,
     // Job Shop Scheduling

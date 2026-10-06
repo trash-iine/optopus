@@ -14,10 +14,11 @@
 
 use std::borrow::Cow;
 
-use super::integer::{IntAssignment, IntVar, IntVars, raw, with_value};
-use crate::common::{BinaryFixing, variable_slots};
+use super::integer::IntAssignment;
+use crate::common::{BinaryFixing, IntVar, IntVars, variable_slots};
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
 use crate::trait_defs::{BinaryProblem, FixVariables, ProblemReduction};
+use crate::trait_defs::{raw, with_value};
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 

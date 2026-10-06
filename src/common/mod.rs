@@ -6,6 +6,7 @@ pub mod biased_fitness;
 pub mod binary;
 pub mod distance_store;
 pub mod graph;
+pub mod integer;
 pub mod parse;
 pub mod permutation;
 pub mod ruin_recreate;
@@ -20,6 +21,7 @@ pub use binary::{
 };
 pub use distance_store::{DistanceStore, EdgeWeightType};
 pub use graph::{Graph, seeded_rng};
+pub use integer::{IntVar, IntVars};
 pub use parse::InstanceLines;
 pub use permutation::order_crossover;
 pub use ruin_recreate::{

@@ -2,9 +2,9 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use super::{Heuristic, StopCondition};
+use crate::common::{IntVar, IntVars};
 use crate::error::OptError;
 use crate::problem::branch::{BranchSpace, Relaxation};
-use crate::problem::integer::{IntVar, IntVars};
 use crate::search_state::{Evaluable, Evaluate, SearchState};
 
 /// Branch-and-bound over integer variables, with any heuristic finding the

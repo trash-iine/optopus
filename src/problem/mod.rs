@@ -40,8 +40,8 @@ pub use graph_coloring::{
 };
 pub use integer::{
     Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntAssignment,
-    IntChangeNeighbor, IntCrossover, IntReverseNeighbor, IntSolution, IntSwapNeighbor, IntVar,
-    IntVars, IntegerProblem, IntervalRelaxation,
+    IntChangeNeighbor, IntCrossover, IntReverseNeighbor, IntSolution, IntSwapNeighbor,
+    IntegerProblem, IntervalRelaxation,
 };
 pub use job_shop_scheduling::{
     JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,

@@ -1,8 +1,8 @@
 //! The moves every [`IntAssignment`] gets.
 
 use super::assignment::IntAssignment;
-use super::problem::IntVar;
-use super::problem::with_value;
+use crate::common::IntVar;
+use crate::trait_defs::with_value;
 use crate::{
     common::{TabuKey, TabuMemory, permutation::random_distinct_pair},
     error::OptError,
@@ -183,7 +183,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
         Ok(())
     }
 
-    /// Empty on a [permutation](super::IntVars::permutation), where changing
+    /// Empty on a [permutation](crate::common::IntVars::permutation), where changing
     /// one value always repeats another.
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
         Changes::new(prob, sol)
@@ -217,7 +217,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
 
 /// Exchanges the values of variables `i` and `j`. Only pairs whose values
 /// differ and fit each other's range are moves. On a
-/// [permutation](super::IntVars::permutation) the result is again one.
+/// [permutation](crate::common::IntVars::permutation) the result is again one.
 #[derive(Debug, Clone, Copy)]
 pub struct IntSwapNeighbor {
     /// The smaller of the two variables.
@@ -333,7 +333,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
 
 /// Reverses the order of the values of variables `i..=j`, `i < j`, when each
 /// value fits its new variable's range. On a
-/// [permutation](super::IntVars::permutation) read as a tour this is a 2-opt
+/// [permutation](crate::common::IntVars::permutation) read as a tour this is a 2-opt
 /// move, and the result is again a permutation.
 #[derive(Debug, Clone, Copy)]
 pub struct IntReverseNeighbor {
@@ -426,10 +426,11 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntReverseNeighbor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::{IntVar, IntVars};
     use crate::heuristic::{Heuristic, LocalSearch, StopCondition, TabuSearch};
-    use crate::problem::integer::problem::raw;
-    use crate::problem::{IntAssignment, IntSolution, IntVar, IntVars, IntegerProblem};
+    use crate::problem::{IntAssignment, IntSolution, IntegerProblem};
     use crate::search_state::{ProblemTrait, SearchState};
+    use crate::trait_defs::raw;
     use rand::SeedableRng;
 
     /// Minimizes the sum of (x_i - t_i)^2, with ranges of different widths and

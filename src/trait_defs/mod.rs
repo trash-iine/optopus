@@ -21,6 +21,7 @@ mod tabu;
 pub use binary::{BinaryProblem, FixVariables, FixedVariables, Placed};
 pub use crossover::{Crossover, SubProblemExtractable};
 pub use evaluate::{Evaluable, Evaluate};
+pub(crate) use evaluate::{raw, with_value};
 pub use neighbor::MoveToNeighbor;
 pub use problem::ProblemTrait;
 pub use rankable::{Distance, Rankable, filter_best, rank_cmp};

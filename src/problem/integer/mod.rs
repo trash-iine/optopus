@@ -12,7 +12,7 @@
 //!   which on a binary variable is a flip.
 //! - [`IntSwapNeighbor`] exchanges the values of two variables.
 //! - [`IntReverseNeighbor`] reverses the values of a range of variables, which
-//!   on a [permutation](IntVars::permutation) read as a tour is a 2-opt move.
+//!   on a [permutation](crate::common::IntVars::permutation) read as a tour is a 2-opt move.
 //!
 //! The moves are written against [`IntAssignment`], which asks only to read
 //! and write one value of a solution. A problem that wants a solution of its
@@ -34,5 +34,4 @@ pub use formula::{
     Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntervalRelaxation,
 };
 pub use neighbor::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor};
-pub use problem::{ChangeDelta, IntSolution, IntVar, IntVars, IntegerProblem, NoDelta, PairDelta};
-pub(crate) use problem::{raw, with_value};
+pub use problem::{ChangeDelta, IntSolution, IntegerProblem, NoDelta, PairDelta};

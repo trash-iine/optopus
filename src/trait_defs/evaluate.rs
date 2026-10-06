@@ -49,6 +49,21 @@ impl Evaluable<f64> {
     }
 }
 
+/// The number inside an [`Evaluable`], without its direction.
+pub(crate) fn raw(e: Evaluable<f64>) -> f64 {
+    match e {
+        Evaluable::Maximize(v) | Evaluable::Minimize(v) => v,
+    }
+}
+
+/// `value` with the direction of `like`.
+pub(crate) fn with_value(like: Evaluable<f64>, value: f64) -> Evaluable<f64> {
+    match like {
+        Evaluable::Maximize(_) => Evaluable::Maximize(value),
+        Evaluable::Minimize(_) => Evaluable::Minimize(value),
+    }
+}
+
 /// Reports an objective value, or a change in one, with the direction attached.
 ///
 /// Implemented by two kinds of type, and the difference is what the value

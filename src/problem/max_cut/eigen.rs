@@ -1,8 +1,9 @@
 //! The eigenvalue bound of MaxCut, certified in floating point.
 
 use super::problem::MaxCut;
+use crate::common::IntVars;
 use crate::problem::branch::{Relaxation, fixed_by};
-use crate::problem::integer::{IntVars, raw};
+use crate::trait_defs::raw;
 use crate::trait_defs::{Evaluable, FixVariables};
 
 /// The eigenvalue bound of Delorme and Poljak, a [`Relaxation`] of MaxCut much

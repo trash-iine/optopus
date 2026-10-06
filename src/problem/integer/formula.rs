@@ -4,10 +4,11 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use super::assignment::IntAssignment;
-use super::problem::{IntVars, raw};
+use crate::common::IntVars;
 use crate::error::OptError;
 use crate::problem::branch::{Branchable, Relaxation};
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
+use crate::trait_defs::raw;
 use rand::Rng;
 
 /// An arithmetic expression over integer variables.
@@ -851,7 +852,7 @@ impl IntAssignment for FormulaProblem {
             sol.constraint_vals[c] += self.constraint_polys[c].change_delta(&sol.values, i, value);
         }
         sol.values[i] = value;
-        sol.objective = super::problem::with_value(sol.objective, raw(sol.objective) + delta);
+        sol.objective = crate::trait_defs::with_value(sol.objective, raw(sol.objective) + delta);
         if !self.keeps_deltas() {
             return;
         }
@@ -1076,8 +1077,9 @@ impl SubProblemExtractable for FormulaProblem {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::IntVar;
     use crate::heuristic::{Heuristic, StopCondition, TabuSearch};
-    use crate::problem::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor, IntVar};
+    use crate::problem::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor};
     use crate::search_state::{MoveToNeighbor, Rankable, SearchState};
     use rand::SeedableRng;
     use rand::rngs::SmallRng;

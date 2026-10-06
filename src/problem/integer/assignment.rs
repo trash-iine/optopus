@@ -1,5 +1,6 @@
-use super::problem::{IntVars, raw};
+use crate::common::IntVars;
 use crate::search_state::{Evaluate, ProblemTrait};
+use crate::trait_defs::raw;
 
 /// A problem whose solutions, of the problem's own type, assign an integer to
 /// each variable.
