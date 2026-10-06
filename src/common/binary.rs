@@ -1,11 +1,15 @@
 //! Generic machinery shared by the binary-variable problems
 //! (MaxCut / QUBO / MaxSAT / VertexCover).
 
+use std::borrow::Cow;
+
 use rand::Rng;
 
+use crate::common::{IntVar, IntVars};
 use crate::error::OptError;
 use crate::trait_defs::{
-    BinaryProblem, FixVariables, FixedVariables, MoveToNeighbor, Placed, ProblemReduction,
+    BinaryProblem, Evaluable, FixVariables, FixedVariables, MoveToNeighbor, Placed,
+    ProblemReduction, Relaxation, raw, with_value,
 };
 
 /// Uniform crossover over binary variables.
@@ -179,6 +183,97 @@ impl<P: FixVariables> ProblemReduction for BinaryFixing<P> {
             })
             .collect();
         source.solution_from_assignment(&values)
+    }
+}
+
+/// [`BranchSpace::ranges`](crate::trait_defs::BranchSpace::ranges) of a
+/// binary problem, `0..=1` for each variable and `0..=0` for an index that is
+/// not one.
+pub fn binary_ranges<P: BinaryProblem>(prob: &P) -> Cow<'static, IntVars> {
+    let mut ranges = vec![IntVar::new(0, 0); variable_slots(prob)];
+    for i in prob.variable_indices() {
+        ranges[i] = IntVar::binary();
+    }
+    Cow::Owned(IntVars::new(ranges))
+}
+
+/// [`BranchSpace::value`](crate::trait_defs::BranchSpace::value) of a binary
+/// problem.
+pub fn binary_value<P: BinaryProblem>(sol: &P::Solution, i: usize) -> i64 {
+    i64::from(P::variable(sol, i))
+}
+
+/// [`BranchSpace::node`](crate::trait_defs::BranchSpace::node) of a binary
+/// problem, the instance with every variable whose range holds one value
+/// fixed at it.
+pub fn binary_node<P: FixVariables>(prob: &P, ranges: &IntVars) -> BinaryFixing<P> {
+    BinaryFixing::new(prob.fix(&fixed_by(ranges)))
+}
+
+/// [`BranchSpace::solution_with`](crate::trait_defs::BranchSpace::solution_with)
+/// of a binary problem.
+pub fn binary_solution_with<P: BinaryProblem>(prob: &P, values: Vec<i64>) -> P::Solution {
+    let values: Vec<bool> = values.into_iter().map(|v| v != 0).collect();
+    prob.solution_from_assignment(&values)
+}
+
+/// The value each variable is held at, where its range holds one.
+pub(crate) fn fixed_by(ranges: &IntVars) -> Vec<Option<bool>> {
+    ranges
+        .iter()
+        .map(|r| (r.num_changes() == 0).then(|| r.lower() != 0))
+        .collect()
+}
+
+/// Implements [`BranchSpace`](crate::trait_defs::BranchSpace) for each binary
+/// problem given, every method handed to the function of the same name above.
+/// A second blanket impl over [`FixVariables`] would overlap the one over
+/// [`Branchable`](crate::trait_defs::Branchable), so each binary problem calls
+/// this in its `fix.rs`, beside its [`FixVariables`] impl.
+macro_rules! binary_branch_space {
+    ($($problem:ty),*) => {$(
+        impl $crate::trait_defs::BranchSpace for $problem {
+            type Node = $crate::common::BinaryFixing<$problem>;
+
+            fn ranges(&self) -> ::std::borrow::Cow<'_, $crate::common::IntVars> {
+                $crate::common::binary_ranges(self)
+            }
+
+            fn value(sol: &Self::Solution, i: usize) -> i64 {
+                $crate::common::binary_value::<$problem>(sol, i)
+            }
+
+            fn node(
+                &self,
+                ranges: &$crate::common::IntVars,
+            ) -> $crate::common::BinaryFixing<$problem> {
+                $crate::common::binary_node(self, ranges)
+            }
+
+            fn solution_with(&self, values: Vec<i64>) -> Self::Solution {
+                $crate::common::binary_solution_with(self, values)
+            }
+        }
+    )*};
+}
+pub(crate) use binary_branch_space;
+
+/// The bound of a binary problem from its folding. The node's fixed variables
+/// are folded with [`FixVariables::fix`], and the bound is the folding's offset
+/// plus [`FixVariables::trivial_bound`] of the folded instance.
+///
+/// The bound is only as strong as `trivial_bound`, which on the built-in
+/// problems proves optima of a few dozen variables, not of benchmark
+/// instances. A stronger bound is given as a closure or a `Relaxation` of its
+/// own.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct BinaryRelaxation;
+
+impl<P: FixVariables> Relaxation<P> for BinaryRelaxation {
+    fn bound(&mut self, prob: &P, vars: &IntVars) -> Evaluable<f64> {
+        let fixed = prob.fix(&fixed_by(vars));
+        let b = fixed.target.trivial_bound();
+        with_value(b, raw(b) + fixed.offset)
     }
 }
 

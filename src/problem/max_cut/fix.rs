@@ -3,6 +3,8 @@ use crate::trait_defs::{Evaluable, FixVariables, FixedVariables, Placed};
 
 use super::problem::MaxCut;
 
+crate::common::binary::binary_branch_space!(MaxCut);
+
 impl FixVariables for MaxCut {
     /// The free vertices, numbered in order, and one reference vertex standing
     /// for every fixed one.

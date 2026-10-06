@@ -3,6 +3,8 @@ use crate::trait_defs::{Evaluable, FixVariables, FixedVariables, Placed};
 
 use super::problem::VertexCover;
 
+crate::common::binary::binary_branch_space!(VertexCover);
+
 impl FixVariables for VertexCover {
     /// The free vertices, numbered in order, over the edges neither end of
     /// which is in the cover.

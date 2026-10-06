@@ -2,14 +2,14 @@
 
 use super::problem::MaxCut;
 use crate::common::IntVars;
-use crate::problem::branch::fixed_by;
+use crate::common::binary::fixed_by;
 use crate::trait_defs::Relaxation;
 use crate::trait_defs::raw;
 use crate::trait_defs::{Evaluable, FixVariables};
 
 /// The eigenvalue bound of Delorme and Poljak, a [`Relaxation`] of MaxCut much
 /// tighter than the positive weights
-/// [`BinaryRelaxation`](crate::problem::BinaryRelaxation) sums.
+/// [`BinaryRelaxation`](crate::common::BinaryRelaxation) sums.
 ///
 /// With `L` the weighted Laplacian of a graph on `n` vertices, a cut of sides
 /// `x ∈ {±1}ⁿ` weighs `¼ xᵀLx`, and since `xᵀ diag(u) x = Σ u` for any `u`,

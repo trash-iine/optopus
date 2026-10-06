@@ -26,12 +26,11 @@ use rand::rngs::SmallRng;
 ///
 /// A binary problem of your own implements
 /// [`FixVariables`](super::FixVariables), and this trait by handing each
-/// method to the functions of the same name in
-/// [`crate::problem::branch`],
-/// [`binary_ranges`](crate::problem::branch::binary_ranges),
-/// [`binary_value`](crate::problem::branch::binary_value),
-/// [`binary_node`](crate::problem::branch::binary_node) and
-/// [`binary_solution_with`](crate::problem::branch::binary_solution_with).
+/// method to the functions of the same name in [`crate::common`],
+/// [`binary_ranges`](crate::common::binary_ranges),
+/// [`binary_value`](crate::common::binary_value),
+/// [`binary_node`](crate::common::binary_node) and
+/// [`binary_solution_with`](crate::common::binary_solution_with).
 pub trait BranchSpace: ProblemTrait<Solution: Evaluate> {
     /// A node, as a map from the whole problem onto what is searched there.
     type Node: ProblemReduction<Source = Self, Target = Self>;

@@ -16,7 +16,8 @@ pub use adaptive_weights::AdaptiveWeights;
 pub use anchored_sweep::AnchoredSweep;
 pub use biased_fitness::{BiasedFitnessPopulation, CostFn, DistanceFn, binary_tournament};
 pub use binary::{
-    BinaryFixing, apply_swap_as_two_flips, hamming_distance, lift_binary_solution,
+    BinaryFixing, BinaryRelaxation, apply_swap_as_two_flips, binary_node, binary_ranges,
+    binary_solution_with, binary_value, hamming_distance, lift_binary_solution,
     lift_compact_binary_solution, uniform_binary_crossover, variable_slots,
 };
 pub use distance_store::{DistanceStore, EdgeWeightType};

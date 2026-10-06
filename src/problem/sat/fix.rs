@@ -2,6 +2,8 @@ use crate::trait_defs::{Evaluable, FixVariables, FixedVariables, Placed};
 
 use super::problem::Sat;
 
+crate::common::binary::binary_branch_space!(Sat);
+
 impl FixVariables for Sat {
     /// The free variables, numbered in order. A clause a fixed literal
     /// satisfies goes to the offset, a fixed literal that is false is dropped

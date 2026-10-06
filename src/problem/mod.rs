@@ -19,10 +19,10 @@
 //! | [`graph_coloring`] | Graph Coloring | Minimize colors used |
 //! | [`integer`] | Any problem over bounded integer variables, by a closure or a formula | Configurable |
 //!
-//! [`branch`] is what [`BranchAndBound`](crate::heuristic::BranchAndBound) asks of
-//! a problem, implemented for the integer problems and for the binary ones.
+//! [`BranchSpace`](crate::trait_defs::BranchSpace), what
+//! [`BranchAndBound`](crate::heuristic::BranchAndBound) asks of a problem, is
+//! implemented for the integer problems and for the binary ones.
 
-pub mod branch;
 pub mod graph_coloring;
 pub mod integer;
 pub mod job_shop_scheduling;
@@ -33,7 +33,6 @@ pub mod tsp;
 pub mod vertex_cover;
 pub mod vrp;
 
-pub use branch::BinaryRelaxation;
 pub use graph_coloring::{
     GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
     GraphColoringUniformCrossover,
