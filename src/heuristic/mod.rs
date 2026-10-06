@@ -3,6 +3,7 @@
 mod alns;
 mod beam_search;
 mod bls;
+mod branch_and_bound;
 mod crossover;
 mod genetic_algorithm;
 mod late_acceptance;
@@ -20,6 +21,7 @@ mod variable_neighborhood_search;
 pub use alns::AdaptiveLargeNeighborhoodSearch;
 pub use beam_search::BeamSearch;
 pub use bls::{AdaptivePerturbation, BreakoutLocalSearch, PerturbationSchedule};
+pub use branch_and_bound::BranchAndBound;
 pub use crossover::SubProblemBasedCrossover;
 pub use genetic_algorithm::{GeneticAlgorithm, ParentSelection};
 pub use late_acceptance::LateAcceptanceHillClimbing;

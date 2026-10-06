@@ -18,7 +18,7 @@ pub use crate::search_state::{SearchState, SearchStateCloneType, TrajectoryPoint
 // Heuristics
 pub use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearch, AdaptivePerturbation, BangBangSimulatedAnnealing, BeamSearch,
-    BreakoutLocalSearch, BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic,
+    BranchAndBound, BreakoutLocalSearch, BreakoutLocalSearchForMaxCut, GeneticAlgorithm, Heuristic,
     HybridGeneticSearchForVrp, Iterated, LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp,
     LocalSearch, MaxCutPerturbation, ParentSelection, PerturbationSchedule, RandomWalk,
     ReinforcementLearningSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing,
@@ -35,6 +35,8 @@ pub use crate::trait_defs::{
 
 // Problem and neighbor types
 pub use crate::problem::{
+    // Branch-and-bound
+    Branchable,
     // Formula
     Constraint,
     ConstraintRel,
@@ -56,6 +58,7 @@ pub use crate::problem::{
     IntVar,
     IntVars,
     IntegerProblem,
+    IntervalRelaxation,
     // Job Shop Scheduling
     JobShopPpxCrossover,
     JobShopRelocateNeighbor,

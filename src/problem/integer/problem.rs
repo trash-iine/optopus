@@ -1,4 +1,5 @@
 use super::assignment::IntAssignment;
+use super::branch::Branchable;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
 use rand::Rng;
@@ -589,6 +590,34 @@ where
             Some(d) => d,
             None => self.full_delta(sol, "IntReverseNeighbor", |v| v[i..=j].reverse()),
         }
+    }
+}
+
+impl<F, D, S, R> Branchable for IntegerProblem<F, D, S, R>
+where
+    F: Fn(&[i64]) -> f64 + Sync + Clone,
+    D: ChangeDelta + Clone,
+    S: PairDelta + Clone,
+    R: PairDelta + Clone,
+{
+    /// A copy with the ranges replaced. The closures are cloned, which costs
+    /// nothing when they borrow what they read and copies it when they own it,
+    /// so a closure over a large table is better given a reference to it.
+    fn restricted(&self, vars: IntVars) -> Self {
+        assert_eq!(vars.len(), self.vars.len(), "one range per variable");
+        Self {
+            vars,
+            maximize: self.maximize,
+            objective: self.objective.clone(),
+            delta: self.delta.clone(),
+            swap_delta: self.swap_delta.clone(),
+            reverse_delta: self.reverse_delta.clone(),
+        }
+    }
+
+    fn solution_from_values(&self, values: Vec<i64>) -> IntSolution {
+        debug_assert!(self.vars.check(&values).is_ok());
+        self.build(values)
     }
 }
 

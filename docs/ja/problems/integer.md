@@ -114,6 +114,11 @@ let prob = IntegerProblem::minimize(IntVars::permutation(n), tour_len)
 `IntSolution` は `Distance` を実装しています。`IntCrossover` は各変数をどちらかの親からとり、順列なら一方の親の区間を残して残りをもう一方の親の順に埋めます。
 そのため `IntCrossover` を交叉にして `GeneticAlgorithm` が動きます。
 
+## 最適性の証明 { #proving-an-optimum }
+
+[`BranchAndBound`](../heuristics/branch_and_bound.md) は、狭めた値域に残りうる値の上界を与えれば、`IntegerProblem` を厳密に探索します。
+自前の解の型は `Branchable` を実装すれば使えます。必須のメソッドは、同じ問題をより狭い値域で返す 1 つだけです。
+
 ## 式で書ける目的関数 { #objectives-written-as-formulas }
 
 目的関数と制約が変数の算術式で書けるなら、[`FormulaProblem`](formula.md) がそれを式として受け取り、差分をすべて自動で求めます。手で書くものはありません。

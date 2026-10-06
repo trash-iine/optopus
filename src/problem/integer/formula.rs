@@ -4,6 +4,7 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use super::assignment::IntAssignment;
+use super::branch::{Branchable, Relaxation};
 use super::problem::{IntVars, raw};
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
@@ -286,6 +287,21 @@ impl Constraint {
         self.penalty(val)
     }
 
+    /// The smallest penalty over the values `low..=high` of the tracked
+    /// expression. The penalty is convex in that value, so the smallest is at
+    /// the allowed value nearest the interval.
+    fn least_penalty(&self, (low, high): (f64, f64)) -> f64 {
+        let allowed = match self {
+            Constraint::Comparison { rel, .. } => match rel {
+                ConstraintRel::Lt => -STRICT_EPSILON,
+                ConstraintRel::Gt => STRICT_EPSILON,
+                ConstraintRel::Le | ConstraintRel::Ge | ConstraintRel::Eq => 0.0,
+            },
+            Constraint::Clamp { lo, .. } => *lo,
+        };
+        self.penalty(allowed.clamp(low, high))
+    }
+
     fn substitute(&self, fixed: &[Option<i64>], remap: &[Option<usize>]) -> Constraint {
         match self {
             Constraint::Comparison {
@@ -352,6 +368,27 @@ fn power(x: i64, q: u32) -> f64 {
         r *= x;
     }
     r
+}
+
+/// The range of `x^q` for `x` in `lower..=upper`.
+fn power_interval(lower: i64, upper: i64, q: u32) -> (f64, f64) {
+    let (a, b) = (power(lower, q), power(upper, q));
+    if q % 2 == 1 || lower >= 0 {
+        (a, b)
+    } else if upper <= 0 {
+        (b, a)
+    } else {
+        (0.0, a.max(b))
+    }
+}
+
+/// The range of `x * y` for `x` and `y` in the two ranges.
+fn mul_intervals((a, b): (f64, f64), (c, d): (f64, f64)) -> (f64, f64) {
+    let products = [a * c, a * d, b * c, b * d];
+    (
+        products.into_iter().fold(f64::INFINITY, f64::min),
+        products.into_iter().fold(f64::NEG_INFINITY, f64::max),
+    )
 }
 
 fn monomials(expr: &Expr) -> Vec<Monomial> {
@@ -428,6 +465,17 @@ impl Poly {
                     .fold(m.coeff, |acc, &(v, q)| acc * power(x[v], q))
             })
             .sum()
+    }
+
+    /// The smallest and largest values the polynomial takes with each
+    /// variable in its range in `vars`, as far as multiplying ranges tells.
+    fn interval(&self, vars: &IntVars) -> (f64, f64) {
+        self.terms.iter().fold((0.0, 0.0), |(lo, hi), m| {
+            let (a, b) = m.vars.iter().fold((m.coeff, m.coeff), |acc, &(v, q)| {
+                mul_intervals(acc, power_interval(vars[v].lower(), vars[v].upper(), q))
+            });
+            (lo + a, hi + b)
+        })
     }
 
     /// How much the polynomial changes when `x[i]` becomes `b`.
@@ -875,6 +923,90 @@ fn union_sorted<'a>(a: &'a [usize], b: &'a [usize]) -> impl Iterator<Item = usiz
         };
         Some(next)
     })
+}
+
+impl Branchable for FormulaProblem {
+    /// A copy with the ranges replaced. The compiled expressions do not depend
+    /// on the ranges and are copied as they are.
+    ///
+    /// # Panics
+    ///
+    /// If the variables are a [permutation](IntVars::permutation), since
+    /// narrowing the range of some positions does not leave one.
+    fn restricted(&self, vars: IntVars) -> Self {
+        assert!(
+            !self.vars.is_permutation(),
+            "a permutation cannot be narrowed variable by variable"
+        );
+        assert_eq!(vars.len(), self.vars.len(), "one range per variable");
+        Self {
+            vars,
+            ..self.clone()
+        }
+    }
+
+    fn solution_from_values(&self, values: Vec<i64>) -> FormulaSolution {
+        debug_assert!(self.vars.check(&values).is_ok());
+        self.build_solution(values)
+    }
+}
+
+/// The bound of a [`FormulaProblem`] found by interval arithmetic, a
+/// [`Relaxation`] that needs nothing from the problem beyond its formula.
+///
+/// Every monomial is bounded by multiplying the ranges of its variables, and
+/// the objective by the sum of those. Each constraint's expression is bounded
+/// the same way, and charges the smallest penalty any value in that interval
+/// would, which is zero whenever the interval meets what the constraint
+/// allows.
+///
+/// The bound is valid on every formula and weak on most. A variable appearing
+/// in several monomials is taken at its worst in each of them at once, so on
+/// anything beyond a sum of single variables the search comes close to
+/// enumerating. It suits small instances and checking a stronger relaxation
+/// against, and a bound that knows the problem is better given as a closure.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// // maximize x0 + 2 x1 + 3 x2 with at most two of them set
+/// let vars: IntVars = (0..3).map(|_| IntVar::binary()).collect();
+/// let objective = Expr::Var(0) + 2.0 * Expr::Var(1) + 3.0 * Expr::Var(2);
+/// let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint::Comparison {
+///     lhs: Expr::Var(0) + Expr::Var(1) + Expr::Var(2),
+///     rel: ConstraintRel::Le,
+///     rhs: Expr::Const(2.0),
+///     penalty_weight: 10.0,
+/// });
+///
+/// let mut bnb = BranchAndBound::new(
+///     StopCondition::new(None, None, None),
+///     Box::new(LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))),
+///     IntervalRelaxation,
+/// );
+/// let mut state = SearchState::new_with_seed(&prob, 1);
+/// bnb.run(&mut state).unwrap();
+/// assert_eq!(state.best_solution.values(), &[0, 1, 1]);
+/// assert!(bnb.is_proven_optimal(&state.best_solution));
+/// ```
+#[derive(Clone, Copy, Debug, Default)]
+pub struct IntervalRelaxation;
+
+impl Relaxation<FormulaProblem> for IntervalRelaxation {
+    fn bound(&mut self, prob: &FormulaProblem, vars: &IntVars) -> Evaluable<f64> {
+        let (lo, hi) = prob.objective_poly.interval(vars);
+        let penalty: f64 = prob
+            .constraints
+            .iter()
+            .zip(&prob.constraint_polys)
+            .map(|(c, poly)| c.least_penalty(poly.interval(vars)))
+            .sum();
+        if prob.maximize {
+            Evaluable::Maximize(hi - penalty)
+        } else {
+            Evaluable::Minimize(lo + penalty)
+        }
+    }
 }
 
 impl SubProblemExtractable for FormulaProblem {

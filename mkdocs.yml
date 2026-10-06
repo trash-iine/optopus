@@ -116,6 +116,7 @@ nav:
       - Population Annealing: heuristics/population_annealing.md
       - Adaptive Large Neighborhood Search: heuristics/alns.md
       - Breakout Local Search: heuristics/breakout_local_search.md
+      - Branch and Bound: heuristics/branch_and_bound.md
       - Meta-heuristics: heuristics/meta.md
       - Lin-Kernighan-Helsgaun (TSP): heuristics/lkh.md
       - WalkSAT (MaxSAT): heuristics/walksat.md
@@ -164,6 +165,7 @@ nav:
           - Population Annealing: ja/heuristics/population_annealing.md
           - Adaptive Large Neighborhood Search: ja/heuristics/alns.md
           - Breakout Local Search: ja/heuristics/breakout_local_search.md
+          - Branch and Bound: ja/heuristics/branch_and_bound.md
           - Meta-heuristics: ja/heuristics/meta.md
           - Lin-Kernighan-Helsgaun (TSP): ja/heuristics/lkh.md
           - WalkSAT (MaxSAT): ja/heuristics/walksat.md
