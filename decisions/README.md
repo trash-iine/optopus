@@ -32,6 +32,7 @@ Read the table, open the one file you need.
 | [0022](0022-integer-problems-have-two-layers-and-no-framework-cache.md) | integer | adopted | `IntegerProblem` sits on `IntAssignment`; a move-pricing cache lives in the user's solution, not the framework |
 | [0023](0023-formula-problem-moved-onto-the-integer-layer.md) | integer | adopted | `FormulaProblem` runs on `IntAssignment` and the binary module is deleted, with identical trajectories |
 | [0024](0024-vrp-is-one-problem-with-a-fleet.md) | vrp | adopted | The VRP is one problem, homogeneous and heterogeneous fleet alike, and the unification cost nothing once the layout was fixed |
+| [0025](0025-max-cut-branch-and-bound-needs-the-eigenvalue-bound.md) | max_cut, heuristic | adopted | Branch-and-bound on MaxCut needs the certified eigenvalue bound, which takes the median G-set gap from 34% to 6% |
 
 ## Writing a new record
 
