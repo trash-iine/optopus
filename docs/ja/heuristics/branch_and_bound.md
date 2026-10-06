@@ -68,7 +68,7 @@ assert!(bnb.is_proven_optimal(&state.best_solution));
 
 `IntegerProblem` は、クロージャを clone できるときに `Branchable` になります。ノードごとに clone するので、大きな表を読むクロージャには表そのものではなく表への参照を渡すほうがよいです。
 
-二値問題は `FixVariables` を実装します。MaxCut、`Qubo`、`Sat`、`VertexCover` は実装済みです。`fix` は、固定した変数を畳み込んだ自由変数だけのインスタンスと、定数のオフセットと、各変数の行き先を返します。探索はそのインスタンスとの間を、`BinaryProblem::solution_from_assignment` で割り当てから解を作り直して行き来するので、解がキャッシュしているものは一から計算されます。自前の二値問題は `FixVariables` を実装し、`BranchSpace` は各メソッドを `optopus::common` の同名の関数に渡して実装します。
+二値問題は `FixVariables` を実装します。MaxCut、`Qubo`、`Sat`、`VertexCover` は実装済みです。`fix` は、固定した変数を畳み込んだ自由変数だけのインスタンスと、定数のオフセットと、各変数の行き先を返します。探索はそのインスタンスとの間を、`BinaryProblem::solution_from_assignment` で割り当てから解を作り直して行き来するので、解がキャッシュしているものは一から計算されます。自前の二値問題は `FixVariables` を実装し、`BranchSpace` はその隣の `optopus::binary_branch_space!(MyProblem);` で得られます。
 
 | 問題 | 固定の畳み込み方 |
 |---|---|

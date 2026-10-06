@@ -226,10 +226,16 @@ pub(crate) fn fixed_by(ranges: &IntVars) -> Vec<Option<bool>> {
 }
 
 /// Implements [`BranchSpace`](crate::trait_defs::BranchSpace) for each binary
-/// problem given, every method handed to the function of the same name above.
-/// A second blanket impl over [`FixVariables`] would overlap the one over
-/// [`Branchable`](crate::trait_defs::Branchable), so each binary problem calls
-/// this in its `fix.rs`, beside its [`FixVariables`] impl.
+/// problem given, every method handed to the function of the same name in
+/// [`common`](crate::common), such as [`binary_ranges`](crate::common::binary_ranges).
+///
+/// A binary problem of your own calls `optopus::binary_branch_space!(MyProblem);`
+/// beside its [`FixVariables`](crate::trait_defs::FixVariables) impl, and
+/// [`BranchAndBound`](crate::heuristic::BranchAndBound) then searches it. The
+/// built-in binary problems call it in their `fix.rs`. A blanket impl over
+/// `FixVariables` would overlap the one over
+/// [`Branchable`](crate::trait_defs::Branchable), which is why this is a macro.
+#[macro_export]
 macro_rules! binary_branch_space {
     ($($problem:ty),*) => {$(
         impl $crate::trait_defs::BranchSpace for $problem {
@@ -256,7 +262,6 @@ macro_rules! binary_branch_space {
         }
     )*};
 }
-pub(crate) use binary_branch_space;
 
 /// The bound of a binary problem from its folding. The node's fixed variables
 /// are folded with [`FixVariables::fix`], and the bound is the folding's offset
