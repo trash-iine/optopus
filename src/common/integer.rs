@@ -1,8 +1,10 @@
 //! Bounded integer variables, the ranges every integer problem and every node
 //! of [`BranchAndBound`](crate::heuristic::BranchAndBound) are stated in.
 
+use std::borrow::Cow;
+
 use crate::error::OptError;
-use crate::trait_defs::{Branchable, ProblemReduction};
+use crate::trait_defs::{BranchSpace, Branchable, ProblemReduction};
 use rand::Rng;
 
 /// An integer variable that takes any value in `lower..=upper`.
@@ -260,13 +262,6 @@ pub struct DomainRestriction<P> {
     target: P,
 }
 
-impl<P> DomainRestriction<P> {
-    /// The node whose problem is `target`.
-    pub(crate) fn new(target: P) -> Self {
-        Self { target }
-    }
-}
-
 impl<P: Branchable> ProblemReduction for DomainRestriction<P> {
     type Source = P;
     type Target = P;
@@ -294,5 +289,27 @@ impl<P: Branchable> ProblemReduction for DomainRestriction<P> {
             .map(|i| P::get(sol, i))
             .collect();
         source.solution_from_values(values)
+    }
+}
+
+impl<P: Branchable> BranchSpace for P {
+    type Node = DomainRestriction<P>;
+
+    fn ranges(&self) -> Cow<'_, IntVars> {
+        Cow::Borrowed(self.domains())
+    }
+
+    fn value(sol: &P::Solution, i: usize) -> i64 {
+        P::get(sol, i)
+    }
+
+    fn node(&self, ranges: &IntVars) -> DomainRestriction<P> {
+        DomainRestriction {
+            target: self.restricted(ranges.clone()),
+        }
+    }
+
+    fn solution_with(&self, values: Vec<i64>) -> P::Solution {
+        self.solution_from_values(values)
     }
 }

@@ -15,7 +15,7 @@
 use std::borrow::Cow;
 
 use super::{Evaluable, Evaluate, IntAssignment, ProblemReduction, ProblemTrait};
-use crate::common::{DomainRestriction, IntVars};
+use crate::common::IntVars;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
@@ -47,26 +47,6 @@ pub trait BranchSpace: ProblemTrait<Solution: Evaluate> {
 
     /// The solution assigning `values`, each inside its variable's range.
     fn solution_with(&self, values: Vec<i64>) -> Self::Solution;
-}
-
-impl<P: Branchable> BranchSpace for P {
-    type Node = DomainRestriction<P>;
-
-    fn ranges(&self) -> Cow<'_, IntVars> {
-        Cow::Borrowed(self.domains())
-    }
-
-    fn value(sol: &P::Solution, i: usize) -> i64 {
-        P::get(sol, i)
-    }
-
-    fn node(&self, ranges: &IntVars) -> DomainRestriction<P> {
-        DomainRestriction::new(self.restricted(ranges.clone()))
-    }
-
-    fn solution_with(&self, values: Vec<i64>) -> P::Solution {
-        self.solution_from_values(values)
-    }
 }
 
 /// An integer problem that can be rebuilt over narrower ranges.

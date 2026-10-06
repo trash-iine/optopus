@@ -67,8 +67,8 @@ src/
 │   ├── tabu.rs               EnabledTabu (object safe on purpose)
 │   ├── binary.rs             BinaryProblem, FixVariables (folding fixed variables)
 │   ├── int_assignment.rs     IntAssignment (read / write one integer of an own solution)
-│   ├── branch.rs             BranchSpace (what BranchAndBound asks, blanket over
-│   │                         Branchable), Branchable (integer), Relaxation
+│   ├── branch.rs             BranchSpace (what BranchAndBound asks), Branchable
+│   │                         (integer), Relaxation
 │   ├── ruinable.rs           Ruinable, LocalRepair
 │   └── reduction.rs          ProblemReduction
 ├── common/                   shared data structures and helpers; put new shared code here
@@ -81,7 +81,8 @@ src/
 │   │                         apply_swap_as_two_flips, BinaryRelaxation, the binary
 │   │                         BranchSpace glue (binary_ranges etc. and the
 │   │                         binary_branch_space! macro each fix.rs calls)
-│   ├── integer.rs            IntVar, IntVars (+ permutation), DomainRestriction
+│   ├── integer.rs            IntVar, IntVars (+ permutation), DomainRestriction and the
+│   │                         BranchSpace blanket impl over Branchable
 │   ├── tabu.rs               TabuKey (Var / Pair / Triple), TabuMemory
 │   ├── biased_fitness.rs     BiasedFitnessPopulation, binary_tournament
 │   ├── ruin_recreate.rs      the five destroy / repair operators over any Ruinable

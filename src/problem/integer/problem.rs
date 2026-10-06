@@ -1,8 +1,7 @@
 use crate::common::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
-use crate::trait_defs::{Branchable, IntAssignment};
-use crate::trait_defs::{raw, with_value};
+use crate::trait_defs::{Branchable, IntAssignment, raw, with_value};
 use rand::Rng;
 
 /// An assignment of a value to every variable of an [`IntegerProblem`],
