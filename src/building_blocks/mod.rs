@@ -1,44 +1,20 @@
-//! Common data structures shared across problem types.
+//! The pieces problems and heuristics are built from, in three groups.
+//!
+//! - [`instance`] holds what a problem instance is built from and read with,
+//!   such as [`Graph`] and [`DistanceStore`].
+//! - [`representation`] holds the helpers shared by problems whose solutions
+//!   are laid out the same way, binary vectors, bounded integers or
+//!   permutations.
+//! - [`search`] holds the search machinery that knows nothing about any
+//!   problem, such as [`TabuMemory`] and [`BiasedFitnessPopulation`].
+//!
+//! Every item is also re-exported here, so `building_blocks::Graph` and
+//! `building_blocks::instance::Graph` name the same type.
 
-pub mod adaptive_weights;
-pub mod anchored_sweep;
-pub mod biased_fitness;
-pub mod binary;
-pub mod distance_store;
-pub mod graph;
-pub mod integer;
-pub mod parse;
-pub mod permutation;
-pub mod ruin_recreate;
-pub mod tabu;
+pub mod instance;
+pub mod representation;
+pub mod search;
 
-pub use adaptive_weights::AdaptiveWeights;
-pub use anchored_sweep::AnchoredSweep;
-pub use biased_fitness::{BiasedFitnessPopulation, CostFn, DistanceFn, binary_tournament};
-pub use binary::{
-    BinaryFixing, BinaryRelaxation, apply_swap_as_two_flips, binary_node, binary_ranges,
-    binary_solution_with, binary_value, hamming_distance, lift_binary_solution,
-    lift_compact_binary_solution, uniform_binary_crossover, variable_slots,
-};
-pub use distance_store::{DistanceStore, EdgeWeightType};
-pub use graph::{Graph, seeded_rng};
-pub use integer::{DomainRestriction, IntVar, IntVars};
-pub use parse::InstanceLines;
-pub use permutation::order_crossover;
-pub use ruin_recreate::{
-    best_two_insertions, greedy_insertion, random_removal, regret2_insertion, shaw_removal,
-    worst_removal,
-};
-pub use tabu::{TabuKey, TabuMemory};
-
-/// The smallest objective change a search treats as a real improvement.
-///
-/// A descent that accepted any negative delta would cycle on ties, since two
-/// moves that undo each other can each show a delta of minus one rounding
-/// error. Lin-Kernighan's closing gain, the granular route descent, the
-/// anchored tour descent and Hybrid Genetic Search's new-best test all ask
-/// the same question of the same kind of number, so they share the answer.
-/// It is not a general epsilon. Simulated annealing's exponent floor and the
-/// strict-inequality margin of `FormulaProblem` mean something else and stay
-/// where they are reasoned out.
-pub const MIN_IMPROVEMENT: f64 = 1e-10;
+pub use instance::*;
+pub use representation::*;
+pub use search::*;

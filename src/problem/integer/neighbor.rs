@@ -1,7 +1,7 @@
 //! The moves every [`IntAssignment`] gets.
 
 use crate::{
-    building_blocks::{IntVar, TabuKey, TabuMemory, permutation::random_distinct_pair},
+    building_blocks::{IntVar, TabuKey, TabuMemory, random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
     trait_defs::IntAssignment,

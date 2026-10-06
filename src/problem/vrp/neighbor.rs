@@ -4,7 +4,7 @@ use rand::rngs::SmallRng;
 use super::ops::pricing::{SlotEdit, apply, price};
 use super::ops::{before, insertion_cost, node_at, removal_gain, reversal_delta};
 use super::problem::{Vrp, VrpSolution};
-use crate::building_blocks::{TabuMemory, permutation::random_distinct_pair};
+use crate::building_blocks::{TabuMemory, random_distinct_pair};
 use crate::error::OptError;
 use crate::trait_defs::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 

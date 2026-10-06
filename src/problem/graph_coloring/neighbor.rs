@@ -2,7 +2,7 @@
 
 use super::problem::{GraphColoring, GraphColoringSolution};
 use crate::{
-    building_blocks::{TabuKey, TabuMemory, permutation::random_distinct_pair},
+    building_blocks::{TabuKey, TabuMemory, random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };

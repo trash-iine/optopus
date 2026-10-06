@@ -1,7 +1,7 @@
 //! The eigenvalue bound of MaxCut, certified in floating point.
 
 use super::problem::MaxCut;
-use crate::building_blocks::{IntVars, binary::fixed_by};
+use crate::building_blocks::{IntVars, fixed_by};
 use crate::trait_defs::{Evaluable, FixVariables, Relaxation};
 
 /// The eigenvalue bound of Delorme and Poljak, a [`Relaxation`] of MaxCut much

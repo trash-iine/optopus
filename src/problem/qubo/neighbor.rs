@@ -17,10 +17,7 @@
 
 use super::problem::{Coefficient, Qubo};
 use crate::{
-    building_blocks::{
-        TabuKey, TabuMemory,
-        binary::{differing_pairs, random_differing_pair},
-    },
+    building_blocks::{TabuKey, TabuMemory, differing_pairs, random_differing_pair},
     error::OptError,
     problem::qubo::problem::QuboSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},

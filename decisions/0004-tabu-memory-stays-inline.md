@@ -3,7 +3,7 @@
 - Status: adopted
 - Area: search_state
 - Date: 2026-08
-- Code: src/building_blocks/tabu.rs
+- Code: src/building_blocks/search/tabu.rs
 
 ## Decision
 

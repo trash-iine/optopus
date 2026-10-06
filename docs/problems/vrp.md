@@ -129,7 +129,7 @@ minimum count and no route-time limit; `with_costs` / `with_min_count` /
 ### Distance storage
 
 The distances live in a
-[`DistanceStore`](../api/optopus/building_blocks/distance_store/struct.DistanceStore.html), the
+[`DistanceStore`](../api/optopus/building_blocks/instance/struct.DistanceStore.html), the
 same store `Tsp` uses.
 
 | Constructor | Keeps | Use it when |

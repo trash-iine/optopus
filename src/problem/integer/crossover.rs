@@ -3,7 +3,7 @@
 use super::formula::{FormulaProblem, FormulaSolution};
 use super::problem::{ChangeDelta, IntSolution, IntegerProblem, PairDelta};
 use crate::building_blocks::IntVars;
-use crate::building_blocks::permutation::order_crossover;
+use crate::building_blocks::order_crossover;
 use crate::error::OptError;
 use crate::search_state::Crossover;
 use rand::Rng;

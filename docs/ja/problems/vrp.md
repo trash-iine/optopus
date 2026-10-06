@@ -114,7 +114,7 @@ for (slot, route) in sol.routes.iter().enumerate() {
 ### 距離の保持方法 { #distance-storage }
 
 距離は
-[`DistanceStore`](../../api/optopus/building_blocks/distance_store/struct.DistanceStore.html) に保持されます。
+[`DistanceStore`](../../api/optopus/building_blocks/instance/struct.DistanceStore.html) に保持されます。
 `Tsp` が使うのと同じストアです。
 
 | コンストラクタ | 保持するもの | 使う場面 |

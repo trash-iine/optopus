@@ -10,7 +10,7 @@ minimize  Σ_{k=1}^{n} d(π(k), π(k mod n + 1))    (π a permutation of the n c
 ```
 
 このクレートの `Tsp` は距離そのものを
-[`DistanceStore`](../../api/optopus/building_blocks/distance_store/struct.DistanceStore.html) に保持します。
+[`DistanceStore`](../../api/optopus/building_blocks/instance/struct.DistanceStore.html) に保持します。
 `Vrp` が使うのと同じストアです。インスタンスは二次元座標と TSPLIB の標準的な距離式の一つから作るか
 (下の [辺の重みの種類](#edge-weight-types) を参照)、距離行列を直接与えて作ります。
 どの距離をメモリに保持するかは構築時に選びます ([距離の保持方法](#distance-storage) を参照)。

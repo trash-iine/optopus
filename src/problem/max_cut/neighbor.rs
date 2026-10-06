@@ -17,10 +17,7 @@
 
 use super::{MaxCut, MaxCutSolution};
 use crate::{
-    building_blocks::{
-        TabuKey, TabuMemory,
-        binary::{differing_pairs, random_differing_pair},
-    },
+    building_blocks::{TabuKey, TabuMemory, differing_pairs, random_differing_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };

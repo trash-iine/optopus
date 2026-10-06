@@ -71,26 +71,32 @@ src/
 │   │                         (integer), Relaxation
 │   ├── ruinable.rs           Ruinable, LocalRepair
 │   └── reduction.rs          ProblemReduction
-├── building_blocks/          shared data structures and helpers; put new shared code here
-│   ├── graph/                Graph (mod.rs), random and lattice generators (generator.rs),
-│   │                         seeded_rng
-│   ├── distance_store.rs     DistanceStore (full matrix / k nearest / given matrix)
-│   │                         and EdgeWeightType, shared by Tsp and Vrp
-│   ├── binary.rs             uniform_binary_crossover, hamming_distance, BinaryFixing,
-│   │                         lift_binary_solution, lift_compact_binary_solution,
-│   │                         apply_swap_as_two_flips, BinaryRelaxation, the binary
-│   │                         BranchSpace glue (binary_ranges etc. and the
-│   │                         exported binary_branch_space! macro each fix.rs calls)
-│   ├── integer.rs            IntVar, IntVars (+ permutation), DomainRestriction and the
-│   │                         BranchSpace blanket impl over Branchable
-│   ├── tabu.rs               TabuKey (Var / Pair / Triple), TabuMemory
-│   ├── biased_fitness.rs     BiasedFitnessPopulation, binary_tournament
-│   ├── ruin_recreate.rs      the five destroy / repair operators over any Ruinable
-│   ├── adaptive_weights.rs   AdaptiveWeights, the roulette the operators are picked by
-│   ├── anchored_sweep.rs     AnchoredSweep, the anchor widening and shuffled sweep
-│   │                         every LocalRepair descent runs
-│   ├── permutation.rs        order_crossover (OX)
-│   └── parse.rs              InstanceLines
+├── building_blocks/          what problems and heuristics are built from, in three groups;
+│   │                         new shared code goes in the group it belongs to, and code that
+│   │                         fits none of them gets its place decided first. Every item is
+│   │                         also re-exported flat (building_blocks::Graph)
+│   ├── instance/             what an instance is built from and read with
+│   │   ├── graph/            Graph (mod.rs), random and lattice generators (generator.rs),
+│   │   │                     seeded_rng
+│   │   ├── distance_store.rs DistanceStore (full matrix / k nearest / given matrix)
+│   │   │                     and EdgeWeightType, shared by Tsp and Vrp
+│   │   └── parse.rs          InstanceLines
+│   ├── representation/       helpers per kind of decision variable
+│   │   ├── binary.rs         uniform_binary_crossover, hamming_distance, BinaryFixing,
+│   │   │                     lift_binary_solution, lift_compact_binary_solution,
+│   │   │                     apply_swap_as_two_flips, BinaryRelaxation, the binary
+│   │   │                     BranchSpace glue (binary_ranges etc. and the
+│   │   │                     exported binary_branch_space! macro each fix.rs calls)
+│   │   ├── integer.rs        IntVar, IntVars (+ permutation), DomainRestriction and the
+│   │   │                     BranchSpace blanket impl over Branchable
+│   │   └── permutation.rs    order_crossover (OX), random_distinct_pair
+│   └── search/               search machinery that knows no problem; MIN_IMPROVEMENT (mod.rs)
+│       ├── tabu.rs           TabuKey (Var / Pair / Triple), TabuMemory
+│       ├── biased_fitness.rs BiasedFitnessPopulation, binary_tournament
+│       ├── ruin_recreate.rs  the five destroy / repair operators over any Ruinable
+│       ├── adaptive_weights.rs  AdaptiveWeights, the roulette the operators are picked by
+│       └── anchored_sweep.rs AnchoredSweep, the anchor widening and shuffled sweep
+│                             every LocalRepair descent runs
 ├── heuristic/
 │   ├── mod.rs                Heuristic trait, StopCondition
 │   ├── local_search.rs / simulated_annealing.rs (+BangBang) / tabu_search.rs

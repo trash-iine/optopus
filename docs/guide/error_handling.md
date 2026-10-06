@@ -46,7 +46,7 @@ When implementing a custom problem or heuristic:
   with an invalid index).
 - Return [`OptError::FileLoad { … }`](../api/optopus/error/enum.OptError.html#variant.FileLoad) from custom
   loaders, with `line == 0` for a file-level problem;
-  [`InstanceLines`](../api/optopus/building_blocks/parse/struct.InstanceLines.html) builds
+  [`InstanceLines`](../api/optopus/building_blocks/instance/struct.InstanceLines.html) builds
   it with the path and line filled in.
 - Let `?` propagate `std::io::Error` automatically,
   [`OptError: From<io::Error>`](../api/optopus/error/enum.OptError.html#trait-implementations) is derived.
