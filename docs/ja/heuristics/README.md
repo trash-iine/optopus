@@ -41,6 +41,7 @@
 | アルゴリズム | 設定の `kind` | 問題に必要なトレイト | 補足 |
 |---|---|---|---|
 | [PopulationAnnealing](population_annealing.md) | `PopulationAnnealing` | 解と move の両方に `Evaluate` | β で冷却するレプリカ集団を、ステップごとにリサンプリングし、Metropolis でスイープする。任意の問題。 |
+| [ParallelTempering](parallel_tempering.md) | `ParallelTempering` | 解と move の両方に `Evaluate` | 固定した温度のはしごに並べたレプリカを Metropolis でスイープし、ラウンドごとに隣同士を交換する。任意の問題。 |
 | [BreakoutLocalSearch](breakout_local_search.md) | `BreakoutLocalSearch` | `ProblemTrait` 以外はなし。スケジュールがさらに要求することはある | 貪欲な降下と、ヒューリスティクスの集まりに対する適応的な摂動。MaxCut に登録済み。 |
 | [AdaptiveLargeNeighborhoodSearch](alns.md) | `AdaptiveLargeNeighborhoodSearch` | `Ruinable`、解に `Evaluate` | 適応的なオペレータ重みと SA 受理による ruin-and-recreate。任意でアンカー付きの `LocalRepair`。CVRP、TSP、フローショップ、Bin Packing に登録済み。 |
 | [IteratedGreedy](iterated_greedy.md) | `IteratedGreedy` | `Ruinable`、解に `Evaluate` | 固定個数のランダム除去、貪欲な再挿入、`LocalRepair` の降下、一定温度での受理。フローショップに登録済み。 |

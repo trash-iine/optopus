@@ -10,9 +10,9 @@ use super::problems::{BenchmarkProblem, BenchmarkSolution};
 use crate::error::OptError;
 use crate::heuristic::{
     BeamSearch, GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
-    ParentSelection, PopulationAnnealing, RandomWalk, ReinforcementLearningSearch, Restart,
-    RewardShaping, Sequential, SimulatedAnnealing, StopCondition, TabuSearch,
-    VariableNeighborhoodSearch,
+    ParallelTempering, ParentSelection, PopulationAnnealing, RandomWalk,
+    ReinforcementLearningSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing,
+    StopCondition, TabuSearch, VariableNeighborhoodSearch,
 };
 use crate::search_state::{Crossover, Distance, MoveToNeighbor, ProblemTrait};
 use crate::trait_defs::{EnabledTabu, Evaluate, Rankable};
@@ -163,6 +163,9 @@ where
             HeuristicConfig::PopulationAnnealing { .. } => {
                 build_population_annealing::<P, N>(self.config, self.cond)
             }
+            HeuristicConfig::ParallelTempering { .. } => {
+                build_parallel_tempering::<P, N>(self.config, self.cond)
+            }
             _ => unreachable!("non-neighbor kinds are dispatched before with_neighbor"),
         }
     }
@@ -236,6 +239,55 @@ where
         pa = pa.with_sweep_length(length);
     }
     Ok(Box::new(pa))
+}
+
+/// Builds a [`ParallelTempering`] from a `ParallelTempering` config, checking
+/// the ranges so a bad config fails at startup rather than panicking in a run.
+fn build_parallel_tempering<P, N>(
+    config: &HeuristicConfig,
+    cond: StopCondition,
+) -> Result<Box<dyn Heuristic<P>>, OptError>
+where
+    P: ProblemTrait + 'static,
+    P::Solution: Evaluate,
+    N: MoveToNeighbor<P> + Evaluate + 'static,
+{
+    let HeuristicConfig::ParallelTempering {
+        num_replicas,
+        beta_min,
+        beta_max,
+        sweeps_per_exchange,
+        sweep_length,
+        ..
+    } = config
+    else {
+        return Err(OptError::Config(format!(
+            "expected a ParallelTempering config, got '{}'",
+            config.kind_name()
+        )));
+    };
+    if *num_replicas < 2 {
+        return Err(OptError::Config(
+            "'num_replicas' must be at least 2".to_string(),
+        ));
+    }
+    let (lo, hi) = (beta_min.unwrap_or(0.1), beta_max.unwrap_or(5.0));
+    if !(lo > 0.0 && lo < hi) {
+        return Err(OptError::Config(format!(
+            "need 0 < beta_min < beta_max, got {lo} and {hi}"
+        )));
+    }
+    let sweeps = sweeps_per_exchange.unwrap_or(1);
+    if sweeps == 0 || sweep_length.is_some_and(|l| l == 0) {
+        return Err(OptError::Config(
+            "'sweeps_per_exchange' and 'sweep_length' must be at least 1".to_string(),
+        ));
+    }
+    let mut pt = ParallelTempering::<P, N>::new(cond, *num_replicas, lo, hi, sweeps);
+    if let Some(length) = *sweep_length {
+        pt = pt.with_sweep_length(length);
+    }
+    Ok(Box::new(pt))
 }
 
 fn build_rl_search<P, N>(
@@ -474,6 +526,7 @@ where
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::LocalSearch { neighbor, .. }
         | HeuristicConfig::PopulationAnnealing { neighbor, .. }
+        | HeuristicConfig::ParallelTempering { neighbor, .. }
         | HeuristicConfig::TabuSearch { neighbor, .. }
         | HeuristicConfig::SimulatedAnnealing { neighbor, .. }
         | HeuristicConfig::LateAcceptanceHillClimbing { neighbor, .. }
@@ -549,6 +602,15 @@ mod factory_tests {
             },
             HeuristicConfig::RandomWalk {
                 neighbor: neighbor.clone(),
+                stop_condition: sc(),
+            },
+            HeuristicConfig::ParallelTempering {
+                neighbor: neighbor.clone(),
+                num_replicas: 4,
+                beta_min: None,
+                beta_max: None,
+                sweeps_per_exchange: None,
+                sweep_length: Some(8),
                 stop_condition: sc(),
             },
             HeuristicConfig::ReinforcementLearningSearch {

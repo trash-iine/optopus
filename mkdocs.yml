@@ -117,6 +117,7 @@ nav:
       - Reinforcement Learning Search: heuristics/rl_search.md
       - Genetic Algorithm: heuristics/genetic_algorithm.md
       - Population Annealing: heuristics/population_annealing.md
+      - Parallel Tempering: heuristics/parallel_tempering.md
       - Adaptive Large Neighborhood Search: heuristics/alns.md
       - Iterated Greedy: heuristics/iterated_greedy.md
       - GRASP construction: heuristics/greedy_randomized_construction.md
@@ -171,6 +172,7 @@ nav:
           - Reinforcement Learning Search: ja/heuristics/rl_search.md
           - Genetic Algorithm: ja/heuristics/genetic_algorithm.md
           - Population Annealing: ja/heuristics/population_annealing.md
+          - Parallel Tempering: ja/heuristics/parallel_tempering.md
           - Adaptive Large Neighborhood Search: ja/heuristics/alns.md
           - Iterated Greedy: ja/heuristics/iterated_greedy.md
           - GRASP construction: ja/heuristics/greedy_randomized_construction.md

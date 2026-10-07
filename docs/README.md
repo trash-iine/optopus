@@ -55,6 +55,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Reinforcement Learning Search](heuristics/rl_search.md)
 - [Genetic Algorithm](heuristics/genetic_algorithm.md) (including `Crossover` trait)
 - [Population Annealing](heuristics/population_annealing.md)
+- [Parallel Tempering](heuristics/parallel_tempering.md)
 - [Adaptive Large Neighborhood Search](heuristics/alns.md)
 - [Iterated Greedy](heuristics/iterated_greedy.md)
 - [GRASP construction](heuristics/greedy_randomized_construction.md)

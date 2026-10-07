@@ -1,5 +1,5 @@
+use crate::building_blocks::search::metropolis_sweeps;
 use crate::error::OptError;
-use crate::heuristic::simulated_annealing::boltzmann_accept;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::search_state::SearchState;
 use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait, rank_cmp};
@@ -26,7 +26,8 @@ use std::marker::PhantomData;
 ///    diversity after the population converges.
 /// 3. Metropolis sweeps, every replica is swept `sweeps_per_step` times at the
 ///    new `β`; a proposed move is accepted with probability
-///    `min(1, exp(-β · ΔE))` (reusing [`boltzmann_accept`]).
+///    `min(1, exp(-β · ΔE))`, by the shared
+///    [`metropolis_sweeps`](crate::building_blocks::search::metropolis_sweeps).
 ///
 /// There is no initial sweep before the first resampling. The paper starts from
 /// a random population at `β = 0`, where random *is* the equilibrium
@@ -156,33 +157,6 @@ where
             // while the search runs.
             N::iter(state.instance, &self.population[0]).count()
         });
-    }
-
-    /// Sweeps a single replica `sweeps` times at temperature `T = 1/β`.
-    /// One sweep proposes `proposals` moves. Free of `self` so the caller can
-    /// iterate `self.population` mutably while sweeping.
-    fn metropolis_sweeps(
-        replica: &mut P::Solution,
-        rng: &mut SmallRng,
-        prob: &P,
-        temperature: f64,
-        sweeps: usize,
-        proposals: usize,
-    ) {
-        if proposals == 0 {
-            return;
-        }
-        for _ in 0..sweeps {
-            for _ in 0..proposals {
-                let Some(mv) = N::random_neighbor(prob, replica, rng) else {
-                    continue;
-                };
-                if boltzmann_accept(mv.evaluate(), temperature, rng) {
-                    // `apply_to_solution` refreshes gain/objective incrementally.
-                    let _ = mv.apply_to_solution(prob, replica);
-                }
-            }
-        }
     }
 
     /// Resamples the population for the transition `β → β + Δβ`. Each replica
@@ -320,7 +294,7 @@ where
         let sweeps = self.sweeps_per_step;
         let proposals = self.proposals_per_sweep;
         for replica in &mut self.population {
-            Self::metropolis_sweeps(
+            metropolis_sweeps::<P, N>(
                 replica,
                 &mut state.rng,
                 prob,

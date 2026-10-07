@@ -2,14 +2,16 @@
 //!
 //! The tabu memory every move writes to, the adaptive roulette and the ruin
 //! and recreate operators of ALNS, the biased-fitness population of the
-//! genetic searches, the anchored sweep the ruin repairs descend with, and
-//! the draw of two distinct positions the moves sample with.
+//! genetic searches, the anchored sweep the ruin repairs descend with, the
+//! Metropolis sweep the replica annealers share, and the draw of two distinct
+//! positions the moves sample with.
 //! Heuristics, `SearchState` and the problems' own moves and descents all use
 //! these, and none of them is about a particular problem.
 
 mod adaptive_weights;
 mod anchored_sweep;
 mod biased_fitness;
+mod metropolis;
 mod ruin_recreate;
 mod sampling;
 mod tabu;
@@ -17,6 +19,7 @@ mod tabu;
 pub use adaptive_weights::AdaptiveWeights;
 pub use anchored_sweep::AnchoredSweep;
 pub use biased_fitness::{BiasedFitnessPopulation, CostFn, DistanceFn, binary_tournament};
+pub use metropolis::{boltzmann_accept, metropolis_sweeps};
 pub use ruin_recreate::{
     best_two_insertions, greedy_insertion, random_removal, randomized_greedy_insertion,
     regret2_insertion, shaw_removal, worst_removal,

@@ -35,6 +35,7 @@ Read the table, open the one file you need.
 | [0025](0025-max-cut-branch-and-bound-needs-the-eigenvalue-bound.md) | max_cut, heuristic | adopted | Branch-and-bound on MaxCut needs the certified eigenvalue bound, which takes the median G-set gap from 34% to 6% |
 | [0026](0026-iterated-greedy-beats-alns-on-the-flow-shop.md) | heuristic, flow_shop | reference | Iterated Greedy is its own heuristic, and on the flow shop it beats ALNS on the same `Ruinable` |
 | [0027](0027-grasp-is-a-composition-and-its-construction-is-only-as-good-as-the-insertion-cost.md) | heuristic, flow_shop, bin_packing | reference | GRASP is `Iterated` with a construction step, and it pays only where cheapest insertion is a good greedy rule |
+| [0028](0028-parallel-tempering-is-level-with-population-annealing-on-the-g-set.md) | heuristic, max_cut | reference | Parallel tempering shares the Metropolis sweep with population annealing, and is level with it on the G-set |
 
 ## Writing a new record
 
