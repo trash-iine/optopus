@@ -1,0 +1,77 @@
+# Falkenauer's bin packing instances, uniform u250 and triplets t249.
+# GRASP written as a composition, multi-start descent and ALNS on one time
+# budget each. Written by hand, not by gen_benchmark_configs.py.
+
+num_runs = 10
+seed = 42
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/u250_00.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/u250_01.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/u250_02.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/u250_03.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/u250_04.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/t249_00.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/t249_01.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/t249_02.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/t249_03.txt"
+problem = "BinPacking"
+
+[[instances]]
+path = "data/instances/bin_packing/falkenauer/t249_04.txt"
+problem = "BinPacking"
+
+# GRASP, a randomized greedy construction then a descent, in a loop.
+[[heuristics]]
+kind = "Iterated"
+[heuristics.stop_condition]
+max_duration_secs = 10.0
+
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[[heuristics.steps]]
+kind = "GreedyRandomizedConstruction"
+alpha = 0.2
+
+# Multi-start descent from random First Fit packings, the baseline GRASP replaces.
+[[heuristics]]
+kind = "Restart"
+[heuristics.stop_condition]
+max_duration_secs = 10.0
+[heuristics.restart_condition]
+max_failed_update = 0
+
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+[heuristics.stop_condition]
+max_duration_secs = 10.0
