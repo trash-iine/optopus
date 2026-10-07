@@ -27,7 +27,6 @@
 
 use std::time::Duration;
 
-use optopus::heuristic::{ParallelTempering, PopulationAnnealing};
 use optopus::prelude::*;
 use rand::Rng;
 
@@ -37,11 +36,14 @@ fn main() {
     let total: i64 = a.iter().sum();
     let n = a.len();
 
+    // QUBO coefficients are i32, so a value that does not fit stops here
+    // rather than wrapping.
+    let coef = |v: i64| i32::try_from(v).expect("coefficient fits in i32");
     let mut entries = Vec::new();
     for i in 0..n {
-        entries.push((i, i, (4 * a[i] * a[i] - 4 * total * a[i]) as i32));
+        entries.push((i, i, coef(4 * a[i] * a[i] - 4 * total * a[i])));
         for j in i + 1..n {
-            entries.push((i, j, (8 * a[i] * a[j]) as i32));
+            entries.push((i, j, coef(8 * a[i] * a[j])));
         }
     }
     let qubo = Qubo::from_entries(entries);
@@ -51,7 +53,7 @@ fn main() {
     };
     // The energy changes run to millions, so the inverse temperatures are
     // tiny.
-    let budget = StopCondition::duration(Duration::from_secs(2));
+    let budget = StopCondition::duration(Duration::from_secs(1));
     println!("{n} numbers summing to {total}");
 
     let mut state = SearchState::new_with_seed(&qubo, 42);
@@ -80,7 +82,7 @@ fn main() {
     );
 
     let mut state = SearchState::new_with_seed(&qubo, 42);
-    let mut pt = ParallelTempering::<Qubo, QuboFlipNeighbor>::new(budget, 20, 1.0e-7, 1.0e-3, 1);
+    let mut pt = ParallelTempering::<Qubo, QuboFlipNeighbor>::new(budget, 20, 1.0e-7, 1.0e-3, 10);
     pt.run(&mut state).unwrap();
     println!(
         "  ParallelTempering   residue {} (exchanges accepted {:.0}%)",

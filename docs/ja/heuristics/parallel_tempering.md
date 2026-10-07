@@ -10,7 +10,6 @@ Parallel tempering (レプリカ交換モンテカルロ法) は、`num_replicas
 ## 例 { #example }
 
 ```rust
-use optopus::heuristic::ParallelTempering;
 use optopus::prelude::*;
 
 let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut seeded_rng(42)));
@@ -27,8 +26,6 @@ pt.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 println!("exchanges accepted = {:?}", pt.exchange_acceptance());
 ```
-
-`ParallelTempering` は prelude に入っていないので、`optopus::heuristic` から import します。
 
 ## アルゴリズムの概略 { #algorithm-sketch }
 

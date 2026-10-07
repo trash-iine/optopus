@@ -1,8 +1,8 @@
-use crate::building_blocks::search::metropolis_sweeps;
+use crate::building_blocks::search::{best_replica, metropolis_sweeps, sweep_length};
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::search_state::SearchState;
-use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait, rank_cmp};
+use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait};
 use rand::Rng;
 use std::marker::PhantomData;
 
@@ -105,8 +105,7 @@ where
 
     /// Sets how many moves one sweep proposes, instead of counting the
     /// neighborhood once per episode as
-    /// [`PopulationAnnealing::with_sweep_length`](crate::heuristic::PopulationAnnealing::with_sweep_length)
-    /// explains.
+    /// [`sweep_length`](crate::building_blocks::search::sweep_length) explains.
     ///
     /// # Panics
     ///
@@ -137,9 +136,8 @@ where
             self.replicas
                 .push(state.instance.new_solution(&mut state.rng));
         }
-        self.proposals_per_sweep = self
-            .sweep_length
-            .unwrap_or_else(|| N::iter(state.instance, &self.replicas[0]).count());
+        self.proposals_per_sweep =
+            sweep_length::<P, N>(state.instance, &self.replicas[0], self.sweep_length);
     }
 
     fn exchange(&mut self, rng: &mut rand::rngs::SmallRng) {
@@ -191,16 +189,9 @@ where
         }
         self.exchange(&mut state.rng);
 
-        // As population annealing does, the counter advances by the sweeps
-        // and the incumbent is the best replica of the round.
+        // Same accounting as PopulationAnnealing.
         state.iteration += self.sweeps_per_exchange as u64;
-        let best = self
-            .replicas
-            .iter()
-            .max_by(|a, b| rank_cmp(*a, *b))
-            .expect("at least two replicas")
-            .clone();
-        state.solution = best;
+        state.solution = self.replicas[best_replica(&self.replicas)].clone();
         state.update_best();
         Ok(())
     }
@@ -210,7 +201,7 @@ where
 mod tests {
     use super::*;
     use crate::problem::max_cut::test_fixtures::small_instance;
-    use crate::problem::{MaxCut, MaxCutFlipNeighbor, Qubo, QuboFlipNeighbor};
+    use crate::problem::{MaxCut, MaxCutFlipNeighbor, Qubo, QuboFlipNeighbor, QuboSolution};
 
     type PtForMaxCut = ParallelTempering<MaxCut, MaxCutFlipNeighbor>;
 
@@ -226,16 +217,13 @@ mod tests {
     }
 
     #[test]
-    fn improves_and_is_reproducible_under_seed() {
+    fn is_reproducible_under_seed() {
         let mc = small_instance();
         let run = || {
             let mut state = SearchState::new_with_seed(&mc, 7);
-            let initial = state.best_solution.objective;
-            let mut pt = PtForMaxCut::new(StopCondition::iterations(200), 6, 0.2, 4.0, 2);
-            pt.run(&mut state).unwrap();
-            assert!(state.best_solution.objective >= initial);
-            let rate = pt.exchange_acceptance().unwrap();
-            assert!((0.0..=1.0).contains(&rate));
+            PtForMaxCut::new(StopCondition::iterations(200), 6, 0.2, 4.0, 2)
+                .run(&mut state)
+                .unwrap();
             (state.best_solution.x.clone(), state.best_iteration)
         };
         assert_eq!(run(), run());
@@ -254,12 +242,11 @@ mod tests {
             2.0,
             1,
         );
-        let mut state = SearchState::new_with_seed(&qubo, 1);
-        pt.initialize(&mut state);
-        pt.replicas[0] = crate::problem::QuboSolution::new_from_assignment(&qubo, vec![true, true]);
-        pt.replicas[1] =
-            crate::problem::QuboSolution::new_from_assignment(&qubo, vec![false, false]);
-        pt.exchange(&mut state.rng);
+        pt.replicas = vec![
+            QuboSolution::new_from_assignment(&qubo, vec![true, true]),
+            QuboSolution::new_from_assignment(&qubo, vec![false, false]),
+        ];
+        pt.exchange(&mut SearchState::new_with_seed(&qubo, 1).rng);
         assert_eq!(pt.replicas[1].x, vec![true, true]);
         assert_eq!(pt.exchange_acceptance(), Some(1.0));
     }

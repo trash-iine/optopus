@@ -9,7 +9,7 @@
 use rand::Rng;
 use rand::rngs::SmallRng;
 
-use crate::trait_defs::{Evaluable, Evaluate, MoveToNeighbor, ProblemTrait};
+use crate::trait_defs::{Evaluable, Evaluate, MoveToNeighbor, ProblemTrait, Rankable, rank_cmp};
 
 /// Returns `true` with Boltzmann probability `exp(-worsening / temperature)`.
 ///
@@ -39,20 +39,41 @@ pub fn metropolis_sweeps<P, N>(
     P: ProblemTrait,
     N: MoveToNeighbor<P> + Evaluate,
 {
-    if proposals == 0 {
-        return;
-    }
-    for _ in 0..sweeps {
-        for _ in 0..proposals {
-            let Some(mv) = N::random_neighbor(prob, replica, rng) else {
-                continue;
-            };
-            if boltzmann_accept(mv.evaluate(), temperature, rng) {
-                // `apply_to_solution` refreshes gain/objective incrementally.
-                let _ = mv.apply_to_solution(prob, replica);
-            }
+    for _ in 0..sweeps * proposals {
+        let Some(mv) = N::random_neighbor(prob, replica, rng) else {
+            continue;
+        };
+        if boltzmann_accept(mv.evaluate(), temperature, rng) {
+            // `apply_to_solution` refreshes gain/objective incrementally.
+            let _ = mv.apply_to_solution(prob, replica);
         }
     }
+}
+
+/// The proposals in one sweep, `fixed` if given and otherwise the size of
+/// `N`'s neighborhood of `sol`.
+///
+/// A sweep is one pass over the system, so by default the length is the
+/// neighborhood counted from [`MoveToNeighbor::iter`], once per episode since
+/// it does not change size while the search runs. That is O(n) for a
+/// single-variable move and is what the physics literature calls a sweep, but
+/// it is O(n²) for a pairwise move such as 2-opt, and the count builds every
+/// move only to discard it. A fixed length is how to avoid that.
+pub fn sweep_length<P, N>(prob: &P, sol: &P::Solution, fixed: Option<usize>) -> usize
+where
+    P: ProblemTrait,
+    N: MoveToNeighbor<P>,
+{
+    fixed.unwrap_or_else(|| N::iter(prob, sol).count())
+}
+
+/// The index of the best of `replicas`, the last of them on a tie.
+pub fn best_replica<S: Rankable>(replicas: &[S]) -> usize {
+    replicas
+        .iter()
+        .enumerate()
+        .max_by(|(_, a), (_, b)| rank_cmp(*a, *b))
+        .map_or(0, |(i, _)| i)
 }
 
 #[cfg(test)]

@@ -83,7 +83,7 @@ impl Evaluable<f64> {
 /// used.
 ///
 /// `T` is the numeric type returned (default `f64`). Use `T = f64` for
-/// compatibility with [`boltzmann_accept`](crate::heuristic::boltzmann_accept).
+/// compatibility with [`boltzmann_accept`](crate::building_blocks::search::boltzmann_accept).
 pub trait Evaluate<T = f64> {
     fn evaluate(&self) -> Evaluable<T>;
 }

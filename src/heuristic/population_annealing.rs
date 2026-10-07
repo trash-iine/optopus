@@ -1,4 +1,4 @@
-use crate::building_blocks::search::metropolis_sweeps;
+use crate::building_blocks::search::{best_replica, metropolis_sweeps, sweep_length};
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::search_state::SearchState;
@@ -126,12 +126,9 @@ where
 
     /// Sets how many moves one sweep proposes, instead of measuring it.
     ///
-    /// A sweep is one pass over the system, so by default the length is the
-    /// size of `N`'s neighborhood, counted once per episode from
-    /// [`MoveToNeighbor::iter`]. That is O(n) for a single-variable move and is
-    /// what the physics literature calls a sweep, but it is O(n²) for a
-    /// pairwise move such as 2-opt, and the count builds every move only to
-    /// discard it. Pin the length here when that matters.
+    /// By default a sweep is one pass over `N`'s neighborhood, as
+    /// [`sweep_length`](crate::building_blocks::search::sweep_length)
+    /// explains. Pin the length here when counting it costs too much.
     ///
     /// # Panics
     ///
@@ -152,11 +149,8 @@ where
             self.population
                 .push(state.instance.new_solution(&mut state.rng));
         }
-        self.proposals_per_sweep = self.sweep_length.unwrap_or_else(|| {
-            // Measured once per episode: the neighborhood does not change size
-            // while the search runs.
-            N::iter(state.instance, &self.population[0]).count()
-        });
+        self.proposals_per_sweep =
+            sweep_length::<P, N>(state.instance, &self.population[0], self.sweep_length);
     }
 
     /// Resamples the population for the transition `β → β + Δβ`. Each replica
@@ -242,16 +236,6 @@ where
 
         std::mem::swap(&mut self.population, &mut self.next_population);
     }
-
-    /// Index of the best replica.
-    fn best_replica_idx(&self) -> usize {
-        self.population
-            .iter()
-            .enumerate()
-            .max_by(|(_, a), (_, b)| rank_cmp(*a, *b))
-            .map(|(i, _)| i)
-            .unwrap_or(0)
-    }
 }
 
 impl<P: ProblemTrait, N> Heuristic<P> for PopulationAnnealing<P, N>
@@ -307,7 +291,7 @@ where
         // 4. Track the global best. Advance the iteration counter by the sweep
         //    budget so time-to-best and the anytime trajectory are meaningful.
         state.iteration += self.sweeps_per_step as u64;
-        let best_idx = self.best_replica_idx();
+        let best_idx = best_replica(&self.population);
         state.solution = self.population[best_idx].clone();
         state.update_best();
 

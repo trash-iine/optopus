@@ -44,6 +44,12 @@ Do not read the G32 and G35 rows as parallel tempering being weaker before
 its ladder has been tuned for 2000 vertices, more replicas being the first
 thing to try.
 
+Do not build a replica-set component for the two to share yet. Beyond the
+sweep they share only the setup and the write-back, `sweep_length` and
+`best_replica` beside the sweep, and the parts that differ, resampling and
+exchange, are most of each. The isoenergetic cluster move would be the third
+user and the operation that justifies one.
+
 Do not move the sweep back into either heuristic. It is the one piece the two
 share, and the isoenergetic cluster move 0016 points to would be the next
 component both take from outside.
