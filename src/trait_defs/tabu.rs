@@ -1,4 +1,4 @@
-use crate::common::TabuMemory;
+use crate::building_blocks::search::TabuMemory;
 use rand::rngs::SmallRng;
 
 /// Is for moves that support a tabu list mechanism.

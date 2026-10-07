@@ -6,7 +6,7 @@
 //! no improving move exists for any starting city (local optimum) or
 //! when the stop condition is met.
 
-use crate::common::MIN_IMPROVEMENT;
+use crate::building_blocks::search::MIN_IMPROVEMENT;
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::tsp::{NeighborLists, Tsp, TspSolution};

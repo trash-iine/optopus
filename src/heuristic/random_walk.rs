@@ -74,7 +74,7 @@ mod tests {
     /// would never be reached.
     #[test]
     fn an_empty_neighborhood_steps_the_counter_rather_than_failing() {
-        let mc = MaxCut::new(crate::common::Graph::new());
+        let mc = MaxCut::new(crate::building_blocks::instance::Graph::new());
         let mut state = SearchState::new_with_seed(&mc, 1);
         let mut rw = RandomWalk::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10));
         rw.run(&mut state)

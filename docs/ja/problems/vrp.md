@@ -114,7 +114,7 @@ for (slot, route) in sol.routes.iter().enumerate() {
 ### 距離の保持方法 { #distance-storage }
 
 距離は
-[`DistanceStore`](../../api/optopus/common/distance_store/struct.DistanceStore.html) に保持されます。
+[`DistanceStore`](../../api/optopus/building_blocks/instance/struct.DistanceStore.html) に保持されます。
 `Tsp` が使うのと同じストアです。
 
 | コンストラクタ | 保持するもの | 使う場面 |
@@ -179,7 +179,7 @@ CVRP のコンストラクタに `num_vehicles = 0` を渡すと、first-fit-dec
 
 ## 交叉 { #crossover }
 
-- `VrpOrderCrossover`。両親を大きな巡回路に平たくし、Order Crossover (`common::order_crossover`) を適用してから、
+- `VrpOrderCrossover`。両親を大きな巡回路に平たくし、Order Crossover (`building_blocks::representation::order_crossover`) を適用してから、
   [`split_giant_tour`](../../api/optopus/problem/vrp/fn.split_giant_tour.html)
   (Prins の Split) で子を `num_slots()` 本のルートに復号し直します。Split は、OX が作った顧客の順序に対して区切り位置を最適に選ぶ動的計画法で、
   各ルートはそれを走るスロットの車両タイプで価格付けされます。

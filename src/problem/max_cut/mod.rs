@@ -17,7 +17,7 @@
 //! println!("best = {}", state.best_solution.objective);
 //! ```
 //!
-//! [`MaxCut`] is the instance and wraps a [`Graph`](crate::common::Graph),
+//! [`MaxCut`] is the instance and wraps a [`Graph`](crate::building_blocks::instance::Graph),
 //! which is where the graph builders and accessors are documented.
 //! [`MaxCutSolution`] is the partition, carrying `x`, `gain` and `objective`.
 //!

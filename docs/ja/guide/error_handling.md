@@ -45,6 +45,6 @@ match Qubo::load_file("instance.qubo") {
   [`MoveToNeighbor::apply_to_solution`](../../api/optopus/trait_defs/trait.MoveToNeighbor.html#tymethod.apply_to_solution))。
 - 独自のローダからは [`OptError::FileLoad { … }`](../../api/optopus/error/enum.OptError.html#variant.FileLoad) を返します。
   ファイル全体の問題なら `line == 0` にします。
-  [`InstanceLines`](../../api/optopus/common/parse/struct.InstanceLines.html) を使うと、パスと行番号が埋まった状態で作れます。
+  [`InstanceLines`](../../api/optopus/building_blocks/instance/struct.InstanceLines.html) を使うと、パスと行番号が埋まった状態で作れます。
 - `std::io::Error` は `?` でそのまま伝播させます。
   [`OptError: From<io::Error>`](../../api/optopus/error/enum.OptError.html#trait-implementations) が導出されています。

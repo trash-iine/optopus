@@ -42,7 +42,7 @@
 use std::collections::BTreeMap;
 
 use super::problem::{MaxCut, MaxCutSolution};
-use crate::common::Graph;
+use crate::building_blocks::instance::Graph;
 use crate::trait_defs::ProblemReduction;
 
 /// One applied reduction, replayed in reverse to restore a removed vertex.

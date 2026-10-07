@@ -38,7 +38,7 @@ pub(crate) use descent::Descent;
 use granular::build_neighbor_lists;
 pub(crate) use route_state::RouteState;
 
-use crate::common::DistanceStore;
+use crate::building_blocks::instance::DistanceStore;
 use crate::problem::Vrp;
 
 /// Distance of a single route, `depot → route[0] → … → route[last] → depot`,

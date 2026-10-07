@@ -65,7 +65,7 @@ tenure and the mode are the same call. Recording is off on a fresh state and off
 so a search whose method is the tabu list has to say so, and says so next to
 the loop that depends on it rather than once, somewhere else.
 
-`common::TabuMemory` is the single store, split by `TabuKey` shape: `Var(i)`,
+`building_blocks::search::TabuMemory` is the single store, split by `TabuKey` shape: `Var(i)`,
 `Pair` and `Triple` in a map, and `DenseVar(i)`, an index known to lie in
 `0..n`, in an array, the fast path the built-in moves take. Two move types over the
 same shape share prohibitions (MaxCut's flip and swap are both `DenseVar`, which is

@@ -32,6 +32,6 @@ chrono = "0.4.42"
 # vertex list are walked in lockstep, so where the allocator happens to put them
 # decides whether they collide in the cache. Under `thin` one arrangement cost
 # +47% on G32; under `fat` the same arrangement is within noise. Costs ~6s of
-# build time. See `src/common/tabu.rs`.
+# build time. See `src/building_blocks/search/tabu.rs`.
 lto = "fat"
 codegen-units = 1

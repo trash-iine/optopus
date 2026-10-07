@@ -1,4 +1,4 @@
-use crate::common::Graph;
+use crate::building_blocks::instance::Graph;
 use crate::search_state::{Distance, ProblemTrait};
 use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate};
 
@@ -11,7 +11,7 @@ use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate};
 ///
 /// ```
 /// use optopus::problem::MaxCut;
-/// use optopus::common::Graph;
+/// use optopus::building_blocks::instance::Graph;
 ///
 /// // From edge list
 /// let mc = MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
@@ -81,7 +81,7 @@ impl Evaluate for MaxCutSolution {
 
 impl Distance for MaxCutSolution {
     fn distance(&self, other: &Self) -> usize {
-        crate::common::hamming_distance(&self.x, &other.x)
+        crate::building_blocks::representation::hamming_distance(&self.x, &other.x)
     }
 }
 
@@ -141,7 +141,7 @@ impl MaxCut {
     /// # Examples
     ///
     /// ```
-    /// use optopus::common::Graph;
+    /// use optopus::building_blocks::instance::Graph;
     /// use optopus::problem::MaxCut;
     ///
     /// let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 2.0)]));
@@ -245,7 +245,7 @@ impl MaxCut {
 /// let mc = optopus::problem::MaxCut::from_edges([(0, 1, 1.0), (1, 2, 2.0)]);
 /// assert_eq!(format!("{mc}"), "MaxCut(vertices: 3, edges: 2)");
 ///
-/// let empty = optopus::problem::MaxCut::new(optopus::common::Graph::new());
+/// let empty = optopus::problem::MaxCut::new(optopus::building_blocks::instance::Graph::new());
 /// assert_eq!(format!("{empty}"), "MaxCut(empty)");
 /// ```
 impl std::fmt::Display for MaxCut {

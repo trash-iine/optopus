@@ -39,7 +39,7 @@
 use std::fmt::Write as _;
 use std::path::Path;
 
-use optopus::common::seeded_rng;
+use optopus::building_blocks::instance::seeded_rng;
 use optopus::prelude::*;
 use optopus::problem::{PlantedMaxCut, TileProbs2d, TileProbs3d, WishartCouplers};
 

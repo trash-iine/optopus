@@ -300,7 +300,7 @@ impl<P: ProblemTrait, S: PerturbationSchedule<P>> BreakoutLocalSearch<P, S> {
         descent: Box<dyn Heuristic<P>>,
         schedule: S,
     ) -> Self {
-        crate::common::tabu::assert_valid_tenure(tabu_tenure);
+        crate::building_blocks::search::assert_valid_tenure(tabu_tenure);
         Self {
             tabu_tenure,
             stop_condition,

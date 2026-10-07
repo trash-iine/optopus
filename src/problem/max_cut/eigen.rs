@@ -1,12 +1,12 @@
 //! The eigenvalue bound of MaxCut, certified in floating point.
 
 use super::problem::MaxCut;
-use crate::common::{IntVars, binary::fixed_by};
+use crate::building_blocks::representation::{IntVars, fixed_by};
 use crate::trait_defs::{Evaluable, FixVariables, Relaxation};
 
 /// The eigenvalue bound of Delorme and Poljak, a [`Relaxation`] of MaxCut much
 /// tighter than the positive weights
-/// [`BinaryRelaxation`](crate::common::BinaryRelaxation) sums.
+/// [`BinaryRelaxation`](crate::building_blocks::representation::BinaryRelaxation) sums.
 ///
 /// With `L` the weighted Laplacian of a graph on `n` vertices, a cut of sides
 /// `x ∈ {±1}ⁿ` weighs `¼ xᵀLx`, and since `xᵀ diag(u) x = Σ u` for any `u`,
@@ -513,7 +513,7 @@ fn cholesky_completes(a: &mut [f64], n: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::Graph;
+    use crate::building_blocks::instance::Graph;
     use rand::rngs::SmallRng;
     use rand::{Rng, SeedableRng};
 

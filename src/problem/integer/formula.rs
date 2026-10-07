@@ -3,7 +3,7 @@
 
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::common::IntVars;
+use crate::building_blocks::representation::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
 use crate::trait_defs::{Branchable, IntAssignment, Relaxation};
@@ -814,7 +814,7 @@ impl Evaluate for FormulaSolution {
 impl Distance for FormulaSolution {
     /// The number of variables whose values differ.
     fn distance(&self, other: &Self) -> usize {
-        crate::common::hamming_distance(&self.values, &other.values)
+        crate::building_blocks::representation::hamming_distance(&self.values, &other.values)
     }
 }
 
@@ -1075,7 +1075,7 @@ impl SubProblemExtractable for FormulaProblem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::IntVar;
+    use crate::building_blocks::representation::IntVar;
     use crate::heuristic::{Heuristic, StopCondition, TabuSearch};
     use crate::problem::{IntChangeNeighbor, IntReverseNeighbor, IntSwapNeighbor};
     use crate::search_state::{MoveToNeighbor, Rankable, SearchState};

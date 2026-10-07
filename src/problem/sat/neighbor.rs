@@ -1,6 +1,6 @@
 use super::problem::{Sat, SatSolution};
 use crate::{
-    common::{TabuKey, TabuMemory},
+    building_blocks::search::{TabuKey, TabuMemory},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -172,7 +172,7 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
 
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
         // Flip i first, then flip j using the updated gain[j] after the first flip
-        crate::common::apply_swap_as_two_flips(prob, sol, self.i, self.j)
+        crate::building_blocks::representation::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     /// Iterates the precomputed clause-sharing pairs lazily (no per-call

@@ -4,7 +4,7 @@ use rayon::prelude::*;
 
 use super::problem::{JobShopScheduling, JobShopSolution};
 use crate::{
-    common::{TabuKey, TabuMemory},
+    building_blocks::search::{TabuKey, TabuMemory},
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -360,7 +360,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
         rng: &mut rand::rngs::SmallRng,
     ) -> Option<Self> {
         let (from, to) =
-            crate::common::permutation::random_distinct_pair(sol.operations.len(), rng)?;
+            crate::building_blocks::search::random_distinct_pair(sol.operations.len(), rng)?;
         Some(Self::new(prob, sol, from, to))
     }
 }

@@ -80,7 +80,7 @@ let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
 は選んだ解を中心にインスタンスを作ります。そのため最適値は最良既知値ではなく、構成から厳密に分かります。
 
 ```rust
-use optopus::common::seeded_rng;
+use optopus::building_blocks::instance::seeded_rng;
 use optopus::problem::{PlantedMaxCut, TileProbs2d};
 
 let planted = PlantedMaxCut::tile_planting_2d(

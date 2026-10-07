@@ -2,8 +2,8 @@
 
 use super::formula::{FormulaProblem, FormulaSolution};
 use super::problem::{ChangeDelta, IntSolution, IntegerProblem, PairDelta};
-use crate::common::IntVars;
-use crate::common::permutation::order_crossover;
+use crate::building_blocks::representation::IntVars;
+use crate::building_blocks::representation::order_crossover;
 use crate::error::OptError;
 use crate::search_state::Crossover;
 use rand::Rng;
@@ -78,7 +78,7 @@ impl Crossover<FormulaProblem> for IntCrossover {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::IntVar;
+    use crate::building_blocks::representation::IntVar;
     use crate::heuristic::{
         GeneticAlgorithm, Heuristic, LocalSearch, ParentSelection, StopCondition,
         SubProblemBasedCrossover,

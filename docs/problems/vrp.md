@@ -129,7 +129,7 @@ minimum count and no route-time limit; `with_costs` / `with_min_count` /
 ### Distance storage
 
 The distances live in a
-[`DistanceStore`](../api/optopus/common/distance_store/struct.DistanceStore.html), the
+[`DistanceStore`](../api/optopus/building_blocks/instance/struct.DistanceStore.html), the
 same store `Tsp` uses.
 
 | Constructor | Keeps | Use it when |
@@ -212,7 +212,7 @@ the problem shares with it.
 ## Crossover
 
 - `VrpOrderCrossover`, flattens both parents into giant tours, applies Order
-  Crossover (`common::order_crossover`), then decodes the child back into
+  Crossover (`building_blocks::representation::order_crossover`), then decodes the child back into
   `num_slots()` routes with
   [`split_giant_tour`](../api/optopus/problem/vrp/fn.split_giant_tour.html)
   (Prins' Split): a dynamic program that, for the customer order OX produced,
