@@ -19,7 +19,7 @@ fn shifted(objective: u32, gain: f64) -> u32 {
 /// The move takes the job at `from` out and puts it back at `to`, counted in
 /// the sequence without it, so `to == from` would leave it where it was and is
 /// never generated. Insertion is the neighborhood the flow shop literature
-/// relies on. [`iter`](MoveToNeighbor::iter) prices all `(n - 1)²`
+/// relies on. [`iter`](MoveToNeighbor::iter) prices all `n (n - 1)`
 /// insertions in O(n²m) with Taillard's heads and tails, one O(nm)
 /// tabulation per job taken out.
 #[derive(Debug, Clone)]
