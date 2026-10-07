@@ -272,9 +272,9 @@ where
         ));
     }
     let (lo, hi) = (beta_min.unwrap_or(0.1), beta_max.unwrap_or(5.0));
-    if !(lo > 0.0 && lo < hi) {
+    if !(lo > 0.0 && lo < hi && hi.is_finite()) {
         return Err(OptError::Config(format!(
-            "need 0 < beta_min < beta_max, got {lo} and {hi}"
+            "need 0 < beta_min < beta_max < infinity, got {lo} and {hi}"
         )));
     }
     let sweeps = sweeps_per_exchange.unwrap_or(1);
@@ -686,6 +686,24 @@ mod factory_tests {
         assert!(err.to_string().contains("removal_fraction"), "{err}");
         let err = try_build(&ProblemKind::FlowShop, &alns(None, Some(1.5))).expect_err("must fail");
         assert!(err.to_string().contains("cooling_rate"), "{err}");
+    }
+
+    /// An infinite `beta_max` would freeze every replica but the hottest, so
+    /// it is a config error rather than a degenerate ladder.
+    #[test]
+    fn parallel_tempering_rejects_an_infinite_ladder() {
+        let pt = |beta_max| HeuristicConfig::ParallelTempering {
+            neighbor: NeighborKind::Flip,
+            num_replicas: 4,
+            beta_min: None,
+            beta_max,
+            sweeps_per_exchange: None,
+            sweep_length: None,
+            stop_condition: StopConditionConfig::default(),
+        };
+        try_build(&ProblemKind::MaxCut, &pt(None)).expect("defaults build");
+        let err = try_build(&ProblemKind::MaxCut, &pt(Some(f64::INFINITY))).expect_err("must fail");
+        assert!(err.to_string().contains("beta_max"), "{err}");
     }
 
     #[test]

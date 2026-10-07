@@ -67,7 +67,8 @@ where
 {
     /// # Panics
     ///
-    /// Panics if `num_replicas < 2`, unless `0 < beta_min < beta_max`, or if
+    /// Panics if `num_replicas < 2`, unless `0 < beta_min < beta_max` with
+    /// `beta_max` finite, or if
     /// `sweeps_per_exchange == 0`.
     pub fn new(
         stop_condition: StopCondition,
@@ -78,8 +79,8 @@ where
     ) -> Self {
         assert!(num_replicas >= 2, "num_replicas must be at least 2");
         assert!(
-            beta_min > 0.0 && beta_min < beta_max,
-            "need 0 < beta_min < beta_max"
+            beta_min > 0.0 && beta_min < beta_max && beta_max.is_finite(),
+            "need 0 < beta_min < beta_max < infinity"
         );
         assert!(
             sweeps_per_exchange >= 1,

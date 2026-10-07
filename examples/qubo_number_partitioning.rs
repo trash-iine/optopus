@@ -14,8 +14,9 @@
 //! Number partitioning has a phase transition physicists know in closed form.
 //! With `b`-bit numbers it is easy while `b / n` is below about one, where
 //! perfect splits are plentiful, and hard above, where the landscape is close
-//! to random. The QUBO's coefficients are 32-bit, and `8 a_i a_j` has to fit,
-//! so the numbers here are 10-bit and the instance sits on the easy side. All
+//! to random. The QUBO's energies are 32-bit, and they range over `[-A², 0]`,
+//! so `A²` has to fit, which keeps the numbers here at 10 bits and the
+//! instance on the easy side. All
 //! three find a split with the smallest residue the parity allows, and the
 //! example is about how each is called, the two replica methods taking their
 //! temperatures as inverse temperatures in the units of the energy.
@@ -36,8 +37,14 @@ fn main() {
     let total: i64 = a.iter().sum();
     let n = a.len();
 
-    // QUBO coefficients are i32, so a value that does not fit stops here
-    // rather than wrapping.
+    // QUBO coefficients and energies are i32. The energies run from -A² to 0,
+    // so A² has to fit as well as every coefficient, and a value that does not
+    // stops here rather than wrapping.
+    assert!(
+        total * total <= i64::from(i32::MAX),
+        "A² = {} does not fit the QUBO's i32 energies",
+        total * total
+    );
     let coef = |v: i64| i32::try_from(v).expect("coefficient fits in i32");
     let mut entries = Vec::new();
     for i in 0..n {
