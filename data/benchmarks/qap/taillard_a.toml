@@ -1,0 +1,77 @@
+# Taillard's uniform random QAP instances, the flat and hard family of QAPLIB.
+# Robust tabu search (TabuSearch with a random tenure), Iterated Tabu Search
+# and simulated annealing on one time budget each.
+# The instances are not bundled. Fetch them with
+#   bash data/instances/scripts/fetch_qaplib.sh
+
+num_runs = 10
+seed = 42
+
+[[instances]]
+path = "data/instances/qap/tai20a.dat"
+problem = "Qap"
+
+[[instances]]
+path = "data/instances/qap/tai25a.dat"
+problem = "Qap"
+
+[[instances]]
+path = "data/instances/qap/tai30a.dat"
+problem = "Qap"
+
+[[instances]]
+path = "data/instances/qap/tai35a.dat"
+problem = "Qap"
+
+[[instances]]
+path = "data/instances/qap/tai40a.dat"
+problem = "Qap"
+
+[[instances]]
+path = "data/instances/qap/tai50a.dat"
+problem = "Qap"
+
+[[instances]]
+path = "data/instances/qap/tai60a.dat"
+problem = "Qap"
+
+[[instances]]
+path = "data/instances/qap/tai80a.dat"
+problem = "Qap"
+
+[[instances]]
+path = "data/instances/qap/tai100a.dat"
+problem = "Qap"
+
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [20, 60]
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+
+[[heuristics]]
+kind = "Iterated"
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [20, 60]
+[heuristics.steps.stop_condition]
+max_failed_update = 2000
+
+[[heuristics.steps]]
+kind = "RandomWalk"
+neighbor = "Swap"
+[heuristics.steps.stop_condition]
+max_iteration = 10
+
+[[heuristics]]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 1000.0
+cooling_rate = 0.999999
+[heuristics.stop_condition]
+max_duration_secs = 30.0

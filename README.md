@@ -3,8 +3,9 @@
 A metaheuristic optimization library for combinatorial problems.
 Provides a uniform interface for applying local search, tabu search, simulated
 annealing, beam search, genetic algorithms, and more to MaxCut, QUBO, MaxSAT,
-TSP, Vertex Cover, Job Shop Scheduling, VRP (homogeneous or heterogeneous
-fleet), Graph Coloring, and user-defined problems.
+TSP, Vertex Cover, Job Shop Scheduling, Permutation Flow Shop, Quadratic
+Assignment, VRP (homogeneous or heterogeneous fleet), Graph Coloring, and
+user-defined problems.
 
 ## Quick Start
 
@@ -44,6 +45,8 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [TSP](docs/problems/tsp.md) | `Tsp` | `TspTwoOptNeighbor`, `TspRelocateNeighbor` |
 | [Vertex Cover](docs/problems/vertex_cover.md) | `VertexCover` | `VertexCoverFlipNeighbor`, `VertexCoverSwapNeighbor` |
 | [Job Shop Scheduling](docs/problems/job_shop_scheduling.md) | `JobShopScheduling` | `JobShopSwapNeighbor`, `JobShopRelocateNeighbor` |
+| [Permutation Flow Shop](docs/problems/flow_shop.md) | `FlowShop` | `FlowShopInsertNeighbor`, `FlowShopSwapNeighbor` |
+| [Quadratic Assignment](docs/problems/qap.md) | `Qap` | `QapSwapNeighbor` |
 | [VRP](docs/problems/vrp.md) | `Vrp` | `VrpRelocateNeighbor`, `VrpSwapNeighbor`, `VrpTwoOptNeighbor` |
 | [Graph Coloring](docs/problems/graph_coloring.md) | `GraphColoring` | `GraphColoringRecolorNeighbor`, `GraphColoringSwapNeighbor` |
 | [Formula](docs/problems/formula.md) | `FormulaProblem` | `IntChangeNeighbor`, `IntSwapNeighbor` |
@@ -63,6 +66,7 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [Genetic Algorithm](docs/heuristics/genetic_algorithm.md) | `GeneticAlgorithm<P, C>` |
 | [Population Annealing](docs/heuristics/population_annealing.md) | `PopulationAnnealing<P, N>` |
 | [Adaptive Large Neighborhood Search](docs/heuristics/alns.md) | `AdaptiveLargeNeighborhoodSearch<P>` |
+| [Iterated Greedy](docs/heuristics/iterated_greedy.md) | `IteratedGreedy<P>` |
 | [Breakout Local Search](docs/heuristics/breakout_local_search.md) | `BreakoutLocalSearch<P, S>` |
 | [Sequential / Iterated / VNS / Restart](docs/heuristics/meta.md) | `Sequential<P>`, `Iterated<P>`, `VariableNeighborhoodSearch<P>`, `Restart<P>` |
 | [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |

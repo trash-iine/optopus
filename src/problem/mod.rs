@@ -11,10 +11,12 @@
 //! |--------|---------|-----------|
 //! | [`max_cut`] | Maximum Cut | Maximize cut weight |
 //! | [`qubo`] | Quadratic Unconstrained Binary Optimization | Minimize energy |
+//! | [`qap`] | Quadratic Assignment | Minimize assignment cost |
 //! | [`sat`] | Maximum Satisfiability (MaxSAT) | Maximize satisfied clauses |
 //! | [`tsp`] | Traveling Salesman Problem | Minimize tour length |
 //! | [`vertex_cover`] | Minimum Vertex Cover | Minimize cover size |
 //! | [`job_shop_scheduling`] | Job Shop Scheduling | Minimize makespan |
+//! | [`flow_shop`] | Permutation Flow Shop Scheduling | Minimize makespan |
 //! | [`vrp`] | Capacitated + heterogeneous-fleet Vehicle Routing | Minimize total distance / time + cost |
 //! | [`graph_coloring`] | Graph Coloring | Minimize colors used |
 //! | [`integer`] | Any problem over bounded integer variables, by a closure or a formula | Configurable |
@@ -23,16 +25,22 @@
 //! [`BranchAndBound`](crate::heuristic::BranchAndBound) asks of a problem, is
 //! implemented for the integer problems and for the binary ones.
 
+pub mod flow_shop;
 pub mod graph_coloring;
 pub mod integer;
 pub mod job_shop_scheduling;
 pub mod max_cut;
+pub mod qap;
 pub mod qubo;
 pub mod sat;
 pub mod tsp;
 pub mod vertex_cover;
 pub mod vrp;
 
+pub use flow_shop::{
+    FlowShop, FlowShopInsertNeighbor, FlowShopOrderCrossover, FlowShopSolution,
+    FlowShopSwapNeighbor,
+};
 pub use graph_coloring::{
     GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
     GraphColoringUniformCrossover,
@@ -51,6 +59,7 @@ pub use max_cut::{
     MaxCutSwapNeighbor, MaxCutUniformCrossover, PlantedMaxCut, TileProbs2d, TileProbs3d,
     WishartCouplers,
 };
+pub use qap::{Qap, QapOrderCrossover, QapSolution, QapSwapNeighbor};
 pub use qubo::{Qubo, QuboFlipNeighbor, QuboSolution, QuboSwapNeighbor, QuboUniformCrossover};
 pub use sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor, SatUniformCrossover};
 pub use tsp::{

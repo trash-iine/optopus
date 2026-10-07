@@ -3,11 +3,13 @@
 //! This module contains heuristics that are tailored to a particular problem type
 //! and cannot be expressed generically through the [`Heuristic`] trait alone.
 
+mod flow_shop;
 mod max_cut;
 mod tsp;
 mod vrp;
 mod walksat_for_sat;
 
+pub use flow_shop::{alns_for_flow_shop, iterated_greedy_for_flow_shop};
 pub use max_cut::{
     BreakoutLocalSearchForMaxCut, PerturbationType as MaxCutPerturbation, bls_for_max_cut,
     max_cut_descent, max_cut_perturbation,

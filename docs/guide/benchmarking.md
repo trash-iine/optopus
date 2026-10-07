@@ -22,7 +22,7 @@ seed = 42                              # optional master seed; when set, reruns 
 
 [[instances]]
 path = "data/instances/max_cut/G*"     # file path or glob (Gset files have no extension)
-problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | Vrp | GraphColoring
+problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | Vrp | GraphColoring
 
 [[heuristics]]
 kind = "LocalSearch"                   # see kinds below
@@ -57,7 +57,8 @@ algorithm's own page; this table is only the index.
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | MaxCut so far |
 | [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP only |
 | [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT only |
-| [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP, TSP |
+| [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP, TSP, FlowShop |
+| [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop only |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
 
 Unknown kinds and missing required fields fail at parse time, before any run
@@ -84,7 +85,8 @@ that kind.
 |---|---|
 | MaxCut, QUBO, SAT, VertexCover | `Flip`, `Swap` |
 | TSP | `TwoOpt`, `Relocate` |
-| JobShop | `Swap`, `Relocate` |
+| JobShop, FlowShop | `Swap`, `Relocate` |
+| Qap | `Swap` |
 | VRP | `Relocate`, `Swap`, `TwoOpt` |
 
 The problem-specific kinds (`BreakoutLocalSearch`, `LinKernighanHelsgaun`,
@@ -160,4 +162,6 @@ Solution encoding:
 | TSP | city visit order |
 | VertexCover | vertex indices in the cover |
 | JobShop | operation sequence (job indices, each repeated `n_machines` times) |
+| FlowShop | job sequence |
+| Qap | the location of each facility |
 | VRP | all routes flattened with the depot (`0`) as separator: `0, r0…, 0, r1…, 0` (idle slots omitted) |
