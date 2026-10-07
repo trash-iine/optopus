@@ -15,6 +15,7 @@ to plug into every relevant heuristic.
 | [Job Shop Scheduling](job_shop_scheduling.md) | Minimize | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
 | [Permutation Flow Shop](flow_shop.md) | Minimize | `FlowShopSolution` | Relocate (insert) / Swap | `FlowShopOrderCrossover` | `FlowShop::load_file` (Taillard) |
 | [Quadratic Assignment](qap.md) | Minimize | `QapSolution` | Swap | `QapOrderCrossover` | `Qap::load_file` (QAPLIB) |
+| [Bin Packing](bin_packing.md) | Minimize | `BinPackingSolution` | Relocate / Swap | `BinPackingGroupCrossover` | `BinPacking::load_file` |
 | [VRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB, or a TOML fleet file) |
 | [Graph Coloring](graph_coloring.md) | Minimize | `GraphColoringSolution` | Flip (recolor) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |
 | [Formula](formula.md) | Configurable | `FormulaSolution` | Change / Swap / Reverse | `IntCrossover` | (none, built from an `Expr`) |

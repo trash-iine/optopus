@@ -34,6 +34,7 @@ Read the table, open the one file you need.
 | [0024](0024-vrp-is-one-problem-with-a-fleet.md) | vrp | adopted | The VRP is one problem, homogeneous and heterogeneous fleet alike, and the unification cost nothing once the layout was fixed |
 | [0025](0025-max-cut-branch-and-bound-needs-the-eigenvalue-bound.md) | max_cut, heuristic | adopted | Branch-and-bound on MaxCut needs the certified eigenvalue bound, which takes the median G-set gap from 34% to 6% |
 | [0026](0026-iterated-greedy-beats-alns-on-the-flow-shop.md) | heuristic, flow_shop | reference | Iterated Greedy is its own heuristic, and on the flow shop it beats ALNS on the same `Ruinable` |
+| [0027](0027-grasp-is-a-composition-and-its-construction-is-only-as-good-as-the-insertion-cost.md) | heuristic, flow_shop, bin_packing | reference | GRASP is `Iterated` with a construction step, and it pays only where cheapest insertion is a good greedy rule |
 
 ## Writing a new record
 
@@ -43,7 +44,7 @@ Copy the shape of an existing file and keep it under 40 lines.
 # One-line conclusion
 
 - Status: adopted | rejected | reference
-- Area: max_cut | qubo | vrp | flow_shop | search_state | heuristic | benchmark | all
+- Area: max_cut | qubo | vrp | flow_shop | bin_packing | search_state | heuristic | benchmark | all
 - Date: YYYY-MM-DD
 - Code: src/... (when there is a specific site)
 

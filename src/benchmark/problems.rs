@@ -9,18 +9,20 @@ use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
 use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
-    Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition,
-    SubProblemBasedCrossover, WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,
-    bls_for_max_cut, iterated_greedy_for_flow_shop,
+    AdaptiveLargeNeighborhoodSearch, GreedyRandomizedConstruction, Heuristic,
+    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
+    WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
+    iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
-    FlowShop, FlowShopInsertNeighbor, FlowShopOrderCrossover, FlowShopSolution,
-    FlowShopSwapNeighbor, GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution,
-    GraphColoringSwapNeighbor, GraphColoringUniformCrossover, JobShopPpxCrossover,
-    JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution, JobShopSwapNeighbor,
-    MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, MaxCutUniformCrossover, Qap,
-    QapOrderCrossover, QapSolution, QapSwapNeighbor, QuboFlipNeighbor, QuboSwapNeighbor,
-    QuboUniformCrossover, SatUniformCrossover, TspOrderCrossover, VertexCover,
+    BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
+    BinPackingSwapNeighbor, FlowShop, FlowShopInsertNeighbor, FlowShopOrderCrossover,
+    FlowShopSolution, FlowShopSwapNeighbor, GraphColoring, GraphColoringRecolorNeighbor,
+    GraphColoringSolution, GraphColoringSwapNeighbor, GraphColoringUniformCrossover,
+    JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
+    JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
+    MaxCutUniformCrossover, Qap, QapOrderCrossover, QapSolution, QapSwapNeighbor, QuboFlipNeighbor,
+    QuboSwapNeighbor, QuboUniformCrossover, SatUniformCrossover, TspOrderCrossover, VertexCover,
     VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
     VertexCoverUniformCrossover,
     max_cut::MaxCut,
@@ -33,6 +35,7 @@ use crate::problem::{
     },
 };
 use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
+use crate::trait_defs::Ruinable;
 
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
@@ -395,6 +398,9 @@ impl ConfigurableProblem for Tsp {
                 num_neighbors.unwrap_or(5),
                 max_depth.unwrap_or(5),
             ))),
+            HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
+                grasp_construction::<Self>(*alpha, cond)
+            }
             HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
                 removal_fraction,
                 cooling_rate,
@@ -447,6 +453,9 @@ impl ConfigurableProblem for Vrp {
         cond: StopCondition,
     ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
         match config {
+            HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
+                grasp_construction::<Self>(*alpha, cond)
+            }
             HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
                 removal_fraction,
                 cooling_rate,
@@ -601,6 +610,98 @@ fn alns_params(
     Ok((removal_fraction, cooling_rate))
 }
 
+/// One GRASP construction for any `Ruinable` problem, the alpha checked here
+/// so a bad config fails at startup rather than panicking in a run.
+fn grasp_construction<P>(
+    alpha: Option<f64>,
+    cond: StopCondition,
+) -> Result<Box<dyn Heuristic<P>>, OptError>
+where
+    P: Ruinable + 'static,
+    P::Solution: Evaluate,
+{
+    let alpha = alpha.unwrap_or(0.2);
+    if !(0.0..=1.0).contains(&alpha) {
+        return Err(OptError::Config(format!(
+            "'alpha' must be in [0, 1], got {alpha}"
+        )));
+    }
+    Ok(Box::new(GreedyRandomizedConstruction::<P>::new(
+        cond, alpha,
+    )))
+}
+
+impl BenchmarkProblem for BinPacking {
+    fn load_instance(path: &str) -> Result<Self, OptError> {
+        BinPacking::load_file(path)
+    }
+}
+
+impl BenchmarkSolution for BinPackingSolution {
+    fn best_objective_f64(&self) -> f64 {
+        self.num_bins() as f64
+    }
+    fn encode_as_indices(&self) -> Vec<usize> {
+        self.bin_of.clone()
+    }
+}
+
+impl ConfigurableProblem for BinPacking {
+    const NAME: &'static str = "BinPacking";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Relocate, NeighborKind::Swap];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Relocate => Ok(visitor.visit::<BinPackingRelocateNeighbor>()),
+            NeighborKind::Swap => Ok(visitor.visit::<BinPackingSwapNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
+        }
+    }
+
+    fn build_special_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        match config {
+            HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
+                grasp_construction::<Self>(*alpha, cond)
+            }
+            HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
+                removal_fraction,
+                cooling_rate,
+                ..
+            } => {
+                let (removal_fraction, cooling_rate) =
+                    alns_params(*removal_fraction, *cooling_rate)?;
+                Ok(Box::new(
+                    AdaptiveLargeNeighborhoodSearch::<BinPacking>::new(
+                        cond,
+                        removal_fraction,
+                        cooling_rate,
+                    ),
+                ))
+            }
+            _ => Err(OptError::Config(format!(
+                "heuristic '{}' is not supported for BinPacking",
+                config.kind_name()
+            ))),
+        }
+    }
+
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Group") {
+            "Group" => Ok(Box::new(BinPackingGroupCrossover)),
+            other => Err(OptError::Config(format!(
+                "Unknown crossover_kind '{other}' for BinPacking (expected 'Group')"
+            ))),
+        }
+    }
+}
+
 impl ConfigurableProblem for FlowShop {
     const NAME: &'static str = "FlowShop";
     const MINIMIZE: bool = true;
@@ -644,6 +745,9 @@ impl ConfigurableProblem for FlowShop {
                     removal_count,
                     temperature_factor,
                 )))
+            }
+            HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
+                grasp_construction::<Self>(*alpha, cond)
             }
             HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
                 removal_fraction,
@@ -726,6 +830,7 @@ pub(crate) fn with_problem<V: ProblemVisitor>(kind: &ProblemKind, visitor: V) ->
         ProblemKind::JobShop => visitor.visit::<JobShopScheduling>(),
         ProblemKind::FlowShop => visitor.visit::<FlowShop>(),
         ProblemKind::Qap => visitor.visit::<Qap>(),
+        ProblemKind::BinPacking => visitor.visit::<BinPacking>(),
         ProblemKind::Vrp => visitor.visit::<Vrp>(),
         ProblemKind::GraphColoring => visitor.visit::<GraphColoring>(),
     }
