@@ -1,6 +1,7 @@
 use rand::seq::SliceRandom;
 
 use super::taillard::HeadsTails;
+use crate::building_blocks::representation::is_permutation;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 
@@ -43,8 +44,8 @@ pub struct FlowShop {
     pub n_jobs: usize,
     /// Number of machines.
     pub n_machines: usize,
-    /// Processing times, machine-major, `processing[i * n_jobs + j]` for job
-    /// `j` on machine `i`.
+    /// Processing times, job-major, `processing[j * n_machines + i]` for job
+    /// `j` on machine `i`, since every schedule walks the machines of one job.
     processing: Vec<u32>,
 }
 
@@ -72,11 +73,14 @@ impl FlowShop {
             rows.iter().all(|row| row.len() == n_jobs),
             "every machine needs a processing time for every job"
         );
+        let processing = (0..n_jobs)
+            .flat_map(|j| rows.iter().map(move |row| row[j]))
+            .collect();
         Self {
             name: name.into(),
             n_jobs,
             n_machines,
-            processing: rows.into_iter().flatten().collect(),
+            processing,
         }
     }
 
@@ -130,7 +134,19 @@ impl FlowShop {
     /// The processing time of `job` on `machine`.
     #[inline]
     pub fn processing_time(&self, machine: usize, job: usize) -> u32 {
-        self.processing[machine * self.n_jobs + job]
+        self.processing[job * self.n_machines + machine]
+    }
+
+    /// Advances `row`, when each machine finishes its last job, by `job`, the
+    /// one recurrence every schedule here is built from.
+    #[inline]
+    pub(crate) fn advance(&self, row: &mut [u32], job: usize) {
+        let times = &self.processing[job * self.n_machines..(job + 1) * self.n_machines];
+        let mut prev_machine = 0;
+        for (cell, &p) in row.iter_mut().zip(times) {
+            *cell = (*cell).max(prev_machine) + p;
+            prev_machine = *cell;
+        }
     }
 
     /// The sum of every processing time, the scale Ruiz and Stützle set their
@@ -145,11 +161,7 @@ impl FlowShop {
     pub fn makespan(&self, sequence: &[usize]) -> u32 {
         let mut done = vec![0u32; self.n_machines];
         for &job in sequence {
-            let mut prev_machine = 0;
-            for (i, cell) in done.iter_mut().enumerate() {
-                *cell = (*cell).max(prev_machine) + self.processing_time(i, job);
-                prev_machine = *cell;
-            }
+            self.advance(&mut done, job);
         }
         done.last().copied().unwrap_or(0)
     }
@@ -160,14 +172,10 @@ impl FlowShop {
     ///
     /// Panics if `sequence` is not a permutation of `0..n_jobs`.
     pub fn solution_from_sequence(&self, sequence: Vec<usize>) -> FlowShopSolution {
-        let mut seen = vec![false; self.n_jobs];
-        for &job in &sequence {
-            assert!(
-                job < self.n_jobs && !std::mem::replace(&mut seen[job], true),
-                "a flow shop sequence is a permutation of the jobs"
-            );
-        }
-        assert_eq!(sequence.len(), self.n_jobs, "every job has to be scheduled");
+        assert!(
+            is_permutation(&sequence, self.n_jobs),
+            "a flow shop sequence is a permutation of the jobs"
+        );
         let objective = self.makespan(&sequence);
         FlowShopSolution {
             sequence,
@@ -204,9 +212,7 @@ impl FlowShop {
         let mut ht = HeadsTails::default();
         for job in order {
             ht.rebuild(self, &sequence);
-            let place = (0..=sequence.len())
-                .min_by_key(|&place| ht.makespan_with(self, place, job))
-                .unwrap_or(0);
+            let (place, _) = ht.best_insertion(self, job);
             sequence.insert(place, job);
         }
         self.solution_from_sequence(sequence)

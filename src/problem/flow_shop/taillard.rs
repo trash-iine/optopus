@@ -22,53 +22,42 @@ pub(crate) struct HeadsTails {
     heads: Vec<u32>,
     tails: Vec<u32>,
     m: usize,
-    len: usize,
 }
 
 impl HeadsTails {
     /// Tabulates `sequence` from scratch in O(nm), reusing the buffers.
     pub(crate) fn rebuild(&mut self, prob: &FlowShop, sequence: &[usize]) {
         let m = prob.n_machines;
-        let len = sequence.len();
         self.m = m;
-        self.len = len;
-        self.heads.resize(len * m, 0);
-        self.tails.resize(len * m, 0);
+        self.heads.resize(sequence.len() * m, 0);
+        self.tails.resize(sequence.len() * m, 0);
         for (k, &job) in sequence.iter().enumerate() {
-            let mut prev_machine = 0;
-            for i in 0..m {
-                let prev_job = if k == 0 {
-                    0
-                } else {
-                    self.heads[(k - 1) * m + i]
-                };
-                let done = prev_job.max(prev_machine) + prob.processing_time(i, job);
-                self.heads[k * m + i] = done;
-                prev_machine = done;
+            if k == 0 {
+                self.heads[..m].fill(0);
+            } else {
+                self.heads.copy_within((k - 1) * m..k * m, k * m);
             }
+            prob.advance(&mut self.heads[k * m..(k + 1) * m], job);
         }
         for (k, &job) in sequence.iter().enumerate().rev() {
             let mut next_machine = 0;
             for i in (0..m).rev() {
-                let next_job = if k + 1 == len {
-                    0
-                } else {
-                    self.tails[(k + 1) * m + i]
-                };
-                let busy = next_job.max(next_machine) + prob.processing_time(i, job);
+                let busy =
+                    self.tail_from(k + 1, i).max(next_machine) + prob.processing_time(i, job);
                 self.tails[k * m + i] = busy;
                 next_machine = busy;
             }
         }
     }
 
+    /// How many jobs the table covers.
+    fn len(&self) -> usize {
+        self.heads.len().checked_div(self.m).unwrap_or(0)
+    }
+
     /// The makespan of the tabulated sequence.
     pub(crate) fn makespan(&self) -> u32 {
-        if self.len == 0 {
-            0
-        } else {
-            self.heads[self.len * self.m - 1]
-        }
+        self.heads.last().copied().unwrap_or(0)
     }
 
     /// The head of the prefix that ends just before `place`, machine `i`.
@@ -82,11 +71,7 @@ impl HeadsTails {
 
     /// The tail of the suffix that starts at `place`, machine `i`.
     fn tail_from(&self, place: usize, i: usize) -> u32 {
-        if place >= self.len {
-            0
-        } else {
-            self.tails[place * self.m + i]
-        }
+        self.tails.get(place * self.m + i).copied().unwrap_or(0)
     }
 
     /// The makespan once `job` is inserted at `place`, between the jobs at
@@ -101,6 +86,15 @@ impl HeadsTails {
         makespan
     }
 
+    /// The place where inserting `job` gives the smallest makespan, the
+    /// earliest one on a tie, and that makespan, in O(nm).
+    pub(crate) fn best_insertion(&self, prob: &FlowShop, job: usize) -> (usize, u32) {
+        (0..=self.len())
+            .map(|place| (place, self.makespan_with(prob, place, job)))
+            .min_by_key(|&(_, makespan)| makespan)
+            .expect("there is always at least one place")
+    }
+
     /// The makespan once the job at position `k` is taken out, in O(m).
     pub(crate) fn makespan_without(&self, k: usize) -> u32 {
         (0..self.m)
@@ -110,22 +104,20 @@ impl HeadsTails {
     }
 
     /// The makespan once the jobs at positions `lo..=hi` are replaced by
-    /// `middle`, in O((hi - lo + 1) m).
+    /// `middle`, in O((hi - lo + 1) m). `row` is scratch, so a caller pricing
+    /// many replacements allocates it once.
     pub(crate) fn makespan_replacing(
         &self,
         prob: &FlowShop,
         lo: usize,
         hi: usize,
         middle: impl Iterator<Item = usize>,
+        row: &mut Vec<u32>,
     ) -> u32 {
-        let m = self.m;
-        let mut row: Vec<u32> = (0..m).map(|i| self.head_before(lo, i)).collect();
+        row.clear();
+        row.extend((0..self.m).map(|i| self.head_before(lo, i)));
         for job in middle {
-            let mut prev_machine = 0;
-            for (i, cell) in row.iter_mut().enumerate() {
-                *cell = (*cell).max(prev_machine) + prob.processing_time(i, job);
-                prev_machine = *cell;
-            }
+            prob.advance(row, job);
         }
         row.iter()
             .enumerate()
@@ -169,6 +161,9 @@ mod tests {
                 edited.insert(place, job);
                 assert_eq!(ht.makespan_with(&prob, place, job), prob.makespan(&edited));
             }
+            let (place, best) = ht.best_insertion(&prob, job);
+            assert_eq!(best, ht.makespan_with(&prob, place, job));
+            assert!((0..place).all(|p| ht.makespan_with(&prob, p, job) > best));
             for k in 0..seq.len() {
                 let mut edited = seq.clone();
                 edited.remove(k);
@@ -180,7 +175,7 @@ mod tests {
                     edited.swap(lo, hi);
                     let middle = edited[lo..=hi].iter().copied();
                     assert_eq!(
-                        ht.makespan_replacing(&prob, lo, hi, middle),
+                        ht.makespan_replacing(&prob, lo, hi, middle, &mut Vec::new()),
                         prob.makespan(&edited)
                     );
                 }

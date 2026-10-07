@@ -53,6 +53,17 @@ by machine on 1..99. Each file is `n_jobs n_machines` followed by one row of
 processing times per machine, the layout `FlowShop::load_file` reads. The
 upper and lower bounds Taillard publishes are left out.
 
+## QAP — `qap/`
+
+**Not bundled — fetch locally (see [Obtaining instances not bundled](#obtaining-instances-not-bundled)).**
+
+| Set | Files | Size (n) | Source |
+|---|---|---|---|
+| QAPLIB | `tai{12..100}a.dat`, `nug{12,20,30}.dat`, `sko{42,56,72,100a}.dat` (19 files) | 12 to 100 | [QAPLIB](https://coral.ise.lehigh.edu/data-sets/qaplib/), Burkard, Karisch and Rendl |
+
+The QAPLIB files are read by `Qap::load_file` as they are. QAPLIB states no
+redistribution terms, so they are fetched rather than bundled.
+
 ## SAT — `sat/`
 
 **Not bundled — fetch locally (see [Obtaining instances not bundled](#obtaining-instances-not-bundled)).**
@@ -169,14 +180,14 @@ it bakes in.
   Full license text is included in `qubo/NOTICE`, `jssp/NOTICE` and
   `flow_shop/NOTICE`.
   Source: <https://people.brunel.ac.uk/~mastjjb/jeb/orlib/legal.html>
-- The SATLIB, TSPLIB, GSET, and CVRPLIB instances are **not bundled** in this
+- The SATLIB, TSPLIB, GSET, CVRPLIB and QAPLIB instances are **not bundled** in this
   repository. Obtain them from their original sites (see below) and follow each
   site's own terms of use.
 - The tiny `sample.*` / `test_data.*` files in each problem directory are
   original to this repository.
 - When publishing results, please also cite the originating libraries:
   Beasley 1990 (OR-Library), Taillard 1993 (flow shop), Hoos & Stützle 2000 (SATLIB), Reinelt 1991
-  (TSPLIB), Helmberg & Rendl 2000 (GSET), Uchoa et al. 2017 (CVRPLIB X).
+  (TSPLIB), Helmberg & Rendl 2000 (GSET), Uchoa et al. 2017 (CVRPLIB X), Burkard, Karisch and Rendl 1997 (QAPLIB).
 
 ## Obtaining instances not bundled
 
@@ -190,6 +201,7 @@ bash scripts/fetch_satcomp2026.sh  # SAT Competition 2026 large instances (via G
 bash scripts/fetch_tsp.sh          # TSPLIB symmetric instances
 bash scripts/fetch_maxcut.sh       # GSET graphs
 bash scripts/fetch_cvrp.sh         # CVRPLIB "X" instances (+ best-known .sol)
+bash scripts/fetch_qaplib.sh       # QAPLIB (Taillard's tai*a, nug, sko)
 ```
 
 The downloaded files stay out of version control via each directory's

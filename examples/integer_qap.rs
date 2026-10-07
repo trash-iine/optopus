@@ -40,10 +40,9 @@ fn main() {
     let qap = Qap::new("random30", a, b);
     let budget = StopCondition::duration(Duration::from_secs(2));
 
-    let qap_ref = &qap;
-    let prob = IntegerProblem::minimize(IntVars::permutation(n), move |v: &[i64]| {
+    let prob = IntegerProblem::minimize(IntVars::permutation(n), |v: &[i64]| {
         let p: Vec<usize> = v.iter().map(|&l| l as usize).collect();
-        qap_ref.cost(&p) as f64
+        qap.cost(&p) as f64
     });
     let mut state = SearchState::new_with_seed(&prob, 42);
     SimulatedAnnealing::<IntSwapNeighbor>::new(budget.clone(), 2_000.0, 0.99999)

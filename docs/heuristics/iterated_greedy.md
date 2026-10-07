@@ -71,7 +71,7 @@ the stronger of the two on the same time.
 ## Temperature
 
 The temperature is in the units of the objective, so `IteratedGreedy::new`
-takes it as a function of the instance, read once at the start of each run.
+takes it as a function of the instance, read from the instance being searched.
 For the flow shop Ruiz and Stützle set it to a tenth of the mean processing
 time scaled by a factor, `T = factor · Σp / (n · m · 10)`, which is what
 `iterated_greedy_for_flow_shop` computes from `temperature_factor`.
@@ -86,10 +86,8 @@ IteratedGreedy::<P>::new(
 ) -> Self
 ```
 
-Panics if `removal_count` is zero, and on the first iteration of a run if the
-temperature is not positive. `with_local_repair(Box<dyn LocalRepair<P>>)` sets
-the descent. `clear()` drops the temperature so the next run reads it from its
-own instance.
+Panics if `removal_count` is zero, and in a run if the temperature is not
+positive. `with_local_repair(Box<dyn LocalRepair<P>>)` sets the descent.
 
 ## Benchmark config
 

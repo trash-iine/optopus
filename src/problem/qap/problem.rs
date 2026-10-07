@@ -1,5 +1,6 @@
 use rand::seq::SliceRandom;
 
+use crate::building_blocks::representation::is_permutation;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 
@@ -114,10 +115,10 @@ impl Qap {
         };
         let a = read_matrix("a")?;
         let b = read_matrix("b")?;
-        if let Ok(extra) = next("nothing") {
+        if let Some((line, extra)) = iter.next() {
             return Err(lines.err_at(
-                0,
-                format!("unexpected value {extra} after the two matrices"),
+                line,
+                format!("unexpected value '{extra}' after the two matrices"),
             ));
         }
 
@@ -177,14 +178,10 @@ impl Qap {
     ///
     /// Panics if `assignment` is not a permutation of `0..n`.
     pub fn solution_from_assignment(&self, assignment: Vec<usize>) -> QapSolution {
-        let mut seen = vec![false; self.n];
-        for &loc in &assignment {
-            assert!(
-                loc < self.n && !std::mem::replace(&mut seen[loc], true),
-                "an assignment is a permutation of the locations"
-            );
-        }
-        assert_eq!(assignment.len(), self.n, "every facility has to be placed");
+        assert!(
+            is_permutation(&assignment, self.n),
+            "an assignment is a permutation of the locations"
+        );
         let objective = self.cost(&assignment);
         QapSolution {
             assignment,
