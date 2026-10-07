@@ -1,0 +1,66 @@
+# Taillard 50x20 (ta051-ta060), the block where half the optima are still open.
+# Iterated Greedy against ALNS and tabu search on one time budget each.
+# Written by hand, not by data/benchmarks/scripts/gen_benchmark_configs.py.
+# 30 s is Ruiz and Stützle's n * m / 2 * 60 ms.
+
+num_runs = 10
+seed = 42
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta051.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta052.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta053.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta054.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta055.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta056.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta057.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta058.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta059.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta060.txt"
+problem = "FlowShop"
+
+[[heuristics]]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [5, 15]
+[heuristics.stop_condition]
+max_duration_secs = 30.0

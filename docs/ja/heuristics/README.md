@@ -42,7 +42,8 @@
 |---|---|---|---|
 | [PopulationAnnealing](population_annealing.md) | `PopulationAnnealing` | 解と move の両方に `Evaluate` | β で冷却するレプリカ集団を、ステップごとにリサンプリングし、Metropolis でスイープする。任意の問題。 |
 | [BreakoutLocalSearch](breakout_local_search.md) | `BreakoutLocalSearch` | `ProblemTrait` 以外はなし。スケジュールがさらに要求することはある | 貪欲な降下と、ヒューリスティクスの集まりに対する適応的な摂動。MaxCut に登録済み。 |
-| [AdaptiveLargeNeighborhoodSearch](alns.md) | `AdaptiveLargeNeighborhoodSearch` | `Ruinable`、解に `Evaluate` | 適応的なオペレータ重みと SA 受理による ruin-and-recreate。任意でアンカー付きの `LocalRepair`。CVRP と TSP に登録済み。 |
+| [AdaptiveLargeNeighborhoodSearch](alns.md) | `AdaptiveLargeNeighborhoodSearch` | `Ruinable`、解に `Evaluate` | 適応的なオペレータ重みと SA 受理による ruin-and-recreate。任意でアンカー付きの `LocalRepair`。CVRP、TSP、フローショップに登録済み。 |
+| [IteratedGreedy](iterated_greedy.md) | `IteratedGreedy` | `Ruinable`、解に `Evaluate` | 固定個数のランダム除去、貪欲な再挿入、`LocalRepair` の降下、一定温度での受理。フローショップに登録済み。 |
 | [BranchAndBound](branch_and_bound.md) | なし、ライブラリ専用 | `BranchSpace` (`Branchable` か `FixVariables` から)と、その `Relaxation` | 厳密な探索。問題の任意のヒューリスティクスが解を見つけ、緩和が枝を刈る。`IntegerProblem`、`FormulaProblem`、MaxCut、QUBO、MaxSAT、vertex cover。 |
 
 ## 問題専用 { #problem-specific }

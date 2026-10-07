@@ -11,8 +11,10 @@ use rand::rngs::SmallRng;
 /// after the segment and wrapping around. The result is a permutation of the
 /// same elements whenever both parents are.
 ///
-/// Used by [`crate::problem::TspOrderCrossover`], and by the giant-tour
-/// encodings: [`crate::problem::VrpOrderCrossover`] and Hybrid Genetic Search.
+/// Used by [`crate::problem::TspOrderCrossover`],
+/// [`crate::problem::FlowShopOrderCrossover`] and
+/// [`crate::problem::QapOrderCrossover`], and by the giant-tour encodings:
+/// [`crate::problem::VrpOrderCrossover`] and Hybrid Genetic Search.
 ///
 /// # Panics
 /// Panics if the parents differ in length.
@@ -54,6 +56,18 @@ pub fn order_crossover(parent1: &[usize], parent2: &[usize], rng: &mut SmallRng)
     child
 }
 
+/// Whether `values` holds each of `0..n` exactly once.
+///
+/// The check a sequencing problem runs on a solution handed to it from
+/// outside, a job order or an assignment.
+pub fn is_permutation(values: &[usize], n: usize) -> bool {
+    let mut seen = vec![false; n];
+    values.len() == n
+        && values
+            .iter()
+            .all(|&v| v < n && !std::mem::replace(&mut seen[v], true))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -76,6 +90,15 @@ mod tests {
             let child = order_crossover(&p1, &p2, &mut rng);
             assert!(is_permutation_of(&child, &p1));
         }
+    }
+
+    #[test]
+    fn is_permutation_rejects_repeats_gaps_and_strays() {
+        assert!(is_permutation(&[2, 0, 1], 3));
+        assert!(is_permutation(&[], 0));
+        assert!(!is_permutation(&[0, 0, 1], 3));
+        assert!(!is_permutation(&[0, 1], 3));
+        assert!(!is_permutation(&[0, 1, 3], 3));
     }
 
     #[test]

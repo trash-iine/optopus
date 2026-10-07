@@ -99,6 +99,8 @@ nav:
       - TSP: problems/tsp.md
       - Vertex Cover: problems/vertex_cover.md
       - Job Shop Scheduling: problems/job_shop_scheduling.md
+      - Permutation Flow Shop: problems/flow_shop.md
+      - Quadratic Assignment: problems/qap.md
       - VRP: problems/vrp.md
       - Graph Coloring: problems/graph_coloring.md
       - Formula: problems/formula.md
@@ -115,6 +117,7 @@ nav:
       - Genetic Algorithm: heuristics/genetic_algorithm.md
       - Population Annealing: heuristics/population_annealing.md
       - Adaptive Large Neighborhood Search: heuristics/alns.md
+      - Iterated Greedy: heuristics/iterated_greedy.md
       - Breakout Local Search: heuristics/breakout_local_search.md
       - Branch and Bound: heuristics/branch_and_bound.md
       - Meta-heuristics: heuristics/meta.md
@@ -148,6 +151,8 @@ nav:
           - TSP: ja/problems/tsp.md
           - Vertex Cover: ja/problems/vertex_cover.md
           - Job Shop Scheduling: ja/problems/job_shop_scheduling.md
+          - Permutation Flow Shop: ja/problems/flow_shop.md
+          - Quadratic Assignment: ja/problems/qap.md
           - VRP: ja/problems/vrp.md
           - Graph Coloring: ja/problems/graph_coloring.md
           - Formula: ja/problems/formula.md
@@ -164,6 +169,7 @@ nav:
           - Genetic Algorithm: ja/heuristics/genetic_algorithm.md
           - Population Annealing: ja/heuristics/population_annealing.md
           - Adaptive Large Neighborhood Search: ja/heuristics/alns.md
+          - Iterated Greedy: ja/heuristics/iterated_greedy.md
           - Breakout Local Search: ja/heuristics/breakout_local_search.md
           - Branch and Bound: ja/heuristics/branch_and_bound.md
           - Meta-heuristics: ja/heuristics/meta.md

@@ -74,6 +74,7 @@ mod tests {
         assert_policy! {
             MaxCut => MaxCutFlipNeighbor { i: 0, gain: 0.0 },
             MaxCut => MaxCutSwapNeighbor { i: 0, j: 1, gain: 0.0 },
+            Qap => QapSwapNeighbor { i: 0, j: 1, loc_i: 0, loc_j: 1, gain: 0 },
             Qubo => QuboFlipNeighbor { i: 0, gain: 0 },
             Qubo => QuboSwapNeighbor { i: 0, j: 1, gain: 0 },
             Sat => SatFlipNeighbor { i: 0, gain: 0 },
@@ -86,6 +87,8 @@ mod tests {
             Tsp => TspRelocateNeighbor { pos: 0, ins: 2, gain: 0.0 },
             JobShopScheduling => JobShopSwapNeighbor { i: 0, gain: 0.0 },
             JobShopScheduling => JobShopRelocateNeighbor { from: 0, to: 1, gain: 0.0 },
+            FlowShop => FlowShopInsertNeighbor { job: 0, from: 0, to: 1, gain: 0.0 },
+            FlowShop => FlowShopSwapNeighbor { i: 0, j: 1, gain: 0.0 },
             Vrp => VrpRelocateNeighbor::new(&vrp, &vrp_sol, 0, 0, 1, 0),
             Vrp => VrpSwapNeighbor::new(&vrp, &vrp_sol, 0, 0, 1, 0),
             Vrp => VrpTwoOptNeighbor::new(&vrp, &vrp_sol, 0, 0, 1),

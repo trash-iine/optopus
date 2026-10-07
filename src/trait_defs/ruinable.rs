@@ -222,6 +222,10 @@ pub trait Ruinable: ProblemTrait {
 /// Optional, since a problem with no such local search runs plain
 /// ruin-and-recreate. For vehicle routing it is not optional in practice,
 /// greedy re-insertion never fixes the edges its own choices spoil.
+///
+/// The anchors are a hint, not a limit. A problem where one edit moves
+/// everything after it, a flow shop sequence for one, has no neighbourhood
+/// to stay in, and its repair may run the full descent instead.
 pub trait LocalRepair<P: Ruinable> {
     /// Improves `partial` in the neighbourhood of `anchors`.
     fn repair_around(

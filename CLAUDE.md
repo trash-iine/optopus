@@ -108,6 +108,7 @@ src/
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── population_annealing.rs  PopulationAnnealing<P, N>
 │   ├── alns.rs               AdaptiveLargeNeighborhoodSearch<P: Ruinable>
+│   ├── iterated_greedy.rs    IteratedGreedy<P: Ruinable>, temperature a function of the instance
 │   ├── branch_and_bound.rs   BranchAndBound<P: BranchSpace, R: Relaxation<P>>
 │   ├── bls.rs                BreakoutLocalSearch<P, S>, PerturbationSchedule,
 │   │                         AdaptivePerturbation
@@ -119,12 +120,13 @@ src/
 │       │                     no generic equivalent)
 │       ├── vrp/              hgs/ (mod.rs driver, population.rs), alns_for_vrp
 │       ├── tsp/              lkh.rs, alns_for_tsp
+│       ├── flow_shop.rs      iterated_greedy_for_flow_shop, alns_for_flow_shop
 │       └── walksat_for_sat.rs
 └── problem/                  each holds problem, solution, neighbors, crossover
     ├── max_cut/              + kernel.rs (MaxCutKernel, an exact ProblemReduction),
     │                         eigen.rs (EigenvalueRelaxation, certified by Cholesky),
     │                         planted.rs (PlantedMaxCut)
-    ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/
+    ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/ qap/
     │                         (max_cut, qubo, sat, vertex_cover each add fix.rs,
     │                         FixVariables and BranchSpace)
     ├── integer/              IntegerProblem (a struct built from a closure),
@@ -138,8 +140,11 @@ src/
     │                         + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
     │                         ops/ (pricing.rs = the one route-edit price, RouteState,
     │                         granular.rs, Descent), ruin.rs (Ruinable + LocalRepair)
-    └── tsp/                  + ruin.rs (Ruinable with the tour as the one container,
-                              AnchoredTourDescent)
+    ├── tsp/                  + ruin.rs (Ruinable with the tour as the one container,
+    │                         AnchoredTourDescent)
+    └── flow_shop/            + taillard.rs (HeadsTails, the O(m) insertion and removal
+                              prices), ruin.rs (Ruinable over the sequence, whose partial
+                              keeps the heads and tails, FlowShopInsertionDescent)
 ```
 
 ## Benchmarking (`src/benchmark/`)
@@ -153,7 +158,7 @@ num_runs = 10
 seed = 42                      # optional: makes every run bit-reproducible
 [[instances]]
 path = "data/instances/max_cut/G*"   # globs supported (Gset files have no extension)
-problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | Vrp | GraphColoring
+problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | Vrp | GraphColoring
 [[heuristics]]
 kind = "LocalSearch"           # see the table below
 neighbor = "Flip"              # Flip | Swap | TwoOpt | Relocate
@@ -178,7 +183,8 @@ kinds fail at parse time.
 | `PopulationAnnealing` | all | `neighbor`, `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `sweep_length` |
 | `LinKernighanHelsgaun` | TSP | | `num_neighbors`, `max_depth` |
 | `WalkSat` | SAT | | `noise`, `adaptive_noise` |
-| `AdaptiveLargeNeighborhoodSearch` | VRP, TSP | | `removal_fraction`, `cooling_rate` |
+| `AdaptiveLargeNeighborhoodSearch` | VRP, TSP, FlowShop | | `removal_fraction`, `cooling_rate` |
+| `IteratedGreedy` | FlowShop | | `removal_count`, `temperature_factor` |
 | `HybridGeneticSearch` | VRP | | `min_population_size`, `generation_size`, `granularity`, `target_feasible`, `restart_generations` |
 | `Sequential` | all | `steps` | |
 | `Iterated` | all | `steps[0]` = search, `steps[1]` = perturbation | |
