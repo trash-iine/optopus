@@ -20,17 +20,12 @@ impl Crossover<BinPacking> for BinPackingGroupCrossover {
         sol2: &BinPackingSolution,
         _rng: &mut SmallRng,
     ) -> Result<BinPackingSolution, crate::error::OptError> {
+        // A stable sort, so bins of equal load keep their order.
         let bins_by_fill = |sol: &BinPackingSolution| -> Vec<Vec<usize>> {
-            let mut bins = vec![Vec::new(); sol.num_bins()];
-            for (item, &b) in sol.bin_of.iter().enumerate() {
-                bins[b].push(item);
-            }
-            let mut order: Vec<usize> = (0..bins.len()).collect();
-            order.sort_by_key(|&b| std::cmp::Reverse(sol.loads[b]));
-            order
-                .into_iter()
-                .map(|b| std::mem::take(&mut bins[b]))
-                .collect()
+            let mut bins: Vec<(u64, Vec<usize>)> =
+                sol.loads.iter().copied().zip(sol.bins()).collect();
+            bins.sort_by_key(|(load, _)| std::cmp::Reverse(*load));
+            bins.into_iter().map(|(_, items)| items).collect()
         };
         let (first, second) = (bins_by_fill(sol1), bins_by_fill(sol2));
 

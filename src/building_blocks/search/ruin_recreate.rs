@@ -190,9 +190,15 @@ pub fn greedy_insertion<P: Ruinable>(
 /// empty partial that is the full construction of a solution, and on a
 /// thousand elements it is slow.
 ///
+/// Only elements with a finite cheapest cost enter the list, so one that fits
+/// nowhere yet waits until an insertion opens room for it, and an infinite
+/// cost never turns the threshold into infinity or NaN.
+///
 /// # Panics
 ///
-/// Panics if `alpha` is outside `[0, 1]`.
+/// Panics if `alpha` is outside `[0, 1]`, or if no element left has a finite
+/// placement, which a problem that offers somewhere new to put an element, as
+/// [`Ruinable`] asks, never reaches.
 pub fn randomized_greedy_insertion<P: Ruinable>(
     prob: &P,
     partial: &mut P::Partial,
@@ -212,9 +218,14 @@ pub fn randomized_greedy_insertion<P: Ruinable>(
         );
         let (lo, hi) = priced
             .iter()
+            .filter(|p| p.0.is_finite())
             .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
                 (lo.min(p.0), hi.max(p.0))
             });
+        assert!(
+            lo.is_finite(),
+            "no element left has a finite placement, see Ruinable::insertion_cost"
+        );
         let threshold = lo + alpha * (hi - lo);
         candidates.clear();
         candidates.extend((0..pool.len()).filter(|&i| priced[i].0 <= threshold));

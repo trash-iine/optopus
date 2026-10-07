@@ -99,13 +99,13 @@ regret-2 が greedy と区別できなくなってしまうからです。
 
 それぞれの問題はこれを次のように解釈します。
 
-| | CVRP | TSP | Flow shop |
-|---|---|---|---|
-| 要素、コンテナ | 顧客、車両 | 都市、巡回路 | ジョブ、順序 |
-| 関連度 | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` | 処理時間の L1 距離 |
-| 挿入コスト | 寄り道と容量ペナルティ。そのため、どのルートも満杯でも挿入先は常にある | 寄り道 | メイクスパンの増分。head と tail から O(m) |
-| Regret-2 | ルート間 | コンテナが一つでは定義できないので、何も順位付けしない固定の順序で候補を挿入する。探索を担うのは破壊オペレータと greedy | 巡回路と同じく定義できない |
-| `LocalRepair` | `AnchoredRouteDescent`、granular なルート降下 | `AnchoredTourDescent`、最近傍に対する Or-opt と 2-opt | `FlowShopInsertionDescent`、全体挿入降下 |
+| | CVRP | TSP | Flow shop | Bin packing |
+|---|---|---|---|---|
+| 要素、コンテナ | 顧客、車両 | 都市、巡回路 | ジョブ、順序 | 品目、bin (空の bin を常に一つ用意) |
+| 関連度 | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` | 処理時間の L1 距離 | `\|size(a) − size(b)\|` |
+| 挿入コスト | 寄り道と容量ペナルティ。そのため、どのルートも満杯でも挿入先は常にある | 寄り道 | メイクスパンの増分。head と tail から O(m) | 目的関数の変化。収まらない bin では無限大 |
+| Regret-2 | ルート間 | コンテナが一つでは定義できないので、何も順位付けしない固定の順序で候補を挿入する。探索を担うのは破壊オペレータと greedy | 巡回路と同じく定義できない | bin 間 |
+| `LocalRepair` | `AnchoredRouteDescent`、granular なルート降下 | `AnchoredTourDescent`、最近傍に対する Or-opt と 2-opt | `FlowShopInsertionDescent`、全体挿入降下 | なし |
 
 ## コンストラクタ { #constructor }
 
