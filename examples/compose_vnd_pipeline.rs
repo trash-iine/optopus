@@ -9,7 +9,9 @@
 //! `failed_updates(2)`. A descent that finds no improving move still charges
 //! one iteration for the pass that showed it, so two passes in a row without a
 //! new best mean both neighborhoods are exhausted, and that is exactly when a
-//! variable neighborhood descent ends.
+//! variable neighborhood descent ends. The `2` is the number of
+//! neighborhoods. With more of them `Sequential` still cycles through all,
+//! rather than going back to the first after an improvement.
 //!
 //! Run with:
 //! ```

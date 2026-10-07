@@ -43,6 +43,8 @@ fn main() {
         let mut sub = state.open_reduction(&kernel);
         inner.run(&mut sub).unwrap();
         state.close_reduction(&kernel, &sub);
+        // A cycle that took no step still has to count, or an iteration
+        // budget is never met.
         if state.iteration == before {
             state.progress_iteration();
         }

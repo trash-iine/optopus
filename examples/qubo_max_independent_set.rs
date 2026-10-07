@@ -36,9 +36,9 @@ fn main() {
         .unwrap();
 
     let x = &state.best_solution.x;
-    let chosen: Vec<usize> = (0..n).filter(|&v| x[v]).collect();
+    let size = (0..n).filter(|&v| x[v]).count();
     let violated = edges.iter().filter(|&&(u, v)| x[u] && x[v]).count();
-    println!("independent set size = {}", chosen.len());
+    println!("independent set size = {size}");
     println!("energy = {}", state.best_solution.objective);
     println!("edges with both ends chosen = {violated}");
 }

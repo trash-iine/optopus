@@ -19,24 +19,19 @@ use optopus::prelude::*;
 fn main() {
     let jssp = JobShopScheduling::load_file("data/instances/jssp/orlib/ft10.txt").unwrap();
     let budget = 400_000;
-    let annealer = || {
-        SimulatedAnnealing::<JobShopSwapNeighbor>::new(
-            StopCondition::iterations(50_000),
-            20.0,
-            0.9999,
-        )
-    };
+    let annealer = |stop| SimulatedAnnealing::<JobShopSwapNeighbor>::new(stop, 20.0, 0.9999);
+    let one_run = || annealer(StopCondition::iterations(50_000));
 
     let mut state = SearchState::new_with_seed(&jssp, 42);
-    let mut once = annealer();
-    once.stop_condition = StopCondition::iterations(budget);
-    once.run(&mut state).unwrap();
+    annealer(StopCondition::iterations(budget))
+        .run(&mut state)
+        .unwrap();
     report("one SA", &state);
 
     let mut state = SearchState::new_with_seed(&jssp, 42);
     Sequential::<JobShopScheduling>::new(
         StopCondition::iterations(budget),
-        vec![Box::new(annealer())],
+        vec![Box::new(one_run())],
     )
     .run(&mut state)
     .unwrap();
@@ -45,7 +40,7 @@ fn main() {
     let mut state = SearchState::new_with_seed(&jssp, 42);
     Restart::<JobShopScheduling>::new(
         StopCondition::iterations(budget),
-        Box::new(annealer()),
+        Box::new(one_run()),
         StopCondition::failed_updates(0),
     )
     .run(&mut state)

@@ -241,11 +241,11 @@ These model problems that have no built-in type, each as a complete program.
 
 - [`integer_linear_ordering.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_linear_ordering.rs), the linear ordering problem over a permutation, searched by
   `Iterated` local search on `IntSwapNeighbor`.
-- [`integer_set_cover.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_set_cover.rs), weighted set cover with one binary variable per set and a penalty for
-  every uncovered element.
-- [`integer_multi_knapsack.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_multi_knapsack.rs), the multidimensional knapsack solved to proven optimality by
-  `BranchAndBound`, with the smallest single-dimension Dantzig bound as the
-  relaxation.
+- [`integer_set_cover.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_set_cover.rs), weighted set cover as a `FormulaProblem`, one binary variable per set and
+  one covering constraint per element.
+- [`integer_multi_knapsack.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_multi_knapsack.rs), the multidimensional knapsack as a `FormulaProblem` with one capacity
+  constraint per dimension, solved to proven optimality by `BranchAndBound`
+  with the smallest single-dimension Dantzig bound as the relaxation.
 - [`qubo_max_independent_set.rs`](https://github.com/trash-iine/optopus/blob/main/examples/qubo_max_independent_set.rs), maximum independent set as a `Qubo` built from a list of entries.
 
 ## Beyond these examples

@@ -22,18 +22,19 @@ fn main() {
         .map(|_| (rng.random_range(0.0..1000.0), rng.random_range(0.0..1000.0)))
         .collect();
     let tsp = Tsp::new("random150".to_string(), cities);
+    let budget = 20_000;
 
     let mut state = SearchState::new_with_seed(&tsp, 42);
-    LocalSearch::<TspTwoOptNeighbor>::new(StopCondition::iterations(20_000))
+    LocalSearch::<TspTwoOptNeighbor>::new(StopCondition::iterations(budget))
         .run(&mut state)
         .unwrap();
     report("one descent", &state);
 
     let mut state = SearchState::new_with_seed(&tsp, 42);
     Restart::<Tsp>::new(
-        StopCondition::iterations(20_000),
+        StopCondition::iterations(budget),
         Box::new(LocalSearch::<TspTwoOptNeighbor>::new(
-            StopCondition::iterations(20_000),
+            StopCondition::iterations(budget),
         )),
         StopCondition::failed_updates(0),
     )
@@ -45,8 +46,6 @@ fn main() {
 fn report(name: &str, state: &SearchState<Tsp>) {
     println!(
         "{name:>12}: length = {:.1} (best at iteration {} of {})",
-        state.best_solution.evaluate().minimized(),
-        state.best_iteration,
-        state.iteration
+        state.best_solution.objective, state.best_iteration, state.iteration
     );
 }
