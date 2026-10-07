@@ -22,6 +22,8 @@ pub enum ProblemKind {
     Tsp,
     VertexCover,
     JobShop,
+    FlowShop,
+    Qap,
     Vrp,
     GraphColoring,
 }
@@ -35,6 +37,8 @@ impl ProblemKind {
         ProblemKind::Tsp,
         ProblemKind::VertexCover,
         ProblemKind::JobShop,
+        ProblemKind::FlowShop,
+        ProblemKind::Qap,
         ProblemKind::Vrp,
         ProblemKind::GraphColoring,
     ];
@@ -216,6 +220,17 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Iterated Greedy of Ruiz and Stützle (FlowShop).
+    IteratedGreedy {
+        /// Elements taken out and put back each iteration (`d`). Default: 4.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        removal_count: Option<usize>,
+        /// Scales the acceptance temperature (`T`). Default: 0.4.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        temperature_factor: Option<f64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Hybrid Genetic Search (VRP only).
     HybridGeneticSearch {
         /// Target size of each sub-population (μ). Default: 25.
@@ -281,8 +296,8 @@ pub enum HeuristicConfig {
         /// Must be >= 2.
         population_size: usize,
         steps: Vec<HeuristicConfig>,
-        /// Crossover operator. Defaults: "Uniform" ("Order" for TSP and Vrp,
-        /// "Ppx" for JobShop).
+        /// Crossover operator. Defaults: "Uniform" ("Order" for TSP, Vrp,
+        /// FlowShop and Qap, "Ppx" for JobShop).
         /// MaxCut also accepts "SubProblem" (memetic recombination: solves the
         /// sub-MaxCut of disagreeing variables with an internal bounded BLS).
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -324,6 +339,7 @@ impl HeuristicConfig {
             Self::PopulationAnnealing { .. } => "PopulationAnnealing",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
+            Self::IteratedGreedy { .. } => "IteratedGreedy",
             Self::HybridGeneticSearch { .. } => "HybridGeneticSearch",
             Self::WalkSat { .. } => "WalkSat",
             Self::Sequential { .. } => "Sequential",
@@ -375,6 +391,7 @@ impl HeuristicConfig {
             | Self::PopulationAnnealing { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
+            | Self::IteratedGreedy { stop_condition, .. }
             | Self::HybridGeneticSearch { stop_condition, .. }
             | Self::WalkSat { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }

@@ -11,8 +11,10 @@ use rand::rngs::SmallRng;
 /// after the segment and wrapping around. The result is a permutation of the
 /// same elements whenever both parents are.
 ///
-/// Used by [`crate::problem::TspOrderCrossover`], and by the giant-tour
-/// encodings: [`crate::problem::VrpOrderCrossover`] and Hybrid Genetic Search.
+/// Used by [`crate::problem::TspOrderCrossover`],
+/// [`crate::problem::FlowShopOrderCrossover`] and
+/// [`crate::problem::QapOrderCrossover`], and by the giant-tour encodings:
+/// [`crate::problem::VrpOrderCrossover`] and Hybrid Genetic Search.
 ///
 /// # Panics
 /// Panics if the parents differ in length.

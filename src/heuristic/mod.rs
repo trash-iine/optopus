@@ -6,6 +6,7 @@ mod bls;
 mod branch_and_bound;
 mod crossover;
 mod genetic_algorithm;
+mod iterated_greedy;
 mod late_acceptance;
 mod local_search;
 mod population_annealing;
@@ -24,6 +25,7 @@ pub use bls::{AdaptivePerturbation, BreakoutLocalSearch, PerturbationSchedule};
 pub use branch_and_bound::BranchAndBound;
 pub use crossover::SubProblemBasedCrossover;
 pub use genetic_algorithm::{GeneticAlgorithm, ParentSelection};
+pub use iterated_greedy::IteratedGreedy;
 pub use late_acceptance::LateAcceptanceHillClimbing;
 pub use local_search::LocalSearch;
 pub use population_annealing::PopulationAnnealing;
@@ -34,8 +36,8 @@ pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
 pub use specific::{
     BreakoutLocalSearchForMaxCut, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp,
-    MaxCutPerturbation, WalkSatForSat, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
-    max_cut_descent, max_cut_perturbation,
+    MaxCutPerturbation, WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,
+    bls_for_max_cut, iterated_greedy_for_flow_shop, max_cut_descent, max_cut_perturbation,
 };
 pub use tabu_search::TabuSearch;
 pub use variable_neighborhood_search::VariableNeighborhoodSearch;
