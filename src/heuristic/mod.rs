@@ -10,6 +10,7 @@ mod greedy_randomized_construction;
 mod iterated_greedy;
 mod late_acceptance;
 mod local_search;
+mod parallel_tempering;
 mod population_annealing;
 mod random_walk;
 pub mod reinforcement_learning;
@@ -20,6 +21,7 @@ mod specific;
 mod tabu_search;
 mod variable_neighborhood_search;
 
+pub use crate::building_blocks::search::boltzmann_accept;
 pub use alns::AdaptiveLargeNeighborhoodSearch;
 pub use beam_search::BeamSearch;
 pub use bls::{AdaptivePerturbation, BreakoutLocalSearch, PerturbationSchedule};
@@ -30,12 +32,13 @@ pub use greedy_randomized_construction::GreedyRandomizedConstruction;
 pub use iterated_greedy::IteratedGreedy;
 pub use late_acceptance::LateAcceptanceHillClimbing;
 pub use local_search::LocalSearch;
+pub use parallel_tempering::ParallelTempering;
 pub use population_annealing::PopulationAnnealing;
 pub use random_walk::RandomWalk;
 pub use reinforcement_learning::{ReinforcementLearningSearch, RewardShaping};
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
-pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
+pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing};
 pub use specific::{
     BreakoutLocalSearchForMaxCut, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp,
     MaxCutPerturbation, WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,

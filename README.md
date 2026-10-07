@@ -66,6 +66,7 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [Reinforcement Learning Search](docs/heuristics/rl_search.md) | `ReinforcementLearningSearch<N>` |
 | [Genetic Algorithm](docs/heuristics/genetic_algorithm.md) | `GeneticAlgorithm<P, C>` |
 | [Population Annealing](docs/heuristics/population_annealing.md) | `PopulationAnnealing<P, N>` |
+| [Parallel Tempering](docs/heuristics/parallel_tempering.md) | `ParallelTempering<P, N>` |
 | [Adaptive Large Neighborhood Search](docs/heuristics/alns.md) | `AdaptiveLargeNeighborhoodSearch<P>` |
 | [Iterated Greedy](docs/heuristics/iterated_greedy.md) | `IteratedGreedy<P>` |
 | [GRASP construction](docs/heuristics/greedy_randomized_construction.md) | `GreedyRandomizedConstruction<P>` |

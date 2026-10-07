@@ -1,5 +1,5 @@
+use crate::building_blocks::search::{best_replica, metropolis_sweeps, sweep_length};
 use crate::error::OptError;
-use crate::heuristic::simulated_annealing::boltzmann_accept;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::search_state::SearchState;
 use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait, rank_cmp};
@@ -26,7 +26,8 @@ use std::marker::PhantomData;
 ///    diversity after the population converges.
 /// 3. Metropolis sweeps, every replica is swept `sweeps_per_step` times at the
 ///    new `β`; a proposed move is accepted with probability
-///    `min(1, exp(-β · ΔE))` (reusing [`boltzmann_accept`]).
+///    `min(1, exp(-β · ΔE))`, by the shared
+///    [`metropolis_sweeps`](crate::building_blocks::search::metropolis_sweeps).
 ///
 /// There is no initial sweep before the first resampling. The paper starts from
 /// a random population at `β = 0`, where random *is* the equilibrium
@@ -125,12 +126,9 @@ where
 
     /// Sets how many moves one sweep proposes, instead of measuring it.
     ///
-    /// A sweep is one pass over the system, so by default the length is the
-    /// size of `N`'s neighborhood, counted once per episode from
-    /// [`MoveToNeighbor::iter`]. That is O(n) for a single-variable move and is
-    /// what the physics literature calls a sweep, but it is O(n²) for a
-    /// pairwise move such as 2-opt, and the count builds every move only to
-    /// discard it. Pin the length here when that matters.
+    /// By default a sweep is one pass over `N`'s neighborhood, as
+    /// [`sweep_length`](crate::building_blocks::search::sweep_length)
+    /// explains. Pin the length here when counting it costs too much.
     ///
     /// # Panics
     ///
@@ -151,38 +149,8 @@ where
             self.population
                 .push(state.instance.new_solution(&mut state.rng));
         }
-        self.proposals_per_sweep = self.sweep_length.unwrap_or_else(|| {
-            // Measured once per episode: the neighborhood does not change size
-            // while the search runs.
-            N::iter(state.instance, &self.population[0]).count()
-        });
-    }
-
-    /// Sweeps a single replica `sweeps` times at temperature `T = 1/β`.
-    /// One sweep proposes `proposals` moves. Free of `self` so the caller can
-    /// iterate `self.population` mutably while sweeping.
-    fn metropolis_sweeps(
-        replica: &mut P::Solution,
-        rng: &mut SmallRng,
-        prob: &P,
-        temperature: f64,
-        sweeps: usize,
-        proposals: usize,
-    ) {
-        if proposals == 0 {
-            return;
-        }
-        for _ in 0..sweeps {
-            for _ in 0..proposals {
-                let Some(mv) = N::random_neighbor(prob, replica, rng) else {
-                    continue;
-                };
-                if boltzmann_accept(mv.evaluate(), temperature, rng) {
-                    // `apply_to_solution` refreshes gain/objective incrementally.
-                    let _ = mv.apply_to_solution(prob, replica);
-                }
-            }
-        }
+        self.proposals_per_sweep =
+            sweep_length::<P, N>(state.instance, &self.population[0], self.sweep_length);
     }
 
     /// Resamples the population for the transition `β → β + Δβ`. Each replica
@@ -268,16 +236,6 @@ where
 
         std::mem::swap(&mut self.population, &mut self.next_population);
     }
-
-    /// Index of the best replica.
-    fn best_replica_idx(&self) -> usize {
-        self.population
-            .iter()
-            .enumerate()
-            .max_by(|(_, a), (_, b)| rank_cmp(*a, *b))
-            .map(|(i, _)| i)
-            .unwrap_or(0)
-    }
 }
 
 impl<P: ProblemTrait, N> Heuristic<P> for PopulationAnnealing<P, N>
@@ -320,7 +278,7 @@ where
         let sweeps = self.sweeps_per_step;
         let proposals = self.proposals_per_sweep;
         for replica in &mut self.population {
-            Self::metropolis_sweeps(
+            metropolis_sweeps::<P, N>(
                 replica,
                 &mut state.rng,
                 prob,
@@ -333,7 +291,7 @@ where
         // 4. Track the global best. Advance the iteration counter by the sweep
         //    budget so time-to-best and the anytime trajectory are meaningful.
         state.iteration += self.sweeps_per_step as u64;
-        let best_idx = self.best_replica_idx();
+        let best_idx = best_replica(&self.population);
         state.solution = self.population[best_idx].clone();
         state.update_best();
 

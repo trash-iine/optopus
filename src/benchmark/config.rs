@@ -200,6 +200,27 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Parallel tempering (replica exchange) over any problem's `neighbor`.
+    ParallelTempering {
+        neighbor: NeighborKind,
+        /// Number of replicas on the temperature ladder (>= 2).
+        num_replicas: usize,
+        /// Inverse temperature of the hottest replica. Default: 0.1.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        beta_min: Option<f64>,
+        /// Inverse temperature of the coldest replica. Default: 5.0.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        beta_max: Option<f64>,
+        /// Metropolis sweeps per replica between exchanges. Default: 1.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        sweeps_per_exchange: Option<usize>,
+        /// Moves proposed in one sweep. Default: the size of `neighbor`'s
+        /// neighborhood, counted once per episode.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        sweep_length: Option<usize>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Lin-Kernighan-Helsgaun (TSP only).
     LinKernighanHelsgaun {
         /// Candidate neighbors per city. Default: 5.
@@ -348,6 +369,7 @@ impl HeuristicConfig {
             Self::ReinforcementLearningSearch { .. } => "ReinforcementLearningSearch",
             Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
             Self::PopulationAnnealing { .. } => "PopulationAnnealing",
+            Self::ParallelTempering { .. } => "ParallelTempering",
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
             Self::IteratedGreedy { .. } => "IteratedGreedy",
@@ -372,7 +394,8 @@ impl HeuristicConfig {
             | Self::BeamSearch { neighbor, .. }
             | Self::RandomWalk { neighbor, .. }
             | Self::ReinforcementLearningSearch { neighbor, .. }
-            | Self::PopulationAnnealing { neighbor, .. } => Some(neighbor),
+            | Self::PopulationAnnealing { neighbor, .. }
+            | Self::ParallelTempering { neighbor, .. } => Some(neighbor),
             _ => None,
         }
     }
@@ -401,6 +424,7 @@ impl HeuristicConfig {
             | Self::ReinforcementLearningSearch { stop_condition, .. }
             | Self::BreakoutLocalSearch { stop_condition, .. }
             | Self::PopulationAnnealing { stop_condition, .. }
+            | Self::ParallelTempering { stop_condition, .. }
             | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
             | Self::IteratedGreedy { stop_condition, .. }

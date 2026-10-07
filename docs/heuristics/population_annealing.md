@@ -12,7 +12,6 @@ the Metropolis proposal supplied as the move type `N`.
 ## Example
 
 ```rust
-use optopus::heuristic::PopulationAnnealing;
 use optopus::prelude::*;
 
 let mut rng = seeded_rng(42);
@@ -30,9 +29,6 @@ let mut pa = PopulationAnnealing::<MaxCut, MaxCutFlipNeighbor>::new(
 pa.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
-
-`PopulationAnnealing` is not in the prelude, import it from
-`optopus::heuristic`.
 
 ## Algorithm sketch
 

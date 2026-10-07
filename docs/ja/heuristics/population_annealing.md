@@ -10,7 +10,6 @@ Population Annealing Monte Carlo (PAMC) は `population_size` 個のレプリカ
 ## 例 { #example }
 
 ```rust
-use optopus::heuristic::PopulationAnnealing;
 use optopus::prelude::*;
 
 let mut rng = seeded_rng(42);
@@ -28,8 +27,6 @@ let mut pa = PopulationAnnealing::<MaxCut, MaxCutFlipNeighbor>::new(
 pa.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
-
-`PopulationAnnealing` は prelude に入っていないので、`optopus::heuristic` からインポートしてください。
 
 ## アルゴリズムの概要 { #algorithm-sketch }
 

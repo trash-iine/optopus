@@ -50,6 +50,10 @@ incrementally.
 [`QuboSolution`](../api/optopus/problem/qubo/struct.QuboSolution.html) carries
 the assignment `x` from the definition above (`x ∈ {0,1}^n`).
 
+The coefficients, the energy and the flip gains are all `i32`, so the
+largest energy a problem can reach, not only its largest coefficient, has to
+fit in 32 bits. Scale large weights down before building the QUBO.
+
 ## Neighbors
 
 | Type | TOML `neighbor` | Move |

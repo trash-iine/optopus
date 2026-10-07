@@ -98,6 +98,7 @@ src/
 │       │                     randomized_greedy_insertion (GRASP's construction)
 │       ├── sampling.rs       random_distinct_pair, the endpoints the position moves draw
 │       ├── adaptive_weights.rs  AdaptiveWeights, the roulette the operators are picked by
+│       ├── metropolis.rs     boltzmann_accept and the Metropolis sweep PA and PT share
 │       └── anchored_sweep.rs AnchoredSweep, the anchor widening and shuffled sweep
 │                             every LocalRepair descent runs
 ├── heuristic/
@@ -108,6 +109,7 @@ src/
 │   ├── variable_neighborhood_search.rs
 │   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
 │   ├── population_annealing.rs  PopulationAnnealing<P, N>
+│   ├── parallel_tempering.rs  ParallelTempering<P, N>, a fixed ladder with exchanges
 │   ├── alns.rs               AdaptiveLargeNeighborhoodSearch<P: Ruinable>
 │   ├── iterated_greedy.rs    IteratedGreedy<P: Ruinable>, temperature a function of the instance
 │   ├── greedy_randomized_construction.rs  one GRASP construction over any Ruinable
@@ -185,6 +187,7 @@ kinds fail at parse time.
 | `ReinforcementLearningSearch` | all | | `learning_rate`, `softmax_temperature`, `reward_shaping`, `policy_weights`, `max_candidates` |
 | `BreakoutLocalSearch` | MaxCut | `tabu_tenure`, `t`, `l0`, `p0`, `q` | |
 | `PopulationAnnealing` | all | `neighbor`, `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `sweep_length` |
+| `ParallelTempering` | all | `neighbor`, `num_replicas` | `beta_min`, `beta_max`, `sweeps_per_exchange`, `sweep_length` |
 | `LinKernighanHelsgaun` | TSP | | `num_neighbors`, `max_depth` |
 | `WalkSat` | SAT | | `noise`, `adaptive_noise` |
 | `AdaptiveLargeNeighborhoodSearch` | VRP, TSP, FlowShop, BinPacking | | `removal_fraction`, `cooling_rate` |
