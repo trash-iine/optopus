@@ -1,4 +1,4 @@
-use crate::building_blocks::IntVars;
+use crate::building_blocks::representation::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
 use crate::trait_defs::{Branchable, IntAssignment};
@@ -39,7 +39,7 @@ impl Evaluate for IntSolution {
 impl crate::search_state::Distance for IntSolution {
     /// The number of variables whose values differ.
     fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::hamming_distance(&self.values, &other.values)
+        crate::building_blocks::representation::hamming_distance(&self.values, &other.values)
     }
 }
 

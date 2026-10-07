@@ -11,7 +11,7 @@ mod neighbor;
 mod problem;
 mod ruin;
 
-pub use crate::building_blocks::EdgeWeightType;
+pub use crate::building_blocks::instance::EdgeWeightType;
 pub use crossover::TspOrderCrossover;
 pub use neighbor::{TspRelocateNeighbor, TspTwoOptNeighbor};
 pub use problem::{NeighborLists, Tsp, TspSolution, TspTour};

@@ -19,7 +19,7 @@
 //! # Examples
 //!
 //! ```
-//! use optopus::building_blocks::{Graph, seeded_rng};
+//! use optopus::building_blocks::instance::{Graph, seeded_rng};
 //!
 //! let mut rng = seeded_rng(42);
 //! let g = Graph::erdos_renyi(50, 0.1, &mut rng).with_random_weights((1, 10), &mut rng);
@@ -46,7 +46,7 @@ use super::Graph;
 /// # Examples
 ///
 /// ```
-/// use optopus::building_blocks::{Graph, seeded_rng};
+/// use optopus::building_blocks::instance::{Graph, seeded_rng};
 ///
 /// let mut rng = seeded_rng(7);
 /// let a = Graph::barabasi_albert(20, 2, &mut rng);
@@ -79,7 +79,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::{Graph, seeded_rng};
+    /// use optopus::building_blocks::instance::{Graph, seeded_rng};
     ///
     /// let g = Graph::erdos_renyi(100, 0.05, &mut seeded_rng(1));
     /// assert!(g.num_edges() > 0);
@@ -140,7 +140,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::{Graph, seeded_rng};
+    /// use optopus::building_blocks::instance::{Graph, seeded_rng};
     ///
     /// let g = Graph::barabasi_albert(100, 3, &mut seeded_rng(1));
     /// assert_eq!(g.num_edges(), 3 + 3 * (100 - 3));
@@ -191,7 +191,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::{Graph, seeded_rng};
+    /// use optopus::building_blocks::instance::{Graph, seeded_rng};
     ///
     /// let g = Graph::watts_strogatz(100, 6, 0.2, &mut seeded_rng(1));
     /// assert_eq!(g.num_edges(), 100 * 6 / 2);
@@ -265,7 +265,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::Graph;
+    /// use optopus::building_blocks::instance::Graph;
     ///
     /// let g = Graph::grid_torus_2d(10);
     /// assert_eq!(g.len(), 100);
@@ -305,7 +305,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::Graph;
+    /// use optopus::building_blocks::instance::Graph;
     ///
     /// let g = Graph::grid_torus_3d(6);
     /// assert_eq!(g.len(), 216);
@@ -353,7 +353,7 @@ impl Graph {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::{Graph, seeded_rng};
+    /// use optopus::building_blocks::instance::{Graph, seeded_rng};
     ///
     /// let mut rng = seeded_rng(1);
     /// let g = Graph::watts_strogatz(50, 4, 0.2, &mut rng).with_random_weights((-5, 5), &mut rng);

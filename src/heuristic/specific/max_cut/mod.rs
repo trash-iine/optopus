@@ -139,7 +139,7 @@ pub fn bls_for_max_cut(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::building_blocks::Graph;
+    use crate::building_blocks::instance::Graph;
     use crate::problem::max_cut::test_fixtures::small_instance;
     use crate::search_state::SearchState;
 

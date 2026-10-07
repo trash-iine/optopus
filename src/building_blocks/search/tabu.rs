@@ -80,7 +80,7 @@ impl From<(usize, usize, usize)> for TabuKey {
 /// it guards. This mixes with the multiplier from splitmix64, which spreads the
 /// low bits the indices vary in across the whole word.
 #[derive(Default)]
-pub struct TabuKeyHasher(u64);
+struct TabuKeyHasher(u64);
 
 impl Hasher for TabuKeyHasher {
     fn write_usize(&mut self, n: usize) {
@@ -127,7 +127,7 @@ impl Hasher for TabuKeyHasher {
 /// `iteration >= until`, with no off-by-one to get wrong at each call site.
 ///
 /// ```
-/// use optopus::building_blocks::TabuMemory;
+/// use optopus::building_blocks::search::TabuMemory;
 /// use rand::SeedableRng;
 ///
 /// let mut rng = rand::rngs::SmallRng::seed_from_u64(0);

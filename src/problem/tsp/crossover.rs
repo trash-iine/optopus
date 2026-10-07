@@ -19,7 +19,8 @@ impl Crossover<Tsp> for TspOrderCrossover {
         sol2: &TspSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<TspSolution, crate::error::OptError> {
-        let child = crate::building_blocks::order_crossover(&sol1.tour, &sol2.tour, rng);
+        let child =
+            crate::building_blocks::representation::order_crossover(&sol1.tour, &sol2.tour, rng);
         let objective = prob
             .calculate_tour_length(&child)
             .expect("OX crossover should produce a valid tour");

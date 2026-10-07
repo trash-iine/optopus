@@ -1,4 +1,4 @@
-use crate::building_blocks::Graph;
+use crate::building_blocks::instance::Graph;
 use crate::trait_defs::{Evaluable, FixVariables, FixedVariables, Placed};
 
 use super::problem::MaxCut;

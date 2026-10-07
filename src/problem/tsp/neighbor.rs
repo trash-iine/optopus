@@ -1,6 +1,6 @@
 use super::problem::{Tsp, TspSolution};
 use crate::{
-    building_blocks::TabuMemory,
+    building_blocks::search::TabuMemory,
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };

@@ -179,7 +179,7 @@ CVRP のコンストラクタに `num_vehicles = 0` を渡すと、first-fit-dec
 
 ## 交叉 { #crossover }
 
-- `VrpOrderCrossover`。両親を大きな巡回路に平たくし、Order Crossover (`building_blocks::order_crossover`) を適用してから、
+- `VrpOrderCrossover`。両親を大きな巡回路に平たくし、Order Crossover (`building_blocks::representation::order_crossover`) を適用してから、
   [`split_giant_tour`](../../api/optopus/problem/vrp/fn.split_giant_tour.html)
   (Prins の Split) で子を `num_slots()` 本のルートに復号し直します。Split は、OX が作った顧客の順序に対して区切り位置を最適に選ぶ動的計画法で、
   各ルートはそれを走るスロットの車両タイプで価格付けされます。

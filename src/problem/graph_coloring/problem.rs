@@ -1,4 +1,4 @@
-use crate::building_blocks::Graph;
+use crate::building_blocks::instance::Graph;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 use rand::Rng;
 
@@ -52,7 +52,7 @@ impl Evaluate for GraphColoringSolution {
 /// Hamming distance over the color assignments.
 impl Distance for GraphColoringSolution {
     fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::hamming_distance(&self.colors, &other.colors)
+        crate::building_blocks::representation::hamming_distance(&self.colors, &other.colors)
     }
 }
 

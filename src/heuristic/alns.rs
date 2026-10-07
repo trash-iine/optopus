@@ -3,7 +3,7 @@
 use rand::Rng;
 use rand::rngs::SmallRng;
 
-use crate::building_blocks::{
+use crate::building_blocks::search::{
     AdaptiveWeights, greedy_insertion, random_removal, regret2_insertion, shaw_removal,
     worst_removal,
 };

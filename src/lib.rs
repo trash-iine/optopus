@@ -38,9 +38,9 @@
 //!   and search-state layers.
 //! - [`building_blocks`] holds the pieces problems and heuristics are built
 //!   from, in three groups, instance data such as
-//!   [`Graph`](building_blocks::Graph), helpers per solution representation,
+//!   [`Graph`](building_blocks::instance::Graph), helpers per solution representation,
 //!   and problem-agnostic search machinery such as
-//!   [`TabuMemory`](building_blocks::TabuMemory).
+//!   [`TabuMemory`](building_blocks::search::TabuMemory).
 //! - [`benchmark`] runs and records benchmark experiments.
 //! - [`prelude`] re-exports the commonly used types and traits.
 //! - [`error`] defines the unified error type.

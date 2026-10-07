@@ -194,7 +194,7 @@ mod tests {
     /// charge the iteration anyway or it never meets its budget.
     #[test]
     fn an_empty_neighborhood_still_charges_its_iteration() {
-        let mc = MaxCut::new(crate::building_blocks::Graph::new());
+        let mc = MaxCut::new(crate::building_blocks::instance::Graph::new());
         let mut state = SearchState::new_with_seed(&mc, 1);
 
         let mut bs = beam_search(3, 5);

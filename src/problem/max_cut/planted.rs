@@ -72,7 +72,7 @@
 //! # Example
 //!
 //! ```
-//! use optopus::building_blocks::seeded_rng;
+//! use optopus::building_blocks::instance::seeded_rng;
 //! use optopus::problem::{PlantedMaxCut, TileProbs2d};
 //!
 //! let mut rng = seeded_rng(1);
@@ -92,7 +92,7 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 
 use super::problem::MaxCut;
-use crate::building_blocks::Graph;
+use crate::building_blocks::instance::Graph;
 use crate::error::OptError;
 
 /// A MaxCut instance together with the solution it was built around.
@@ -219,7 +219,7 @@ impl PlantedMaxCut {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::seeded_rng;
+    /// use optopus::building_blocks::instance::seeded_rng;
     /// use optopus::problem::{PlantedMaxCut, TileProbs2d};
     ///
     /// let p = PlantedMaxCut::tile_planting_2d(6, TileProbs2d::new(0.2, 0.5, 0.1), &mut seeded_rng(7));
@@ -272,7 +272,7 @@ impl PlantedMaxCut {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::seeded_rng;
+    /// use optopus::building_blocks::instance::seeded_rng;
     /// use optopus::problem::{PlantedMaxCut, TileProbs3d};
     ///
     /// let p = PlantedMaxCut::tile_planting_3d(4, TileProbs3d::new(0.0, 0.0), &mut seeded_rng(7));
@@ -330,7 +330,7 @@ impl PlantedMaxCut {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::seeded_rng;
+    /// use optopus::building_blocks::instance::seeded_rng;
     /// use optopus::problem::{PlantedMaxCut, WishartCouplers};
     ///
     /// let p = PlantedMaxCut::wishart(32, 0.75, WishartCouplers::Gaussian, &mut seeded_rng(7));
@@ -473,7 +473,7 @@ impl PlantedMaxCut {
     /// # Examples
     ///
     /// ```
-    /// use optopus::building_blocks::seeded_rng;
+    /// use optopus::building_blocks::instance::seeded_rng;
     /// use optopus::problem::{PlantedMaxCut, TileProbs2d, WishartCouplers};
     ///
     /// let mut rng = seeded_rng(1);
@@ -649,7 +649,7 @@ fn standard_normal(rng: &mut impl Rng) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::building_blocks::seeded_rng;
+    use crate::building_blocks::instance::seeded_rng;
     use std::collections::HashSet;
 
     /// Best cut over every assignment. Only usable for tiny `n`.

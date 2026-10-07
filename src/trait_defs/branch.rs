@@ -15,7 +15,7 @@
 use std::borrow::Cow;
 
 use super::{Evaluable, Evaluate, IntAssignment, ProblemReduction, ProblemTrait};
-use crate::building_blocks::IntVars;
+use crate::building_blocks::representation::IntVars;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
@@ -26,11 +26,12 @@ use rand::rngs::SmallRng;
 ///
 /// A binary problem of your own implements
 /// [`FixVariables`](super::FixVariables), and this trait by handing each
-/// method to the functions of the same name in [`crate::building_blocks`],
-/// [`binary_ranges`](crate::building_blocks::binary_ranges),
-/// [`binary_value`](crate::building_blocks::binary_value),
-/// [`binary_node`](crate::building_blocks::binary_node) and
-/// [`binary_solution_with`](crate::building_blocks::binary_solution_with).
+/// method to the functions of the same name in
+/// [`representation`](crate::building_blocks::representation),
+/// [`binary_ranges`](crate::building_blocks::representation::binary_ranges),
+/// [`binary_value`](crate::building_blocks::representation::binary_value),
+/// [`binary_node`](crate::building_blocks::representation::binary_node) and
+/// [`binary_solution_with`](crate::building_blocks::representation::binary_solution_with).
 pub trait BranchSpace: ProblemTrait<Solution: Evaluate> {
     /// A node, as a map from the whole problem onto what is searched there.
     type Node: ProblemReduction<Source = Self, Target = Self>;

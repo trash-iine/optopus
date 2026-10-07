@@ -17,7 +17,10 @@
 
 use super::{MaxCut, MaxCutSolution};
 use crate::{
-    building_blocks::{TabuKey, TabuMemory, differing_pairs, random_differing_pair},
+    building_blocks::{
+        representation::{differing_pairs, random_differing_pair},
+        search::{TabuKey, TabuMemory},
+    },
     error::OptError,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
@@ -235,7 +238,7 @@ impl MaxCutSwapNeighbor {
     /// assert_eq!(swap.gain, sol.gain[1] + sol.gain[0] + 2.0 * mc.graph.get_weight(1, 0));
     /// ```
     /// Non-adjacent pairs need no correction, and
-    /// [`get_weight`](crate::building_blocks::Graph::get_weight) already returns `0.0`
+    /// [`get_weight`](crate::building_blocks::instance::Graph::get_weight) already returns `0.0`
     /// for them, so this does not pay for a separate `has_edge` lookup, the
     /// perturbation operators call it once per move.
     pub fn new(prob: &MaxCut, sol: &MaxCutSolution, i: usize, j: usize) -> Self {
@@ -285,7 +288,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     /// The second flip uses the updated gain after the first flip, so the combined
     /// effect accounts for the interaction between the two vertices.
     fn apply_to_solution(&self, prob: &MaxCut, sol: &mut MaxCutSolution) -> Result<(), OptError> {
-        crate::building_blocks::apply_swap_as_two_flips(prob, sol, self.i, self.j)
+        crate::building_blocks::representation::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
     /// Returns a lazy iterator over all valid swap pairs `(i, j)` where
