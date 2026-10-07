@@ -26,8 +26,7 @@ use crate::trait_defs::{Evaluable, Evaluate, LocalRepair, Ruinable};
 /// [`Ruinable`] and an [`Evaluate`] solution. The local search is a
 /// [`LocalRepair`], optional in the type and part of the algorithm as
 /// published. The temperature is in the units of the objective, so it is a
-/// function of the instance, read once per run from the instance being
-/// searched. The flow shop's is wired by
+/// function of the instance, read from the instance being searched. The flow shop's is wired by
 /// [`iterated_greedy_for_flow_shop`](crate::heuristic::iterated_greedy_for_flow_shop).
 ///
 /// # References
@@ -40,9 +39,6 @@ pub struct IteratedGreedy<P: Ruinable> {
     stop_condition: StopCondition,
     removal_count: usize,
     temperature_of: Box<dyn Fn(&P) -> f64>,
-    /// The temperature for the instance of this run, resolved on its first
-    /// iteration and dropped by [`clear`](Heuristic::clear).
-    temperature: Option<f64>,
     local: Option<Box<dyn LocalRepair<P>>>,
     scratch: Vec<P::Element>,
 }
@@ -53,8 +49,8 @@ impl<P: Ruinable> IteratedGreedy<P> {
     ///
     /// # Panics
     ///
-    /// Panics if `removal_count` is zero, and on the first iteration of a run
-    /// if `temperature_of` gives a temperature that is not positive.
+    /// Panics if `removal_count` is zero, and in a run if `temperature_of`
+    /// gives a temperature that is not positive.
     pub fn new(
         stop_condition: StopCondition,
         removal_count: usize,
@@ -65,7 +61,6 @@ impl<P: Ruinable> IteratedGreedy<P> {
             stop_condition,
             removal_count,
             temperature_of: Box::new(temperature_of),
-            temperature: None,
             local: None,
             scratch: Vec::new(),
         }
@@ -83,10 +78,6 @@ where
     P: Ruinable,
     P::Solution: Evaluate,
 {
-    fn clear(&mut self) {
-        self.temperature = None;
-    }
-
     fn stop_condition(&self) -> &StopCondition {
         &self.stop_condition
     }
@@ -115,11 +106,11 @@ where
             local.repair_around(prob, &mut partial, anchors, &mut state.rng);
         }
 
-        let temperature = *self.temperature.get_or_insert_with(|| {
-            let t = (self.temperature_of)(prob);
-            assert!(t > 0.0, "temperature must be positive, got {t}");
-            t
-        });
+        let temperature = (self.temperature_of)(prob);
+        assert!(
+            temperature > 0.0,
+            "temperature must be positive, got {temperature}"
+        );
         let current = state.solution.evaluate().minimized();
         let candidate = prob.partial_energy(&partial);
         let worsening = Evaluable::Minimize(candidate - current);

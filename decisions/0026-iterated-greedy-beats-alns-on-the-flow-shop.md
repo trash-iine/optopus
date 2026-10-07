@@ -15,9 +15,11 @@ flow shop `Partial` keeps Taillard's heads and tails, so the trait's per-place
 `insertion_cost` is O(m) and a scan over all places is O(nm), which avoids the
 granularity cost 0015 describes.
 
-The temperature is a function of the instance, resolved on the first iteration
-of a run, because `build_special_heuristic` has no instance to read
-`Σp / (n·m·10)` from.
+The temperature is a function of the instance, read from the instance being
+searched, because `build_special_heuristic` has no instance to read
+`Σp / (n·m·10)` from. Threading the instance into the builders would mean
+splitting `check_build`'s validation from construction for every problem, which
+is the deeper fix once a second instance-scaled parameter appears.
 
 ## Measurement
 

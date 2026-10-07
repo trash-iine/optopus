@@ -1,3 +1,5 @@
+use std::iter::once;
+
 use rand::rngs::SmallRng;
 
 use super::problem::{FlowShop, FlowShopSolution};
@@ -5,6 +7,12 @@ use super::taillard::HeadsTails;
 use crate::building_blocks::search::{TabuKey, TabuMemory, random_distinct_pair};
 use crate::error::OptError;
 use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
+
+/// A makespan moved by a move's gain. Makespans are integers and a gain is
+/// the difference of two, so the sum is exact.
+fn shifted(objective: u32, gain: f64) -> u32 {
+    (f64::from(objective) + gain) as u32
+}
 
 /// Moves one job to another place in the sequence, the insertion move.
 ///
@@ -105,7 +113,8 @@ impl MoveToNeighbor<FlowShop> for FlowShopInsertNeighbor {
     ) -> Result<(), OptError> {
         let job = sol.sequence.remove(self.from);
         sol.sequence.insert(self.to, job);
-        sol.objective = prob.makespan(&sol.sequence);
+        sol.objective = shifted(sol.objective, self.gain);
+        debug_assert_eq!(sol.objective, prob.makespan(&sol.sequence));
         Ok(())
     }
 
@@ -219,7 +228,8 @@ impl MoveToNeighbor<FlowShop> for FlowShopSwapNeighbor {
         sol: &mut FlowShopSolution,
     ) -> Result<(), OptError> {
         sol.sequence.swap(self.i, self.j);
-        sol.objective = prob.makespan(&sol.sequence);
+        sol.objective = shifted(sol.objective, self.gain);
+        debug_assert_eq!(sol.objective, prob.makespan(&sol.sequence));
         Ok(())
     }
 
@@ -230,18 +240,13 @@ impl MoveToNeighbor<FlowShop> for FlowShopSwapNeighbor {
         let mut ht = HeadsTails::default();
         ht.rebuild(prob, seq);
         let mut moves = Vec::with_capacity(n * n.saturating_sub(1) / 2);
+        let mut row = Vec::with_capacity(prob.n_machines);
         for i in 0..n {
             for j in i + 1..n {
-                let middle = (i..=j).map(|k| {
-                    if k == i {
-                        seq[j]
-                    } else if k == j {
-                        seq[i]
-                    } else {
-                        seq[k]
-                    }
-                });
-                let makespan = ht.makespan_replacing(prob, i, j, middle);
+                let middle = once(seq[j])
+                    .chain(seq[i + 1..j].iter().copied())
+                    .chain(once(seq[i]));
+                let makespan = ht.makespan_replacing(prob, i, j, middle, &mut row);
                 moves.push(Self {
                     i,
                     j,

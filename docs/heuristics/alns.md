@@ -124,7 +124,7 @@ What each problem reads into that:
 |---|---|---|---|
 | Element, container | customer, vehicle | city, the tour | job, the sequence |
 | Relatedness | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` | L1 distance between the processing times |
-| Insertion cost | detour plus the capacity penalty, so a placement is always available even when every route is full | makespan increase, O(m) from the heads and tails |
+| Insertion cost | detour plus the capacity penalty, so a placement is always available even when every route is full | detour | makespan increase, O(m) from the heads and tails |
 | Regret-2 | across routes | undefined with one container, so it inserts the pool in a fixed order that ranks nothing, and the destroys and greedy carry the search | undefined, as on a tour |
 | `LocalRepair` | `AnchoredRouteDescent`, the granular route descent | `AnchoredTourDescent`, Or-opt and 2-opt over the nearest neighbours | `FlowShopInsertionDescent`, the full insertion descent |
 

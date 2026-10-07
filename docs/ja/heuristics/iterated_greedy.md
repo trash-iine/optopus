@@ -59,7 +59,7 @@ Taillard の 50 × 20 インスタンスでは、同じ時間で Iterated Greedy
 
 ## 温度 { #temperature }
 
-温度は目的関数の単位を持つので、`IteratedGreedy::new` はそれをインスタンスの関数として受け取り、各実行の開始時に一度だけ読みます。
+温度は目的関数の単位を持つので、`IteratedGreedy::new` はそれをインスタンスの関数として受け取り、探索するインスタンスから読みます。
 フローショップでは Ruiz と Stützle が、平均処理時間の 10 分の 1 に係数を掛けた `T = factor · Σp / (n · m · 10)` としており、
 `iterated_greedy_for_flow_shop` が `temperature_factor` からこれを計算します。
 
@@ -73,8 +73,8 @@ IteratedGreedy::<P>::new(
 ) -> Self
 ```
 
-`removal_count` が 0 なら panic し、実行の最初の反復で温度が正でなければ panic します。
-`with_local_repair(Box<dyn LocalRepair<P>>)` で降下を設定します。`clear()` は温度を捨てるので、次の実行は自分のインスタンスから温度を読み直します。
+`removal_count` が 0 なら panic し、実行中に温度が正でなければ panic します。
+`with_local_repair(Box<dyn LocalRepair<P>>)` で降下を設定します。
 
 ## ベンチマーク設定 { #benchmark-config }
 

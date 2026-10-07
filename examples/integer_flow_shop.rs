@@ -29,10 +29,9 @@ fn main() {
     );
     println!("NEH = {}", fs.neh().objective);
 
-    let fs_ref = &fs;
-    let prob = IntegerProblem::minimize(IntVars::permutation(fs.n_jobs), move |v: &[i64]| {
+    let prob = IntegerProblem::minimize(IntVars::permutation(fs.n_jobs), |v: &[i64]| {
         let order: Vec<usize> = v.iter().map(|&j| j as usize).collect();
-        f64::from(fs_ref.makespan(&order))
+        f64::from(fs.makespan(&order))
     });
     let mut state = SearchState::new_with_seed(&prob, 42);
     SimulatedAnnealing::<IntSwapNeighbor>::new(budget.clone(), 20.0, 0.99995)

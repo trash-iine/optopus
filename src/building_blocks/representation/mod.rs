@@ -17,7 +17,7 @@ pub use binary::{
     lift_compact_binary_solution, random_differing_pair, uniform_binary_crossover, variable_slots,
 };
 pub use integer::{DomainRestriction, IntVar, IntVars};
-pub use permutation::order_crossover;
+pub use permutation::{is_permutation, order_crossover};
 
 /// Hamming distance between two sequences of equal length: the number of
 /// positions whose values differ.

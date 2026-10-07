@@ -48,15 +48,6 @@ impl FlowShopPartial {
     fn makespan(&self) -> u32 {
         self.table.makespan()
     }
-
-    /// The place where `job` costs least, the earliest one on a tie, and the
-    /// makespan it gives.
-    fn best_place(&self, prob: &FlowShop, job: usize) -> (usize, u32) {
-        (0..=self.sequence.len())
-            .map(|place| (place, self.table.makespan_with(prob, place, job)))
-            .min_by_key(|&(_, makespan)| makespan)
-            .expect("there is always at least one place")
-    }
 }
 
 impl Ruinable for FlowShop {
@@ -157,28 +148,22 @@ impl Ruinable for FlowShop {
 /// paper's local search is the full descent, and on a flow shop a job moved
 /// anywhere changes the schedule of every job after it, so there is no
 /// neighborhood of the re-inserted jobs to stay in.
+///
+/// A job is priced against a scratch table of the sequence without it, so a
+/// move that does not improve leaves the partial untouched and costs one
+/// tabulation and one scan, and only an accepted move rebuilds the partial.
 #[derive(Debug, Default)]
 pub struct FlowShopInsertionDescent {
     sweep: AnchoredSweep,
-    max_passes: Option<usize>,
+    /// The sequence without the job being tried, and its table.
+    rest: Vec<usize>,
+    without: HeadsTails,
 }
 
 impl FlowShopInsertionDescent {
     /// A descent that runs to a local optimum.
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// Builder-style: stops after `max_passes` passes even if the last one
-    /// still improved. Unbounded unless set.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `max_passes` is zero.
-    pub fn with_max_passes(mut self, max_passes: usize) -> Self {
-        assert!(max_passes >= 1, "max_passes must be at least 1");
-        self.max_passes = Some(max_passes);
-        self
     }
 }
 
@@ -193,21 +178,21 @@ impl LocalRepair<FlowShop> for FlowShopInsertionDescent {
         if partial.sequence.len() < 2 {
             return;
         }
+        let (rest, without) = (&mut self.rest, &mut self.without);
         self.sweep.set_order(partial.sequence.iter().copied());
-        self.sweep
-            .sweep(rng, self.max_passes.unwrap_or(usize::MAX), |job| {
-                let before = partial.makespan();
-                let from = partial.pos[job];
-                partial.sequence.remove(from);
-                partial.refresh(prob);
-                let (place, makespan) = partial.best_place(prob, job);
-                let improved = makespan < before;
-                partial
-                    .sequence
-                    .insert(if improved { place } else { from }, job);
-                partial.refresh(prob);
-                improved
-            });
+        self.sweep.sweep(rng, usize::MAX, |job| {
+            rest.clear();
+            rest.extend(partial.sequence.iter().copied().filter(|&j| j != job));
+            without.rebuild(prob, rest);
+            let (place, makespan) = without.best_insertion(prob, job);
+            if makespan >= partial.makespan() {
+                return false;
+            }
+            rest.insert(place, job);
+            std::mem::swap(&mut partial.sequence, rest);
+            partial.refresh(prob);
+            true
+        });
     }
 }
 
