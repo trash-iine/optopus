@@ -1,0 +1,56 @@
+# Replica annealers on the G-set, one of each structure at n = 800 and 2000.
+# Parallel tempering, population annealing and simulated annealing on one
+# time budget each. Written by hand, not by gen_benchmark_configs.py. The
+# G-set is not bundled; fetch it with data/instances/scripts/fetch_maxcut.sh.
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/max_cut/G1"
+problem = "MaxCut"
+
+[[instances]]
+path = "data/instances/max_cut/G11"
+problem = "MaxCut"
+
+[[instances]]
+path = "data/instances/max_cut/G14"
+problem = "MaxCut"
+
+[[instances]]
+path = "data/instances/max_cut/G22"
+problem = "MaxCut"
+
+[[instances]]
+path = "data/instances/max_cut/G32"
+problem = "MaxCut"
+
+[[instances]]
+path = "data/instances/max_cut/G35"
+problem = "MaxCut"
+
+[[heuristics]]
+kind = "ParallelTempering"
+neighbor = "Flip"
+num_replicas = 20
+beta_min = 0.1
+beta_max = 5.0
+sweeps_per_exchange = 1
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "PopulationAnnealing"
+neighbor = "Flip"
+population_size = 20
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 3.0
+cooling_rate = 0.9999995
+[heuristics.stop_condition]
+max_duration_secs = 20.0

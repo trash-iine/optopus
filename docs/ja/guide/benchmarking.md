@@ -50,6 +50,7 @@ max_failed_update = 5_000
 | [`RandomWalk`](../heuristics/random_walk.md#benchmark-config) | すべて |
 | [`ReinforcementLearningSearch`](../heuristics/rl_search.md#benchmark-config) | すべて |
 | [`PopulationAnnealing`](../heuristics/population_annealing.md#benchmark-config) | すべて |
+| [`ParallelTempering`](../heuristics/parallel_tempering.md#benchmark-config) | すべて |
 | [`Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart`](../heuristics/meta.md#benchmark-config) | すべて |
 | [`GeneticAlgorithm`](../heuristics/genetic_algorithm.md#benchmark-config) | すべて |
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | 現在は MaxCut |
