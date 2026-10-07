@@ -96,6 +96,63 @@ impl InstanceLines {
     }
 }
 
+impl InstanceLines {
+    /// Reads the rest of the file as whitespace tokens, each with its line,
+    /// for formats that wrap a row over lines as they please.
+    pub fn into_tokens(mut self) -> Result<InstanceTokens, OptError> {
+        let mut tokens = Vec::new();
+        while let Some(line) = self.next_line()? {
+            let line_num = self.line_num;
+            tokens.extend(line.split_whitespace().map(|t| (line_num, t.to_string())));
+        }
+        Ok(InstanceTokens {
+            lines: self,
+            tokens: tokens.into_iter(),
+        })
+    }
+}
+
+/// The tokens of an instance file, read in order, each error naming the line
+/// its token came from.
+#[derive(Debug)]
+pub struct InstanceTokens {
+    lines: InstanceLines,
+    tokens: std::vec::IntoIter<(usize, String)>,
+}
+
+impl InstanceTokens {
+    /// Parses the next token as `T`. `what` names it in the error message.
+    pub fn next<T>(&mut self, what: &str) -> Result<T, OptError>
+    where
+        T: std::str::FromStr,
+        T::Err: std::fmt::Display,
+    {
+        let (line, token) = self.tokens.next().ok_or_else(|| {
+            self.lines
+                .err_at(0, format!("unexpected end of file, expected {what}"))
+        })?;
+        token.parse::<T>().map_err(|e| {
+            self.lines
+                .err_at(line, format!("failed to parse {what} '{token}': {e}"))
+        })
+    }
+
+    /// Fails on any token left over, naming its line.
+    pub fn expect_end(&mut self) -> Result<(), OptError> {
+        match self.tokens.next() {
+            None => Ok(()),
+            Some((line, token)) => Err(self
+                .lines
+                .err_at(line, format!("unexpected value '{token}' at the end"))),
+        }
+    }
+
+    /// Builds a `FileLoad` error about the file as a whole.
+    pub fn err(&self, detail: impl Into<String>) -> OptError {
+        self.lines.err_at(0, detail)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

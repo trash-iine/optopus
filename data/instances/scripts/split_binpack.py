@@ -27,21 +27,13 @@ import sys
 DST_DIR = Path(__file__).resolve().parent.parent / "bin_packing" / "falkenauer"
 
 
-def split_file(src: Path) -> int:
-    tokens = src.read_text().split()
-    pos = 0
-
-    def take() -> str:
-        nonlocal pos
-        pos += 1
-        return tokens[pos - 1]
-
+def split_file(src: Path, scale: int) -> int:
+    tokens = iter(src.read_text().split())
     written = 0
-    for _ in range(int(take())):
-        name = take()
-        capacity, n, _best = Decimal(take()), int(take()), take()
-        sizes = [Decimal(take()) for _ in range(n)]
-        scale = 10 if any(v != v.to_integral_value() for v in sizes + [capacity]) or "." in str(capacity) else 1
+    for _ in range(int(next(tokens))):
+        name = next(tokens)
+        capacity, n, _best = Decimal(next(tokens)), int(next(tokens)), next(tokens)
+        sizes = [Decimal(next(tokens)) for _ in range(n)]
         as_int = lambda v: int(v * scale)
         assert all(v * scale == as_int(v) for v in sizes + [capacity]), name
         body = "\n".join(str(as_int(v)) for v in sizes)
@@ -55,7 +47,10 @@ def main() -> None:
         sys.exit(__doc__)
     src_dir = Path(sys.argv[1])
     DST_DIR.mkdir(parents=True, exist_ok=True)
-    written = sum(split_file(src_dir / f"binpack{k}.txt") for k in range(1, 9))
+    # Files 5-8 are the triplets, whose sizes have one decimal.
+    written = sum(
+        split_file(src_dir / f"binpack{k}.txt", 10 if k >= 5 else 1) for k in range(1, 9)
+    )
     print(f"wrote {written} instances to {DST_DIR}")
     if written != 160:
         sys.exit(f"expected 160 instances, found {written}")

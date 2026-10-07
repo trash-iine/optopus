@@ -58,18 +58,7 @@ impl Crossover<BinPacking> for BinPackingGroupCrossover {
             .filter(|&item| bin_of[item] == UNPLACED)
             .collect();
         rest.sort_by_key(|&item| std::cmp::Reverse(prob.sizes[item]));
-        for item in rest {
-            let size = prob.sizes[item];
-            let bin = match loads.iter().position(|&l| l + size <= prob.capacity) {
-                Some(b) => b,
-                None => {
-                    loads.push(0);
-                    loads.len() - 1
-                }
-            };
-            loads[bin] += size;
-            bin_of[item] = bin;
-        }
+        prob.first_fit_into(&mut loads, &mut bin_of, rest);
         Ok(prob.solution_from_bins(bin_of))
     }
 }

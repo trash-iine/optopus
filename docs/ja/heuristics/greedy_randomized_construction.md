@@ -29,7 +29,10 @@ let mut state = SearchState::new_with_seed(&fs, 42);
 Iterated::<FlowShop>::new(
     budget.clone(),
     Box::new(LocalSearch::<FlowShopInsertNeighbor>::new(budget.clone())),
-    Box::new(GreedyRandomizedConstruction::<FlowShop>::new(budget, /* alpha = */ 0.2)),
+    Box::new(GreedyRandomizedConstruction::<FlowShop>::new(
+        StopCondition::new(None, None, None),
+        /* alpha = */ 0.2,
+    )),
 )
 .run(&mut state)?;
 println!("makespan = {}", state.best_solution.objective);

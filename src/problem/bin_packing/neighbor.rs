@@ -14,45 +14,18 @@ use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 /// rarely land, and the fallback lists them instead, which is uniform too.
 const RANDOM_DRAWS: usize = 64;
 
-/// `Σ (load / capacity)²` of a packing, read back from its objective
-/// `B − S / B`, so a move can be priced without a pass over the bins.
-fn fill_of(sol: &BinPackingSolution) -> f64 {
-    let b = sol.num_bins() as f64;
-    b * (b - sol.objective)
-}
-
-/// The objective after bin loads change, `changes` listing each touched bin's
-/// load before and after.
-fn energy_after(prob: &BinPacking, sol: &BinPackingSolution, changes: &[(u64, u64)]) -> f64 {
-    let c = prob.capacity as f64;
-    let sq = |l: u64| (l as f64 / c).powi(2);
-    let mut fill = fill_of(sol);
+/// The objective and fill term once the loads of the touched bins change,
+/// `changes` listing each one's load before and after, in O(1).
+fn priced(prob: &BinPacking, sol: &BinPackingSolution, changes: &[(u64, u64)]) -> (f64, f64) {
+    let mut fill = sol.fill;
     let mut bins = sol.num_bins();
     for &(before, after) in changes {
-        fill += sq(after) - sq(before);
+        fill += prob.sq(after) - prob.sq(before);
         if after == 0 {
             bins -= 1;
         }
     }
-    if bins == 0 {
-        0.0
-    } else {
-        bins as f64 - fill / bins as f64
-    }
-}
-
-/// Empties bin `gone` by giving its number to the last bin, so the bins stay
-/// numbered `0..num_bins()`, then recomputes the objective.
-fn settle(prob: &BinPacking, sol: &mut BinPackingSolution) {
-    if let Some(gone) = sol.loads.iter().position(|&l| l == 0) {
-        let last = sol.loads.len() - 1;
-        sol.loads.swap(gone, last);
-        sol.loads.pop();
-        for b in sol.bin_of.iter_mut().filter(|b| **b == last) {
-            *b = gone;
-        }
-    }
-    sol.objective = prob.energy(sol.loads.iter().copied());
+    (BinPacking::energy_of(bins, fill), fill)
 }
 
 /// Moves one item into another bin that has room for it.
@@ -90,7 +63,7 @@ impl BinPackingRelocateNeighbor {
         Some(Self {
             item,
             to,
-            gain: energy_after(prob, sol, &changes) - sol.objective,
+            gain: priced(prob, sol, &changes).0 - sol.objective,
         })
     }
 }
@@ -139,10 +112,23 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
     ) -> Result<(), OptError> {
         let size = prob.sizes[self.item];
         let from = sol.bin_of[self.item];
+        let changes = [
+            (sol.loads[from], sol.loads[from] - size),
+            (sol.loads[self.to], sol.loads[self.to] + size),
+        ];
+        (sol.objective, sol.fill) = priced(prob, sol, &changes);
         sol.loads[from] -= size;
         sol.loads[self.to] += size;
         sol.bin_of[self.item] = self.to;
-        settle(prob, sol);
+        // Close an emptied bin by giving its number to the last one, so the
+        // bins stay numbered `0..num_bins()`.
+        if sol.loads[from] == 0 {
+            let last = sol.loads.len() - 1;
+            sol.loads.swap_remove(from);
+            for b in sol.bin_of.iter_mut().filter(|b| **b == last) {
+                *b = from;
+            }
+        }
         Ok(())
     }
 
@@ -205,7 +191,7 @@ impl BinPackingSwapNeighbor {
         Some(Self {
             i,
             j,
-            gain: energy_after(prob, sol, &changes) - sol.objective,
+            gain: priced(prob, sol, &changes).0 - sol.objective,
         })
     }
 }
@@ -254,10 +240,10 @@ impl MoveToNeighbor<BinPacking> for BinPackingSwapNeighbor {
     ) -> Result<(), OptError> {
         let (a, b) = (sol.bin_of[self.i], sol.bin_of[self.j]);
         let (si, sj) = (prob.sizes[self.i], prob.sizes[self.j]);
-        sol.loads[a] = sol.loads[a] - si + sj;
-        sol.loads[b] = sol.loads[b] - sj + si;
+        let (la, lb) = (sol.loads[a] - si + sj, sol.loads[b] - sj + si);
+        (sol.objective, sol.fill) = priced(prob, sol, &[(sol.loads[a], la), (sol.loads[b], lb)]);
+        (sol.loads[a], sol.loads[b]) = (la, lb);
         sol.bin_of.swap(self.i, self.j);
-        sol.objective = prob.energy(sol.loads.iter().copied());
         Ok(())
     }
 

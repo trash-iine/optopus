@@ -34,7 +34,7 @@ pub struct GreedyRandomizedConstruction<P: Ruinable> {
     stop_condition: StopCondition,
     alpha: f64,
     built: bool,
-    scratch: Vec<P::Element>,
+    _problem: std::marker::PhantomData<P>,
 }
 
 impl<P: Ruinable> GreedyRandomizedConstruction<P> {
@@ -53,7 +53,7 @@ impl<P: Ruinable> GreedyRandomizedConstruction<P> {
             stop_condition,
             alpha,
             built: false,
-            scratch: Vec::new(),
+            _problem: std::marker::PhantomData,
         }
     }
 }
@@ -79,8 +79,8 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let prob: &P = state.instance;
         let mut partial = prob.to_partial(&state.solution);
-        prob.elements(&partial, &mut self.scratch);
-        let all = std::mem::take(&mut self.scratch);
+        let mut all = Vec::new();
+        prob.elements(&partial, &mut all);
         prob.remove_all(&mut partial, &all);
         randomized_greedy_insertion(prob, &mut partial, all, self.alpha, &mut state.rng);
         state.solution = prob.finish(&partial);

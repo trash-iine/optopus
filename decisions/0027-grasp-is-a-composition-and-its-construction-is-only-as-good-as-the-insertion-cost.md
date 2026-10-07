@@ -33,6 +33,9 @@ over `Relocate`, against multi-start descent (`Restart` with
 On a 150 city random tour with 2-opt, a single 2 s run, GRASP gave 9459.8 to
 9881.4 over `alpha` from 0 to 1 against 9555.5 for multi-start.
 
+The ALNS column on bin packing ran without a `LocalRepair`, since bin packing
+has none yet, so it is ruin and recreate alone.
+
 On the flow shop the cheapest insertion is the NEH rule, a good one, and GRASP
 pays. On bin packing the cheapest element to insert is one that fits an open
 bin, so the large items are left for last and each opens a bin, the opposite of
