@@ -7,6 +7,8 @@
 //! a local search takes it to a local optimum. `Iterated` already alternates a
 //! search with a second step and keeps the best of every cycle, so with the
 //! construction as that second step it is GRASP, and nothing else is written.
+//! The construction builds one solution per run whatever its stop condition,
+//! so it is given an empty one.
 //!
 //! The construction asks only for `Ruinable`, so the same composition runs on
 //! a flow shop and on bin packing. On the bin packing the local search is
@@ -46,7 +48,7 @@ fn main() {
         budget.clone(),
         descent(),
         Box::new(GreedyRandomizedConstruction::<FlowShop>::new(
-            budget.clone(),
+            StopCondition::new(None, None, None),
             0.2,
         )),
     )
@@ -82,7 +84,10 @@ fn main() {
     Iterated::<BinPacking>::new(
         budget.clone(),
         vnd(),
-        Box::new(GreedyRandomizedConstruction::<BinPacking>::new(budget, 0.2)),
+        Box::new(GreedyRandomizedConstruction::<BinPacking>::new(
+            StopCondition::new(None, None, None),
+            0.2,
+        )),
     )
     .run(&mut state)
     .unwrap();

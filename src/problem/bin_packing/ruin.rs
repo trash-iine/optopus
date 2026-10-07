@@ -31,20 +31,8 @@ pub struct BinPackingPartial {
 }
 
 impl BinPackingPartial {
-    fn energy_of(bins: usize, fill: f64) -> f64 {
-        if bins == 0 {
-            0.0
-        } else {
-            bins as f64 - fill / bins as f64
-        }
-    }
-
     fn energy(&self) -> f64 {
-        Self::energy_of(self.loads.len(), self.fill)
-    }
-
-    fn sq(prob: &BinPacking, load: u64) -> f64 {
-        (load as f64 / prob.capacity as f64).powi(2)
+        BinPacking::energy_of(self.loads.len(), self.fill)
     }
 }
 
@@ -53,19 +41,11 @@ impl Ruinable for BinPacking {
     type Partial = BinPackingPartial;
 
     fn to_partial(&self, sol: &BinPackingSolution) -> BinPackingPartial {
-        let mut bins = vec![Vec::new(); sol.num_bins()];
-        for (item, &b) in sol.bin_of.iter().enumerate() {
-            bins[b].push(item);
-        }
         BinPackingPartial {
-            bins,
+            bins: sol.bins(),
             loads: sol.loads.clone(),
             bin_of: sol.bin_of.clone(),
-            fill: sol
-                .loads
-                .iter()
-                .map(|&l| BinPackingPartial::sq(self, l))
-                .sum(),
+            fill: sol.loads.iter().map(|&l| self.sq(l)).sum(),
         }
     }
 
@@ -107,20 +87,15 @@ impl Ruinable for BinPacking {
                 b += 1;
             }
         }
-        partial.fill = partial
-            .loads
-            .iter()
-            .map(|&l| BinPackingPartial::sq(self, l))
-            .sum();
+        partial.fill = partial.loads.iter().map(|&l| self.sq(l)).sum();
     }
 
     fn removal_gain(&self, partial: &BinPackingPartial, element: usize) -> f64 {
         let b = partial.bin_of[element];
         let (before, after) = (partial.loads[b], partial.loads[b] - self.sizes[element]);
-        let fill =
-            partial.fill - BinPackingPartial::sq(self, before) + BinPackingPartial::sq(self, after);
+        let fill = partial.fill - self.sq(before) + self.sq(after);
         let bins = partial.loads.len() - usize::from(after == 0);
-        partial.energy() - BinPackingPartial::energy_of(bins, fill)
+        partial.energy() - BinPacking::energy_of(bins, fill)
     }
 
     /// Items of similar size, smaller is closer.
@@ -151,10 +126,9 @@ impl Ruinable for BinPacking {
         if before + size > self.capacity {
             return f64::INFINITY;
         }
-        let fill = partial.fill - BinPackingPartial::sq(self, before)
-            + BinPackingPartial::sq(self, before + size);
+        let fill = partial.fill - self.sq(before) + self.sq(before + size);
         let bins = partial.loads.len() + usize::from(opened);
-        BinPackingPartial::energy_of(bins, fill) - partial.energy()
+        BinPacking::energy_of(bins, fill) - partial.energy()
     }
 
     fn insert(
@@ -173,7 +147,7 @@ impl Ruinable for BinPacking {
         partial.bins[bucket].push(element);
         partial.loads[bucket] = after;
         partial.bin_of[element] = bucket;
-        partial.fill += BinPackingPartial::sq(self, after) - BinPackingPartial::sq(self, before);
+        partial.fill += self.sq(after) - self.sq(before);
     }
 
     fn partial_energy(&self, partial: &BinPackingPartial) -> f64 {

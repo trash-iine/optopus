@@ -15,6 +15,9 @@ pub struct BinPackingSolution {
     pub loads: Vec<u64>,
     /// `num_bins − mean((load / capacity)²)`, see [`BinPacking::energy`].
     pub objective: f64,
+    /// `Σ (load / capacity)²`, kept beside the loads so a move prices the
+    /// objective in O(1).
+    pub(super) fill: f64,
 }
 
 impl BinPackingSolution {
@@ -22,6 +25,33 @@ impl BinPackingSolution {
     pub fn num_bins(&self) -> usize {
         self.loads.len()
     }
+
+    /// The items in each bin.
+    pub fn bins(&self) -> Vec<Vec<usize>> {
+        let mut bins = vec![Vec::new(); self.num_bins()];
+        for (item, &b) in self.bin_of.iter().enumerate() {
+            bins[b].push(item);
+        }
+        bins
+    }
+}
+
+/// Renumbers bins in order of their first item, so two maps that differ only
+/// in how their bins are numbered come out equal.
+fn relabel(bin_of: &[usize]) -> Vec<usize> {
+    let width = bin_of.iter().copied().max().map_or(0, |b| b + 1);
+    let mut label = vec![usize::MAX; width];
+    let mut next = 0;
+    bin_of
+        .iter()
+        .map(|&b| {
+            if label[b] == usize::MAX {
+                label[b] = next;
+                next += 1;
+            }
+            label[b]
+        })
+        .collect()
 }
 
 impl Evaluate for BinPackingSolution {
@@ -36,23 +66,9 @@ impl Distance for BinPackingSolution {
     /// of their first item, so two packings that differ only in how their bins
     /// are numbered are at distance zero.
     fn distance(&self, other: &Self) -> usize {
-        let canonical = |bin_of: &[usize], width: usize| -> Vec<usize> {
-            let mut label = vec![usize::MAX; width];
-            let mut next = 0;
-            bin_of
-                .iter()
-                .map(|&b| {
-                    if label[b] == usize::MAX {
-                        label[b] = next;
-                        next += 1;
-                    }
-                    label[b]
-                })
-                .collect()
-        };
         crate::building_blocks::representation::hamming_distance(
-            &canonical(&self.bin_of, self.num_bins()),
-            &canonical(&other.bin_of, other.num_bins()),
+            &relabel(&self.bin_of),
+            &relabel(&other.bin_of),
         )
     }
 }
@@ -116,30 +132,15 @@ impl BinPacking {
         use crate::building_blocks::instance::InstanceLines;
 
         let path = path.as_ref();
-        let mut lines = InstanceLines::open(path)?;
-        let mut tokens: Vec<(usize, String)> = Vec::new();
-        while let Some(line) = lines.next_line()? {
-            let line_num = lines.line_num();
-            tokens.extend(line.split_whitespace().map(|t| (line_num, t.to_string())));
-        }
-        let mut iter = tokens.into_iter();
-        let mut next = |what: &str| -> Result<u64, OptError> {
-            let (line, tok) = iter.next().ok_or_else(|| {
-                lines.err_at(0, format!("unexpected end of file, expected {what}"))
-            })?;
-            tok.parse::<u64>()
-                .map_err(|e| lines.err_at(line, format!("failed to parse {what} '{tok}': {e}")))
-        };
-        let n = next("n")? as usize;
-        let capacity = next("capacity")?;
+        let mut tokens = InstanceLines::open(path)?.into_tokens()?;
+        let n: usize = tokens.next("n")?;
+        let capacity: u64 = tokens.next("capacity")?;
         let sizes = (0..n)
-            .map(|i| next(&format!("size of item {i}")))
-            .collect::<Result<Vec<_>, _>>()?;
-        if next("nothing").is_ok() {
-            return Err(lines.err_at(0, format!("more than {n} item sizes")));
-        }
+            .map(|i| tokens.next(&format!("size of item {i}")))
+            .collect::<Result<Vec<u64>, _>>()?;
+        tokens.expect_end()?;
         if capacity == 0 || sizes.iter().any(|&s| s == 0 || s > capacity) {
-            return Err(lines.err_at(0, "every item has to be non-empty and fit in a bin"));
+            return Err(tokens.err("every item has to be non-empty and fit in a bin"));
         }
 
         let name = path
@@ -162,17 +163,25 @@ impl BinPacking {
 
     /// The objective of a packing with these bin loads, see [`BinPacking`].
     pub fn energy(&self, loads: impl IntoIterator<Item = u64>) -> f64 {
-        let c = self.capacity as f64;
-        let (count, fill) = loads
+        let (bins, fill) = loads
             .into_iter()
             .filter(|&l| l > 0)
-            .fold((0usize, 0.0), |(n, f), l| {
-                (n + 1, f + (l as f64 / c).powi(2))
-            });
-        if count == 0 {
+            .fold((0, 0.0), |(n, f), l| (n + 1, f + self.sq(l)));
+        Self::energy_of(bins, fill)
+    }
+
+    /// `(load / capacity)²`, one bin's share of the fill term.
+    pub(super) fn sq(&self, load: u64) -> f64 {
+        (load as f64 / self.capacity as f64).powi(2)
+    }
+
+    /// The objective of `bins` open bins whose fill terms sum to `fill`. The
+    /// one place the objective is written.
+    pub(super) fn energy_of(bins: usize, fill: f64) -> f64 {
+        if bins == 0 {
             0.0
         } else {
-            count as f64 - fill / count as f64
+            bins as f64 - fill / bins as f64
         }
     }
 
@@ -184,38 +193,40 @@ impl BinPacking {
     /// Panics if `bin_of` does not cover every item or a bin is over capacity.
     pub fn solution_from_bins(&self, bin_of: Vec<usize>) -> BinPackingSolution {
         assert_eq!(bin_of.len(), self.num_items(), "every item needs a bin");
-        let width = bin_of.iter().copied().max().map_or(0, |b| b + 1);
-        let mut label = vec![usize::MAX; width];
-        let mut loads = Vec::new();
-        let bin_of: Vec<usize> = bin_of
-            .iter()
-            .zip(&self.sizes)
-            .map(|(&b, &size)| {
-                if label[b] == usize::MAX {
-                    label[b] = loads.len();
-                    loads.push(0);
-                }
-                loads[label[b]] += size;
-                label[b]
-            })
-            .collect();
+        let bin_of = relabel(&bin_of);
+        let mut loads = vec![0; bin_of.iter().copied().max().map_or(0, |b| b + 1)];
+        for (&b, &size) in bin_of.iter().zip(&self.sizes) {
+            loads[b] += size;
+        }
         assert!(
             loads.iter().all(|&l| l <= self.capacity),
             "a bin is over capacity"
         );
-        let objective = self.energy(loads.iter().copied());
+        let fill = loads.iter().map(|&l| self.sq(l)).sum();
         BinPackingSolution {
             bin_of,
+            objective: Self::energy_of(loads.len(), fill),
             loads,
-            objective,
+            fill,
         }
     }
 
     /// First Fit over the items in the given order, each into the first bin
     /// with room.
     pub fn first_fit(&self, order: impl IntoIterator<Item = usize>) -> BinPackingSolution {
-        let mut loads: Vec<u64> = Vec::new();
         let mut bin_of = vec![0; self.num_items()];
+        self.first_fit_into(&mut Vec::new(), &mut bin_of, order);
+        self.solution_from_bins(bin_of)
+    }
+
+    /// First Fit of the items in `order` into the bins `loads` already
+    /// describes, opening new ones as needed.
+    pub(super) fn first_fit_into(
+        &self,
+        loads: &mut Vec<u64>,
+        bin_of: &mut [usize],
+        order: impl IntoIterator<Item = usize>,
+    ) {
         for item in order {
             let size = self.sizes[item];
             let bin = match loads.iter().position(|&l| l + size <= self.capacity) {
@@ -228,7 +239,6 @@ impl BinPacking {
             loads[bin] += size;
             bin_of[item] = bin;
         }
-        self.solution_from_bins(bin_of)
     }
 }
 

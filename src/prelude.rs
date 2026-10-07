@@ -39,18 +39,21 @@ pub use crate::trait_defs::{
 
 // Problem and neighbor types
 pub use crate::problem::{
-    // Formula
+    // Bin packing
     BinPacking,
     BinPackingRelocateNeighbor,
     BinPackingSolution,
     BinPackingSwapNeighbor,
+    // Formula
     Constraint,
     ConstraintRel,
     Expr,
+    // Flow shop
     FlowShop,
     FlowShopInsertNeighbor,
     FlowShopSolution,
     FlowShopSwapNeighbor,
+    // Formula
     FormulaProblem,
     FormulaSolution,
     // Graph Coloring
@@ -79,10 +82,11 @@ pub use crate::problem::{
     MaxCutSwapNeighbor,
     // VRP objective selector
     ObjectiveMode,
-    // QUBO
+    // QAP
     Qap,
     QapSolution,
     QapSwapNeighbor,
+    // QUBO
     Qubo,
     QuboFlipNeighbor,
     QuboSolution,
