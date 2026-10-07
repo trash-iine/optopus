@@ -200,6 +200,25 @@ let mut solver = Restart::new(
 solver.run(&mut state)?;
 ```
 
+## Runnable compositions
+
+Each of these is a complete program in `examples/` that builds a well-known
+algorithm out of the heuristics above and compares it with its plain
+counterpart on the same budget. Run one with `cargo run --release --example`
+and its name.
+
+| Example | Algorithm | Composition |
+|---|---|---|
+| [`compose_iterated_local_search.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_iterated_local_search.rs) | Iterated Local Search | `Iterated` of `LocalSearch` and `RandomWalk` |
+| [`compose_iterated_tabu_search.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_iterated_tabu_search.rs) | Iterated Tabu Search | `Iterated` of `TabuSearch` and `RandomWalk` |
+| [`compose_multi_start.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_multi_start.rs) | multi-start descent | `Restart` of `LocalSearch`, restarting after every descent |
+| [`compose_sa_reheating.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_sa_reheating.rs) | annealing with reheating, and with restarts | `Sequential` of one `SimulatedAnnealing`, and `Restart` of it |
+| [`compose_vns.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_vns.rs) | Variable Neighborhood Search | `VariableNeighborhoodSearch` with three shake strengths |
+| [`compose_vnd_pipeline.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_vnd_pipeline.rs) | Variable Neighborhood Descent | `Sequential` of two `LocalSearch` over different moves |
+| [`compose_memetic.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_memetic.rs) | memetic algorithm | `GeneticAlgorithm` with `TabuSearch` as its mutation |
+| [`compose_kernel_then_search.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_kernel_then_search.rs) | exact reduction, then search | `MaxCutKernel` with Breakout Local Search on the kernel |
+| [`compose_population_annealing_vs_sa.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_population_annealing_vs_sa.rs) | population annealing against annealing | `PopulationAnnealing` and `SimulatedAnnealing` on one budget |
+
 ## Benchmark config
 
 All four are one `kind` with a nested `steps` array, and only the meaning of

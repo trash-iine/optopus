@@ -183,6 +183,23 @@ let mut solver = Restart::new(
 solver.run(&mut state)?;
 ```
 
+## 実行できる合成例 { #runnable-compositions }
+
+どれも `examples/` にある完結したプログラムで、上のヒューリスティックから定番のアルゴリズムを組み立て、同じ予算で素の手法と比べます。
+`cargo run --release --example` に名前を付けて実行します。
+
+| 例 | アルゴリズム | 合成 |
+|---|---|---|
+| [`compose_iterated_local_search.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_iterated_local_search.rs) | Iterated Local Search | `LocalSearch` と `RandomWalk` の `Iterated` |
+| [`compose_iterated_tabu_search.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_iterated_tabu_search.rs) | Iterated Tabu Search | `TabuSearch` と `RandomWalk` の `Iterated` |
+| [`compose_multi_start.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_multi_start.rs) | multi-start 降下 | 降下のたびに再出発する `LocalSearch` の `Restart` |
+| [`compose_sa_reheating.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_sa_reheating.rs) | 再加熱つき焼きなましと再出発つき焼きなまし | `SimulatedAnnealing` 一つの `Sequential` と、その `Restart` |
+| [`compose_vns.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_vns.rs) | Variable Neighborhood Search | 三段階の shake を持つ `VariableNeighborhoodSearch` |
+| [`compose_vnd_pipeline.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_vnd_pipeline.rs) | Variable Neighborhood Descent | 近傍の違う二つの `LocalSearch` の `Sequential` |
+| [`compose_memetic.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_memetic.rs) | memetic algorithm | mutation に `TabuSearch` を使う `GeneticAlgorithm` |
+| [`compose_kernel_then_search.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_kernel_then_search.rs) | 厳密縮約のあとの探索 | `MaxCutKernel` と、カーネル上の Breakout Local Search |
+| [`compose_population_annealing_vs_sa.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_population_annealing_vs_sa.rs) | population annealing と焼きなましの比較 | 同じ予算の `PopulationAnnealing` と `SimulatedAnnealing` |
+
 ## ベンチマーク設定 { #benchmark-config }
 
 四つとも入れ子の `steps` 配列を持つ一つの `kind` で、違うのは各位置の意味だけです。
