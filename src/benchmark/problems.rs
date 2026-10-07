@@ -399,11 +399,11 @@ impl ConfigurableProblem for Tsp {
                 removal_fraction,
                 cooling_rate,
                 ..
-            } => Ok(Box::new(alns_for_tsp(
-                cond,
-                removal_fraction.unwrap_or(0.15),
-                cooling_rate.unwrap_or(0.9995),
-            ))),
+            } => {
+                let (removal_fraction, cooling_rate) =
+                    alns_params(*removal_fraction, *cooling_rate)?;
+                Ok(Box::new(alns_for_tsp(cond, removal_fraction, cooling_rate)))
+            }
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for Tsp",
                 config.kind_name()
@@ -451,11 +451,11 @@ impl ConfigurableProblem for Vrp {
                 removal_fraction,
                 cooling_rate,
                 ..
-            } => Ok(Box::new(alns_for_vrp(
-                cond,
-                removal_fraction.unwrap_or(0.15),
-                cooling_rate.unwrap_or(0.9995),
-            ))),
+            } => {
+                let (removal_fraction, cooling_rate) =
+                    alns_params(*removal_fraction, *cooling_rate)?;
+                Ok(Box::new(alns_for_vrp(cond, removal_fraction, cooling_rate)))
+            }
             HeuristicConfig::HybridGeneticSearch {
                 min_population_size,
                 generation_size,
@@ -580,6 +580,27 @@ impl ConfigurableProblem for Qap {
     }
 }
 
+/// The ALNS defaults, checked here so a bad config fails at startup rather
+/// than panicking in the constructor.
+fn alns_params(
+    removal_fraction: Option<f64>,
+    cooling_rate: Option<f64>,
+) -> Result<(f64, f64), OptError> {
+    let removal_fraction = removal_fraction.unwrap_or(0.15);
+    let cooling_rate = cooling_rate.unwrap_or(0.9995);
+    for (name, value) in [
+        ("removal_fraction", removal_fraction),
+        ("cooling_rate", cooling_rate),
+    ] {
+        if !(value > 0.0 && value <= 1.0) {
+            return Err(OptError::Config(format!(
+                "'{name}' must be in (0, 1], got {value}"
+            )));
+        }
+    }
+    Ok((removal_fraction, cooling_rate))
+}
+
 impl ConfigurableProblem for FlowShop {
     const NAME: &'static str = "FlowShop";
     const MINIMIZE: bool = true;
@@ -605,20 +626,38 @@ impl ConfigurableProblem for FlowShop {
                 removal_count,
                 temperature_factor,
                 ..
-            } => Ok(Box::new(iterated_greedy_for_flow_shop(
-                cond,
-                removal_count.unwrap_or(4),
-                temperature_factor.unwrap_or(0.4),
-            ))),
+            } => {
+                let removal_count = removal_count.unwrap_or(4);
+                let temperature_factor = temperature_factor.unwrap_or(0.4);
+                if removal_count == 0 {
+                    return Err(OptError::Config(
+                        "'removal_count' must be at least 1".to_string(),
+                    ));
+                }
+                if !(temperature_factor.is_finite() && temperature_factor > 0.0) {
+                    return Err(OptError::Config(format!(
+                        "'temperature_factor' must be positive and finite, got {temperature_factor}"
+                    )));
+                }
+                Ok(Box::new(iterated_greedy_for_flow_shop(
+                    cond,
+                    removal_count,
+                    temperature_factor,
+                )))
+            }
             HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
                 removal_fraction,
                 cooling_rate,
                 ..
-            } => Ok(Box::new(alns_for_flow_shop(
-                cond,
-                removal_fraction.unwrap_or(0.15),
-                cooling_rate.unwrap_or(0.9995),
-            ))),
+            } => {
+                let (removal_fraction, cooling_rate) =
+                    alns_params(*removal_fraction, *cooling_rate)?;
+                Ok(Box::new(alns_for_flow_shop(
+                    cond,
+                    removal_fraction,
+                    cooling_rate,
+                )))
+            }
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for FlowShop",
                 config.kind_name()
