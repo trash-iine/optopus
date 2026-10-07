@@ -14,6 +14,7 @@
 | [Job Shop Scheduling](job_shop_scheduling.md) | 最小化 | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
 | [Permutation Flow Shop](flow_shop.md) | 最小化 | `FlowShopSolution` | Relocate (挿入) / Swap | `FlowShopOrderCrossover` | `FlowShop::load_file` (Taillard) |
 | [Quadratic Assignment](qap.md) | 最小化 | `QapSolution` | Swap | `QapOrderCrossover` | `Qap::load_file` (QAPLIB) |
+| [Bin Packing](bin_packing.md) | 最小化 | `BinPackingSolution` | Relocate / Swap | `BinPackingGroupCrossover` | `BinPacking::load_file` |
 | [VRP](vrp.md) | 最小化 | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB、または TOML のフリート記述) |
 | [Graph Coloring](graph_coloring.md) | 最小化 | `GraphColoringSolution` | Flip (再彩色) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |
 | [Formula](formula.md) | 設定可能 | `FormulaSolution` | Change / Swap / Reverse | `IntCrossover` | (なし、`Expr` から作る) |

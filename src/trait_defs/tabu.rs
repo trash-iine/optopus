@@ -87,6 +87,8 @@ mod tests {
             Tsp => TspRelocateNeighbor { pos: 0, ins: 2, gain: 0.0 },
             JobShopScheduling => JobShopSwapNeighbor { i: 0, gain: 0.0 },
             JobShopScheduling => JobShopRelocateNeighbor { from: 0, to: 1, gain: 0.0 },
+            BinPacking => BinPackingRelocateNeighbor { item: 0, to: 1, gain: 0.0 },
+            BinPacking => BinPackingSwapNeighbor { i: 0, j: 1, gain: 0.0 },
             FlowShop => FlowShopInsertNeighbor { job: 0, from: 0, to: 1, gain: 0.0 },
             FlowShop => FlowShopSwapNeighbor { i: 0, j: 1, gain: 0.0 },
             Vrp => VrpRelocateNeighbor::new(&vrp, &vrp_sol, 0, 0, 1, 0),

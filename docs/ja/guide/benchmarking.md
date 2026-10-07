@@ -22,7 +22,7 @@ seed = 42                              # 任意のマスターシード。設定
 
 [[instances]]
 path = "data/instances/max_cut/G*"     # ファイルパスまたは glob (Gset のファイルには拡張子がない)
-problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | Vrp | GraphColoring
+problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | BinPacking | Vrp | GraphColoring
 
 [[heuristics]]
 kind = "LocalSearch"                   # 下の kind 一覧を参照
@@ -55,8 +55,9 @@ max_failed_update = 5_000
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | 現在は MaxCut |
 | [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP のみ |
 | [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT のみ |
-| [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP, TSP, FlowShop |
+| [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop のみ |
+| [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP のみ |
 
 未知の kind や必須フィールドの欠落は、実行が始まる前のパースの時点でエラーになります。
@@ -81,6 +82,7 @@ max_failed_update = 5_000
 | TSP | `TwoOpt`, `Relocate` |
 | JobShop, FlowShop | `Swap`, `Relocate` |
 | Qap | `Swap` |
+| BinPacking | `Relocate`, `Swap` |
 | VRP | `Relocate`, `Swap`, `TwoOpt` |
 
 問題専用の kind (`BreakoutLocalSearch`、`LinKernighanHelsgaun`、
@@ -156,4 +158,5 @@ BenchmarkReport
 | JobShop | 作業の列 (ジョブのインデックスを、それぞれ `n_machines` 回ずつ並べたもの) |
 | FlowShop | ジョブの順序 |
 | Qap | 各施設の場所 |
+| BinPacking | 各品目の bin |
 | VRP | すべてのルートをデポ (`0`) を区切りにして平たくしたもの。`0, r0…, 0, r1…, 0` (空いているスロットは省略) |

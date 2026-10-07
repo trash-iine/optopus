@@ -94,7 +94,8 @@ src/
 │   └── search/               search machinery that knows no problem, plus MIN_IMPROVEMENT (mod.rs)
 │       ├── tabu.rs           TabuKey (Var / Pair / Triple), TabuMemory
 │       ├── biased_fitness.rs BiasedFitnessPopulation, binary_tournament
-│       ├── ruin_recreate.rs  the five destroy / repair operators over any Ruinable
+│       ├── ruin_recreate.rs  the destroy / repair operators over any Ruinable, plus
+│       │                     randomized_greedy_insertion (GRASP's construction)
 │       ├── sampling.rs       random_distinct_pair, the endpoints the position moves draw
 │       ├── adaptive_weights.rs  AdaptiveWeights, the roulette the operators are picked by
 │       └── anchored_sweep.rs AnchoredSweep, the anchor widening and shuffled sweep
@@ -109,6 +110,7 @@ src/
 │   ├── population_annealing.rs  PopulationAnnealing<P, N>
 │   ├── alns.rs               AdaptiveLargeNeighborhoodSearch<P: Ruinable>
 │   ├── iterated_greedy.rs    IteratedGreedy<P: Ruinable>, temperature a function of the instance
+│   ├── greedy_randomized_construction.rs  one GRASP construction over any Ruinable
 │   ├── branch_and_bound.rs   BranchAndBound<P: BranchSpace, R: Relaxation<P>>
 │   ├── bls.rs                BreakoutLocalSearch<P, S>, PerturbationSchedule,
 │   │                         AdaptivePerturbation
@@ -142,6 +144,8 @@ src/
     │                         granular.rs, Descent), ruin.rs (Ruinable + LocalRepair)
     ├── tsp/                  + ruin.rs (Ruinable with the tour as the one container,
     │                         AnchoredTourDescent)
+    ├── bin_packing/          + ruin.rs (Ruinable whose bins open and close,
+    │                         one empty bin always offered)
     └── flow_shop/            + taillard.rs (HeadsTails, the O(m) insertion and removal
                               prices), ruin.rs (Ruinable over the sequence, whose partial
                               keeps the heads and tails, FlowShopInsertionDescent)
@@ -158,7 +162,7 @@ num_runs = 10
 seed = 42                      # optional: makes every run bit-reproducible
 [[instances]]
 path = "data/instances/max_cut/G*"   # globs supported (Gset files have no extension)
-problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | Vrp | GraphColoring
+problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | BinPacking | Vrp | GraphColoring
 [[heuristics]]
 kind = "LocalSearch"           # see the table below
 neighbor = "Flip"              # Flip | Swap | TwoOpt | Relocate
@@ -183,8 +187,9 @@ kinds fail at parse time.
 | `PopulationAnnealing` | all | `neighbor`, `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `sweep_length` |
 | `LinKernighanHelsgaun` | TSP | | `num_neighbors`, `max_depth` |
 | `WalkSat` | SAT | | `noise`, `adaptive_noise` |
-| `AdaptiveLargeNeighborhoodSearch` | VRP, TSP, FlowShop | | `removal_fraction`, `cooling_rate` |
+| `AdaptiveLargeNeighborhoodSearch` | VRP, TSP, FlowShop, BinPacking | | `removal_fraction`, `cooling_rate` |
 | `IteratedGreedy` | FlowShop | | `removal_count`, `temperature_factor` |
+| `GreedyRandomizedConstruction` | VRP, TSP, FlowShop, BinPacking | | `alpha` (one construction, GRASP is `Iterated` with it as `steps[1]`) |
 | `HybridGeneticSearch` | VRP | | `min_population_size`, `generation_size`, `granularity`, `target_feasible`, `restart_generations` |
 | `Sequential` | all | `steps` | |
 | `Iterated` | all | `steps[0]` = search, `steps[1]` = perturbation | |

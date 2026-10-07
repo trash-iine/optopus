@@ -1,9 +1,10 @@
 //! The destroy and repair operators of ruin-and-recreate, over any
 //! [`Ruinable`] problem.
 //!
-//! Five free functions, three that ruin and two that recreate, plus the
-//! two-best-insertions scan both repairs select with. They are Ropke &
-//! Pisinger's operator bank, and each reads the problem only through
+//! Six free functions, three that ruin and three that recreate, plus the
+//! two-best-insertions scan the repairs select with. Five are Ropke &
+//! Pisinger's operator bank, and the sixth is the randomized greedy
+//! construction of GRASP. Each reads the problem only through
 //! [`Ruinable`]: what an element is, which containers it may go in, and what a
 //! placement costs.
 //!
@@ -171,6 +172,66 @@ pub fn greedy_insertion<P: Ruinable>(
     for element in removed {
         let (best, _) = best_two_insertions(prob, partial, element);
         let (_, bucket, place) = best;
+        prob.insert(partial, bucket, place, element);
+    }
+}
+
+/// Re-inserts the pool by GRASP's randomized greedy rule.
+///
+/// At every step each element left in the pool is priced at its cheapest
+/// placement, and the restricted candidate list is the elements whose cost is
+/// within `alpha` of the cheapest, `c ≤ c_min + alpha · (c_max − c_min)`. One of
+/// them is drawn uniformly and inserted there. `alpha = 0` is pure greedy,
+/// the cheapest element first, and `alpha = 1` inserts the elements in a random
+/// order, each at its cheapest place.
+///
+/// Every step reprices the whole pool, since one insertion changes what the
+/// others cost, so recreating `k` elements is O(k² · buckets · places). From an
+/// empty partial that is the full construction of a solution, and on a
+/// thousand elements it is slow.
+///
+/// Only elements with a finite cheapest cost enter the list, so one that fits
+/// nowhere yet waits until an insertion opens room for it, and an infinite
+/// cost never turns the threshold into infinity or NaN.
+///
+/// # Panics
+///
+/// Panics if `alpha` is outside `[0, 1]`, or if no element left has a finite
+/// placement, which a problem that offers somewhere new to put an element, as
+/// [`Ruinable`] asks, never reaches.
+pub fn randomized_greedy_insertion<P: Ruinable>(
+    prob: &P,
+    partial: &mut P::Partial,
+    removed: Vec<P::Element>,
+    alpha: f64,
+    rng: &mut SmallRng,
+) {
+    assert!((0.0..=1.0).contains(&alpha), "alpha must be in [0, 1]");
+    let mut pool = removed;
+    let mut priced: Vec<Placement> = Vec::with_capacity(pool.len());
+    let mut candidates: Vec<usize> = Vec::with_capacity(pool.len());
+    while !pool.is_empty() {
+        priced.clear();
+        priced.extend(
+            pool.iter()
+                .map(|&element| best_two_insertions(prob, partial, element).0),
+        );
+        let (lo, hi) = priced
+            .iter()
+            .filter(|p| p.0.is_finite())
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
+                (lo.min(p.0), hi.max(p.0))
+            });
+        assert!(
+            lo.is_finite(),
+            "no element left has a finite placement, see Ruinable::insertion_cost"
+        );
+        let threshold = lo + alpha * (hi - lo);
+        candidates.clear();
+        candidates.extend((0..pool.len()).filter(|&i| priced[i].0 <= threshold));
+        let pick = candidates[rng.random_range(0..candidates.len())];
+        let (_, bucket, place) = priced[pick];
+        let element = pool.swap_remove(pick);
         prob.insert(partial, bucket, place, element);
     }
 }

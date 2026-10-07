@@ -91,36 +91,20 @@ impl Qap {
         use crate::building_blocks::instance::InstanceLines;
 
         let path = path.as_ref();
-        let mut lines = InstanceLines::open(path)?;
-        let mut tokens: Vec<(usize, String)> = Vec::new();
-        while let Some(line) = lines.next_line()? {
-            let line_num = lines.line_num();
-            tokens.extend(line.split_whitespace().map(|t| (line_num, t.to_string())));
-        }
-        let mut iter = tokens.into_iter();
-        let mut next = |what: &str| -> Result<i64, OptError> {
-            let (line, tok) = iter.next().ok_or_else(|| {
-                lines.err_at(0, format!("unexpected end of file, expected {what}"))
-            })?;
-            tok.parse::<i64>()
-                .map_err(|e| lines.err_at(line, format!("failed to parse {what} '{tok}': {e}")))
-        };
-
-        let n =
-            usize::try_from(next("n")?).map_err(|_| lines.err_at(1, "n must be non-negative"))?;
+        let mut tokens = InstanceLines::open(path)?.into_tokens()?;
+        let n: usize = tokens.next("n")?;
         let mut read_matrix = |name: &str| -> Result<Vec<Vec<i64>>, OptError> {
             (0..n)
-                .map(|i| (0..n).map(|j| next(&format!("{name}[{i}][{j}]"))).collect())
+                .map(|i| {
+                    (0..n)
+                        .map(|j| tokens.next(&format!("{name}[{i}][{j}]")))
+                        .collect()
+                })
                 .collect()
         };
         let a = read_matrix("a")?;
         let b = read_matrix("b")?;
-        if let Some((line, extra)) = iter.next() {
-            return Err(lines.err_at(
-                line,
-                format!("unexpected value '{extra}' after the two matrices"),
-            ));
-        }
+        tokens.expect_end()?;
 
         let name = path.file_stem().and_then(|s| s.to_str()).unwrap_or("qap");
         Ok(Self::new(name, a, b))
