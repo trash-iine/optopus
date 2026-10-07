@@ -209,6 +209,15 @@ let prob = IntegerProblem::minimize(IntVars::permutation(vrp.get_n()), |order: &
 [`examples/integer_vrp.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_vrp.rs)
 (`cargo run --example integer_vrp`)
 
+## ほかの問題 { #more-problems }
+
+組み込みの型がない問題をモデル化した、完結したプログラムです。
+
+- [`integer_linear_ordering.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_linear_ordering.rs) は順列の上の linear ordering problem で、`IntSwapNeighbor` の上の `Iterated` 局所探索で解きます。
+- [`integer_set_cover.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_set_cover.rs) は重み付き集合被覆を `FormulaProblem` で書いたもので、集合ごとに 0/1 変数を一つ置き、要素ごとに被覆の制約を一つ課します。
+- [`integer_multi_knapsack.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_multi_knapsack.rs) は多次元ナップサックを、次元ごとに容量の制約を一つ持つ `FormulaProblem` で書き、`BranchAndBound` で最適性の証明まで解きます。緩和には次元ごとの Dantzig 上界の最小値を使います。
+- [`qubo_max_independent_set.rs`](https://github.com/trash-iine/optopus/blob/main/examples/qubo_max_independent_set.rs) は最大独立集合を、係数の並びから作った `Qubo` として解きます。
+
 ## この先 { #beyond-these-examples }
 
 - 近傍ごとに変化量を渡すと `IntegerProblem` は速くなります。[高速化](../problems/integer.md#making-it-fast) を参照してください。
