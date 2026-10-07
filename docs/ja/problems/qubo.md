@@ -45,6 +45,9 @@ println!("assignment = {:?}", sol.x); // sol.x[i] は見つかった最小点で
 [`QuboSolution`](../../api/optopus/problem/qubo/struct.QuboSolution.html) は
 上の定義の割り当て `x` (`x ∈ {0,1}^n`) を持ちます。
 
+係数、エネルギー、Flip の利得はすべて `i32` なので、最大の係数だけでなく、問題が取りうる最大のエネルギーも 32 ビットに収まる必要があります。
+大きな重みは QUBO を作る前に縮めてください。
+
 ## 近傍 { #neighbors }
 
 | 型 | TOML の `neighbor` | move |

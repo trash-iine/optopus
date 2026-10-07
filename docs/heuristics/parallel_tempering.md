@@ -15,7 +15,6 @@ the Metropolis proposal supplied as the move type `N`, the same requirement as
 ## Example
 
 ```rust
-use optopus::heuristic::ParallelTempering;
 use optopus::prelude::*;
 
 let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut seeded_rng(42)));
@@ -32,8 +31,6 @@ pt.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 println!("exchanges accepted = {:?}", pt.exchange_acceptance());
 ```
-
-`ParallelTempering` is not in the prelude, import it from `optopus::heuristic`.
 
 ## Algorithm sketch
 

@@ -21,6 +21,7 @@ mod specific;
 mod tabu_search;
 mod variable_neighborhood_search;
 
+pub use crate::building_blocks::search::boltzmann_accept;
 pub use alns::AdaptiveLargeNeighborhoodSearch;
 pub use beam_search::BeamSearch;
 pub use bls::{AdaptivePerturbation, BreakoutLocalSearch, PerturbationSchedule};
@@ -37,7 +38,7 @@ pub use random_walk::RandomWalk;
 pub use reinforcement_learning::{ReinforcementLearningSearch, RewardShaping};
 pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
-pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing, boltzmann_accept};
+pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing};
 pub use specific::{
     BreakoutLocalSearchForMaxCut, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp,
     MaxCutPerturbation, WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,

@@ -3,7 +3,7 @@ use crate::error::OptError;
 use crate::search_state::SearchState;
 use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait};
 
-pub use crate::building_blocks::search::boltzmann_accept;
+use crate::building_blocks::search::boltzmann_accept;
 
 /// Simulated annealing heuristic.
 ///
