@@ -30,6 +30,33 @@ objective, wrapped in `Evaluable::Maximize` or `Evaluable::Minimize` according
 to which way the problem optimizes. On the move it reports the change applying
 the move would make, wrapped the same way.
 
+The change is the objective after the move minus the objective before it,
+never the objective after. A minimizing problem's move reports
+`Evaluable::Minimize(after - before)`, so a negative value improves, and a
+maximizing problem's move reports `Evaluable::Maximize(after - before)`, so a
+positive value does. When the objective is not a sum of independent terms, such
+as a maximum or an absolute value, compute the value the objective would take
+after the move and subtract the current one. Neither `evaluate` can see the
+problem, so what it needs is cached when the move is built, the way
+`FlipMove::new` in `examples/custom_problem.rs` caches its gain.
+
+```rust
+struct MyMove { index: usize, delta: f64 }
+
+impl MyMove {
+    fn new(prob: &MyProblem, sol: &MySolution, index: usize) -> Self {
+        let after = todo!(); // the objective `sol` would have after this move
+        MyMove { index, delta: after - sol.objective }
+    }
+}
+
+impl Evaluate for MyMove {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Minimize(self.delta) // a minimizing problem, negative improves
+    }
+}
+```
+
 Both impls also give you [`Rankable`](../traits.md#core-trait-reference), which
 is how `LocalSearch`, `RandomWalk`, `BeamSearch` and `TabuSearch` pick a move
 and how every heuristic decides whether a solution is an improvement. It is

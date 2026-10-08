@@ -30,6 +30,7 @@ pub trait Heuristic<Problem: ProblemTrait> {
 `is_done` をオーバーライドするのは、停止条件では表せない終了規則を既定の判定に加えたいときだけです。
 `LocalSearch` と `LinKernighanHelsgaunForTsp` の「局所最適で止まる」がその例です。
 ヒューリスティクスが実行ごとの状態 (カウンタ、学習した重みなど) を持つなら `clear` をオーバーライドしてください。
+`run` は最初の `run_once` の前にこれを呼びます。[反復をまたいで状態を持つ](#keeping-state-across-iterations) を参照してください。
 
 ## 最小の first-improving 探索 { #minimal-first-improving-search }
 
@@ -103,6 +104,16 @@ state のフィールドは公開されています。`state.instance` が問題
 `state.initial_solution` が実行を始めたときの解で、`state.iteration` と `state.best_iteration` が反復を数えます。
 各解の `objective` などのフィールドは問題ごとのページに、各フィールドがいつ変わるかは [SearchState](../search_state.md) にあります。
 
+state に対するほかの呼び出しです。
+
+| 呼び出し | すること |
+|---|---|
+| [`SearchState::new(&prob)`](../../api/optopus/search_state/struct.SearchState.html#method.new), [`new_with_seed(&prob, seed)`](../../api/optopus/search_state/struct.SearchState.html#method.new_with_seed) | ランダムな解から始める state。seed を渡すと実行を再現できる |
+| [`SearchState::with_solution(&prob, sol)`](../../api/optopus/search_state/struct.SearchState.html#method.with_solution) | 与えた解から始める state |
+| [`state.is_neighbor_better_than_current(&m)`](../../api/optopus/search_state/struct.SearchState.html#method.is_neighbor_better_than_current), [`is_neighbor_better_than_best(&m)`](../../api/optopus/search_state/struct.SearchState.html#method.is_neighbor_better_than_best) | `m` を適用すると現在の解または最良解より良くなるか |
+| [`state.update_best()`](../../api/optopus/search_state/struct.SearchState.html#method.update_best) | 現在の解の方が良ければ最良解として採用する |
+| [`state.iterations_this_run()`](../../api/optopus/search_state/struct.SearchState.html#method.iterations_this_run), [`state.duration()`](../../api/optopus/search_state/struct.SearchState.html#method.duration) | 今の実行がどこまで進んだか (反復数と経過時間) |
+
 ## 差分で move を受理する { #accepting-a-move-by-its-delta }
 
 Simulated Annealing、Late Acceptance、しきい値型の規則は近傍を走査しません。
@@ -142,6 +153,51 @@ where
 最大化問題でも最小化問題でも、悪くなる move なら正、良くなる move なら負なので、受理規則はこれをしきい値と比べるだけで、問題の向きを問う必要はありません。
 受理は `state.apply` を通し、これは反復も数えて最良解も更新します。棄却は `state.progress_iteration` を通します。
 `examples/custom_heuristic.rs` はこのヒューリスティクスを小さな MaxCut インスタンスで動かします。
+
+## 反復をまたいで状態を持つ { #keeping-state-across-iterations }
+
+カウンタ、スケジュール、学習した重みのように実行中に変わるものは、ヒューリスティクス自身の struct に持たせ、`run_once` で更新し、`clear` で初期化します。
+`run` は最初の `run_once` の前に `clear` を呼ぶので、どの実行も初期化した値から始まります。
+停止条件の上限は公開フィールドなので、初期化のときに状態を実行の予算に合わせることもできます。[停止条件](stop_conditions.md) を参照してください。
+
+```rust
+struct KickingDescent<N> {
+    stop_condition: StopCondition,
+    rejected_in_a_row: u64,
+    patience: u64,
+    _neighbor: std::marker::PhantomData<N>,
+}
+
+impl<P, N> Heuristic<P> for KickingDescent<N>
+where
+    P: ProblemTrait,
+    N: MoveToNeighbor<P> + Evaluate,
+{
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
+    }
+
+    fn clear(&mut self) {
+        self.rejected_in_a_row = 0;
+        // 反復の予算の 1%。予算がなければ 1_000。
+        self.patience = self.stop_condition.max_iteration.map_or(1_000, |n| (n / 100).max(1));
+    }
+
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
+        let neighbor: N = state.random_neighbor("KickingDescent")?;
+        // 悪化しない move はすべて受理し、`patience` 回続けて棄却したら
+        // 次の move をコストに関係なく受理する。
+        if neighbor.evaluate().minimized() <= 0.0 || self.rejected_in_a_row >= self.patience {
+            state.apply(&neighbor)?;
+            self.rejected_in_a_row = 0;
+        } else {
+            state.progress_iteration();
+            self.rejected_in_a_row += 1;
+        }
+        Ok(())
+    }
+}
+```
 
 ## 並列評価 (任意) { #optional-parallel-evaluation }
 

@@ -37,6 +37,11 @@ StopCondition::iterations(1_000_000)
 | `max_duration` | Stop after wall-clock duration since the run started. |
 | `max_failed_update` | Stop when this many iterations have passed without improving `best_solution`. |
 
+The three criteria are public fields of `StopCondition`, each an `Option`, so a
+heuristic can read its own budget, for instance to scale a schedule to
+`self.stop_condition.max_iteration`. How far the current run has got is
+`state.iterations_this_run()` and `state.duration()`.
+
 `new(max_iteration, max_duration, max_failed_update)` is also available for
 constructing a `StopCondition` from `Option` fields directly (useful when
 deserializing from config).
