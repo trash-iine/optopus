@@ -75,7 +75,7 @@ impl GraphColoring {
     /// Loads a [`GraphColoring`] instance from a file in the `N M / i j w`
     /// edge-list format (weights are ignored; coloring is unweighted).
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
-        Graph::load_from_file(path).map(Self::new)
+        Graph::load_file(path).map(Self::new)
     }
 
     /// Builds a [`GraphColoringSolution`] from a color assignment, recomputing

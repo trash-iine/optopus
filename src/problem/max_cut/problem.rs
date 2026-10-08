@@ -172,7 +172,7 @@ impl MaxCut {
 
     /// Loads a [`MaxCut`] instance from a file in the `N M / i j w` format.
     ///
-    /// Wraps [`Graph::load_from_file`] and constructs the problem with
+    /// Wraps [`Graph::load_file`] and constructs the problem with
     /// [`MaxCut::new`].
     ///
     /// # Examples
@@ -183,7 +183,7 @@ impl MaxCut {
     /// let mc = MaxCut::load_file("data/instances/max_cut/G1").unwrap();
     /// ```
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
-        Graph::load_from_file(path).map(Self::new)
+        Graph::load_file(path).map(Self::new)
     }
 
     /// Calculates the total weight of edges crossing the partition defined by `cut`.

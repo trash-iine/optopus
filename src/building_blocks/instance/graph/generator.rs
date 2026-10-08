@@ -334,7 +334,7 @@ impl Graph {
     /// untouched.
     ///
     /// Chains onto any graph, generated or not -- including one loaded with
-    /// [`load_from_file`](Self::load_from_file). Passing `min == max` puts a
+    /// [`load_file`](Self::load_file). Passing `min == max` puts a
     /// fixed weight on every edge.
     ///
     /// Zero is never drawn. A zero-weight edge is invisible to every
