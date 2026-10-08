@@ -34,6 +34,7 @@
 ```rust
 use optopus::prelude::*;
 use optopus::error::OptError;
+use optopus::rand; // optopus がビルドに使っている rand
 
 struct MyProblem { /* ... */ }
 
@@ -77,6 +78,9 @@ impl Evaluate for MyMove {
 
 gain をキャッシュする形は `examples/custom_problem.rs` にあります。
 
+`new_solution` は `impl rand::Rng` を受け取り、optopus は自身がビルドに使っている `rand` を再エクスポートしています。
+`use optopus::rand;` でその版がスコープに入るので、問題を定義するクレートに `rand` の依存を別に足す必要はありません。
+
 ## どのヒューリスティクスに何が必要か { #which-heuristic-needs-what }
 
 以下はすべて任意です。そのヒューリスティクスを使いたいときだけ、その行を実装してください。完全なシグネチャは
@@ -88,7 +92,7 @@ gain をキャッシュする形は `examples/custom_problem.rs` にあります
 | `Sequential`, `Iterated`, `VariableNeighborhoodSearch`, `Restart` | なし |
 | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing` | move に [`Evaluate<f64>`](../traits.md#core-trait-reference) |
 | `ReinforcementLearningSearch` | move に [`Evaluate<f64>`](../traits.md#core-trait-reference) と `Clone` |
-| `TabuSearch` | move に [`EnabledTabu`](../traits.md#core-trait-reference) と `Clone`、加えてその `MoveToNeighbor` impl に `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }`。この1行が、メモリを持つ [`SearchState`](../search_state.md#remembering-tabu-moves) に方策を渡します |
+| `TabuSearch` | move に [`EnabledTabu`](../traits.md#core-trait-reference) と `Clone`、加えてその `MoveToNeighbor` impl に `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }`。この1行が、メモリを持つ [`SearchState`](../search_state.md#remembering-tabu-moves) に方策を渡します。[タブーを付ける](#adding-tabu) を参照 |
 | `GeneticAlgorithm` | 解に [`Distance`](../traits.md#core-trait-reference) (`DistantTopK` に限らずどの親選択でも必要) と [`Crossover<P>`](../traits.md#core-trait-reference) の impl (`SubProblemBasedCrossover` を使う場合だけ問題に [`SubProblemExtractable`](../traits.md#core-trait-reference)) |
 | CLI ベンチマーク (TOML 設定) | 上のすべて |
 
@@ -96,6 +100,45 @@ gain をキャッシュする形は `examples/custom_problem.rs` にあります
 (`ConfigNeighbor = MoveToNeighbor + Rankable + Evaluate + EnabledTabu + Clone`、
 および `ConfigurableProblem::Solution: Distance + Evaluate`)。Rust から直接動かすだけの問題なら、
 使うヒューリスティクスが必要とするトレイトまでで止めてかまいません。ベンチマークに登録する問題は、部分的には登録できません。
+
+## タブーを付ける { #adding-tabu }
+
+`TabuSearch` が move のタブーリストを持つのは、その move が「適用したら何を禁止するか」を述べているときだけです。
+そのためには骨組みの move に三つ足します。`Clone`、`EnabledTabu` の impl、そして `MoveToNeighbor` impl のメソッド一つです。
+`TabuKey` と `TabuMemory` は prelude に入っています。
+
+```rust
+use optopus::rand::rngs::SmallRng;
+
+#[derive(Clone)]
+struct MyMove { index: usize }
+
+impl EnabledTabu for MyMove {
+    // 触る変数の禁止が解けていれば許可する。
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(TabuKey::DenseVar(self.index), iteration)
+    }
+    // 適用したら、その変数を `TabuSearch::new` に渡した範囲から引いた
+    // tenure の間禁止する。
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(TabuKey::DenseVar(self.index), iteration, rng);
+    }
+}
+
+impl MoveToNeighbor<MyProblem> for MyMove {
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+    // iter、apply_to_solution、move_to_be_better_than は骨組みのとおり
+}
+```
+
+**`tabu_policy` がないと、`EnabledTabu` の impl はそのままコンパイルが通り、`TabuSearch` はタブーリストなしで動きます。**
+
+`TabuKey::DenseVar(i)` は変数のようにインスタンスで上限が決まる添字に向きます。
+二つの変数にまたがる move は `TabuKey::Pair(i, j)` を禁止し、大きさに上限のない添字は `TabuKey::Var(i)` にします。
+すべての形は [`TabuKey`](../../api/optopus/building_blocks/search/enum.TabuKey.html) の rustdoc にあります。
+`examples/custom_problem.rs` はこの方策で OneMax 問題に `TabuSearch` をかけます。
 
 ## 性能についての注意 { #performance-note }
 

@@ -99,6 +99,46 @@ where
   戦略に応じて `max_by`、`find`、
   [`filter_best`](../../api/optopus/trait_defs/fn.filter_best.html)、`.choose(&mut rng)` などと組み合わせます。
 
+## 差分で move を受理する { #accepting-a-move-by-its-delta }
+
+Simulated Annealing、Late Acceptance、しきい値型の規則は近傍を走査しません。
+move を一つ引き、それが生む変化から受理するかを決めます。
+move はその変化を自身の `Evaluate` impl で返すので、こうしたヒューリスティクスは `N` に `Evaluate` を求め、何も適用せずに差分を読みます。
+
+```rust
+struct RandomDescent<N> {
+    stop_condition: StopCondition,
+    _neighbor: std::marker::PhantomData<N>,
+}
+
+impl<P, N> Heuristic<P> for RandomDescent<N>
+where
+    P: ProblemTrait,
+    N: MoveToNeighbor<P> + Evaluate,
+{
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
+    }
+
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
+        let neighbor: N = state.random_neighbor("RandomDescent")?;
+        let worsening = neighbor.evaluate().minimized();
+        if worsening <= 0.0 {
+            state.apply(&neighbor)?;
+        } else {
+            state.progress_iteration();
+        }
+        Ok(())
+    }
+}
+```
+
+[`neighbor.evaluate().minimized()`](../../api/optopus/trait_defs/enum.Evaluable.html#method.minimized)
+は、その move を適用したときに目的関数がどれだけ悪化するかを、問題の向きを反映したうえで表します。
+最大化問題でも最小化問題でも、悪くなる move なら正、良くなる move なら負なので、受理規則はこれをしきい値と比べるだけで、問題の向きを問う必要はありません。
+受理は `state.apply` を通し、これは反復も数えて最良解も更新します。棄却は `state.progress_iteration` を通します。
+`examples/custom_heuristic.rs` はこのヒューリスティクスを小さな MaxCut インスタンスで動かします。
+
 ## 並列評価 (任意) { #optional-parallel-evaluation }
 
 実装すべき `Heuristic` の並列版はありません。並列化は近傍の型の役割です。`MoveToNeighbor::iter` は

@@ -94,7 +94,8 @@ The rendered documentation site is at
 - [Benchmark viewer](https://trash-iine.github.io/optopus/benchmarks/viewer.html)
   — cross-heuristic results on standard instance sets
 
-The same pages as Markdown in this repository:
+The same pages as Markdown in this repository, indexed in
+[`docs/README.md`](docs/README.md):
 
 - [`docs/quickstart.md`](docs/quickstart.md) — getting started, file loaders
 - [`docs/concepts.md`](docs/concepts.md) — design philosophy and key patterns
@@ -102,7 +103,14 @@ The same pages as Markdown in this repository:
 - [`docs/traits.md`](docs/traits.md) — core traits reference
 - [`docs/problems/`](docs/problems/) — supported problems
 - [`docs/heuristics/`](docs/heuristics/) — available algorithms
-- [`docs/guide/`](docs/guide/) — stop conditions, benchmarking, custom problem/heuristic, error handling
+- Guides in [`docs/guide/`](docs/guide/):
+  - [`stop_conditions.md`](docs/guide/stop_conditions.md), iteration, time and stagnation limits
+  - [`benchmarking.md`](docs/guide/benchmarking.md), the TOML config and the CLI runner
+  - [`custom_problem.md`](docs/guide/custom_problem.md), defining your own problem and adding tabu to its moves
+  - [`integer_modeling.md`](docs/guide/integer_modeling.md), writing a problem over integer variables without new types
+  - [`custom_heuristic.md`](docs/guide/custom_heuristic.md), implementing `Heuristic` for your own algorithm
+  - [`error_handling.md`](docs/guide/error_handling.md), the `OptError` cases
+  - [`learned_perturbation.md`](docs/guide/learned_perturbation.md), driving BLS with a learned perturbation policy
 - [`docs/benchmarks/`](docs/benchmarks/) — performance reports on standard instance sets
 
 ## Examples
@@ -113,6 +121,10 @@ cargo run --example beam_search         # MaxCut: BeamSearch
 cargo run --example custom_problem      # define your own problem
 cargo run --example custom_heuristic    # define your own heuristic
 ```
+
+The last two are walked through in
+[`docs/guide/custom_problem.md`](docs/guide/custom_problem.md) and
+[`docs/guide/custom_heuristic.md`](docs/guide/custom_heuristic.md).
 
 ## License
 
