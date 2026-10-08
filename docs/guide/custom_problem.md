@@ -117,9 +117,11 @@ benchmark cannot register partially.
 `TabuSearch` keeps a tabu list for a move only when the move says what applying
 it forbids. That takes three additions to the move of the skeleton, `Clone`, an
 `EnabledTabu` impl, and one method in its `MoveToNeighbor` impl. `TabuKey` and
-`TabuMemory` come with the prelude.
+`TabuMemory` are search machinery that knows no problem, so they are imported
+from `optopus::building_blocks::search` rather than the prelude.
 
 ```rust
+use optopus::building_blocks::search::{TabuKey, TabuMemory};
 use optopus::rand::rngs::SmallRng;
 
 #[derive(Clone)]

@@ -12,9 +12,6 @@ pub use crate::building_blocks::{
     representation::{BinaryRelaxation, IntVar, IntVars},
 };
 
-// Tabu memory, what an EnabledTabu impl reads and writes
-pub use crate::building_blocks::search::{TabuKey, TabuMemory};
-
 // Error type
 pub use crate::error::OptError;
 

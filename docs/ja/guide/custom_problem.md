@@ -105,9 +105,10 @@ gain をキャッシュする形は `examples/custom_problem.rs` にあります
 
 `TabuSearch` が move のタブーリストを持つのは、その move が「適用したら何を禁止するか」を述べているときだけです。
 そのためには骨組みの move に三つ足します。`Clone`、`EnabledTabu` の impl、そして `MoveToNeighbor` impl のメソッド一つです。
-`TabuKey` と `TabuMemory` は prelude に入っています。
+`TabuKey` と `TabuMemory` は問題に依存しない探索部品なので、prelude ではなく `optopus::building_blocks::search` から import します。
 
 ```rust
+use optopus::building_blocks::search::{TabuKey, TabuMemory};
 use optopus::rand::rngs::SmallRng;
 
 #[derive(Clone)]

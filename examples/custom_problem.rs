@@ -12,6 +12,7 @@
 //! cargo run --example custom_problem
 //! ```
 
+use optopus::building_blocks::search::{TabuKey, TabuMemory};
 use optopus::prelude::*;
 // optopus re-exports the rand it is built against. The trait signatures below
 // name rand types, and this keeps them the same version without a dependency.
