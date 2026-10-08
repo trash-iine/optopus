@@ -25,6 +25,29 @@
 `Evaluate` は本当に二回実装します。解に対しては目的関数値を返し、問題が最大化か最小化かに応じて
 `Evaluable::Maximize` または `Evaluable::Minimize` で包みます。move に対しては、その move を適用したときの変化量を同じように包んで返します。
 
+変化量とは「move を適用した後の目的関数値 − 適用前の目的関数値」で、適用後の値そのものではありません。
+最小化問題の move は `Evaluable::Minimize(after - before)` を返すので負なら改善、最大化問題の move は `Evaluable::Maximize(after - before)` を返すので正なら改善です。
+最大値や絶対値のように目的関数が独立な項の和になっていないときは、move の後に目的関数がとる値を計算して、今の値を引きます。
+どちらの `evaluate` も問題を見られないので、必要な値は move を作るときにキャッシュしておきます。
+`examples/custom_problem.rs` の `FlipMove::new` が gain をキャッシュしているのと同じやり方です。
+
+```rust
+struct MyMove { index: usize, delta: f64 }
+
+impl MyMove {
+    fn new(prob: &MyProblem, sol: &MySolution, index: usize) -> Self {
+        let after = todo!(); // この move の後に `sol` がとる目的関数値
+        MyMove { index, delta: after - sol.objective }
+    }
+}
+
+impl Evaluate for MyMove {
+    fn evaluate(&self) -> Evaluable<f64> {
+        Evaluable::Minimize(self.delta) // 最小化問題。負なら改善
+    }
+}
+```
+
 どちらの impl からも [`Rankable`](../traits.md#core-trait-reference) が得られます。
 `LocalSearch`、`RandomWalk`、`BeamSearch`、`TabuSearch` が move を選ぶのも、どのヒューリスティクスでも解が改善したかを判断するのもこれを通してです。
 これは書くものではなく導出されるものです。`is_better_than` は向きを反映したうえで二つの `evaluate` の値を比べるので、実装することは何もありません。

@@ -7,6 +7,8 @@ mark it tabu for a tenure drawn uniformly from `tabu_tenure = (min, max)`.
 
 A tabu move is still selectable when it satisfies the aspiration criterion:
 the resulting solution would be strictly better than the current global best.
+When every move is tabu and none satisfies it, the iteration is counted as
+rejected and the search goes on, since prohibitions expire and free moves again.
 
 ## Example
 

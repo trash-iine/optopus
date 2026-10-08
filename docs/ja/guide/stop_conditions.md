@@ -36,6 +36,10 @@ StopCondition::iterations(1_000_000)
 | `max_duration` | 実行開始からの実時間がこの長さに達したら止まる。 |
 | `max_failed_update` | `best_solution` を改善しない反復がこの回数続いたら止まる。 |
 
+三つの基準は `StopCondition` の公開フィールドで、それぞれ `Option` です。
+ヒューリスティクスは自分の予算を読めるので、たとえばスケジュールの長さを `self.stop_condition.max_iteration` に合わせられます。
+今の実行がどこまで進んだかは `state.iterations_this_run()` と `state.duration()` で分かります。
+
 `new(max_iteration, max_duration, max_failed_update)` を使えば、`Option` のフィールドから直接
 `StopCondition` を作ることもできます (設定ファイルからデシリアライズするときに便利です)。
 

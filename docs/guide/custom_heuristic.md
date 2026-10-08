@@ -31,7 +31,9 @@ You implement `stop_condition` and `run_once`; `is_done` and `run` are
 provided. Override `is_done` only when your heuristic has a termination rule
 the stop condition cannot express, "stop at a local optimum", as `LocalSearch`
 and `LinKernighanHelsgaunForTsp` do, on top of the default. Override `clear` if
-your heuristic carries per-run state (counters, learned weights, etc.).
+your heuristic carries per-run state (counters, learned weights, etc.). `run`
+calls it before the first `run_once`, see
+[Keeping state across iterations](#keeping-state-across-iterations).
 
 ## Minimal first-improving search
 
@@ -109,6 +111,16 @@ started from, while `state.iteration` and `state.best_iteration` count iteration
 solution's `objective` and other fields are listed on its problem page, and
 [SearchState](../search_state.md) explains when each field changes.
 
+Other calls on the state:
+
+| Call | What it does |
+|---|---|
+| [`SearchState::new(&prob)`](../api/optopus/search_state/struct.SearchState.html#method.new), [`new_with_seed(&prob, seed)`](../api/optopus/search_state/struct.SearchState.html#method.new_with_seed) | a state starting from a random solution, seeded for a reproducible run |
+| [`SearchState::with_solution(&prob, sol)`](../api/optopus/search_state/struct.SearchState.html#method.with_solution) | a state starting from a given solution |
+| [`state.is_neighbor_better_than_current(&m)`](../api/optopus/search_state/struct.SearchState.html#method.is_neighbor_better_than_current), [`is_neighbor_better_than_best(&m)`](../api/optopus/search_state/struct.SearchState.html#method.is_neighbor_better_than_best) | whether applying `m` would improve on the current or the best solution |
+| [`state.update_best()`](../api/optopus/search_state/struct.SearchState.html#method.update_best) | takes the current solution as the best one if it is better |
+| [`state.iterations_this_run()`](../api/optopus/search_state/struct.SearchState.html#method.iterations_this_run), [`state.duration()`](../api/optopus/search_state/struct.SearchState.html#method.duration) | how far the current run has got, in iterations and in time |
+
 ## Accepting a move by its delta
 
 Simulated annealing, late acceptance and threshold rules do not scan the
@@ -153,6 +165,54 @@ problem goes. Accepting goes through `state.apply`, which also counts the
 iteration and updates the best solution. Rejecting goes through
 `state.progress_iteration`. `examples/custom_heuristic.rs` runs this heuristic
 on a small MaxCut instance.
+
+## Keeping state across iterations
+
+A heuristic whose behavior changes over a run, a counter, a schedule or learned
+weights, keeps that state in its own struct, updates it in `run_once`, and
+resets it in `clear`. `run` calls `clear` before the first `run_once`, so every
+run starts from the reset values. The stop condition's limits are public
+fields, so the reset can size the state to the run's budget, as
+[Stop conditions](stop_conditions.md) describes.
+
+```rust
+struct KickingDescent<N> {
+    stop_condition: StopCondition,
+    rejected_in_a_row: u64,
+    patience: u64,
+    _neighbor: std::marker::PhantomData<N>,
+}
+
+impl<P, N> Heuristic<P> for KickingDescent<N>
+where
+    P: ProblemTrait,
+    N: MoveToNeighbor<P> + Evaluate,
+{
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
+    }
+
+    fn clear(&mut self) {
+        self.rejected_in_a_row = 0;
+        // One percent of the iteration budget, or 1_000 when there is none.
+        self.patience = self.stop_condition.max_iteration.map_or(1_000, |n| (n / 100).max(1));
+    }
+
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
+        let neighbor: N = state.random_neighbor("KickingDescent")?;
+        // Takes every move that does not worsen, and after `patience` rejections
+        // in a row takes the next move whatever it costs.
+        if neighbor.evaluate().minimized() <= 0.0 || self.rejected_in_a_row >= self.patience {
+            state.apply(&neighbor)?;
+            self.rejected_in_a_row = 0;
+        } else {
+            state.progress_iteration();
+            self.rejected_in_a_row += 1;
+        }
+        Ok(())
+    }
+}
+```
 
 ## Optional: parallel evaluation
 
