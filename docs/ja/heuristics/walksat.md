@@ -31,10 +31,6 @@ println!("assignment = {:?}", sol.x);
 三つの節のインスタンスは呼び出し方を示すだけです。このヒューリスティクスを使う価値があるのは、ステップごとのコストのおかげで、
 汎用の `LocalSearch` や `TabuSearch` では走査しきれないインスタンスを扱えるところにあります。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## アルゴリズムの概要 { #algorithm-sketch }
 
 充足されていない節のリテラルはすべて偽なので、そのどの変数を反転してもその節は充足されます。どれを選ぶかが Selman–Kautz–Cohen の規則です。
@@ -75,6 +71,8 @@ WalkSatForSat::new(
     adaptive: bool,    // Hoos の自動ノイズ調整
 ) -> Self
 ```
+
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 `noise` が `[0.0, 1.0]` の外にあれば panic します。
 

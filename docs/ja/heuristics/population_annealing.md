@@ -31,10 +31,6 @@ println!("cut weight = {}", state.best_solution.objective);
 
 `PopulationAnnealing` は prelude に入っていないので、`optopus::heuristic` からインポートしてください。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## アルゴリズムの概要 { #algorithm-sketch }
 
 集団は `population_size` 個のランダムな解で初期化されます。各 `run_once` が一つのアニーリングステップで、手法の定義どおりの順序で進みます。
@@ -77,6 +73,8 @@ PopulationAnnealing::<P, N>::new(
     reset_period: Option<usize>,   // None = リセットしない
 ) -> Self
 ```
+
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 `population_size < 2`、`initial_beta <= 0`、`delta_beta <= 0`、`sweeps_per_step == 0` のいずれかなら panic します。
 `with_sweep_length` は `0` で panic します。

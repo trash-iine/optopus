@@ -5,9 +5,7 @@
 どのヒューリスティクスも `Heuristic<P>` (`clear` / `is_done` / `run_once` / `run`) を実装しています。
 ヒューリスティクスは問題に依存しません。近傍の型にトレイトを要求するだけなので、それを満たす組み込みの問題や独自の問題はそのまま組み込めます。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
+どのヒューリスティクスも `StopCondition` を取ります。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 ## 基本 { #base }
 

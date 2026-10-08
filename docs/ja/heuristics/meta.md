@@ -49,10 +49,6 @@ println!("cut weight = {}", state.best_solution.objective);
 
 以下の四つの節には、それぞれのコンストラクタと例があります。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## Sequential
 
 ヒューリスティクスのリストを順番に実行します。それぞれは新しい `ClearBest` のクローン上で動き、ステップの間で結果がマージされます。
@@ -66,6 +62,8 @@ Sequential::<P>::new(
 // または少しずつ組み立てる:
 seq.push_heuristic(Box::new(...));
 ```
+
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 外側の `stop_condition` はサブヒューリスティクスの間で調べられ、内側のヒューリスティクスはそれぞれ自分の停止条件を持ちます。
 リストの最後まで来ると、先頭からもう一周します。

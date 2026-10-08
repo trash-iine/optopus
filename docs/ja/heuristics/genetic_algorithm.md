@@ -36,10 +36,6 @@ ga.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## アルゴリズムの概要 { #algorithm-sketch }
 
 各反復で次を行います。
@@ -60,6 +56,8 @@ GeneticAlgorithm::<P, C>::new(
     parent_selection: ParentSelection,
 ) -> Self
 ```
+
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 `C: Crossover<P>` と `P::Solution: Distance` が必要です (型の境界が `Heuristic<P>` の impl にあるので、
 `Tournament` 選択を使う場合でも距離の impl は必要です)。

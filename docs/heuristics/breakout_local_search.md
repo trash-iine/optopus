@@ -60,12 +60,6 @@ println!("cut weight = {}", state.best_solution.objective);
 `|V| = 800` here rather than left at a constant, see
 [Benchmark config](#benchmark-config).
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](../guide/stop_conditions.md).
-
 ## Algorithm sketch
 
 - Greedy phase: repeatedly apply the strictly best improving flip, updating
@@ -140,6 +134,9 @@ bls_for_max_cut(
     q: f64,
 ) -> BreakoutLocalSearchForMaxCut
 ```
+
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
 
 Another problem builds one directly, supplying its own descent and schedule:
 

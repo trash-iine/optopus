@@ -42,11 +42,8 @@ ls.run(&mut state).unwrap();
 println!("best cut = {}", state.best_solution.objective);
 ```
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](guide/stop_conditions.md).
+Limits other than an iteration count, such as a time budget, are in [Stop
+conditions](guide/stop_conditions.md).
 
 ## Loading instances from files
 

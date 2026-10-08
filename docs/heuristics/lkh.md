@@ -38,12 +38,6 @@ println!("visiting order = {:?}", sol.tour);
 Like `LocalSearch`, it stops at a local optimum, so a budget larger than one
 descent only pays inside [`Restart` or `Iterated`](meta.md).
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](../guide/stop_conditions.md).
-
 ## Algorithm sketch
 
 For each starting city, the algorithm extends a chain of edge swaps:
@@ -73,6 +67,9 @@ LinKernighanHelsgaunForTsp::new(
     max_depth: usize,
 ) -> Self
 ```
+
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
 
 Defaults: `num_neighbors = 5`, `max_depth = 5`.
 

@@ -32,10 +32,6 @@ for (vehicle, route) in sol.routes.iter().enumerate() {
 
 自前の move 集合を持つので、`neighbor` の型パラメータは取りません。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## アルゴリズムの概要 { #algorithm-sketch }
 
 表現は giant tour なので、個体は顧客の置換です。これを `split_giant_tour` でルートに復号します。
@@ -108,6 +104,8 @@ HybridGeneticSearchForVrp::new(
     restart_generations: Option<u64>,
 ) -> Self
 ```
+
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 妥当な既定値は `μ = 25`、`λ = 40`、`Γ = 20`、`target_feasible = 0.2`、
 `restart_generations = Some(20_000)` です。

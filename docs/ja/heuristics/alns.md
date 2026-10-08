@@ -66,10 +66,6 @@ alns_for_tsp(StopCondition::iterations(10_000), 0.15, 0.9995).run(&mut state)?;
 println!("tour length = {}", state.best_solution.objective);
 ```
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## アルゴリズムの概要 { #algorithm-sketch }
 
 各 `run_once` は候補を一つ作ります。
@@ -120,6 +116,8 @@ AdaptiveLargeNeighborhoodSearch::<P>::new(
     cooling_rate: f64,       // 反復ごとの幾何的な冷却係数
 ) -> Self
 ```
+
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 `removal_fraction` か `cooling_rate` が `(0, 1]` の外にあれば panic します。
 

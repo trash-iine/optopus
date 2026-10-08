@@ -33,12 +33,6 @@ The three-clause instance shows the shape of the call; the per-step cost is
 what makes this heuristic worth reaching for on instances the generic
 `LocalSearch` / `TabuSearch` cannot scan.
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](../guide/stop_conditions.md).
-
 ## Algorithm sketch
 
 Every literal of an unsatisfied clause is false, so flipping any of its
@@ -89,6 +83,9 @@ WalkSatForSat::new(
     adaptive: bool,    // Hoos' automatic noise adjustment
 ) -> Self
 ```
+
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
 
 Panics if `noise` is outside `[0.0, 1.0]`.
 

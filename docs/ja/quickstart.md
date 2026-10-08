@@ -42,9 +42,7 @@ ls.run(&mut state).unwrap();
 println!("best cut = {}", state.best_solution.objective);
 ```
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](guide/stop_conditions.md) にまとめてあります。
+時間など反復回数以外の上限は [停止条件](guide/stop_conditions.md) にあります。
 
 ## ファイルからインスタンスを読み込む { #loading-instances-from-files }
 

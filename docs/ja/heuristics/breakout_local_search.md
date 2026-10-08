@@ -50,10 +50,6 @@ println!("cut weight = {}", state.best_solution.objective);
 `l0` と `tabu_tenure` はインスタンスに依存するので、ここでは定数のままにせず `|V| = 800` から導いています。
 [ベンチマーク設定](#benchmark-config) を参照してください。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## アルゴリズムの概要 { #algorithm-sketch }
 
 - 貪欲フェーズ。厳密に最良の改善 flip を繰り返し適用し、タブーマップを更新します。
@@ -105,6 +101,8 @@ bls_for_max_cut(
     q: f64,
 ) -> BreakoutLocalSearchForMaxCut
 ```
+
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 ほかの問題では、自前の降下とスケジュールを与えて直接作ります。
 

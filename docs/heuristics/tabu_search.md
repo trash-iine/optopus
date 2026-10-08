@@ -23,12 +23,6 @@ ts.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](../guide/stop_conditions.md).
-
 ## Constructor
 
 ```rust
@@ -37,6 +31,9 @@ TabuSearch::<N>::new(
     tabu_tenure: (u64, u64),
 ) -> Self
 ```
+
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
 
 `N` must satisfy `MoveToNeighbor<P> + Clone + EnabledTabu + Rankable`.
 

@@ -32,11 +32,8 @@ println!("best cut = {}", state.best_solution.objective);
 // state.best_solution.x holds the partition. docs/problems/max_cut.md lists every field.
 ```
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](docs/guide/stop_conditions.md).
+Limits other than an iteration count, such as a time budget, are in [Stop
+conditions](docs/guide/stop_conditions.md).
 
 See [`docs/quickstart.md`](docs/quickstart.md) for a longer tour, including
 file-based loading. The documentation is also available in Japanese, starting

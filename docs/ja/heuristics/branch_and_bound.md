@@ -49,10 +49,6 @@ assert!(bnb.is_proven_optimal(&state.best_solution));
 
 `examples/max_cut_branch_and_bound.rs` は、MaxCut の各ノードで Breakout Local Search を走らせ、`EigenvalueRelaxation` か正の重みの和で上界を与えます。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## アルゴリズムの概要 { #algorithm-sketch }
 
 ノードは、いくつかの変数の値域を狭めた問題です。未処理のノードは上界の順に保持され、`run_once` のたびに最良のものを 1 つ取り出します。問題全体を一度探索してから上界を計算するので、最初の上界は探索済みの暫定解に対して計算されます。
@@ -101,6 +97,8 @@ BranchAndBound::new(
     relaxation: R,
 ) -> Self
 ```
+
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
 
 `P: BranchSpace`、`R: Relaxation<P>` です。
 

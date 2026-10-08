@@ -28,12 +28,6 @@ println!("cut weight = {}", state.best_solution.objective);
 One `run` is one episode. The policy is what carries over between episodes,
 see [Multi-episode learning](#multi-episode-learning).
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](../guide/stop_conditions.md).
-
 ## Algorithm sketch
 
 At each step:
@@ -60,6 +54,9 @@ ReinforcementLearningSearch::<N>::new(
     max_candidates: Option<usize>,
 ) -> Self
 ```
+
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
 
 `N` must satisfy `MoveToNeighbor<P> + Evaluate + Clone`.
 
