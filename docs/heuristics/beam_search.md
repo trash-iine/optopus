@@ -39,6 +39,9 @@ BeamSearch::<P, N>::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 `N` must satisfy `MoveToNeighbor<P> + Rankable`.
 
 Panics if `beam_width == 0`.

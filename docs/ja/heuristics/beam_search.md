@@ -38,6 +38,8 @@ BeamSearch::<P, N>::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `N` は `MoveToNeighbor<P> + Rankable` を満たす必要があります。
 
 `beam_width == 0` なら panic します。

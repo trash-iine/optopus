@@ -155,6 +155,9 @@ BranchAndBound::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 `P: BranchSpace` and `R: Relaxation<P>`.
 
 ## Behavior

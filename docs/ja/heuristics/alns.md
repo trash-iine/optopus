@@ -117,6 +117,8 @@ AdaptiveLargeNeighborhoodSearch::<P>::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `removal_fraction` か `cooling_rate` が `(0, 1]` の外にあれば panic します。
 
 それ以外はすべて既定値が公開された builder なので、`new` の引数は三つのままです。

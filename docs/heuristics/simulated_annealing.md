@@ -32,6 +32,9 @@ SimulatedAnnealing::<N>::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 `N` must satisfy `MoveToNeighbor<P> + Evaluate` (i.e. `Evaluate<f64>`). The
 worsening amount is read from `Evaluable::minimized()`, so the direction of the
 underlying objective is handled automatically.

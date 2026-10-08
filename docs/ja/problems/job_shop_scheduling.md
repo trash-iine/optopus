@@ -22,6 +22,7 @@ subject to  C_{j,k} ≥ C_{j,k-1} + p_{j,k}                 (ジョブ内の先�
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 let inst = JobShopScheduling::new(
     "tiny".to_string(),
     /* n_machines = */ 2,
@@ -49,6 +50,14 @@ println!("completion times = {:?}", sol.completion_times); // 上の各位置の
 はその符号化を `operations` として、位置ごとに復号した完了時刻を `completion_times` として
 (`completion_times[pos]` は位置 `pos` の作業の `C_{j,k}`)、最小化するメイクスパン `max_j C_{j,last}` を
 `objective` として持ちます。
+
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `operations` | `Vec<usize>` | 符号化の各位置にあるジョブの番号 |
+| `completion_times` | `Vec<u32>` | `completion_times[pos]` は位置 `pos` の作業が終わる時刻 |
+| `objective` | `u32` | メイクスパン。小さいほど良い |
+
+`JobShopScheduling::load_file` はジョブをファイルの行の順に 0 から数え、機械の番号は書かれたまま (0 始まり) 使います。
 
 ## 近傍 { #neighbors }
 

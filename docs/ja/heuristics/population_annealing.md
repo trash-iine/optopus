@@ -74,6 +74,8 @@ PopulationAnnealing::<P, N>::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `population_size < 2`、`initial_beta <= 0`、`delta_beta <= 0`、`sweeps_per_step == 0` のいずれかなら panic します。
 `with_sweep_length` は `0` で panic します。
 

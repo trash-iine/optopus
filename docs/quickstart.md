@@ -42,6 +42,9 @@ ls.run(&mut state).unwrap();
 println!("best cut = {}", state.best_solution.objective);
 ```
 
+Limits other than an iteration count, such as a time budget, are in [Stop
+conditions](guide/stop_conditions.md).
+
 ## Loading instances from files
 
 Each problem ships with a loader that returns
@@ -51,13 +54,13 @@ Each problem ships with a loader that returns
 use optopus::prelude::*;
 
 // MaxCut / Vertex Cover use the shared Graph loader (format: `N M / i j w`).
-let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 
 // QUBO loader (format: `N M / i j v`, 1-indexed):
 let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 
 // MaxSAT loader (DIMACS CNF):
-let sat = Sat::load_file("data/instances/sat/example.cnf")?;
+let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 
 // TSP loader (TSPLIB):
 let tsp = Tsp::load_file("data/instances/tsp/burma14.tsp")?;

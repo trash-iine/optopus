@@ -137,6 +137,9 @@ AdaptiveLargeNeighborhoodSearch::<P>::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 Panics if `removal_fraction` or `cooling_rate` is outside `(0, 1]`.
 
 Everything else is a builder with a published default, so `new` stays at three

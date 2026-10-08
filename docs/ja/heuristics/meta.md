@@ -63,6 +63,8 @@ Sequential::<P>::new(
 seq.push_heuristic(Box::new(...));
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 外側の `stop_condition` はサブヒューリスティクスの間で調べられ、内側のヒューリスティクスはそれぞれ自分の停止条件を持ちます。
 リストの最後まで来ると、先頭からもう一周します。
 

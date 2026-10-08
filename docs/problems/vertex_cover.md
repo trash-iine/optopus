@@ -30,6 +30,7 @@ Running a search and reading back which vertices form the cover:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let vc = VertexCover::load_file("data/instances/max_cut/G1")?;
 let vc = VertexCover::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&vc);
 LocalSearch::<VertexCoverFlipNeighbor>::new(StopCondition::iterations(10_000))
@@ -56,6 +57,16 @@ cover membership of vertex `v`), and the penalty-augmented `objective`
 defined above; `cover_size` is `Σ x_v = |S|`
 and `uncovered_edges` is the constraint-violation count.
 
+| Field | Type | Meaning |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[v]` is `true` when vertex `v` is in the cover |
+| `cover_size` | `usize` | the number of vertices in the cover |
+| `uncovered_edges` | `usize` | edges with neither end in the cover, `0` when feasible |
+| `objective` | `i32` | `cover_size + penalty_weight * uncovered_edges`, lower is better |
+| `gain` | `Vec<i32>` | `gain[v]` is the change in `objective` flipping `v` would make, negative improves |
+
+`VertexCover::load_file` reads the MaxCut graph format and numbers vertices from 0, so vertex `k` of the 1-indexed file is `x[k - 1]`.
+
 ## Neighbors
 
 | Type | Move | Iteration cost |
@@ -77,7 +88,7 @@ weights are ignored (every edge contributes equally to the cover constraint).
 ```rust
 use optopus::prelude::*;
 
-let vc = VertexCover::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let vc = VertexCover::load_file("data/instances/max_cut/G1")?;
 ```
 
 ## References

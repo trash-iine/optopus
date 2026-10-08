@@ -15,6 +15,7 @@ cargo run --example max_cut
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 let mc = MaxCut::new(Graph::from_edges([
     (0, 1, 1.0),
     (0, 2, 1.0),
@@ -28,7 +29,11 @@ let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(
 ls.run(&mut state).unwrap();
 
 println!("best cut = {}", state.best_solution.objective);
+// state.best_solution.x holds the partition. docs/problems/max_cut.md lists every field.
 ```
+
+Limits other than an iteration count, such as a time budget, are in [Stop
+conditions](docs/guide/stop_conditions.md).
 
 See [`docs/quickstart.md`](docs/quickstart.md) for a longer tour, including
 file-based loading. The documentation is also available in Japanese, starting

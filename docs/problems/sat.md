@@ -25,6 +25,7 @@ Running a search and reading back the assignment and how many clauses it satisfi
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 let mut sat = Sat::new(3);
 sat.add_clause([1, -2, 3]); // (x1 ∨ ¬x2 ∨ x3); literals are signed 1-indexed
 sat.add_clause([-1, 2]);
@@ -47,6 +48,14 @@ for (i, &v) in sol.x.iter().enumerate() {
 [`SatSolution`](../api/optopus/problem/sat/struct.SatSolution.html) carries
 the assignment `x` from the definition above (`x ∈ {0,1}^n`), and 
 `n_satisfied`, which is `Σ_{k=1}^{m} [C_k(x)=true]`.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[i]` is the truth value of DIMACS variable `i + 1` |
+| `n_satisfied` | `usize` | the number of satisfied clauses, the objective |
+| `gain` | `Vec<i64>` | `gain[i]` is the change in satisfied clauses flipping `x[i]` would make, positive improves |
+
+DIMACS literals are 1-indexed and `x` is 0-indexed, so variable `v` of the file is `x[v - 1]`. There is no `objective` field, `n_satisfied` is the value being maximized.
 
 ## Neighbors
 
@@ -81,7 +90,7 @@ p cnf N M
 ```rust
 use optopus::prelude::*;
 
-let sat = Sat::load_file("data/instances/sat/example.cnf")?;
+let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 ```
 
 ## References

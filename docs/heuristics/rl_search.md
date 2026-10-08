@@ -55,6 +55,9 @@ ReinforcementLearningSearch::<N>::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 `N` must satisfy `MoveToNeighbor<P> + Evaluate + Clone`.
 
 `max_candidates`: if set, reservoir-samples this many moves from the lazy

@@ -88,6 +88,9 @@ PopulationAnnealing::<P, N>::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 Panics if `population_size < 2`, `initial_beta <= 0`, `delta_beta <= 0`, or
 `sweeps_per_step == 0`. `with_sweep_length` panics on `0`.
 

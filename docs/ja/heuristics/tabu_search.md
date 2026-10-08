@@ -30,6 +30,8 @@ TabuSearch::<N>::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `N` は `MoveToNeighbor<P> + Clone + EnabledTabu + Rankable` を満たす必要があります。
 
 `tabu_tenure.0 > tabu_tenure.1` なら panic します。

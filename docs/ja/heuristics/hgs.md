@@ -105,6 +105,8 @@ HybridGeneticSearchForVrp::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 妥当な既定値は `μ = 25`、`λ = 40`、`Γ = 20`、`target_feasible = 0.2`、
 `restart_generations = Some(20_000)` です。
 

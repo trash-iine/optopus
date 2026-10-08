@@ -20,6 +20,7 @@ Running a search and reading back the partition it found:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]);
 let mut state = SearchState::new(&mc);
 LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10_000))
@@ -40,8 +41,15 @@ duplicate edges, the last write wins.
 ## Solution
 
 [`MaxCutSolution`](../api/optopus/problem/max_cut/struct.MaxCutSolution.html)
-represents the partition from the definition above: `x[v]` is the side
-(`false`/`true`) vertex `v`.
+represents the partition from the definition above.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[v]` is the side of vertex `v` |
+| `objective` | `f32` | the cut weight |
+| `gain` | `Vec<f32>` | `gain[v]` is the change in cut weight flipping `v` would make |
+
+`MaxCut::load_file` numbers vertices from 0, so vertex `k` of the 1-indexed file is `x[k - 1]`, and `x.len()` is the `N` of its header.
 
 ## Neighbors
 
@@ -60,7 +68,7 @@ represents the partition from the definition above: `x[v]` is the side
 
 ## File format
 
-`Graph::load_from_file` expects one header line followed by edge lines, with
+`MaxCut::load_file` expects one header line followed by edge lines, with
 1-indexed vertices:
 
 ```text
@@ -77,7 +85,7 @@ i j w
 ```rust
 use optopus::prelude::*;
 
-let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 ```
 
 ## Instances with a known optimum

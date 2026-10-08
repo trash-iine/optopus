@@ -68,6 +68,9 @@ LinKernighanHelsgaunForTsp::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 Defaults: `num_neighbors = 5`, `max_depth = 5`.
 
 `clear()` drops the local-optimum flag that `is_done` reads, so a second `run`

@@ -99,6 +99,10 @@ where
   戦略に応じて `max_by`、`find`、
   [`filter_best`](../../api/optopus/trait_defs/fn.filter_best.html)、`.choose(&mut rng)` などと組み合わせます。
 
+state のフィールドは公開されています。`state.instance` が問題、`state.solution` が現在の解、`state.best_solution` がこれまでの最良解、
+`state.initial_solution` が実行を始めたときの解で、`state.iteration` と `state.best_iteration` が反復を数えます。
+各解の `objective` などのフィールドは問題ごとのページに、各フィールドがいつ変わるかは [SearchState](../search_state.md) にあります。
+
 ## 差分で move を受理する { #accepting-a-move-by-its-delta }
 
 Simulated Annealing、Late Acceptance、しきい値型の規則は近傍を走査しません。

@@ -371,12 +371,10 @@ impl Graph {
     /// ```no_run
     /// use optopus::building_blocks::instance::Graph;
     ///
-    /// let g = Graph::load_from_file("data/instances/max_cut/G1").unwrap();
+    /// let g = Graph::load_file("data/instances/max_cut/G1").unwrap();
     /// println!("{g}");
     /// ```
-    pub fn load_from_file(
-        path: impl AsRef<std::path::Path>,
-    ) -> Result<Self, crate::error::OptError> {
+    pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
         use crate::building_blocks::instance::InstanceLines;
 
         let mut lines = InstanceLines::open(path)?;
@@ -438,7 +436,7 @@ impl Graph {
     }
 
     /// Writes the graph to `path` in the format read by
-    /// [`load_from_file`](Self::load_from_file): the header `N M` followed by
+    /// [`load_file`](Self::load_file): the header `N M` followed by
     /// one `i j w` line per edge with 1-based vertex indices.
     ///
     /// The header `N` is [`len`](Self::len), the graph's vertex index space, so
@@ -592,7 +590,7 @@ mod tests {
 
         let path = temp_path("roundtrip");
         g.write_to_file(&path).unwrap();
-        let loaded = Graph::load_from_file(&path).unwrap();
+        let loaded = Graph::load_file(&path).unwrap();
         let _ = std::fs::remove_file(&path);
 
         assert_eq!(edge_set(&g), edge_set(&loaded));
@@ -604,7 +602,7 @@ mod tests {
         let g = Graph::from_edges([(0, 1, 0.5), (1, 2, -1.25)]);
         let path = temp_path("frac");
         g.write_to_file(&path).unwrap();
-        let loaded = Graph::load_from_file(&path).unwrap();
+        let loaded = Graph::load_file(&path).unwrap();
         let _ = std::fs::remove_file(&path);
 
         assert_eq!(edge_set(&g), edge_set(&loaded));
@@ -615,7 +613,7 @@ mod tests {
     #[test]
     fn test_load_rejects_vertex_out_of_range() {
         let path = write_temp_file("oob", "3 2\n1 2 1.0\n5 6 1.0\n");
-        let result = Graph::load_from_file(&path);
+        let result = Graph::load_file(&path);
         let _ = std::fs::remove_file(&path);
         let err = result.expect_err("out-of-range vertex must be rejected");
         assert!(err.to_string().contains("exceeds vertex count"), "{err}");
@@ -624,7 +622,7 @@ mod tests {
     #[test]
     fn test_load_rejects_duplicate_edge() {
         let path = write_temp_file("dup", "3 3\n1 2 1.0\n2 3 1.0\n1 2 2.0\n");
-        let result = Graph::load_from_file(&path);
+        let result = Graph::load_file(&path);
         let _ = std::fs::remove_file(&path);
         let err = result.expect_err("duplicate edge must be rejected");
         assert!(err.to_string().contains("duplicate edge"), "{err}");
@@ -633,7 +631,7 @@ mod tests {
     #[test]
     fn test_load_rejects_malformed_weight() {
         let path = write_temp_file("badw", "2 1\n1 2 abc\n");
-        let result = Graph::load_from_file(&path);
+        let result = Graph::load_file(&path);
         let _ = std::fs::remove_file(&path);
         let err = result.expect_err("malformed weight must be rejected");
         assert!(err.to_string().contains("edge weight"), "{err}");
@@ -642,7 +640,7 @@ mod tests {
     #[test]
     fn test_load_defaults_missing_weight_to_one() {
         let path = write_temp_file("defw", "2 1\n1 2\n");
-        let result = Graph::load_from_file(&path);
+        let result = Graph::load_file(&path);
         let _ = std::fs::remove_file(&path);
         let g = result.expect("missing weight defaults to 1.0");
         assert_eq!(g.get_weight(0, 1), 1.0);

@@ -25,6 +25,10 @@ StopCondition::iterations(1_000_000)
 - [`StopCondition::iterations`](../../api/optopus/heuristic/struct.StopCondition.html#method.iterations) 
 - [`StopCondition::duration`](../../api/optopus/heuristic/struct.StopCondition.html#method.duration) 
 - [`StopCondition::failed_updates`](../../api/optopus/heuristic/struct.StopCondition.html#method.failed_updates)
+- [`with_iterations`](../../api/optopus/heuristic/struct.StopCondition.html#method.with_iterations)、
+  [`with_duration`](../../api/optopus/heuristic/struct.StopCondition.html#method.with_duration)、
+  [`with_failed_updates`](../../api/optopus/heuristic/struct.StopCondition.html#method.with_failed_updates)
+  は、どれにでも基準を一つ足します
 
 | 基準 | 意味 |
 |---|---|
@@ -34,6 +38,18 @@ StopCondition::iterations(1_000_000)
 
 `new(max_iteration, max_duration, max_failed_update)` を使えば、`Option` のフィールドから直接
 `StopCondition` を作ることもできます (設定ファイルからデシリアライズするときに便利です)。
+
+## ベンチマーク設定では { #in-a-benchmark-config }
+
+CLI ランナーは同じ三つの上限を `[heuristics.stop_condition]` テーブルとして受け取ります。
+どの組み合わせでもよく、どれか一つに達したら止まるのも同じです。
+このテーブルはほかの共通フィールドと一緒に [ベンチマーク](benchmarking.md#fields-shared-by-every-kind) で説明しています。
+
+| ビルダー | TOML のフィールド |
+|---|---|
+| `StopCondition::iterations(n)` | `max_iteration = n` |
+| `StopCondition::duration(Duration::from_secs_f64(s))` | `max_duration_secs = s` |
+| `StopCondition::failed_updates(n)` | `max_failed_update = n` |
 
 ## サブラン { #sub-runs }
 

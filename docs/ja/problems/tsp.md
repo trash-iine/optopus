@@ -22,6 +22,7 @@ minimize  Σ_{k=1}^{n} d(π(k), π(k mod n + 1))    (π a permutation of the n c
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let tsp = Tsp::load_file("data/instances/tsp/berlin52.tsp")?;
 let tsp = Tsp::new(
     "demo".to_string(),
     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],  // 正方形の配置
@@ -75,6 +76,13 @@ let tsp = Tsp::from_distance_matrix("triangle".to_string(), matrix)?;
 [`TspSolution`](../../api/optopus/problem/tsp/struct.TspSolution.html) は
 上の定義の置換 `π` を `tour` として (`tour[k]` は `π(k)`、つまり `k` 番目に訪れる都市)、
 巡回路の長さ `Σ d(π(k), π(k+1))` を `objective` として持ちます。
+
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `tour` | `Vec<usize>` | 訪問順に並べた都市。各都市は一度ずつで、`tour[0]` へ戻る辺は暗黙 |
+| `objective` | `f64` | 巡回路の長さ。小さいほど良い |
+
+`Tsp::load_file` は都市を `NODE_COORD_SECTION` の行の順に 0 から数えます。行に書かれた id は見ないので、都市 `k` は `k + 1` 行目の座標です。
 
 ## 近傍 { #neighbors }
 

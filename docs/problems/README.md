@@ -3,15 +3,16 @@
 **API:** [`optopus::problem`](../api/optopus/problem/index.html)
 
 Each built-in problem implements `ProblemTrait` plus enough additional traits
-to plug into every relevant heuristic.
+to plug into every relevant heuristic. Its moves run under every base
+heuristic, as the [Heuristics](../heuristics/README.md#base) page lists.
 
 | Problem | Direction | Solution | Neighbors | Crossover | Loader |
 |---|---|---|---|---|---|
-| [MaxCut](max_cut.md) | Maximize | `MaxCutSolution` | Flip / Swap | `MaxCutUniformCrossover` | `Graph::load_from_file` |
+| [MaxCut](max_cut.md) | Maximize | `MaxCutSolution` | Flip / Swap | `MaxCutUniformCrossover` | `MaxCut::load_file` |
 | [QUBO](qubo.md) | Minimize | `QuboSolution` | Flip / Swap | `QuboUniformCrossover` | `Qubo::load_file` |
 | [MaxSAT](sat.md) | Maximize | `SatSolution` | Flip / Swap | `SatUniformCrossover` | `Sat::load_file` (DIMACS CNF) |
 | [TSP](tsp.md) | Minimize | `TspSolution` | TwoOpt / Relocate | `TspOrderCrossover` | `Tsp::load_file` (TSPLIB) |
-| [Vertex Cover](vertex_cover.md) | Minimize | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `Graph::load_from_file` |
+| [Vertex Cover](vertex_cover.md) | Minimize | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `VertexCover::load_file` |
 | [Job Shop Scheduling](job_shop_scheduling.md) | Minimize | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
 | [VRP](vrp.md) | Minimize | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB, or a TOML fleet file) |
 | [Graph Coloring](graph_coloring.md) | Minimize | `GraphColoringSolution` | Flip (recolor) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |

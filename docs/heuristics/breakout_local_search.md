@@ -135,6 +135,9 @@ bls_for_max_cut(
 ) -> BreakoutLocalSearchForMaxCut
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 Another problem builds one directly, supplying its own descent and schedule:
 
 ```rust

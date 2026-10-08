@@ -73,6 +73,9 @@ Sequential::<P>::new(
 seq.push_heuristic(Box::new(...));
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 The outer `stop_condition` is checked between sub-heuristics; the inner
 heuristics each carry their own stop condition. The cycle re-runs from the top
 once it reaches the end of the list.

@@ -127,6 +127,9 @@ HybridGeneticSearchForVrp::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 Reasonable defaults: `μ = 25`, `λ = 40`, `Γ = 20`, `target_feasible = 0.2`,
 `restart_generations = Some(20_000)`.
 

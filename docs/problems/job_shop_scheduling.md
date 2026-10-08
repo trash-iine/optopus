@@ -26,6 +26,7 @@ Running a search and reading back the decoded schedule:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 let inst = JobShopScheduling::new(
     "tiny".to_string(),
     /* n_machines = */ 2,
@@ -57,6 +58,14 @@ carries that encoding as `operations`, the per-position decoded completion
 times as `completion_times` (so `completion_times[pos]` is the `C_{j,k}` of
 the operation at position `pos`), and `objective`, which is `max_j C_{j,last}`,
 the makespan being minimized. 
+
+| Field | Type | Meaning |
+|---|---|---|
+| `operations` | `Vec<usize>` | the job index at each position of the encoding |
+| `completion_times` | `Vec<u32>` | `completion_times[pos]` is when the operation at `pos` finishes |
+| `objective` | `u32` | the makespan, lower is better |
+
+`JobShopScheduling::load_file` numbers jobs from 0 by their row in the file and keeps the machine numbers as written, which are 0-indexed.
 
 ## Neighbors
 

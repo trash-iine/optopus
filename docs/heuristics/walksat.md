@@ -84,6 +84,9 @@ WalkSatForSat::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 Panics if `noise` is outside `[0.0, 1.0]`.
 
 `clear()` drops the scratch and resets the working noise to `noise`, so a fresh

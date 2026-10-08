@@ -31,6 +31,7 @@ objective(c) = colors_used(c) + penalty_weight · conflicts(c)
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let gc = GraphColoring::load_file("data/instances/graph_coloring/example.txt")?;
 let gc = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&gc);
 LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(10_000))
@@ -48,6 +49,15 @@ println!("coloring = {:?}", sol.colors); // colors[v] は頂点 v の色
 は割り当て `colors` (`colors[v]` は `0..k` の範囲の `c_v`)、上で定義したペナルティ付きの `objective`、
 空でない色クラスの数 `colors_used`、制約違反の数 `conflicts` を持ちます。さらに頂点ごとに、各色の隣接頂点がいくつあるか
 (TabuCol の Γ 行列) をキャッシュしていて、これによってどの move の gain も O(1) で求まります。
+
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `colors` | `Vec<usize>` | `colors[v]` は頂点 `v` の色で、`0..k` の範囲 |
+| `colors_used` | `usize` | 空でない色クラスの数 |
+| `conflicts` | `usize` | 両端が同じ色の辺の数。正しい彩色なら `0` |
+| `objective` | `i64` | `colors_used + penalty_weight * conflicts`。小さいほど良い |
+
+`GraphColoring::load_file` は MaxCut のグラフ形式を読み、頂点を 0 から数え直すので、1 始まりのファイルの頂点 `k` は `colors[k - 1]` です。
 
 ## 近傍 { #neighbors }
 

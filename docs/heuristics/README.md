@@ -7,6 +7,9 @@ Every heuristic implements `Heuristic<P>` (`clear` / `is_done` / `run_once` /
 neighbor type, so any built-in or custom problem that satisfies those traits
 plugs straight in.
 
+Every heuristic takes a `StopCondition`, see [Stop
+conditions](../guide/stop_conditions.md).
+
 ## Base
 
 | Algorithm | Config `kind` | Required traits on neighbor | Notes |
@@ -18,6 +21,12 @@ plugs straight in.
 | [RandomWalk](random_walk.md) | `RandomWalk` | `MoveToNeighbor`, `Rankable` | Uniform random move; useful as perturbation. |
 | [BeamSearch](beam_search.md) | `BeamSearch` | `MoveToNeighbor`, `Rankable` | Maintains top-`k` candidates. |
 | [ReinforcementLearningSearch](rl_search.md) | `ReinforcementLearningSearch` | `MoveToNeighbor`, `Evaluate<f64>`, `Clone` | Online REINFORCE over move features. |
+
+Every built-in move, of every problem on the [Problems](../problems/README.md)
+page, implements all of the traits in this table, so each base heuristic runs on
+every built-in problem. A move of your own needs only the traits of the
+heuristics you run it with, see [Defining a Custom
+Problem](../guide/custom_problem.md#which-heuristic-needs-what).
 
 ## Meta
 

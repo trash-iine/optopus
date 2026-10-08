@@ -5,6 +5,8 @@
 どのヒューリスティクスも `Heuristic<P>` (`clear` / `is_done` / `run_once` / `run`) を実装しています。
 ヒューリスティクスは問題に依存しません。近傍の型にトレイトを要求するだけなので、それを満たす組み込みの問題や独自の問題はそのまま組み込めます。
 
+どのヒューリスティクスも `StopCondition` を取ります。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 ## 基本 { #base }
 
 | アルゴリズム | 設定の `kind` | 近傍に必要なトレイト | 補足 |
@@ -16,6 +18,9 @@
 | [RandomWalk](random_walk.md) | `RandomWalk` | `MoveToNeighbor`, `Rankable` | 一様ランダムな move。摂動として便利。 |
 | [BeamSearch](beam_search.md) | `BeamSearch` | `MoveToNeighbor`, `Rankable` | 上位 `k` 個の候補を保持する。 |
 | [ReinforcementLearningSearch](rl_search.md) | `ReinforcementLearningSearch` | `MoveToNeighbor`, `Evaluate<f64>`, `Clone` | move の特徴量に対するオンライン REINFORCE。 |
+
+[問題](../problems/README.md) のページにあるどの問題の組み込み move も、この表のトレイトをすべて実装しているので、基本のヒューリスティクスはどれも組み込みのすべての問題で動きます。
+独自の move に要るのは、それを動かすヒューリスティクスのトレイトだけです。[独自の問題を定義する](../guide/custom_problem.md#which-heuristic-needs-what) を参照してください。
 
 ## メタ { #meta }
 

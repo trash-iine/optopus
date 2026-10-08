@@ -50,6 +50,8 @@ ReinforcementLearningSearch::<N>::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `N` は `MoveToNeighbor<P> + Evaluate + Clone` を満たす必要があります。
 
 `max_candidates` を設定すると、評価する前に遅延的な近傍イテレータからこの数だけの move をリザーバサンプリングします。

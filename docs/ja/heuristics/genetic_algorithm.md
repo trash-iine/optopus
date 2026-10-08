@@ -57,6 +57,8 @@ GeneticAlgorithm::<P, C>::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `C: Crossover<P>` と `P::Solution: Distance` が必要です (型の境界が `Heuristic<P>` の impl にあるので、
 `Tournament` 選択を使う場合でも距離の impl は必要です)。
 

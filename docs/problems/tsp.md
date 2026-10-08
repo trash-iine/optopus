@@ -27,6 +27,7 @@ Running a search and reading back the visiting order it found:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let tsp = Tsp::load_file("data/instances/tsp/berlin52.tsp")?;
 let tsp = Tsp::new(
     "demo".to_string(),
     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],  // square placement
@@ -87,6 +88,13 @@ let tsp = Tsp::from_distance_matrix("triangle".to_string(), matrix)?;
 the permutation `π` from the definition above as `tour` (`tour[k]` is
 `π(k)`, the `k`-th city visited), and the tour length `objective`, 
 which is `Σ d(π(k), π(k+1))`.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `tour` | `Vec<usize>` | the cities in visiting order, each once, the return to `tour[0]` left implicit |
+| `objective` | `f64` | the tour length, lower is better |
+
+`Tsp::load_file` numbers cities from 0 in the order of the `NODE_COORD_SECTION` lines, whatever id a line carries, so city `k` is the `(k + 1)`-th coordinate line.
 
 ## Neighbors
 

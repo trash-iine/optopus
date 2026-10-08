@@ -36,6 +36,7 @@ Running a search and reading back the coloring:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let gc = GraphColoring::load_file("data/instances/graph_coloring/example.txt")?;
 let gc = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&gc);
 LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(10_000))
@@ -55,6 +56,15 @@ penalty-augmented `objective` defined above, `colors_used`, the number of
 non-empty color classes, and `conflicts`, the constraint-violation count. It
 also caches, per vertex, how many neighbors carry each color (the Γ matrix
 of TabuCol), which is what makes every move's gain O(1).
+
+| Field | Type | Meaning |
+|---|---|---|
+| `colors` | `Vec<usize>` | `colors[v]` is the color of vertex `v`, in `0..k` |
+| `colors_used` | `usize` | the number of non-empty color classes |
+| `conflicts` | `usize` | edges whose ends share a color, `0` when proper |
+| `objective` | `i64` | `colors_used + penalty_weight * conflicts`, lower is better |
+
+`GraphColoring::load_file` reads the MaxCut graph format and numbers vertices from 0, so vertex `k` of the 1-indexed file is `colors[k - 1]`.
 
 ## Neighbors
 

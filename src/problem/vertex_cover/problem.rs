@@ -50,12 +50,12 @@ impl VertexCover {
 
     /// Loads a [`VertexCover`] instance from a file in the `N M / i j w` format.
     ///
-    /// Wraps [`Graph::load_from_file`] and constructs the problem with
+    /// Wraps [`Graph::load_file`] and constructs the problem with
     /// [`VertexCover::new`]. Edge weights in the file are loaded into the
     /// graph but ignored by the vertex-cover objective (which counts
     /// uncovered edges, not their weights).
     pub fn load_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::OptError> {
-        Graph::load_from_file(path).map(Self::new)
+        Graph::load_file(path).map(Self::new)
     }
 
     /// Returns the penalty weight applied to each uncovered edge (`graph.len() + 1`).

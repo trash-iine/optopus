@@ -25,6 +25,7 @@ Running a search and reading back the minimizing assignment:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let qubo = Qubo::load_file("data/instances/qubo/bqp/bqp100_1.txt")?;
 let qubo = Qubo::from_entries([
     (0, 0, -1), // diagonal = linear term
     (0, 1, 1),
@@ -49,6 +50,14 @@ incrementally.
 
 [`QuboSolution`](../api/optopus/problem/qubo/struct.QuboSolution.html) carries
 the assignment `x` from the definition above (`x ∈ {0,1}^n`).
+
+| Field | Type | Meaning |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[i]` is the value of variable `i` |
+| `objective` | `i32` | the energy `xᵀQx`, lower is better |
+| `gain` | `Vec<i32>` | `gain[i]` is the change in energy flipping `i` would make, negative improves |
+
+`Qubo::load_file` numbers variables from 0, so variable `i` of the 1-indexed file is `x[i - 1]`.
 
 ## Neighbors
 
@@ -81,7 +90,7 @@ i j v
 ```rust
 use optopus::prelude::*;
 
-let qubo = Qubo::load_file("data/instances/qubo/sample.qubo")?;
+let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 ```
 
 ## References

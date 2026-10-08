@@ -18,6 +18,7 @@ maximize  Σ_{(i,j)∈E} w_ij · [x_i ≠ x_j]        (x ∈ {0,1}^|V|)
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]);
 let mut state = SearchState::new(&mc);
 LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10_000))
@@ -37,7 +38,15 @@ for (v, &side) in sol.x.iter().enumerate() {
 ## 解 { #solution }
 
 [`MaxCutSolution`](../../api/optopus/problem/max_cut/struct.MaxCutSolution.html)
-は上の定義の分割を表します。`x[v]` は頂点 `v` の側 (`false`/`true`) です。
+は上の定義の分割を表します。
+
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[v]` は頂点 `v` の側 |
+| `objective` | `f32` | カットの重み |
+| `gain` | `Vec<f32>` | `gain[v]` は `v` を反転したときのカットの重みの変化 |
+
+`MaxCut::load_file` は頂点を 0 から数え直すので、1 始まりのファイルの頂点 `k` は `x[k - 1]` で、`x.len()` はヘッダの `N` です。
 
 ## 近傍 { #neighbors }
 
@@ -55,7 +64,7 @@ for (v, &side) in sol.x.iter().enumerate() {
 
 ## ファイル形式 { #file-format }
 
-`Graph::load_from_file` は、ヘッダ行一つとそれに続く辺の行を受け取ります。頂点は 1 始まりです。
+`MaxCut::load_file` は、ヘッダ行一つとそれに続く辺の行を受け取ります。頂点は 1 始まりです。
 
 ```text
 N M
@@ -71,7 +80,7 @@ i j w
 ```rust
 use optopus::prelude::*;
 
-let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 ```
 
 ## 最適値が分かっているインスタンス { #instances-with-a-known-optimum }

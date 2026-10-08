@@ -101,7 +101,7 @@ needs 26 bins for `X-n101-k25`.
 | GSET | `G1`..`G81` (varies, 73 present) | 800–20000 | [GSET](https://web.stanford.edu/~yyye/yyye/Gset/), Y. Ye / Stanford |
 | Ad-hoc | `sample.txt`, `test_data.txt` | tiny | repo-local |
 
-VertexCover reuses MaxCut graph files via `Graph::load_from_file`
+VertexCover reuses MaxCut graph files via `VertexCover::load_file`
 (see `src/benchmark/problems.rs`).
 
 ### Generated locally — not bundled, not committed

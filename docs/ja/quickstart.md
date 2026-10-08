@@ -42,6 +42,8 @@ ls.run(&mut state).unwrap();
 println!("best cut = {}", state.best_solution.objective);
 ```
 
+時間など反復回数以外の上限は [停止条件](guide/stop_conditions.md) にあります。
+
 ## ファイルからインスタンスを読み込む { #loading-instances-from-files }
 
 各問題には `Result<Self, optopus::error::OptError>` を返すローダが付いています。
@@ -50,13 +52,13 @@ println!("best cut = {}", state.best_solution.objective);
 use optopus::prelude::*;
 
 // MaxCut と Vertex Cover は共通の Graph ローダを使う (形式は `N M / i j w`)。
-let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 
 // QUBO ローダ (形式は `N M / i j v`、1 始まり):
 let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 
 // MaxSAT ローダ (DIMACS CNF):
-let sat = Sat::load_file("data/instances/sat/example.cnf")?;
+let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 
 // TSP ローダ (TSPLIB):
 let tsp = Tsp::load_file("data/instances/tsp/burma14.tsp")?;

@@ -102,6 +102,8 @@ bls_for_max_cut(
 ) -> BreakoutLocalSearchForMaxCut
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 ほかの問題では、自前の降下とスケジュールを与えて直接作ります。
 
 ```rust

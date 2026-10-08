@@ -98,6 +98,8 @@ BranchAndBound::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `P: BranchSpace`、`R: Relaxation<P>` です。
 
 ## 振る舞い { #behavior }

@@ -58,6 +58,9 @@ GeneticAlgorithm::<P, C>::new(
 ) -> Self
 ```
 
+`stop_condition` decides when the run ends, see [Stop
+conditions](../guide/stop_conditions.md).
+
 `C: Crossover<P>` and `P::Solution: Distance` (the distance impl is required
 even when using `Tournament` selection because the type bound is on the
 `Heuristic<P>` impl).

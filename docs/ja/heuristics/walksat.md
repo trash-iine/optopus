@@ -72,6 +72,8 @@ WalkSatForSat::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `noise` が `[0.0, 1.0]` の外にあれば panic します。
 
 `clear()` は作業用の状態を捨て、作業中のノイズを `noise` に戻すので、新しいエピソードはまっさらな状態で始まります。

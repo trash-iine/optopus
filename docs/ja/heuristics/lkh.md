@@ -62,6 +62,8 @@ LinKernighanHelsgaunForTsp::new(
 ) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 既定値は `num_neighbors = 5`、`max_depth = 5` です。
 
 `clear()` は `is_done` が読む局所最適のフラグを下ろすので、二回目の `run` はすぐに終了を報告せずもう一度探索します。

@@ -31,6 +31,8 @@ println!("cut weight = {}", state.best_solution.objective);
 LocalSearch::<N>::new(stop_condition: StopCondition) -> Self
 ```
 
+`stop_condition` は実行を終える条件です。[停止条件](../guide/stop_conditions.md) を参照してください。
+
 `N` は `MoveToNeighbor<P> + Rankable` を満たす必要があります。
 
 `clear()` は `is_done` が読む局所最適のフラグを下ろします。そのため二回目の `run` はすぐに終了を報告せず、もう一度登ります。
