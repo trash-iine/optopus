@@ -1,7 +1,8 @@
 //! Example of defining your own optimization problem.
 //!
 //! Implements ProblemTrait / MoveToNeighbor / Evaluate and solves the
-//! problem with the built-in LocalSearch.
+//! problem with the built-in LocalSearch, then adds EnabledTabu so that
+//! TabuSearch runs on it too.
 //!
 //! The problem here is deliberately simple: maximize the number of `true`
 //! bits in a binary vector (OneMax).
@@ -11,7 +12,12 @@
 //! cargo run --example custom_problem
 //! ```
 
+use optopus::building_blocks::search::{TabuKey, TabuMemory};
 use optopus::prelude::*;
+// optopus re-exports the rand it is built against. The trait signatures below
+// name rand types, and this keeps them the same version without a dependency.
+use optopus::rand;
+use optopus::rand::rngs::SmallRng;
 
 // ─── Problem definition ─────────────────────────────────────
 /// Maximize the number of bits set to 1 among `n` binary variables (OneMax).
@@ -51,6 +57,8 @@ impl ProblemTrait for OneMaxProblem {
 }
 
 // ─── Neighborhood definition (single-bit flip) ──────────────
+/// `Clone` is what `TabuSearch` asks of a move besides `EnabledTabu`.
+#[derive(Clone)]
 struct FlipMove {
     index: usize,
     /// Change in objective this flip would cause, cached at construction time.
@@ -84,6 +92,13 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
         (0..prob.n).map(move |i| FlipMove::new(prob, sol, i))
     }
 
+    /// Hands this move's tabu policy to the search state. Without this line
+    /// the `EnabledTabu` impl below still compiles, and `TabuSearch` runs with
+    /// no tabu list at all.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+
     fn move_to_be_better_than(
         &self,
         prob: &OneMaxProblem,
@@ -108,6 +123,20 @@ impl Evaluate for FlipMove {
     }
 }
 
+// ─── Tabu policy ────────────────────────────────────────────
+impl EnabledTabu for FlipMove {
+    /// The flip is allowed once bit `index` is no longer forbidden.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(TabuKey::DenseVar(self.index), iteration)
+    }
+
+    /// Applying the flip forbids bit `index` for a tenure the memory draws
+    /// from the range given to `TabuSearch::new`.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(TabuKey::DenseVar(self.index), iteration, rng);
+    }
+}
+
 // ─── Main ───────────────────────────────────────────────────
 fn main() {
     let prob = OneMaxProblem { n: 20 };
@@ -117,7 +146,18 @@ fn main() {
     ls.run(&mut state).unwrap();
 
     println!(
-        "best = {:?}  (objective = {}/{})",
+        "[LocalSearch] best = {:?}  (objective = {}/{})",
+        state.best_solution.bits,
+        state.best_solution.objective(),
+        prob.n
+    );
+
+    let mut state = SearchState::new(&prob);
+    let mut ts = TabuSearch::<FlipMove>::new(StopCondition::iterations(10_000), (2, 5));
+    ts.run(&mut state).unwrap();
+
+    println!(
+        "[TabuSearch]  best = {:?}  (objective = {}/{})",
         state.best_solution.bits,
         state.best_solution.objective(),
         prob.n

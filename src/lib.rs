@@ -53,3 +53,13 @@ pub mod prelude;
 pub mod problem;
 pub mod search_state;
 pub mod trait_defs;
+
+/// The `rand` this crate is built against.
+///
+/// [`ProblemTrait::new_solution`](trait_defs::ProblemTrait::new_solution) takes
+/// an `impl rand::Rng` and
+/// [`EnabledTabu::add_to_tabu_map`](trait_defs::EnabledTabu::add_to_tabu_map) a
+/// `rand::rngs::SmallRng`, so a problem defined outside the crate names `rand`
+/// types. `use optopus::rand;` brings the same version into scope, with no
+/// dependency of its own that could drift to an incompatible one.
+pub use rand;

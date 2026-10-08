@@ -103,6 +103,51 @@ Key API touchpoints:
   [`filter_best`](../api/optopus/trait_defs/fn.filter_best.html), `.choose(&mut rng)` etc. as your
   strategy demands.
 
+## Accepting a move by its delta
+
+Simulated annealing, late acceptance and threshold rules do not scan the
+neighborhood. They draw one move and decide from the change it would make. The
+move reports that change through its own `Evaluate` impl, so such a heuristic
+asks for `Evaluate` on `N` and reads the delta without applying anything.
+
+```rust
+struct RandomDescent<N> {
+    stop_condition: StopCondition,
+    _neighbor: std::marker::PhantomData<N>,
+}
+
+impl<P, N> Heuristic<P> for RandomDescent<N>
+where
+    P: ProblemTrait,
+    N: MoveToNeighbor<P> + Evaluate,
+{
+    fn stop_condition(&self) -> &StopCondition {
+        &self.stop_condition
+    }
+
+    fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
+        let neighbor: N = state.random_neighbor("RandomDescent")?;
+        let worsening = neighbor.evaluate().minimized();
+        if worsening <= 0.0 {
+            state.apply(&neighbor)?;
+        } else {
+            state.progress_iteration();
+        }
+        Ok(())
+    }
+}
+```
+
+[`neighbor.evaluate().minimized()`](../api/optopus/trait_defs/enum.Evaluable.html#method.minimized)
+is how much applying the move would worsen the objective, with the problem's
+direction already applied. It is positive for a worse move and negative for a
+better one on a maximization problem and a minimization problem alike, so an
+acceptance rule compares it with a threshold and never asks which way the
+problem goes. Accepting goes through `state.apply`, which also counts the
+iteration and updates the best solution. Rejecting goes through
+`state.progress_iteration`. `examples/custom_heuristic.rs` runs this heuristic
+on a small MaxCut instance.
+
 ## Optional: parallel evaluation
 
 There is no parallel variant of `Heuristic` to implement. Parallelism belongs

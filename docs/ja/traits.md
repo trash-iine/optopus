@@ -11,6 +11,9 @@
 「X を動かすには何を実装すればよいか」の正式な答えは「必要とするもの」の列です。
 最後の行の `ProblemReduction` は例外で、何も使えるようにはせず、問題ではなく縮約が実装します。表の下の節を参照してください。
 
+ヒューリスティクス自身が実装するトレイト `Heuristic` はここではなくヒューリスティクスの側にあります。
+[独自のヒューリスティクスを定義する](guide/custom_heuristic.md) で扱います。
+
 ## コアトレイト一覧 { #core-trait-reference }
 
 | トレイト | 必要とするもの | 主なシグネチャ |
@@ -20,7 +23,7 @@
 | `MoveToNeighbor<P>` | すべてのヒューリスティクス | `fn iter(prob, sol) -> impl Iterator<Self> + Send`<br>`fn apply_to_solution(&self, prob, sol) -> Result<()>`<br>`fn random_neighbor(prob, sol, rng) -> Option<Self>` (既定は `iter` からのリザーバサンプリング)<br>`fn move_to_be_better_than(&self, prob, src, other) -> bool` (既定はクローンして適用)<br>`fn apply_to_iteration(&self, iter) -> u64` (既定は `iter + 1`)<br>`fn tabu_policy(&self) -> Option<&dyn EnabledTabu>` (既定は `None` で、タブー方策なし) |
 | `Rankable` (両方に実装) | `LocalSearch`、`BeamSearch`、`RandomWalk`、`TabuSearch`、および解が改善したかを問うすべてのヒューリスティクス | `fn is_better_than(&self, other: &Self) -> bool`。手では実装しません。ブランケット impl が `Evaluate` から導出し、二つの `minimized()` の値を比べます。`Evaluate` を実装しない型は、一つの数の比較ではない順序のためにこれを直接実装することもできますが、その場合 `Evaluate` とそれを必要とするすべてのヒューリスティクスを諦めることになります。 |
 | `Evaluate<T>` (move に実装) | `SimulatedAnnealing`、`BangBangSimulatedAnnealing`、`LateAcceptanceHillClimbing`、`ReinforcementLearningSearch` (最後のものは move に `Clone` も必要) | `fn evaluate(&self) -> Evaluable<T>` (既定は `T = f64`)。move を適用したときの変化量です。`Evaluable::Maximize(T)` / `Minimize(T)` が最適化の向きを持ち、`Evaluable<f64>::minimized()` がそれを適用して小さいほど良い値にします。これは差分にとっての悪化量であり、目的関数にとってのエネルギーでもあります。 |
-| `EnabledTabu` | `TabuSearch` (move に `Rankable` と `Clone` も必要) | `fn is_move_enabled(&self, tabu: &TabuMemory, iter) -> bool;`<br>`fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iter, rng: &mut SmallRng)`<br>加えて move の `MoveToNeighbor` impl に1行。`fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` |
+| `EnabledTabu` | `TabuSearch` (move に `Rankable` と `Clone` も必要) | `fn is_move_enabled(&self, tabu: &TabuMemory, iter) -> bool;`<br>`fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iter, rng: &mut SmallRng)`<br>加えて move の `MoveToNeighbor` impl に1行。`fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }`。独自の move に対する完全な impl は [タブーを付ける](guide/custom_problem.md#adding-tabu) にあります。 |
 | `Crossover<P>` | `GeneticAlgorithm` (`Distance` も必要、下を参照) | `fn crossover(&mut self, prob, sol1, sol2, rng: &mut SmallRng) -> Result<P::Solution, OptError>` (`&mut self` なので状態を持つオペレータがサブヒューリスティクスを走らせられる) |
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
 | `Distance` (`Solution` に実装) | `GeneticAlgorithm`。`ParentSelection::DistantTopK` に限らずどの選択戦略でも必要 | `fn distance(&self, other: &Self) -> usize` |

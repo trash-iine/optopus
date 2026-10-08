@@ -41,6 +41,7 @@ values with the direction applied, so there is nothing to implement.
 ```rust
 use optopus::prelude::*;
 use optopus::error::OptError;
+use optopus::rand; // the rand optopus is built against
 
 struct MyProblem { /* ... */ }
 
@@ -84,6 +85,10 @@ impl Evaluate for MyMove {
 
 `examples/custom_problem.rs` shows the cached-gain form.
 
+`new_solution` takes an `impl rand::Rng`, and optopus re-exports the `rand` it
+is built against. `use optopus::rand;` brings that version into scope, so the
+crate defining the problem needs no `rand` dependency of its own.
+
 ## Which heuristic needs what
 
 Everything below is optional, implement a row only when you want that
@@ -96,7 +101,7 @@ heuristic. Full signatures are in the
 | `Sequential`, `Iterated`, `VariableNeighborhoodSearch`, `Restart` | nothing |
 | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing` | [`Evaluate<f64>`](../traits.md#core-trait-reference) on the move |
 | `ReinforcementLearningSearch` | [`Evaluate<f64>`](../traits.md#core-trait-reference) + `Clone` on the move |
-| `TabuSearch` | [`EnabledTabu`](../traits.md#core-trait-reference) + `Clone` on the move, plus `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` in its `MoveToNeighbor` impl, that one line is what hands the policy to the [`SearchState`](../search_state.md#remembering-tabu-moves), which owns the memory |
+| `TabuSearch` | [`EnabledTabu`](../traits.md#core-trait-reference) + `Clone` on the move, plus `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` in its `MoveToNeighbor` impl, that one line is what hands the policy to the [`SearchState`](../search_state.md#remembering-tabu-moves), which owns the memory, see [Adding tabu](#adding-tabu) |
 | `GeneticAlgorithm` | [`Distance`](../traits.md#core-trait-reference) on the solution (with any parent selection, not only `DistantTopK`) plus a [`Crossover<P>`](../traits.md#core-trait-reference) impl ([`SubProblemExtractable`](../traits.md#core-trait-reference) on the problem only if you use `SubProblemBasedCrossover`) |
 | the CLI benchmark (TOML config) | all of the above |
 
@@ -106,6 +111,51 @@ factory chooses the heuristic at runtime, so it bundles the bounds
 and `ConfigurableProblem::Solution: Distance + Evaluate`). A problem you only drive from
 Rust can stop at whichever traits its heuristics need; one registered with the
 benchmark cannot register partially.
+
+## Adding tabu
+
+`TabuSearch` keeps a tabu list for a move only when the move says what applying
+it forbids. That takes three additions to the move of the skeleton, `Clone`, an
+`EnabledTabu` impl, and one method in its `MoveToNeighbor` impl. `TabuKey` and
+`TabuMemory` are search machinery that knows no problem, so they are imported
+from `optopus::building_blocks::search` rather than the prelude.
+
+```rust
+use optopus::building_blocks::search::{TabuKey, TabuMemory};
+use optopus::rand::rngs::SmallRng;
+
+#[derive(Clone)]
+struct MyMove { index: usize }
+
+impl EnabledTabu for MyMove {
+    // Allowed once the variable it touches is no longer forbidden.
+    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
+        tabu.is_enabled(TabuKey::DenseVar(self.index), iteration)
+    }
+    // Applying it forbids that variable for a tenure drawn from the range
+    // given to `TabuSearch::new`.
+    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
+        tabu.forbid(TabuKey::DenseVar(self.index), iteration, rng);
+    }
+}
+
+impl MoveToNeighbor<MyProblem> for MyMove {
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        Some(self)
+    }
+    // iter, apply_to_solution and move_to_be_better_than as in the skeleton
+}
+```
+
+**Without `tabu_policy` the `EnabledTabu` impl still compiles, and `TabuSearch`
+runs with no tabu list at all.**
+
+`TabuKey::DenseVar(i)` suits an index bounded by the instance, such as a
+variable. A move over two variables forbids a `TabuKey::Pair(i, j)`, and an
+index of any size is a `TabuKey::Var(i)`. The
+[`TabuKey`](../api/optopus/building_blocks/search/enum.TabuKey.html) rustdoc
+lists every shape. `examples/custom_problem.rs` runs `TabuSearch` with this
+policy on its OneMax problem.
 
 ## Performance note
 

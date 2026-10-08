@@ -16,6 +16,9 @@ I implement to run X". The last row, `ProblemReduction`, is the exception, it
 unlocks nothing and is implemented by a reduction rather than by a problem; see
 the section below the table.
 
+The trait a heuristic implements, `Heuristic`, lives with the heuristics rather
+than here. [Defining a Custom Heuristic](guide/custom_heuristic.md) covers it.
+
 ## Core trait reference
 
 | Trait | Required by | Key signature |
@@ -25,7 +28,7 @@ the section below the table.
 | `MoveToNeighbor<P>` | every heuristic | `fn iter(prob, sol) -> impl Iterator<Self> + Send`<br>`fn apply_to_solution(&self, prob, sol) -> Result<()>`<br>`fn random_neighbor(prob, sol, rng) -> Option<Self>` (default: reservoir-sample `iter`)<br>`fn move_to_be_better_than(&self, prob, src, other) -> bool` (default: clone + apply)<br>`fn apply_to_iteration(&self, iter) -> u64` (default: `iter + 1`)<br>`fn tabu_policy(&self) -> Option<&dyn EnabledTabu>` (default: `None`, no tabu policy) |
 | `Rankable` (on both) | `LocalSearch`, `BeamSearch`, `RandomWalk`, `TabuSearch`, and every heuristic that asks whether a solution improved | `fn is_better_than(&self, other: &Self) -> bool`. Not implemented by hand. A blanket impl derives it from `Evaluate`, comparing the two `minimized()` values. A type that does not implement `Evaluate` may implement this directly instead, for an order that is not a comparison of one number, and gives up `Evaluate` and every heuristic that needs it. |
 | `Evaluate<T>` (on the move) | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing`, `ReinforcementLearningSearch` (the last also needs `Clone` on the move) | `fn evaluate(&self) -> Evaluable<T>` (default `T = f64`), the change applying the move would make. `Evaluable::Maximize(T)` / `Minimize(T)` carries the optimization direction, and `Evaluable<f64>::minimized()` applies it so that lower is better, which is both the worsening amount of a delta and the energy of an objective. |
-| `EnabledTabu` | `TabuSearch` (together with `Rankable` and `Clone` on the move) | `fn is_move_enabled(&self, tabu: &TabuMemory, iter) -> bool;`<br>`fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iter, rng: &mut SmallRng)`<br>plus one line in the move's `MoveToNeighbor` impl: `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` |
+| `EnabledTabu` | `TabuSearch` (together with `Rankable` and `Clone` on the move) | `fn is_move_enabled(&self, tabu: &TabuMemory, iter) -> bool;`<br>`fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iter, rng: &mut SmallRng)`<br>plus one line in the move's `MoveToNeighbor` impl: `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }`. A complete impl for a move of your own is in [Adding tabu](guide/custom_problem.md#adding-tabu). |
 | `Crossover<P>` | `GeneticAlgorithm` (which also requires `Distance`, see below) | `fn crossover(&mut self, prob, sol1, sol2, rng: &mut SmallRng) -> Result<P::Solution, OptError>` (`&mut self` lets stateful operators run a sub-heuristic) |
 | `SubProblemExtractable` | `SubProblemBasedCrossover` | `fn extract_sub_problem(&self, sol1, sol2) -> Self;`<br>`fn lift_solution(&self, sol1, sol2, sub_solution) -> Self::Solution` |
 | `Distance` (on `Solution`) | `GeneticAlgorithm`, any selection strategy, not only `ParentSelection::DistantTopK` | `fn distance(&self, other: &Self) -> usize` |
