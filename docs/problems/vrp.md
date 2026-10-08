@@ -160,12 +160,6 @@ minimum, splitting a remote customer onto its own route can be cheaper than
 detouring to it. Idle vehicles cost nothing, an undersized fleet costs the
 optimum.
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](../guide/stop_conditions.md).
-
 ## Objective mode
 
 [`ObjectiveMode`](../api/optopus/problem/vrp/enum.ObjectiveMode.html) selects

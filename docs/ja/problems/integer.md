@@ -40,10 +40,6 @@ println!("{:?}", state.best_solution.values());
 はこの方法で有界ナップサックを解きます (`cargo run --example integer_problem`)。
 ライブラリに入っているすべての問題を同じように書いた例は [整数変数で問題を書く](../guide/integer_modeling.md) にあります。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## 順列 { #permutations }
 
 `IntVars::permutation(n)` は、`0..=n-1` の値を互いに重ならずにとる `n` 個の変数を宣言します。

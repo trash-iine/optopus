@@ -45,12 +45,6 @@ solves a bounded knapsack this way (`cargo run --example integer_problem`).
 [Writing problems with integer variables](../guide/integer_modeling.md) does
 the same for every problem the library ships.
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](../guide/stop_conditions.md).
-
 ## Permutations
 
 `IntVars::permutation(n)` declares `n` variables in `0..=n-1` that take

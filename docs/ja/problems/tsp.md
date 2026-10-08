@@ -40,10 +40,6 @@ println!("visiting order = {:?}", sol.tour); // 訪問順に並んだ都市の�
 `Tsp::new` の既定は `EdgeWeightType::Continuous` です。下の距離式から選ぶには
 `Tsp::with_edge_weight_type` を使います。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## 距離の保持方法 { #distance-storage }
 
 | コンストラクタ | 保持するもの | 使う場面 |

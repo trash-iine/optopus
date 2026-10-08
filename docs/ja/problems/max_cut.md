@@ -35,10 +35,6 @@ for (v, &side) in sol.x.iter().enumerate() {
 `MaxCut::from_edges` は `MaxCut::new(Graph::from_edges(...))` の便利なラッパーです。
 どちらも重複した辺は集合として扱い、最後に書いたものが残ります。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## 解 { #solution }
 
 [`MaxCutSolution`](../../api/optopus/problem/max_cut/struct.MaxCutSolution.html)

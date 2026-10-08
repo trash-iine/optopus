@@ -41,10 +41,6 @@ println!("assignment = {:?}", sol.x); // sol.x[i] は見つかった最小点で
 `Qubo::from_entries` はインスタンスの作り方の一つです。`Qubo::new()` から始めて、`set_q` (上書き) や `add_q` (加算)
 を少しずつ呼んでもかまいません。
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## 解 { #solution }
 
 [`QuboSolution`](../../api/optopus/problem/qubo/struct.QuboSolution.html) は

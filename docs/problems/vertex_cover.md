@@ -49,12 +49,6 @@ let cover: Vec<usize> = sol
 println!("cover = {cover:?}"); // vertices selected to cover every edge
 ```
 
-Every heuristic stops on a `StopCondition`, such as
-`StopCondition::iterations(100_000)`,
-`StopCondition::duration(std::time::Duration::from_secs(10))` or
-`StopCondition::failed_updates(1_000)`. How to combine them, and their TOML
-form, are collected in [Stop conditions](../guide/stop_conditions.md).
-
 ## Solution
 
 [`VertexCoverSolution`](../api/optopus/problem/vertex_cover/struct.VertexCoverSolution.html)

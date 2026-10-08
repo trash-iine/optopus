@@ -38,10 +38,6 @@ for (i, &v) in sol.x.iter().enumerate() {
 }
 ```
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## 解 { #solution }
 
 [`SatSolution`](../../api/optopus/problem/sat/struct.SatSolution.html) は

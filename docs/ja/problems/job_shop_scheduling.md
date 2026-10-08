@@ -42,10 +42,6 @@ println!("operation order = {:?}", sol.operations); // 復号前の重複を許�
 println!("completion times = {:?}", sol.completion_times); // 上の各位置の完了時刻
 ```
 
-どのヒューリスティクスも `StopCondition` で止まります。
-`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
-組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
-
 ## 解 { #solution }
 
 解は長さ `n_jobs * n_machines` の重複を許す置換として符号化されます。列の中でジョブ `j` が `k` 回目に現れる位置が、
