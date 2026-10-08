@@ -69,8 +69,6 @@ println!("coloring = {:?}", sol.colors); // colors[v] は頂点 v の色
 一頂点の再彩色だけでは、色数の項は平坦な地形になります。衝突は強く修正されますが、色クラスを一つ空にするにはそのクラスのすべての頂点を一つずつ動かす必要があり、
 最後の一つを動かすまで何の報酬もありません。探索はすぐに正しい彩色に達し、その後ゆっくりと色数を減らしていくと考えてください。
 
-組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
-
 ## 交叉 { #crossover }
 
 - `GraphColoringUniformCrossover`。頂点ごとにランダムに親を選びます。色のラベルは両親の間でそろっていないので、

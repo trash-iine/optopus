@@ -59,8 +59,6 @@ DIMACS のリテラルは 1 始まりで `x` は 0 始まりなので、ファ�
 | [`SatFlipNeighbor`](../../api/optopus/problem/sat/struct.SatFlipNeighbor.html) | 変数を一つ反転する。 | `iter + 1` |
 | [`SatSwapNeighbor`](../../api/optopus/problem/sat/struct.SatSwapNeighbor.html) | 二つの変数を入れ替える。 | `iter + 2` |
 
-組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
-
 ## 交叉 { #crossover }
 
 - `SatUniformCrossover`。変数ごとにランダムに親を選びます。

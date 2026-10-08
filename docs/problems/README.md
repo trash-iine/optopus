@@ -3,7 +3,8 @@
 **API:** [`optopus::problem`](../api/optopus/problem/index.html)
 
 Each built-in problem implements `ProblemTrait` plus enough additional traits
-to plug into every relevant heuristic.
+to plug into every relevant heuristic. Its moves run under every base
+heuristic, as the [Heuristics](../heuristics/README.md#base) page lists.
 
 | Problem | Direction | Solution | Neighbors | Crossover | Loader |
 |---|---|---|---|---|---|

@@ -66,8 +66,6 @@ the assignment `x` from the definition above (`x ∈ {0,1}^n`).
 | `QuboFlipNeighbor` | `"Flip"` | Flip one variable. `iter + 1`. |
 | `QuboSwapNeighbor` | `"Swap"` | Swap two variables with different values. `iter + 2`. |
 
-Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
-
 ## Crossover
 
 - `QuboUniformCrossover`, per-variable random parent selection.

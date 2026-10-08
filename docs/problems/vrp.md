@@ -222,8 +222,6 @@ tune the penalty at runtime, as [HybridGeneticSearchForVrp](../heuristics/hgs.md
 does, prices the same edits under its own penalty through the route machinery
 the problem shares with it.
 
-Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
-
 ## Crossover
 
 - `VrpOrderCrossover`, flattens both parents into giant tours, applies Order

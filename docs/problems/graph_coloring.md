@@ -78,8 +78,6 @@ repaired strongly, but emptying a color class needs every vertex of that class
 to move, one at a time, with no reward until the last one. Expect a search to
 reach a proper coloring quickly and then reduce the number of colors slowly.
 
-Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
-
 ## Crossover
 
 - `GraphColoringUniformCrossover`, per-vertex random parent selection. Color

@@ -103,8 +103,6 @@ which is `Σ d(π(k), π(k+1))`.
 | `TspTwoOptNeighbor` | 2-opt: reverse a tour segment between two edges. | `iter + 1` |
 | `TspRelocateNeighbor` | Remove a city and reinsert it at another position. | `iter + 1` |
 
-Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
-
 ## Crossover
 
 - `TspOrderCrossover`, Order Crossover (OX): copy a contiguous segment from

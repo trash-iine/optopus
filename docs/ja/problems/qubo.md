@@ -61,8 +61,6 @@ println!("assignment = {:?}", sol.x); // sol.x[i] は見つかった最小点で
 | `QuboFlipNeighbor` | `"Flip"` | 変数を一つ反転する。`iter + 1`。 |
 | `QuboSwapNeighbor` | `"Swap"` | 値の異なる二つの変数を入れ替える。`iter + 2`。 |
 
-組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
-
 ## 交叉 { #crossover }
 
 - `QuboUniformCrossover`。変数ごとにランダムに親を選びます。

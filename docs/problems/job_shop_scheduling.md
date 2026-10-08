@@ -74,8 +74,6 @@ the makespan being minimized.
 | `JobShopSwapNeighbor` | Swap `operations[i]` with `operations[i+1]`. | `iter + 1` |
 | `JobShopRelocateNeighbor` | Remove `operations[i]` and reinsert it at another position. | `iter + 1` |
 
-Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
-
 ## Crossover
 
 The crossover `JobShopPpxCrossover` is Precedence-Preserving Crossover (PPX): at each

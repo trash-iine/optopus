@@ -190,8 +190,6 @@ CVRP のコンストラクタに `num_vehicles = 0` を渡すと、first-fit-dec
 [HybridGeneticSearchForVrp](../heuristics/hgs.md) のように実行中にペナルティを調整する必要があるヒューリスティクスは、
 問題が共有するルート機構を通して同じ編集を自前のペナルティで価格付けします。
 
-組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
-
 ## 交叉 { #crossover }
 
 - `VrpOrderCrossover`。両親を大きな巡回路に平たくし、Order Crossover (`building_blocks::representation::order_crossover`) を適用してから、

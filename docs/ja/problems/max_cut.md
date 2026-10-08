@@ -55,8 +55,6 @@ for (v, &side) in sol.x.iter().enumerate() {
 | `MaxCutFlipNeighbor` | `"Flip"` | 頂点を一つ反対側に移す。`iter + 1`。 |
 | `MaxCutSwapNeighbor` | `"Swap"` | 反対側にある二つの頂点を入れ替える。`iter + 2`。 |
 
-組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
-
 ## 交叉 { #crossover }
 
 - `MaxCutUniformCrossover`。頂点ごとにランダムに親を選びます。

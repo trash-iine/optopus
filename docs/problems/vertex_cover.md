@@ -74,8 +74,6 @@ and `uncovered_edges` is the constraint-violation count.
 | [`VertexCoverFlipNeighbor`](../api/optopus/problem/vertex_cover/struct.VertexCoverFlipNeighbor.html) | Flip a single vertex's membership. | `iter + 1` |
 | [`VertexCoverSwapNeighbor`](../api/optopus/problem/vertex_cover/struct.VertexCoverSwapNeighbor.html) | Swap a covered vertex with an uncovered one. | `iter + 2` |
 
-Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
-
 ## Crossover
 
 - `VertexCoverUniformCrossover`, per-vertex random parent selection.

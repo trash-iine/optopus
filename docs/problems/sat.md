@@ -64,8 +64,6 @@ DIMACS literals are 1-indexed and `x` is 0-indexed, so variable `v` of the file 
 | [`SatFlipNeighbor`](../api/optopus/problem/sat/struct.SatFlipNeighbor.html) | Flip one variable. | `iter + 1` |
 | [`SatSwapNeighbor`](../api/optopus/problem/sat/struct.SatSwapNeighbor.html) | Swap two variables. | `iter + 2` |
 
-Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
-
 ## Crossover
 
 - `SatUniformCrossover`, per-variable random parent selection.

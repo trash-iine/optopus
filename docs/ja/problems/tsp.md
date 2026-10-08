@@ -91,8 +91,6 @@ let tsp = Tsp::from_distance_matrix("triangle".to_string(), matrix)?;
 | `TspTwoOptNeighbor` | 2-opt。二本の辺の間にある巡回路の区間を反転する。 | `iter + 1` |
 | `TspRelocateNeighbor` | 都市を一つ取り除き、別の位置に挿入し直す。 | `iter + 1` |
 
-組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
-
 ## 交叉 { #crossover }
 
 - `TspOrderCrossover`。Order Crossover (OX) です。一方の親から連続する区間をコピーし、残りの位置をもう一方の親の順序で埋めます。

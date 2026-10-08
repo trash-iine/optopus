@@ -3,6 +3,7 @@
 **API:** [`optopus::problem`](../../api/optopus/problem/index.html)
 
 組み込みの各問題は `ProblemTrait` と、関係するすべてのヒューリスティクスに組み込めるだけの追加のトレイトを実装しています。
+その move は、[ヒューリスティクス](../heuristics/README.md#base) のページにある基本のヒューリスティクスのどれでも動きます。
 
 | 問題 | 向き | 解 | 近傍 | 交叉 | ローダ |
 |---|---|---|---|---|---|

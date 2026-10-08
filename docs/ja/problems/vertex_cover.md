@@ -68,8 +68,6 @@ println!("cover = {cover:?}"); // すべての辺を被覆するために選ば�
 | [`VertexCoverFlipNeighbor`](../../api/optopus/problem/vertex_cover/struct.VertexCoverFlipNeighbor.html) | 頂点一つの所属を反転する。 | `iter + 1` |
 | [`VertexCoverSwapNeighbor`](../../api/optopus/problem/vertex_cover/struct.VertexCoverSwapNeighbor.html) | 被覆に入っている頂点と入っていない頂点を入れ替える。 | `iter + 2` |
 
-組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
-
 ## 交叉 { #crossover }
 
 - `VertexCoverUniformCrossover`。頂点ごとにランダムに親を選びます。

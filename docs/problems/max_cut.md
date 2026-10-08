@@ -58,8 +58,6 @@ represents the partition from the definition above.
 | `MaxCutFlipNeighbor` | `"Flip"` | Flip one vertex to the opposite side. `iter + 1`. |
 | `MaxCutSwapNeighbor` | `"Swap"` | Swap two vertices on opposite sides. `iter + 2`. |
 
-Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
-
 ## Crossover
 
 - `MaxCutUniformCrossover`, per-vertex random parent selection.

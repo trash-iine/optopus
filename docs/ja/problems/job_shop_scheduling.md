@@ -66,8 +66,6 @@ println!("completion times = {:?}", sol.completion_times); // 上の各位置の
 | `JobShopSwapNeighbor` | `operations[i]` と `operations[i+1]` を入れ替える。 | `iter + 1` |
 | `JobShopRelocateNeighbor` | `operations[i]` を取り除き、別の位置に挿入し直す。 | `iter + 1` |
 
-組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
-
 ## 交叉 { #crossover }
 
 交叉 `JobShopPpxCrossover` は Precedence-Preserving Crossover (PPX) です。子の各位置で親をランダムに選び、

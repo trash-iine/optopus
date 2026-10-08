@@ -22,6 +22,12 @@ conditions](../guide/stop_conditions.md).
 | [BeamSearch](beam_search.md) | `BeamSearch` | `MoveToNeighbor`, `Rankable` | Maintains top-`k` candidates. |
 | [ReinforcementLearningSearch](rl_search.md) | `ReinforcementLearningSearch` | `MoveToNeighbor`, `Evaluate<f64>`, `Clone` | Online REINFORCE over move features. |
 
+Every built-in move, of every problem on the [Problems](../problems/README.md)
+page, implements all of the traits in this table, so each base heuristic runs on
+every built-in problem. A move of your own needs only the traits of the
+heuristics you run it with, see [Defining a Custom
+Problem](../guide/custom_problem.md#which-heuristic-needs-what).
+
 ## Meta
 
 | Algorithm | Config `kind` | Description |
