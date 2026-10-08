@@ -140,7 +140,8 @@ CVRP のコンストラクタに `num_vehicles = 0` を渡すと、first-fit-dec
 使わない車両にコストはかかりませんが、足りない車両は最適解そのものを失わせます。
 
 どのヒューリスティクスも `StopCondition` で止まります。
-反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
+`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
+組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## 目的関数のモード { #objective-mode }
 

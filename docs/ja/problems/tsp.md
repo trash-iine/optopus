@@ -41,7 +41,8 @@ println!("visiting order = {:?}", sol.tour); // 訪問順に並んだ都市の�
 `Tsp::with_edge_weight_type` を使います。
 
 どのヒューリスティクスも `StopCondition` で止まります。
-反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
+`StopCondition::iterations(100_000)`、`StopCondition::duration(std::time::Duration::from_secs(10))`、`StopCondition::failed_updates(1_000)` のように書きます。
+組み合わせ方と TOML での書き方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## 距離の保持方法 { #distance-storage }
 
