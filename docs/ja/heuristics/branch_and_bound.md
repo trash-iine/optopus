@@ -19,6 +19,9 @@ let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint:
     penalty_weight: 10.0,
 });
 
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut bnb = BranchAndBound::new(
     StopCondition::new(None, None, None),
     Box::new(LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))),

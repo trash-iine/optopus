@@ -51,6 +51,7 @@ CVRP のインスタンスで探索を実行し、各車両のルートを読み
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 let vrp = Vrp::new(
     "demo",
     vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)],  // [0] がデポ
@@ -59,6 +60,9 @@ let vrp = Vrp::new(
     2,                                                      // num_vehicles (0 = 自動)
 );
 let mut state = SearchState::new(&vrp);
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<VrpRelocateNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -162,6 +166,18 @@ CVRP のコンストラクタに `num_vehicles = 0` を渡すと、first-fit-dec
 `Distance` (GA の多様性に使います) は broken-pairs の隣接カウントです。どの車両が走るかは見ないので、
 同じ trip を別の車両タイプで走る二つの解は距離 `0` になります。ここでの多様性は trip の集合が違うことを指します。
 
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `routes` | `Vec<Vec<usize>>` | スロットごとのルート。顧客を訪問順に並べ、デポは両端に暗黙 |
+| `objective` | `f64` | ペナルティ付きの目的関数。小さいほど良い |
+| `total_cost` | `f64` | 使った車両の固定費と距離に比例する費用の合計 |
+| `total_time` | `f64` | ルートの所要時間の合計 |
+| `makespan` | `f64` | 最も長いルートの所要時間 |
+| `overload` | `i64` | 容量を超えた需要のルートごとの合計。実行可能なら `0` |
+| `time_excess` | `f64` | 車両ごとの上限を超えた所要時間の合計。実行可能なら `0` |
+
+`Vrp::load_file` は CVRPLIB ファイルのノードを 0 から数え直すので、ファイルのノード `k` は `k - 1` になります。ファイルのノード 1 であるデポは `0` に、id が `k` の顧客は `routes` の中で `k - 1` になります。残りのキャッシュされたフィールドは rustdoc にあります。
+
 ## 近傍 { #neighbors }
 
 | 型 | move | 範囲 |
@@ -176,6 +192,8 @@ CVRP のコンストラクタに `num_vehicles = 0` を渡すと、first-fit-dec
 これらの move は gain に `penalty_weight` を組み込んでいます。
 [HybridGeneticSearchForVrp](../heuristics/hgs.md) のように実行中にペナルティを調整する必要があるヒューリスティクスは、
 問題が共有するルート機構を通して同じ編集を自前のペナルティで価格付けします。
+
+組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
 
 ## 交叉 { #crossover }
 

@@ -25,6 +25,7 @@ Running a search and reading back the minimizing assignment:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let qubo = Qubo::load_file("data/instances/qubo/bqp/bqp100_1.txt")?;
 let qubo = Qubo::from_entries([
     (0, 0, -1), // diagonal = linear term
     (0, 1, 1),
@@ -32,6 +33,9 @@ let qubo = Qubo::from_entries([
     (0, 2, 3),
 ]);
 let mut state = SearchState::new(&qubo);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -50,12 +54,22 @@ incrementally.
 [`QuboSolution`](../api/optopus/problem/qubo/struct.QuboSolution.html) carries
 the assignment `x` from the definition above (`x ∈ {0,1}^n`).
 
+| Field | Type | Meaning |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[i]` is the value of variable `i` |
+| `objective` | `i32` | the energy `xᵀQx`, lower is better |
+| `gain` | `Vec<i32>` | `gain[i]` is the change in energy flipping `i` would make, negative improves |
+
+`Qubo::load_file` numbers variables from 0, so variable `i` of the 1-indexed file is `x[i - 1]`.
+
 ## Neighbors
 
 | Type | TOML `neighbor` | Move |
 |---|---|---|
 | `QuboFlipNeighbor` | `"Flip"` | Flip one variable. `iter + 1`. |
 | `QuboSwapNeighbor` | `"Swap"` | Swap two variables with different values. `iter + 2`. |
+
+Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
 
 ## Crossover
 
@@ -81,7 +95,7 @@ i j v
 ```rust
 use optopus::prelude::*;
 
-let qubo = Qubo::load_file("data/instances/qubo/sample.qubo")?;
+let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 ```
 
 ## References

@@ -17,6 +17,9 @@ let mut rng = seeded_rng(42);
 let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
 let mut state = SearchState::new_with_seed(&mc, 42);
 
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut pa = PopulationAnnealing::<MaxCut, MaxCutFlipNeighbor>::new(
     StopCondition::iterations(100_000),
     /* population_size = */ 50,

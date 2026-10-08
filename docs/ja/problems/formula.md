@@ -35,6 +35,9 @@ let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint:
 });
 
 let mut state = SearchState::new(&prob);
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 TabuSearch::<IntChangeNeighbor>::new(StopCondition::iterations(1_000), (1, 2))
     .run(&mut state)
     .unwrap();

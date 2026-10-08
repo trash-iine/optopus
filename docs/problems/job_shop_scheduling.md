@@ -26,6 +26,7 @@ Running a search and reading back the decoded schedule:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 let inst = JobShopScheduling::new(
     "tiny".to_string(),
     /* n_machines = */ 2,
@@ -35,6 +36,9 @@ let inst = JobShopScheduling::new(
     ],
 );
 let mut state = SearchState::new(&inst);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<JobShopSwapNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -58,12 +62,22 @@ times as `completion_times` (so `completion_times[pos]` is the `C_{j,k}` of
 the operation at position `pos`), and `objective`, which is `max_j C_{j,last}`,
 the makespan being minimized. 
 
+| Field | Type | Meaning |
+|---|---|---|
+| `operations` | `Vec<usize>` | the job index at each position of the encoding |
+| `completion_times` | `Vec<u32>` | `completion_times[pos]` is when the operation at `pos` finishes |
+| `objective` | `u32` | the makespan, lower is better |
+
+`JobShopScheduling::load_file` numbers jobs from 0 by their row in the file and keeps the machine numbers as written, which are 0-indexed.
+
 ## Neighbors
 
 | Type | Move | Iteration cost |
 |---|---|---|
 | `JobShopSwapNeighbor` | Swap `operations[i]` with `operations[i+1]`. | `iter + 1` |
 | `JobShopRelocateNeighbor` | Remove `operations[i]` and reinsert it at another position. | `iter + 1` |
+
+Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
 
 ## Crossover
 

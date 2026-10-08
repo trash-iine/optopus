@@ -17,6 +17,9 @@ sat.add_clause([-1, 2]);
 sat.add_clause([1, 2, 3]);
 
 let mut state = SearchState::new(&sat);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 let mut ws = WalkSatForSat::new(
     StopCondition::iterations(100_000),
     /* noise    = */ 0.3,

@@ -22,6 +22,9 @@ use optopus::prelude::*;
 let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 let mut state = SearchState::new(&vrp);
 
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 let mut alns = alns_for_vrp(
     StopCondition::iterations(10_000),
     /* removal_fraction = */ 0.15,

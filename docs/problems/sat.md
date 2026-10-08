@@ -25,12 +25,16 @@ Running a search and reading back the assignment and how many clauses it satisfi
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 let mut sat = Sat::new(3);
 sat.add_clause([1, -2, 3]); // (x1 ∨ ¬x2 ∨ x3); literals are signed 1-indexed
 sat.add_clause([-1, 2]);
 sat.add_clause([1, 2, 3]);
 
 let mut state = SearchState::new(&sat);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<SatFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -48,12 +52,22 @@ for (i, &v) in sol.x.iter().enumerate() {
 the assignment `x` from the definition above (`x ∈ {0,1}^n`), and 
 `n_satisfied`, which is `Σ_{k=1}^{m} [C_k(x)=true]`.
 
+| Field | Type | Meaning |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[i]` is the truth value of DIMACS variable `i + 1` |
+| `n_satisfied` | `usize` | the number of satisfied clauses, the objective |
+| `gain` | `Vec<i64>` | `gain[i]` is the change in satisfied clauses flipping `x[i]` would make, positive improves |
+
+DIMACS literals are 1-indexed and `x` is 0-indexed, so variable `v` of the file is `x[v - 1]`. There is no `objective` field, `n_satisfied` is the value being maximized.
+
 ## Neighbors
 
 | Type | Move | Iteration cost |
 |---|---|---|
 | [`SatFlipNeighbor`](../api/optopus/problem/sat/struct.SatFlipNeighbor.html) | Flip one variable. | `iter + 1` |
 | [`SatSwapNeighbor`](../api/optopus/problem/sat/struct.SatSwapNeighbor.html) | Swap two variables. | `iter + 2` |
+
+Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
 
 ## Crossover
 
@@ -81,7 +95,7 @@ p cnf N M
 ```rust
 use optopus::prelude::*;
 
-let sat = Sat::load_file("data/instances/sat/example.cnf")?;
+let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 ```
 
 ## References

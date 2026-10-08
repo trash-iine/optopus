@@ -35,6 +35,9 @@ let mut rng = seeded_rng(42);
 let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
 let mut state = SearchState::new_with_seed(&mc, 42);
 
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut bls = bls_for_max_cut(
     StopCondition::iterations(100_000),
     /* tabu_tenure = */ (10, 300),

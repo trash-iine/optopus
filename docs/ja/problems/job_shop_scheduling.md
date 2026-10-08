@@ -22,6 +22,7 @@ subject to  C_{j,k} ≥ C_{j,k-1} + p_{j,k}                 (ジョブ内の先�
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let inst = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 let inst = JobShopScheduling::new(
     "tiny".to_string(),
     /* n_machines = */ 2,
@@ -31,6 +32,9 @@ let inst = JobShopScheduling::new(
     ],
 );
 let mut state = SearchState::new(&inst);
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<JobShopSwapNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -50,12 +54,22 @@ println!("completion times = {:?}", sol.completion_times); // 上の各位置の
 (`completion_times[pos]` は位置 `pos` の作業の `C_{j,k}`)、最小化するメイクスパン `max_j C_{j,last}` を
 `objective` として持ちます。
 
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `operations` | `Vec<usize>` | 符号化の各位置にあるジョブの番号 |
+| `completion_times` | `Vec<u32>` | `completion_times[pos]` は位置 `pos` の作業が終わる時刻 |
+| `objective` | `u32` | メイクスパン。小さいほど良い |
+
+`JobShopScheduling::load_file` はジョブをファイルの行の順に 0 から数え、機械の番号は書かれたまま (0 始まり) 使います。
+
 ## 近傍 { #neighbors }
 
 | 型 | move | 反復コスト |
 |---|---|---|
 | `JobShopSwapNeighbor` | `operations[i]` と `operations[i+1]` を入れ替える。 | `iter + 1` |
 | `JobShopRelocateNeighbor` | `operations[i]` を取り除き、別の位置に挿入し直す。 | `iter + 1` |
+
+組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
 
 ## 交叉 { #crossover }
 

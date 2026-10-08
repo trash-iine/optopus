@@ -23,6 +23,9 @@ let tsp = Tsp::new(
 );
 let mut state = SearchState::new(&tsp);
 
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 let mut lkh = LinKernighanHelsgaunForTsp::new(
     StopCondition::iterations(10_000),
     /* num_neighbors = */ 5,

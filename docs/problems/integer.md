@@ -31,6 +31,9 @@ let prob = IntegerProblem::minimize(vars, |x: &[i64]| {
 });
 
 let mut state = SearchState::new(&prob);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))
     .run(&mut state)
     .unwrap();

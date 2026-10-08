@@ -27,11 +27,15 @@ Running a search and reading back the visiting order it found:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let tsp = Tsp::load_file("data/instances/tsp/berlin52.tsp")?;
 let tsp = Tsp::new(
     "demo".to_string(),
     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],  // square placement
 );
 let mut state = SearchState::new(&tsp);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<TspTwoOptNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -88,12 +92,21 @@ the permutation `π` from the definition above as `tour` (`tour[k]` is
 `π(k)`, the `k`-th city visited), and the tour length `objective`, 
 which is `Σ d(π(k), π(k+1))`.
 
+| Field | Type | Meaning |
+|---|---|---|
+| `tour` | `Vec<usize>` | the cities in visiting order, each once, the return to `tour[0]` left implicit |
+| `objective` | `f64` | the tour length, lower is better |
+
+`Tsp::load_file` numbers cities from 0 in the order of the `NODE_COORD_SECTION` lines, whatever id a line carries, so city `k` is the `(k + 1)`-th coordinate line.
+
 ## Neighbors
 
 | Type | Move | Iteration cost |
 |---|---|---|
 | `TspTwoOptNeighbor` | 2-opt: reverse a tour segment between two edges. | `iter + 1` |
 | `TspRelocateNeighbor` | Remove a city and reinsert it at another position. | `iter + 1` |
+
+Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
 
 ## Crossover
 

@@ -63,6 +63,7 @@ Running a search on a CVRP instance and reading back each vehicle's route:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 let vrp = Vrp::new(
     "demo",
     vec![(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)],  // [0] is the depot
@@ -71,6 +72,9 @@ let vrp = Vrp::new(
     2,                                                      // num_vehicles (0 = auto)
 );
 let mut state = SearchState::new(&vrp);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<VrpRelocateNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -191,6 +195,18 @@ blind to which vehicle drives a trip, so two solutions that drive the same
 trips with different vehicle types are at distance `0`, diversity here
 meaning a different set of trips.
 
+| Field | Type | Meaning |
+|---|---|---|
+| `routes` | `Vec<Vec<usize>>` | one route per slot, the customers in visiting order, the depot implicit at both ends |
+| `objective` | `f64` | the penalty-augmented objective, lower is better |
+| `total_cost` | `f64` | fixed costs of the used vehicles plus distance costs |
+| `total_time` | `f64` | the sum of route durations |
+| `makespan` | `f64` | the longest route duration |
+| `overload` | `i64` | demand above capacity, summed over routes, `0` when feasible |
+| `time_excess` | `f64` | duration above each vehicle's limit, summed, `0` when feasible |
+
+`Vrp::load_file` numbers the nodes of a CVRPLIB file from 0, so node `k` of the file is `k - 1`. The depot, node 1 of the file, becomes `0`, and a customer with id `k` appears in `routes` as `k - 1`. The remaining cached fields are listed in the rustdoc.
+
 ## Neighbors
 
 | Type | Move | Scope |
@@ -208,6 +224,8 @@ These moves bake `penalty_weight` into their gains. A heuristic that needs to
 tune the penalty at runtime, as [HybridGeneticSearchForVrp](../heuristics/hgs.md)
 does, prices the same edits under its own penalty through the route machinery
 the problem shares with it.
+
+Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
 
 ## Crossover
 

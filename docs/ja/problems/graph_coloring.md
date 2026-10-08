@@ -31,8 +31,12 @@ objective(c) = colors_used(c) + penalty_weight · conflicts(c)
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let gc = GraphColoring::load_file("data/instances/graph_coloring/example.txt")?;
 let gc = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&gc);
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -49,6 +53,15 @@ println!("coloring = {:?}", sol.colors); // colors[v] は頂点 v の色
 空でない色クラスの数 `colors_used`、制約違反の数 `conflicts` を持ちます。さらに頂点ごとに、各色の隣接頂点がいくつあるか
 (TabuCol の Γ 行列) をキャッシュしていて、これによってどの move の gain も O(1) で求まります。
 
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `colors` | `Vec<usize>` | `colors[v]` は頂点 `v` の色で、`0..k` の範囲 |
+| `colors_used` | `usize` | 空でない色クラスの数 |
+| `conflicts` | `usize` | 両端が同じ色の辺の数。正しい彩色なら `0` |
+| `objective` | `i64` | `colors_used + penalty_weight * conflicts`。小さいほど良い |
+
+`GraphColoring::load_file` は MaxCut のグラフ形式を読み、頂点を 0 から数え直すので、1 始まりのファイルの頂点 `k` は `colors[k - 1]` です。
+
 ## 近傍 { #neighbors }
 
 | 型 | move | 反復コスト |
@@ -58,6 +71,8 @@ println!("coloring = {:?}", sol.colors); // colors[v] は頂点 v の色
 
 一頂点の再彩色だけでは、色数の項は平坦な地形になります。衝突は強く修正されますが、色クラスを一つ空にするにはそのクラスのすべての頂点を一つずつ動かす必要があり、
 最後の一つを動かすまで何の報酬もありません。探索はすぐに正しい彩色に達し、その後ゆっくりと色数を減らしていくと考えてください。
+
+組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
 
 ## 交叉 { #crossover }
 

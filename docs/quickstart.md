@@ -33,6 +33,9 @@ let mc = MaxCut::new(Graph::from_edges([
 let mut state = SearchState::new(&mc);
 
 // 3. Configure and run a heuristic.
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(1_000_000),
 );
@@ -51,13 +54,13 @@ Each problem ships with a loader that returns
 use optopus::prelude::*;
 
 // MaxCut / Vertex Cover use the shared Graph loader (format: `N M / i j w`).
-let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 
 // QUBO loader (format: `N M / i j v`, 1-indexed):
 let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 
 // MaxSAT loader (DIMACS CNF):
-let sat = Sat::load_file("data/instances/sat/example.cnf")?;
+let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 
 // TSP loader (TSPLIB):
 let tsp = Tsp::load_file("data/instances/tsp/burma14.tsp")?;

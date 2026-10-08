@@ -103,6 +103,12 @@ Key API touchpoints:
   [`filter_best`](../api/optopus/trait_defs/fn.filter_best.html), `.choose(&mut rng)` etc. as your
   strategy demands.
 
+The state's fields are public. `state.instance` is the problem, `state.solution` the current
+solution, `state.best_solution` the best one so far and `state.initial_solution` the one the run
+started from, while `state.iteration` and `state.best_iteration` count iterations. Each
+solution's `objective` and other fields are listed on its problem page, and
+[SearchState](../search_state.md) explains when each field changes.
+
 ## Accepting a move by its delta
 
 Simulated annealing, late acceptance and threshold rules do not scan the

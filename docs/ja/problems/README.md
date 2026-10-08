@@ -6,11 +6,11 @@
 
 | 問題 | 向き | 解 | 近傍 | 交叉 | ローダ |
 |---|---|---|---|---|---|
-| [MaxCut](max_cut.md) | 最大化 | `MaxCutSolution` | Flip / Swap | `MaxCutUniformCrossover` | `Graph::load_from_file` |
+| [MaxCut](max_cut.md) | 最大化 | `MaxCutSolution` | Flip / Swap | `MaxCutUniformCrossover` | `MaxCut::load_file` |
 | [QUBO](qubo.md) | 最小化 | `QuboSolution` | Flip / Swap | `QuboUniformCrossover` | `Qubo::load_file` |
 | [MaxSAT](sat.md) | 最大化 | `SatSolution` | Flip / Swap | `SatUniformCrossover` | `Sat::load_file` (DIMACS CNF) |
 | [TSP](tsp.md) | 最小化 | `TspSolution` | TwoOpt / Relocate | `TspOrderCrossover` | `Tsp::load_file` (TSPLIB) |
-| [Vertex Cover](vertex_cover.md) | 最小化 | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `Graph::load_from_file` |
+| [Vertex Cover](vertex_cover.md) | 最小化 | `VertexCoverSolution` | Flip / Swap | `VertexCoverUniformCrossover` | `VertexCover::load_file` |
 | [Job Shop Scheduling](job_shop_scheduling.md) | 最小化 | `JobShopSolution` | Swap / Relocate | `JobShopPpxCrossover` | `JobShopScheduling::load_file` |
 | [VRP](vrp.md) | 最小化 | `VrpSolution` | Relocate / Swap / TwoOpt | `VrpOrderCrossover` | `Vrp::load_file` (CVRPLIB、または TOML のフリート記述) |
 | [Graph Coloring](graph_coloring.md) | 最小化 | `GraphColoringSolution` | Flip (再彩色) / Swap | `GraphColoringUniformCrossover` | `GraphColoring::load_file` |

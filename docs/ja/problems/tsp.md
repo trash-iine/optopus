@@ -22,11 +22,15 @@ minimize  Σ_{k=1}^{n} d(π(k), π(k mod n + 1))    (π a permutation of the n c
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let tsp = Tsp::load_file("data/instances/tsp/berlin52.tsp")?;
 let tsp = Tsp::new(
     "demo".to_string(),
     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],  // 正方形の配置
 );
 let mut state = SearchState::new(&tsp);
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<TspTwoOptNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -76,12 +80,21 @@ let tsp = Tsp::from_distance_matrix("triangle".to_string(), matrix)?;
 上の定義の置換 `π` を `tour` として (`tour[k]` は `π(k)`、つまり `k` 番目に訪れる都市)、
 巡回路の長さ `Σ d(π(k), π(k+1))` を `objective` として持ちます。
 
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `tour` | `Vec<usize>` | 訪問順に並べた都市。各都市は一度ずつで、`tour[0]` へ戻る辺は暗黙 |
+| `objective` | `f64` | 巡回路の長さ。小さいほど良い |
+
+`Tsp::load_file` は都市を `NODE_COORD_SECTION` の行の順に 0 から数えます。行に書かれた id は見ないので、都市 `k` は `k + 1` 行目の座標です。
+
 ## 近傍 { #neighbors }
 
 | 型 | move | 反復コスト |
 |---|---|---|
 | `TspTwoOptNeighbor` | 2-opt。二本の辺の間にある巡回路の区間を反転する。 | `iter + 1` |
 | `TspRelocateNeighbor` | 都市を一つ取り除き、別の位置に挿入し直す。 | `iter + 1` |
+
+組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
 
 ## 交叉 { #crossover }
 

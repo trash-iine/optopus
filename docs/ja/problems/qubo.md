@@ -21,6 +21,7 @@ QUBO は量子および古典のイジングマシン型アニーラが受け付
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let qubo = Qubo::load_file("data/instances/qubo/bqp/bqp100_1.txt")?;
 let qubo = Qubo::from_entries([
     (0, 0, -1), // 対角 = 一次の項
     (0, 1, 1),
@@ -28,6 +29,9 @@ let qubo = Qubo::from_entries([
     (0, 2, 3),
 ]);
 let mut state = SearchState::new(&qubo);
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -45,12 +49,22 @@ println!("assignment = {:?}", sol.x); // sol.x[i] は見つかった最小点で
 [`QuboSolution`](../../api/optopus/problem/qubo/struct.QuboSolution.html) は
 上の定義の割り当て `x` (`x ∈ {0,1}^n`) を持ちます。
 
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[i]` は変数 `i` の値 |
+| `objective` | `i32` | エネルギー `xᵀQx`。小さいほど良い |
+| `gain` | `Vec<i32>` | `gain[i]` は `i` を反転したときのエネルギーの変化。負なら改善 |
+
+`Qubo::load_file` は変数を 0 から数え直すので、1 始まりのファイルの変数 `i` は `x[i - 1]` です。
+
 ## 近傍 { #neighbors }
 
 | 型 | TOML の `neighbor` | move |
 |---|---|---|
 | `QuboFlipNeighbor` | `"Flip"` | 変数を一つ反転する。`iter + 1`。 |
 | `QuboSwapNeighbor` | `"Swap"` | 値の異なる二つの変数を入れ替える。`iter + 2`。 |
+
+組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
 
 ## 交叉 { #crossover }
 
@@ -75,7 +89,7 @@ i j v
 ```rust
 use optopus::prelude::*;
 
-let qubo = Qubo::load_file("data/instances/qubo/sample.qubo")?;
+let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 ```
 
 ## 参考文献 { #references }

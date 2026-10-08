@@ -16,6 +16,9 @@ sat.add_clause([-1, 2]);
 sat.add_clause([1, 2, 3]);
 
 let mut state = SearchState::new(&sat);
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut ws = WalkSatForSat::new(
     StopCondition::iterations(100_000),
     /* noise    = */ 0.3,

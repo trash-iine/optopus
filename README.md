@@ -15,6 +15,7 @@ cargo run --example max_cut
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 let mc = MaxCut::new(Graph::from_edges([
     (0, 1, 1.0),
     (0, 2, 1.0),
@@ -22,12 +23,15 @@ let mc = MaxCut::new(Graph::from_edges([
 ]));
 
 let mut state = SearchState::new(&mc);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, see docs/guide/stop_conditions.md.
 let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(1_000_000),
 );
 ls.run(&mut state).unwrap();
 
 println!("best cut = {}", state.best_solution.objective);
+// state.best_solution.x holds the partition. docs/problems/max_cut.md lists every field.
 ```
 
 See [`docs/quickstart.md`](docs/quickstart.md) for a longer tour, including

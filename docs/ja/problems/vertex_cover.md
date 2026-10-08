@@ -26,8 +26,12 @@ objective(x) = cover_size(x) + penalty_weight · uncovered_edges(x)
 ```rust
 use optopus::prelude::*;
 
+// ファイルから読むなら let vc = VertexCover::load_file("data/instances/max_cut/G1")?;
 let vc = VertexCover::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&vc);
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<VertexCoverFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -50,12 +54,24 @@ println!("cover = {cover:?}"); // すべての辺を被覆するために選ば�
 は上の定義の所属 `x` (`x[v]` は頂点 `v` の被覆への所属 `x_v`) と、上で定義したペナルティ付きの
 `objective` を持ちます。`cover_size` は `Σ x_v = |S|`、`uncovered_edges` は制約違反の数です。
 
+| フィールド | 型 | 意味 |
+|---|---|---|
+| `x` | `Vec<bool>` | 頂点 `v` が被覆に入っていれば `x[v]` は `true` |
+| `cover_size` | `usize` | 被覆に入っている頂点の数 |
+| `uncovered_edges` | `usize` | 両端とも被覆にない辺の数。実行可能なら `0` |
+| `objective` | `i32` | `cover_size + penalty_weight * uncovered_edges`。小さいほど良い |
+| `gain` | `Vec<i32>` | `gain[v]` は `v` を反転したときの `objective` の変化。負なら改善 |
+
+`VertexCover::load_file` は MaxCut のグラフ形式を読み、頂点を 0 から数え直すので、1 始まりのファイルの頂点 `k` は `x[k - 1]` です。
+
 ## 近傍 { #neighbors }
 
 | 型 | move | 反復コスト |
 |---|---|---|
 | [`VertexCoverFlipNeighbor`](../../api/optopus/problem/vertex_cover/struct.VertexCoverFlipNeighbor.html) | 頂点一つの所属を反転する。 | `iter + 1` |
 | [`VertexCoverSwapNeighbor`](../../api/optopus/problem/vertex_cover/struct.VertexCoverSwapNeighbor.html) | 被覆に入っている頂点と入っていない頂点を入れ替える。 | `iter + 2` |
+
+組み込みの move はすべて `Evaluate` と `EnabledTabu` を実装しているので、`SimulatedAnnealing` や `TabuSearch` を含め、move の型を取るどのヒューリスティクスでも動きます。
 
 ## 交叉 { #crossover }
 
@@ -70,7 +86,7 @@ Vertex Cover は [MaxCut のグラフ形式](max_cut.md#file-format) をその�
 ```rust
 use optopus::prelude::*;
 
-let vc = VertexCover::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let vc = VertexCover::load_file("data/instances/max_cut/G1")?;
 ```
 
 ## 参考文献 { #references }

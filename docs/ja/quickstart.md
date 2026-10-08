@@ -33,6 +33,9 @@ let mc = MaxCut::new(Graph::from_edges([
 let mut state = SearchState::new(&mc);
 
 // 3. ヒューリスティクスを設定して実行する。
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(1_000_000),
 );
@@ -50,13 +53,13 @@ println!("best cut = {}", state.best_solution.objective);
 use optopus::prelude::*;
 
 // MaxCut と Vertex Cover は共通の Graph ローダを使う (形式は `N M / i j w`)。
-let mc = MaxCut::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 
 // QUBO ローダ (形式は `N M / i j v`、1 始まり):
 let qubo = Qubo::load_file("data/instances/qubo/sample.txt")?;
 
 // MaxSAT ローダ (DIMACS CNF):
-let sat = Sat::load_file("data/instances/sat/example.cnf")?;
+let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 
 // TSP ローダ (TSPLIB):
 let tsp = Tsp::load_file("data/instances/tsp/burma14.tsp")?;

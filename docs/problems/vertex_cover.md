@@ -30,8 +30,12 @@ Running a search and reading back which vertices form the cover:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let vc = VertexCover::load_file("data/instances/max_cut/G1")?;
 let vc = VertexCover::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&vc);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<VertexCoverFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -56,12 +60,24 @@ cover membership of vertex `v`), and the penalty-augmented `objective`
 defined above; `cover_size` is `Σ x_v = |S|`
 and `uncovered_edges` is the constraint-violation count.
 
+| Field | Type | Meaning |
+|---|---|---|
+| `x` | `Vec<bool>` | `x[v]` is `true` when vertex `v` is in the cover |
+| `cover_size` | `usize` | the number of vertices in the cover |
+| `uncovered_edges` | `usize` | edges with neither end in the cover, `0` when feasible |
+| `objective` | `i32` | `cover_size + penalty_weight * uncovered_edges`, lower is better |
+| `gain` | `Vec<i32>` | `gain[v]` is the change in `objective` flipping `v` would make, negative improves |
+
+`VertexCover::load_file` reads the MaxCut graph format and numbers vertices from 0, so vertex `k` of the 1-indexed file is `x[k - 1]`.
+
 ## Neighbors
 
 | Type | Move | Iteration cost |
 |---|---|---|
 | [`VertexCoverFlipNeighbor`](../api/optopus/problem/vertex_cover/struct.VertexCoverFlipNeighbor.html) | Flip a single vertex's membership. | `iter + 1` |
 | [`VertexCoverSwapNeighbor`](../api/optopus/problem/vertex_cover/struct.VertexCoverSwapNeighbor.html) | Swap a covered vertex with an uncovered one. | `iter + 2` |
+
+Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
 
 ## Crossover
 
@@ -77,7 +93,7 @@ weights are ignored (every edge contributes equally to the cover constraint).
 ```rust
 use optopus::prelude::*;
 
-let vc = VertexCover::new(Graph::load_from_file("data/instances/max_cut/G1")?);
+let vc = VertexCover::load_file("data/instances/max_cut/G1")?;
 ```
 
 ## References

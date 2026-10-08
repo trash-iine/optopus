@@ -18,6 +18,9 @@ use optopus::prelude::*;
 let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 let mut state = SearchState::new(&vrp);
 
+// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
+// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
+// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut alns = alns_for_vrp(
     StopCondition::iterations(10_000),
     /* removal_fraction = */ 0.15,

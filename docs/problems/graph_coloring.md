@@ -36,8 +36,12 @@ Running a search and reading back the coloring:
 ```rust
 use optopus::prelude::*;
 
+// Or from a file, let gc = GraphColoring::load_file("data/instances/graph_coloring/example.txt")?;
 let gc = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&gc);
+// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
+// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
+// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -56,6 +60,15 @@ non-empty color classes, and `conflicts`, the constraint-violation count. It
 also caches, per vertex, how many neighbors carry each color (the Γ matrix
 of TabuCol), which is what makes every move's gain O(1).
 
+| Field | Type | Meaning |
+|---|---|---|
+| `colors` | `Vec<usize>` | `colors[v]` is the color of vertex `v`, in `0..k` |
+| `colors_used` | `usize` | the number of non-empty color classes |
+| `conflicts` | `usize` | edges whose ends share a color, `0` when proper |
+| `objective` | `i64` | `colors_used + penalty_weight * conflicts`, lower is better |
+
+`GraphColoring::load_file` reads the MaxCut graph format and numbers vertices from 0, so vertex `k` of the 1-indexed file is `colors[k - 1]`.
+
 ## Neighbors
 
 | Type | Move | Iteration cost |
@@ -67,6 +80,8 @@ Single recolors make the color-count term a flat landscape. A conflict is
 repaired strongly, but emptying a color class needs every vertex of that class
 to move, one at a time, with no reward until the last one. Expect a search to
 reach a proper coloring quickly and then reduce the number of colors slowly.
+
+Every built-in move implements `Evaluate` and `EnabledTabu`, so it runs under every heuristic that takes a move type, `SimulatedAnnealing` and `TabuSearch` included.
 
 ## Crossover
 
