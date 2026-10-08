@@ -32,9 +32,6 @@ let inst = JobShopScheduling::new(
     ],
 );
 let mut state = SearchState::new(&inst);
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<JobShopSwapNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -44,6 +41,9 @@ println!("makespan = {}", sol.objective);
 println!("operation order = {:?}", sol.operations); // 復号前の重複を許す置換
 println!("completion times = {:?}", sol.completion_times); // 上の各位置の完了時刻
 ```
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## 解 { #solution }
 

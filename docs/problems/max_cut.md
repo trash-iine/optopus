@@ -23,9 +23,6 @@ use optopus::prelude::*;
 // Or from a file, let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
 let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]);
 let mut state = SearchState::new(&mc);
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -40,6 +37,10 @@ for (v, &side) in sol.x.iter().enumerate() {
 `MaxCut::from_edges` is a convenience wrapper around
 `MaxCut::new(Graph::from_edges(...))`; both use set semantics for
 duplicate edges, the last write wins.
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Solution
 

@@ -39,9 +39,6 @@ use optopus::prelude::*;
 // Or from a file, let gc = GraphColoring::load_file("data/instances/graph_coloring/example.txt")?;
 let gc = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&gc);
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -50,6 +47,10 @@ let sol = &state.best_solution;
 println!("colors used = {}, conflicts = {}", sol.colors_used, sol.conflicts);
 println!("coloring = {:?}", sol.colors); // colors[v] is the color of vertex v
 ```
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Solution
 

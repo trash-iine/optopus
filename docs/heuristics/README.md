@@ -7,6 +7,10 @@ Every heuristic implements `Heuristic<P>` (`clear` / `is_done` / `run_once` /
 neighbor type, so any built-in or custom problem that satisfies those traits
 plugs straight in.
 
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
+
 ## Base
 
 | Algorithm | Config `kind` | Required traits on neighbor | Notes |

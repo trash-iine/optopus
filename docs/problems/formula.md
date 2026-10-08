@@ -43,9 +43,6 @@ let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint:
 });
 
 let mut state = SearchState::new(&prob);
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 TabuSearch::<IntChangeNeighbor>::new(StopCondition::iterations(1_000), (1, 2))
     .run(&mut state)
     .unwrap();
@@ -57,6 +54,10 @@ println!("penalty = {}", prob.eval_penalty(values));
 ```
 
 There is no file loader. The problem is built in code, as above.
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Solution
 

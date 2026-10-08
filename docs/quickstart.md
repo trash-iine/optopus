@@ -33,9 +33,6 @@ let mc = MaxCut::new(Graph::from_edges([
 let mut state = SearchState::new(&mc);
 
 // 3. Configure and run a heuristic.
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(1_000_000),
 );
@@ -44,6 +41,10 @@ ls.run(&mut state).unwrap();
 // 4. Read the best result.
 println!("best cut = {}", state.best_solution.objective);
 ```
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](guide/stop_conditions.md).
 
 ## Loading instances from files
 

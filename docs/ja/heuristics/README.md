@@ -5,6 +5,9 @@
 どのヒューリスティクスも `Heuristic<P>` (`clear` / `is_done` / `run_once` / `run`) を実装しています。
 ヒューリスティクスは問題に依存しません。近傍の型にトレイトを要求するだけなので、それを満たす組み込みの問題や独自の問題はそのまま組み込めます。
 
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
+
 ## 基本 { #base }
 
 | アルゴリズム | 設定の `kind` | 近傍に必要なトレイト | 補足 |

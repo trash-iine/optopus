@@ -44,9 +44,6 @@ let mut rng = seeded_rng(42);
 let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
 let mut state = SearchState::new_with_seed(&mc, 42);
 
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 let mut bls = bls_for_max_cut(
     StopCondition::iterations(100_000),
     /* tabu_tenure = */ (10, 300),
@@ -62,6 +59,10 @@ println!("cut weight = {}", state.best_solution.objective);
 `l0` and `tabu_tenure` are instance-dependent, so they are derived from
 `|V| = 800` here rather than left at a constant, see
 [Benchmark config](#benchmark-config).
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Algorithm sketch
 

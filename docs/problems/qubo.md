@@ -33,9 +33,6 @@ let qubo = Qubo::from_entries([
     (0, 2, 3),
 ]);
 let mut state = SearchState::new(&qubo);
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -48,6 +45,10 @@ println!("assignment = {:?}", sol.x); // sol.x[i] is the value of x[i] at the mi
 `Qubo::from_entries` is one way to build an instance; you can also start from
 `Qubo::new()` and call `set_q` (overwrite) / `add_q` (accumulate)
 incrementally.
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Solution
 

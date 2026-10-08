@@ -23,9 +23,6 @@ let tsp = Tsp::new(
 );
 let mut state = SearchState::new(&tsp);
 
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 let mut lkh = LinKernighanHelsgaunForTsp::new(
     StopCondition::iterations(10_000),
     /* num_neighbors = */ 5,
@@ -40,6 +37,10 @@ println!("visiting order = {:?}", sol.tour);
 
 Like `LocalSearch`, it stops at a local optimum, so a budget larger than one
 descent only pays inside [`Restart` or `Iterated`](meta.md).
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Algorithm sketch
 

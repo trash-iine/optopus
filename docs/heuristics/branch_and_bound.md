@@ -24,9 +24,6 @@ let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint:
     penalty_weight: 10.0,
 });
 
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 let mut bnb = BranchAndBound::new(
     StopCondition::new(None, None, None),
     Box::new(LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))),
@@ -59,6 +56,10 @@ assert!(bnb.is_proven_optimal(&state.best_solution));
 
 `examples/max_cut_branch_and_bound.rs` runs Breakout Local Search in every node
 of a MaxCut, bounded by `EigenvalueRelaxation` or by the positive weights.
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Algorithm sketch
 

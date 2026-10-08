@@ -17,9 +17,6 @@ sat.add_clause([-1, 2]);
 sat.add_clause([1, 2, 3]);
 
 let mut state = SearchState::new(&sat);
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 let mut ws = WalkSatForSat::new(
     StopCondition::iterations(100_000),
     /* noise    = */ 0.3,
@@ -35,6 +32,10 @@ println!("assignment = {:?}", sol.x);
 The three-clause instance shows the shape of the call; the per-step cost is
 what makes this heuristic worth reaching for on instances the generic
 `LocalSearch` / `TabuSearch` cannot scan.
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Algorithm sketch
 

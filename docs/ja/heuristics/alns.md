@@ -18,9 +18,6 @@ use optopus::prelude::*;
 let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 let mut state = SearchState::new(&vrp);
 
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut alns = alns_for_vrp(
     StopCondition::iterations(10_000),
     /* removal_fraction = */ 0.15,
@@ -68,6 +65,9 @@ let mut state = SearchState::new(&tsp);
 alns_for_tsp(StopCondition::iterations(10_000), 0.15, 0.9995).run(&mut state)?;
 println!("tour length = {}", state.best_solution.objective);
 ```
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## アルゴリズムの概要 { #algorithm-sketch }
 

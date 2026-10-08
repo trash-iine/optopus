@@ -29,9 +29,6 @@ use optopus::prelude::*;
 // ファイルから読むなら let vc = VertexCover::load_file("data/instances/max_cut/G1")?;
 let vc = VertexCover::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&vc);
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<VertexCoverFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -47,6 +44,9 @@ let cover: Vec<usize> = sol
     .collect();
 println!("cover = {cover:?}"); // すべての辺を被覆するために選ばれた頂点
 ```
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## 解 { #solution }
 

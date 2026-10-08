@@ -22,9 +22,6 @@ use optopus::prelude::*;
 let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 let mut state = SearchState::new(&vrp);
 
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 let mut alns = alns_for_vrp(
     StopCondition::iterations(10_000),
     /* removal_fraction = */ 0.15,
@@ -77,6 +74,10 @@ let mut state = SearchState::new(&tsp);
 alns_for_tsp(StopCondition::iterations(10_000), 0.15, 0.9995).run(&mut state)?;
 println!("tour length = {}", state.best_solution.objective);
 ```
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Algorithm sketch
 

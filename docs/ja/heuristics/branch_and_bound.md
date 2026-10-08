@@ -19,9 +19,6 @@ let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint:
     penalty_weight: 10.0,
 });
 
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut bnb = BranchAndBound::new(
     StopCondition::new(None, None, None),
     Box::new(LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))),
@@ -51,6 +48,9 @@ assert!(bnb.is_proven_optimal(&state.best_solution));
 ```
 
 `examples/max_cut_branch_and_bound.rs` は、MaxCut の各ノードで Breakout Local Search を走らせ、`EigenvalueRelaxation` か正の重みの和で上界を与えます。
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## アルゴリズムの概要 { #algorithm-sketch }
 

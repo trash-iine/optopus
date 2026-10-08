@@ -14,9 +14,6 @@ use optopus::prelude::*;
 let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]));
 let mut state = SearchState::new(&mc);
 
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 let mut rl = ReinforcementLearningSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(10_000),
     /* learning_rate       = */ 0.01,
@@ -30,6 +27,10 @@ println!("cut weight = {}", state.best_solution.objective);
 
 One `run` is one episode. The policy is what carries over between episodes,
 see [Multi-episode learning](#multi-episode-learning).
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Algorithm sketch
 

@@ -17,9 +17,6 @@ let mut rng = seeded_rng(42);
 let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
 let mut state = SearchState::new_with_seed(&mc, 42);
 
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut pa = PopulationAnnealing::<MaxCut, MaxCutFlipNeighbor>::new(
     StopCondition::iterations(100_000),
     /* population_size = */ 50,
@@ -33,6 +30,9 @@ println!("cut weight = {}", state.best_solution.objective);
 ```
 
 `PopulationAnnealing` は prelude に入っていないので、`optopus::heuristic` からインポートしてください。
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## アルゴリズムの概要 { #algorithm-sketch }
 

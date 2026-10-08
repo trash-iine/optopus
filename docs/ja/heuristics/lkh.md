@@ -22,9 +22,6 @@ let tsp = Tsp::new(
 );
 let mut state = SearchState::new(&tsp);
 
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut lkh = LinKernighanHelsgaunForTsp::new(
     StopCondition::iterations(10_000),
     /* num_neighbors = */ 5,
@@ -38,6 +35,9 @@ println!("visiting order = {:?}", sol.tour);
 ```
 
 `LocalSearch` と同じく局所最適で止まるので、一回の降下より大きな予算が生きるのは [`Restart` や `Iterated`](meta.md) の中だけです。
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## アルゴリズムの概要 { #algorithm-sketch }
 

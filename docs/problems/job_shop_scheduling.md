@@ -36,9 +36,6 @@ let inst = JobShopScheduling::new(
     ],
 );
 let mut state = SearchState::new(&inst);
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<JobShopSwapNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -48,6 +45,10 @@ println!("makespan = {}", sol.objective);
 println!("operation order = {:?}", sol.operations); // decoded permutation-with-repetition
 println!("completion times = {:?}", sol.completion_times); // finish time of each position above
 ```
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Solution
 

@@ -11,9 +11,6 @@ use optopus::prelude::*;
 
 let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 1.0)]));
 let mut state = SearchState::new(&mc);
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 let mut bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
     StopCondition::iterations(1_000),
     /* beam_width = */ 5,
@@ -21,6 +18,9 @@ let mut bs = BeamSearch::<MaxCut, MaxCutFlipNeighbor>::new(
 bs.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## アルゴリズムの概要 { #algorithm-sketch }
 

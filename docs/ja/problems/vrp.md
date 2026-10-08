@@ -60,9 +60,6 @@ let vrp = Vrp::new(
     2,                                                      // num_vehicles (0 = 自動)
 );
 let mut state = SearchState::new(&vrp);
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<VrpRelocateNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -141,6 +138,9 @@ CVRP のコンストラクタに `num_vehicles = 0` を渡すと、first-fit-dec
 余裕を持たせるのは、距離が最適な解が最小台数より数台多く使うことがよくあるからです。
 遠い顧客を単独のルートに切り出すほうが、寄り道するより安くつくことがあります。
 使わない車両にコストはかかりませんが、足りない車両は最適解そのものを失わせます。
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## 目的関数のモード { #objective-mode }
 

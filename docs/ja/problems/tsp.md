@@ -28,9 +28,6 @@ let tsp = Tsp::new(
     vec![(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)],  // 正方形の配置
 );
 let mut state = SearchState::new(&tsp);
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<TspTwoOptNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -42,6 +39,9 @@ println!("visiting order = {:?}", sol.tour); // 訪問順に並んだ都市の�
 
 `Tsp::new` の既定は `EdgeWeightType::Continuous` です。下の距離式から選ぶには
 `Tsp::with_edge_weight_type` を使います。
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## 距離の保持方法 { #distance-storage }
 

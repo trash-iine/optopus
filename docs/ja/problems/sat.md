@@ -27,9 +27,6 @@ sat.add_clause([-1, 2]);
 sat.add_clause([1, 2, 3]);
 
 let mut state = SearchState::new(&sat);
-// 時間で止めるなら StopCondition::duration(std::time::Duration::from_secs(10))、
-// 停滞で止めるなら StopCondition::failed_updates(1_000)。.with_duration(...) や
-// .with_iterations(...) で組み合わせられる。一覧は Stop conditions ガイドにある。
 LocalSearch::<SatFlipNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -40,6 +37,9 @@ for (i, &v) in sol.x.iter().enumerate() {
     println!("x{} = {v}", i + 1); // DIMACS と add_clause の慣習に合わせて 1 始まり
 }
 ```
+
+どのヒューリスティクスも `StopCondition` で止まります。
+反復回数、時間、停滞で止める `StopCondition::iterations`、`duration`、`failed_updates` と、それらの組み合わせ方は [停止条件](../guide/stop_conditions.md) にまとめてあります。
 
 ## 解 { #solution }
 

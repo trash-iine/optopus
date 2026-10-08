@@ -72,9 +72,6 @@ let vrp = Vrp::new(
     2,                                                      // num_vehicles (0 = auto)
 );
 let mut state = SearchState::new(&vrp);
-// Other limits: StopCondition::duration(std::time::Duration::from_secs(10)) for a time budget,
-// StopCondition::failed_updates(1_000) for a stall, and .with_duration(...) / .with_iterations(...)
-// to combine them. The Stop conditions guide lists them all.
 LocalSearch::<VrpRelocateNeighbor>::new(StopCondition::iterations(10_000))
     .run(&mut state)
     .unwrap();
@@ -162,6 +159,10 @@ distance-optimal solution routinely uses a few more vehicles than the
 minimum, splitting a remote customer onto its own route can be cheaper than
 detouring to it. Idle vehicles cost nothing, an undersized fleet costs the
 optimum.
+
+Every heuristic stops on a `StopCondition`. The iteration, time and stall
+limits, `StopCondition::iterations`, `duration` and `failed_updates`, and how to
+combine them are collected in [Stop conditions](../guide/stop_conditions.md).
 
 ## Objective mode
 

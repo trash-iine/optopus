@@ -26,6 +26,10 @@ StopCondition::iterations(1_000_000)
 - [`StopCondition::iterations`](../api/optopus/heuristic/struct.StopCondition.html#method.iterations) 
 - [`StopCondition::duration`](../api/optopus/heuristic/struct.StopCondition.html#method.duration) 
 - [`StopCondition::failed_updates`](../api/optopus/heuristic/struct.StopCondition.html#method.failed_updates)
+- [`with_iterations`](../api/optopus/heuristic/struct.StopCondition.html#method.with_iterations),
+  [`with_duration`](../api/optopus/heuristic/struct.StopCondition.html#method.with_duration) and
+  [`with_failed_updates`](../api/optopus/heuristic/struct.StopCondition.html#method.with_failed_updates)
+  add a criterion to any of them
 
 | Criterion | Meaning |
 |---|---|
@@ -36,6 +40,19 @@ StopCondition::iterations(1_000_000)
 `new(max_iteration, max_duration, max_failed_update)` is also available for
 constructing a `StopCondition` from `Option` fields directly (useful when
 deserializing from config).
+
+## In a benchmark config
+
+The CLI runner takes the same three limits as a `[heuristics.stop_condition]`
+table, any subset of them, with the same any-met semantics. The table is
+described with the other shared fields in
+[Benchmarking](benchmarking.md#fields-shared-by-every-kind).
+
+| Builder | TOML field |
+|---|---|
+| `StopCondition::iterations(n)` | `max_iteration = n` |
+| `StopCondition::duration(Duration::from_secs_f64(s))` | `max_duration_secs = s` |
+| `StopCondition::failed_updates(n)` | `max_failed_update = n` |
 
 ## Sub-runs
 
