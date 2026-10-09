@@ -49,7 +49,7 @@ Panics if `beam_width == 0`.
 `clear()` empties the beam; the beam is re-seeded from `state.solution` on
 the first `run_once` call after a `run`.
 
-## Cost
+## Behavior
 
 Unlike `LocalSearch`/`TabuSearch`, BeamSearch materializes every neighbor:
 each step is O(beam_width × |neighborhood|) memory and applies that many

@@ -35,8 +35,7 @@ use optopus::prelude::*;
 let gc = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&gc);
 LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("colors used = {}, conflicts = {}", sol.colors_used, sol.conflicts);

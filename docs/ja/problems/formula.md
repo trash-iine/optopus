@@ -36,8 +36,7 @@ let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint:
 
 let mut state = SearchState::new(&prob);
 TabuSearch::<IntChangeNeighbor>::new(StopCondition::iterations(1_000), (1, 2))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let values = state.best_solution.values();
 println!("assignment = {values:?}");
@@ -52,6 +51,10 @@ println!("penalty = {}", prob.eval_penalty(values));
 `FormulaSolution` は各変数の値を持ち、`values()` で読めます。`Evaluate` は問題の向き付きのペナルティ込みの目的値を返します。
 最大化なら `Evaluable::Maximize(objective − penalty)`、最小化なら `Evaluable::Minimize(objective + penalty)` で、探索はこれで順位を付けます。
 二つの部分はそれぞれ `eval_objective` と `eval_penalty` で得られます。
+
+| メソッド | 型 | 意味 |
+|---|---|---|
+| `values()` | `&[i64]` | 各変数の値。並びは作るときに渡した範囲の順 |
 
 ## 式 { #expressions }
 
@@ -91,7 +94,7 @@ let constraint = Constraint::Comparison {
 
 `Constraint::Clamp` は式を `lo..=hi` に収めます。`Lt` と `Gt` は等号のときに小さなペナルティをかけるので、狭義の関係では等号が無料になりません。
 
-## 近傍 { #moves }
+## 近傍 { #neighbors }
 
 近傍は整数変数の問題すべてに付いてくるものと同じです。
 
@@ -104,7 +107,7 @@ let constraint = Constraint::Comparison {
 `IntChangeNeighbor` は解の表から値を読みます。Swap はどちらかの変数を読む単項式と制約だけから求めます。
 Reverse は解の複製を評価します。式の問題で Reverse を使うことはほとんどないためです。
 
-## 交叉と部分問題 { #crossover-and-sub-problems }
+## 交叉 { #crossover }
 
 `IntCrossover` は各変数をどちらかの親からとり、`FormulaSolution` は `Distance` を実装しているので、`FormulaProblem` で `GeneticAlgorithm` が動きます。
 

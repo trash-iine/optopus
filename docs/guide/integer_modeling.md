@@ -31,8 +31,7 @@ picked by naming the move, and the best solution's values are read back with
 ```rust
 let mut state = SearchState::new_with_seed(&prob, 42);
 SimulatedAnnealing::<IntChangeNeighbor>::new(StopCondition::iterations(20_000), 2.0, 0.9995)
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 println!("{:?}", state.best_solution.values());
 println!("{:?}", state.best_solution.evaluate());
 ```
@@ -71,7 +70,7 @@ out what every flip changes from the expression, so it is fast with nothing
 more written.
 
 ```rust
-let qubo = Qubo::load_file("data/instances/qubo/bqp/bqp100_1.txt").unwrap();
+let qubo = Qubo::load_file("data/instances/qubo/bqp/bqp100_1.txt")?;
 
 let vars: IntVars = (0..qubo.len()).map(|_| IntVar::binary()).collect();
 let energy = qubo.entries().fold(Expr::Const(0.0), |sum, (i, j, q)| {
@@ -90,7 +89,7 @@ that hold. A literal `l` asks variable `|l| - 1` to be `1` when `l` is
 positive and `0` when it is negative.
 
 ```rust
-let sat = Sat::load_file("data/instances/sat/sample.cnf").unwrap();
+let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 
 let vars: IntVars = (0..sat.n_vars()).map(|_| IntVar::binary()).collect();
 let prob = IntegerProblem::maximize(vars, |x: &[i64]| {
@@ -114,7 +113,7 @@ and the objective is the length of the closed tour. `IntReverseNeighbor`
 reverses a stretch of the tour, which is a 2-opt move.
 
 ```rust
-let tsp = Tsp::load_file("data/instances/tsp/eil51.tsp").unwrap();
+let tsp = Tsp::load_file("data/instances/tsp/eil51.tsp")?;
 let n = tsp.get_n();
 
 let prob = IntegerProblem::minimize(IntVars::permutation(n), |tour: &[i64]| {
@@ -196,7 +195,7 @@ called inside the objective like any other. `IntSwapNeighbor` exchanges two
 operations in the order.
 
 ```rust
-let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt").unwrap();
+let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 let m = jssp.n_machines;
 
 let as_jobs = |v: &[i64]| -> Vec<usize> { v.iter().map(|&p| p as usize / m).collect() };
@@ -221,7 +220,7 @@ Customers are numbered from 1, the depot being 0, so a value is shifted by one.
 ```rust
 use optopus::problem::vrp::split_giant_tour;
 
-let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp").unwrap();
+let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 
 let routes = |order: &[i64]| {
     let giant: Vec<usize> = order.iter().map(|&c| c as usize + 1).collect();

@@ -34,16 +34,6 @@ CVRP は TSP を一般化したもので、容量無制限の車両 1 台にす�
 積載超過と最小台数の不足は整数なので、違反があれば必ず重み 1 個分以上のコストになります。
 ルート時間の超過は連続量なので、1 時間単位に満たない違反はその分だけ小さく評価されます。
 
-## スロットは車両タイプに固定の連続ブロックで結び付く { #slots-are-bound-to-vehicle-types-in-fixed-contiguous-blocks }
-
-どの解もスロット 1 本につきルートがちょうど 1 本で、`num_slots` はフリート全体の `Σ max_count` です。
-各車両タイプはスロットの連続ブロックを持ちます。タイプ `0` がスロット `0..max_count[0]`、タイプ `1` が次のブロック、という具合で、
-この対応は構築時に一度決まり、その後は変わりません。つまりスロットのタイプは *インスタンス* の一部であって解の一部ではなく、
-顧客を別タイプのスロットへ移したり交換したりすることが、そのままその顧客の車両タイプの変更になります。
-
-同じタイプの空きスロットどうしは区別がつかないので、新しいルートを開く move が見るのはそのタイプの最初の空きスロット 1 本だけです
-(`Vrp::idle_representatives`)。ほかのスロットは同じルートに別のラベルを付けたものにしかなりません。
-
 ## 例 { #example }
 
 CVRP のインスタンスで探索を実行し、各車両のルートを読み出します。
@@ -61,8 +51,7 @@ let vrp = Vrp::new(
 );
 let mut state = SearchState::new(&vrp);
 LocalSearch::<VrpRelocateNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("total distance = {}", sol.total_distance());
@@ -97,8 +86,7 @@ let fleet = Vrp::with_fleet(
 
 let mut state = SearchState::new(&fleet);
 LocalSearch::<VrpRelocateNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("objective = {}", sol.objective);
@@ -138,17 +126,6 @@ CVRP のコンストラクタに `num_vehicles = 0` を渡すと、first-fit-dec
 余裕を持たせるのは、距離が最適な解が最小台数より数台多く使うことがよくあるからです。
 遠い顧客を単独のルートに切り出すほうが、寄り道するより安くつくことがあります。
 使わない車両にコストはかかりませんが、足りない車両は最適解そのものを失わせます。
-
-## 目的関数のモード { #objective-mode }
-
-[`ObjectiveMode`](../../api/optopus/problem/vrp/enum.ObjectiveMode.html) は、スロットごとの `route_time` を
-時間の項がどう集計するかを選びます。
-
-- `TotalTime`。全スロットにわたる和で、通常の配送経路問題の目的関数です。
-- `Makespan`。最も長い 1 本のルートの所要時間で、「最後の車両が戻るのはいつか」という min-max の目的関数です。
-
-`Makespan` は加法的ではないので、この下での探索は move が変える量を足し合わせて価格付けすることができません。
-それでもどのヒューリスティクスも動きます。増分更新は move を価格付けする時点で新しい最大値を解決し、そのコストは顧客数ではなくフリートの台数で抑えられます。
 
 ## 解 { #solution }
 
@@ -212,7 +189,28 @@ HGS は探索の進行に合わせて調整し直すペナルティで同じ復�
 `alns_for_vrp` はこの探索を `AnchoredRouteDescent` と組み合わせます。これは ruin が再挿入したばかりの顧客の周りで走らせる
 granular なルート降下で、その粒度、リング、パス数は ALNS のページで説明している builder で設定します。
 
-## ファイル形式 { #file-formats }
+## スロットは車両タイプに固定の連続ブロックで結び付く { #slots-are-bound-to-vehicle-types-in-fixed-contiguous-blocks }
+
+どの解もスロット 1 本につきルートがちょうど 1 本で、`num_slots` はフリート全体の `Σ max_count` です。
+各車両タイプはスロットの連続ブロックを持ちます。タイプ `0` がスロット `0..max_count[0]`、タイプ `1` が次のブロック、という具合で、
+この対応は構築時に一度決まり、その後は変わりません。つまりスロットのタイプは *インスタンス* の一部であって解の一部ではなく、
+顧客を別タイプのスロットへ移したり交換したりすることが、そのままその顧客の車両タイプの変更になります。
+
+同じタイプの空きスロットどうしは区別がつかないので、新しいルートを開く move が見るのはそのタイプの最初の空きスロット 1 本だけです
+(`Vrp::idle_representatives`)。ほかのスロットは同じルートに別のラベルを付けたものにしかなりません。
+
+## 目的関数のモード { #objective-mode }
+
+[`ObjectiveMode`](../../api/optopus/problem/vrp/enum.ObjectiveMode.html) は、スロットごとの `route_time` を
+時間の項がどう集計するかを選びます。
+
+- `TotalTime`。全スロットにわたる和で、通常の配送経路問題の目的関数です。
+- `Makespan`。最も長い 1 本のルートの所要時間で、「最後の車両が戻るのはいつか」という min-max の目的関数です。
+
+`Makespan` は加法的ではないので、この下での探索は move が変える量を足し合わせて価格付けすることができません。
+それでもどのヒューリスティクスも動きます。増分更新は move を価格付けする時点で新しい最大値を解決し、そのコストは顧客数ではなくフリートの台数で抑えられます。
+
+## ファイル形式 { #file-format }
 
 `Vrp::load_file` は、パスが `.toml` で終わるときは TOML のフリート形式を、それ以外は CVRPLIB を読みます。
 

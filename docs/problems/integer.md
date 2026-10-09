@@ -6,18 +6,9 @@
 variables are integers, each ranging over `lower..=upper`, and building one
 takes those ranges and the objective, a closure. There is nothing to implement.
 
-- `ProblemTrait` comes with every `IntegerProblem`, with `IntSolution` as the
-  solution. The initial solution draws each variable uniformly from its
-  range, or is a uniformly random permutation when the variables are one.
-- Three moves come with it, and each implements everything `LocalSearch`,
-  `SimulatedAnnealing`, `LateAcceptanceHillClimbing`, `TabuSearch`,
-  `RandomWalk`, `BeamSearch` and `ReinforcementLearningSearch` ask of a move.
-
-| Move | What it does | For |
-|---|---|---|
-| `IntChangeNeighbor` | sets one variable to any other value in its range, a flip on `0..=1` | independent ranges |
-| `IntSwapNeighbor` | exchanges the values of two variables | assignments, permutations |
-| `IntReverseNeighbor` | reverses the values of variables `i..=j` | permutations read as a tour (2-opt) |
+`ProblemTrait` comes with every `IntegerProblem`, with `IntSolution` as the
+solution. The initial solution draws each variable uniformly from its range,
+or is a uniformly random permutation when the variables are one.
 
 ## Example
 
@@ -32,8 +23,7 @@ let prob = IntegerProblem::minimize(vars, |x: &[i64]| {
 
 let mut state = SearchState::new(&prob);
 LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 println!("{:?}", state.best_solution.values());
 ```
 
@@ -44,6 +34,26 @@ and the closure returns the plain value.
 solves a bounded knapsack this way (`cargo run --example integer_problem`).
 [Writing problems with integer variables](../guide/integer_modeling.md) does
 the same for every problem the library ships.
+
+## Solution
+
+`IntSolution` holds the value of every variable.
+
+| Method | Type | Meaning |
+|---|---|---|
+| `values()` | `&[i64]` | the value of every variable, in the order of the ranges given at construction |
+
+## Neighbors
+
+Three moves come with it, and each implements everything `LocalSearch`,
+`SimulatedAnnealing`, `LateAcceptanceHillClimbing`, `TabuSearch`, `RandomWalk`,
+`BeamSearch` and `ReinforcementLearningSearch` ask of a move.
+
+| Move | What it does | For |
+|---|---|---|
+| `IntChangeNeighbor` | sets one variable to any other value in its range, a flip on `0..=1` | independent ranges |
+| `IntSwapNeighbor` | exchanges the values of two variables | assignments, permutations |
+| `IntReverseNeighbor` | reverses the values of variables `i..=j` | permutations read as a tour (2-opt) |
 
 ## Permutations
 
@@ -124,7 +134,7 @@ they do on an `IntegerProblem`, which is itself an `IntAssignment`.
 fails if one lies outside its range. Hand it to `SearchState::with_solution` to
 start a search there.
 
-## Genetic algorithm
+## Crossover
 
 `IntSolution` implements `Distance`, and `IntCrossover` takes each variable
 from either parent, or on a permutation keeps a segment of one parent and

@@ -26,7 +26,7 @@ let mut state = SearchState::new(&mc);
 let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(1_000_000),
 );
-ls.run(&mut state).unwrap();
+ls.run(&mut state)?;
 
 println!("best cut = {}", state.best_solution.objective);
 // state.best_solution.x holds the partition. docs/problems/max_cut.md lists every field.

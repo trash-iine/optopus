@@ -29,10 +29,29 @@ Small (≤30s budget), medium (120s), and large (600s) bands.
 
 CVRP has run configs and a size-band profile (below) but no published
 results yet, there is no `data/vrp/` under this directory, so the viewer has
-no CVRP rows. The bespoke CVRP comparison lives in
-[hgs.md](../heuristics/hgs.md#measured-quality) instead. The same holds for
+no CVRP rows. The bespoke CVRP comparison is
+[below](#hgs-against-alns-on-cvrp) instead. The same holds for
 `PopulationAnnealing` and `WalkSatForSat`: implemented and
 configurable, not part of this sweep.
+
+## HGS against ALNS on CVRP
+
+30 s per run, 3 runs, seed 42, `μ=25 λ=40 Γ=20`, against the CVRPLIB best-known
+solutions (`data/instances/scripts/fetch_cvrp.sh`).
+[HGS](../heuristics/hgs.md) is `HybridGeneticSearchForVrp` and
+[ALNS](../heuristics/alns.md) is `AdaptiveLargeNeighborhoodSearch` at the same
+budget.
+
+| Instance | BKS | ALNS best | HGS best | ALNS gap | HGS gap |
+|---|---|---|---|---|---|
+| X-n101-k25 | 27591 | 27597 | 27597 | +0.02% | +0.02% |
+| X-n195-k51 | 44225 | 44334 | 44506 | +0.25% | +0.64% |
+| X-n502-k39 | 69226 | 69872 | 70025 | +0.93% | +1.15% |
+
+The two are level at this budget, with every difference between them under
+0.7%, so either is a reasonable default for CVRP.
+
+Reproduce with `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
 
 ## Browse interactively
 

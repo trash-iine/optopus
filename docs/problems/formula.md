@@ -44,8 +44,7 @@ let prob = FormulaProblem::maximize(vars, objective).with_constraint(Constraint:
 
 let mut state = SearchState::new(&prob);
 TabuSearch::<IntChangeNeighbor>::new(StopCondition::iterations(1_000), (1, 2))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let values = state.best_solution.values();
 println!("assignment = {values:?}");
@@ -62,6 +61,10 @@ There is no file loader. The problem is built in code, as above.
 `Evaluable::Maximize(objective − penalty)` or
 `Evaluable::Minimize(objective + penalty)`, which is what the search ranks by.
 `eval_objective` and `eval_penalty` give the two parts on their own.
+
+| Method | Type | Meaning |
+|---|---|---|
+| `values()` | `&[i64]` | the value of every variable, in the order of the ranges given at construction |
 
 ## Expressions
 
@@ -107,7 +110,7 @@ let constraint = Constraint::Comparison {
 `Constraint::Clamp` keeps an expression within `lo..=hi`. `Lt` and `Gt` charge
 a small margin at equality, so a tie is never free under a strict relation.
 
-## Moves
+## Neighbors
 
 The moves are the ones every integer problem gets.
 
@@ -121,7 +124,7 @@ The moves are the ones every integer problem gets.
 from the monomials and constraints that read either variable. A reversal
 evaluates a copy of the solution, since formulas rarely want one.
 
-## Crossover and sub-problems
+## Crossover
 
 `IntCrossover` takes each variable from either parent, and `FormulaSolution`
 implements `Distance`, so `GeneticAlgorithm` runs on a `FormulaProblem`.
