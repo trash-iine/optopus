@@ -36,6 +36,7 @@
 - [VRP](problems/vrp.md)
 - [Graph Coloring](problems/graph_coloring.md)
 - [Formula](problems/formula.md)
+- [整数変数](problems/integer.md)
 
 ### ヒューリスティクス
 
@@ -51,6 +52,7 @@
 - [Population Annealing](heuristics/population_annealing.md)
 - [Adaptive Large Neighborhood Search](heuristics/alns.md)
 - [Breakout Local Search](heuristics/breakout_local_search.md)
+- [Branch and Bound](heuristics/branch_and_bound.md)
 - [Meta-heuristics](heuristics/meta.md) (Sequential, Iterated (ILS), VNS, Restart)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
 - [WalkSAT (MaxSAT)](heuristics/walksat.md)
