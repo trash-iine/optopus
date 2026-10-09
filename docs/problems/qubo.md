@@ -34,8 +34,7 @@ let qubo = Qubo::from_entries([
 ]);
 let mut state = SearchState::new(&qubo);
 LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("energy = {}", sol.objective);

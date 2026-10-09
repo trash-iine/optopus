@@ -145,20 +145,7 @@ max_duration_secs = 30.0
 
 フィールドはすべて任意です。レポートの受理カウンタには子の実行可能な割合が入ります。適応的なペナルティが操作しているのはこの値です。
 
-## 計測した品質 { #measured-quality }
-
-1 回 30 秒、3 回実行、シード 42、`μ=25 λ=40 Γ=20` で、CVRPLIB の最良既知解 (`data/instances/scripts/fetch_cvrp.sh`) と比較しました。
-ALNS は同じ予算の `AdaptiveLargeNeighborhoodSearch` です。
-
-| インスタンス | BKS | ALNS の最良 | HGS の最良 | ALNS の差 | HGS の差 |
-|---|---|---|---|---|---|
-| X-n101-k25 | 27591 | 27597 | 27597 | +0.02% | +0.02% |
-| X-n195-k51 | 44225 | 44334 | 44506 | +0.25% | +0.64% |
-| X-n502-k39 | 69226 | 69872 | 70025 | +0.93% | +1.15% |
-
-この予算では HGS と [ALNS](alns.md) は互角で、X インスタンス 10 本でどの差も 0.7% 未満です。CVRP ではどちらを既定にしても妥当です。
-
-再現には `data/benchmarks/vrp/hgs_{small,medium,large}.toml` を使います。
+CVRPLIB のインスタンスで同じ予算の ALNS と比べた結果は [ベンチマーク](../../benchmarks/README.md#hgs-against-alns-on-cvrp) にあります。
 
 ## 参考文献 { #references }
 

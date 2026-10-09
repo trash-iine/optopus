@@ -22,6 +22,18 @@ sa.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
 
+## Algorithm sketch
+
+Each `run_once`:
+
+1. Draw a uniformly random neighbor with `state.random_neighbor`.
+2. Read its worsening, `evaluate().minimized()`. Accept the move when the
+   worsening is negative, and otherwise with probability `exp(−worsening / T)`,
+   so a move that leaves the objective unchanged is always accepted. The shared
+   helper `boltzmann_accept(delta, T, rng)` makes this decision.
+3. Apply an accepted move, or count the iteration as rejected.
+4. Multiply `T` by `cooling_rate`.
+
 ## Constructor
 
 ```rust
@@ -40,12 +52,6 @@ worsening amount is read from `Evaluable::minimized()`, so the direction of the
 underlying objective is handled automatically.
 
 `clear()` resets the current temperature to `initial_temperature`.
-
-## Acceptance rule
-
-The shared helper `boltzmann_accept(delta: Evaluable<f64>, T: f64)` returns
-`true` if `delta` improves the score, otherwise it draws a uniform random
-number and compares against `exp(−worsening / T)`.
 
 ## Benchmark config
 

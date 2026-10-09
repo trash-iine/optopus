@@ -21,11 +21,10 @@ Running a search and reading back the partition it found:
 use optopus::prelude::*;
 
 // Or from a file, let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
-let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]);
+let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]));
 let mut state = SearchState::new(&mc);
 LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("cut weight = {}", sol.objective);
@@ -34,9 +33,7 @@ for (v, &side) in sol.x.iter().enumerate() {
 }
 ```
 
-`MaxCut::from_edges` is a convenience wrapper around
-`MaxCut::new(Graph::from_edges(...))`; both use set semantics for
-duplicate edges, the last write wins.
+`Graph::from_edges` treats duplicate edges as a set, the last write wins.
 
 ## Solution
 
@@ -103,7 +100,7 @@ let planted = PlantedMaxCut::tile_planting_2d(
     TileProbs2d::new(0.35, 0.0, 0.65),
     &mut seeded_rng(1),
 );
-planted.verify().unwrap(); // the recorded optimum is what the instance computes
+planted.verify()?; // the recorded optimum is what the instance computes
 // planted.optimum is the ceiling no run can exceed
 ```
 

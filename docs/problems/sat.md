@@ -33,8 +33,7 @@ sat.add_clause([1, 2, 3]);
 
 let mut state = SearchState::new(&sat);
 LocalSearch::<SatFlipNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("{} / {} clauses satisfied", sol.n_satisfied, sat.n_clauses());
@@ -69,7 +68,9 @@ DIMACS literals are 1-indexed and `x` is 0-indexed, so variable `v` of the file 
 - `SatUniformCrossover`, per-variable random parent selection.
 - `Sat` implements `SubProblemExtractable` for `SubProblemBasedCrossover`.
 
-## File format (DIMACS CNF)
+## File format
+
+`Sat::load_file` reads DIMACS CNF.
 
 Note the indexing convention: `add_clause` and the file format use signed
 1-indexed literals (positive = positive literal, negative = negation).

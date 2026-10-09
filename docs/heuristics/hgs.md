@@ -175,22 +175,8 @@ max_duration_secs = 30.0
 All fields are optional. The acceptance counters in the report carry the
 feasible share of offspring, which is what the adaptive penalty steers.
 
-## Measured quality
-
-30 s per run, 3 runs, seed 42, `μ=25 λ=40 Γ=20`, against the CVRPLIB best-known
-solutions (`data/instances/scripts/fetch_cvrp.sh`). ALNS is
-`AdaptiveLargeNeighborhoodSearch` at the same budget.
-
-| Instance | BKS | ALNS best | HGS best | ALNS gap | HGS gap |
-|---|---|---|---|---|---|
-| X-n101-k25 | 27591 | 27597 | 27597 | +0.02% | +0.02% |
-| X-n195-k51 | 44225 | 44334 | 44506 | +0.25% | +0.64% |
-| X-n502-k39 | 69226 | 69872 | 70025 | +0.93% | +1.15% |
-
-HGS and [ALNS](alns.md) are level at this budget, with every difference under
-0.7% over ten X instances, so either is a reasonable default for CVRP.
-
-Reproduce with `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
+How HGS compares with ALNS at the same budget on CVRPLIB instances is in
+[Benchmarks](../benchmarks/README.md#hgs-against-alns-on-cvrp).
 
 ## References
 

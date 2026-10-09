@@ -28,8 +28,7 @@ sat.add_clause([1, 2, 3]);
 
 let mut state = SearchState::new(&sat);
 LocalSearch::<SatFlipNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("{} / {} clauses satisfied", sol.n_satisfied, sat.n_clauses());
@@ -64,7 +63,9 @@ DIMACS のリテラルは 1 始まりで `x` は 0 始まりなので、ファ�
 - `SatUniformCrossover`。変数ごとにランダムに親を選びます。
 - `Sat` は `SubProblemBasedCrossover` のために `SubProblemExtractable` を実装しています。
 
-## ファイル形式 (DIMACS CNF) { #file-format-dimacs-cnf }
+## ファイル形式 { #file-format }
+
+`Sat::load_file` は DIMACS CNF を読みます。
 
 インデックスの慣習に注意してください。`add_clause` とファイル形式は符号付きの 1 始まりのリテラルを使います
 (正は肯定リテラル、負は否定)。

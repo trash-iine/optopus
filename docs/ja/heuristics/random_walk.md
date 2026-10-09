@@ -5,9 +5,6 @@
 一様ランダムに近傍を一つ引き、無条件に適用します。受理判定も比較もありません。
 それでも、歩く途中で出会った最良解は `state.best_solution` に記録されます。
 
-move が見つからない反復は、カウンタを進めて戻ります。空の近傍は失敗ではなく、歩行に渡されうる状態の一つです。
-カウンタを進めることで、外側の予算で終了できるようになります。
-
 ## 例 { #example }
 
 ```rust
@@ -20,6 +17,15 @@ rw.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
 
+## アルゴリズムの概要 { #algorithm-sketch }
+
+各 `run_once` で次を行います。
+
+1. 一様ランダムに近傍を一つ引きます。
+2. それを無条件に適用します。歩く途中で出会った最良解は、state が記録し続けます。
+3. 近傍が空なら、反復のカウンタだけを進めます。空の近傍は失敗ではなく、歩行に渡されうる状態の一つです。
+   カウンタを進めることで、外側の予算で歩行を終えられるようになります。
+
 ## コンストラクタ { #constructor }
 
 ```rust
@@ -30,7 +36,7 @@ RandomWalk::<N>::new(stop_condition: StopCondition) -> Self
 
 `N` は `MoveToNeighbor<P> + Rankable` を満たす必要があります。
 
-## 使いどころ { #when-to-use }
+## 振る舞い { #behavior }
 
 `RandomWalk` 単体で役に立つことはまれです。主な役割は [`Iterated`](meta.md#iterated) の摂動フェーズです。
 いくつかのランダムな move で探索を局所最適から押し出し、次の貪欲なフェーズが別の谷を登れるようにします。
