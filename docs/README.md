@@ -36,9 +36,10 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [TSP](problems/tsp.md)
 - [Vertex Cover](problems/vertex_cover.md)
 - [Job Shop Scheduling](problems/job_shop_scheduling.md)
-- [CVRP](problems/vrp.md)
+- [VRP](problems/vrp.md)
 - [Graph Coloring](problems/graph_coloring.md)
 - [Formula](problems/formula.md)
+- [Integer variables](problems/integer.md)
 
 ### Heuristics
 
@@ -54,6 +55,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Population Annealing](heuristics/population_annealing.md)
 - [Adaptive Large Neighborhood Search](heuristics/alns.md)
 - [Breakout Local Search](heuristics/breakout_local_search.md)
+- [Branch and Bound](heuristics/branch_and_bound.md)
 - [Meta-heuristics](heuristics/meta.md) (Sequential, Iterated (ILS), VNS, Restart)
 - [Lin-Kernighan-Helsgaun (TSP)](heuristics/lkh.md)
 - [WalkSAT (MaxSAT)](heuristics/walksat.md)
