@@ -2,19 +2,12 @@
 
 **API:** [`GreedyRandomizedConstruction`](../../api/optopus/heuristic/struct.GreedyRandomizedConstruction.html)
 
-GRASP の構築フェーズです。現在解を空にし、要素を一つずつ入れて新しい解を作ります。
-各ステップで、まだ外にある要素それぞれを最も安い配置で価格付けし、制限付き候補リスト、つまりコストが最安から `alpha` の範囲にある要素から一つを一様に引きます。
-
-```text
-cost ≤ c_min + alpha · (c_max − c_min)
-```
-
-`alpha = 0` は純粋な貪欲法で、`alpha = 1` は要素をランダムな順に取り、それぞれを最も安い位置に置きます。
+GRASP の構築フェーズです。現在解を空にし、最も安い配置のコストが全体の最安から `alpha` の範囲にある要素から一つずつ選んで入れ、新しい解を作ります。
 
 [`Ruinable`](../traits.md) を実装し、その解が [`Evaluate`](../traits.md) を実装している任意の問題で動きます。
 設定ファイルからは TSP、VRP、[フローショップ](../problems/flow_shop.md)、[Bin Packing](../problems/bin_packing.md) で使えます。
 
-## GRASP は合成で書く { #grasp-is-a-composition }
+## 例 { #example }
 
 1 回の実行で解をちょうど一つ作って止まるので、これは探索ではなく合成の部品です。
 構築と降下を繰り返して最良を残す GRASP 本体は、これを第 2 ステップにした [`Iterated`](meta.md) です。
@@ -41,15 +34,17 @@ println!("makespan = {}", state.best_solution.objective);
 [`examples/compose_grasp.rs`](https://github.com/trash-iine/optopus/blob/main/examples/compose_grasp.rs) はこれをフローショップと Bin Packing で実行し、
 Bin Packing では探索に variable neighborhood descent を使って、multi-start 降下と比べます。
 
-## 効くところ { #where-it-pays }
+## アルゴリズムの概略 { #algorithm-sketch }
 
-貪欲の規則は、問題の `insertion_cost` が意味するところの「最も安い挿入から」なので、構築の質はその規則の質で決まります。
+1 回の実行が 1 回の構築です。
 
-- フローショップでは最も安い挿入は NEH の規則そのもので、Taillard の 50 × 20 インスタンスで GRASP は multi-start 降下に勝ちます。
-- Bin Packing では最も安く入れられる品目は開いている bin に収まるものなので、大きい品目が最後まで残り、それぞれが bin を開きます。First Fit Decreasing の逆です。そこでは GRASP は multi-start 降下に負け、ALNS が両方を大きく上回ります。
-- 巡回路と 2-opt では multi-start 降下とほぼ互角です。
+1. 空にする。現在解の要素をすべて取り出す。
+2. 価格付け。まだ外にある要素それぞれを最も安い配置で価格付けする。
+3. 絞り込み。コストが最安から `alpha` の範囲、`cost ≤ c_min + alpha · (c_max − c_min)` にある要素を候補リストにする。コストが有限な要素だけが入る。
+4. 挿入。候補から一つを一様に引き、最も安い位置に置く。
+5. すべての要素が置かれるまで 2 から 4 を繰り返し、結果で現在解を置き換える。
 
-各ステップで残りの全要素を価格付けし直すので、`n` 要素の解を作るのは O(n² · buckets · places) です。数百要素ならミリ秒単位、数千要素では遅くなります。
+`alpha = 0` は純粋な貪欲法で、`alpha = 1` は要素をランダムな順に取り、それぞれを最も安い位置に置きます。
 
 ## コンストラクタ { #constructor }
 
@@ -62,6 +57,16 @@ GreedyRandomizedConstruction::<P>::new(
 
 `alpha` が `[0, 1]` の外なら panic します。オペレータ本体は `building_blocks::search` の自由関数 `randomized_greedy_insertion` で、
 ALNS の修復オペレータと並んでおり、解の一部をこの方法で作り直したい探索から使えます。
+
+## 効くところ { #where-it-pays }
+
+貪欲の規則は、問題の `insertion_cost` が意味するところの「最も安い挿入から」なので、構築の質はその規則の質で決まります。
+
+- フローショップでは最も安い挿入は NEH の規則そのもので、Taillard の 50 × 20 インスタンスで GRASP は multi-start 降下に勝ちます。
+- Bin Packing では最も安く入れられる品目は開いている bin に収まるものなので、大きい品目が最後まで残り、それぞれが bin を開きます。First Fit Decreasing の逆です。そこでは GRASP は multi-start 降下に負け、ALNS が両方を大きく上回ります。
+- 巡回路と 2-opt では multi-start 降下とほぼ互角です。
+
+各ステップで残りの全要素を価格付けし直すので、`n` 要素の解を作るのは O(n² · buckets · places) です。数百要素ならミリ秒単位、数千要素では遅くなります。
 
 ## ベンチマーク設定 { #benchmark-config }
 

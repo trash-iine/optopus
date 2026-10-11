@@ -49,6 +49,13 @@ which items share a bin, not the bin numbers.
 
 Both are priced in O(1) from the loads, and neither ever overfills a bin.
 
+## Crossover
+
+`BinPackingGroupCrossover` passes on whole bins rather than items, in the
+spirit of Falkenauer's grouping crossover. The child takes bins from the two
+parents alternately, fullest first, skipping any that holds an item already
+placed, and packs what is left by First Fit Decreasing.
+
 ## Ruin and recreate
 
 `BinPacking` implements [`Ruinable`](../traits.md) with items as the elements
@@ -58,13 +65,6 @@ never runs out of room. An item that does not fit a bin costs infinity there,
 and regret, the gap between an item's best bin and its next best, means
 something. [ALNS](../heuristics/alns.md) runs on it without a local repair, and
 so does [GreedyRandomizedConstruction](../heuristics/greedy_randomized_construction.md).
-
-## Crossover
-
-`BinPackingGroupCrossover` passes on whole bins rather than items, in the
-spirit of Falkenauer's grouping crossover. The child takes bins from the two
-parents alternately, fullest first, skipping any that holds an item already
-placed, and packs what is left by First Fit Decreasing.
 
 ## File format
 

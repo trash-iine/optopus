@@ -3,22 +3,14 @@
 **API:** [`GreedyRandomizedConstruction`](../api/optopus/heuristic/struct.GreedyRandomizedConstruction.html)
 
 The construction phase of GRASP. It empties the incumbent and builds a new
-solution one element at a time. At every step each element still out is priced
-at its cheapest placement, and one is drawn uniformly from the restricted
-candidate list, the elements whose cost is within `alpha` of the cheapest,
-
-```text
-cost ≤ c_min + alpha · (c_max − c_min)
-```
-
-`alpha = 0` is pure greedy and `alpha = 1` takes the elements in a random order,
-each at its cheapest place.
+solution one element at a time, each drawn from the elements whose cheapest
+placement is within `alpha` of the cheapest of all.
 
 It runs on any problem implementing [`Ruinable`](../traits.md) whose solution
 implements [`Evaluate`](../traits.md). In a config that is TSP, VRP, the
 [flow shop](../problems/flow_shop.md) and [bin packing](../problems/bin_packing.md).
 
-## GRASP is a composition
+## Example
 
 A run builds exactly one solution and stops, so this is a step for a
 composition rather than a search. GRASP itself, a construction and a descent
@@ -48,6 +40,36 @@ println!("makespan = {}", state.best_solution.objective);
 runs this on the flow shop and on bin packing, with a variable neighborhood
 descent as the search there, against multi-start descent.
 
+## Algorithm sketch
+
+A run is one construction.
+
+1. Empty, every element of the incumbent is taken out.
+2. Price, each element still out is priced at its cheapest placement.
+3. Restrict, the candidate list is the elements whose cost is within `alpha`
+   of the cheapest, `cost ≤ c_min + alpha · (c_max − c_min)`. Only elements
+   with a finite cost enter it.
+4. Insert, one candidate is drawn uniformly and put at its cheapest place.
+5. Steps 2 to 4 repeat until every element is placed, and the result replaces
+   the incumbent.
+
+`alpha = 0` is pure greedy and `alpha = 1` takes the elements in a random order,
+each at its cheapest place.
+
+## Constructor
+
+```rust
+GreedyRandomizedConstruction::<P>::new(
+    stop_condition: StopCondition,   // can end a run early, never makes it build twice
+    alpha: f64,                      // in [0, 1]
+) -> Self
+```
+
+Panics if `alpha` is outside `[0, 1]`. The operator itself is the free function
+`randomized_greedy_insertion` in `building_blocks::search`, beside the repair
+operators of ALNS, for a search that wants to recreate part of a solution
+this way.
+
 ## Where it pays
 
 The greedy rule is cheapest insertion first, whatever the problem's
@@ -64,20 +86,6 @@ The greedy rule is cheapest insertion first, whatever the problem's
 Every step reprices every element left, so building a solution of `n` elements
 is O(n² · buckets · places). That is milliseconds on a few hundred elements and
 slow on thousands.
-
-## Constructor
-
-```rust
-GreedyRandomizedConstruction::<P>::new(
-    stop_condition: StopCondition,   // can end a run early, never makes it build twice
-    alpha: f64,                      // in [0, 1]
-) -> Self
-```
-
-Panics if `alpha` is outside `[0, 1]`. The operator itself is the free function
-`randomized_greedy_insertion` in `building_blocks::search`, beside the repair
-operators of ALNS, for a search that wants to recreate part of a solution
-this way.
 
 ## Benchmark config
 

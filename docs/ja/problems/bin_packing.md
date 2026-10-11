@@ -44,17 +44,17 @@ bin は常に空きのない `0..num_bins()` で番号付けされ、bin を空�
 
 どちらも負荷から O(1) で価格付けし、bin を容量超過にすることはありません。
 
+## 交叉 { #crossover }
+
+`BinPackingGroupCrossover` は Falkenauer のグルーピング交叉の考え方で、品目ではなく bin を丸ごと受け継ぎます。
+子は二つの親から、満杯の bin から順に交互に bin を受け取り、すでに配置した品目を含む bin は飛ばし、残りを First Fit Decreasing で詰めます。
+
 ## Ruin and recreate { #ruin-and-recreate }
 
 `BinPacking` は品目を要素、bin をコンテナとして [`Ruinable`](../traits.md) を実装しています。このトレイトが想定していたそのものの形です。
 開いている bin がそれぞれ bucket で、その後ろに常に空の bin を一つ用意するので、修復で置き場所がなくなることはありません。
 収まらない bin への挿入コストは無限大で、regret、つまり品目の最良の bin と次善の bin の差に意味があります。
 [ALNS](../heuristics/alns.md) は局所修復なしでこの上で動き、[GreedyRandomizedConstruction](../heuristics/greedy_randomized_construction.md) も動きます。
-
-## 交叉 { #crossover }
-
-`BinPackingGroupCrossover` は Falkenauer のグルーピング交叉の考え方で、品目ではなく bin を丸ごと受け継ぎます。
-子は二つの親から、満杯の bin から順に交互に bin を受け取り、すでに配置した品目を含む bin は飛ばし、残りを First Fit Decreasing で詰めます。
 
 ## ファイル形式 { #file-format }
 
