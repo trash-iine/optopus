@@ -474,11 +474,11 @@ mod tests {
 
         #[test]
         fn job_shop_swap_and_relocate_are_independent() {
-            let swap = JobShopSwapNeighbor { i: 0, gain: 0.0 };
+            let swap = JobShopSwapNeighbor { i: 0, gain: 0 };
             let relocate = JobShopRelocateNeighbor {
                 from: 0,
                 to: 1,
-                gain: 0.0,
+                gain: 0,
             };
             let mut tabu = memory((9, 9));
 
