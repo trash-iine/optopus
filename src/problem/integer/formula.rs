@@ -676,10 +676,6 @@ impl FormulaProblem {
     /// permutation and a value repeats.
     pub fn solution_from(&self, values: Vec<i64>) -> Result<FormulaSolution, OptError> {
         self.vars.check(&values)?;
-        Ok(self.build_solution(values))
-    }
-
-    fn build_solution(&self, values: Vec<i64>) -> FormulaSolution {
         let objective = self.objective(&values);
         let constraint_vals = self
             .constraint_polys
@@ -698,7 +694,7 @@ impl FormulaProblem {
                 self.fill_row(&mut sol, var);
             }
         }
-        sol
+        Ok(sol)
     }
 
     /// Whether solutions keep the delta table. A permutation has no single
@@ -824,7 +820,8 @@ impl ProblemTrait for FormulaProblem {
     /// Draws every variable uniformly from its range, or a uniformly random
     /// permutation when the variables are one.
     fn new_solution(&self, rng: &mut impl Rng) -> FormulaSolution {
-        self.build_solution(self.vars.random_values(rng))
+        self.solution_from(self.vars.random_values(rng))
+            .expect("random values lie in their ranges")
     }
 }
 
@@ -1067,7 +1064,8 @@ impl SubProblemExtractable for FormulaProblem {
                 }
             })
             .collect();
-        self.build_solution(values)
+        self.solution_from(values)
+            .expect("each value comes from a parent or the sub-problem, inside its range")
     }
 }
 

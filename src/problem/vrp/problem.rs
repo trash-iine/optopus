@@ -948,20 +948,13 @@ impl Vrp {
 
     /// Builds a [`VrpSolution`] from a slot assignment, computing every
     /// cached field from scratch, for starting a search somewhere other than a
-    /// random solution.
+    /// random solution. This is the reference implementation the incremental
+    /// neighborhood updates are tested against.
     ///
     /// Fails if `routes` is not one route per vehicle slot visiting every
     /// customer exactly once, the check [`Vrp::validate_routes`] runs.
     pub fn solution_from_routes(&self, routes: Vec<Vec<usize>>) -> Result<VrpSolution, OptError> {
         self.validate_routes(&routes)?;
-        Ok(self.build(routes))
-    }
-
-    /// A solution from routes the caller knows are a valid partition, as
-    /// every set built inside the crate is. This is the reference
-    /// implementation the incremental neighborhood updates are tested against.
-    pub(crate) fn build(&self, routes: Vec<Vec<usize>>) -> VrpSolution {
-        debug_assert!(self.validate_routes(&routes).is_ok());
 
         let slots = self.num_slots();
         let mut route_loads = vec![0i64; slots];
@@ -1039,7 +1032,7 @@ impl Vrp {
             objective: 0.0,
         };
         sol.objective = self.objective_under(&sol, self.penalty_weight());
-        sol
+        Ok(sol)
     }
 
     /// Validates that `routes` has one entry per slot and visits every customer
@@ -1449,7 +1442,8 @@ impl ProblemTrait for Vrp {
             remaining[s] -= d;
         }
 
-        self.build(routes)
+        self.solution_from_routes(routes)
+            .expect("every customer is placed in exactly one slot")
     }
 }
 
@@ -1519,7 +1513,9 @@ mod tests {
         // Slot 0 (truck): depot -> c1 -> c2 -> depot = 3 + 5 + 4 = 12 distance,
         // load 12 (overload 2), time 12/1 + (1 + 2) = 15 (excess 3 over 12).
         // Slot 2 (van): depot -> c3 -> depot = 2 distance, load 2, time 2/2 + 0.5 = 1.5.
-        let sol = prob.build(vec![vec![1, 2], vec![], vec![3]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2], vec![], vec![3]])
+            .unwrap();
 
         assert_eq!(sol.route_loads, vec![12, 0, 2]);
         assert!((sol.route_distance[0] - 12.0).abs() < 1e-9);
@@ -1545,7 +1541,9 @@ mod tests {
     fn empty_fleet_type_counts_as_a_shortfall() {
         let prob = fixture(ObjectiveMode::TotalTime);
         // Everything on the trucks: the van's min_count of 1 is unmet.
-        let sol = prob.build(vec![vec![1], vec![2, 3], vec![]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1], vec![2, 3], vec![]])
+            .unwrap();
         assert_eq!(sol.used_count, vec![2, 0]);
         assert_eq!(sol.min_count_shortfall, 1);
     }
@@ -1553,8 +1551,12 @@ mod tests {
     #[test]
     fn objective_mode_changes_the_objective_of_the_same_routes() {
         let routes = vec![vec![1, 2], vec![], vec![3]];
-        let total = fixture(ObjectiveMode::TotalTime).build(routes.clone());
-        let makespan = fixture(ObjectiveMode::Makespan).build(routes);
+        let total = fixture(ObjectiveMode::TotalTime)
+            .solution_from_routes(routes.clone())
+            .unwrap();
+        let makespan = fixture(ObjectiveMode::Makespan)
+            .solution_from_routes(routes)
+            .unwrap();
         // Same penalty weight (the instances differ only in the aggregation),
         // so the objectives differ by exactly total_time - makespan.
         assert!((total.objective - makespan.objective - (16.5 - 15.0)).abs() < 1e-6);
@@ -1565,24 +1567,32 @@ mod tests {
     fn penalty_weight_dominates_time_and_cost() {
         let prob = fixture(ObjectiveMode::TotalTime);
         // Feasible: the trucks carry one big customer each, the van the small one.
-        let feasible = prob.build(vec![vec![1], vec![2], vec![3]]);
+        let feasible = prob
+            .solution_from_routes(vec![vec![1], vec![2], vec![3]])
+            .unwrap();
         assert_eq!(feasible.overload, 0);
         assert_eq!(feasible.min_count_shortfall, 0);
         assert!(feasible.time_excess < 1e-9);
 
         // Overload by 2 while being much cheaper in time and cost.
-        let overloaded = prob.build(vec![vec![1, 2], vec![], vec![3]]);
+        let overloaded = prob
+            .solution_from_routes(vec![vec![1, 2], vec![], vec![3]])
+            .unwrap();
         assert_eq!(overloaded.overload, 2);
         assert!(feasible.objective < overloaded.objective);
 
         // Missing the van's minimum count, again on an otherwise cheap routing.
-        let short = prob.build(vec![vec![1], vec![2, 3], vec![]]);
+        let short = prob
+            .solution_from_routes(vec![vec![1], vec![2, 3], vec![]])
+            .unwrap();
         assert_eq!(short.overload, 0);
         assert_eq!(short.min_count_shortfall, 1);
         assert!(feasible.objective < short.objective);
 
         // The route-time limit: one truck doing everything exceeds 12.
-        let slow = prob.build(vec![vec![1, 2, 3], vec![], vec![]]);
+        let slow = prob
+            .solution_from_routes(vec![vec![1, 2, 3], vec![], vec![]])
+            .unwrap();
         assert!(slow.time_excess > 1.0);
         assert!(feasible.objective < slow.objective);
 
@@ -1873,7 +1883,9 @@ demand = 20
     fn overload_is_penalized() {
         let vrp = square_vrp();
         // All four customers on one route: load 4 > capacity 2 → overload 2.
-        let sol = vrp.build(vec![vec![1, 2, 3, 4], vec![]]);
+        let sol = vrp
+            .solution_from_routes(vec![vec![1, 2, 3, 4], vec![]])
+            .unwrap();
         assert_eq!(sol.overload, 2);
         assert!(sol.objective > sol.total_distance());
         assert!((sol.objective - (sol.total_distance() + vrp.penalty_weight() * 2.0)).abs() < 1e-6);
@@ -1893,7 +1905,7 @@ demand = 20
         // 3 vehicles that actually pack, plus the margin.
         assert_eq!(vrp.num_slots(), 4);
         let routes = vec![vec![1], vec![2], vec![3], vec![]];
-        assert_eq!(vrp.build(routes).overload, 0);
+        assert_eq!(vrp.solution_from_routes(routes).unwrap().overload, 0);
     }
 
     #[test]
@@ -2005,7 +2017,7 @@ demand = 20
         assert_eq!(sparse.penalty_weight(), full.penalty_weight());
         let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
         let sol = full.new_solution(&mut rng);
-        let again = sparse.build(sol.routes.clone());
+        let again = sparse.solution_from_routes(sol.routes.clone()).unwrap();
         assert_eq!(again.objective, sol.objective);
     }
 

@@ -57,7 +57,7 @@ mod tests {
             2,
             2,
         );
-        let vrp_sol = vrp.build(vec![vec![1, 2], vec![3]]);
+        let vrp_sol = vrp.solution_from_routes(vec![vec![1, 2], vec![3]]).unwrap();
 
         macro_rules! assert_policy {
             ($($problem:ty => $mv:expr),+ $(,)?) => {

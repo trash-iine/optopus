@@ -41,7 +41,7 @@ impl Crossover<Vrp> for VrpOrderCrossover {
 
         let child = order_crossover(&flatten(sol1), &flatten(sol2), rng);
         let routes = split_giant_tour(prob, &child, prob.penalty_weight());
-        Ok(prob.build(routes))
+        prob.solution_from_routes(routes)
     }
 }
 
@@ -70,8 +70,12 @@ mod tests {
     #[test]
     fn offspring_is_valid_permutation() {
         let prob = vrp();
-        let a = prob.build(vec![vec![1, 2], vec![3, 4], vec![5]]);
-        let b = prob.build(vec![vec![5, 3], vec![1, 4], vec![2]]);
+        let a = prob
+            .solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5]])
+            .unwrap();
+        let b = prob
+            .solution_from_routes(vec![vec![5, 3], vec![1, 4], vec![2]])
+            .unwrap();
         let mut cx = VrpOrderCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         for _ in 0..20 {
@@ -90,7 +94,9 @@ mod tests {
         let prob = vrp();
         // A deliberately mediocre but feasible partition: the tour order is
         // 1,3,5,2,4 and the cuts are not the ones Split would choose.
-        let parent = prob.build(vec![vec![1, 3], vec![5, 2], vec![4]]);
+        let parent = prob
+            .solution_from_routes(vec![vec![1, 3], vec![5, 2], vec![4]])
+            .unwrap();
         let mut cx = VrpOrderCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(11);
         for _ in 0..20 {

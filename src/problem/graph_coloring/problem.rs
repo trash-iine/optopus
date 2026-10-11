@@ -102,12 +102,6 @@ impl GraphColoring {
                 self.k
             )));
         }
-        Ok(self.build(colors))
-    }
-
-    /// A solution from colors the caller knows are in range for every vertex,
-    /// as every coloring built inside the crate is.
-    pub(super) fn build(&self, colors: Vec<usize>) -> GraphColoringSolution {
         let n = self.graph.len();
         let k = self.k;
         let mut gamma = vec![0u32; n * k];
@@ -125,14 +119,14 @@ impl GraphColoring {
             gamma[j * k + colors[i]] += 1;
         }
         let objective = colors_used as i64 + self.penalty_weight() * conflicts as i64;
-        GraphColoringSolution {
+        Ok(GraphColoringSolution {
             colors,
             gamma,
             class_size,
             colors_used,
             conflicts,
             objective,
-        }
+        })
     }
 
     /// The single incremental-update primitive: recolor vertex `v` to
@@ -212,7 +206,8 @@ impl ProblemTrait for GraphColoring {
     fn new_solution(&self, rng: &mut impl Rng) -> Self::Solution {
         let n = self.graph.len();
         let colors = (0..n).map(|_| rng.random_range(0..self.k)).collect();
-        self.build(colors)
+        self.solution_from_colors(colors)
+            .expect("random colors lie in the palette")
     }
 }
 
