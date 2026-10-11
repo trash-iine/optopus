@@ -94,8 +94,9 @@ The one penalty weighs the whole violation the objective charges, overload,
 route-time excess and minimum-count shortfall alike. HGS therefore keeps its
 own individuals rather than `VrpSolution`s, since `Vrp::penalty_weight()` is a
 fixed constant large enough to make any optimum feasible.
-`Vrp::solution_from_routes` converts back when writing to the search state,
-so reported objectives stay comparable with every other heuristic.
+It converts back with the same computation as `Vrp::solution_from_routes`
+when writing to the search state, so reported objectives stay comparable with
+every other heuristic.
 
 ### Granular local search
 

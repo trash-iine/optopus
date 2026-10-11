@@ -1,4 +1,6 @@
+use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
+use crate::trait_defs::check_assignment;
 
 fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
     if let Err(pos) = v.binary_search(&x) {
@@ -338,8 +340,9 @@ impl crate::trait_defs::BinaryProblem for Sat {
         }
     }
 
-    fn solution_from_assignment(&self, values: &[bool]) -> SatSolution {
-        SatSolution::new_from_assignment(self, values.to_vec())
+    fn solution_from_assignment(&self, values: &[bool]) -> Result<SatSolution, OptError> {
+        check_assignment(self, values, self.n_vars)?;
+        Ok(SatSolution::new_from_assignment(self, values.to_vec()))
     }
 }
 

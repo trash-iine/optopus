@@ -201,7 +201,9 @@ let routes = |order: &[i64]| {
     split_giant_tour(&vrp, &giant, vrp.penalty_weight())
 };
 let prob = IntegerProblem::minimize(IntVars::permutation(vrp.get_n()), |order: &[i64]| {
-    vrp.solution_from_routes(routes(order)).objective
+    vrp.solution_from_routes(routes(order))
+        .expect("split gives every customer one route")
+        .objective
 });
 ```
 

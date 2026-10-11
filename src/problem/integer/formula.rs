@@ -582,7 +582,7 @@ impl FormulaProblem {
     ///
     /// If `objective` reads a variable outside `vars`.
     pub fn minimize(vars: IntVars, objective: Expr) -> Self {
-        Self::build(vars, false, objective, vec![])
+        Self::compile(vars, false, objective, vec![])
     }
 
     /// A problem that maximizes `objective`.
@@ -591,7 +591,7 @@ impl FormulaProblem {
     ///
     /// If `objective` reads a variable outside `vars`.
     pub fn maximize(vars: IntVars, objective: Expr) -> Self {
-        Self::build(vars, true, objective, vec![])
+        Self::compile(vars, true, objective, vec![])
     }
 
     /// The problem with `constraint` added. Its penalty is subtracted from a
@@ -603,10 +603,17 @@ impl FormulaProblem {
     pub fn with_constraint(self, constraint: Constraint) -> Self {
         let mut constraints = self.constraints;
         constraints.push(constraint);
-        Self::build(self.vars, self.maximize, self.objective, constraints)
+        Self::compile(self.vars, self.maximize, self.objective, constraints)
     }
 
-    fn build(vars: IntVars, maximize: bool, objective: Expr, constraints: Vec<Constraint>) -> Self {
+    /// Compiles the objective and the constraints into the polynomials and
+    /// indexes the moves are priced from.
+    fn compile(
+        vars: IntVars,
+        maximize: bool,
+        objective: Expr,
+        constraints: Vec<Constraint>,
+    ) -> Self {
         let n = vars.len();
         let top = objective
             .max_var()
@@ -676,10 +683,6 @@ impl FormulaProblem {
     /// permutation and a value repeats.
     pub fn solution_from(&self, values: Vec<i64>) -> Result<FormulaSolution, OptError> {
         self.vars.check(&values)?;
-        Ok(self.build_solution(values))
-    }
-
-    fn build_solution(&self, values: Vec<i64>) -> FormulaSolution {
         let objective = self.objective(&values);
         let constraint_vals = self
             .constraint_polys
@@ -698,7 +701,7 @@ impl FormulaProblem {
                 self.fill_row(&mut sol, var);
             }
         }
-        sol
+        Ok(sol)
     }
 
     /// Whether solutions keep the delta table. A permutation has no single
@@ -824,7 +827,8 @@ impl ProblemTrait for FormulaProblem {
     /// Draws every variable uniformly from its range, or a uniformly random
     /// permutation when the variables are one.
     fn new_solution(&self, rng: &mut impl Rng) -> FormulaSolution {
-        self.build_solution(self.vars.random_values(rng))
+        self.solution_from(self.vars.random_values(rng))
+            .expect("random values lie in their ranges")
     }
 }
 
@@ -944,9 +948,8 @@ impl Branchable for FormulaProblem {
         }
     }
 
-    fn solution_from_values(&self, values: Vec<i64>) -> FormulaSolution {
-        debug_assert!(self.vars.check(&values).is_ok());
-        self.build_solution(values)
+    fn solution_from_values(&self, values: Vec<i64>) -> Result<FormulaSolution, OptError> {
+        self.solution_from(values)
     }
 }
 
@@ -1034,7 +1037,7 @@ impl SubProblemExtractable for FormulaProblem {
                 free.push(self.vars[i]);
             }
         }
-        Self::build(
+        Self::compile(
             IntVars::new(free),
             self.maximize,
             self.objective.substitute(&fixed, &remap),
@@ -1068,7 +1071,8 @@ impl SubProblemExtractable for FormulaProblem {
                 }
             })
             .collect();
-        self.build_solution(values)
+        self.solution_from(values)
+            .expect("each value comes from a parent or the sub-problem, inside its range")
     }
 }
 

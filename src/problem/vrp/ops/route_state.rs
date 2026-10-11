@@ -42,7 +42,10 @@ impl RouteState {
     /// Builds the state from a route partition, every cache computed from
     /// scratch and the objective priced under `penalty`.
     pub(crate) fn from_routes(prob: &Vrp, routes: Vec<Vec<usize>>, penalty: f64) -> Self {
-        Self::from_solution(prob, prob.solution_from_routes(routes), penalty)
+        let sol = prob
+            .solution_from_routes(routes)
+            .expect("route states hold a partition of the customers");
+        Self::from_solution(prob, sol, penalty)
     }
 
     /// Builds the state around a solution whose caches are already current,

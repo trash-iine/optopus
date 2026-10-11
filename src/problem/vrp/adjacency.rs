@@ -147,8 +147,12 @@ mod tests {
         );
 
         for _ in 0..200 {
-            let first = prob.solution_from_routes(random_solution(&prob, &mut rng));
-            let second = prob.solution_from_routes(random_solution(&prob, &mut rng));
+            let first = prob
+                .solution_from_routes(random_solution(&prob, &mut rng))
+                .unwrap();
+            let second = prob
+                .solution_from_routes(random_solution(&prob, &mut rng))
+                .unwrap();
 
             assert_eq!(first.distance(&second), second.distance(&first));
             assert_eq!(first.distance(&first), 0);
@@ -160,7 +164,7 @@ mod tests {
                 .iter()
                 .map(|r| r.iter().rev().copied().collect())
                 .collect();
-            let flipped = prob.solution_from_routes(flipped);
+            let flipped = prob.solution_from_routes(flipped).unwrap();
             assert_eq!(second.distance(&flipped), 0);
             assert_eq!(first.distance(&flipped), first.distance(&second));
         }

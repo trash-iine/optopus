@@ -235,12 +235,8 @@ where
     /// permutation and a value repeats.
     pub fn solution_from(&self, values: Vec<i64>) -> Result<IntSolution, OptError> {
         self.vars.check(&values)?;
-        Ok(self.build(values))
-    }
-
-    fn build(&self, values: Vec<i64>) -> IntSolution {
         let objective = self.objective(&values);
-        IntSolution { values, objective }
+        Ok(IntSolution { values, objective })
     }
 
     /// Applies `edit` to the values, moving the objective by `delta` when the
@@ -282,7 +278,8 @@ where
     /// Draws every variable uniformly from its range, or a uniformly random
     /// permutation when the variables are one.
     fn new_solution(&self, rng: &mut impl Rng) -> IntSolution {
-        self.build(self.vars.random_values(rng))
+        self.solution_from(self.vars.random_values(rng))
+            .expect("random values lie in their ranges")
     }
 }
 
@@ -368,8 +365,7 @@ where
         }
     }
 
-    fn solution_from_values(&self, values: Vec<i64>) -> IntSolution {
-        debug_assert!(self.vars.check(&values).is_ok());
-        self.build(values)
+    fn solution_from_values(&self, values: Vec<i64>) -> Result<IntSolution, OptError> {
+        self.solution_from(values)
     }
 }

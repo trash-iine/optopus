@@ -255,7 +255,7 @@ mod tests {
             let giant = random_tour(&mut rng, n);
 
             let routes = split_giant_tour(&prob, &giant, prob.penalty_weight());
-            let sol = prob.solution_from_routes(routes);
+            let sol = prob.solution_from_routes(routes).unwrap();
 
             match brute_force_optimum(&prob, &giant, fleet) {
                 Some(want) => {
@@ -292,7 +292,9 @@ mod tests {
         // 8 unit-demand customers, capacity 2, 4 vehicles: exactly feasible.
         let prob = ring_vrp(8, 2, 4);
         let giant: Vec<usize> = (1..=8).collect();
-        let sol = prob.solution_from_routes(split_giant_tour(&prob, &giant, prob.penalty_weight()));
+        let sol = prob
+            .solution_from_routes(split_giant_tour(&prob, &giant, prob.penalty_weight()))
+            .unwrap();
         assert_eq!(sol.overload, 0);
         assert!(
             sol.route_loads
@@ -314,7 +316,7 @@ mod tests {
         let routes = split_giant_tour(&prob, &[1, 2, 3], prob.penalty_weight());
         assert_eq!(routes.len(), 2);
         prob.validate_routes(&routes).unwrap();
-        let sol = prob.solution_from_routes(routes);
+        let sol = prob.solution_from_routes(routes).unwrap();
         assert_eq!(sol.overload, 2, "9 demand over 2 × capacity 4");
     }
 
@@ -336,8 +338,12 @@ mod tests {
             2,
         );
         let giant = vec![1, 2, 3, 4];
-        let cheap = prob.solution_from_routes(split_giant_tour(&prob, &giant, 0.01));
-        let dear = prob.solution_from_routes(split_giant_tour(&prob, &giant, 1e6));
+        let cheap = prob
+            .solution_from_routes(split_giant_tour(&prob, &giant, 0.01))
+            .unwrap();
+        let dear = prob
+            .solution_from_routes(split_giant_tour(&prob, &giant, 1e6))
+            .unwrap();
         assert!(
             cheap.overload >= dear.overload,
             "a cheap penalty must not buy less overload than an expensive one"

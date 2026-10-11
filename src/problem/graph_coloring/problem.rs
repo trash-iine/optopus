@@ -1,4 +1,5 @@
 use crate::building_blocks::instance::Graph;
+use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 use rand::Rng;
 
@@ -80,8 +81,27 @@ impl GraphColoring {
 
     /// Builds a [`GraphColoringSolution`] from a color assignment, recomputing
     /// all cached state (`gamma`, `class_size`, `colors_used`, `conflicts`,
-    /// `objective`) from scratch.
-    pub fn solution_from_colors(&self, colors: Vec<usize>) -> GraphColoringSolution {
+    /// `objective`) from scratch, for starting a search somewhere other than a
+    /// random coloring.
+    ///
+    /// Fails unless `colors` gives every vertex a color in `0..k`.
+    pub fn solution_from_colors(
+        &self,
+        colors: Vec<usize>,
+    ) -> Result<GraphColoringSolution, OptError> {
+        if colors.len() != self.graph.len() {
+            return Err(OptError::InvalidState(format!(
+                "{} colors given for {} vertices",
+                colors.len(),
+                self.graph.len()
+            )));
+        }
+        if let Some((v, &c)) = colors.iter().enumerate().find(|&(_, &c)| c >= self.k) {
+            return Err(OptError::InvalidState(format!(
+                "vertex {v} has color {c}, outside the palette 0..{}",
+                self.k
+            )));
+        }
         let n = self.graph.len();
         let k = self.k;
         let mut gamma = vec![0u32; n * k];
@@ -99,14 +119,14 @@ impl GraphColoring {
             gamma[j * k + colors[i]] += 1;
         }
         let objective = colors_used as i64 + self.penalty_weight() * conflicts as i64;
-        GraphColoringSolution {
+        Ok(GraphColoringSolution {
             colors,
             gamma,
             class_size,
             colors_used,
             conflicts,
             objective,
-        }
+        })
     }
 
     /// The single incremental-update primitive: recolor vertex `v` to
@@ -187,6 +207,7 @@ impl ProblemTrait for GraphColoring {
         let n = self.graph.len();
         let colors = (0..n).map(|_| rng.random_range(0..self.k)).collect();
         self.solution_from_colors(colors)
+            .expect("random colors lie in the palette")
     }
 }
 
@@ -205,12 +226,22 @@ mod tests {
     }
 
     fn assert_consistent(prob: &GraphColoring, sol: &GraphColoringSolution) {
-        let fresh = prob.solution_from_colors(sol.colors.clone());
+        let fresh = prob.solution_from_colors(sol.colors.clone()).unwrap();
         assert_eq!(sol.gamma, fresh.gamma, "gamma drifted");
         assert_eq!(sol.class_size, fresh.class_size, "class_size drifted");
         assert_eq!(sol.colors_used, fresh.colors_used, "colors_used drifted");
         assert_eq!(sol.conflicts, fresh.conflicts, "conflicts drifted");
         assert_eq!(sol.objective, fresh.objective, "objective drifted");
+    }
+
+    /// A coloring of the wrong length or with a color outside the palette is
+    /// an error, not an index panic.
+    #[test]
+    fn solution_from_colors_rejects_bad_colorings() {
+        let prob = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0)]));
+        assert!(prob.solution_from_colors(vec![0, 1, 0]).is_ok());
+        assert!(prob.solution_from_colors(vec![0, 1]).is_err());
+        assert!(prob.solution_from_colors(vec![0, 1, prob.k]).is_err());
     }
 
     #[test]
@@ -234,7 +265,7 @@ mod tests {
     fn test_proper_coloring_zero_conflicts() {
         let prob = sample();
         // 0->0, 1->1, 2->2, 3->0 : proper, 3 colors used.
-        let sol = prob.solution_from_colors(vec![0, 1, 2, 0]);
+        let sol = prob.solution_from_colors(vec![0, 1, 2, 0]).unwrap();
         assert_eq!(sol.conflicts, 0);
         assert_eq!(sol.colors_used, 3);
         assert_eq!(sol.objective, 3);
@@ -288,8 +319,8 @@ mod tests {
         use crate::search_state::Crossover;
 
         let prob = sample();
-        let p1 = prob.solution_from_colors(vec![0, 1, 2, 0]);
-        let p2 = prob.solution_from_colors(vec![1, 2, 0, 1]);
+        let p1 = prob.solution_from_colors(vec![0, 1, 2, 0]).unwrap();
+        let p2 = prob.solution_from_colors(vec![1, 2, 0, 1]).unwrap();
         let mut rng = SmallRng::seed_from_u64(3);
         let mut xover = GraphColoringUniformCrossover;
         let child = xover.crossover(&prob, &p1, &p2, &mut rng).unwrap();

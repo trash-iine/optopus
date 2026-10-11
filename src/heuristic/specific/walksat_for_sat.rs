@@ -79,8 +79,8 @@ impl VarInClause {
 }
 
 impl WalkSatScratch {
-    /// Builds the scratch state from scratch for assignment `x`.
-    fn build(instance: &Sat, x: &[bool]) -> Self {
+    /// The scratch state for assignment `x`, counted from scratch.
+    fn from_assignment(instance: &Sat, x: &[bool]) -> Self {
         let n_clauses = instance.n_clauses();
         let n_vars = instance.n_vars();
 
@@ -259,7 +259,7 @@ impl WalkSat {
             .as_ref()
             .is_none_or(|s| s.true_count.len() != n_clauses);
         if stale {
-            let scratch = WalkSatScratch::build(state.instance, &state.solution.x);
+            let scratch = WalkSatScratch::from_assignment(state.instance, &state.solution.x);
             self.best_unsat = scratch.unsat_clauses.len();
             self.flips_since_improve = 0;
             self.noise = self.base_noise;
@@ -445,7 +445,7 @@ mod tests {
         sat.add_clause([-2, -2, 3]);
         for bits in 0..8u32 {
             let x: Vec<bool> = (0..3).map(|k| bits >> k & 1 == 1).collect();
-            let scratch = WalkSatScratch::build(&sat, &x);
+            let scratch = WalkSatScratch::from_assignment(&sat, &x);
             for v in 0..3 {
                 assert_eq!(
                     scratch.break_count(&x, v),

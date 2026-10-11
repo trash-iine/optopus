@@ -74,7 +74,10 @@ impl<P: FixVariables> ProblemReduction for BinaryFixing<P> {
                 values[t] = P::variable(sol, i);
             }
         }
-        self.fixed.target.solution_from_assignment(&values)
+        self.fixed
+            .target
+            .solution_from_assignment(&values)
+            .expect("one value per variable of the folded instance")
     }
 
     /// The fixed variables at their values, the free ones read from `sol`.
@@ -89,7 +92,9 @@ impl<P: FixVariables> ProblemReduction for BinaryFixing<P> {
                 Placed::Free(t) => P::variable(sol, t) != flip,
             })
             .collect();
-        source.solution_from_assignment(&values)
+        source
+            .solution_from_assignment(&values)
+            .expect("one value per variable of the whole instance")
     }
 }
 
@@ -122,6 +127,7 @@ pub fn binary_node<P: FixVariables>(prob: &P, ranges: &IntVars) -> BinaryFixing<
 pub fn binary_solution_with<P: BinaryProblem>(prob: &P, values: Vec<i64>) -> P::Solution {
     let values: Vec<bool> = values.into_iter().map(|v| v != 0).collect();
     prob.solution_from_assignment(&values)
+        .expect("branch-and-bound hands over one value per variable")
 }
 
 /// The value each variable is held at, where its range holds one.

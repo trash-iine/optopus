@@ -1,6 +1,7 @@
 use crate::building_blocks::instance::Graph;
+use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
-use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate};
+use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate, check_assignment};
 
 /// The MaxCut problem instance, an undirected weighted graph.
 ///
@@ -294,12 +295,14 @@ impl BinaryProblem for MaxCut {
     }
 
     /// `values` covers the vertices with an edge, and the graph may run
-    /// past them, so the assignment is padded to the graph's length with
-    /// `false`, the side every solution gives a vertex without an edge.
-    fn solution_from_assignment(&self, values: &[bool]) -> MaxCutSolution {
+    /// past them, so the assignment may be as long as the graph and is padded
+    /// to it with `false`, the side every solution gives a vertex without an
+    /// edge.
+    fn solution_from_assignment(&self, values: &[bool]) -> Result<MaxCutSolution, OptError> {
+        check_assignment(self, values, self.graph.len())?;
         let mut x = values.to_vec();
         x.resize(self.graph.len(), false);
-        MaxCutSolution::new_from_assignment(self, x)
+        Ok(MaxCutSolution::new_from_assignment(self, x))
     }
 }
 

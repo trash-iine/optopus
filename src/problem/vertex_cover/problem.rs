@@ -1,5 +1,7 @@
 use crate::building_blocks::instance::Graph;
+use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
+use crate::trait_defs::check_assignment;
 
 /// The Minimum Vertex Cover problem.
 ///
@@ -114,24 +116,27 @@ impl VertexCover {
         (gain, objective, cover_size, uncovered_edges)
     }
 
-    /// Builds a [`VertexCoverSolution`] from a boolean assignment (same length as `len()`).
-    pub fn solution_from_assignment(&self, assignment: &[bool]) -> VertexCoverSolution {
-        let n = self.graph.len();
-        let cover = if assignment.len() >= n {
-            assignment[..n].to_vec()
-        } else {
-            let mut c = assignment.to_vec();
-            c.resize(n, false);
-            c
-        };
+    /// Builds a [`VertexCoverSolution`] from a boolean assignment, for
+    /// starting a search somewhere other than a random cover.
+    ///
+    /// Fails unless `assignment` covers every vertex with an edge and is no
+    /// longer than the graph. A shorter one is padded with `false`, out of the
+    /// cover, for the vertices past it, which have no edge.
+    pub fn solution_from_assignment(
+        &self,
+        assignment: &[bool],
+    ) -> Result<VertexCoverSolution, OptError> {
+        check_assignment(self, assignment, self.graph.len())?;
+        let mut cover = assignment.to_vec();
+        cover.resize(self.graph.len(), false);
         let (gain, objective, cover_size, uncovered_edges) = self.calculate_state(&cover);
-        VertexCoverSolution {
+        Ok(VertexCoverSolution {
             x: cover,
             gain,
             objective,
             cover_size,
             uncovered_edges,
-        }
+        })
     }
 }
 
@@ -172,7 +177,7 @@ impl crate::trait_defs::BinaryProblem for VertexCover {
         }
     }
 
-    fn solution_from_assignment(&self, values: &[bool]) -> VertexCoverSolution {
+    fn solution_from_assignment(&self, values: &[bool]) -> Result<VertexCoverSolution, OptError> {
         VertexCover::solution_from_assignment(self, values)
     }
 }
@@ -201,6 +206,19 @@ mod tests {
         vc.graph.add_edge(1, 2);
         vc.graph.add_edge(2, 3);
         vc
+    }
+
+    /// Too few values to cover the vertices with an edge, or more than the
+    /// graph holds, are errors rather than being padded or cut.
+    #[test]
+    fn solution_from_assignment_rejects_wrong_lengths() {
+        let vc = VertexCover::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0)]));
+        assert!(vc.solution_from_assignment(&[true, false, true]).is_ok());
+        assert!(vc.solution_from_assignment(&[true, false]).is_err());
+        assert!(
+            vc.solution_from_assignment(&[true, false, true, false])
+                .is_err()
+        );
     }
 
     #[test]

@@ -496,7 +496,10 @@ impl HybridGeneticSearch {
         };
         let cost = best.cost(self.penalty_capacity);
         let routes = best.routes.clone();
-        state.solution = state.instance.solution_from_routes(routes);
+        state.solution = state
+            .instance
+            .solution_from_routes(routes)
+            .expect("an individual's routes partition the customers");
         state.update_best();
 
         if cost < self.best_cost - MIN_IMPROVEMENT {
@@ -727,12 +730,14 @@ mod tests {
     fn a_warm_start_is_never_lost() {
         let prob = ring_vrp(20, 5, 4);
         // The ring visited in order is optimal; hand it to HGS as the incumbent.
-        let optimal = prob.solution_from_routes(vec![
-            vec![1, 2, 3, 4, 5],
-            vec![6, 7, 8, 9, 10],
-            vec![11, 12, 13, 14, 15],
-            vec![16, 17, 18, 19, 20],
-        ]);
+        let optimal = prob
+            .solution_from_routes(vec![
+                vec![1, 2, 3, 4, 5],
+                vec![6, 7, 8, 9, 10],
+                vec![11, 12, 13, 14, 15],
+                vec![16, 17, 18, 19, 20],
+            ])
+            .unwrap();
         let mut state = SearchState::with_solution_and_seed(&prob, optimal.clone(), 5);
 
         let mut search = hgs(200);

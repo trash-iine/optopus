@@ -127,7 +127,7 @@ impl VrpRelocateNeighbor {
     ///     1.0,
     ///     false,
     /// );
-    /// let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3]]);
+    /// let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3]])?;
     ///
     /// let m = VrpRelocateNeighbor::new(&prob, &sol, 0, 1, 1, 0);
     /// assert_eq!(m.customer, 2);
@@ -136,6 +136,7 @@ impl VrpRelocateNeighbor {
     /// m.apply_to_solution(&prob, &mut after).unwrap();
     /// assert_eq!(after.routes, vec![vec![1], vec![2, 3]]);
     /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+    /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn new(
         prob: &Vrp,
@@ -381,7 +382,7 @@ impl VrpSwapNeighbor {
     ///     1.0,
     ///     false,
     /// );
-    /// let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3]]);
+    /// let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3]])?;
     ///
     /// let m = VrpSwapNeighbor::new(&prob, &sol, 0, 1, 1, 0);
     /// assert_eq!((m.c1, m.c2), (2, 3));
@@ -390,6 +391,7 @@ impl VrpSwapNeighbor {
     /// m.apply_to_solution(&prob, &mut after).unwrap();
     /// assert_eq!(after.routes, vec![vec![1, 3], vec![2]]);
     /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+    /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn new(prob: &Vrp, sol: &VrpSolution, r1: usize, i1: usize, r2: usize, i2: usize) -> Self {
         assert_ne!(r1, r2, "swap is an inter-slot move");
@@ -553,7 +555,7 @@ impl VrpTwoOptNeighbor {
     ///     false,
     /// );
     /// // Detour: depot -> 2 -> 1 -> 3 -> depot.
-    /// let sol = prob.solution_from_routes(vec![vec![2, 1, 3]]);
+    /// let sol = prob.solution_from_routes(vec![vec![2, 1, 3]])?;
     ///
     /// let m = VrpTwoOptNeighbor::new(&prob, &sol, 0, 0, 1);
     /// assert!(m.gain < 0.0);
@@ -562,6 +564,7 @@ impl VrpTwoOptNeighbor {
     /// m.apply_to_solution(&prob, &mut after).unwrap();
     /// assert_eq!(after.routes, vec![vec![1, 2, 3]]);
     /// assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+    /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn new(prob: &Vrp, sol: &VrpSolution, r: usize, p: usize, q: usize) -> Self {
         assert!(p < q, "2-opt needs a segment of at least two customers");
@@ -706,7 +709,7 @@ mod tests {
 
     /// Every cached field of `sol` must equal a from-scratch recomputation.
     fn assert_caches_consistent(prob: &Vrp, sol: &VrpSolution) {
-        let want = prob.solution_from_routes(sol.routes.clone());
+        let want = prob.solution_from_routes(sol.routes.clone()).unwrap();
         let close = |a: f64, b: f64, what: &str| {
             assert!(
                 (a - b).abs() < 1e-6,
@@ -748,7 +751,7 @@ mod tests {
                 start_routes(),
                 vec![vec![1, 2, 5], vec![3, 4, 6], vec![], vec![]],
             ] {
-                let sol = prob.solution_from_routes(start);
+                let sol = prob.solution_from_routes(start).unwrap();
                 for nb in VrpRelocateNeighbor::iter(&prob, &sol) {
                     let mut s = sol.clone();
                     nb.apply_to_solution(&prob, &mut s).unwrap();
@@ -765,7 +768,7 @@ mod tests {
     #[test]
     fn swap_apply_matches_recompute_in_both_modes() {
         for prob in both_modes() {
-            let sol = prob.solution_from_routes(start_routes());
+            let sol = prob.solution_from_routes(start_routes()).unwrap();
             for nb in VrpSwapNeighbor::iter(&prob, &sol) {
                 let mut s = sol.clone();
                 nb.apply_to_solution(&prob, &mut s).unwrap();
@@ -778,7 +781,9 @@ mod tests {
     #[test]
     fn two_opt_apply_matches_recompute_in_both_modes() {
         for prob in both_modes() {
-            let sol = prob.solution_from_routes(vec![vec![1, 2, 5], vec![3, 4, 6], vec![], vec![]]);
+            let sol = prob
+                .solution_from_routes(vec![vec![1, 2, 5], vec![3, 4, 6], vec![], vec![]])
+                .unwrap();
             for nb in VrpTwoOptNeighbor::iter(&prob, &sol) {
                 let mut s = sol.clone();
                 nb.apply_to_solution(&prob, &mut s).unwrap();
@@ -794,7 +799,7 @@ mod tests {
     fn a_long_chain_of_moves_does_not_drift() {
         for prob in both_modes() {
             let mut rng = rand::rngs::SmallRng::seed_from_u64(17);
-            let mut sol = prob.solution_from_routes(start_routes());
+            let mut sol = prob.solution_from_routes(start_routes()).unwrap();
             for step in 0..200 {
                 match step % 3 {
                     0 => {
@@ -827,7 +832,9 @@ mod tests {
     #[test]
     fn makespan_survives_a_move_between_two_short_routes() {
         let prob = prob(ObjectiveMode::Makespan);
-        let sol = prob.solution_from_routes(vec![vec![1, 2, 6], vec![3], vec![4], vec![5]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2, 6], vec![3], vec![4], vec![5]])
+            .unwrap();
         let holder = sol.makespan;
         assert!(
             sol.route_time[0] > sol.route_time[1] + 1e-6
@@ -850,7 +857,9 @@ mod tests {
     #[test]
     fn makespan_drops_when_its_holder_gives_a_customer_away() {
         let prob = prob(ObjectiveMode::Makespan);
-        let sol = prob.solution_from_routes(vec![vec![1, 2, 6], vec![3], vec![4], vec![5]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2, 6], vec![3], vec![4], vec![5]])
+            .unwrap();
         let before = sol.makespan;
 
         // Take customer 6 off the longest route.
@@ -866,7 +875,7 @@ mod tests {
     #[test]
     fn a_tied_makespan_is_held_up_by_the_other_slot() {
         let prob = prob(ObjectiveMode::Makespan);
-        let sol = prob.solution_from_routes(start_routes());
+        let sol = prob.solution_from_routes(start_routes()).unwrap();
         assert!(
             (sol.route_time[0] - sol.route_time[1]).abs() < 1e-12,
             "the fixture's two trucks must tie: {} vs {}",
@@ -892,7 +901,9 @@ mod tests {
     fn waking_an_idle_vehicle_charges_its_fixed_cost() {
         let prob = prob(ObjectiveMode::TotalTime);
         // Both vans idle: the van type's min_count of 1 is unmet.
-        let sol = prob.solution_from_routes(vec![vec![1, 2, 5], vec![3, 4, 6], vec![], vec![]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2, 5], vec![3, 4, 6], vec![], vec![]])
+            .unwrap();
         assert_eq!(sol.used_count, vec![2, 0]);
         assert_eq!(sol.min_count_shortfall, 1);
 
@@ -914,7 +925,9 @@ mod tests {
     fn emptying_a_route_refunds_its_fixed_cost_and_may_create_a_shortfall() {
         let prob = prob(ObjectiveMode::TotalTime);
         // Slot 2 is the only van in use; emptying it re-opens the shortfall.
-        let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3, 4, 6], vec![5], vec![]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2], vec![3, 4, 6], vec![5], vec![]])
+            .unwrap();
         assert_eq!(sol.used_count, vec![2, 1]);
         assert_eq!(sol.min_count_shortfall, 0);
 
@@ -941,7 +954,9 @@ mod tests {
     #[test]
     fn a_transfer_within_one_type_leaves_the_used_count_alone() {
         let prob = prob(ObjectiveMode::TotalTime);
-        let sol = prob.solution_from_routes(vec![vec![1, 2, 3, 4, 6], vec![], vec![5], vec![]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2, 3, 4, 6], vec![], vec![5], vec![]])
+            .unwrap();
         assert_eq!(sol.used_count, vec![1, 1]);
 
         // Slot 2 -> slot 3: both vans, so the type's used count is unchanged.
@@ -963,7 +978,9 @@ mod tests {
     #[test]
     fn relocating_across_types_reprices_the_customer() {
         let prob = prob(ObjectiveMode::TotalTime);
-        let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5], vec![6]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5], vec![6]])
+            .unwrap();
         // Truck (speed 1, rate 0.2) -> van (speed 2, rate 0.5).
         let m = VrpRelocateNeighbor::new(&prob, &sol, 0, 1, 2, 1);
         let mut after = sol.clone();
@@ -982,7 +999,9 @@ mod tests {
     #[test]
     fn random_neighbors_are_members_of_iter() {
         let prob = prob(ObjectiveMode::Makespan);
-        let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5], vec![6]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5], vec![6]])
+            .unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
 
         let relocs: Vec<_> = VrpRelocateNeighbor::iter(&prob, &sol).collect();
@@ -1023,7 +1042,9 @@ mod tests {
     #[test]
     fn two_opt_random_neighbor_never_gives_up_on_a_non_empty_neighborhood() {
         let prob = prob(ObjectiveMode::TotalTime);
-        let sol = prob.solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5, 6], vec![]]);
+        let sol = prob
+            .solution_from_routes(vec![vec![1, 2], vec![3, 4], vec![5, 6], vec![]])
+            .unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
         for _ in 0..300 {
             let m = VrpTwoOptNeighbor::random_neighbor(&prob, &sol, &mut rng)
@@ -1031,7 +1052,9 @@ mod tests {
             assert!(m.p < m.q);
         }
         // One route of three among singletons is still a non-empty neighborhood.
-        let singles = prob.solution_from_routes(vec![vec![1], vec![2], vec![3], vec![4, 5, 6]]);
+        let singles = prob
+            .solution_from_routes(vec![vec![1], vec![2], vec![3], vec![4, 5, 6]])
+            .unwrap();
         assert!(VrpTwoOptNeighbor::random_neighbor(&prob, &singles, &mut rng).is_some());
     }
 
@@ -1039,7 +1062,7 @@ mod tests {
     #[should_panic(expected = "inter-slot")]
     fn relocate_new_rejects_the_same_slot() {
         let prob = prob(ObjectiveMode::TotalTime);
-        let sol = prob.solution_from_routes(start_routes());
+        let sol = prob.solution_from_routes(start_routes()).unwrap();
         let _ = VrpRelocateNeighbor::new(&prob, &sol, 0, 0, 0, 2);
     }
 
@@ -1047,7 +1070,7 @@ mod tests {
     #[should_panic(expected = "inter-slot")]
     fn swap_new_rejects_the_same_slot() {
         let prob = prob(ObjectiveMode::TotalTime);
-        let sol = prob.solution_from_routes(start_routes());
+        let sol = prob.solution_from_routes(start_routes()).unwrap();
         let _ = VrpSwapNeighbor::new(&prob, &sol, 0, 0, 0, 1);
     }
 
@@ -1055,7 +1078,7 @@ mod tests {
     #[should_panic(expected = "at least two customers")]
     fn two_opt_new_rejects_a_degenerate_segment() {
         let prob = prob(ObjectiveMode::TotalTime);
-        let sol = prob.solution_from_routes(start_routes());
+        let sol = prob.solution_from_routes(start_routes()).unwrap();
         let _ = VrpTwoOptNeighbor::new(&prob, &sol, 0, 1, 1);
     }
 
