@@ -264,7 +264,7 @@ mod tests {
         assert!(done.objective <= start.objective);
         assert_eq!(done.objective, fs.makespan(&done.sequence));
         assert!(
-            super::super::FlowShopInsertNeighbor::iter(&fs, &done).all(|m| m.gain >= 0.0),
+            super::super::FlowShopInsertNeighbor::iter(&fs, &done).all(|m| m.gain >= 0),
             "some insertion still improves the descent's result"
         );
     }

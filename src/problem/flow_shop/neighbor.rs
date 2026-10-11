@@ -8,10 +8,9 @@ use crate::building_blocks::search::{TabuKey, TabuMemory, random_distinct_pair};
 use crate::error::OptError;
 use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 
-/// A makespan moved by a move's gain. Makespans are integers and a gain is
-/// the difference of two, so the sum is exact.
-fn shifted(objective: u32, gain: f64) -> u32 {
-    (f64::from(objective) + gain) as u32
+/// A makespan moved by a move's gain.
+fn shifted(objective: u32, gain: i64) -> u32 {
+    u32::try_from(i64::from(objective) + gain).expect("a makespan is never negative")
 }
 
 /// Moves one job to another place in the sequence, the insertion move.
@@ -31,7 +30,7 @@ pub struct FlowShopInsertNeighbor {
     /// Its position after the move.
     pub to: usize,
     /// Change in makespan (negative = improvement).
-    pub gain: f64,
+    pub gain: i64,
 }
 
 impl FlowShopInsertNeighbor {
@@ -54,7 +53,7 @@ impl FlowShopInsertNeighbor {
     /// let mut after = sol.clone();
     /// m.apply_to_solution(&fs, &mut after).unwrap();
     /// assert_eq!(after.sequence, vec![1, 0, 2]);
-    /// assert_eq!(after.objective as f64, sol.objective as f64 + m.gain);
+    /// assert_eq!(i64::from(after.objective), i64::from(sol.objective) + m.gain);
     /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn new(prob: &FlowShop, sol: &FlowShopSolution, from: usize, to: usize) -> Self {
@@ -65,14 +64,14 @@ impl FlowShopInsertNeighbor {
             job,
             from,
             to,
-            gain: f64::from(prob.makespan(&moved)) - f64::from(sol.objective),
+            gain: i64::from(prob.makespan(&moved)) - i64::from(sol.objective),
         }
     }
 }
 
 impl Evaluate for FlowShopInsertNeighbor {
     fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
+        Evaluable::Minimize(self.gain as f64)
     }
 }
 
@@ -121,7 +120,7 @@ impl MoveToNeighbor<FlowShop> for FlowShopInsertNeighbor {
 
     fn iter(prob: &FlowShop, sol: &FlowShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.sequence.len();
-        let base = f64::from(sol.objective);
+        let base = i64::from(sol.objective);
         let mut moves = Vec::with_capacity(n * n.saturating_sub(1));
         let mut rest = Vec::with_capacity(n);
         let mut ht = HeadsTails::default();
@@ -135,7 +134,7 @@ impl MoveToNeighbor<FlowShop> for FlowShopInsertNeighbor {
                 job,
                 from,
                 to,
-                gain: f64::from(ht.makespan_with(prob, to, job)) - base,
+                gain: i64::from(ht.makespan_with(prob, to, job)) - base,
             }));
         }
         moves.into_iter()
@@ -164,7 +163,7 @@ pub struct FlowShopSwapNeighbor {
     /// The later position.
     pub j: usize,
     /// Change in makespan (negative = improvement).
-    pub gain: f64,
+    pub gain: i64,
 }
 
 impl FlowShopSwapNeighbor {
@@ -181,14 +180,14 @@ impl FlowShopSwapNeighbor {
         Self {
             i,
             j,
-            gain: f64::from(prob.makespan(&swapped)) - f64::from(sol.objective),
+            gain: i64::from(prob.makespan(&swapped)) - i64::from(sol.objective),
         }
     }
 }
 
 impl Evaluate for FlowShopSwapNeighbor {
     fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
+        Evaluable::Minimize(self.gain as f64)
     }
 }
 
@@ -237,7 +236,7 @@ impl MoveToNeighbor<FlowShop> for FlowShopSwapNeighbor {
     fn iter(prob: &FlowShop, sol: &FlowShopSolution) -> impl Iterator<Item = Self> + Send {
         let seq = &sol.sequence;
         let n = seq.len();
-        let base = f64::from(sol.objective);
+        let base = i64::from(sol.objective);
         let mut ht = HeadsTails::default();
         ht.rebuild(prob, seq);
         let mut moves = Vec::with_capacity(n * n.saturating_sub(1) / 2);
@@ -251,7 +250,7 @@ impl MoveToNeighbor<FlowShop> for FlowShopSwapNeighbor {
                 moves.push(Self {
                     i,
                     j,
-                    gain: f64::from(makespan) - base,
+                    gain: i64::from(makespan) - base,
                 });
             }
         }
@@ -298,8 +297,8 @@ mod tests {
             let mut after = sol.clone();
             m.apply_to_solution(&fs, &mut after).unwrap();
             assert_eq!(
-                f64::from(after.objective),
-                f64::from(sol.objective) + m.gain
+                i64::from(after.objective),
+                i64::from(sol.objective) + m.gain
             );
         }
 
