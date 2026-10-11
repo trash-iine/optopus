@@ -78,9 +78,10 @@ pub fn check_permutation(values: &[usize], n: usize, what: &str) -> Result<(), O
                 "{what} {v} is out of range, expected 0..{n}"
             )));
         }
-        if std::mem::replace(&mut seen[v], true) {
+        if seen[v] {
             return Err(OptError::InvalidState(format!("{what} {v} appears twice")));
         }
+        seen[v] = true;
     }
     Ok(())
 }
