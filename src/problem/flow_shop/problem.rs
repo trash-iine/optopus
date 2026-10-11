@@ -186,18 +186,11 @@ impl FlowShop {
         sequence: Vec<usize>,
     ) -> Result<FlowShopSolution, OptError> {
         check_permutation(&sequence, self.n_jobs, "job")?;
-        Ok(self.build(sequence))
-    }
-
-    /// A solution from a sequence the caller knows is a permutation of the
-    /// jobs, as every one built inside the crate is.
-    pub(super) fn build(&self, sequence: Vec<usize>) -> FlowShopSolution {
-        debug_assert!(check_permutation(&sequence, self.n_jobs, "job").is_ok());
         let objective = self.makespan(&sequence);
-        FlowShopSolution {
+        Ok(FlowShopSolution {
             sequence,
             objective,
-        }
+        })
     }
 
     /// The NEH heuristic of Nawaz, Enscore and Ham (1983).
@@ -232,7 +225,8 @@ impl FlowShop {
             let (place, _) = ht.best_insertion(self, job);
             sequence.insert(place, job);
         }
-        self.build(sequence)
+        self.solution_from_sequence(sequence)
+            .expect("NEH inserts every job once")
     }
 }
 
@@ -243,7 +237,8 @@ impl ProblemTrait for FlowShop {
     fn new_solution(&self, rng: &mut impl rand::Rng) -> FlowShopSolution {
         let mut sequence: Vec<usize> = (0..self.n_jobs).collect();
         sequence.shuffle(rng);
-        self.build(sequence)
+        self.solution_from_sequence(sequence)
+            .expect("a shuffle of the jobs is a permutation")
     }
 }
 

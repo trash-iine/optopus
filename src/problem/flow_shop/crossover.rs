@@ -21,6 +21,6 @@ impl Crossover<FlowShop> for FlowShopOrderCrossover {
             &sol2.sequence,
             rng,
         );
-        Ok(prob.build(child))
+        prob.solution_from_sequence(child)
     }
 }

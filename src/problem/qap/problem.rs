@@ -181,18 +181,11 @@ impl Qap {
         assignment: Vec<usize>,
     ) -> Result<QapSolution, OptError> {
         check_permutation(&assignment, self.n, "location")?;
-        Ok(self.build(assignment))
-    }
-
-    /// A solution from an assignment the caller knows is a permutation, as
-    /// every one built inside the crate is.
-    pub(super) fn build(&self, assignment: Vec<usize>) -> QapSolution {
-        debug_assert!(check_permutation(&assignment, self.n, "location").is_ok());
         let objective = self.cost(&assignment);
-        QapSolution {
+        Ok(QapSolution {
             assignment,
             objective,
-        }
+        })
     }
 }
 
@@ -203,7 +196,8 @@ impl ProblemTrait for Qap {
     fn new_solution(&self, rng: &mut impl rand::Rng) -> QapSolution {
         let mut assignment: Vec<usize> = (0..self.n).collect();
         assignment.shuffle(rng);
-        self.build(assignment)
+        self.solution_from_assignment(assignment)
+            .expect("a shuffle of 0..n is a permutation")
     }
 }
 
