@@ -203,13 +203,13 @@ impl IntVars {
         }
         if self.is_permutation() {
             let mut seen = vec![false; values.len()];
-            if let Some(x) = values
-                .iter()
-                .find(|&&x| std::mem::replace(&mut seen[x as usize], true))
-            {
-                return Err(OptError::InvalidState(format!(
-                    "value {x} appears twice in a permutation"
-                )));
+            for &x in values {
+                if seen[x as usize] {
+                    return Err(OptError::InvalidState(format!(
+                        "value {x} appears twice in a permutation"
+                    )));
+                }
+                seen[x as usize] = true;
             }
         }
         Ok(())
