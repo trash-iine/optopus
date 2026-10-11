@@ -48,13 +48,14 @@ impl FlowShopInsertNeighbor {
     /// use optopus::prelude::*;
     ///
     /// let fs = FlowShop::new("tiny", vec![vec![3, 2, 4], vec![2, 5, 1]]);
-    /// let sol = fs.solution_from_sequence(vec![0, 1, 2]);
+    /// let sol = fs.solution_from_sequence(vec![0, 1, 2])?;
     /// let m = FlowShopInsertNeighbor::new(&fs, &sol, 1, 0);
     ///
     /// let mut after = sol.clone();
     /// m.apply_to_solution(&fs, &mut after).unwrap();
     /// assert_eq!(after.sequence, vec![1, 0, 2]);
     /// assert_eq!(after.objective as f64, sol.objective as f64 + m.gain);
+    /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn new(prob: &FlowShop, sol: &FlowShopSolution, from: usize, to: usize) -> Self {
         let mut moved = sol.sequence.clone();
@@ -285,7 +286,9 @@ mod tests {
     #[test]
     fn iter_prices_match_single_moves() {
         let fs = instance();
-        let sol = fs.solution_from_sequence(vec![3, 0, 6, 1, 5, 2, 4]);
+        let sol = fs
+            .solution_from_sequence(vec![3, 0, 6, 1, 5, 2, 4])
+            .unwrap();
 
         let inserts: Vec<_> = FlowShopInsertNeighbor::iter(&fs, &sol).collect();
         assert_eq!(inserts.len(), 7 * 6);
@@ -310,7 +313,7 @@ mod tests {
     #[test]
     fn random_insert_never_draws_the_identity() {
         let fs = instance();
-        let sol = fs.solution_from_sequence((0..7).collect());
+        let sol = fs.solution_from_sequence((0..7).collect()).unwrap();
         let mut rng = SmallRng::seed_from_u64(1);
         for _ in 0..200 {
             let m = FlowShopInsertNeighbor::random_neighbor(&fs, &sol, &mut rng).unwrap();

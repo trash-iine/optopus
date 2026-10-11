@@ -22,6 +22,6 @@ impl Crossover<Qap> for QapOrderCrossover {
             &sol2.assignment,
             rng,
         );
-        Ok(prob.solution_from_assignment(child))
+        Ok(prob.build(child))
     }
 }

@@ -44,7 +44,8 @@ runs next to it.
 [`QapSolution`](../api/optopus/problem/qap/struct.QapSolution.html) carries
 `assignment`, where `assignment[i]` is the location of facility `i`, and
 `objective`, its cost. `Qap::solution_from_assignment` wraps an assignment of
-your own, and `Qap::cost` prices one without building a solution.
+your own, and returns an error if it is not a permutation of the locations.
+`Qap::cost` prices one without building a solution.
 
 ## Neighbors
 

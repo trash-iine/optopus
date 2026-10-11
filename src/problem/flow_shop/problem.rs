@@ -1,7 +1,7 @@
 use rand::seq::SliceRandom;
 
 use super::taillard::HeadsTails;
-use crate::building_blocks::representation::is_permutation;
+use crate::building_blocks::representation::check_permutation;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 
@@ -166,16 +166,33 @@ impl FlowShop {
         done.last().copied().unwrap_or(0)
     }
 
-    /// Wraps a sequence as a solution, computing its makespan.
+    /// Wraps a sequence as a solution, computing its makespan, for starting a
+    /// search somewhere other than a random order.
     ///
-    /// # Panics
+    /// Fails if `sequence` is not a permutation of `0..n_jobs`.
     ///
-    /// Panics if `sequence` is not a permutation of `0..n_jobs`.
-    pub fn solution_from_sequence(&self, sequence: Vec<usize>) -> FlowShopSolution {
-        assert!(
-            is_permutation(&sequence, self.n_jobs),
-            "a flow shop sequence is a permutation of the jobs"
-        );
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let fs = FlowShop::new("tiny", vec![vec![3, 2, 4], vec![2, 5, 1]]);
+    /// assert_eq!(fs.solution_from_sequence(vec![1, 0, 2])?.objective, 10);
+    /// assert!(fs.solution_from_sequence(vec![1, 1, 2]).is_err());
+    /// # Ok::<(), optopus::error::OptError>(())
+    /// ```
+    pub fn solution_from_sequence(
+        &self,
+        sequence: Vec<usize>,
+    ) -> Result<FlowShopSolution, OptError> {
+        check_permutation(&sequence, self.n_jobs, "job")?;
+        Ok(self.build(sequence))
+    }
+
+    /// A solution from a sequence the caller knows is a permutation of the
+    /// jobs, as every one built inside the crate is.
+    pub(super) fn build(&self, sequence: Vec<usize>) -> FlowShopSolution {
+        debug_assert!(check_permutation(&sequence, self.n_jobs, "job").is_ok());
         let objective = self.makespan(&sequence);
         FlowShopSolution {
             sequence,
@@ -215,7 +232,7 @@ impl FlowShop {
             let (place, _) = ht.best_insertion(self, job);
             sequence.insert(place, job);
         }
-        self.solution_from_sequence(sequence)
+        self.build(sequence)
     }
 }
 
@@ -226,7 +243,7 @@ impl ProblemTrait for FlowShop {
     fn new_solution(&self, rng: &mut impl rand::Rng) -> FlowShopSolution {
         let mut sequence: Vec<usize> = (0..self.n_jobs).collect();
         sequence.shuffle(rng);
-        self.solution_from_sequence(sequence)
+        self.build(sequence)
     }
 }
 

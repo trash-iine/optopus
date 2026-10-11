@@ -1,6 +1,6 @@
 use rand::seq::SliceRandom;
 
-use crate::building_blocks::representation::is_permutation;
+use crate::building_blocks::representation::check_permutation;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 
@@ -172,16 +172,22 @@ impl Qap {
         delta
     }
 
-    /// Wraps an assignment as a solution, computing its cost.
+    /// Wraps an assignment as a solution, computing its cost, for starting a
+    /// search somewhere other than a random assignment.
     ///
-    /// # Panics
-    ///
-    /// Panics if `assignment` is not a permutation of `0..n`.
-    pub fn solution_from_assignment(&self, assignment: Vec<usize>) -> QapSolution {
-        assert!(
-            is_permutation(&assignment, self.n),
-            "an assignment is a permutation of the locations"
-        );
+    /// Fails if `assignment` is not a permutation of `0..n`.
+    pub fn solution_from_assignment(
+        &self,
+        assignment: Vec<usize>,
+    ) -> Result<QapSolution, OptError> {
+        check_permutation(&assignment, self.n, "location")?;
+        Ok(self.build(assignment))
+    }
+
+    /// A solution from an assignment the caller knows is a permutation, as
+    /// every one built inside the crate is.
+    pub(super) fn build(&self, assignment: Vec<usize>) -> QapSolution {
+        debug_assert!(check_permutation(&assignment, self.n, "location").is_ok());
         let objective = self.cost(&assignment);
         QapSolution {
             assignment,
@@ -197,7 +203,7 @@ impl ProblemTrait for Qap {
     fn new_solution(&self, rng: &mut impl rand::Rng) -> QapSolution {
         let mut assignment: Vec<usize> = (0..self.n).collect();
         assignment.shuffle(rng);
-        self.solution_from_assignment(assignment)
+        self.build(assignment)
     }
 }
 

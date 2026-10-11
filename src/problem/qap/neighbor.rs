@@ -42,13 +42,14 @@ impl QapSwapNeighbor {
     ///     vec![vec![0, 5, 0], vec![5, 0, 1], vec![0, 1, 0]],
     ///     vec![vec![0, 1, 9], vec![1, 0, 2], vec![9, 2, 0]],
     /// );
-    /// let sol = qap.solution_from_assignment(vec![0, 2, 1]);
+    /// let sol = qap.solution_from_assignment(vec![0, 2, 1])?;
     /// let m = QapSwapNeighbor::new(&qap, &sol, 1, 2);
     ///
     /// let mut after = sol.clone();
     /// m.apply_to_solution(&qap, &mut after).unwrap();
     /// assert_eq!(after.assignment, vec![0, 1, 2]);
     /// assert_eq!(after.objective, sol.objective + m.gain);
+    /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn new(prob: &Qap, sol: &QapSolution, i: usize, j: usize) -> Self {
         let (i, j) = (i.min(j), i.max(j));

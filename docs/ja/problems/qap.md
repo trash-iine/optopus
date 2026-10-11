@@ -35,7 +35,7 @@ println!("cost = {}", state.best_solution.objective);
 ## 解 { #solution }
 
 [`QapSolution`](../../api/optopus/problem/qap/struct.QapSolution.html) は、`assignment[i]` が施設 `i` の場所である `assignment` と、そのコスト `objective` を持ちます。
-自前の配置は `Qap::solution_from_assignment` で解に包め、`Qap::cost` は解を作らずにコストを求めます。
+自前の配置は `Qap::solution_from_assignment` で解に包めます。場所の置換でなければエラーを返します。`Qap::cost` は解を作らずにコストを求めます。
 
 ## 近傍 { #neighbors }
 

@@ -46,7 +46,7 @@ Ham, which is also exposed on its own.
 [`FlowShopSolution`](../api/optopus/problem/flow_shop/struct.FlowShopSolution.html)
 carries `sequence`, a permutation of the jobs with the one run first first, and
 `objective`, its makespan. `FlowShop::solution_from_sequence` wraps a sequence
-of your own.
+of your own, and returns an error if it is not a permutation of the jobs.
 
 ## Neighbors
 

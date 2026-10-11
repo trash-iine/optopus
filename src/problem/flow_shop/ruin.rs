@@ -217,7 +217,7 @@ mod tests {
         let mut rng = SmallRng::seed_from_u64(4);
         let mut seq: Vec<usize> = (0..8).collect();
         seq.shuffle(&mut rng);
-        let sol = fs.solution_from_sequence(seq.clone());
+        let sol = fs.solution_from_sequence(seq.clone()).unwrap();
         let mut partial = fs.to_partial(&sol);
         assert_eq!(fs.partial_energy(&partial), f64::from(sol.objective));
 

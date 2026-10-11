@@ -38,7 +38,7 @@ println!("sequence = {:?}", state.best_solution.sequence);
 ## 解 { #solution }
 
 [`FlowShopSolution`](../../api/optopus/problem/flow_shop/struct.FlowShopSolution.html) は、最初に処理するジョブを先頭にしたジョブの置換 `sequence` と、そのメイクスパン `objective` を持ちます。
-自前の順序は `FlowShop::solution_from_sequence` で解に包めます。
+自前の順序は `FlowShop::solution_from_sequence` で解に包めます。ジョブの置換でなければエラーを返します。
 
 ## 近傍 { #neighbors }
 
