@@ -582,7 +582,7 @@ impl FormulaProblem {
     ///
     /// If `objective` reads a variable outside `vars`.
     pub fn minimize(vars: IntVars, objective: Expr) -> Self {
-        Self::build(vars, false, objective, vec![])
+        Self::compile(vars, false, objective, vec![])
     }
 
     /// A problem that maximizes `objective`.
@@ -591,7 +591,7 @@ impl FormulaProblem {
     ///
     /// If `objective` reads a variable outside `vars`.
     pub fn maximize(vars: IntVars, objective: Expr) -> Self {
-        Self::build(vars, true, objective, vec![])
+        Self::compile(vars, true, objective, vec![])
     }
 
     /// The problem with `constraint` added. Its penalty is subtracted from a
@@ -603,10 +603,17 @@ impl FormulaProblem {
     pub fn with_constraint(self, constraint: Constraint) -> Self {
         let mut constraints = self.constraints;
         constraints.push(constraint);
-        Self::build(self.vars, self.maximize, self.objective, constraints)
+        Self::compile(self.vars, self.maximize, self.objective, constraints)
     }
 
-    fn build(vars: IntVars, maximize: bool, objective: Expr, constraints: Vec<Constraint>) -> Self {
+    /// Compiles the objective and the constraints into the polynomials and
+    /// indexes the moves are priced from.
+    fn compile(
+        vars: IntVars,
+        maximize: bool,
+        objective: Expr,
+        constraints: Vec<Constraint>,
+    ) -> Self {
         let n = vars.len();
         let top = objective
             .max_var()
@@ -1030,7 +1037,7 @@ impl SubProblemExtractable for FormulaProblem {
                 free.push(self.vars[i]);
             }
         }
-        Self::build(
+        Self::compile(
             IntVars::new(free),
             self.maximize,
             self.objective.substitute(&fixed, &remap),
