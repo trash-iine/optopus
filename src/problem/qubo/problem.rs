@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 
+use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
-use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate};
+use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate, check_assignment};
 
 /// Integer coefficient type used in the Q matrix.
 pub type Coefficient = i32;
@@ -598,8 +599,9 @@ impl BinaryProblem for Qubo {
         }
     }
 
-    fn solution_from_assignment(&self, values: &[bool]) -> QuboSolution {
-        QuboSolution::new_from_assignment(self, values.to_vec())
+    fn solution_from_assignment(&self, values: &[bool]) -> Result<QuboSolution, OptError> {
+        check_assignment(self, values, self.len())?;
+        Ok(QuboSolution::new_from_assignment(self, values.to_vec()))
     }
 }
 

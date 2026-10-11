@@ -24,6 +24,6 @@ impl Crossover<GraphColoring> for GraphColoringUniformCrossover {
                 }
             })
             .collect();
-        Ok(prob.solution_from_colors(colors))
+        Ok(prob.build(colors))
     }
 }

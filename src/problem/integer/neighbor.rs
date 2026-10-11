@@ -577,6 +577,17 @@ mod tests {
         assert_eq!(sol.evaluate().raw(), 0.0);
     }
 
+    /// The branching hook checks values like the public constructor, so a
+    /// value outside its range is an error rather than a debug-only assert.
+    #[test]
+    fn solution_from_values_rejects_bad_values() {
+        use crate::trait_defs::Branchable;
+        let prob = fast();
+        assert!(prob.solution_from_values(vec![0; 4]).is_err());
+        assert!(prob.solution_from_values(vec![0, 0, 6, 0, 0]).is_err());
+        assert!(prob.solution_from_values(TARGETS.to_vec()).is_ok());
+    }
+
     #[test]
     fn local_search_and_tabu_search_reach_the_optimum() {
         let prob = fast();

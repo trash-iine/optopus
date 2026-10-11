@@ -90,6 +90,7 @@ fn objectives_within<P: FixVariables>(prob: &P, fixed: &[Option<bool>]) -> Vec<f
                 values[i] = mask >> k & 1 == 1;
             }
             prob.solution_from_assignment(&values)
+                .unwrap()
                 .evaluate()
                 .minimized()
         })
@@ -114,14 +115,16 @@ fn check_exact_folding<P: FixVariables>(prob: &P, fixed: &[Option<bool>]) {
     let reduction = BinaryFixing::new(prob.fix(fixed));
     let offset = offset_minimized(prob, &reduction);
     let target = reduction.target();
-    let base = prob.solution_from_assignment(&vec![false; variable_slots(prob)]);
+    let base = prob
+        .solution_from_assignment(&vec![false; variable_slots(prob)])
+        .unwrap();
     let vars: Vec<usize> = target.variable_indices().collect();
     for mask in 0..1u32 << vars.len() {
         let mut values = vec![false; variable_slots(target)];
         for (k, &t) in vars.iter().enumerate() {
             values[t] = mask >> k & 1 == 1;
         }
-        let folded = target.solution_from_assignment(&values);
+        let folded = target.solution_from_assignment(&values).unwrap();
         let lifted = reduction.lift(prob, &base, &folded);
         for (i, f) in fixed.iter().enumerate() {
             if let Some(v) = f {
@@ -437,7 +440,7 @@ fn a_max_cut_with_trailing_isolated_vertices_keeps_full_length_solutions() {
     assert_eq!(variable_slots(&prob), 3);
     assert_eq!(prob.graph.len(), 6);
 
-    let sol = prob.solution_from_assignment(&[true, false, true]);
+    let sol = prob.solution_from_assignment(&[true, false, true]).unwrap();
     assert_eq!((sol.x.len(), sol.gain.len()), (6, 6));
 
     let mut bnb = BranchAndBound::new(

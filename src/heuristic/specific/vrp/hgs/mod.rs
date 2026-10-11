@@ -496,7 +496,7 @@ impl HybridGeneticSearch {
         };
         let cost = best.cost(self.penalty_capacity);
         let routes = best.routes.clone();
-        state.solution = state.instance.solution_from_routes(routes);
+        state.solution = state.instance.build(routes);
         state.update_best();
 
         if cost < self.best_cost - MIN_IMPROVEMENT {
@@ -727,7 +727,7 @@ mod tests {
     fn a_warm_start_is_never_lost() {
         let prob = ring_vrp(20, 5, 4);
         // The ring visited in order is optimal; hand it to HGS as the incumbent.
-        let optimal = prob.solution_from_routes(vec![
+        let optimal = prob.build(vec![
             vec![1, 2, 3, 4, 5],
             vec![6, 7, 8, 9, 10],
             vec![11, 12, 13, 14, 15],

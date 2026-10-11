@@ -152,9 +152,9 @@ with the depot implicit at both ends, plus every quantity in the objective
 cached per slot or in total (the API page lists them; `total_distance()` sums
 the route distances). `Vrp::solution_from_routes` recomputes every cached
 field from a plain `Vec<Vec<usize>>` partition and is the reference every
-incremental move update is tested against; `Vrp::validate_routes` checks
-that a partition visits every customer `1..=n` exactly once, over exactly
-`num_slots()` routes.
+incremental move update is tested against. It returns an error unless the
+partition visits every customer `1..=n` exactly once over exactly
+`num_slots()` routes, the check `Vrp::validate_routes` runs on its own.
 
 `Distance` (used for GA diversity) is the broken-pairs adjacency count: it is
 blind to which vehicle drives a trip, so two solutions that drive the same

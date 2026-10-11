@@ -944,9 +944,8 @@ impl Branchable for FormulaProblem {
         }
     }
 
-    fn solution_from_values(&self, values: Vec<i64>) -> FormulaSolution {
-        debug_assert!(self.vars.check(&values).is_ok());
-        self.build_solution(values)
+    fn solution_from_values(&self, values: Vec<i64>) -> Result<FormulaSolution, OptError> {
+        self.solution_from(values)
     }
 }
 

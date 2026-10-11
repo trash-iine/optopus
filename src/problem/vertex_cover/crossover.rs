@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn test_uniform_crossover_identical_parents() {
         let vc = make_vc();
-        let s = vc.solution_from_assignment(&[true, false, true]);
+        let s = vc.solution_from_assignment(&[true, false, true]).unwrap();
         let mut cx = VertexCoverUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         let offspring = cx.crossover(&vc, &s, &s, &mut rng).unwrap();
@@ -74,8 +74,8 @@ mod tests {
     #[test]
     fn test_uniform_crossover_gain_consistency() {
         let vc = make_vc();
-        let a = vc.solution_from_assignment(&[true, false, true]);
-        let b = vc.solution_from_assignment(&[false, true, false]);
+        let a = vc.solution_from_assignment(&[true, false, true]).unwrap();
+        let b = vc.solution_from_assignment(&[false, true, false]).unwrap();
         let mut cx = VertexCoverUniformCrossover;
         let mut rng = rand::rngs::SmallRng::seed_from_u64(0);
         let offspring = cx.crossover(&vc, &a, &b, &mut rng).unwrap();
@@ -90,12 +90,12 @@ mod tests {
     #[test]
     fn test_extract_sub_problem_size() {
         let vc = make_vc();
-        let s = vc.solution_from_assignment(&[true, false, true]);
+        let s = vc.solution_from_assignment(&[true, false, true]).unwrap();
         let sub_same = vc.extract_sub_problem(&s, &s);
         assert_eq!(sub_same.graph.len(), 0);
 
-        let all_f = vc.solution_from_assignment(&[false, false, false]);
-        let all_t = vc.solution_from_assignment(&[true, true, true]);
+        let all_f = vc.solution_from_assignment(&[false, false, false]).unwrap();
+        let all_t = vc.solution_from_assignment(&[true, true, true]).unwrap();
         let sub_diff = vc.extract_sub_problem(&all_f, &all_t);
         assert_eq!(sub_diff.graph.len(), 3);
     }
@@ -104,11 +104,11 @@ mod tests {
     fn test_lift_solution() {
         let vc = make_vc();
         // Free: vertices 1 and 2 (differ); Fixed: vertex 0 (same: false).
-        let parent_a = vc.solution_from_assignment(&[false, false, false]);
-        let parent_b = vc.solution_from_assignment(&[false, true, true]);
+        let parent_a = vc.solution_from_assignment(&[false, false, false]).unwrap();
+        let parent_b = vc.solution_from_assignment(&[false, true, true]).unwrap();
         let sub = vc.extract_sub_problem(&parent_a, &parent_b);
 
-        let sub_sol = sub.solution_from_assignment(&[false, true, false]);
+        let sub_sol = sub.solution_from_assignment(&[false, true, false]).unwrap();
         let lifted = vc.lift_solution(&parent_a, &parent_b, &sub_sol);
 
         // Fixed vertex 0 inherits from parent_a.

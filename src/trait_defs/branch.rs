@@ -12,6 +12,7 @@
 //!   fixed variables into a smaller instance of itself, so its own moves and
 //!   heuristics search the node.
 
+use crate::error::OptError;
 use std::borrow::Cow;
 
 use super::{Evaluable, Evaluate, IntAssignment, ProblemReduction, ProblemTrait};
@@ -67,21 +68,26 @@ pub trait Branchable: IntAssignment + Sized {
     /// inside the original one.
     fn restricted(&self, vars: IntVars) -> Self;
 
-    /// The solution assigning `values`, each inside its variable's range.
+    /// The solution assigning `values`.
+    ///
+    /// Fails unless there is one value per variable, each inside its
+    /// variable's range, and no value repeats when the variables are a
+    /// permutation.
     ///
     /// A solution crosses between a node and the whole problem by its values,
     /// because what it caches to price moves may be laid out by the ranges.
     /// The default starts from a solution drawn with a fixed seed and assigns
     /// each value that differs, which is correct whatever the solution caches
     /// and costs an [`assign`](IntAssignment::assign) per variable.
-    fn solution_from_values(&self, values: Vec<i64>) -> Self::Solution {
+    fn solution_from_values(&self, values: Vec<i64>) -> Result<Self::Solution, OptError> {
+        self.domains().check(&values)?;
         let mut sol = self.new_solution(&mut SmallRng::seed_from_u64(0));
         for (i, value) in values.into_iter().enumerate() {
             if Self::get(&sol, i) != value {
                 self.assign(&mut sol, i, value);
             }
         }
-        sol
+        Ok(sol)
     }
 }
 

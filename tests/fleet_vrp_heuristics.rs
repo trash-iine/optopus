@@ -33,7 +33,7 @@ fn check(vrp: &Vrp, state: &SearchState<'_, Vrp>, what: &str) {
     let best = &state.best_solution;
     vrp.validate_routes(&best.routes)
         .unwrap_or_else(|e| panic!("{what}: {e}"));
-    let fresh = vrp.solution_from_routes(best.routes.clone());
+    let fresh = vrp.solution_from_routes(best.routes.clone()).unwrap();
     assert!(
         (best.objective - fresh.objective).abs() < 1e-6,
         "{what}: reported {} where its routes price at {}",
@@ -87,8 +87,12 @@ fn the_objective_mode_is_what_the_heuristics_optimize() {
         .unwrap();
     // Re-price each best under the other mode: the makespan search must not
     // lose to the total-time search on the makespan, nor vice versa.
-    let a_under_makespan = makespan.solution_from_routes(a.best_solution.routes.clone());
-    let b_under_total = total.solution_from_routes(b.best_solution.routes.clone());
+    let a_under_makespan = makespan
+        .solution_from_routes(a.best_solution.routes.clone())
+        .unwrap();
+    let b_under_total = total
+        .solution_from_routes(b.best_solution.routes.clone())
+        .unwrap();
     assert!(b.best_solution.objective <= a_under_makespan.objective + 1e-9);
     assert!(a.best_solution.objective <= b_under_total.objective + 1e-9);
 }

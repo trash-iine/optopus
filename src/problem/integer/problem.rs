@@ -368,8 +368,7 @@ where
         }
     }
 
-    fn solution_from_values(&self, values: Vec<i64>) -> IntSolution {
-        debug_assert!(self.vars.check(&values).is_ok());
-        self.build(values)
+    fn solution_from_values(&self, values: Vec<i64>) -> Result<IntSolution, OptError> {
+        self.solution_from(values)
     }
 }

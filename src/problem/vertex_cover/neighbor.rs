@@ -175,9 +175,10 @@ impl VertexCoverSwapNeighbor {
     /// use optopus::prelude::*;
     ///
     /// let vc = VertexCover::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0)]));
-    /// let sol = vc.solution_from_assignment(&[true, false, false]);
+    /// let sol = vc.solution_from_assignment(&[true, false, false])?;
     /// let swap = VertexCoverSwapNeighbor::new(&vc, &sol, 1, 0);
     /// assert_eq!(swap.gain, sol.gain[1] + sol.gain[0] - vc.penalty_weight());
+    /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn new(prob: &VertexCover, sol: &VertexCoverSolution, i: usize, j: usize) -> Self {
         let edge_correction = if prob.graph.has_edge(i, j) {
@@ -275,7 +276,7 @@ mod tests {
         let vc = make_triangle();
         let mut state = SearchState::new(&vc);
         // Force solution to all-false to make assertions deterministic.
-        state.solution = vc.solution_from_assignment(&[false, false, false]);
+        state.solution = vc.solution_from_assignment(&[false, false, false]).unwrap();
         state.best_solution = state.solution.clone();
 
         let n = VertexCoverFlipNeighbor {
@@ -301,7 +302,7 @@ mod tests {
     fn test_swap_neighbor_apply_and_gain() {
         let vc = make_triangle();
         let mut state = SearchState::new(&vc);
-        state.solution = vc.solution_from_assignment(&[true, false, false]);
+        state.solution = vc.solution_from_assignment(&[true, false, false]).unwrap();
         state.best_solution = state.solution.clone();
 
         // Swap vertex 0 (in cover) with vertex 1 (out of cover).
@@ -326,7 +327,7 @@ mod tests {
     #[test]
     fn test_swap_iter_only_mixed_pairs() {
         let vc = make_triangle();
-        let sol = vc.solution_from_assignment(&[true, false, false]);
+        let sol = vc.solution_from_assignment(&[true, false, false]).unwrap();
         let pairs: Vec<_> = VertexCoverSwapNeighbor::iter(&vc, &sol).collect();
         // Mixed (i, j) with j < i: (1, 0) and (2, 0). No (2, 1) since both are out.
         assert_eq!(pairs.len(), 2);
@@ -340,7 +341,7 @@ mod tests {
     fn test_random_neighbor_samples_member_of_iter() {
         use rand::SeedableRng;
         let vc = make_triangle();
-        let sol = vc.solution_from_assignment(&[true, false, false]);
+        let sol = vc.solution_from_assignment(&[true, false, false]).unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
 
         let flips: Vec<_> = VertexCoverFlipNeighbor::iter(&vc, &sol).collect();
@@ -370,7 +371,7 @@ mod tests {
     fn test_random_swap_neighbor_none_when_uniform() {
         use rand::SeedableRng;
         let vc = make_triangle();
-        let sol = vc.solution_from_assignment(&[false, false, false]);
+        let sol = vc.solution_from_assignment(&[false, false, false]).unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(7);
         assert!(
             <VertexCoverSwapNeighbor as MoveToNeighbor<VertexCover>>::random_neighbor(

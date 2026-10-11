@@ -183,7 +183,7 @@ impl IntVars {
     /// a permutation when the variables are one.
     pub(crate) fn check(&self, values: &[i64]) -> Result<(), OptError> {
         if values.len() != self.len() {
-            return Err(OptError::Config(format!(
+            return Err(OptError::InvalidState(format!(
                 "{} values given for {} variables",
                 values.len(),
                 self.len()
@@ -195,7 +195,7 @@ impl IntVars {
             .enumerate()
             .find(|(_, (v, x))| !v.contains(**x))
         {
-            return Err(OptError::Config(format!(
+            return Err(OptError::InvalidState(format!(
                 "value {x} of variable {i} lies outside [{}, {}]",
                 v.lower(),
                 v.upper()
@@ -207,7 +207,7 @@ impl IntVars {
                 .iter()
                 .find(|&&x| std::mem::replace(&mut seen[x as usize], true))
             {
-                return Err(OptError::Config(format!(
+                return Err(OptError::InvalidState(format!(
                     "value {x} appears twice in a permutation"
                 )));
             }
@@ -286,7 +286,9 @@ impl<P: Branchable> ProblemReduction for DomainRestriction<P> {
             .enumerate()
             .map(|(i, v)| P::get(sol, i).clamp(v.lower(), v.upper()))
             .collect();
-        self.target.solution_from_values(values)
+        self.target
+            .solution_from_values(values)
+            .expect("each value clamped into its narrowed range")
     }
 
     /// The same values, as a solution of the whole problem.
@@ -294,7 +296,9 @@ impl<P: Branchable> ProblemReduction for DomainRestriction<P> {
         let values = (0..self.target.domains().len())
             .map(|i| P::get(sol, i))
             .collect();
-        source.solution_from_values(values)
+        source
+            .solution_from_values(values)
+            .expect("a node's values lie inside the whole problem's ranges")
     }
 }
 
@@ -317,5 +321,6 @@ impl<P: Branchable> BranchSpace for P {
 
     fn solution_with(&self, values: Vec<i64>) -> P::Solution {
         self.solution_from_values(values)
+            .expect("branch-and-bound hands over values inside the ranges")
     }
 }

@@ -28,7 +28,7 @@ mod reduction;
 mod ruinable;
 mod tabu;
 
-pub use binary::{BinaryProblem, FixVariables, FixedVariables, Placed};
+pub use binary::{BinaryProblem, FixVariables, FixedVariables, Placed, check_assignment};
 pub use branch::{BranchSpace, Branchable, Relaxation};
 pub use crossover::{Crossover, SubProblemExtractable};
 pub use evaluate::{Evaluable, Evaluate};

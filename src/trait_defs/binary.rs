@@ -1,6 +1,7 @@
 //! Trait for problems over binary variables.
 
 use super::{MoveToNeighbor, ProblemTrait};
+use crate::error::OptError;
 
 /// A problem whose solutions assign a boolean value to each variable and cache
 /// a per-variable flip gain.
@@ -26,13 +27,18 @@ pub trait BinaryProblem: ProblemTrait + Sized {
     /// Returns the flip move for variable `i`, carrying the gain cached in `sol`.
     fn flip_move(sol: &Self::Solution, i: usize) -> Self::Flip;
 
-    /// The solution assigning `values[i]` to each variable `i`, `values`
-    /// covering every variable index.
+    /// The solution assigning `values[i]` to each variable `i`.
+    ///
+    /// Fails unless `values` covers every variable index and runs no further,
+    /// the check [`check_assignment`] makes. A problem whose solutions span
+    /// more than its variables, a graph with isolated vertices for one, may
+    /// accept values up to that length instead.
     ///
     /// The default starts from a solution drawn with a fixed seed and flips
     /// each variable that differs, which keeps whatever the solution caches up
     /// to date. The built-in problems build the solution directly instead.
-    fn solution_from_assignment(&self, values: &[bool]) -> Self::Solution {
+    fn solution_from_assignment(&self, values: &[bool]) -> Result<Self::Solution, OptError> {
+        check_assignment(self, values, variable_count(self))?;
         use rand::SeedableRng;
         let mut sol = self.new_solution(&mut rand::rngs::SmallRng::seed_from_u64(0));
         for i in self.variable_indices() {
@@ -42,8 +48,37 @@ pub trait BinaryProblem: ProblemTrait + Sized {
                     .expect("flip on a valid variable index cannot fail");
             }
         }
-        sol
+        Ok(sol)
     }
+}
+
+/// One past the largest variable index, the length an assignment covering
+/// every variable needs.
+fn variable_count<P: BinaryProblem>(prob: &P) -> usize {
+    prob.variable_indices().max().map_or(0, |i| i + 1)
+}
+
+/// Checks that `values` gives every variable of `prob` a value and holds no
+/// more than `longest` values.
+pub fn check_assignment<P: BinaryProblem>(
+    prob: &P,
+    values: &[bool],
+    longest: usize,
+) -> Result<(), OptError> {
+    let needed = variable_count(prob);
+    if values.len() < needed {
+        return Err(OptError::InvalidState(format!(
+            "{} values given, the variables need {needed}",
+            values.len()
+        )));
+    }
+    if values.len() > longest {
+        return Err(OptError::InvalidState(format!(
+            "{} values given, more than the {longest} a solution holds",
+            values.len()
+        )));
+    }
+    Ok(())
 }
 
 /// A binary problem that can fix some of its variables and fold them into a

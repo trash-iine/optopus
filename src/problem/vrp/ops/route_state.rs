@@ -42,7 +42,7 @@ impl RouteState {
     /// Builds the state from a route partition, every cache computed from
     /// scratch and the objective priced under `penalty`.
     pub(crate) fn from_routes(prob: &Vrp, routes: Vec<Vec<usize>>, penalty: f64) -> Self {
-        Self::from_solution(prob, prob.solution_from_routes(routes), penalty)
+        Self::from_solution(prob, prob.build(routes), penalty)
     }
 
     /// Builds the state around a solution whose caches are already current,
