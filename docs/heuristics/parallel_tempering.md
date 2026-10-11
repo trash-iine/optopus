@@ -53,16 +53,6 @@ toward the good ones.
 incumbent is the best replica of the round. All randomness flows through
 `state.rng` in a fixed order, so seeded runs are bit-reproducible.
 
-## Choosing the ladder
-
-The temperatures are in the units of the objective. `beta_max` should be cold
-enough that the coldest replica is a descent, and `beta_min` hot enough that
-the hottest one moves freely. Between them the ladder has to be dense enough
-that neighbours overlap in energy, or exchanges are rarely accepted and a
-configuration never crosses it. `exchange_acceptance()` reports the share of
-exchanges accepted so far, and a value near zero means more replicas or a
-narrower range.
-
 ## Constructor
 
 ```rust
@@ -79,6 +69,16 @@ ParallelTempering::<P, N>::new(
 neighborhood once per run, which matters for a pairwise move whose
 neighborhood is quadratic, as it does for population annealing. `betas()`
 returns the ladder.
+
+## Choosing the ladder
+
+The temperatures are in the units of the objective. `beta_max` should be cold
+enough that the coldest replica is a descent, and `beta_min` hot enough that
+the hottest one moves freely. Between them the ladder has to be dense enough
+that neighbours overlap in energy, or exchanges are rarely accepted and a
+configuration never crosses it. `exchange_acceptance()` reports the share of
+exchanges accepted so far, and a value near zero means more replicas or a
+narrower range.
 
 ## Benchmark config
 
