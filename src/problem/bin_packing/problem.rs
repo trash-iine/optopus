@@ -210,32 +210,24 @@ impl BinPacking {
                 self.num_items()
             )));
         }
-        let sol = self.build(bin_of);
-        if let Some(load) = sol.loads.iter().find(|&&l| l > self.capacity) {
-            return Err(OptError::InvalidState(format!(
-                "a bin holds {load}, over the capacity {}",
-                self.capacity
-            )));
-        }
-        Ok(sol)
-    }
-
-    /// A solution from a map the caller knows packs every item within
-    /// capacity, as every one built inside the crate does.
-    pub(super) fn build(&self, bin_of: Vec<usize>) -> BinPackingSolution {
-        debug_assert_eq!(bin_of.len(), self.num_items());
         let bin_of = relabel(&bin_of);
         let mut loads = vec![0; bin_of.iter().copied().max().map_or(0, |b| b + 1)];
         for (&b, &size) in bin_of.iter().zip(&self.sizes) {
             loads[b] += size;
         }
+        if let Some(load) = loads.iter().find(|&&l| l > self.capacity) {
+            return Err(OptError::InvalidState(format!(
+                "a bin holds {load}, over the capacity {}",
+                self.capacity
+            )));
+        }
         let fill = loads.iter().map(|&l| self.sq(l)).sum();
-        BinPackingSolution {
+        Ok(BinPackingSolution {
             bin_of,
             objective: Self::energy_of(loads.len(), fill),
             loads,
             fill,
-        }
+        })
     }
 
     /// First Fit over the items in the given order, each into the first bin
@@ -243,7 +235,8 @@ impl BinPacking {
     pub fn first_fit(&self, order: impl IntoIterator<Item = usize>) -> BinPackingSolution {
         let mut bin_of = vec![0; self.num_items()];
         self.first_fit_into(&mut Vec::new(), &mut bin_of, order);
-        self.build(bin_of)
+        self.solution_from_bins(bin_of)
+            .expect("First Fit gives every item a bin with room")
     }
 
     /// First Fit of the items in `order` into the bins `loads` already
