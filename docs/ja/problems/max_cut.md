@@ -19,11 +19,10 @@ maximize  Σ_{(i,j)∈E} w_ij · [x_i ≠ x_j]        (x ∈ {0,1}^|V|)
 use optopus::prelude::*;
 
 // ファイルから読むなら let mc = MaxCut::load_file("data/instances/max_cut/G1")?;
-let mc = MaxCut::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]);
+let mc = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (0, 2, 1.0), (1, 2, 2.0)]));
 let mut state = SearchState::new(&mc);
 LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("cut weight = {}", sol.objective);
@@ -32,8 +31,7 @@ for (v, &side) in sol.x.iter().enumerate() {
 }
 ```
 
-`MaxCut::from_edges` は `MaxCut::new(Graph::from_edges(...))` の便利なラッパーです。
-どちらも重複した辺は集合として扱い、最後に書いたものが残ります。
+`Graph::from_edges` は重複した辺を集合として扱い、最後に書いたものが残ります。
 
 ## 解 { #solution }
 
@@ -97,7 +95,7 @@ let planted = PlantedMaxCut::tile_planting_2d(
     TileProbs2d::new(0.35, 0.0, 0.65),
     &mut seeded_rng(1),
 );
-planted.verify().unwrap(); // 記録された最適値がインスタンスから計算した値と一致する
+planted.verify()?; // 記録された最適値がインスタンスから計算した値と一致する
 // planted.optimum はどの実行も超えられない上限
 ```
 

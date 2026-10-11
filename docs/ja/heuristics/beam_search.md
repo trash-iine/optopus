@@ -46,7 +46,7 @@ BeamSearch::<P, N>::new(
 
 `clear()` はビームを空にします。ビームは `run` の後の最初の `run_once` で `state.solution` から再び作られます。
 
-## コスト { #cost }
+## 振る舞い { #behavior }
 
 `LocalSearch` や `TabuSearch` と違い、BeamSearch はすべての近傍を実体化します。
 各ステップは O(beam_width × |近傍|) のメモリを使い、その回数だけ `apply_to_solution` を呼びます。

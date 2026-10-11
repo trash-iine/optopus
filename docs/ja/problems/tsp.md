@@ -29,8 +29,7 @@ let tsp = Tsp::new(
 );
 let mut state = SearchState::new(&tsp);
 LocalSearch::<TspTwoOptNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("tour length = {}", sol.objective);
@@ -39,37 +38,6 @@ println!("visiting order = {:?}", sol.tour); // 訪問順に並んだ都市の�
 
 `Tsp::new` の既定は `EdgeWeightType::Continuous` です。下の距離式から選ぶには
 `Tsp::with_edge_weight_type` を使います。
-
-## 距離の保持方法 { #distance-storage }
-
-| コンストラクタ | 保持するもの | 使う場面 |
-|---|---|---|
-| `Tsp::new(name, coords)`, `Tsp::with_edge_weight_type(name, coords, ewt)` | `n × n` の行列全体、`8n²` バイト | `n` がせいぜい数千 |
-| `Tsp::with_nearest_neighbors(name, coords, ewt, k)` | 各都市の近い順に `k` 個の近傍、`n × k` 個の距離 | 行列が収まらない |
-| `Tsp::from_distance_matrix(name, matrix)` | 与えた行列そのもの | 距離がユークリッド距離でない、または座標がない |
-
-近傍リスト方式のインスタンスでも、すべての組について `distance(i, j)` に答えます。
-リストにない組は座標から計算するので、値は行列全体を持つ場合と同じで、遠い組のコストが高くなるだけです。
-Lin-Kernighan とアンカー付きの巡回路降下が求める候補リストは、`k` が足りていれば保持している行からそのまま取り出されます。
-
-`Tsp::from_distance_matrix` は `Vec<Vec<f64>>` を受け取り、正方でない行列を拒否します。
-このインスタンスには座標がないので、`coordinates()` と `edge_weight_type()` は `None` を返します。
-対称な行列を与えてください。近傍は 2-opt の move を交換する4本の辺から評価しますが、これは区間を反転しても長さが変わらない場合にしか成り立ちません。
-非対称な行列では、報告される gain が巡回路の長さからずれていきます。
-
-```rust
-use optopus::prelude::*;
-
-let matrix = vec![
-    vec![0.0, 3.0, 7.0],
-    vec![3.0, 0.0, 5.0],
-    vec![7.0, 5.0, 0.0],
-];
-let tsp = Tsp::from_distance_matrix("triangle".to_string(), matrix)?;
-```
-
-`Tsp::load_file` は都市数が `Tsp::DIST_MATRIX_MAX_N` (2000) 以下のファイルでは行列全体を保持し、
-それを超えると都市ごとに `Tsp::NEAREST_NEIGHBORS_ABOVE_CAP` 個 (20) の近傍に切り替えます。
 
 ## 解 { #solution }
 
@@ -102,6 +70,37 @@ let tsp = Tsp::from_distance_matrix("triangle".to_string(), matrix)?;
 `alns_for_tsp` はこの探索を `AnchoredTourDescent` と組み合わせます。これは、ruin が再挿入したばかりの都市とその近傍に対する
 Or-opt と 2-opt の降下で、その粒度、リング、パス数は ALNS のページで説明している builder で設定します。
 
+## 距離の保持方法 { #distance-storage }
+
+| コンストラクタ | 保持するもの | 使う場面 |
+|---|---|---|
+| `Tsp::new(name, coords)`, `Tsp::with_edge_weight_type(name, coords, ewt)` | `n × n` の行列全体、`8n²` バイト | `n` がせいぜい数千 |
+| `Tsp::with_nearest_neighbors(name, coords, ewt, k)` | 各都市の近い順に `k` 個の近傍、`n × k` 個の距離 | 行列が収まらない |
+| `Tsp::from_distance_matrix(name, matrix)` | 与えた行列そのもの | 距離がユークリッド距離でない、または座標がない |
+
+近傍リスト方式のインスタンスでも、すべての組について `distance(i, j)` に答えます。
+リストにない組は座標から計算するので、値は行列全体を持つ場合と同じで、遠い組のコストが高くなるだけです。
+Lin-Kernighan とアンカー付きの巡回路降下が求める候補リストは、`k` が足りていれば保持している行からそのまま取り出されます。
+
+`Tsp::from_distance_matrix` は `Vec<Vec<f64>>` を受け取り、正方でない行列を拒否します。
+このインスタンスには座標がないので、`coordinates()` と `edge_weight_type()` は `None` を返します。
+対称な行列を与えてください。近傍は 2-opt の move を交換する4本の辺から評価しますが、これは区間を反転しても長さが変わらない場合にしか成り立ちません。
+非対称な行列では、報告される gain が巡回路の長さからずれていきます。
+
+```rust
+use optopus::prelude::*;
+
+let matrix = vec![
+    vec![0.0, 3.0, 7.0],
+    vec![3.0, 0.0, 5.0],
+    vec![7.0, 5.0, 0.0],
+];
+let tsp = Tsp::from_distance_matrix("triangle".to_string(), matrix)?;
+```
+
+`Tsp::load_file` は都市数が `Tsp::DIST_MATRIX_MAX_N` (2000) 以下のファイルでは行列全体を保持し、
+それを超えると都市ごとに `Tsp::NEAREST_NEIGHBORS_ABOVE_CAP` 個 (20) の近傍に切り替えます。
+
 ## 辺の重みの種類 { #edge-weight-types }
 
 `EdgeWeightType` で距離式を選びます。
@@ -114,7 +113,9 @@ Or-opt と 2-opt の降下で、その粒度、リング、パス数は ALNS の
 | `Att` | TSPLIB の擬似ユークリッド距離 | `ATT` |
 | `Geo` | TSPLIB の大円距離 (DDD.MM → ラジアン、R = 6378.388 km) | `GEO` |
 
-## ファイル形式 (TSPLIB) { #file-format-tsplib }
+## ファイル形式 { #file-format }
+
+`Tsp::load_file` は TSPLIB を読みます。
 
 ```text
 NAME: <name>

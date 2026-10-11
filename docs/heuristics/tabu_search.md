@@ -7,8 +7,6 @@ mark it tabu for a tenure drawn uniformly from `tabu_tenure = (min, max)`.
 
 A tabu move is still selectable when it satisfies the aspiration criterion:
 the resulting solution would be strictly better than the current global best.
-When every move is tabu and none satisfies it, the iteration is counted as
-rejected and the search goes on, since prohibitions expire and free moves again.
 
 ## Example
 
@@ -24,6 +22,19 @@ let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
 ts.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
+
+## Algorithm sketch
+
+Each `run_once`:
+
+1. Turn on tabu recording in the state with the configured `tabu_tenure`.
+2. Enumerate the neighborhood through the lazy `N::iter`, keeping the moves
+   that are not tabu and the tabu ones that satisfy the aspiration criterion.
+3. Select the best of them with `max_by` over `rank_cmp`, ties going to the
+   last one the iterator yields.
+4. Apply it, which forbids what it touches for a tenure drawn from
+   `tabu_tenure`. When every move was filtered out, count the iteration as
+   rejected and go on, since prohibitions expire and free moves again.
 
 ## Constructor
 

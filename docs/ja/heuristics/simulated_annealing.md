@@ -21,6 +21,16 @@ sa.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
 
+## アルゴリズムの概要 { #algorithm-sketch }
+
+各 `run_once` で次を行います。
+
+1. `state.random_neighbor` で一様ランダムに近傍を一つ引きます。
+2. その悪化量 `evaluate().minimized()` を読みます。悪化量が負なら受理し、そうでなければ確率 `exp(−worsening / T)` で受理します。
+   目的関数を変えない move は常に受理されます。この判定は共通のヘルパー `boltzmann_accept(delta, T, rng)` が行います。
+3. 受理した move を適用し、棄却したときは反復を棄却として数えます。
+4. `T` を `cooling_rate` 倍します。
+
 ## コンストラクタ { #constructor }
 
 ```rust
@@ -37,11 +47,6 @@ SimulatedAnnealing::<N>::new(
 悪化量は `Evaluable::minimized()` から読むので、もとの目的関数の向きは自動的に扱われます。
 
 `clear()` は現在の温度を `initial_temperature` に戻します。
-
-## 受理規則 { #acceptance-rule }
-
-共通のヘルパー `boltzmann_accept(delta: Evaluable<f64>, T: f64)` は、`delta` がスコアを改善するなら `true` を返し、
-そうでなければ一様乱数を引いて `exp(−worsening / T)` と比べます。
 
 ## ベンチマーク設定 { #benchmark-config }
 

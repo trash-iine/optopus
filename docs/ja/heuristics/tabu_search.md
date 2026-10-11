@@ -5,7 +5,6 @@
 各ステップで、現在タブーでない move のうち厳密に最良のものを選び、それを `tabu_tenure = (min, max)` から一様に引いたテニュアの間タブーにします。
 
 タブーの move でも、aspiration 基準を満たせば選べます。適用した結果の解が現在の全体の最良解より厳密に良くなる場合です。
-すべての move がタブーでどれも基準を満たさないときは、その反復を棄却として数えて探索を続けます。禁止は時間がたてば解けて、move はまた選べるようになります。
 
 ## 例 { #example }
 
@@ -21,6 +20,16 @@ let mut ts = TabuSearch::<MaxCutFlipNeighbor>::new(
 ts.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
+
+## アルゴリズムの概要 { #algorithm-sketch }
+
+各 `run_once` で次を行います。
+
+1. 設定された `tabu_tenure` で、state のタブー記録を有効にします。
+2. 遅延イテレータ `N::iter` で近傍を列挙し、タブーでない move と、aspiration 基準を満たすタブーの move だけを残します。
+3. その中の最良のものを `rank_cmp` による `max_by` で選びます。同点ならイテレータが最後に返したものになります。
+4. それを適用します。適用した move が触るものは、`tabu_tenure` から引いたテニュアの間禁止されます。
+   すべての move が除外されたときは、その反復を棄却として数えて探索を続けます。禁止は時間がたてば解けて、move はまた選べるようになります。
 
 ## コンストラクタ { #constructor }
 

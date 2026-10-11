@@ -33,8 +33,7 @@ let inst = JobShopScheduling::new(
 );
 let mut state = SearchState::new(&inst);
 LocalSearch::<JobShopSwapNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("makespan = {}", sol.objective);
@@ -71,7 +70,9 @@ println!("completion times = {:?}", sol.completion_times); // 上の各位置の
 交叉 `JobShopPpxCrossover` は Precedence-Preserving Crossover (PPX) です。子の各位置で親をランダムに選び、
 その親のまだ使っていない作業のうち最も左のものを追加します。両親は同期して進むので、子も先行関係を満たす重複を許す置換のままです。
 
-## ファイル形式 (Taillard / OR-Library) { #file-format-taillard-or-library }
+## ファイル形式 { #file-format }
+
+`JobShopScheduling::load_file` は Taillard / OR-Library 形式を読みます。
 
 ```text
 n_jobs n_machines

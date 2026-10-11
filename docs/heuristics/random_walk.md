@@ -6,10 +6,6 @@ Sample a uniformly random neighbor and apply it unconditionally, no
 acceptance test, no comparison. The best solution encountered along the walk
 is still tracked in `state.best_solution`.
 
-An iteration that finds no move steps the counter and returns. An empty
-neighborhood is a state a walk can be handed rather than a failure, and
-stepping the counter is what lets an outer budget terminate.
-
 ## Example
 
 ```rust
@@ -22,6 +18,17 @@ rw.run(&mut state)?;
 println!("cut weight = {}", state.best_solution.objective);
 ```
 
+## Algorithm sketch
+
+Each `run_once`:
+
+1. Draw a uniformly random neighbor.
+2. Apply it unconditionally. The state still records the best solution the
+   walk passes through.
+3. When the neighborhood is empty, only advance the iteration counter. An
+   empty neighborhood is a state a walk can be handed rather than a failure,
+   and advancing the counter is what lets an outer budget end the walk.
+
 ## Constructor
 
 ```rust
@@ -33,7 +40,7 @@ conditions](../guide/stop_conditions.md).
 
 `N` must satisfy `MoveToNeighbor<P> + Rankable`.
 
-## When to use
+## Behavior
 
 `RandomWalk` is rarely useful on its own; its main role is as the
 perturbation phase of [`Iterated`](meta.md#iterated): a few random moves

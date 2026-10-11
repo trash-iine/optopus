@@ -5,16 +5,8 @@
 `IntegerProblem` は、近傍を書かずに済ませたい問題のための型です。変数は整数で、それぞれ `lower..=upper` の範囲を動きます。
 作るのに要るのはその範囲と、クロージャで書いた目的関数だけで、実装するものはありません。
 
-- `ProblemTrait` はすべての `IntegerProblem` に付いてきて、解は `IntSolution` です。初期解は各変数をその範囲から一様に引いたもので、
-  変数が順列ならば一様ランダムな順列です。
-- 近傍が三つ付いてきます。どれも `LocalSearch`、`SimulatedAnnealing`、`LateAcceptanceHillClimbing`、`TabuSearch`、`RandomWalk`、
-  `BeamSearch`、`ReinforcementLearningSearch` が近傍に求めるものをすべて実装しています。
-
-| 近傍 | 何をするか | 向いているもの |
-|---|---|---|
-| `IntChangeNeighbor` | 一つの変数を範囲内の別の値にする。`0..=1` なら Flip | 範囲が独立した変数 |
-| `IntSwapNeighbor` | 二つの変数の値を交換する | 割り当て、順列 |
-| `IntReverseNeighbor` | 変数 `i..=j` の値の並びを反転する | 巡回路として読む順列 (2-opt) |
+`ProblemTrait` はすべての `IntegerProblem` に付いてきて、解は `IntSolution` です。初期解は各変数をその範囲から一様に引いたもので、
+変数が順列ならば一様ランダムな順列です。
 
 ## 例 { #example }
 
@@ -29,8 +21,7 @@ let prob = IntegerProblem::minimize(vars, |x: &[i64]| {
 
 let mut state = SearchState::new(&prob);
 LocalSearch::<IntChangeNeighbor>::new(StopCondition::iterations(100))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 println!("{:?}", state.best_solution.values());
 ```
 
@@ -39,6 +30,25 @@ println!("{:?}", state.best_solution.values());
 [`examples/integer_problem.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_problem.rs)
 はこの方法で有界ナップサックを解きます (`cargo run --example integer_problem`)。
 ライブラリに入っているすべての問題を同じように書いた例は [整数変数で問題を書く](../guide/integer_modeling.md) にあります。
+
+## 解 { #solution }
+
+`IntSolution` は各変数の値を持ちます。
+
+| メソッド | 型 | 意味 |
+|---|---|---|
+| `values()` | `&[i64]` | 各変数の値。並びは作るときに渡した範囲の順 |
+
+## 近傍 { #neighbors }
+
+近傍が三つ付いてきます。どれも `LocalSearch`、`SimulatedAnnealing`、`LateAcceptanceHillClimbing`、`TabuSearch`、`RandomWalk`、
+`BeamSearch`、`ReinforcementLearningSearch` が近傍に求めるものをすべて実装しています。
+
+| 近傍 | 何をするか | 向いているもの |
+|---|---|---|
+| `IntChangeNeighbor` | 一つの変数を範囲内の別の値にする。`0..=1` なら Flip | 範囲が独立した変数 |
+| `IntSwapNeighbor` | 二つの変数の値を交換する | 割り当て、順列 |
+| `IntReverseNeighbor` | 変数 `i..=j` の値の並びを反転する | 巡回路として読む順列 (2-opt) |
 
 ## 順列 { #permutations }
 
@@ -109,7 +119,7 @@ let prob = IntegerProblem::minimize(IntVars::permutation(n), tour_len)
 `IntegerProblem::solution_from` は指定した値から解を作り、範囲外の値があれば失敗します。
 それを `SearchState::with_solution` に渡すとそこから探索を始められます。
 
-## 遺伝的アルゴリズム { #genetic-algorithm }
+## 交叉 { #crossover }
 
 `IntSolution` は `Distance` を実装しています。`IntCrossover` は各変数をどちらかの親からとり、順列なら一方の親の区間を残して残りをもう一方の親の順に埋めます。
 そのため `IntCrossover` を交叉にして `GeneticAlgorithm` が動きます。

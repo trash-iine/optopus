@@ -37,8 +37,7 @@ let inst = JobShopScheduling::new(
 );
 let mut state = SearchState::new(&inst);
 LocalSearch::<JobShopSwapNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("makespan = {}", sol.objective);
@@ -81,7 +80,9 @@ child position, randomly choose a parent and append that parent's leftmost
 unconsumed operation. Both parents are kept in sync, so the child remains a
 precedence-feasible permutation-with-repetition.
 
-## File format (Taillard / OR-Library)
+## File format
+
+`JobShopScheduling::load_file` reads the Taillard / OR-Library format.
 
 ```text
 n_jobs n_machines

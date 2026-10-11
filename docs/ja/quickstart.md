@@ -36,7 +36,7 @@ let mut state = SearchState::new(&mc);
 let mut ls = LocalSearch::<MaxCutFlipNeighbor>::new(
     StopCondition::iterations(1_000_000),
 );
-ls.run(&mut state).unwrap();
+ls.run(&mut state)?;
 
 // 4. 最良の結果を読み出す。
 println!("best cut = {}", state.best_solution.objective);

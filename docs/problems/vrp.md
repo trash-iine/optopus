@@ -41,21 +41,6 @@ Overload and shortfall are integers, so any violation of them costs the full
 weight; route-time excess is continuous, so a violation smaller than one time
 unit is scaled down accordingly.
 
-## Slots are bound to vehicle types in fixed contiguous blocks
-
-Every solution has exactly one route per slot, and `num_slots = Σ max_count`
-over the fleet. Each vehicle type owns a contiguous block of slots, type `0`
-gets slots `0..max_count[0]`, type `1` the next block, and so on, computed
-once at construction and never changed after that. A slot's type is therefore
-part of the instance, never of the solution, and moving or swapping a
-customer between slots of different types is exactly a change of vehicle
-type for that customer.
-
-Idle slots of one type are interchangeable, so a move that opens a new route
-of a type considers only the first empty slot of that type
-(`Vrp::idle_representatives`); the others would offer the same route under
-another label.
-
 ## Example
 
 Running a search on a CVRP instance and reading back each vehicle's route:
@@ -73,8 +58,7 @@ let vrp = Vrp::new(
 );
 let mut state = SearchState::new(&vrp);
 LocalSearch::<VrpRelocateNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("total distance = {}", sol.total_distance());
@@ -110,8 +94,7 @@ let fleet = Vrp::with_fleet(
 
 let mut state = SearchState::new(&fleet);
 LocalSearch::<VrpRelocateNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("objective = {}", sol.objective);
@@ -159,20 +142,6 @@ distance-optimal solution routinely uses a few more vehicles than the
 minimum, splitting a remote customer onto its own route can be cheaper than
 detouring to it. Idle vehicles cost nothing, an undersized fleet costs the
 optimum.
-
-## Objective mode
-
-[`ObjectiveMode`](../api/optopus/problem/vrp/enum.ObjectiveMode.html) selects
-which aggregation of the per-slot `route_time` the time term charges:
-
-- `TotalTime`, the additive sum over every slot, the usual routing objective.
-- `Makespan`, the longest single route's duration, a min-max "when is the
-  last vehicle back" objective.
-
-`Makespan` is not additive, so a search under it cannot price a move by
-adding up what the move changes. Every heuristic still works on it: the
-incremental update resolves the new maximum while the move is priced, at a
-cost bounded by the fleet size rather than the customer count.
 
 ## Solution
 
@@ -254,7 +223,36 @@ runs on it, on any fleet. `alns_for_vrp` pairs the search with
 ruin just re-inserted, whose granularity, ring and pass count are builders
 described on that page.
 
-## File formats
+## Slots are bound to vehicle types in fixed contiguous blocks
+
+Every solution has exactly one route per slot, and `num_slots = Σ max_count`
+over the fleet. Each vehicle type owns a contiguous block of slots, type `0`
+gets slots `0..max_count[0]`, type `1` the next block, and so on, computed
+once at construction and never changed after that. A slot's type is therefore
+part of the instance, never of the solution, and moving or swapping a
+customer between slots of different types is exactly a change of vehicle
+type for that customer.
+
+Idle slots of one type are interchangeable, so a move that opens a new route
+of a type considers only the first empty slot of that type
+(`Vrp::idle_representatives`); the others would offer the same route under
+another label.
+
+## Objective mode
+
+[`ObjectiveMode`](../api/optopus/problem/vrp/enum.ObjectiveMode.html) selects
+which aggregation of the per-slot `route_time` the time term charges:
+
+- `TotalTime`, the additive sum over every slot, the usual routing objective.
+- `Makespan`, the longest single route's duration, a min-max "when is the
+  last vehicle back" objective.
+
+`Makespan` is not additive, so a search under it cannot price a move by
+adding up what the move changes. Every heuristic still works on it: the
+incremental update resolves the new maximum while the move is priced, at a
+cost bounded by the fleet size rather than the customer count.
+
+## File format
 
 `Vrp::load_file` reads the TOML fleet format when the path ends in `.toml`
 and CVRPLIB otherwise.

@@ -30,8 +30,7 @@ use optopus::prelude::*;
 let vc = VertexCover::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&vc);
 LocalSearch::<VertexCoverFlipNeighbor>::new(StopCondition::iterations(10_000))
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 
 let sol = &state.best_solution;
 println!("cover size = {}", sol.cover_size);

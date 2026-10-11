@@ -24,8 +24,7 @@
 ```rust
 let mut state = SearchState::new_with_seed(&prob, 42);
 SimulatedAnnealing::<IntChangeNeighbor>::new(StopCondition::iterations(20_000), 2.0, 0.9995)
-    .run(&mut state)
-    .unwrap();
+    .run(&mut state)?;
 println!("{:?}", state.best_solution.values());
 println!("{:?}", state.best_solution.evaluate());
 ```
@@ -59,7 +58,7 @@ let prob = IntegerProblem::maximize(vars, |x: &[i64]| {
 この問題は各 Flip による変化量を式から導くので、ほかに何も書かなくても速く動きます。
 
 ```rust
-let qubo = Qubo::load_file("data/instances/qubo/bqp/bqp100_1.txt").unwrap();
+let qubo = Qubo::load_file("data/instances/qubo/bqp/bqp100_1.txt")?;
 
 let vars: IntVars = (0..qubo.len()).map(|_| IntVar::binary()).collect();
 let energy = qubo.entries().fold(Expr::Const(0.0), |sum, (i, j, q)| {
@@ -77,7 +76,7 @@ let prob = FormulaProblem::minimize(vars, energy);
 負なら `0` であることを求めます。
 
 ```rust
-let sat = Sat::load_file("data/instances/sat/sample.cnf").unwrap();
+let sat = Sat::load_file("data/instances/sat/sample.cnf")?;
 
 let vars: IntVars = (0..sat.n_vars()).map(|_| IntVar::binary()).collect();
 let prob = IntegerProblem::maximize(vars, |x: &[i64]| {
@@ -99,7 +98,7 @@ let prob = IntegerProblem::maximize(vars, |x: &[i64]| {
 これは 2-opt の近傍です。
 
 ```rust
-let tsp = Tsp::load_file("data/instances/tsp/eil51.tsp").unwrap();
+let tsp = Tsp::load_file("data/instances/tsp/eil51.tsp")?;
 let n = tsp.get_n();
 
 let prob = IntegerProblem::minimize(IntVars::permutation(n), |tour: &[i64]| {
@@ -173,7 +172,7 @@ let prob = IntegerProblem::minimize(vars, |color: &[i64]| {
 ライブラリにすでにある関数も、ほかの関数と同じように目的関数の中で呼べます。`IntSwapNeighbor` は作業順の二つの作業を交換します。
 
 ```rust
-let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt").unwrap();
+let jssp = JobShopScheduling::load_file("data/instances/jssp/ft06.txt")?;
 let m = jssp.n_machines;
 
 let as_jobs = |v: &[i64]| -> Vec<usize> { v.iter().map(|&p| p as usize / m).collect() };
@@ -195,7 +194,7 @@ let prob = IntegerProblem::minimize(IntVars::permutation(jssp.n_jobs * m), |v: &
 ```rust
 use optopus::problem::vrp::split_giant_tour;
 
-let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp").unwrap();
+let vrp = Vrp::load_file("data/instances/vrp/demo16.vrp")?;
 
 let routes = |order: &[i64]| {
     let giant: Vec<usize> = order.iter().map(|&c| c as usize + 1).collect();
