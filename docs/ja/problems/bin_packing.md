@@ -34,6 +34,7 @@ println!("{} bins, at least {}", state.best_solution.num_bins(), bp.lower_bound(
 [`BinPackingSolution`](../../api/optopus/problem/bin_packing/struct.BinPackingSolution.html) は、各品目の bin `bin_of`、各 bin の負荷 `loads`、`objective` を持ちます。
 bin は常に空きのない `0..num_bins()` で番号付けされ、bin を空にする移動は残りの番号を付け直します。
 `Distance` は bin の番号ではなく、どの品目が同じ bin にあるかを比べます。
+自前の詰め方は `BinPacking::solution_from_bins` で解に包めます。bin のない品目や容量を超える bin があればエラーを返します。
 
 ## 近傍 { #neighbors }
 

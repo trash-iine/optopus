@@ -54,6 +54,6 @@ impl Crossover<BinPacking> for BinPackingGroupCrossover {
             .collect();
         rest.sort_by_key(|&item| std::cmp::Reverse(prob.sizes[item]));
         prob.first_fit_into(&mut loads, &mut bin_of, rest);
-        Ok(prob.solution_from_bins(bin_of))
+        Ok(prob.build(bin_of))
     }
 }

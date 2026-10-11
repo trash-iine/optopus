@@ -186,22 +186,49 @@ impl BinPacking {
     }
 
     /// Wraps an item to bin map as a solution, numbering the bins compactly
-    /// in order of their first item and computing the loads and objective.
+    /// in order of their first item and computing the loads and objective,
+    /// for starting a search somewhere other than a random packing.
     ///
-    /// # Panics
+    /// Fails if `bin_of` does not give every item a bin or a bin is over
+    /// capacity.
     ///
-    /// Panics if `bin_of` does not cover every item or a bin is over capacity.
-    pub fn solution_from_bins(&self, bin_of: Vec<usize>) -> BinPackingSolution {
-        assert_eq!(bin_of.len(), self.num_items(), "every item needs a bin");
+    /// # Examples
+    ///
+    /// ```
+    /// use optopus::prelude::*;
+    ///
+    /// let bp = BinPacking::new("tiny", 10, vec![6, 4, 5]);
+    /// assert_eq!(bp.solution_from_bins(vec![0, 0, 1])?.num_bins(), 2);
+    /// assert!(bp.solution_from_bins(vec![0, 1, 0]).is_err());
+    /// # Ok::<(), optopus::error::OptError>(())
+    /// ```
+    pub fn solution_from_bins(&self, bin_of: Vec<usize>) -> Result<BinPackingSolution, OptError> {
+        if bin_of.len() != self.num_items() {
+            return Err(OptError::InvalidState(format!(
+                "{} bins given for {} items",
+                bin_of.len(),
+                self.num_items()
+            )));
+        }
+        let sol = self.build(bin_of);
+        if let Some(load) = sol.loads.iter().find(|&&l| l > self.capacity) {
+            return Err(OptError::InvalidState(format!(
+                "a bin holds {load}, over the capacity {}",
+                self.capacity
+            )));
+        }
+        Ok(sol)
+    }
+
+    /// A solution from a map the caller knows packs every item within
+    /// capacity, as every one built inside the crate does.
+    pub(super) fn build(&self, bin_of: Vec<usize>) -> BinPackingSolution {
+        debug_assert_eq!(bin_of.len(), self.num_items());
         let bin_of = relabel(&bin_of);
         let mut loads = vec![0; bin_of.iter().copied().max().map_or(0, |b| b + 1)];
         for (&b, &size) in bin_of.iter().zip(&self.sizes) {
             loads[b] += size;
         }
-        assert!(
-            loads.iter().all(|&l| l <= self.capacity),
-            "a bin is over capacity"
-        );
         let fill = loads.iter().map(|&l| self.sq(l)).sum();
         BinPackingSolution {
             bin_of,
@@ -216,7 +243,7 @@ impl BinPacking {
     pub fn first_fit(&self, order: impl IntoIterator<Item = usize>) -> BinPackingSolution {
         let mut bin_of = vec![0; self.num_items()];
         self.first_fit_into(&mut Vec::new(), &mut bin_of, order);
-        self.solution_from_bins(bin_of)
+        self.build(bin_of)
     }
 
     /// First Fit of the items in `order` into the bins `loads` already
@@ -261,16 +288,16 @@ mod tests {
     fn energy_prefers_fewer_bins_then_fuller_ones() {
         let bp = BinPacking::new("tiny", 10, vec![6, 4, 5, 5, 3]);
         // Three bins, two of them full.
-        let full = bp.solution_from_bins(vec![0, 0, 1, 1, 2]);
+        let full = bp.solution_from_bins(vec![0, 0, 1, 1, 2]).unwrap();
         assert_eq!(full.num_bins(), 3);
         // Three bins, none full.
-        let loose = bp.solution_from_bins(vec![0, 1, 1, 2, 0]);
+        let loose = bp.solution_from_bins(vec![0, 1, 1, 2, 0]).unwrap();
         // Four bins.
-        let four = bp.solution_from_bins(vec![0, 1, 2, 2, 3]);
+        let four = bp.solution_from_bins(vec![0, 1, 2, 2, 3]).unwrap();
         assert!(full.objective < loose.objective);
         assert!(loose.objective < four.objective);
         assert_eq!(
-            full.distance(&bp.solution_from_bins(vec![2, 2, 0, 0, 1])),
+            full.distance(&bp.solution_from_bins(vec![2, 2, 0, 0, 1]).unwrap()),
             0
         );
     }

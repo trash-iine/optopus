@@ -50,7 +50,7 @@ impl Ruinable for BinPacking {
     }
 
     fn finish(&self, partial: &BinPackingPartial) -> BinPackingSolution {
-        self.solution_from_bins(partial.bin_of.clone())
+        self.build(partial.bin_of.clone())
     }
 
     fn elements(&self, partial: &BinPackingPartial, out: &mut Vec<usize>) {

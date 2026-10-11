@@ -293,7 +293,7 @@ mod tests {
         let sol = bp.new_solution(&mut SmallRng::seed_from_u64(1));
         let check = |after: &BinPackingSolution, gain: f64| {
             // Rebuilding renumbers the bins, so the loads are compared as sets.
-            let rebuilt = bp.solution_from_bins(after.bin_of.clone());
+            let rebuilt = bp.solution_from_bins(after.bin_of.clone()).unwrap();
             let sorted = |loads: &[u64]| {
                 let mut l = loads.to_vec();
                 l.sort_unstable();
@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn emptying_a_bin_drops_it() {
         let bp = BinPacking::new("tiny", 10, vec![6, 3, 1]);
-        let sol = bp.solution_from_bins(vec![0, 1, 2]);
+        let sol = bp.solution_from_bins(vec![0, 1, 2]).unwrap();
         let m = BinPackingRelocateNeighbor::new(&bp, &sol, 2, 1).unwrap();
         let mut after = sol.clone();
         m.apply_to_solution(&bp, &mut after).unwrap();

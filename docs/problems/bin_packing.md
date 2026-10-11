@@ -38,7 +38,9 @@ println!("{} bins, at least {}", state.best_solution.num_bins(), bp.lower_bound(
 carries `bin_of`, the bin of every item, `loads`, the load of every bin, and
 `objective`. The bins are always numbered `0..num_bins()` with none of them
 empty, and a move that empties one renumbers the rest. Its `Distance` compares
-which items share a bin, not the bin numbers.
+which items share a bin, not the bin numbers. `BinPacking::solution_from_bins`
+wraps a packing of your own, and returns an error if an item has no bin or a
+bin is over capacity.
 
 ## Neighbors
 
