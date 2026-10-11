@@ -59,6 +59,19 @@ Each `run_once` produces one candidate.
 The global best is kept apart from the incumbent, so an accepted worse
 solution loses nothing.
 
+## Constructor
+
+```rust
+IteratedGreedy::<P>::new(
+    stop_condition: StopCondition,
+    removal_count: usize,                       // elements taken out per iteration
+    temperature_of: impl Fn(&P) -> f64 + 'static,
+) -> Self
+```
+
+Panics if `removal_count` is zero, and in a run if the temperature is not
+positive. `with_local_repair(Box<dyn LocalRepair<P>>)` sets the descent.
+
 ## How it differs from ALNS
 
 Both are ruin and recreate over the same trait, and
@@ -75,19 +88,6 @@ takes it as a function of the instance, read from the instance being searched.
 For the flow shop Ruiz and Stützle set it to a tenth of the mean processing
 time scaled by a factor, `T = factor · Σp / (n · m · 10)`, which is what
 `iterated_greedy_for_flow_shop` computes from `temperature_factor`.
-
-## Constructor
-
-```rust
-IteratedGreedy::<P>::new(
-    stop_condition: StopCondition,
-    removal_count: usize,                       // elements taken out per iteration
-    temperature_of: impl Fn(&P) -> f64 + 'static,
-) -> Self
-```
-
-Panics if `removal_count` is zero, and in a run if the temperature is not
-positive. `with_local_repair(Box<dyn LocalRepair<P>>)` sets the descent.
 
 ## Benchmark config
 

@@ -61,7 +61,9 @@ facilities back, which is Taillard's rule.
 
 `QapOrderCrossover` is Order Crossover (OX) over the assignment.
 
-## File format (QAPLIB)
+## File format
+
+QAPLIB's layout.
 
 ```text
 n

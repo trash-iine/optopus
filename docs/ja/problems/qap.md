@@ -50,7 +50,9 @@ println!("cost = {}", state.best_solution.objective);
 
 `QapOrderCrossover` は配置に対する Order Crossover (OX) です。
 
-## ファイル形式 (QAPLIB) { #file-format-qaplib }
+## ファイル形式 { #file-format }
+
+QAPLIB の形式です。
 
 ```text
 n

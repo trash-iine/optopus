@@ -48,27 +48,22 @@ carries `sequence`, a permutation of the jobs with the one run first first, and
 `objective`, its makespan. `FlowShop::solution_from_sequence` wraps a sequence
 of your own.
 
-## Heads and tails
-
-Every price on this problem comes from Taillard's acceleration. Split a
-sequence anywhere into a prefix and a suffix. The head of the prefix is when
-its last job leaves each machine, and the tail of the suffix is how long each
-machine stays busy from the moment its first job starts there. The makespan is
-the largest sum of head and tail over the machines, and neither side depends
-on the other. Once both are tabulated for every split point, which is O(nm),
-inserting a job at any place or taking one out is O(m), and trying a job at
-all `n + 1` places is O(nm). That is what makes NEH O(n²m) and an Iterated
-Greedy iteration cheap.
-
 ## Neighbors
 
 | Type | Config | Move | Scan cost |
 |---|---|---|---|
-| `FlowShopInsertNeighbor` | `Relocate` | Take one job out and put it back at another place. | all `(n−1)²` moves in O(n²m) |
+| `FlowShopInsertNeighbor` | `Relocate` | Take one job out and put it back at another place. | all `n(n−1)` moves in O(n²m) |
 | `FlowShopSwapNeighbor` | `Swap` | Exchange the jobs at two positions. | each move O((j−i)·m) from the heads and tails |
 
 Insertion is the neighborhood the flow shop literature relies on. Both moves
-draw a random neighbor in O(nm).
+are priced from the [heads and tails](#heads-and-tails), and both draw a
+random neighbor in O(nm).
+
+## Crossover
+
+`FlowShopOrderCrossover` is Order Crossover (OX), a stretch of the first
+parent's sequence kept in place and the other jobs filled in the order the
+second parent runs them.
 
 ## Ruin and recreate
 
@@ -83,11 +78,17 @@ the full insertion descent of Ruiz and Stützle, which takes every job out in a
 random order and puts it back where the makespan is smallest until a pass
 changes nothing.
 
-## Crossover
+## Heads and tails
 
-`FlowShopOrderCrossover` is Order Crossover (OX), a stretch of the first
-parent's sequence kept in place and the other jobs filled in the order the
-second parent runs them.
+Every price on this problem comes from Taillard's acceleration. Split a
+sequence anywhere into a prefix and a suffix. The head of the prefix is when
+its last job leaves each machine, and the tail of the suffix is how long each
+machine stays busy from the moment its first job starts there. The makespan is
+the largest sum of head and tail over the machines, and neither side depends
+on the other. Once both are tabulated for every split point, which is O(nm),
+inserting a job at any place or taking one out is O(m), and trying a job at
+all `n + 1` places is O(nm). That is what makes NEH O(n²m) and an Iterated
+Greedy iteration cheap.
 
 ## File format
 

@@ -50,19 +50,6 @@ let mut ig = IteratedGreedy::<Tsp>::new(
 
 大域最良解は現在解とは別に保持されるので、悪い解を受理しても何も失いません。
 
-## ALNS との違い { #how-it-differs-from-alns }
-
-どちらも同じトレイトの上の ruin and recreate で、[ALNS](alns.md) もフローショップで動きます。
-ALNS は三つの破壊と二つの修復のオペレータをルーレットで選び、要素の一定割合を取り出し、冷却します。
-Iterated Greedy はランダムな破壊一つ、貪欲な修復一つ、取り出す個数を固定し、冷却しません。
-Taillard の 50 × 20 インスタンスでは、同じ時間で Iterated Greedy の方が強くなります。
-
-## 温度 { #temperature }
-
-温度は目的関数の単位を持つので、`IteratedGreedy::new` はそれをインスタンスの関数として受け取り、探索するインスタンスから読みます。
-フローショップでは Ruiz と Stützle が、平均処理時間の 10 分の 1 に係数を掛けた `T = factor · Σp / (n · m · 10)` としており、
-`iterated_greedy_for_flow_shop` が `temperature_factor` からこれを計算します。
-
 ## コンストラクタ { #constructor }
 
 ```rust
@@ -75,6 +62,19 @@ IteratedGreedy::<P>::new(
 
 `removal_count` が 0 なら panic し、実行中に温度が正でなければ panic します。
 `with_local_repair(Box<dyn LocalRepair<P>>)` で降下を設定します。
+
+## ALNS との違い { #how-it-differs-from-alns }
+
+どちらも同じトレイトの上の ruin and recreate で、[ALNS](alns.md) もフローショップで動きます。
+ALNS は三つの破壊と二つの修復のオペレータをルーレットで選び、要素の一定割合を取り出し、冷却します。
+Iterated Greedy はランダムな破壊一つ、貪欲な修復一つ、取り出す個数を固定し、冷却しません。
+Taillard の 50 × 20 インスタンスでは、同じ時間で Iterated Greedy の方が強くなります。
+
+## 温度 { #temperature }
+
+温度は目的関数の単位を持つので、`IteratedGreedy::new` はそれをインスタンスの関数として受け取り、探索するインスタンスから読みます。
+フローショップでは Ruiz と Stützle が、平均処理時間の 10 分の 1 に係数を掛けた `T = factor · Σp / (n · m · 10)` としており、
+`iterated_greedy_for_flow_shop` が `temperature_factor` からこれを計算します。
 
 ## ベンチマーク設定 { #benchmark-config }
 
