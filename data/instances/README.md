@@ -6,7 +6,7 @@ with sources and licensing. Instances are pure numerical descriptions of
 optimization problems (adjacency lists, processing times, CNF clauses, city
 coordinates). Paths below are relative to this directory unless noted.
 
-The OR-Library QUBO, JSSP and flow shop sets are bundled directly in this repository. The
+The OR-Library QUBO, JSSP, flow shop and bin packing sets are bundled directly in this repository. The
 SATLIB, TSPLIB, GSET, and CVRPLIB sets are **not bundled**; fetch them locally
 with the commands in
 [Obtaining instances not bundled](#obtaining-instances-not-bundled).
@@ -63,6 +63,20 @@ upper and lower bounds Taillard publishes are left out.
 
 The QAPLIB files are read by `Qap::load_file` as they are. QAPLIB states no
 redistribution terms, so they are fetched rather than bundled.
+
+## Bin packing — `bin_packing/`
+
+**Bundled in this repository.**
+
+| Set | Files | Size (items) | Source |
+|---|---|---|---|
+| Falkenauer uniform | `falkenauer/u{120,250,500,1000}_{00..19}.txt` (80 files) | 120 / 250 / 500 / 1000, capacity 150 | [OR-Library](https://people.brunel.ac.uk/~mastjjb/jeb/orlib/binpackinfo.html), E. Falkenauer |
+| Falkenauer triplets | `falkenauer/t{60,120,249,501}_{00..19}.txt` (80 files) | 60 / 120 / 249 / 501, capacity 1000 | same, optimum `n / 3` by construction |
+
+Conversion: `scripts/split_binpack.py` splits each OR-Library bundle into one
+file per instance, `n capacity` followed by the `n` sizes, the layout
+`BinPacking::load_file` reads. The triplet files give sizes with one decimal,
+so those instances are scaled by ten. The best known bin counts are left out.
 
 ## SAT — `sat/`
 
@@ -176,9 +190,9 @@ it bakes in.
 ## Licensing
 
 - The OR-Library data bundled here (QUBO `bqp/`, JSSP `orlib/`, flow shop
-  `taillard/`) is redistributed under the **MIT License** (© 2010 J E Beasley).
-  Full license text is included in `qubo/NOTICE`, `jssp/NOTICE` and
-  `flow_shop/NOTICE`.
+  `taillard/`, bin packing `falkenauer/`) is redistributed under the **MIT
+  License** (© 2010 J E Beasley). Full license text is included in
+  `qubo/NOTICE`, `jssp/NOTICE`, `flow_shop/NOTICE` and `bin_packing/NOTICE`.
   Source: <https://people.brunel.ac.uk/~mastjjb/jeb/orlib/legal.html>
 - The SATLIB, TSPLIB, GSET, CVRPLIB and QAPLIB instances are **not bundled** in this
   repository. Obtain them from their original sites (see below) and follow each
@@ -186,7 +200,7 @@ it bakes in.
 - The tiny `sample.*` / `test_data.*` files in each problem directory are
   original to this repository.
 - When publishing results, please also cite the originating libraries:
-  Beasley 1990 (OR-Library), Taillard 1993 (flow shop), Hoos & Stützle 2000 (SATLIB), Reinelt 1991
+  Beasley 1990 (OR-Library), Taillard 1993 (flow shop), Falkenauer 1996 (bin packing), Hoos & Stützle 2000 (SATLIB), Reinelt 1991
   (TSPLIB), Helmberg & Rendl 2000 (GSET), Uchoa et al. 2017 (CVRPLIB X), Burkard, Karisch and Rendl 1997 (QAPLIB).
 
 ## Obtaining instances not bundled
@@ -209,7 +223,7 @@ The downloaded files stay out of version control via each directory's
 
 ### Regenerating the bundled OR-Library files (optional)
 
-The QUBO, JSSP and flow shop sets are already bundled; these scripts download the
+The QUBO, JSSP, flow shop and bin packing sets are already bundled; these scripts download the
 upstream OR-Library bundles and split them back into the per-instance files in
 place.
 
@@ -217,4 +231,5 @@ place.
 bash scripts/fetch_qubo.sh  # → qubo/bqp/
 bash scripts/fetch_jssp.sh  # → jssp/orlib/
 bash scripts/fetch_pfsp.sh  # → flow_shop/taillard/ (regenerated from the seeds)
+bash scripts/fetch_binpack.sh  # → bin_packing/falkenauer/
 ```
