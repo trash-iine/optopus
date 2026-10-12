@@ -28,7 +28,7 @@ pub struct JobShopSwapNeighbor {
     /// Left index of the swapped pair (swaps `operations[i]` and `operations[i+1]`).
     pub i: usize,
     /// Change in makespan (negative = improvement).
-    pub gain: f64,
+    pub gain: i64,
 }
 
 impl JobShopSwapNeighbor {
@@ -43,7 +43,7 @@ impl JobShopSwapNeighbor {
     ///
     /// Swapping two positions that hold the same job is an identity move; the
     /// neighborhood scan skips those, but one built here is still evaluated
-    /// correctly (`gain == 0.0`) rather than rejected.
+    /// correctly (`gain == 0`) rather than rejected.
     ///
     /// # Panics
     ///
@@ -69,7 +69,7 @@ impl JobShopSwapNeighbor {
     ///
     /// let mut after = sol.clone();
     /// m.apply_to_solution(&inst, &mut after).unwrap();
-    /// assert_eq!(after.objective as f64, sol.objective as f64 + m.gain);
+    /// assert_eq!(i64::from(after.objective), i64::from(sol.objective) + m.gain);
     /// ```
     pub fn new(prob: &JobShopScheduling, sol: &JobShopSolution, i: usize) -> Self {
         let mut tentative = sol.operations.clone();
@@ -77,14 +77,14 @@ impl JobShopSwapNeighbor {
         let makespan = prob.compute_makespan(&tentative);
         Self {
             i,
-            gain: makespan as f64 - sol.objective as f64,
+            gain: i64::from(makespan) - i64::from(sol.objective),
         }
     }
 }
 
 impl Evaluate for JobShopSwapNeighbor {
     fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
+        Evaluable::Minimize(self.gain as f64)
     }
 }
 
@@ -121,7 +121,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
 
     fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.operations.len();
-        let base = sol.objective as f64;
+        let base = i64::from(sol.objective);
         let items: Vec<Self> = if n >= PARALLEL_ITER_MIN_OPS {
             (0..n.saturating_sub(1))
                 .into_par_iter()
@@ -134,7 +134,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
                         tentative.swap(i, i + 1);
                         JobShopSwapNeighbor {
                             i,
-                            gain: makespan as f64 - base,
+                            gain: i64::from(makespan) - base,
                         }
                     },
                 )
@@ -149,7 +149,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
                 tentative.swap(i, i + 1);
                 let makespan = prob.compute_makespan(&tentative);
                 tentative.swap(i, i + 1);
-                let gain = makespan as f64 - base;
+                let gain = i64::from(makespan) - base;
                 items.push(JobShopSwapNeighbor { i, gain });
             }
             items
@@ -202,7 +202,7 @@ pub struct JobShopRelocateNeighbor {
     /// Destination index, in post-removal indexing (`to ∈ 0..n-1`).
     pub to: usize,
     /// Change in makespan (negative = improvement).
-    pub gain: f64,
+    pub gain: i64,
 }
 
 impl JobShopRelocateNeighbor {
@@ -217,7 +217,7 @@ impl JobShopRelocateNeighbor {
     ///
     /// `to` is in post-removal indexing, so `to == from` is the identity move;
     /// the neighborhood scan skips it, but one built here is still evaluated
-    /// correctly (`gain == 0.0`) rather than rejected.
+    /// correctly (`gain == 0`) rather than rejected.
     ///
     /// # Panics
     ///
@@ -244,7 +244,7 @@ impl JobShopRelocateNeighbor {
     /// let mut after = sol.clone();
     /// m.apply_to_solution(&inst, &mut after).unwrap();
     /// assert_eq!(after.operations, vec![1, 0, 1, 0]);
-    /// assert_eq!(after.objective as f64, sol.objective as f64 + m.gain);
+    /// assert_eq!(i64::from(after.objective), i64::from(sol.objective) + m.gain);
     /// ```
     pub fn new(prob: &JobShopScheduling, sol: &JobShopSolution, from: usize, to: usize) -> Self {
         let mut tentative = sol.operations.clone();
@@ -253,14 +253,14 @@ impl JobShopRelocateNeighbor {
         Self {
             from,
             to,
-            gain: makespan as f64 - sol.objective as f64,
+            gain: i64::from(makespan) - i64::from(sol.objective),
         }
     }
 }
 
 impl Evaluate for JobShopRelocateNeighbor {
     fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
+        Evaluable::Minimize(self.gain as f64)
     }
 }
 
@@ -302,7 +302,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
 
     fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.operations.len();
-        let base = sol.objective as f64;
+        let base = i64::from(sol.objective);
         let relocate_row = |tentative: &mut Vec<usize>, from: usize| {
             let mut row = Vec::with_capacity(n.saturating_sub(1));
             for to in 0..n {
@@ -312,7 +312,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
                 relocate_in_place(tentative, from, to);
                 let makespan = prob.compute_makespan(tentative);
                 relocate_in_place(tentative, to, from);
-                let gain = makespan as f64 - base;
+                let gain = i64::from(makespan) - base;
                 row.push(JobShopRelocateNeighbor { from, to, gain });
             }
             row
@@ -401,7 +401,7 @@ mod tests {
             let recomputed = inst.decode(&s.operations).unwrap().0;
             assert_eq!(s.objective, recomputed);
             assert!(
-                (n.gain - (s.objective as f64 - before as f64)).abs() < 1e-9,
+                n.gain == i64::from(s.objective) - i64::from(before),
                 "swap gain inconsistent at i={}",
                 n.i
             );
@@ -448,8 +448,8 @@ mod tests {
         let inst = make_inst();
         let sol = make_sol(&inst, vec![0, 0, 1, 1]);
         // i=0 swaps two operations of the same job; iter skips it.
-        assert_eq!(JobShopSwapNeighbor::new(&inst, &sol, 0).gain, 0.0);
-        assert_eq!(JobShopRelocateNeighbor::new(&inst, &sol, 2, 2).gain, 0.0);
+        assert_eq!(JobShopSwapNeighbor::new(&inst, &sol, 0).gain, 0);
+        assert_eq!(JobShopRelocateNeighbor::new(&inst, &sol, 2, 2).gain, 0);
     }
 
     #[test]
@@ -462,7 +462,7 @@ mod tests {
             n.apply_to_solution(&inst, &mut s).unwrap();
             let recomputed = inst.decode(&s.operations).unwrap().0;
             assert_eq!(s.objective, recomputed);
-            assert!((n.gain - (s.objective as f64 - before as f64)).abs() < 1e-9);
+            assert_eq!(n.gain, i64::from(s.objective) - i64::from(before));
             let mut counts = vec![0usize; inst.n_jobs];
             for &j in &s.operations {
                 counts[j] += 1;
