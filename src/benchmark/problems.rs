@@ -10,15 +10,19 @@ use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
 use crate::error::OptError;
 use crate::heuristic::{
     Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition,
-    SubProblemBasedCrossover, WalkSatForSat, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
+    SubProblemBasedCrossover, WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,
+    bls_for_max_cut, iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
-    GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
-    GraphColoringUniformCrossover, JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling,
-    JobShopSolution, JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
-    MaxCutUniformCrossover, QuboFlipNeighbor, QuboSwapNeighbor, QuboUniformCrossover,
-    SatUniformCrossover, TspOrderCrossover, VertexCover, VertexCoverFlipNeighbor,
-    VertexCoverSolution, VertexCoverSwapNeighbor, VertexCoverUniformCrossover,
+    FlowShop, FlowShopInsertNeighbor, FlowShopOrderCrossover, FlowShopSolution,
+    FlowShopSwapNeighbor, GraphColoring, GraphColoringRecolorNeighbor, GraphColoringSolution,
+    GraphColoringSwapNeighbor, GraphColoringUniformCrossover, JobShopPpxCrossover,
+    JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution, JobShopSwapNeighbor,
+    MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor, MaxCutUniformCrossover, Qap,
+    QapOrderCrossover, QapSolution, QapSwapNeighbor, QuboFlipNeighbor, QuboSwapNeighbor,
+    QuboUniformCrossover, SatUniformCrossover, TspOrderCrossover, VertexCover,
+    VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
+    VertexCoverUniformCrossover,
     max_cut::MaxCut,
     qubo::{Qubo, QuboSolution},
     sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor},
@@ -177,6 +181,21 @@ impl BenchmarkSolution for JobShopSolution {
     }
     fn encode_as_indices(&self) -> Vec<usize> {
         self.operations.clone()
+    }
+}
+
+impl BenchmarkProblem for FlowShop {
+    fn load_instance(path: &str) -> Result<Self, OptError> {
+        FlowShop::load_file(path)
+    }
+}
+
+impl BenchmarkSolution for FlowShopSolution {
+    fn best_objective_f64(&self) -> f64 {
+        f64::from(self.objective)
+    }
+    fn encode_as_indices(&self) -> Vec<usize> {
+        self.sequence.clone()
     }
 }
 
@@ -380,11 +399,11 @@ impl ConfigurableProblem for Tsp {
                 removal_fraction,
                 cooling_rate,
                 ..
-            } => Ok(Box::new(alns_for_tsp(
-                cond,
-                removal_fraction.unwrap_or(0.15),
-                cooling_rate.unwrap_or(0.9995),
-            ))),
+            } => {
+                let (removal_fraction, cooling_rate) =
+                    alns_params(*removal_fraction, *cooling_rate)?;
+                Ok(Box::new(alns_for_tsp(cond, removal_fraction, cooling_rate)))
+            }
             _ => Err(OptError::Config(format!(
                 "heuristic '{}' is not supported for Tsp",
                 config.kind_name()
@@ -432,11 +451,11 @@ impl ConfigurableProblem for Vrp {
                 removal_fraction,
                 cooling_rate,
                 ..
-            } => Ok(Box::new(alns_for_vrp(
-                cond,
-                removal_fraction.unwrap_or(0.15),
-                cooling_rate.unwrap_or(0.9995),
-            ))),
+            } => {
+                let (removal_fraction, cooling_rate) =
+                    alns_params(*removal_fraction, *cooling_rate)?;
+                Ok(Box::new(alns_for_vrp(cond, removal_fraction, cooling_rate)))
+            }
             HeuristicConfig::HybridGeneticSearch {
                 min_population_size,
                 generation_size,
@@ -521,6 +540,141 @@ impl ConfigurableProblem for JobShopScheduling {
     }
 }
 
+impl BenchmarkProblem for Qap {
+    fn load_instance(path: &str) -> Result<Self, OptError> {
+        Qap::load_file(path)
+    }
+}
+
+impl BenchmarkSolution for QapSolution {
+    fn best_objective_f64(&self) -> f64 {
+        self.objective as f64
+    }
+    fn encode_as_indices(&self) -> Vec<usize> {
+        self.assignment.clone()
+    }
+}
+
+impl ConfigurableProblem for Qap {
+    const NAME: &'static str = "Qap";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Swap];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Swap => Ok(visitor.visit::<QapSwapNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
+        }
+    }
+
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Order") {
+            "Order" => Ok(Box::new(QapOrderCrossover)),
+            other => Err(OptError::Config(format!(
+                "Unknown crossover_kind '{other}' for Qap (expected 'Order')"
+            ))),
+        }
+    }
+}
+
+/// The ALNS defaults, checked here so a bad config fails at startup rather
+/// than panicking in the constructor.
+fn alns_params(
+    removal_fraction: Option<f64>,
+    cooling_rate: Option<f64>,
+) -> Result<(f64, f64), OptError> {
+    let removal_fraction = removal_fraction.unwrap_or(0.15);
+    let cooling_rate = cooling_rate.unwrap_or(0.9995);
+    for (name, value) in [
+        ("removal_fraction", removal_fraction),
+        ("cooling_rate", cooling_rate),
+    ] {
+        if !(value > 0.0 && value <= 1.0) {
+            return Err(OptError::Config(format!(
+                "'{name}' must be in (0, 1], got {value}"
+            )));
+        }
+    }
+    Ok((removal_fraction, cooling_rate))
+}
+
+impl ConfigurableProblem for FlowShop {
+    const NAME: &'static str = "FlowShop";
+    const MINIMIZE: bool = true;
+    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Swap, NeighborKind::Relocate];
+
+    fn with_neighbor<V: NeighborVisitor<Self>>(
+        kind: &NeighborKind,
+        visitor: V,
+    ) -> Result<V::Output, OptError> {
+        match kind {
+            NeighborKind::Swap => Ok(visitor.visit::<FlowShopSwapNeighbor>()),
+            NeighborKind::Relocate => Ok(visitor.visit::<FlowShopInsertNeighbor>()),
+            other => Err(invalid_neighbor::<Self>(other)),
+        }
+    }
+
+    fn build_special_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        match config {
+            HeuristicConfig::IteratedGreedy {
+                removal_count,
+                temperature_factor,
+                ..
+            } => {
+                let removal_count = removal_count.unwrap_or(4);
+                let temperature_factor = temperature_factor.unwrap_or(0.4);
+                if removal_count == 0 {
+                    return Err(OptError::Config(
+                        "'removal_count' must be at least 1".to_string(),
+                    ));
+                }
+                if !(temperature_factor.is_finite() && temperature_factor > 0.0) {
+                    return Err(OptError::Config(format!(
+                        "'temperature_factor' must be positive and finite, got {temperature_factor}"
+                    )));
+                }
+                Ok(Box::new(iterated_greedy_for_flow_shop(
+                    cond,
+                    removal_count,
+                    temperature_factor,
+                )))
+            }
+            HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
+                removal_fraction,
+                cooling_rate,
+                ..
+            } => {
+                let (removal_fraction, cooling_rate) =
+                    alns_params(*removal_fraction, *cooling_rate)?;
+                Ok(Box::new(alns_for_flow_shop(
+                    cond,
+                    removal_fraction,
+                    cooling_rate,
+                )))
+            }
+            _ => Err(OptError::Config(format!(
+                "heuristic '{}' is not supported for FlowShop",
+                config.kind_name()
+            ))),
+        }
+    }
+
+    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+        match kind.unwrap_or("Order") {
+            "Order" => Ok(Box::new(FlowShopOrderCrossover)),
+            other => Err(OptError::Config(format!(
+                "Unknown crossover_kind '{other}' for FlowShop (expected 'Order')"
+            ))),
+        }
+    }
+}
+
 impl ConfigurableProblem for GraphColoring {
     const NAME: &'static str = "GraphColoring";
     const MINIMIZE: bool = true;
@@ -570,6 +724,8 @@ pub(crate) fn with_problem<V: ProblemVisitor>(kind: &ProblemKind, visitor: V) ->
         ProblemKind::Tsp => visitor.visit::<Tsp>(),
         ProblemKind::VertexCover => visitor.visit::<VertexCover>(),
         ProblemKind::JobShop => visitor.visit::<JobShopScheduling>(),
+        ProblemKind::FlowShop => visitor.visit::<FlowShop>(),
+        ProblemKind::Qap => visitor.visit::<Qap>(),
         ProblemKind::Vrp => visitor.visit::<Vrp>(),
         ProblemKind::GraphColoring => visitor.visit::<GraphColoring>(),
     }

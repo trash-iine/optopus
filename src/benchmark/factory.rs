@@ -468,6 +468,7 @@ where
         HeuristicConfig::BreakoutLocalSearch { .. }
         | HeuristicConfig::LinKernighanHelsgaun { .. }
         | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
+        | HeuristicConfig::IteratedGreedy { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::LocalSearch { neighbor, .. }
@@ -591,6 +592,37 @@ mod factory_tests {
         try_build(&ProblemKind::MaxCut, &beam(1)).expect("a beam of one builds");
         let err = try_build(&ProblemKind::MaxCut, &beam(0)).expect_err("beam_width = 0 must fail");
         assert!(err.to_string().contains("beam_width"), "{err}");
+    }
+
+    /// Out-of-range IteratedGreedy and ALNS values are config errors, not a
+    /// constructor panic mid-startup.
+    #[test]
+    fn iterated_greedy_and_alns_reject_out_of_range_values() {
+        let ig = |removal_count, temperature_factor| HeuristicConfig::IteratedGreedy {
+            removal_count,
+            temperature_factor,
+            stop_condition: StopConditionConfig::default(),
+        };
+        try_build(&ProblemKind::FlowShop, &ig(None, None)).expect("defaults build");
+        for (config, name) in [
+            (ig(Some(0), None), "removal_count"),
+            (ig(None, Some(0.0)), "temperature_factor"),
+            (ig(None, Some(f64::NAN)), "temperature_factor"),
+        ] {
+            let err = try_build(&ProblemKind::FlowShop, &config).expect_err("must fail");
+            assert!(err.to_string().contains(name), "{err}");
+        }
+
+        let alns =
+            |removal_fraction, cooling_rate| HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
+                removal_fraction,
+                cooling_rate,
+                stop_condition: StopConditionConfig::default(),
+            };
+        let err = try_build(&ProblemKind::Tsp, &alns(Some(0.0), None)).expect_err("must fail");
+        assert!(err.to_string().contains("removal_fraction"), "{err}");
+        let err = try_build(&ProblemKind::FlowShop, &alns(None, Some(1.5))).expect_err("must fail");
+        assert!(err.to_string().contains("cooling_rate"), "{err}");
     }
 
     #[test]

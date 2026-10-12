@@ -3,6 +3,8 @@
 use rand::Rng;
 use rand::rngs::SmallRng;
 
+use crate::error::OptError;
+
 /// Order crossover (OX) over two permutations of the same elements.
 ///
 /// A random contiguous segment of `parent1` is copied to the child at its own
@@ -11,8 +13,10 @@ use rand::rngs::SmallRng;
 /// after the segment and wrapping around. The result is a permutation of the
 /// same elements whenever both parents are.
 ///
-/// Used by [`crate::problem::TspOrderCrossover`], and by the giant-tour
-/// encodings: [`crate::problem::VrpOrderCrossover`] and Hybrid Genetic Search.
+/// Used by [`crate::problem::TspOrderCrossover`],
+/// [`crate::problem::FlowShopOrderCrossover`] and
+/// [`crate::problem::QapOrderCrossover`], and by the giant-tour encodings:
+/// [`crate::problem::VrpOrderCrossover`] and Hybrid Genetic Search.
 ///
 /// # Panics
 /// Panics if the parents differ in length.
@@ -54,6 +58,34 @@ pub fn order_crossover(parent1: &[usize], parent2: &[usize], rng: &mut SmallRng)
     child
 }
 
+/// Checks that `values` holds each of `0..n` exactly once, naming the first
+/// thing wrong.
+///
+/// The check a sequencing problem runs on a solution handed to it from
+/// outside, a job order or an assignment. `what` names the values in the
+/// message, "job" or "location".
+pub fn check_permutation(values: &[usize], n: usize, what: &str) -> Result<(), OptError> {
+    if values.len() != n {
+        return Err(OptError::InvalidState(format!(
+            "{} {what}s given, expected {n}",
+            values.len()
+        )));
+    }
+    let mut seen = vec![false; n];
+    for &v in values {
+        if v >= n {
+            return Err(OptError::InvalidState(format!(
+                "{what} {v} is out of range, expected 0..{n}"
+            )));
+        }
+        if seen[v] {
+            return Err(OptError::InvalidState(format!("{what} {v} appears twice")));
+        }
+        seen[v] = true;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -76,6 +108,16 @@ mod tests {
             let child = order_crossover(&p1, &p2, &mut rng);
             assert!(is_permutation_of(&child, &p1));
         }
+    }
+
+    #[test]
+    fn check_permutation_names_repeats_gaps_and_strays() {
+        assert!(check_permutation(&[2, 0, 1], 3, "job").is_ok());
+        assert!(check_permutation(&[], 0, "job").is_ok());
+        let message = |v: &[usize]| check_permutation(v, 3, "job").unwrap_err().to_string();
+        assert!(message(&[0, 0, 1]).contains("job 0 appears twice"));
+        assert!(message(&[0, 1]).contains("2 jobs given, expected 3"));
+        assert!(message(&[0, 1, 3]).contains("job 3 is out of range"));
     }
 
     #[test]
