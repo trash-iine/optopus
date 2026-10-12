@@ -6,6 +6,10 @@
 //! the objective alone. The routes, the objective, both iteration counters and
 //! the acceptance tallies all matched, over four seeds and two budgets.
 //!
+//! The pins were captured again when the greedy repair became cheapest
+//! element first, which moves the search on purpose (decisions/0029). The agreement above is what the pins held up to
+//! that change.
+//!
 //! What [`PINS`] freezes is the five scalars of that agreement. The routes are
 //! not among them, a `const` being unable to hold a `Vec<Vec<usize>>`, and
 //! [`run`] drops them. They are still worth capturing by hand from
@@ -77,12 +81,12 @@ fn the_alns_trajectories_are_pinned() {
 
 /// `(seed, iterations, objective bits, iteration, best_iteration, accepted, rejected)`.
 const PINS: [(u64, u64, u64, u64, u64, u64, u64); 8] = [
-    (1, 200, 0x407a_a000_0000_0000, 200, 69, 200, 0),
-    (1, 1_000, 0x407a_a000_0000_0000, 1_000, 69, 1_000, 0),
-    (7, 200, 0x407a_a000_0000_0000, 200, 49, 200, 0),
-    (7, 1_000, 0x407a_a000_0000_0000, 1_000, 49, 1_000, 0),
-    (42, 200, 0x407a_a000_0000_0000, 200, 5, 200, 0),
-    (42, 1_000, 0x407a_a000_0000_0000, 1_000, 5, 999, 1),
-    (2024, 200, 0x407a_a000_0000_0000, 200, 11, 199, 1),
-    (2024, 1_000, 0x407a_a000_0000_0000, 1_000, 11, 999, 1),
+    (1, 200, 0x407a_a000_0000_0000, 200, 98, 200, 0),
+    (1, 1_000, 0x407a_a000_0000_0000, 1_000, 98, 1_000, 0),
+    (7, 200, 0x407b_f000_0000_0000, 200, 53, 200, 0),
+    (7, 1_000, 0x407a_a000_0000_0000, 1_000, 318, 1_000, 0),
+    (42, 200, 0x407b_f000_0000_0000, 200, 124, 200, 0),
+    (42, 1_000, 0x407a_a000_0000_0000, 1_000, 418, 1_000, 0),
+    (2024, 200, 0x407a_a000_0000_0000, 200, 92, 200, 0),
+    (2024, 1_000, 0x407a_a000_0000_0000, 1_000, 92, 1_000, 0),
 ];

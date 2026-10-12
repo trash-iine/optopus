@@ -4,7 +4,7 @@ use rand::Rng;
 use rand::rngs::SmallRng;
 
 use crate::building_blocks::search::{
-    AdaptiveWeights, greedy_insertion, random_removal, regret2_insertion, shaw_removal,
+    AdaptiveWeights, cheapest_first_insertion, random_removal, regret2_insertion, shaw_removal,
     worst_removal,
 };
 use crate::error::OptError;
@@ -40,7 +40,8 @@ impl DestroyOp {
 /// Counted from [`ALL`](Self::ALL), for the reason [`DestroyOp`] explains.
 #[derive(Debug, Clone, Copy)]
 enum RepairOp {
-    /// Each removed element at its cheapest placement, random order.
+    /// Cheapest element first, at its cheapest placement, the pool repriced
+    /// after each insertion.
     Greedy,
     /// Largest-regret-first, regret measured across containers.
     Regret2,
@@ -259,15 +260,9 @@ impl<P: Ruinable> AdaptiveLargeNeighborhoodSearch<P> {
         }
     }
 
-    fn run_repair(
-        op: RepairOp,
-        prob: &P,
-        partial: &mut P::Partial,
-        removed: Vec<P::Element>,
-        rng: &mut SmallRng,
-    ) {
+    fn run_repair(op: RepairOp, prob: &P, partial: &mut P::Partial, removed: Vec<P::Element>) {
         match op {
-            RepairOp::Greedy => greedy_insertion(prob, partial, removed, rng),
+            RepairOp::Greedy => cheapest_first_insertion(prob, partial, removed),
             RepairOp::Regret2 => regret2_insertion(prob, partial, removed),
         }
     }
@@ -315,16 +310,10 @@ where
         let removed =
             self.run_destroy(DestroyOp::ALL[d_idx], prob, &mut partial, k, &mut state.rng);
         // Copied only when something will read it. The repair operators
-        // consume the removal list, one shuffling it and one draining it, so
-        // the anchors cannot borrow it.
+        // consume the removal list by draining it, so the anchors cannot
+        // borrow it.
         let anchors = self.local.is_some().then(|| removed.clone());
-        Self::run_repair(
-            RepairOp::ALL[r_idx],
-            prob,
-            &mut partial,
-            removed,
-            &mut state.rng,
-        );
+        Self::run_repair(RepairOp::ALL[r_idx], prob, &mut partial, removed);
         if let (Some(local), Some(anchors)) = (self.local.as_mut(), anchors.as_ref()) {
             local.repair_around(prob, &mut partial, anchors, &mut state.rng);
         }

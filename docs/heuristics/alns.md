@@ -110,7 +110,7 @@ than through `state.apply`.
 
 | Repair | Inserts |
 |---|---|
-| Greedy | each removed element at its cheapest placement, in random order. |
+| Greedy | the element whose cheapest placement costs the least first, at that placement, every element repriced after each insertion. |
 | Regret-2 | the element with the largest regret first, the gap between its cheapest placement and its cheapest placement in a different container. |
 
 Regret is measured across containers, not across positions. The

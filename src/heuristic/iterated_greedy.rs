@@ -1,6 +1,6 @@
 //! Iterated Greedy over any [`Ruinable`] problem.
 
-use crate::building_blocks::search::{greedy_insertion, random_removal};
+use crate::building_blocks::search::{random_order_insertion, random_removal};
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition, boltzmann_accept};
 use crate::search_state::SearchState;
@@ -101,7 +101,7 @@ where
         // The repair consumes the removal list, so the anchors are a copy,
         // made only when a local search will read them.
         let anchors = self.local.is_some().then(|| removed.clone());
-        greedy_insertion(prob, &mut partial, removed, &mut state.rng);
+        random_order_insertion(prob, &mut partial, removed, &mut state.rng);
         if let (Some(local), Some(anchors)) = (self.local.as_mut(), anchors.as_ref()) {
             local.repair_around(prob, &mut partial, anchors, &mut state.rng);
         }
