@@ -95,7 +95,7 @@ src/
 │       ├── tabu.rs           TabuKey (Var / Pair / Triple), TabuMemory
 │       ├── biased_fitness.rs BiasedFitnessPopulation, binary_tournament
 │       ├── ruin_recreate.rs  the destroy / repair operators over any Ruinable, plus
-│       │                     randomized_greedy_insertion (GRASP's construction)
+│       │                     restricted_candidate_insertion (GRASP's construction)
 │       ├── sampling.rs       random_distinct_pair, the endpoints the position moves draw
 │       ├── adaptive_weights.rs  AdaptiveWeights, the roulette the operators are picked by
 │       └── anchored_sweep.rs AnchoredSweep, the anchor widening and shuffled sweep

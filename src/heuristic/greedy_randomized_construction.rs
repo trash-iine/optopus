@@ -1,6 +1,6 @@
 //! The construction phase of GRASP over any [`Ruinable`] problem.
 
-use crate::building_blocks::search::randomized_greedy_insertion;
+use crate::building_blocks::search::restricted_candidate_insertion;
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::search_state::SearchState;
@@ -12,7 +12,7 @@ use crate::trait_defs::{Evaluate, Ruinable};
 /// Every element is taken out, and the empty solution is filled again one
 /// element at a time, each drawn from the restricted candidate list of the
 /// ones whose cheapest placement is within `alpha` of the cheapest of all.
-/// See [`randomized_greedy_insertion`].
+/// See [`restricted_candidate_insertion`].
 ///
 /// It is one step, not a search. A run builds exactly one solution and stops,
 /// so it is meant to sit inside a composition. GRASP itself is
@@ -82,7 +82,7 @@ where
         let mut all = Vec::new();
         prob.elements(&partial, &mut all);
         prob.remove_all(&mut partial, &all);
-        randomized_greedy_insertion(prob, &mut partial, all, self.alpha, &mut state.rng);
+        restricted_candidate_insertion(prob, &mut partial, all, self.alpha, &mut state.rng);
         state.solution = prob.finish(&partial);
         state.iteration += 1;
         state.n_accepted += 1;

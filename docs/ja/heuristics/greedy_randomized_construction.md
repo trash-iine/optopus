@@ -55,7 +55,7 @@ GreedyRandomizedConstruction::<P>::new(
 ) -> Self
 ```
 
-`alpha` が `[0, 1]` の外なら panic します。オペレータ本体は `building_blocks::search` の自由関数 `randomized_greedy_insertion` で、
+`alpha` が `[0, 1]` の外なら panic します。オペレータ本体は `building_blocks::search` の自由関数 `restricted_candidate_insertion` で、
 ALNS の修復オペレータと並んでおり、解の一部をこの方法で作り直したい探索から使えます。
 
 ## 効くところ { #where-it-pays }

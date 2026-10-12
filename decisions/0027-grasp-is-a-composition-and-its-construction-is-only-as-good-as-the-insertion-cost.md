@@ -3,7 +3,7 @@
 - Status: reference
 - Area: heuristic, flow_shop, bin_packing
 - Date: 2026-10-07
-- Code: src/heuristic/greedy_randomized_construction.rs, src/building_blocks/search/ruin_recreate.rs (`randomized_greedy_insertion`)
+- Code: src/heuristic/greedy_randomized_construction.rs, src/building_blocks/search/ruin_recreate.rs (`restricted_candidate_insertion`)
 
 ## Decision
 

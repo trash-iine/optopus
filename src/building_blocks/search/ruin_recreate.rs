@@ -237,7 +237,7 @@ pub fn cheapest_first_insertion<P: Ruinable>(
 /// Panics if `alpha` is outside `[0, 1]`, or if no element left has a finite
 /// placement, which a problem that offers somewhere new to put an element, as
 /// [`Ruinable`] asks, never reaches.
-pub fn randomized_greedy_insertion<P: Ruinable>(
+pub fn restricted_candidate_insertion<P: Ruinable>(
     prob: &P,
     partial: &mut P::Partial,
     removed: Vec<P::Element>,

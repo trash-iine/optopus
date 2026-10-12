@@ -66,7 +66,7 @@ GreedyRandomizedConstruction::<P>::new(
 ```
 
 Panics if `alpha` is outside `[0, 1]`. The operator itself is the free function
-`randomized_greedy_insertion` in `building_blocks::search`, beside the repair
+`restricted_candidate_insertion` in `building_blocks::search`, beside the repair
 operators of ALNS, for a search that wants to recreate part of a solution
 this way.
 
