@@ -3,7 +3,7 @@ use rand::rngs::SmallRng;
 use super::problem::{BinPacking, BinPackingSolution};
 use crate::search_state::Crossover;
 
-/// A grouping crossover in the spirit of Falkenauer's.
+/// A grouping crossover, passing on bins rather than items.
 ///
 /// Bins, not items, are what a packing passes on. The child takes whole bins
 /// from the two parents alternately, fullest first, skipping any bin that holds

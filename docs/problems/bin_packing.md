@@ -11,7 +11,7 @@ search minimizes
 num_bins − (1 / num_bins) Σ_b (load_b / capacity)²
 ```
 
-which is the count less Falkenauer's fill term. The term lies in `(0, 1]`, so
+which is the count less a fill term. The term lies in `(0, 1]`, so
 fewer bins always wins, and among packings with the same count it prefers the
 ones whose bins are fuller, the ones a bin can be emptied from.
 `BinPacking::lower_bound` gives `⌈Σ size / capacity⌉`.
@@ -53,8 +53,8 @@ Both are priced in O(1) from the loads, and neither ever overfills a bin.
 
 ## Crossover
 
-`BinPackingGroupCrossover` passes on whole bins rather than items, in the
-spirit of Falkenauer's grouping crossover. The child takes bins from the two
+`BinPackingGroupCrossover` is a grouping crossover, passing on whole bins
+rather than items. The child takes bins from the two
 parents alternately, fullest first, skipping any that holds an item already
 placed, and packs what is left by First Fit Decreasing.
 

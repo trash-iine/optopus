@@ -9,7 +9,7 @@ bin の数だけでは目的関数が平らで、同じ数の詰め方はすべ�
 num_bins − (1 / num_bins) Σ_b (load_b / capacity)²
 ```
 
-bin の数から Falkenauer の充填項を引いたものです。この項は `(0, 1]` に収まるので bin が少ない詰め方が必ず勝ち、
+bin の数から充填項を引いたものです。この項は `(0, 1]` に収まるので bin が少ない詰め方が必ず勝ち、
 同じ数の中では bin がより満杯の詰め方、つまり bin を一つ空にできる詰め方を好みます。
 `BinPacking::lower_bound` は `⌈Σ size / capacity⌉` を返します。
 
@@ -47,7 +47,7 @@ bin は常に空きのない `0..num_bins()` で番号付けされ、bin を空�
 
 ## 交叉 { #crossover }
 
-`BinPackingGroupCrossover` は Falkenauer のグルーピング交叉の考え方で、品目ではなく bin を丸ごと受け継ぎます。
+`BinPackingGroupCrossover` はグルーピング交叉で、品目ではなく bin を丸ごと受け継ぎます。
 子は二つの親から、満杯の bin から順に交互に bin を受け取り、すでに配置した品目を含む bin は飛ばし、残りを First Fit Decreasing で詰めます。
 
 ## Ruin and recreate { #ruin-and-recreate }

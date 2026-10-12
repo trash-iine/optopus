@@ -22,7 +22,7 @@ use crate::trait_defs::{Evaluate, Ruinable};
 /// ```
 ///
 /// since `Iterated` alternates a descent with this restart and keeps the best
-/// of every cycle, which is the whole of the procedure Feo and Resende state.
+/// of every cycle, which is the whole of the published procedure.
 /// No GRASP type exists for that reason.
 ///
 /// # References

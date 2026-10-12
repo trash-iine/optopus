@@ -83,7 +83,7 @@ impl Distance for BinPackingSolution {
 /// num_bins − (1 / num_bins) Σ_b (load_b / capacity)²
 /// ```
 ///
-/// instead, Falkenauer's fill term subtracted. The term lies in `(0, 1]`, so
+/// instead, a fill term subtracted. The term lies in `(0, 1]`, so
 /// fewer bins always wins, and among packings with the same count it prefers
 /// the ones whose bins are fuller, which are the ones a bin can be emptied
 /// from.
