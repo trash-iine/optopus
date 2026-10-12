@@ -58,7 +58,7 @@ println!("sequence = {:?}", state.best_solution.sequence);
 `FlowShop` は、ジョブを要素、順序を唯一のコンテナとして [`Ruinable`](../traits.md) を実装しています。TSP の巡回路と同じ形です。
 部分解が head と tail を保持しているので、トレイトの位置ごとの挿入コストはスケジュール全体ではなく O(m) です。
 [Iterated Greedy](../heuristics/iterated_greedy.md) と [ALNS](../heuristics/alns.md) はこの上で、`iterated_greedy_for_flow_shop` と `alns_for_flow_shop` を通して動きます。
-どちらも探索を `FlowShopInsertionDescent` と組みます。これは Ruiz と Stützle の全体挿入降下で、すべてのジョブをランダムな順に取り出してメイクスパンが最小の位置に戻すことを、一周で何も変わらなくなるまで繰り返します。
+どちらも探索を `FlowShopInsertionDescent` と組みます。これは Iterated Greedy の全体挿入降下で、すべてのジョブをランダムな順に取り出してメイクスパンが最小の位置に戻すことを、一周で何も変わらなくなるまで繰り返します。
 
 ## head と tail { #heads-and-tails }
 

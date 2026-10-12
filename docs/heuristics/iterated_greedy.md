@@ -4,7 +4,7 @@
 
 Iterated Greedy takes a few elements out of the incumbent at random, puts each
 back where it costs least, runs a local search, and accepts the result on a
-constant temperature. Ruiz and Stützle proposed it for the
+constant temperature. It was proposed for the
 [permutation flow shop](../problems/flow_shop.md), where this short loop is
 still among the strongest methods known.
 
@@ -85,7 +85,7 @@ the stronger of the two on the same time.
 
 The temperature is in the units of the objective, so `IteratedGreedy::new`
 takes it as a function of the instance, read from the instance being searched.
-For the flow shop Ruiz and Stützle set it to a tenth of the mean processing
+For the flow shop the original paper sets it to a tenth of the mean processing
 time scaled by a factor, `T = factor · Σp / (n · m · 10)`, which is what
 `iterated_greedy_for_flow_shop` computes from `temperature_factor`.
 
@@ -100,7 +100,7 @@ temperature_factor = 0.4    # optional (default shown)
 max_duration_secs = 30.0
 ```
 
-The defaults are the values Ruiz and Stützle tuned.
+The defaults are the values tuned in the original paper.
 
 ## References
 

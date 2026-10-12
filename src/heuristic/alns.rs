@@ -52,7 +52,7 @@ impl RepairOp {
     const ALL: [RepairOp; 2] = [Self::Greedy, Self::Regret2];
 }
 
-// Ropke & Pisinger's published scoring: the reward for a new global best, for
+// The published scoring: the reward for a new global best, for
 // a better-than-current solution, and for an accepted worse one, together with
 // the segment length and reaction factor the weights adapt on. These are
 // defaults, not fixed values. See `with_scoring` and `with_adaptation`.
@@ -184,7 +184,7 @@ impl<P: Ruinable> AdaptiveLargeNeighborhoodSearch<P> {
     /// Builder-style: the rewards an operator pair earns for a new global best,
     /// for beating the incumbent, and for an accepted worse candidate.
     ///
-    /// Defaults to Ropke & Pisinger's `4 / 2 / 1`. Only the ratios matter,
+    /// Defaults to the published `4 / 2 / 1`. Only the ratios matter,
     /// the weights are a convex blend of segment averages, so scaling all three
     /// leaves the wheel unchanged.
     ///
@@ -206,7 +206,7 @@ impl<P: Ruinable> AdaptiveLargeNeighborhoodSearch<P> {
     /// Builder-style: how many iterations a scoring segment spans, and how much
     /// of its average is blended into the weights at the boundary.
     ///
-    /// Defaults to Ropke & Pisinger's `100` / `0.1`. Rebuilds both roulettes,
+    /// Defaults to the published `100` / `0.1`. Rebuilds both roulettes,
     /// which is why this takes `self` by value. A builder runs before the
     /// search does, so there are no learned weights to lose.
     ///

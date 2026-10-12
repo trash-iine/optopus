@@ -123,7 +123,7 @@ fn remove_top_k<P: Ruinable>(
 /// container.
 ///
 /// The two are taken across containers, not across places, because that is
-/// what regret-k is defined on (Ropke & Pisinger). The gap that matters is how
+/// what regret-k is defined on in ALNS. The gap that matters is how
 /// much worse `element` gets once its best container is taken. The
 /// second-cheapest *place* is almost always the one next door in the same
 /// container, a gap of nearly zero for every element, which would leave

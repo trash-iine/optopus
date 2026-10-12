@@ -1,7 +1,6 @@
 //! Roulette-wheel selection over weights that track recent performance.
 //!
-//! The scheme is Ropke & Pisinger's, introduced for ALNS's destroy and repair
-//! banks. Each option starts equally likely, every use is scored, and at fixed
+//! The scheme was introduced for ALNS's destroy and repair banks. Each option starts equally likely, every use is scored, and at fixed
 //! segment boundaries the segment's average score is blended into the weight.
 //! Nothing in it is about routes or about operators. It is "pick one of `n`
 //! things, learn which ones have been paying".

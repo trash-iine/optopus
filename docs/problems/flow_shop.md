@@ -74,7 +74,7 @@ insertion cost is O(m) rather than a full schedule. That is what
 [Iterated Greedy](../heuristics/iterated_greedy.md) and
 [ALNS](../heuristics/alns.md) run on, through `iterated_greedy_for_flow_shop`
 and `alns_for_flow_shop`. Both pair the search with `FlowShopInsertionDescent`,
-the full insertion descent of Ruiz and Stützle, which takes every job out in a
+the full insertion descent of Iterated Greedy, which takes every job out in a
 random order and puts it back where the makespan is smallest until a pass
 changes nothing.
 

@@ -3,7 +3,7 @@
 **API:** [`IteratedGreedy`](../../api/optopus/heuristic/struct.IteratedGreedy.html)
 
 Iterated Greedy は、現在解からランダムにいくつかの要素を取り出し、それぞれを最も安い位置に戻し、局所探索をかけ、一定の温度で受理を判定します。
-Ruiz と Stützle が [Permutation Flow Shop](../problems/flow_shop.md) のために提案したもので、この短いループは今も知られている中で最も強い手法の一つです。
+[Permutation Flow Shop](../problems/flow_shop.md) のために提案されたもので、この短いループは今も知られている中で最も強い手法の一つです。
 
 [`Ruinable`](../traits.md) を実装し、その解が [`Evaluate`](../traits.md) を実装している任意の問題で動きます。設定ファイルからはフローショップで使えます。
 
@@ -73,7 +73,7 @@ Taillard の 50 × 20 インスタンスでは、同じ時間で Iterated Greedy
 ## 温度 { #temperature }
 
 温度は目的関数の単位を持つので、`IteratedGreedy::new` はそれをインスタンスの関数として受け取り、探索するインスタンスから読みます。
-フローショップでは Ruiz と Stützle が、平均処理時間の 10 分の 1 に係数を掛けた `T = factor · Σp / (n · m · 10)` としており、
+フローショップでは元の論文が、平均処理時間の 10 分の 1 に係数を掛けた `T = factor · Σp / (n · m · 10)` としており、
 `iterated_greedy_for_flow_shop` が `temperature_factor` からこれを計算します。
 
 ## ベンチマーク設定 { #benchmark-config }
@@ -87,7 +87,7 @@ temperature_factor = 0.4    # 省略可 (既定値を表示)
 max_duration_secs = 30.0
 ```
 
-既定値は Ruiz と Stützle が調整した値です。
+既定値は元の論文で調整された値です。
 
 ## 参考文献 { #references }
 
