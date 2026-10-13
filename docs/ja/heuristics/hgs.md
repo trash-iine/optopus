@@ -62,7 +62,7 @@ fitness = rank_cost / (N−1) + (1 − n_elite/N) · rank_diversity / (N−1)
 
 broken-pairs 距離は、ルート上の隣が異なる顧客の割合で、ルートのラベルの付け替えや反転に対して不変です。
 `VrpSolution` の [`Distance`](../../api/optopus/trait_defs/trait.Distance.html) impl は同じ数え方を対称化して使いますが、
-ここでの biased fitness は 論文が定義した形である方向付きの数え方で順位付けします。
+ここでの biased fitness は論文が定義した形である方向付きの数え方で順位付けします。
 
 ### 二つの部分集団と適応的なペナルティ { #two-sub-populations-and-the-adaptive-penalty }
 

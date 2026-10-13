@@ -2,7 +2,7 @@
 
 **API:** [`SoftmaxBandit`](../api/optopus/heuristic/reinforcement_learning/bandit/struct.SoftmaxBandit.html)
 
-A rule of your own goes in where the published one does, as a
+A rule of your own goes in where `AdaptivePerturbation` does, as a
 `PerturbationSchedule` handed to
 [BreakoutLocalSearch](../heuristics/breakout_local_search.md). It owns the
 operators it chooses between, decides in `determine_jump_magnitude`, and hands

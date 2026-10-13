@@ -25,10 +25,10 @@ use crate::heuristic::{
 use crate::problem::{MaxCut, MaxCutFlipNeighbor};
 use best_swap::BestSwap;
 
-/// Breakout Local Search on MaxCut, with the published schedule.
+/// Breakout Local Search on MaxCut, scheduled by [`AdaptivePerturbation`].
 pub type BreakoutLocalSearchForMaxCut = BreakoutLocalSearch<MaxCut, AdaptivePerturbation<MaxCut>>;
 
-/// One of the perturbation operators, in the vocabulary of the Max-Cut paper.
+/// One of the three perturbation operators [`bls_for_max_cut`] schedules.
 ///
 /// A weak perturbation is directed by the gains and the tabu memory, a strong
 /// one is random. This names which one to build, and is what
@@ -88,7 +88,12 @@ pub fn max_cut_perturbation(
     }
 }
 
-/// Breakout Local Search on MaxCut, with the published `omega` / `l` schedule.
+/// Breakout Local Search on MaxCut.
+///
+/// The descent is [`max_cut_descent`]. The schedule is [`AdaptivePerturbation`]
+/// with the strong kick as its random perturbation and two directed ones, the
+/// weak flip with share `q` and the weak swap with share `1 - q`, all three
+/// built by [`max_cut_perturbation`] with the same `tabu_tenure`.
 ///
 /// # Parameters
 ///

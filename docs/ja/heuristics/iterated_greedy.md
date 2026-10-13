@@ -24,7 +24,7 @@ iterated_greedy_for_flow_shop(
 println!("makespan = {}", state.best_solution.objective);
 ```
 
-`iterated_greedy_for_flow_shop` はコンストラクタに、フローショップが渡す二つのもの、局所探索としての全体挿入降下と論文の温度を加えたものです。
+`iterated_greedy_for_flow_shop` はコンストラクタに、フローショップが渡す二つのもの、局所探索としての全体挿入降下と処理時間から決まる温度を加えたものです。
 同じ探索を書き下し、別の問題で使うと次のようになります。
 
 ```rust
@@ -73,7 +73,7 @@ Taillard の 50 × 20 インスタンスでは、同じ時間で Iterated Greedy
 ## 温度 { #temperature }
 
 温度は目的関数の単位を持つので、`IteratedGreedy::new` はそれをインスタンスの関数として受け取り、探索するインスタンスから読みます。
-フローショップでは元の論文が、平均処理時間の 10 分の 1 に係数を掛けた `T = factor · Σp / (n · m · 10)` としており、
+フローショップでは平均処理時間の 10 分の 1 に係数を掛けた `T = factor · Σp / (n · m · 10)` で、
 `iterated_greedy_for_flow_shop` が `temperature_factor` からこれを計算します。
 
 ## ベンチマーク設定 { #benchmark-config }

@@ -264,7 +264,7 @@ impl Ruinable for Tsp {
 /// as VRP's [`AnchoredRouteDescent`](crate::problem::vrp::AnchoredRouteDescent).
 /// The nearest-neighbour lists it reads are cached on the instance, so this
 /// holds only its sweep buffers and its three tunables, each behind a builder
-/// with a published default.
+/// with a `DEFAULT_*` constant.
 #[derive(Debug)]
 pub struct AnchoredTourDescent {
     sweep: AnchoredSweep,
@@ -292,7 +292,7 @@ impl AnchoredTourDescent {
     /// VRP's.
     pub const DEFAULT_MAX_PASSES: usize = 4;
 
-    /// A descent with the published defaults.
+    /// A descent with the `DEFAULT_*` constants.
     pub fn new() -> Self {
         Self {
             sweep: AnchoredSweep::new(),

@@ -1,15 +1,15 @@
 //! Advanced example: driving Breakout Local Search with a learned
 //! perturbation policy.
 //!
-//! [`BreakoutLocalSearchForMaxCut`] exposes its round as two halves —
-//! `descend` (greedy descent to a local optimum) and `kick` (one perturbation
-//! plus the round's `update_best`) — so a controller can act at the point
-//! *between* them. This example replaces the published hand-crafted
-//! `omega`-based perturbation rule *and* its strength schedule with a
+//! [`BreakoutLocalSearchForMaxCut`] exposes its round as two halves — `descend`
+//! (greedy descent to a local optimum) and `kick` (one perturbation plus the
+//! round's `update_best`) — so a controller can act at the point *between*
+//! them. This example replaces the hand-crafted `omega`-based perturbation
+//! choice *and* the strength schedule of `AdaptivePerturbation` with a
 //! contextual softmax gradient bandit (`SoftmaxBandit`, from the library's
 //! reinforcement-learning module): each round the bandit reads search-state
-//! features and picks one of `3 x strength_bins.len()` actions — a
-//! perturbation type together with a multiplier of `l0`.
+//! features and picks one of `3 x strength_bins.len()` actions — a perturbation
+//! type together with a multiplier of `l0`.
 //!
 //! Nothing here is MaxCut-specific machinery: the descent, the operators and
 //! the tabu memory they share all stay inside BLS. What the example owns is
@@ -297,7 +297,7 @@ fn main() -> Result<(), OptError> {
     let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
     let iterations = 20_000;
 
-    // Baseline: BLS with the published schedule.
+    // Baseline: BLS scheduled by `AdaptivePerturbation`.
     let mut bls = bls_for_max_cut(
         StopCondition::iterations(iterations),
         (30, 600),
@@ -309,7 +309,7 @@ fn main() -> Result<(), OptError> {
     let mut bls_state = SearchState::new_with_seed(&mc, 42);
     bls.run(&mut bls_state)?;
 
-    // The same framework and the same operators, with the paper's schedule
+    // The same framework and the same operators, with `AdaptivePerturbation`
     // swapped for the learned one. Nothing else about the round changes.
     let mut rl = BreakoutLocalSearch::new(
         StopCondition::iterations(iterations),

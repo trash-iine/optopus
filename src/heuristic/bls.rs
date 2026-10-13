@@ -54,20 +54,24 @@ pub trait PerturbationSchedule<P: ProblemTrait> {
     fn round_ended(&mut self, _state: &SearchState<'_, P>) {}
 }
 
-/// The schedule of the Max-Cut paper, the `omega` stagnation counter and the
-/// perturbation length `l`.
+/// A perturbation schedule over two counters, the stagnation count `omega` and
+/// the perturbation length `l`.
 ///
-/// Its `DetermineJumpMagnitude` is
 /// [`determine_jump_magnitude`](PerturbationSchedule::determine_jump_magnitude)
-/// and its `DeterminePerturbationType` is
-/// [`select`](PerturbationSchedule::select), which is the division the trait
-/// asks for, the first of the two writing the history and the second only
-/// reading it.
+/// updates both after every descent and returns `l`, and
+/// [`select`](PerturbationSchedule::select) reads `omega` to pick the operator.
+/// The first of the two writes the history and the second only reads it, which
+/// is the division the trait asks for.
 ///
-/// `omega` counts consecutive rounds whose descent failed to beat the best
-/// recorded a round ago. `p = max(exp(-omega / t), p0)` is then the probability
-/// of a directed perturbation, and it decays toward `p0` as `omega` grows, so
-/// the random one becomes steadily more likely the longer the best stands.
+/// - `l` grows by one when the descent ends on the same local optimum as the
+///   round before, at distance zero from it, and returns to `l0` otherwise.
+/// - `omega` grows by one when the descent failed to beat the best recorded a
+///   round ago, and returns to zero otherwise. Once it passes `t` it returns
+///   to zero as well.
+/// - With `omega` at zero the random perturbation runs. Otherwise a directed
+///   one runs with probability `p = max(exp(-omega / t), p0)` and the random
+///   one with probability `1 - p`. `p` decays toward `p0` as `omega` grows, so
+///   the random one becomes steadily more likely the longer the best stands.
 ///
 /// The operators are held here rather than indexed out of a bank the search
 /// owns, so which one is the random one is something this was built with
