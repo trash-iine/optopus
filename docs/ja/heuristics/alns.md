@@ -6,7 +6,7 @@ Adaptive Large Neighborhood Search は、現在解の一部を壊して (ruin) �
 オペレータの組は、最近の成績を追跡する重みを持つルーレットで選びます。
 
 [`Ruinable`](../traits.md) を実装し、その解が [`Evaluate`](../traits.md) を実装している任意の問題で動きます。
-現在それに当たるのは [VRP](../problems/vrp.md) (同種フリートでも異種フリートでも)、[TSP](../problems/tsp.md)、[Permutation Flow Shop](../problems/flow_shop.md) です。
+現在それに当たるのは [VRP](../problems/vrp.md) (同種フリートでも異種フリートでも)、[TSP](../problems/tsp.md)、[Permutation Flow Shop](../problems/flow_shop.md)、[Bin Packing](../problems/bin_packing.md) です。
 `Ruinable` は問題に必要な形、つまり有限の資源を奪い合うコンテナに要素が割り当てられているという形を表し、すでにその形を持つ問題の族を名指ししています。
 巡回路はコンテナが一つの場合で、それが何を犠牲にするかは [オペレータ](#operators) で説明します。
 
@@ -99,13 +99,13 @@ regret-2 が greedy と区別できなくなってしまうからです。
 
 それぞれの問題はこれを次のように解釈します。
 
-| | CVRP | TSP | Flow shop |
-|---|---|---|---|
-| 要素、コンテナ | 顧客、車両 | 都市、巡回路 | ジョブ、順序 |
-| 関連度 | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` | 処理時間の L1 距離 |
-| 挿入コスト | 寄り道と容量ペナルティ。そのため、どのルートも満杯でも挿入先は常にある | 寄り道 | メイクスパンの増分。head と tail から O(m) |
-| Regret-2 | ルート間 | コンテナが一つでは定義できないので、何も順位付けしない固定の順序で候補を挿入する。探索を担うのは破壊オペレータと greedy | 巡回路と同じく定義できない |
-| `LocalRepair` | `AnchoredRouteDescent`、granular なルート降下 | `AnchoredTourDescent`、最近傍に対する Or-opt と 2-opt | `FlowShopInsertionDescent`、全体挿入降下 |
+| | CVRP | TSP | Flow shop | Bin packing |
+|---|---|---|---|---|
+| 要素、コンテナ | 顧客、車両 | 都市、巡回路 | ジョブ、順序 | 品目、bin (空の bin を常に一つ用意) |
+| 関連度 | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` | 処理時間の L1 距離 | `\|size(a) − size(b)\|` |
+| 挿入コスト | 寄り道と容量ペナルティ。そのため、どのルートも満杯でも挿入先は常にある | 寄り道 | メイクスパンの増分。head と tail から O(m) | 目的関数の変化。収まらない bin では無限大 |
+| Regret-2 | ルート間 | コンテナが一つでは定義できないので、何も順位付けしない固定の順序で候補を挿入する。探索を担うのは破壊オペレータと greedy | 巡回路と同じく定義できない | bin 間 |
+| `LocalRepair` | `AnchoredRouteDescent`、granular なルート降下 | `AnchoredTourDescent`、最近傍に対する Or-opt と 2-opt | `FlowShopInsertionDescent`、全体挿入降下 | なし |
 
 ## コンストラクタ { #constructor }
 

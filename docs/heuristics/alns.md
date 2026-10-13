@@ -8,8 +8,9 @@ performance.
 
 Runs on any problem implementing [`Ruinable`](../traits.md) whose solution
 implements [`Evaluate`](../traits.md), which is the [VRP](../problems/vrp.md),
-homogeneous or heterogeneous fleet, [TSP](../problems/tsp.md) and the
-[permutation flow shop](../problems/flow_shop.md).
+homogeneous or heterogeneous fleet, [TSP](../problems/tsp.md), the
+[permutation flow shop](../problems/flow_shop.md) and
+[bin packing](../problems/bin_packing.md).
 `Ruinable` describes the shape a problem needs,
 elements assigned to containers that compete for a finite resource, and names
 the family of problems that already has it. A tour is the single-container
@@ -120,13 +121,13 @@ indistinguishable from greedy.
 
 What each problem reads into that:
 
-| | CVRP | TSP | Flow shop |
-|---|---|---|---|
-| Element, container | customer, vehicle | city, the tour | job, the sequence |
-| Relatedness | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` | L1 distance between the processing times |
-| Insertion cost | detour plus the capacity penalty, so a placement is always available even when every route is full | detour | makespan increase, O(m) from the heads and tails |
-| Regret-2 | across routes | undefined with one container, so it inserts the pool in a fixed order that ranks nothing, and the destroys and greedy carry the search | undefined, as on a tour |
-| `LocalRepair` | `AnchoredRouteDescent`, the granular route descent | `AnchoredTourDescent`, Or-opt and 2-opt over the nearest neighbours | `FlowShopInsertionDescent`, the full insertion descent |
+| | CVRP | TSP | Flow shop | Bin packing |
+|---|---|---|---|---|
+| Element, container | customer, vehicle | city, the tour | job, the sequence | item, bin (one empty bin always offered) |
+| Relatedness | `distance(a, b) + \|demand(a) − demand(b)\|` | `distance(a, b)` | L1 distance between the processing times | `\|size(a) − size(b)\|` |
+| Insertion cost | detour plus the capacity penalty, so a placement is always available even when every route is full | detour | makespan increase, O(m) from the heads and tails | change in the objective, infinite where the item does not fit |
+| Regret-2 | across routes | undefined with one container, so it inserts the pool in a fixed order that ranks nothing, and the destroys and greedy carry the search | undefined, as on a tour | across bins |
+| `LocalRepair` | `AnchoredRouteDescent`, the granular route descent | `AnchoredTourDescent`, Or-opt and 2-opt over the nearest neighbours | `FlowShopInsertionDescent`, the full insertion descent | none |
 
 ## Constructor
 

@@ -469,6 +469,7 @@ where
         | HeuristicConfig::LinKernighanHelsgaun { .. }
         | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
         | HeuristicConfig::IteratedGreedy { .. }
+        | HeuristicConfig::GreedyRandomizedConstruction { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::LocalSearch { neighbor, .. }

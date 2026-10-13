@@ -10,6 +10,7 @@
 //! | Module | Problem | Objective |
 //! |--------|---------|-----------|
 //! | [`max_cut`] | Maximum Cut | Maximize cut weight |
+//! | [`bin_packing`] | One-dimensional Bin Packing | Minimize bins used |
 //! | [`qubo`] | Quadratic Unconstrained Binary Optimization | Minimize energy |
 //! | [`qap`] | Quadratic Assignment | Minimize assignment cost |
 //! | [`sat`] | Maximum Satisfiability (MaxSAT) | Maximize satisfied clauses |
@@ -25,6 +26,7 @@
 //! [`BranchAndBound`](crate::heuristic::BranchAndBound) asks of a problem, is
 //! implemented for the integer problems and for the binary ones.
 
+pub mod bin_packing;
 pub mod flow_shop;
 pub mod graph_coloring;
 pub mod integer;
@@ -37,6 +39,10 @@ pub mod tsp;
 pub mod vertex_cover;
 pub mod vrp;
 
+pub use bin_packing::{
+    BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
+    BinPackingSwapNeighbor,
+};
 pub use flow_shop::{
     FlowShop, FlowShopInsertNeighbor, FlowShopOrderCrossover, FlowShopSolution,
     FlowShopSwapNeighbor,

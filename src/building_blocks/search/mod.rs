@@ -19,7 +19,7 @@ pub use anchored_sweep::AnchoredSweep;
 pub use biased_fitness::{BiasedFitnessPopulation, CostFn, DistanceFn, binary_tournament};
 pub use ruin_recreate::{
     best_two_insertions, cheapest_first_insertion, random_order_insertion, random_removal,
-    regret2_insertion, shaw_removal, worst_removal,
+    regret2_insertion, restricted_candidate_insertion, shaw_removal, worst_removal,
 };
 pub use sampling::random_distinct_pair;
 pub(crate) use tabu::assert_valid_tenure;

@@ -24,6 +24,7 @@ pub enum ProblemKind {
     JobShop,
     FlowShop,
     Qap,
+    BinPacking,
     Vrp,
     GraphColoring,
 }
@@ -39,6 +40,7 @@ impl ProblemKind {
         ProblemKind::JobShop,
         ProblemKind::FlowShop,
         ProblemKind::Qap,
+        ProblemKind::BinPacking,
         ProblemKind::Vrp,
         ProblemKind::GraphColoring,
     ];
@@ -209,7 +211,7 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
-    /// Adaptive Large Neighborhood Search (VRP, TSP and FlowShop).
+    /// Adaptive Large Neighborhood Search (VRP, TSP, FlowShop and BinPacking).
     AdaptiveLargeNeighborhoodSearch {
         /// Fraction of elements ruined each iteration. Default: 0.15.
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -228,6 +230,15 @@ pub enum HeuristicConfig {
         /// Scales the acceptance temperature (`T`). Default: 0.4.
         #[serde(skip_serializing_if = "Option::is_none")]
         temperature_factor: Option<f64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
+    /// One GRASP construction (TSP, VRP, FlowShop, BinPacking). GRASP is
+    /// `Iterated` with this as `steps[1]`.
+    GreedyRandomizedConstruction {
+        /// Width of the restricted candidate list, in `[0, 1]`. Default: 0.2.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        alpha: Option<f64>,
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
@@ -297,7 +308,7 @@ pub enum HeuristicConfig {
         population_size: usize,
         steps: Vec<HeuristicConfig>,
         /// Crossover operator. Defaults: "Uniform" ("Order" for TSP, Vrp,
-        /// FlowShop and Qap, "Ppx" for JobShop).
+        /// FlowShop and Qap, "Ppx" for JobShop, "Group" for BinPacking).
         /// MaxCut also accepts "SubProblem" (memetic recombination: solves the
         /// sub-MaxCut of disagreeing variables with an internal bounded BLS).
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -340,6 +351,7 @@ impl HeuristicConfig {
             Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
             Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
             Self::IteratedGreedy { .. } => "IteratedGreedy",
+            Self::GreedyRandomizedConstruction { .. } => "GreedyRandomizedConstruction",
             Self::HybridGeneticSearch { .. } => "HybridGeneticSearch",
             Self::WalkSat { .. } => "WalkSat",
             Self::Sequential { .. } => "Sequential",
@@ -392,6 +404,7 @@ impl HeuristicConfig {
             | Self::LinKernighanHelsgaun { stop_condition, .. }
             | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
             | Self::IteratedGreedy { stop_condition, .. }
+            | Self::GreedyRandomizedConstruction { stop_condition, .. }
             | Self::HybridGeneticSearch { stop_condition, .. }
             | Self::WalkSat { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
