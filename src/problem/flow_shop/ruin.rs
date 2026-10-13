@@ -137,7 +137,7 @@ impl Ruinable for FlowShop {
     }
 }
 
-/// The insertion descent of Ruiz and Stützle's Iterated Greedy.
+/// The insertion descent of Iterated Greedy.
 ///
 /// Every job, in a random order, is taken out and put back where the makespan
 /// is smallest, and the move is kept only if it shortens the schedule. Passes

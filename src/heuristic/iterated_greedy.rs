@@ -6,7 +6,7 @@ use crate::heuristic::{Heuristic, StopCondition, boltzmann_accept};
 use crate::search_state::SearchState;
 use crate::trait_defs::{Evaluable, Evaluate, LocalRepair, Ruinable};
 
-/// Iterated Greedy, the destruction and construction loop of Ruiz and Stützle.
+/// Iterated Greedy, a loop of destruction and construction.
 ///
 /// Each iteration takes `removal_count` elements of the incumbent out at
 /// random, puts each back at its cheapest place, runs the local search if one

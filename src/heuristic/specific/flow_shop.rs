@@ -10,11 +10,11 @@ use crate::heuristic::{AdaptiveLargeNeighborhoodSearch, IteratedGreedy, StopCond
 use crate::problem::FlowShop;
 use crate::problem::flow_shop::FlowShopInsertionDescent;
 
-/// Iterated Greedy as Ruiz and Stützle run it on the flow shop.
+/// Iterated Greedy as published for the flow shop.
 ///
-/// The temperature is their `T · Σp / (n · m · 10)`, a tenth of the mean
-/// processing time scaled by `temperature_factor`, and the local search is the
-/// full insertion descent. Their tuned values are `removal_count = 4` and
+/// The temperature is `T · Σp / (n · m · 10)`, a tenth of the mean processing
+/// time scaled by `temperature_factor`, and the local search is the full
+/// insertion descent. The published tuned values are `removal_count = 4` and
 /// `temperature_factor = 0.4`.
 ///
 /// # Panics

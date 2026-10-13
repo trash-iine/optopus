@@ -220,7 +220,7 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
-    /// Iterated Greedy of Ruiz and Stützle (FlowShop).
+    /// Iterated Greedy (FlowShop).
     IteratedGreedy {
         /// Elements taken out and put back each iteration (`d`). Default: 4.
         #[serde(skip_serializing_if = "Option::is_none")]

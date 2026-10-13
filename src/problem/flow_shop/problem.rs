@@ -149,7 +149,7 @@ impl FlowShop {
         }
     }
 
-    /// The sum of every processing time, the scale Ruiz and Stützle set their
+    /// The sum of every processing time, the scale Iterated Greedy sets its
     /// acceptance temperature by.
     pub fn total_processing_time(&self) -> u64 {
         self.processing.iter().map(|&p| u64::from(p)).sum()
