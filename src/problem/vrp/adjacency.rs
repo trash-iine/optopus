@@ -43,7 +43,7 @@ impl RouteAdjacency {
     }
 
     /// How many of `self`'s adjacencies `other` does not have: the broken-pairs
-    /// count of Vidal's HGS-CVRP.
+    /// count of HGS-CVRP.
     ///
     /// A pair counts as kept whichever way round `other` drives it, so reversing
     /// a route breaks nothing, and route order is never consulted, so relabeling
@@ -54,7 +54,7 @@ impl RouteAdjacency {
     /// Directional. That last clause is not symmetric, the solution using
     /// more routes has more depot departures to lose, so `a.broken_pairs_from(b)`
     /// and `b.broken_pairs_from(a)` can differ: `[[1, 2, 3], []]` measures 2
-    /// against `[[1, 3], [2]]`, which measures 3 back. This is the count Vidal's
+    /// against `[[1, 3], [2]]`, which measures 3 back. This is the count
     /// biased fitness is defined on and it is kept as-is;
     /// [`Distance`](crate::trait_defs::Distance) symmetrizes it at the trait
     /// boundary, where a caller comparing two solutions has no reason to care

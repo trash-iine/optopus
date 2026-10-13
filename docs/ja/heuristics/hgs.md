@@ -62,7 +62,7 @@ fitness = rank_cost / (N−1) + (1 − n_elite/N) · rank_diversity / (N−1)
 
 broken-pairs 距離は、ルート上の隣が異なる顧客の割合で、ルートのラベルの付け替えや反転に対して不変です。
 `VrpSolution` の [`Distance`](../../api/optopus/trait_defs/trait.Distance.html) impl は同じ数え方を対称化して使いますが、
-ここでの biased fitness は Vidal が定義した形である方向付きの数え方で順位付けします。
+ここでの biased fitness は論文が定義した形である方向付きの数え方で順位付けします。
 
 ### 二つの部分集団と適応的なペナルティ { #two-sub-populations-and-the-adaptive-penalty }
 
@@ -110,11 +110,11 @@ HybridGeneticSearchForVrp::new(
 妥当な既定値は `μ = 25`、`λ = 40`、`Γ = 20`、`target_feasible = 0.2`、
 `restart_generations = Some(20_000)` です。
 
-Vidal が調整するそれ以外のものはすべて既定値が公開された builder なので、`new` の引数は六つのままです。
+論文が調整するそれ以外のものはすべて既定値が公開された builder なので、`new` の引数は六つのままです。
 
 | builder | 設定するもの | 既定値 |
 |---|---|---|
-| `with_elite(n_elite, n_closest)` | biased fitness における Vidal の `nbElite` と `nbClose` | `4` / `5` |
+| `with_elite(n_elite, n_closest)` | biased fitness における `nbElite` と `nbClose` | `4` / `5` |
 | `with_penalty_adaptation(period, increase, decrease, tolerance)` | ペナルティ更新の間の子の数、二つの係数、`target_feasible` の周りの不感帯 | `100` / `1.2` / `0.85` / `0.05` |
 | `with_repair_probability(p)` | 実行不能な子を修復もする確率 | `0.5` |
 | `with_initial_population(factor, nearest_neighbor_every)` | μ の倍数で表した初期個体数と、そのうち何個に一個を最近傍巡回路にするか | `4` / `4` |

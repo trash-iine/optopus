@@ -298,7 +298,7 @@ impl Distance for VrpSolution {
     ///
     /// The underlying count is directional; this takes the larger of the two
     /// directions, so `a.distance(b) == b.distance(a)`. Hybrid Genetic Search
-    /// ranks diversity on the directional count instead, the form Vidal's biased
+    /// ranks diversity on the directional count instead, the form biased
     /// fitness is defined on.
     fn distance(&self, other: &Self) -> usize {
         let n: usize = self.routes.iter().map(|r| r.len()).sum();

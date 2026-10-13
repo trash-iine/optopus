@@ -24,8 +24,7 @@ use crate::trait_defs::{Evaluable, Evaluate, LocalRepair, Ruinable};
 /// # What the problem supplies
 ///
 /// [`Ruinable`] and an [`Evaluate`] solution. The local search is a
-/// [`LocalRepair`], optional in the type and part of the algorithm as
-/// published. The temperature is in the units of the objective, so it is a
+/// [`LocalRepair`], optional in the type. The temperature is in the units of the objective, so it is a
 /// function of the instance, read from the instance being searched. The flow shop's is wired by
 /// [`iterated_greedy_for_flow_shop`](crate::heuristic::iterated_greedy_for_flow_shop).
 ///

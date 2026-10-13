@@ -54,25 +54,29 @@ pub trait PerturbationSchedule<P: ProblemTrait> {
     fn round_ended(&mut self, _state: &SearchState<'_, P>) {}
 }
 
-/// Benlic & Hao's Max-Cut schedule: the `omega` stagnation counter and the
-/// perturbation length `l`.
+/// A perturbation schedule over two counters, the stagnation count `omega` and
+/// the perturbation length `l`.
 ///
-/// Their `DetermineJumpMagnitude` is
 /// [`determine_jump_magnitude`](PerturbationSchedule::determine_jump_magnitude)
-/// and their `DeterminePerturbationType` is
-/// [`select`](PerturbationSchedule::select), which is the division the trait
-/// asks for, the first of the two writing the history and the second only
-/// reading it.
+/// updates both after every descent and returns `l`, and
+/// [`select`](PerturbationSchedule::select) reads `omega` to pick the operator.
+/// The first of the two writes the history and the second only reads it, which
+/// is the division the trait asks for.
 ///
-/// `omega` counts consecutive rounds whose descent failed to beat the best
-/// recorded a round ago. `p = max(exp(-omega / t), p0)` is then the probability
-/// of a directed perturbation, and it decays toward `p0` as `omega` grows, so
-/// the random one becomes steadily more likely the longer the best stands.
+/// - `l` grows by one when the descent ends on the same local optimum as the
+///   round before, at distance zero from it, and returns to `l0` otherwise.
+/// - `omega` grows by one when the descent failed to beat the best recorded a
+///   round ago, and returns to zero otherwise. Once it passes `t` it returns
+///   to zero as well.
+/// - With `omega` at zero the random perturbation runs. Otherwise a directed
+///   one runs with probability `p = max(exp(-omega / t), p0)` and the random
+///   one with probability `1 - p`. `p` decays toward `p0` as `omega` grows, so
+///   the random one becomes steadily more likely the longer the best stands.
 ///
 /// The operators are held here rather than indexed out of a bank the search
 /// owns, so which one is the random one is something this was built with
 /// rather than a position everyone has to agree on. `directed` carries a share
-/// of the directed probability per operator, and Benlic & Hao's `q` is the
+/// of the directed probability per operator, and the Max-Cut paper's `q` is the
 /// two-operator case, `[(first, q), (second, 1 - q)]`.
 ///
 /// # Parameters
@@ -87,7 +91,7 @@ pub struct AdaptivePerturbation<P: ProblemTrait> {
     omega: u64,
     l: u64,
     prev_best_energy: Option<f64>,
-    /// The local optimum the previous round ended on, Benlic & Hao's `Cp`.
+    /// The local optimum the previous round ended on, `Cp` in the Max-Cut paper.
     ///
     /// This holds the solution, not its objective value. The rule is to
     /// lengthen the perturbation when the descent lands on the same local
@@ -258,8 +262,8 @@ where
 ///
 /// The history the three procedures read is the tabu memory on the
 /// [`SearchState`]. The descent writes it, forbidding each vertex it moves for
-/// a tenure's worth of iterations, which is where Benlic & Hao put the write
-/// too, and the directed perturbations read it. That is what stops a
+/// a tenure's worth of iterations, which is where the Max-Cut paper puts the
+/// write too, and the directed perturbations read it. That is what stops a
 /// perturbation undoing the descent that just ran.
 ///
 /// # References

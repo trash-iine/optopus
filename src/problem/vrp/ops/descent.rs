@@ -9,7 +9,7 @@
 //!
 //! Moves are restricted to granular candidate pairs: for each customer `u`,
 //! only its `granularity` nearest customers `v` are considered as partners. The
-//! move set follows Vidal's HGS-CVRP:
+//! move set follows HGS-CVRP:
 //!
 //! | Move | Kind |
 //! |---|---|

@@ -10,7 +10,7 @@ of the three needs the problem to be binary. `BreakoutLocalSearch<P, S>`
 therefore takes any `P: ProblemTrait`. The paper that states the framework
 introduces BLS on the vertex separator problem, which is not a binary problem.
 
-Benlic & Hao state the framework as four procedures a concrete BLS supplies,
+That paper states the framework as four procedures a concrete BLS supplies,
 and they land in three places here. `DescentBasedSearch` and `Perturb` are ordinary
 heuristics, a `Box<dyn Heuristic<P>>` for the descent and a bank of them for
 the kicks. `DetermineJumpMagnitude` and `DeterminePerturbationType`, the two
@@ -25,7 +25,7 @@ round, a descent, the two decisions, then the kick.
 
 The history the three procedures share is the tabu memory on the
 `SearchState`. The descent writes it, forbidding each vertex it moves for a
-tenure's worth of iterations, which is where Benlic & Hao put the write too,
+tenure's worth of iterations, which is where the Max-Cut paper puts the write too,
 and the directed perturbations read it. That is what stops a perturbation
 undoing the descent that just ran.
 
@@ -84,8 +84,8 @@ println!("cut weight = {}", state.best_solution.objective);
 
 ## Differences from the original scheme
 
-This implementation follows Benlic and Hao closely, and each departure below was
-checked against the cut values they publish.
+This implementation follows the Max-Cut paper closely, and each departure below
+was checked against the cut values it publishes.
 
 - `tabu_tenure` is the prohibition length itself, as it is under
   [`TabuSearch`](tabu_search.md). The original tenure `γ` is added once when a
@@ -112,7 +112,7 @@ Three quarters of a round are the library's own heuristics. The descent is a
 [`RandomWalk`](random_walk.md), and the weak flip a
 [`TabuSearch`](tabu_search.md). They select the same moves a dedicated operator
 would, and because recording is a mode on the `SearchState`, their `apply`
-writes the same prohibitions, so the tabu list update Benlic and Hao put inside
+writes the same prohibitions, so the tabu list update the Max-Cut paper puts inside
 the descent loop still happens.
 
 The weak swap is the one hand-written operator, because `M2` moves one vertex
@@ -163,7 +163,7 @@ AdaptivePerturbation::<P>::new(
 ) -> Self
 ```
 
-Benlic & Hao's `q` is the two-entry case, `[(flip, q), (swap, 1 - q)]`. Any
+The Max-Cut paper's `q` is the two-entry case, `[(flip, q), (swap, 1 - q)]`. Any
 number of directed perturbations works, one included.
 
 | Parameter | Meaning |

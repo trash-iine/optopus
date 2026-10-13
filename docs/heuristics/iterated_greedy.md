@@ -30,8 +30,8 @@ println!("makespan = {}", state.best_solution.objective);
 ```
 
 `iterated_greedy_for_flow_shop` is the constructor plus the two things the
-flow shop hands it, the full insertion descent as its local search and the
-paper's temperature. Written out, and on another problem, the same search is
+flow shop hands it, the full insertion descent as its local search and a
+temperature from the processing times. Written out, and on another problem, the same search is
 
 ```rust
 use optopus::prelude::*;
@@ -85,8 +85,8 @@ the stronger of the two on the same time.
 
 The temperature is in the units of the objective, so `IteratedGreedy::new`
 takes it as a function of the instance, read from the instance being searched.
-For the flow shop the original paper sets it to a tenth of the mean processing
-time scaled by a factor, `T = factor · Σp / (n · m · 10)`, which is what
+For the flow shop it is a tenth of the mean processing time scaled by a
+factor, `T = factor · Σp / (n · m · 10)`, which is what
 `iterated_greedy_for_flow_shop` computes from `temperature_factor`.
 
 ## Benchmark config

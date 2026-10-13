@@ -4,7 +4,7 @@
 //!
 //! Selecting purely on cost collapses a population onto one basin within a few
 //! hundred generations. Blending in a diversity rank is what lets a genetic
-//! search keep going for millions of them. The scheme is Vidal's, introduced
+//! search keep going for millions of them. The scheme was introduced
 //! for HGS on vehicle routing, but nothing in it is about routes. It needs a
 //! cost per member and a distance between two members, and no more.
 //!
@@ -76,7 +76,7 @@ impl<T> BiasedFitnessPopulation<T> {
     ///
     /// `n_elite` is how many members the cost rank alone keeps alive and
     /// `n_closest` is how many nearest members are averaged into a diversity
-    /// contribution, Vidal's `nbElite` and `nbClose`, whose published values
+    /// contribution, the `nbElite` and `nbClose` of HGS, whose published values
     /// are `4` and `5`. Neither is defaulted.
     ///
     /// `n_elite` enters the blend as `1 - n_elite / N`, so **a population of

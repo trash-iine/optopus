@@ -2,7 +2,7 @@
 
 **API:** [`SoftmaxBandit`](../../api/optopus/heuristic/reinforcement_learning/bandit/struct.SoftmaxBandit.html)
 
-独自の規則は、Benlic と Hao の規則が入っている場所に、
+独自の規則は、`AdaptivePerturbation` が入っている場所に、
 [BreakoutLocalSearch](../heuristics/breakout_local_search.md) に渡す `PerturbationSchedule` として入れます。
 規則は選択肢となるオペレータを持ち、`determine_jump_magnitude` で決定し、決めたものを `select` で返します。
 

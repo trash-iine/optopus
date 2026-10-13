@@ -9,7 +9,7 @@
 //! - `TabuSearch` with a tenure drawn at random per move is Taillard's robust
 //!   tabu search, since the tabu rule of `QapSwapNeighbor` is his, and
 //! - `Iterated` around a shorter tabu search, with a few random exchanges
-//!   between runs, is the Iterated Tabu Search of Misevicius.
+//!   between runs, is Iterated Tabu Search.
 //!
 //! The instance is uniform random like Taillard's `tai*a` family, drawn from
 //! a fixed seed so no file is needed. All three get the same time.

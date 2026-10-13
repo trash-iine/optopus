@@ -182,7 +182,7 @@ impl Ruinable for Vrp {
 ///
 /// Holds the descent because it owns instance-derived candidate lists worth
 /// keeping across iterations, and the three tunables the anchored form needs,
-/// each behind a builder with a published default. Ruin-and-recreate without
+/// each behind a builder with a `DEFAULT_*` constant. Ruin-and-recreate without
 /// this is worse on VRP, since greedy re-insertion puts each customer where
 /// it is cheapest at the time and never repairs the edges that choice spoils.
 /// The cost of leaving it out grows with the instance, and on the largest it
@@ -205,7 +205,7 @@ impl AnchoredRouteDescent {
     /// handful of them is enough to settle the routes the ruin disturbed.
     pub const DEFAULT_MAX_PASSES: usize = 4;
 
-    /// A descent with the published defaults.
+    /// A descent with the `DEFAULT_*` constants.
     pub fn new() -> Self {
         Self {
             descent: Descent::new(),

@@ -24,8 +24,8 @@ pub enum ParentSelection {
     /// Promotes exploration by avoiding crossover between near-identical
     /// individuals. Requires `P::Solution: Distance`.
     DistantTopK { top_k: usize },
-    /// Vidal's *biased fitness*: rank members by a blend of cost rank and
-    /// diversity rank, then run a binary tournament on that rank.
+    /// *Biased fitness*, ranking members by a blend of cost rank and
+    /// diversity rank and running a binary tournament on that rank.
     ///
     /// The other two strategies rank on cost alone, which collapses the
     /// population onto one basin within a few hundred generations. Every
@@ -41,7 +41,7 @@ pub enum ParentSelection {
     /// evicting purely on cost would let the population converge anyway, one
     /// eviction at a time.
     ///
-    /// `n_elite` and `n_closest` are Vidal's `nbElite` and `nbClose`, whose
+    /// `n_elite` and `n_closest` are the `nbElite` and `nbClose` of HGS, whose
     /// published values are `4` and `5`. Neither is defaulted. Note that a
     /// population of `n_elite` or fewer ranks on cost alone, the diversity half
     /// being weighted by `1 - n_elite / N`.
@@ -130,9 +130,9 @@ impl<S> std::ops::Index<usize> for Members<S> {
 ///
 /// With [`with_init_improvement`](Self::with_init_improvement), each random
 /// initial individual is also passed through that heuristic via the same
-/// sub-run pattern. This reproduces the Galinier-Hao Hybrid Evolutionary
-/// Algorithm (HEA) for graph coloring when paired with a
-/// [`crate::heuristic::TabuSearch`] mutation operator.
+/// sub-run pattern. This reproduces the Hybrid Evolutionary Algorithm (HEA) for
+/// graph coloring when paired with a [`crate::heuristic::TabuSearch`] mutation
+/// operator.
 ///
 /// The global best solution is tracked in `SearchState::best_solution`.
 ///
@@ -222,7 +222,7 @@ where
     }
 
     /// Builder-style: runs `op` on every member of the initial random
-    /// population, which is the Galinier-Hao HEA configuration.
+    /// population, which is how HEA is configured.
     ///
     /// The population is not built until the first `run_once`, so this may be
     /// set at any point before then.

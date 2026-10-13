@@ -29,7 +29,7 @@ use rand::Rng;
 /// Sentinel for "clause not currently in the unsatisfied list".
 const NOT_IN_UNSAT: usize = usize::MAX;
 
-// Adaptive-noise schedule (Hoos 2002; see [`WalkSat`] References).
+// The adaptive-noise schedule, as [`WalkSat`] states it.
 /// Fraction of the clause count that may pass without improvement before the
 /// noise is raised.
 const ADAPT_THETA: f64 = 1.0 / 6.0;
@@ -199,8 +199,21 @@ impl WalkSatScratch {
 
 /// WalkSAT/SKC stochastic local search for [`Sat`] (MaxSAT).
 ///
+/// Each step draws an unsatisfied clause uniformly and reads the break count
+/// of each of its variables, the number of satisfied clauses a flip of it would
+/// leave unsatisfied. If some have break count zero, the first of them is
+/// flipped. Otherwise, with probability `noise`, a variable of the clause drawn
+/// uniformly is flipped, and with probability `1 - noise` the one with the
+/// smallest break count, the first in the clause on a tie.
+///
+/// With `adaptive` on, the noise follows the search. Each time the unsatisfied
+/// count reaches a new low within the run the noise is multiplied by
+/// `1 - φ / 2`, and after more than `n_clauses / 6` flips without one it moves
+/// to `noise + (1 - noise) · φ` and the count of flips starts again, with
+/// `φ = 0.2`. Every run starts again from the configured `noise`.
+///
 /// See the [WalkSAT guide](https://trash-iine.github.io/optopus/heuristics/walksat/)
-/// for the algorithm. Construct with [`new`](Self::new);
+/// for a worked example. Construct with [`new`](Self::new);
 /// wire it into the benchmark via `kind = "WalkSat"` (SAT only).
 ///
 /// # References
@@ -213,7 +226,7 @@ pub struct WalkSat {
     stop_condition: StopCondition,
     /// The configured noise probability (the working noise resets to this).
     base_noise: f64,
-    /// Whether to adapt the noise to search progress (Hoos 2002).
+    /// Whether to adapt the noise to search progress.
     adaptive: bool,
     /// The working noise probability (equals `base_noise` when `adaptive` is off).
     noise: f64,
@@ -228,8 +241,8 @@ impl WalkSat {
     /// Creates a WalkSAT heuristic.
     ///
     /// `noise` is the probability of a random (non-greedy) walk step within the
-    /// chosen clause. `adaptive` enables Hoos' automatic noise adjustment, in
-    /// which case `noise` is only the starting value.
+    /// chosen clause. `adaptive` enables the noise adjustment described on
+    /// [`WalkSat`], in which case `noise` is only the starting value.
     ///
     /// # Panics
     ///

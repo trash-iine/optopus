@@ -28,9 +28,9 @@ use std::marker::PhantomData;
 ///    new `β`; a proposed move is accepted with probability
 ///    `min(1, exp(-β · ΔE))` (reusing [`boltzmann_accept`]).
 ///
-/// There is no initial sweep before the first resampling. The paper starts from
-/// a random population at `β = 0`, where random *is* the equilibrium
-/// distribution, and steps straight into the first resampling.
+/// There is no initial sweep before the first resampling. The population starts
+/// random at `β = 0`, where random *is* the equilibrium distribution, so there
+/// is nothing to equilibrate before the first step.
 ///
 /// The energy `E_j` is read through [`Evaluate`] on the solution, which is what
 /// makes the difference `E_j - E_min` meaningful: population annealing computes
@@ -296,9 +296,8 @@ where
             self.initialize_population(state);
         }
 
-        // 1. Resample for the next temperature. This comes first: the paper's
-        //    annealing step is "the population is resampled and then N_S sweeps
-        //    of the Metropolis algorithm are carried out on each replica".
+        // 1. Resample for the next temperature. This comes first, so a step
+        //    resamples and then sweeps every replica at the new temperature.
         self.resample(&mut state.rng);
 
         // 2. Advance β, and restart the anneal every `reset_period` steps. The

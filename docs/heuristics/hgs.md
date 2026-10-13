@@ -75,7 +75,7 @@ Broken-pairs distance is the fraction of customers whose route neighbors differ,
 invariant to relabeling and reversing routes. The
 [`Distance`](../api/optopus/trait_defs/trait.Distance.html) impl on
 `VrpSolution` uses the same count but symmetrizes it, while biased fitness here
-ranks on the directional count, which is the form Vidal defines.
+ranks on the directional count, which is the form the paper defines.
 
 ### Two sub-populations and the adaptive penalty
 
@@ -134,12 +134,12 @@ conditions](../guide/stop_conditions.md).
 Reasonable defaults: `μ = 25`, `λ = 40`, `Γ = 20`, `target_feasible = 0.2`,
 `restart_generations = Some(20_000)`.
 
-Everything else Vidal tunes is a builder with a published default, so `new`
+Everything else the paper tunes is a builder with a published default, so `new`
 stays at six arguments.
 
 | Builder | Sets | Default |
 |---|---|---|
-| `with_elite(n_elite, n_closest)` | Vidal's `nbElite` and `nbClose` in the biased fitness | `4` / `5` |
+| `with_elite(n_elite, n_closest)` | `nbElite` and `nbClose` in the biased fitness | `4` / `5` |
 | `with_penalty_adaptation(period, increase, decrease, tolerance)` | offspring between penalty updates, the two factors, and the dead band around `target_feasible` | `100` / `1.2` / `0.85` / `0.05` |
 | `with_repair_probability(p)` | chance an infeasible offspring is also repaired | `0.5` |
 | `with_initial_population(factor, nearest_neighbor_every)` | initial individuals as a multiple of μ, and how many of them one nearest-neighbour tour is among | `4` / `4` |

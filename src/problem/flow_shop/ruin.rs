@@ -144,10 +144,9 @@ impl Ruinable for FlowShop {
 /// repeat until one changes nothing, which is a local optimum of the
 /// insertion neighborhood. A pass is O(n²m) with the heads and tails.
 ///
-/// It sweeps the whole sequence and ignores the anchors it is handed. The
-/// paper's local search is the full descent, and on a flow shop a job moved
-/// anywhere changes the schedule of every job after it, so there is no
-/// neighborhood of the re-inserted jobs to stay in.
+/// It sweeps the whole sequence and ignores the anchors it is handed, since on
+/// a flow shop a job moved anywhere changes the schedule of every job after it,
+/// so there is no neighborhood of the re-inserted jobs to stay in.
 ///
 /// A job is priced against a scratch table of the sequence without it, so a
 /// move that does not improve leaves the partial untouched and costs one

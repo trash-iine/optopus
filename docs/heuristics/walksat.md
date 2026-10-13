@@ -69,7 +69,7 @@ clauses with O(1) membership, and a variable → clause-occurrence index.
 
 ### Adaptive noise
 
-With `adaptive = true`, `noise` is only the starting value and follows Hoos'
+With `adaptive = true`, `noise` is only the starting value and follows a fixed
 schedule: it is lowered by a factor `φ/2` (φ = 0.2) whenever the unsatisfied
 count reaches a new low, and raised toward 1 by `φ` after `n_clauses / 6` flips
 without improvement.
@@ -80,7 +80,7 @@ without improvement.
 WalkSatForSat::new(
     stop_condition: StopCondition,
     noise: f64,        // probability of a random walk step within the clause
-    adaptive: bool,    // Hoos' automatic noise adjustment
+    adaptive: bool,    // automatic noise adjustment
 ) -> Self
 ```
 

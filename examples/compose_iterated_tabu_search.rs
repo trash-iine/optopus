@@ -2,11 +2,10 @@
 //! `RandomWalk`.
 //!
 //! Tabu search already escapes local optima on its own, but on a long run it
-//! circles the same region. Iterated Tabu Search (Misevicius) restarts it
-//! from a perturbed copy of the incumbent each time it stops improving, which
-//! is `Iterated` with tabu search as the search phase. The inner tabu search
-//! stops after a stretch without improvement, so each cycle is one tabu walk
-//! plus one kick.
+//! circles the same region. Iterated Tabu Search restarts it from a perturbed
+//! copy of the incumbent each time it stops improving, which is `Iterated` with
+//! tabu search as the search phase. The inner tabu search stops after a stretch
+//! without improvement, so each cycle is one tabu walk plus one kick.
 //!
 //! Run with:
 //! ```

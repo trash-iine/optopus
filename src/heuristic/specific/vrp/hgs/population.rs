@@ -63,7 +63,7 @@ impl Individual {
     /// `n` is what makes the value comparable across instances, which is all
     /// biased fitness needs of it, the ranking itself only reads the order.
     ///
-    /// This is the directional count, the form Vidal's biased fitness is
+    /// This is the directional count, the form biased fitness is
     /// defined on, not the symmetrized one
     /// [`Distance`](crate::search_state::Distance) exposes.
     pub(super) fn broken_pairs_distance(&self, other: &Self) -> f64 {
@@ -97,8 +97,8 @@ pub(super) fn penalized(penalty: f64) -> CostFn<Individual> {
     Box::new(move |m| m.cost(penalty))
 }
 
-/// An empty sub-population ranked under `penalty`, with Vidal's `nbElite` and
-/// `nbClose` as the search was built with.
+/// An empty sub-population ranked under `penalty`, with the `nbElite` and
+/// `nbClose` the search was built with.
 pub(super) fn sub_population(penalty: f64, n_elite: usize, n_closest: usize) -> Subpopulation {
     BiasedFitnessPopulation::new(
         n_elite,
