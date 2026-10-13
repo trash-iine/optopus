@@ -40,8 +40,8 @@ impl BestSwap {
 impl Heuristic<MaxCut> for BestSwap {
     /// A swap takes one vertex per partition side, and this applies the
     /// highest-gain such swap that is not tabu, admitting a tabu one only when
-    /// the result would beat the global best (aspiration). Benlic & Hao call
-    /// the operator `M2` and the eligible set `A2`.
+    /// the result would beat the global best (aspiration). The Max-Cut paper
+    /// calls the operator `M2` and the eligible set `A2`.
     ///
     /// A single scan therefore tracks two candidates per side, the best
     /// non-tabu vertex, which is what normally gets picked, and the best

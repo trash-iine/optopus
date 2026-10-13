@@ -8,7 +8,7 @@ BLS は一つのアルゴリズムというよりフレームワークです。�
 三つのどれも問題が二値であることを必要としません。そのため `BreakoutLocalSearch<P, S>` は任意の `P: ProblemTrait` を受け取ります。
 このフレームワークを述べた論文も、BLS を二値問題ではない vertex separator problem で導入しています。
 
-Benlic と Hao はこのフレームワークを、具体的な BLS が与える四つの手続きとして述べていて、ここではそれが三か所に収まります。
+その論文はこのフレームワークを、具体的な BLS が与える四つの手続きとして述べていて、ここではそれが三か所に収まります。
 `DescentBasedSearch` と `Perturb` は普通のヒューリスティクスで、降下は `Box<dyn Heuristic<P>>`、キックはその集まりです。
 `DetermineJumpMagnitude` と `DeterminePerturbationType` は降下とそれに続くキックの間で行う二つの決定で、
 その集まりへのインデックスを返す
@@ -19,7 +19,7 @@ Benlic と Hao はこのフレームワークを、具体的な BLS が与える
 `Heuristic::run` のものです。一回の `run_once` が一ラウンドで、降下、二つの決定、キックの順に進みます。
 
 三つの手続きが共有する履歴は `SearchState` のタブーメモリです。降下がそれを書き込み、動かした頂点をテニュア分の反復の間禁止します。
-Benlic と Hao が書き込みを置いた場所も同じです。そして方向付きの摂動がそれを読みます。
+Max-Cut の論文が書き込みを置いた場所も同じです。そして方向付きの摂動がそれを読みます。
 これによって、摂動が直前に走った降下を元に戻してしまうことを防いでいます。
 
 [MaxCut](../problems/max_cut.md) では、強いキックに [`RandomWalk`](random_walk.md)、weak flip に
@@ -65,7 +65,7 @@ println!("cut weight = {}", state.best_solution.objective);
 
 ## 原論文の方式との違い { #differences-from-the-original-scheme }
 
-この実装は Benlic と Hao にかなり忠実に従っていて、以下の相違点はそれぞれ論文が公表しているカット値と照らし合わせて確認しています。
+この実装は Max-Cut の論文にかなり忠実に従っていて、以下の相違点はそれぞれ論文が公表しているカット値と照らし合わせて確認しています。
 
 - `tabu_tenure` は、[`TabuSearch`](tabu_search.md) と同じく禁止の長さそのものです。原論文のテニュア `γ` は、頂点を記録するときに一度、
   適格性の判定でもう一度加えられるので、頂点は `2γ` の間禁止されます。`TabuMemory` はその長さを直接保持するので、
@@ -82,7 +82,7 @@ println!("cut weight = {}", state.best_solution.objective);
 一ラウンドの四分の三はライブラリ自身のヒューリスティクスです。降下は [`LocalSearch`](local_search.md)、強い摂動は
 [`RandomWalk`](random_walk.md)、weak flip は [`TabuSearch`](tabu_search.md) です。
 これらは専用のオペレータと同じ move を選び、記録は `SearchState` のモードなので、その `apply` は同じ禁止を書き込みます。
-そのため、Benlic と Hao が降下のループの中に置いたタブーリストの更新はここでも行われます。
+そのため、Max-Cut の論文が降下のループの中に置いたタブーリストの更新はここでも行われます。
 
 weak swap だけが手書きのオペレータです。`M2` は一回の move で分割の両側から一頂点ずつ動かし、一歩ずつの探索を二つ組み合わせてもそれは表せないからです。
 片側に適格な頂点がないと、もう片方の頂点だけが動いてしまうことになります。
@@ -128,7 +128,7 @@ AdaptivePerturbation::<P>::new(
 ) -> Self
 ```
 
-Benlic と Hao の `q` は要素が二つの場合で、`[(flip, q), (swap, 1 - q)]` です。方向付きの摂動はいくつでも (一つでも) かまいません。
+Max-Cut の論文の `q` は要素が二つの場合で、`[(flip, q), (swap, 1 - q)]` です。方向付きの摂動はいくつでも (一つでも) かまいません。
 
 | パラメータ | 意味 |
 |---|---|

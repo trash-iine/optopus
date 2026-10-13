@@ -29,7 +29,7 @@ println!("cost = {}", state.best_solution.objective);
 ```
 
 `TabuSearch` は移動のたびに範囲から tenure を引き、`QapSwapNeighbor` は Taillard のタブー規則に従うので、これは何も足さずに Taillard の robust tabu search になります。
-[`Iterated`](../heuristics/meta.md) で包み、探索の合間にランダムな交換を数回入れれば Misevicius の Iterated Tabu Search で、
+[`Iterated`](../heuristics/meta.md) で包み、探索の合間にランダムな交換を数回入れれば Iterated Tabu Search で、
 [`examples/integer_qap.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_qap.rs) が両者を並べて実行します。
 
 ## 解 { #solution }

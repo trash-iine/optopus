@@ -4,8 +4,8 @@
 //! [`BreakoutLocalSearchForMaxCut`] exposes its round as two halves —
 //! `descend` (greedy descent to a local optimum) and `kick` (one perturbation
 //! plus the round's `update_best`) — so a controller can act at the point
-//! *between* them. This example replaces Benlic & Hao's hand-crafted
-//! `omega`-based perturbation rule *and* their strength schedule with a
+//! *between* them. This example replaces the published hand-crafted
+//! `omega`-based perturbation rule *and* its strength schedule with a
 //! contextual softmax gradient bandit (`SoftmaxBandit`, from the library's
 //! reinforcement-learning module): each round the bandit reads search-state
 //! features and picks one of `3 x strength_bins.len()` actions — a
@@ -297,7 +297,7 @@ fn main() -> Result<(), OptError> {
     let mc = MaxCut::new(Graph::erdos_renyi(800, 0.02, &mut rng));
     let iterations = 20_000;
 
-    // Baseline: BLS with Benlic & Hao's schedule.
+    // Baseline: BLS with the published schedule.
     let mut bls = bls_for_max_cut(
         StopCondition::iterations(iterations),
         (30, 600),

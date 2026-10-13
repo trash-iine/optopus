@@ -75,7 +75,7 @@ Panics if `population_size < 2`.
 
 Every random initial individual is also passed through `op`, using the sub-run
 clone/merge pattern. Pair this with a `TabuSearch` mutation operator to
-reproduce the Galinier-Hao Hybrid Evolutionary Algorithm (HEA). The population
+reproduce the Hybrid Evolutionary Algorithm (HEA) for graph coloring. The population
 is not built until the first `run_once`, so this may be set at any point before
 then.
 
@@ -94,7 +94,7 @@ pub enum ParentSelection {
 }
 ```
 
-`BiasedFitness` ranks the population by Vidal's blend of cost rank and
+`BiasedFitness` ranks the population by a blend of cost rank and
 diversity rank, the same scheme
 [HybridGeneticSearch](hgs.md) uses, and runs the binary tournament on that rank.
 It changes survivor selection as well, trimming by the same rank with clones
@@ -103,8 +103,8 @@ while evicting on cost alone lets the population converge one eviction at a
 time. It needs `Evaluate` on the solution, which every problem here implements.
 
 `n_closest` is how many nearest members are averaged into a member's diversity
-contribution, Vidal's `nbClose`. `n_elite` is how many members the cost rank
-alone keeps alive, his `nbElite`, and it enters the blend as `1 - n_elite / N`,
+contribution, the `nbClose` of HGS. `n_elite` is how many members the cost rank
+alone keeps alive, the `nbElite` of HGS, and it enters the blend as `1 - n_elite / N`,
 so **a population of `n_elite` or fewer ranks on cost alone**. The diversity
 half is multiplied by zero and the strategy becomes the cost-only selection it
 exists to replace. The benchmark refuses a config where `n_elite >=

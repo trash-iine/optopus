@@ -427,7 +427,7 @@ where
                     ParentSelection::DistantTopK { top_k }
                 }
                 "BiasedFitness" => {
-                    // Vidal's nbElite and nbClose.
+                    // The nbElite and nbClose HGS publishes.
                     let n_elite = n_elite.unwrap_or(4);
                     let n_closest = n_closest.unwrap_or(5);
                     if n_elite == 0 || n_closest == 0 {

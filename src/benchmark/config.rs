@@ -163,7 +163,7 @@ pub enum HeuristicConfig {
     /// Breakout Local Search (MaxCut only).
     BreakoutLocalSearch {
         /// Tabu tenure range `(min, max)` in iterations, the same meaning it
-        /// has under `TabuSearch`. Benlic & Hao count their `γ` twice, so a
+        /// has under `TabuSearch`. The Max-Cut paper counts its `γ` twice, so a
         /// range written in the paper's terms is doubled here, `[3, |V|/10]`
         /// becomes `[6, |V|/5]`.
         tabu_tenure: (u64, u64),
@@ -269,7 +269,7 @@ pub enum HeuristicConfig {
         /// Random-walk probability within the chosen unsatisfied clause. Default: 0.3.
         #[serde(skip_serializing_if = "Option::is_none")]
         noise: Option<f64>,
-        /// Enable Hoos' adaptive noise adjustment (uses `noise` as the start). Default: false.
+        /// Enable the adaptive noise adjustment (uses `noise` as the start). Default: false.
         #[serde(skip_serializing_if = "Option::is_none")]
         adaptive_noise: Option<bool>,
         #[serde(default)]
@@ -319,13 +319,13 @@ pub enum HeuristicConfig {
         /// `top_k` for `parent_selection = "DistantTopK"` (must be >= 1).
         #[serde(skip_serializing_if = "Option::is_none")]
         parent_top_k: Option<usize>,
-        /// Vidal's `nbElite` for `parent_selection = "BiasedFitness"`: how many
+        /// The `nbElite` of HGS for `parent_selection = "BiasedFitness"`, how many
         /// members the cost rank alone keeps alive. Default: 4. Must be at
         /// least 1 and below `population_size`, since a population of
         /// `n_elite` or fewer ranks on cost alone.
         #[serde(skip_serializing_if = "Option::is_none")]
         n_elite: Option<usize>,
-        /// Vidal's `nbClose` for `parent_selection = "BiasedFitness"`: how many
+        /// The `nbClose` of HGS for `parent_selection = "BiasedFitness"`, how many
         /// nearest members are averaged into a diversity contribution.
         /// Default: 5. Must be at least 1.
         #[serde(skip_serializing_if = "Option::is_none")]

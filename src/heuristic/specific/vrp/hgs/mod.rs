@@ -140,7 +140,7 @@ pub struct HybridGeneticSearch {
 }
 
 impl HybridGeneticSearch {
-    // Vidal's published values for everything `new` does not take. Each is
+    // The published values for everything `new` does not take. Each is
     // the default behind a builder, so a caller who wants another number
     // chains the builder rather than editing a constant.
 
@@ -177,19 +177,19 @@ impl HybridGeneticSearch {
     /// alone. See [`with_penalty_adaptation`](Self::with_penalty_adaptation).
     pub const DEFAULT_FEASIBILITY_TOLERANCE: f64 = 0.05;
 
-    /// Members the cost rank alone keeps alive, Vidal's `nbElite`. See
+    /// Members the cost rank alone keeps alive, the paper's `nbElite`. See
     /// [`with_elite`](Self::with_elite).
     pub const DEFAULT_N_ELITE: usize = 4;
 
-    /// Nearest members averaged into a diversity contribution, Vidal's
-    /// `nbClose`. See [`with_elite`](Self::with_elite).
+    /// Nearest members averaged into a diversity contribution, the
+    /// paper's `nbClose`. See [`with_elite`](Self::with_elite).
     pub const DEFAULT_N_CLOSEST: usize = 5;
 
     /// Creates a new Hybrid Genetic Search.
     ///
-    /// Reasonable defaults follow Vidal: `min_population_size = 25`,
+    /// Reasonable defaults follow the paper, `min_population_size = 25`,
     /// `generation_size = 40`, `granularity = 20`, `target_feasible = 0.2`,
-    /// `restart_generations = Some(20_000)`. Everything else Vidal tunes is a
+    /// `restart_generations = Some(20_000)`. Everything else the paper tunes is a
     /// builder with a published default, `with_elite`,
     /// `with_penalty_adaptation`, `with_repair_probability`,
     /// `with_initial_population` and `with_descent_passes`.
@@ -245,7 +245,7 @@ impl HybridGeneticSearch {
         }
     }
 
-    /// Builder-style: Vidal's `nbElite` and `nbClose`, how many members the
+    /// Builder-style: the paper's `nbElite` and `nbClose`, how many members the
     /// cost rank alone keeps alive and how many nearest members are averaged
     /// into a diversity contribution. Defaults to
     /// [`DEFAULT_N_ELITE`](Self::DEFAULT_N_ELITE) /

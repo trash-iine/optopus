@@ -29,7 +29,7 @@ use rand::Rng;
 /// Sentinel for "clause not currently in the unsatisfied list".
 const NOT_IN_UNSAT: usize = usize::MAX;
 
-// Adaptive-noise schedule (Hoos 2002; see [`WalkSat`] References).
+// Adaptive-noise schedule, see the [`WalkSat`] References.
 /// Fraction of the clause count that may pass without improvement before the
 /// noise is raised.
 const ADAPT_THETA: f64 = 1.0 / 6.0;
@@ -213,7 +213,7 @@ pub struct WalkSat {
     stop_condition: StopCondition,
     /// The configured noise probability (the working noise resets to this).
     base_noise: f64,
-    /// Whether to adapt the noise to search progress (Hoos 2002).
+    /// Whether to adapt the noise to search progress.
     adaptive: bool,
     /// The working noise probability (equals `base_noise` when `adaptive` is off).
     noise: f64,
@@ -228,7 +228,7 @@ impl WalkSat {
     /// Creates a WalkSAT heuristic.
     ///
     /// `noise` is the probability of a random (non-greedy) walk step within the
-    /// chosen clause. `adaptive` enables Hoos' automatic noise adjustment, in
+    /// chosen clause. `adaptive` enables the automatic noise adjustment, in
     /// which case `noise` is only the starting value.
     ///
     /// # Panics

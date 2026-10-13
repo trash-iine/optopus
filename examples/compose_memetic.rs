@@ -2,9 +2,8 @@
 //!
 //! `GeneticAlgorithm` takes its mutation step as any heuristic. Handing it a
 //! short tabu search turns every offspring into a local optimum before it
-//! enters the population, which is the hybrid evolutionary algorithm of
-//! Galinier and Hao for graph coloring, a crossover for exploration and tabu
-//! search for intensification.
+//! enters the population, which is the hybrid evolutionary algorithm for graph
+//! coloring, a crossover for exploration and tabu search for intensification.
 //!
 //! The graph is drawn from a fixed seed, so no instance file is needed.
 //!

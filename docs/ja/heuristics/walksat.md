@@ -59,7 +59,7 @@ println!("assignment = {:?}", sol.x);
 
 ### 適応的なノイズ { #adaptive-noise }
 
-`adaptive = true` のとき、`noise` は初期値にすぎず、Hoos のスケジュールに従います。充足されていない節の数が最小を更新するたびに係数 `φ/2` (φ = 0.2) だけ下げ、
+`adaptive = true` のとき、`noise` は初期値にすぎず、決まったスケジュールに従います。充足されていない節の数が最小を更新するたびに係数 `φ/2` (φ = 0.2) だけ下げ、
 改善のないまま `n_clauses / 6` 回反転すると `φ` だけ 1 に向けて上げます。
 
 ## コンストラクタ { #constructor }
@@ -68,7 +68,7 @@ println!("assignment = {:?}", sol.x);
 WalkSatForSat::new(
     stop_condition: StopCondition,
     noise: f64,        // 節の中でランダムウォークのステップを行う確率
-    adaptive: bool,    // Hoos の自動ノイズ調整
+    adaptive: bool,    // 自動ノイズ調整
 ) -> Self
 ```
 

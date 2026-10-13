@@ -34,8 +34,7 @@ println!("cost = {}", state.best_solution.objective);
 `TabuSearch` draws a tenure from its range for every move it makes, and
 `QapSwapNeighbor` follows Taillard's tabu rule, so this is his robust tabu
 search with nothing added. Wrapped in [`Iterated`](../heuristics/meta.md) with
-a few random exchanges between runs it is the Iterated Tabu Search of
-Misevicius, which
+a few random exchanges between runs it is Iterated Tabu Search, which
 [`examples/integer_qap.rs`](https://github.com/trash-iine/optopus/blob/main/examples/integer_qap.rs)
 runs next to it.
 
