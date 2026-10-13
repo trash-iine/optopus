@@ -52,6 +52,7 @@ algorithm's own page; this table is only the index.
 | [`RandomWalk`](../heuristics/random_walk.md#benchmark-config) | all |
 | [`ReinforcementLearningSearch`](../heuristics/rl_search.md#benchmark-config) | all |
 | [`PopulationAnnealing`](../heuristics/population_annealing.md#benchmark-config) | all |
+| [`ParallelTempering`](../heuristics/parallel_tempering.md#benchmark-config) | all |
 | [`Sequential` / `Iterated` / `VariableNeighborhoodSearch` / `Restart`](../heuristics/meta.md#benchmark-config) | all |
 | [`GeneticAlgorithm`](../heuristics/genetic_algorithm.md#benchmark-config) | all |
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | MaxCut so far |
