@@ -94,7 +94,7 @@ src/
 │   └── search/               search machinery that knows no problem, plus MIN_IMPROVEMENT (mod.rs)
 │       ├── tabu.rs           TabuKey (Var / Pair / Triple), TabuMemory
 │       ├── biased_fitness.rs BiasedFitnessPopulation, binary_tournament
-│       ├── ruin_recreate.rs  the five destroy / repair operators over any Ruinable
+│       ├── ruin_recreate.rs  the six destroy / repair operators over any Ruinable
 │       ├── sampling.rs       random_distinct_pair, the endpoints the position moves draw
 │       ├── adaptive_weights.rs  AdaptiveWeights, the roulette the operators are picked by
 │       └── anchored_sweep.rs AnchoredSweep, the anchor widening and shuffled sweep

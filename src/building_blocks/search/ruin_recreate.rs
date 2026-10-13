@@ -1,9 +1,10 @@
 //! The destroy and repair operators of ruin-and-recreate, over any
 //! [`Ruinable`] problem.
 //!
-//! Five free functions, three that ruin and two that recreate, plus the
-//! two-best-insertions scan both repairs select with. They are Ropke &
-//! Pisinger's operator bank, and each reads the problem only through
+//! Six free functions, three that ruin and three that recreate, plus the
+//! two-best-insertions scan the repairs select with. Five are the operator
+//! bank of ALNS, and the sixth is the repair Iterated Greedy reconstructs
+//! with. Each reads the problem only through
 //! [`Ruinable`]: what an element is, which containers it may go in, and what a
 //! placement costs.
 //!
@@ -13,8 +14,8 @@
 //! `Ruinable` asks for.
 //!
 //! Every one of them is generic over `P`, not `dyn Ruinable`. The inner loop of
-//! greedy insertion is O(k · buckets · places) and regret-2 is O(k² · buckets ·
-//! places), and routing `insertion_cost` through a vtable there would be paid
+//! random-order insertion is O(k · buckets · places), and cheapest-first and
+//! regret-2 are O(k² · buckets · places), and routing `insertion_cost` through a vtable there would be paid
 //! on every one of those.
 
 use rand::Rng;
@@ -126,7 +127,7 @@ fn remove_top_k<P: Ruinable>(
 /// much worse `element` gets once its best container is taken. The
 /// second-cheapest *place* is almost always the one next door in the same
 /// container, a gap of nearly zero for every element, which would leave
-/// [`regret2_insertion`] indistinguishable from [`greedy_insertion`].
+/// [`regret2_insertion`] indistinguishable from [`cheapest_first_insertion`].
 ///
 /// With a single container the second entry stays infinite, which the caller
 /// reads as unbounded regret.
@@ -160,7 +161,12 @@ pub fn best_two_insertions<P: Ruinable>(
 /// The order is randomized rather than left as the destroy operator produced
 /// it. Worst- and Shaw-removal both return a *sorted* pool, and inserting in
 /// that order would make the first element's choice systematically the freest.
-pub fn greedy_insertion<P: Ruinable>(
+///
+/// Iterated Greedy reconstructs with it. Each element is priced once, against
+/// the partial as it stands when its turn comes, and elements are never
+/// compared with each other, which keeps a repair of `k` elements
+/// O(k · buckets · places).
+pub fn random_order_insertion<P: Ruinable>(
     prob: &P,
     partial: &mut P::Partial,
     removed: Vec<P::Element>,
@@ -172,6 +178,38 @@ pub fn greedy_insertion<P: Ruinable>(
         let (best, _) = best_two_insertions(prob, partial, element);
         let (_, bucket, place) = best;
         prob.insert(partial, bucket, place, element);
+    }
+}
+
+/// Re-inserts the cheapest element first, the basic greedy repair of ALNS.
+///
+/// Every step prices each element left in the pool at its cheapest placement
+/// and inserts the one whose cheapest placement costs the least. One insertion
+/// changes what the others cost, so the whole pool is priced again, which makes
+/// recreating `k` elements O(k² · buckets · places), the cost of
+/// [`regret2_insertion`].
+///
+/// The elements that are expensive everywhere go in last, when the containers
+/// have the least room left. [`regret2_insertion`] is the repair that answers
+/// that.
+pub fn cheapest_first_insertion<P: Ruinable>(
+    prob: &P,
+    partial: &mut P::Partial,
+    removed: Vec<P::Element>,
+) {
+    let mut pool = removed;
+    while !pool.is_empty() {
+        let mut best = NOWHERE;
+        let mut best_idx = 0usize;
+        for (idx, &element) in pool.iter().enumerate() {
+            let (b1, _) = best_two_insertions(prob, partial, element);
+            if b1.0 < best.0 {
+                best = b1;
+                best_idx = idx;
+            }
+        }
+        let element = pool.swap_remove(best_idx);
+        prob.insert(partial, best.1, best.2, element);
     }
 }
 
