@@ -5,9 +5,8 @@
 //! two-best-insertions scan the repairs select with. Five are the operator
 //! bank of ALNS, the sixth is the repair Iterated Greedy reconstructs with,
 //! and the seventh is the randomized greedy construction of GRASP. Each reads
-//! the problem only through
-//! [`Ruinable`]: what an element is, which containers it may go in, and what a
-//! placement costs.
+//! the problem only through [`Ruinable`]: what an element is, which containers
+//! it may go in, and what a placement costs.
 //!
 //! Free functions rather than trait methods with defaults, because there is no
 //! reason for a problem to override one. The operators decide which elements to
@@ -15,9 +14,9 @@
 //! `Ruinable` asks for.
 //!
 //! Every one of them is generic over `P`, not `dyn Ruinable`. The inner loop of
-//! random-order insertion is O(k · buckets · places), and cheapest-first and
-//! regret-2 are O(k² · buckets · places), and routing `insertion_cost` through a vtable there would be paid
-//! on every one of those.
+//! random-order insertion is O(k · buckets · places), and the other three
+//! repairs are O(k² · buckets · places), and routing `insertion_cost` through
+//! a vtable there would be paid on every one of those.
 
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -220,8 +219,9 @@ pub fn cheapest_first_insertion<P: Ruinable>(
 /// placement, and the restricted candidate list is the elements whose cost is
 /// within `alpha` of the cheapest, `c ≤ c_min + alpha · (c_max − c_min)`. One of
 /// them is drawn uniformly and inserted there. `alpha = 0` is pure greedy,
-/// the cheapest element first, and `alpha = 1` inserts the elements in a random
-/// order, each at its cheapest place.
+/// the cheapest element first as in [`cheapest_first_insertion`] with ties
+/// drawn at random, and `alpha = 1` inserts the elements in a random order,
+/// each at its cheapest place, as [`random_order_insertion`] does.
 ///
 /// Every step reprices the whole pool, since one insertion changes what the
 /// others cost, so recreating `k` elements is O(k² · buckets · places). From an
