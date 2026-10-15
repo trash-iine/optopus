@@ -38,7 +38,8 @@ impl SatSolution {
     /// assert_eq!(sol.n_satisfied, 2);
     /// ```
     pub fn new_from_assignment(sat: &Sat, x: Vec<bool>) -> Self {
-        let gain = (0..sat.n_vars()).map(|i| sat.calc_gain(&x, i)).collect();
+        let mut gain = vec![0; sat.n_vars()];
+        sat.fill_gains(&x, &mut gain);
         let n_satisfied = sat.calc_satisfied(&x);
         Self {
             x,
@@ -284,6 +285,18 @@ impl Sat {
             }
             let after = true_now - s + u;
             gain[v] += sign * ((after > 0) as i64 - was);
+        }
+    }
+
+    /// Sets `gain[i]` to [`Sat::calc_gain`] of every variable under `x`.
+    ///
+    /// Every clause adds its share to the gains of its own variables, so one
+    /// pass over the clauses gives every gain, where asking each variable
+    /// walks every clause once per variable in it.
+    pub(crate) fn fill_gains(&self, x: &[bool], gain: &mut [i64]) {
+        gain.fill(0);
+        for c in 0..self.clauses.len() {
+            self.add_clause_shares(c, x, gain, 1);
         }
     }
 
