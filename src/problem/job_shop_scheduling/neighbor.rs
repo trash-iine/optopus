@@ -22,6 +22,18 @@ const PARALLEL_ITER_MIN_OPS: usize = 400;
 /// prefix before its first position once.
 const PARALLEL_SWAP_CHUNK: usize = 32;
 
+/// When each operation of `operations` finishes, and the latest finish from
+/// each position on, one longer so that past the end reads zero.
+fn trace(prob: &JobShopScheduling, operations: &[usize]) -> (Vec<u32>, Vec<u32>) {
+    let mut partial = PartialSchedule::new(prob);
+    let finish: Vec<u32> = operations.iter().map(|&j| partial.push(prob, j)).collect();
+    let mut latest = vec![0; finish.len() + 1];
+    for p in (0..finish.len()).rev() {
+        latest[p] = latest[p + 1].max(finish[p]);
+    }
+    (finish, latest)
+}
+
 /// The swaps of positions `range` with their gains over `base`.
 ///
 /// Swapping `i` and `i + 1` leaves the schedule of `operations[..i]` as it
@@ -31,25 +43,28 @@ fn swap_scan(
     prob: &JobShopScheduling,
     operations: &[usize],
     base: i64,
+    (finish, latest): (&[u32], &[u32]),
     range: std::ops::Range<usize>,
 ) -> Vec<JobShopSwapNeighbor> {
     let mut prefix = PartialSchedule::new(prob);
     for &j in &operations[..range.start] {
         prefix.push(prob, j);
     }
-    let mut work = prefix.clone();
+    let (mut work, mut shadow) = (prefix.clone(), prefix.clone());
     let mut items = Vec::with_capacity(range.len());
     for i in range {
         if operations[i] != operations[i + 1] {
             work.clone_from(&prefix);
             work.push(prob, operations[i + 1]);
             work.push(prob, operations[i]);
-            for &j in &operations[i + 2..] {
-                work.push(prob, j);
-            }
+            shadow.clone_from(&prefix);
+            shadow.push(prob, operations[i]);
+            shadow.push(prob, operations[i + 1]);
+            let makespan =
+                work.finish_against(prob, &mut shadow, operations, i + 2, finish, latest);
             items.push(JobShopSwapNeighbor {
                 i,
-                gain: i64::from(work.makespan) - base,
+                gain: i64::from(makespan) - base,
             });
         }
         prefix.push(prob, operations[i]);
@@ -207,6 +222,8 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
         let ops = &sol.operations[..];
         let positions = ops.len().saturating_sub(1);
         let base = i64::from(sol.objective);
+        let (finish, latest) = trace(prob, ops);
+        let traced = (&finish[..], &latest[..]);
         let items: Vec<Self> = if ops.len() >= PARALLEL_ITER_MIN_OPS {
             (0..positions)
                 .into_par_iter()
@@ -216,6 +233,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
                         prob,
                         ops,
                         base,
+                        traced,
                         start..(start + PARALLEL_SWAP_CHUNK).min(positions),
                     )
                 })
@@ -224,7 +242,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
                 .flatten()
                 .collect()
         } else {
-            swap_scan(prob, ops, base, 0..positions)
+            swap_scan(prob, ops, base, traced, 0..positions)
         };
         items.into_iter()
     }

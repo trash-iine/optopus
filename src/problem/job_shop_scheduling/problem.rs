@@ -261,6 +261,41 @@ impl PartialSchedule {
         self.makespan = self.makespan.max(finish);
         finish
     }
+
+    /// Schedules `operations[at..]` and returns the makespan, given that this
+    /// schedule has taken the same operations as `base` up to `at`, `base`
+    /// being the schedule of the solution's own sequence at `at`.
+    ///
+    /// `finish[p]` is when the solution's operation `p` finishes and
+    /// `latest[p]` the latest of `finish[p..]`. Once every release time here
+    /// equals the solution's, the rest of the schedule is the solution's too,
+    /// so the walk stops there. `base` is scratch afterwards.
+    pub(crate) fn finish_against(
+        &mut self,
+        prob: &JobShopScheduling,
+        base: &mut PartialSchedule,
+        operations: &[usize],
+        at: usize,
+        finish: &[u32],
+        latest: &[u32],
+    ) -> u32 {
+        let differs = |a: &[u32], b: &[u32]| a.iter().zip(b).filter(|(x, y)| x != y).count();
+        let mut apart = differs(&self.machine_release, &base.machine_release)
+            + differs(&self.job_release, &base.job_release);
+        for (p, &j) in operations.iter().enumerate().skip(at) {
+            if apart == 0 {
+                return self.makespan.max(latest[p]);
+            }
+            let machine = prob.jobs[j][self.job_op_idx[j]].0;
+            apart -= usize::from(self.machine_release[machine] != base.machine_release[machine])
+                + usize::from(self.job_release[j] != base.job_release[j]);
+            let ours = self.push(prob, j);
+            base.machine_release[machine] = finish[p];
+            base.job_release[j] = finish[p];
+            apart += 2 * usize::from(ours != finish[p]);
+        }
+        self.makespan
+    }
 }
 
 impl ProblemTrait for JobShopScheduling {
