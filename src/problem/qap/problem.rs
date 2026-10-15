@@ -1,3 +1,5 @@
+use std::sync::OnceLock;
+
 use rand::seq::SliceRandom;
 
 use crate::building_blocks::representation::check_permutation;
@@ -12,6 +14,23 @@ pub struct QapSolution {
     pub assignment: Vec<usize>,
     /// The cost `Σ_i Σ_j a[i][j] · b[assignment[i]][assignment[j]]`.
     pub objective: i64,
+    /// The swap deltas of every pair, built by the first full scan of the
+    /// swap neighborhood and kept up to date by each applied swap. A search
+    /// that never scans the whole neighborhood never builds it.
+    pub(super) deltas: OnceLock<SwapDeltas>,
+}
+
+/// The swap delta of every pair of facilities for one assignment.
+///
+/// A full scan reads each pair in O(1) from it, and an applied swap brings it
+/// up to date in O(n²), where pricing every pair anew is O(n³).
+#[derive(Debug, Clone)]
+pub(super) struct SwapDeltas {
+    /// The assignment the deltas are for. A table whose assignment is not the
+    /// solution's is never read.
+    assignment: Vec<usize>,
+    /// `delta[i * n + j]`, for `i < j`.
+    delta: Vec<i64>,
 }
 
 impl Evaluate for QapSolution {
@@ -156,6 +175,64 @@ impl Qap {
         delta
     }
 
+    /// The swap deltas of `sol` indexed `i * n + j` for `i < j`, built on the
+    /// first call, or `None` if `sol.assignment` was changed other than by a
+    /// swap move since they were built.
+    pub(super) fn swap_deltas<'s>(&self, sol: &'s QapSolution) -> Option<&'s [i64]> {
+        let n = self.n;
+        let table = sol.deltas.get_or_init(|| {
+            let p = &sol.assignment;
+            let mut delta = vec![0; n * n];
+            for i in 0..n {
+                for j in i + 1..n {
+                    delta[i * n + j] = self.swap_delta(p, i, j);
+                }
+            }
+            SwapDeltas {
+                assignment: p.clone(),
+                delta,
+            }
+        });
+        (table.assignment == sol.assignment).then_some(&table.delta)
+    }
+
+    /// Exchanges facilities `r` and `s` in `sol`, its cost moving by `gain`,
+    /// and brings the swap deltas along if they were built.
+    ///
+    /// A pair `(u, v)` that shares no facility with the swap changes by
+    /// `(a[r][u] - a[r][v] - a[s][u] + a[s][v]) X + (a[u][r] - a[v][r] - a[u][s] + a[v][s]) Y`,
+    /// where `X = b[ps][pv] - b[ps][pu] - b[pr][pv] + b[pr][pu]` and
+    /// `Y = b[pv][ps] - b[pu][ps] - b[pv][pr] + b[pu][pr]` read the locations
+    /// before the swap, Taillard's O(1) update. The 2n pairs that share one
+    /// are priced anew.
+    pub(super) fn apply_swap(&self, sol: &mut QapSolution, r: usize, s: usize, gain: i64) {
+        let table = sol.deltas.take().filter(|t| t.assignment == sol.assignment);
+        let (pr, ps) = (sol.assignment[r], sol.assignment[s]);
+        sol.assignment.swap(r, s);
+        sol.objective += gain;
+        let Some(mut table) = table else {
+            return;
+        };
+        let n = self.n;
+        let p = &sol.assignment;
+        for u in 0..n {
+            for v in u + 1..n {
+                table.delta[u * n + v] = if u == r || u == s || v == r || v == s {
+                    self.swap_delta(p, u, v)
+                } else {
+                    let (pu, pv) = (p[u], p[v]);
+                    let x = self.b(ps, pv) - self.b(ps, pu) - self.b(pr, pv) + self.b(pr, pu);
+                    let y = self.b(pv, ps) - self.b(pu, ps) - self.b(pv, pr) + self.b(pu, pr);
+                    table.delta[u * n + v]
+                        + (self.a(r, u) - self.a(r, v) - self.a(s, u) + self.a(s, v)) * x
+                        + (self.a(u, r) - self.a(v, r) - self.a(u, s) + self.a(v, s)) * y
+                };
+            }
+        }
+        table.assignment.clone_from(p);
+        sol.deltas = OnceLock::from(table);
+    }
+
     /// Wraps an assignment as a solution, computing its cost, for starting a
     /// search somewhere other than a random assignment.
     ///
@@ -169,6 +246,7 @@ impl Qap {
         Ok(QapSolution {
             assignment,
             objective,
+            deltas: OnceLock::new(),
         })
     }
 }
