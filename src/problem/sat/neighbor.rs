@@ -11,8 +11,8 @@ use rand::rngs::SmallRng;
 ///
 /// `gain` is the change in the number of satisfied clauses after the flip
 /// (positive = improvement, since MaxSAT is maximized). Applying the move
-/// refreshes the gain of every variable sharing a clause with `i`, i.e.
-/// O(clauses containing `i`) work, using `Sat::var_neighbors`.
+/// updates the gains through the clauses that hold `i` and no others, in
+/// O(total length of those clauses).
 #[derive(Debug, Clone)]
 pub struct SatFlipNeighbor {
     /// Index of the variable to flip.
@@ -61,20 +61,16 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     }
 
     fn apply_to_solution(&self, prob: &Sat, sol: &mut SatSolution) -> Result<(), OptError> {
-        // Flip x[i]
-        sol.x[self.i] = !sol.x[self.i];
-
-        // Update n_satisfied
-        sol.n_satisfied = (sol.n_satisfied as i64 + self.gain) as usize;
-
-        // Update gain[i]: flipping again reverts to the original (sign flip)
-        sol.gain[self.i] = -self.gain;
-
-        // Recompute gain for variables sharing a clause with i.
-        // `prob.var_neighbors(i)` is precomputed at problem-construction time.
-        for &j in prob.var_neighbors(self.i) {
-            sol.gain[j] = prob.calc_gain(&sol.x, j);
+        // Only the clauses holding i change, so their shares of the gains are
+        // taken out under the old value and put back under the new one.
+        for &c in prob.clauses_of(self.i) {
+            prob.add_clause_shares(c, &sol.x, &mut sol.gain, -1);
         }
+        sol.x[self.i] = !sol.x[self.i];
+        for &c in prob.clauses_of(self.i) {
+            prob.add_clause_shares(c, &sol.x, &mut sol.gain, 1);
+        }
+        sol.n_satisfied = (sol.n_satisfied as i64 + self.gain) as usize;
         Ok(())
     }
 
