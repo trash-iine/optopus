@@ -40,8 +40,11 @@ takes the Cartesian product.
 A `max_duration_secs` stop ends on whatever iteration the clock reaches, which
 changes from one rerun to the next, so a seeded run that stops on time repeats
 its result only when it found its best before either stop. To give each run a
-time budget and still rerun it bit for bit, time one run, read how many
-iterations it got through, and stop with `max_iteration` at that count instead.
+time budget and still rerun it bit for bit, run the config once with
+`max_duration_secs`, so that the runs share the cores as they will later, and
+replace it with a `max_iteration` no larger than the smallest
+`n_accepted + n_rejected` a run reached, which is how many iterations it got
+through.
 
 ## Heuristic kinds
 
