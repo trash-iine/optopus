@@ -38,6 +38,46 @@ where
     })
 }
 
+/// Every pair [`differing_pairs`] yields, in the same order, with the value
+/// `row(i)` lists for `j`, or `W::default()` when it lists none.
+///
+/// The swap moves price a pair by the interaction between its two variables,
+/// which a lookup in `i`'s row finds by binary search. Here one pass over
+/// `row(i)` fills a dense scratch before the pairs of `i` are listed and
+/// another clears it after, so a pair costs O(1) and an `i` its row length on
+/// top. The per-problem `*SwapNeighbor::iter` impls delegate to this function.
+pub fn differing_pairs_by_row<P, W, I>(
+    prob: &P,
+    sol: &P::Solution,
+    row: impl Fn(usize) -> I + Send,
+) -> impl Iterator<Item = (usize, usize, W)> + Send
+where
+    P: BinaryProblem + Sync,
+    P::Solution: Sync,
+    W: Copy + Default + Send,
+    I: Iterator<Item = (usize, W)>,
+{
+    let mut dense = vec![W::default(); crate::trait_defs::variable_count(prob)];
+    prob.variable_indices().flat_map(move |i| {
+        for (j, w) in row(i) {
+            if let Some(slot) = dense.get_mut(j) {
+                *slot = w;
+            }
+        }
+        let pairs: Vec<(usize, usize, W)> = prob
+            .variable_indices()
+            .filter(|&j| j < i && P::variable(sol, i) != P::variable(sol, j))
+            .map(|j| (i, j, dense[j]))
+            .collect();
+        for (j, _) in row(i) {
+            if let Some(slot) = dense.get_mut(j) {
+                *slot = W::default();
+            }
+        }
+        pairs
+    })
+}
+
 /// Draws of two variables before [`random_differing_pair`] falls back to its
 /// counting pass. A draw lands with the probability that two variables
 /// differ, about one half on a balanced assignment.
@@ -125,5 +165,62 @@ mod tests {
         }
         let same = mc.solution_from_assignment(&[false; 12]).unwrap();
         assert!(random_differing_pair(&mc, &same, &mut rng).is_none());
+    }
+
+    /// The swap scans that read the interaction from a dense row price every
+    /// pair as the moves' own constructors do, in the order `differing_pairs`
+    /// lists them, on MaxCut, QUBO and Vertex Cover.
+    #[test]
+    fn row_scans_price_pairs_as_the_constructors_do() {
+        use crate::problem::{
+            MaxCutSolution, MaxCutSwapNeighbor, Qubo, QuboSolution, QuboSwapNeighbor, VertexCover,
+            VertexCoverSwapNeighbor,
+        };
+        use crate::search_state::{MoveToNeighbor, ProblemTrait};
+        use rand::Rng;
+
+        let mut rng = SmallRng::seed_from_u64(9);
+        let edges: Vec<(usize, usize, f32)> = (0..40)
+            .map(|_| {
+                (
+                    rng.random_range(0..15),
+                    rng.random_range(0..15),
+                    rng.random_range(-3.0..3.0),
+                )
+            })
+            .filter(|&(a, b, _)| a != b)
+            .collect();
+        let graph = Graph::from_edges(edges.iter().copied());
+        let mc = MaxCut::new(graph.clone());
+        let qubo = Qubo::from_entries(edges.iter().map(|&(a, b, w)| (a, b, w as i32)));
+        let vc = VertexCover::new(graph);
+        for _ in 0..5 {
+            let sol: MaxCutSolution = mc.new_solution(&mut rng);
+            let scanned: Vec<_> = MaxCutSwapNeighbor::iter(&mc, &sol)
+                .map(|m| (m.i, m.j, m.gain))
+                .collect();
+            let built: Vec<_> = differing_pairs(&mc, &sol)
+                .map(|(i, j)| (i, j, MaxCutSwapNeighbor::new(&mc, &sol, i, j).gain))
+                .collect();
+            assert_eq!(scanned, built);
+
+            let sol: QuboSolution = qubo.new_solution(&mut rng);
+            let scanned: Vec<_> = QuboSwapNeighbor::iter(&qubo, &sol)
+                .map(|m| (m.i, m.j, m.gain))
+                .collect();
+            let built: Vec<_> = differing_pairs(&qubo, &sol)
+                .map(|(i, j)| (i, j, QuboSwapNeighbor::new(&qubo, &sol, i, j).gain))
+                .collect();
+            assert_eq!(scanned, built);
+
+            let sol = vc.new_solution(&mut rng);
+            let scanned: Vec<_> = VertexCoverSwapNeighbor::iter(&vc, &sol)
+                .map(|m| (m.i, m.j, m.gain))
+                .collect();
+            let built: Vec<_> = differing_pairs(&vc, &sol)
+                .map(|(i, j)| (i, j, VertexCoverSwapNeighbor::new(&vc, &sol, i, j).gain))
+                .collect();
+            assert_eq!(scanned, built);
+        }
     }
 }

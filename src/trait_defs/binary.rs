@@ -70,7 +70,7 @@ pub trait BinaryProblem: ProblemTrait + Sized {
 
 /// One past the largest variable index, the length an assignment covering
 /// every variable needs.
-fn variable_count<P: BinaryProblem>(prob: &P) -> usize {
+pub(crate) fn variable_count<P: BinaryProblem>(prob: &P) -> usize {
     prob.variable_indices().max().map_or(0, |i| i + 1)
 }
 
