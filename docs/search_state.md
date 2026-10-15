@@ -199,4 +199,7 @@ compare against.
 Every source of randomness reaches `state.rng` and nothing else: initial
 solutions, `random_neighbor`, tabu tenures, crossovers, perturbations, and the
 seeds of sub-runs and reductions. Fix the seed at construction and the whole
-composition, nested meta-heuristics included, replays bit for bit.
+composition, nested meta-heuristics included, replays bit for bit up to where it
+stops. A stop on `duration()` reads the clock, so it lands on a different
+iteration from one rerun to the next, and only the stops that count iterations
+end a seeded run in the same place every time.

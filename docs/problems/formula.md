@@ -62,6 +62,13 @@ There is no file loader. The problem is built in code, as above.
 `Evaluable::Minimize(objective + penalty)`, which is what the search ranks by.
 `eval_objective` and `eval_penalty` give the two parts on their own.
 
+Because the ranking is by that sum, the best solution can break a constraint
+when a small violation costs less than it adds to the objective. A weight
+larger than the whole range of the objective, divided by the smallest violation
+a solution can have, rules that out. A smaller weight, which lets the search
+pass through infeasible solutions more easily, does not, so check that
+`eval_penalty(values)` is `0` before you take the result as feasible.
+
 | Method | Type | Meaning |
 |---|---|---|
 | `values()` | `&[i64]` | the value of every variable, in the order of the ranges given at construction |

@@ -5,8 +5,10 @@
 //! dimension has its own capacity. One binary variable per item says whether
 //! it is packed. The objective is the packed value, and one constraint per
 //! dimension keeps the load within capacity, charging the overweight at twice
-//! the best value per unit of weight, so no overweight packing can beat a
-//! feasible one.
+//! the best value per unit of weight. That makes taking an item out pay
+//! whenever the load stays over capacity without it. A packing only a little
+//! over can still rank above every feasible one, so the program prints the
+//! penalty of the packing it found, which is 0 when it fits.
 //!
 //! The relaxation is the point of this example. Dropping every dimension but
 //! one leaves an ordinary knapsack, whose fractional fill bounds the packed
@@ -111,6 +113,7 @@ fn main() {
         println!("dimension {d}: weight = {load} of {}", capacity[d]);
     }
     println!("value = {}", prob.eval_objective(x));
+    println!("penalty = {}", prob.eval_penalty(x));
     println!(
         "proven optimal = {}",
         bnb.is_proven_optimal(&state.best_solution)

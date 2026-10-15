@@ -18,7 +18,8 @@ cargo run --release -- path/to/config.toml
 ```toml
 num_runs = 10                          # (インスタンス, ヒューリスティクス) の組ごとの繰り返し回数
 seed = 42                              # 任意のマスターシード。設定すると再実行が
-                                       # ビット単位で一致する (各実行が自分のシードを導出する)
+                                       # ビット単位で一致する (各実行が自分のシードを導出する)。
+                                       # ただし max_duration_secs で打ち切られる実行は除く
 
 [[instances]]
 path = "data/instances/max_cut/G*"     # ファイルパスまたは glob (Gset のファイルには拡張子がない)
@@ -34,6 +35,10 @@ max_failed_update = 5_000
 ```
 
 `[[instances]]` と `[[heuristics]]` はそれぞれ複数書けます。ランナーはその直積を実行します。
+
+`max_duration_secs` による停止は、時計がその時間に達したときの iteration で終わり、その位置は再実行のたびに変わります。
+そのためシードを固定しても、時間で止まる実行が同じ結果を返すのは、どちらの停止よりも前に最良解を見つけていた場合だけです。
+各実行に時間予算を与えつつビット単位で再実行したいときは、一度実行して何 iteration 進んだかを読み、代わりに `max_iteration` をその回数にして止めてください。
 
 ## ヒューリスティクスの kind { #heuristic-kinds }
 

@@ -70,8 +70,11 @@ outer `iterations(10_000)` budget governs the overall run.
 
 ## Tips
 
-- `iterations` is the most reproducible (no clock dependency), use it in
-  tests and benchmarks where you need deterministic stops.
+- `iterations` is the only limit that stops a seeded run at the same place on
+  every rerun. A `duration` stop lands on a different iteration each time, so
+  with a fixed seed the result repeats only if the best was found before
+  either stop. Use `iterations` in tests and benchmarks that must rerun bit for
+  bit.
 - `duration` is best for time-budgeted comparisons across machines.
 - `failed_updates` is the natural condition for "run until it stops finding
   improvements", pair with `LocalSearch` (which forces it to `1`) or with the

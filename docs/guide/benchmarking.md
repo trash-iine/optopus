@@ -18,7 +18,8 @@ Output is written to `result/<config_stem>_<timestamp>.toml`.
 ```toml
 num_runs = 10                          # repetitions per (instance, heuristic) pair
 seed = 42                              # optional master seed; when set, reruns are
-                                       # bit-identical (each run derives its own seed)
+                                       # bit-identical (each run derives its own seed),
+                                       # except runs cut short by max_duration_secs
 
 [[instances]]
 path = "data/instances/max_cut/G*"     # file path or glob (Gset files have no extension)
@@ -35,6 +36,12 @@ max_failed_update = 5_000
 
 Multiple `[[instances]]` and `[[heuristics]]` blocks are allowed; the runner
 takes the Cartesian product.
+
+A `max_duration_secs` stop ends on whatever iteration the clock reaches, which
+changes from one rerun to the next, so a seeded run that stops on time repeats
+its result only when it found its best before either stop. To give each run a
+time budget and still rerun it bit for bit, time one run, read how many
+iterations it got through, and stop with `max_iteration` at that count instead.
 
 ## Heuristic kinds
 
