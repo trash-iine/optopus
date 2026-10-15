@@ -52,6 +52,18 @@ conditions](../guide/stop_conditions.md).
 
 Panics if `tabu_tenure.0 > tabu_tenure.1`.
 
+## Choosing the tenure
+
+The tenure decides how far the search gets from a local optimum before the
+moves that left it are free again. Too short and it falls back into the optimum
+it just left, too long and it runs out of moves worth taking. The upper end
+grows with the number of variables, and on a graph it grows as the graph gets
+sparser. On the 800-vertex G-set graphs, `MaxCut` with `MaxCutFlipNeighbor` in a
+20 second run did best at about `(3, 80)` on the dense G1, whose average degree
+is 48, and at `(5, 150)` to `(15, 300)` on G14 and G11, whose average degrees
+are 12 and 4, while `(10, 30)` stayed well behind on all three. Scale those to
+the size of your instance as a first guess.
+
 ## Where the tabu map lives
 
 The map is on the [`SearchState`](../search_state.md), not on this heuristic.

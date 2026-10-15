@@ -38,6 +38,18 @@ println!("visiting order = {:?}", sol.tour);
 Like `LocalSearch`, it stops at a local optimum, so a budget larger than one
 descent only pays inside [`Restart` or `Iterated`](meta.md).
 
+```rust
+let mut ils = Iterated::<Tsp>::new(
+    StopCondition::duration(std::time::Duration::from_secs(10)),
+    Box::new(LinKernighanHelsgaunForTsp::new(StopCondition::iterations(10_000), 5, 5)),
+    Box::new(RandomWalk::<TspTwoOptNeighbor>::new(StopCondition::iterations(5))),
+);
+ils.run(&mut state)?;
+```
+
+Each round descends with this heuristic, then kicks the tour with five random
+2-opt moves, and the best tour over all rounds is kept.
+
 ## Algorithm sketch
 
 For each starting city, the algorithm extends a chain of edge swaps:

@@ -173,7 +173,10 @@ weights, keeps that state in its own struct, updates it in `run_once`, and
 resets it in `clear`. `run` calls `clear` before the first `run_once`, so every
 run starts from the reset values. The stop condition's limits are public
 fields, so the reset can size the state to the run's budget, as
-[Stop conditions](stop_conditions.md) describes.
+[Stop conditions](stop_conditions.md) describes. `clear` is not given the
+state, so a value that depends on the instance, a threshold scaled to the
+starting objective for one, is set on the first `run_once`, where
+`state.initial_solution` already holds the solution the run starts from.
 
 ```rust
 struct KickingDescent<N> {

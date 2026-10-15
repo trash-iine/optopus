@@ -36,6 +36,17 @@ println!("visiting order = {:?}", sol.tour);
 
 `LocalSearch` と同じく局所最適で止まるので、一回の降下より大きな予算が生きるのは [`Restart` や `Iterated`](meta.md) の中だけです。
 
+```rust
+let mut ils = Iterated::<Tsp>::new(
+    StopCondition::duration(std::time::Duration::from_secs(10)),
+    Box::new(LinKernighanHelsgaunForTsp::new(StopCondition::iterations(10_000), 5, 5)),
+    Box::new(RandomWalk::<TspTwoOptNeighbor>::new(StopCondition::iterations(5))),
+);
+ils.run(&mut state)?;
+```
+
+各ラウンドはこのヒューリスティクスで降下し、ランダムな 2-opt を 5 回かけてツアーを揺らします。全ラウンドを通じた最良ツアーが残ります。
+
 ## アルゴリズムの概要 { #algorithm-sketch }
 
 各開始都市について、アルゴリズムは辺交換の連鎖を伸ばしていきます。
