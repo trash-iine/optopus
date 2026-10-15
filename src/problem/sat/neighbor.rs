@@ -171,12 +171,44 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
         crate::building_blocks::representation::apply_swap_as_two_flips(prob, sol, self.i, self.j)
     }
 
-    /// Iterates the precomputed clause-sharing pairs lazily (no per-call
-    /// allocation); the pair list itself is cached on the problem.
+    /// Iterates the precomputed clause-sharing pairs, the list cached on the
+    /// problem, a run of pairs with the same `i` at a time.
+    ///
+    /// Flipping `i` changes the gains of the variables sharing a clause with
+    /// it through those clauses only, so one pass over the clauses of `i`
+    /// prices `j`'s gain after the flip for every `j` of the run, the same
+    /// value [`SatSwapNeighbor::new`] reads with one walk of `j`'s clauses per
+    /// pair.
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
+        let mut x = sol.x.clone();
+        let mut shift = vec![0i64; prob.n_vars()];
         prob.clause_sharing_pairs()
-            .iter()
-            .map(move |&(i, j)| Self::new(prob, sol, i, j))
+            .chunk_by(|a, b| a.0 == b.0)
+            .flat_map(move |run| {
+                let i = run[0].0;
+                for &c in prob.clauses_of(i) {
+                    prob.add_clause_shares(c, &x, &mut shift, -1);
+                }
+                x[i] = !x[i];
+                for &c in prob.clauses_of(i) {
+                    prob.add_clause_shares(c, &x, &mut shift, 1);
+                }
+                x[i] = !x[i];
+                let moves: Vec<Self> = run
+                    .iter()
+                    .map(|&(i, j)| Self {
+                        i,
+                        j,
+                        gain: sol.gain[i] + sol.gain[j] + shift[j],
+                    })
+                    .collect();
+                for &c in prob.clauses_of(i) {
+                    for &lit in prob.clause(c) {
+                        shift[lit.unsigned_abs() as usize - 1] = 0;
+                    }
+                }
+                moves
+            })
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
@@ -397,5 +429,39 @@ mod tests {
         // make_sat-based instance: adding a clause resets its cache too.
         sat.add_clause([1, 2, 3]);
         assert_eq!(sat.clause_sharing_pairs(), &[(0, 1), (0, 2), (1, 2)]);
+    }
+
+    /// The scan that prices a run of pairs from one pass over the clauses of
+    /// their first variable agrees with pricing every pair on its own, on a
+    /// random formula and on one with tautologies and repeated literals.
+    #[test]
+    fn swap_scan_prices_every_pair_as_new_does() {
+        use rand::{Rng, SeedableRng};
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(8);
+        let mut random = Sat::new(12);
+        for _ in 0..40 {
+            let lits: Vec<i64> = (0..3)
+                .map(|_| {
+                    let v = rng.random_range(1..=12);
+                    if rng.random_bool(0.5) { v } else { -v }
+                })
+                .collect();
+            random.add_clause(lits);
+        }
+        for sat in [random, make_degenerate_sat()] {
+            for _ in 0..10 {
+                let x = (0..sat.n_vars()).map(|_| rng.random_bool(0.5)).collect();
+                let sol = make_solution(&sat, x);
+                let scanned: Vec<_> = SatSwapNeighbor::iter(&sat, &sol)
+                    .map(|m| (m.i, m.j, m.gain))
+                    .collect();
+                let priced: Vec<_> = sat
+                    .clause_sharing_pairs()
+                    .iter()
+                    .map(|&(i, j)| (i, j, SatSwapNeighbor::new(&sat, &sol, i, j).gain))
+                    .collect();
+                assert_eq!(scanned, priced);
+            }
+        }
     }
 }
