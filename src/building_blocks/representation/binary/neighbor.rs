@@ -38,19 +38,33 @@ where
     })
 }
 
+/// Draws of two variables before [`random_differing_pair`] falls back to its
+/// counting pass. A draw lands with the probability that two variables
+/// differ, about one half on a balanced assignment.
+const PAIR_DRAWS: usize = 16;
+
 /// A uniformly random pair `(i, j)` with `j < i` whose values differ in
 /// `sol`, or `None` when every variable holds the same value.
 ///
-/// O(n) and allocation free: one pass counts each side, then one variable is
-/// drawn from each side, so every differing pair is hit with equal
-/// probability, the distribution of sampling [`differing_pairs`] uniformly.
-/// The per-problem `*SwapNeighbor::random_neighbor` impls delegate to this
-/// function.
+/// Two variables are drawn with [`BinaryProblem::random_variable`] and kept
+/// if they differ, which is uniform over the differing pairs and O(1) per
+/// draw on the built-in problems. When sixteen draws all miss, the
+/// values are nearly all equal, and one O(n) pass counts each side and draws
+/// one variable from each, uniform too. Either way the distribution is that of
+/// sampling [`differing_pairs`] uniformly. The per-problem
+/// `*SwapNeighbor::random_neighbor` impls delegate to this function.
 pub fn random_differing_pair<P: BinaryProblem>(
     prob: &P,
     sol: &P::Solution,
     rng: &mut impl Rng,
 ) -> Option<(usize, usize)> {
+    for _ in 0..PAIR_DRAWS {
+        let a = prob.random_variable(rng)?;
+        let b = prob.random_variable(rng)?;
+        if P::variable(sol, a) != P::variable(sol, b) {
+            return Some((a.max(b), a.min(b)));
+        }
+    }
     let (mut n_false, mut n_true) = (0, 0);
     for i in prob.variable_indices() {
         if P::variable(sol, i) {
@@ -73,4 +87,43 @@ pub fn random_differing_pair<P: BinaryProblem>(
         .filter(|&i| P::variable(sol, i))
         .nth(k_true)?;
     Some((a.max(b), a.min(b)))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::{HashMap, HashSet};
+
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    use super::*;
+    use crate::building_blocks::instance::Graph;
+    use crate::problem::MaxCut;
+
+    /// Both the drawing and the counting path reach exactly the differing
+    /// pairs, each about equally often.
+    #[test]
+    fn random_pairs_are_uniform_over_the_differing_pairs() {
+        let mc = MaxCut::new(Graph::from_edges((0..12).map(|i| (i, (i + 1) % 12, 1.0))));
+        let mut rng = SmallRng::seed_from_u64(5);
+        // Balanced, where the draws land, and one-sided, where they mostly
+        // miss and the counting pass answers.
+        for ones in [6, 1] {
+            let values: Vec<bool> = (0..12).map(|i| i < ones).collect();
+            let sol = mc.solution_from_assignment(&values).unwrap();
+            let listed: HashSet<_> = differing_pairs(&mc, &sol).collect();
+            let mut counts = HashMap::new();
+            for _ in 0..400 * listed.len() {
+                let pair = random_differing_pair(&mc, &sol, &mut rng).unwrap();
+                *counts.entry(pair).or_insert(0usize) += 1;
+            }
+            assert_eq!(counts.keys().copied().collect::<HashSet<_>>(), listed);
+            assert!(
+                counts.values().all(|&c| (250..550).contains(&c)),
+                "{counts:?}"
+            );
+        }
+        let same = mc.solution_from_assignment(&[false; 12]).unwrap();
+        assert!(random_differing_pair(&mc, &same, &mut rng).is_none());
+    }
 }

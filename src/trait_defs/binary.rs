@@ -1,5 +1,7 @@
 //! Trait for problems over binary variables.
 
+use rand::Rng;
+
 use super::{MoveToNeighbor, ProblemTrait};
 use crate::error::OptError;
 
@@ -20,6 +22,20 @@ pub trait BinaryProblem: ProblemTrait + Sized {
     /// [`representation`](crate::building_blocks::representation) can build
     /// the `Send` neighborhoods [`MoveToNeighbor::iter`] requires.
     fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_;
+
+    /// One of [`variable_indices`](Self::variable_indices) drawn uniformly,
+    /// or `None` when there are none.
+    ///
+    /// The default walks the indices, which is O(n). A problem that keeps
+    /// them in a slice should answer in O(1), since the random swap moves
+    /// draw through this.
+    fn random_variable(&self, rng: &mut impl Rng) -> Option<usize> {
+        let n = self.variable_indices().count();
+        if n == 0 {
+            return None;
+        }
+        self.variable_indices().nth(rng.random_range(0..n))
+    }
 
     /// Returns the value of variable `i` in `sol`.
     fn variable(sol: &Self::Solution, i: usize) -> bool;

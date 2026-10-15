@@ -329,6 +329,10 @@ impl crate::trait_defs::BinaryProblem for Sat {
         0..self.n_vars
     }
 
+    fn random_variable(&self, rng: &mut impl rand::Rng) -> Option<usize> {
+        (self.n_vars > 0).then(|| rng.random_range(0..self.n_vars))
+    }
+
     fn variable(sol: &SatSolution, i: usize) -> bool {
         sol.x[i]
     }

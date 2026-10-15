@@ -283,6 +283,11 @@ impl BinaryProblem for MaxCut {
         self.graph.iter_on_vertices().copied()
     }
 
+    fn random_variable(&self, rng: &mut impl rand::Rng) -> Option<usize> {
+        let v = &self.graph.vertices;
+        (!v.is_empty()).then(|| v[rng.random_range(0..v.len())])
+    }
+
     fn variable(sol: &MaxCutSolution, i: usize) -> bool {
         sol.x[i]
     }
