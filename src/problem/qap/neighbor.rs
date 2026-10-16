@@ -112,8 +112,8 @@ impl MoveToNeighbor<Qap> for QapSwapNeighbor {
         let deltas = prob.swap_deltas(sol);
         pair_scan(
             n,
-            move |i| i + 1..n,
-            move |i, j| {
+            move |i| ((), i + 1..n),
+            move |_, i, j| {
                 Some(match deltas {
                     Some(d) => Self {
                         i,

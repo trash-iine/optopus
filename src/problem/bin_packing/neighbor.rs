@@ -178,8 +178,8 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
     fn iter(prob: &BinPacking, sol: &BinPackingSolution) -> impl Iterator<Item = Self> + Send {
         pair_scan(
             prob.num_items(),
-            move |_| 0..sol.num_bins(),
-            move |item, to| Self::new(prob, sol, item, to),
+            move |_| ((), 0..sol.num_bins()),
+            move |_, item, to| Self::new(prob, sol, item, to),
         )
     }
 

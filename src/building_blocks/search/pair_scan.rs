@@ -3,40 +3,44 @@
 
 use std::ops::Range;
 
-/// The moves `build(i, j)` gives, for `i` in `0..n` and `j` in `inner(i)`, in
-/// that order, skipping the pairs where it gives `None`.
+/// The moves `build(row, i, j)` gives, for `i` in `0..n` and `j` in the range
+/// `inner(i)` returns, in that order, skipping the pairs where it gives
+/// `None`. `inner(i)` also returns what every pair of row `i` shares, built
+/// once per row and handed to `build` as `row`.
 ///
 /// It lists what `(0..n).flat_map(|i| inner(i).map(move |j| (i, j)))`
-/// followed by `filter_map(|(i, j)| build(i, j))` lists, as one iterator
-/// whose `next` and `fold` run as plain loops over the two indices.
-pub fn pair_scan<T, R, B>(n: usize, inner: R, build: B) -> PairScan<R, B>
+/// followed by a `filter_map` over `build` lists, as one iterator whose
+/// `next` and `fold` run as plain loops over the two indices.
+pub fn pair_scan<T, C, R, B>(n: usize, inner: R, build: B) -> PairScan<C, R, B>
 where
-    R: Fn(usize) -> Range<usize>,
-    B: Fn(usize, usize) -> Option<T>,
+    R: Fn(usize) -> (C, Range<usize>),
+    B: Fn(&C, usize, usize) -> Option<T>,
 {
     PairScan {
         n,
         i: 0,
         j: 0,
+        row: None,
         inner,
         build,
     }
 }
 
-/// The iterator [`pair_scan`] returns, at row `i` with the `j`s of
-/// `inner(i)` below `j` already listed.
-pub struct PairScan<R, B> {
+/// The iterator [`pair_scan`] returns. While row `i` is under way, `row`
+/// holds what it shares and where its range ends, and `j` is its next pair.
+pub struct PairScan<C, R, B> {
     n: usize,
     i: usize,
     j: usize,
+    row: Option<(C, usize)>,
     inner: R,
     build: B,
 }
 
-impl<T, R, B> Iterator for PairScan<R, B>
+impl<T, C, R, B> Iterator for PairScan<C, R, B>
 where
-    R: Fn(usize) -> Range<usize>,
-    B: Fn(usize, usize) -> Option<T>,
+    R: Fn(usize) -> (C, Range<usize>),
+    B: Fn(&C, usize, usize) -> Option<T>,
 {
     type Item = T;
 
@@ -50,43 +54,45 @@ where
     #[inline]
     fn next(&mut self) -> Option<T> {
         let mut i = self.i;
-        if i >= self.n {
-            return None;
-        }
-        let row = (self.inner)(i);
-        for j in row.start.max(self.j)..row.end {
-            if let Some(m) = (self.build)(i, j) {
-                self.j = j + 1;
-                return Some(m);
+        if let Some((shared, end)) = &self.row {
+            for j in self.j..*end {
+                if let Some(m) = (self.build)(shared, i, j) {
+                    self.j = j + 1;
+                    return Some(m);
+                }
             }
+            self.row = None;
+            i += 1;
         }
-        i += 1;
         while i < self.n {
-            for j in (self.inner)(i) {
-                if let Some(m) = (self.build)(i, j) {
-                    (self.i, self.j) = (i, j + 1);
+            let (shared, Range { start, end }) = (self.inner)(i);
+            for j in start..end {
+                if let Some(m) = (self.build)(&shared, i, j) {
+                    (self.i, self.j, self.row) = (i, j + 1, Some((shared, end)));
                     return Some(m);
                 }
             }
             i += 1;
         }
-        (self.i, self.j) = (i, 0);
+        self.i = i;
         None
     }
 
     fn fold<A, F: FnMut(A, T) -> A>(self, init: A, mut f: F) -> A {
         let mut acc = init;
-        if self.i < self.n {
-            let row = (self.inner)(self.i);
-            for j in row.start.max(self.j)..row.end {
-                if let Some(m) = (self.build)(self.i, j) {
+        let mut i = self.i;
+        if let Some((shared, end)) = self.row {
+            for j in self.j..end {
+                if let Some(m) = (self.build)(&shared, i, j) {
                     acc = f(acc, m);
                 }
             }
+            i += 1;
         }
-        for i in self.i + 1..self.n {
-            for j in (self.inner)(i) {
-                if let Some(m) = (self.build)(i, j) {
+        for i in i..self.n {
+            let (shared, range) = (self.inner)(i);
+            for j in range {
+                if let Some(m) = (self.build)(&shared, i, j) {
                     acc = f(acc, m);
                 }
             }
@@ -105,17 +111,21 @@ mod tests {
     #[test]
     fn pair_scan_lists_what_flat_map_lists() {
         for n in 0..7 {
-            let inner = |i: usize| i + 1..n.max(i + 1).min(i + 4);
-            let build = |i: usize, j: usize| (!(i + j).is_multiple_of(3)).then_some((i, j));
+            let range = |i: usize| i + 1..n.max(i + 1).min(i + 4);
+            let inner = |i: usize| (10 * i, range(i));
+            let build = |&shared: &usize, i: usize, j: usize| {
+                (!(i + j).is_multiple_of(3)).then_some((shared, i, j))
+            };
             let expected: Vec<_> = (0..n)
-                .flat_map(|i| inner(i).map(move |j| (i, j)))
-                .filter_map(|(i, j)| build(i, j))
+                .flat_map(|i| range(i).map(move |j| (i, j)))
+                .filter_map(|(i, j)| build(&(10 * i), i, j))
                 .collect();
             let by_next: Vec<_> = {
                 let mut it = pair_scan(n, inner, build);
                 std::iter::from_fn(|| it.next()).collect()
             };
             assert_eq!(by_next, expected, "n = {n}");
+
             for k in 0..=expected.len() {
                 let mut it = pair_scan(n, inner, build);
                 let head: Vec<_> = it.by_ref().take(k).collect();
