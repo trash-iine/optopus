@@ -57,25 +57,126 @@ where
     W: Copy + Default + Send,
     I: Iterator<Item = (usize, W)>,
 {
-    let mut dense = vec![W::default(); crate::trait_defs::variable_count(prob)];
-    prob.variable_indices().flat_map(move |i| {
-        for (j, w) in row(i) {
-            if let Some(slot) = dense.get_mut(j) {
+    RowPairs::<P, _, _, W, _>::new(
+        sol,
+        row,
+        move || prob.variable_indices(),
+        crate::trait_defs::variable_count(prob),
+    )
+}
+
+/// The scan [`differing_pairs_by_row`] returns. `current` is the `i` whose
+/// row is in `dense`, its value, and the `j`s still to list for it.
+///
+/// `fold`, which is how `max_by` and `filter` drive a scan, finishes the
+/// current `i` and then runs the rest as two plain loops, which is what the
+/// tour's 2-opt scan gained by (decisions/0031).
+struct RowPairs<'a, P: BinaryProblem, R, K, W, O> {
+    sol: &'a P::Solution,
+    row: R,
+    indices: K,
+    dense: Vec<W>,
+    outer: O,
+    current: Option<(usize, bool, O)>,
+}
+
+impl<'a, P, R, K, W, I, O> RowPairs<'a, P, R, K, W, O>
+where
+    P: BinaryProblem,
+    R: Fn(usize) -> I,
+    K: Fn() -> O,
+    W: Copy + Default,
+    I: Iterator<Item = (usize, W)>,
+    O: Iterator<Item = usize>,
+{
+    fn new(sol: &'a P::Solution, row: R, indices: K, len: usize) -> Self {
+        let outer = indices();
+        Self {
+            sol,
+            row,
+            indices,
+            dense: vec![W::default(); len],
+            outer,
+            current: None,
+        }
+    }
+
+    fn fill(&mut self, i: usize) {
+        for (j, w) in (self.row)(i) {
+            if let Some(slot) = self.dense.get_mut(j) {
                 *slot = w;
             }
         }
-        let pairs: Vec<(usize, usize, W)> = prob
-            .variable_indices()
-            .filter(|&j| j < i && P::variable(sol, i) != P::variable(sol, j))
-            .map(|j| (i, j, dense[j]))
-            .collect();
-        for (j, _) in row(i) {
-            if let Some(slot) = dense.get_mut(j) {
+    }
+
+    fn clear(&mut self, i: usize) {
+        for (j, _) in (self.row)(i) {
+            if let Some(slot) = self.dense.get_mut(j) {
                 *slot = W::default();
             }
         }
-        pairs
-    })
+    }
+}
+
+impl<P, R, K, W, I, O> Iterator for RowPairs<'_, P, R, K, W, O>
+where
+    P: BinaryProblem,
+    R: Fn(usize) -> I,
+    K: Fn() -> O,
+    W: Copy + Default,
+    I: Iterator<Item = (usize, W)>,
+    O: Iterator<Item = usize>,
+{
+    type Item = (usize, usize, W);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some((i, vi, js)) = &mut self.current {
+                let (i, vi) = (*i, *vi);
+                for j in js.by_ref() {
+                    if j < i && vi != P::variable(self.sol, j) {
+                        return Some((i, j, self.dense[j]));
+                    }
+                }
+                self.clear(i);
+                self.current = None;
+            }
+            let i = self.outer.next()?;
+            self.fill(i);
+            self.current = Some((i, P::variable(self.sol, i), (self.indices)()));
+        }
+    }
+
+    fn fold<B, F: FnMut(B, Self::Item) -> B>(mut self, init: B, mut f: F) -> B {
+        let mut acc = init;
+        if let Some((i, vi, js)) = self.current.take() {
+            for j in js {
+                if j < i && vi != P::variable(self.sol, j) {
+                    acc = f(acc, (i, j, self.dense[j]));
+                }
+            }
+            self.clear(i);
+        }
+        for i in self.outer.by_ref() {
+            for (j, w) in (self.row)(i) {
+                if let Some(slot) = self.dense.get_mut(j) {
+                    *slot = w;
+                }
+            }
+            let vi = P::variable(self.sol, i);
+            for j in (self.indices)() {
+                if j < i && vi != P::variable(self.sol, j) {
+                    acc = f(acc, (i, j, self.dense[j]));
+                }
+            }
+            for (j, _) in (self.row)(i) {
+                if let Some(slot) = self.dense.get_mut(j) {
+                    *slot = W::default();
+                }
+            }
+        }
+        acc
+    }
 }
 
 /// Draws of two variables before [`random_differing_pair`] falls back to its
@@ -203,6 +304,17 @@ mod tests {
                 .map(|(i, j)| (i, j, MaxCutSwapNeighbor::new(&mc, &sol, i, j).gain))
                 .collect();
             assert_eq!(scanned, built);
+            // `collect` reads by `next`, `fold` by its own loops, and a scan
+            // may switch from the first to the second at any pair.
+            for k in 0..=built.len() {
+                let mut it = MaxCutSwapNeighbor::iter(&mc, &sol);
+                let head: Vec<_> = it.by_ref().take(k).map(|m| (m.i, m.j, m.gain)).collect();
+                let all = it.fold(head, |mut acc, m| {
+                    acc.push((m.i, m.j, m.gain));
+                    acc
+                });
+                assert_eq!(all, built, "switched after {k}");
+            }
 
             let sol: QuboSolution = qubo.new_solution(&mut rng);
             let scanned: Vec<_> = QuboSwapNeighbor::iter(&qubo, &sol)
