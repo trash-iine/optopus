@@ -426,9 +426,7 @@ impl Heuristic<Sat> for WalkSat {
 
 /// Recomputes the cached per-variable gain array of `sol` from scratch.
 fn recompute_gains(instance: &Sat, sol: &mut crate::problem::SatSolution) {
-    for i in 0..instance.n_vars() {
-        sol.gain[i] = instance.calc_gain(&sol.x, i);
-    }
+    instance.fill_gains(&sol.x, &mut sol.gain);
 }
 
 #[cfg(test)]

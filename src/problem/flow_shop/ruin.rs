@@ -180,9 +180,11 @@ impl LocalRepair<FlowShop> for FlowShopInsertionDescent {
         let (rest, without) = (&mut self.rest, &mut self.without);
         self.sweep.set_order(partial.sequence.iter().copied());
         self.sweep.sweep(rng, usize::MAX, |job| {
+            let k = partial.pos[job];
             rest.clear();
-            rest.extend(partial.sequence.iter().copied().filter(|&j| j != job));
-            without.rebuild(prob, rest);
+            rest.extend_from_slice(&partial.sequence[..k]);
+            rest.extend_from_slice(&partial.sequence[k + 1..]);
+            without.rebuild_without(prob, &partial.table, rest, k);
             let (place, makespan) = without.best_insertion(prob, job);
             if makespan >= partial.makespan() {
                 return false;

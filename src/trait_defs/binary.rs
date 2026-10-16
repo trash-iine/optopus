@@ -1,5 +1,7 @@
 //! Trait for problems over binary variables.
 
+use rand::Rng;
+
 use super::{MoveToNeighbor, ProblemTrait};
 use crate::error::OptError;
 
@@ -20,6 +22,39 @@ pub trait BinaryProblem: ProblemTrait + Sized {
     /// [`representation`](crate::building_blocks::representation) can build
     /// the `Send` neighborhoods [`MoveToNeighbor::iter`] requires.
     fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_;
+
+    /// One of [`variable_indices`](Self::variable_indices) drawn uniformly,
+    /// or `None` when there are none.
+    ///
+    /// <div class="warning">
+    /// The default walks the indices, which is O(n). A problem that keeps
+    /// them in a slice should answer in O(1), since the random swap moves
+    /// draw through this, several times per move.
+    ///
+    /// When this default is invoked at runtime, a one-shot
+    /// <code>tracing::warn!</code> names the problem type that reached it. The
+    /// <code>OnceLock</code> behind it is a single <code>static</code> inside a
+    /// generic function, which Rust shares across every monomorphization, so
+    /// the warning is emitted once for the process rather than once per
+    /// problem.
+    /// </div>
+    fn random_variable(&self, rng: &mut impl Rng) -> Option<usize> {
+        // One `static` for the whole process, as in `Ruinable::partial_energy`.
+        static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+        WARNED.get_or_init(|| {
+            tracing::warn!(
+                problem_type = std::any::type_name::<Self>(),
+                "Using the default implementation of BinaryProblem::random_variable, \
+                 which walks variable_indices on every draw. Override it with an \
+                 O(1) draw for random swap moves."
+            );
+        });
+        let n = self.variable_indices().count();
+        if n == 0 {
+            return None;
+        }
+        self.variable_indices().nth(rng.random_range(0..n))
+    }
 
     /// Returns the value of variable `i` in `sol`.
     fn variable(sol: &Self::Solution, i: usize) -> bool;
@@ -54,7 +89,7 @@ pub trait BinaryProblem: ProblemTrait + Sized {
 
 /// One past the largest variable index, the length an assignment covering
 /// every variable needs.
-fn variable_count<P: BinaryProblem>(prob: &P) -> usize {
+pub(crate) fn variable_count<P: BinaryProblem>(prob: &P) -> usize {
     prob.variable_indices().max().map_or(0, |i| i + 1)
 }
 

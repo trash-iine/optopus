@@ -38,7 +38,8 @@ impl SatSolution {
     /// assert_eq!(sol.n_satisfied, 2);
     /// ```
     pub fn new_from_assignment(sat: &Sat, x: Vec<bool>) -> Self {
-        let gain = (0..sat.n_vars()).map(|i| sat.calc_gain(&x, i)).collect();
+        let mut gain = vec![0; sat.n_vars()];
+        sat.fill_gains(&x, &mut gain);
         let n_satisfied = sat.calc_satisfied(&x);
         Self {
             x,
@@ -92,6 +93,9 @@ pub struct Sat {
     /// `i < j`, the swap-move neighborhood. Built on first use and reset by
     /// [`Sat::add_clause`].
     swap_pairs: std::sync::OnceLock<Vec<(usize, usize)>>,
+    /// `distinct_vars[c]` is true when no variable occurs twice in clause
+    /// `c`, which lets [`Sat::add_clause_shares`] take its O(length) path.
+    distinct_vars: Vec<bool>,
 }
 
 impl Sat {
@@ -102,6 +106,7 @@ impl Sat {
             clauses_per_var: vec![vec![]; n_vars],
             var_neighbors: vec![vec![]; n_vars],
             swap_pairs: std::sync::OnceLock::new(),
+            distinct_vars: Vec::new(),
         }
     }
 
@@ -149,6 +154,7 @@ impl Sat {
             }
         }
         self.swap_pairs = std::sync::OnceLock::new();
+        self.distinct_vars.push(vars.len() == clause.len());
         self.clauses.push(clause);
     }
 
@@ -181,7 +187,7 @@ impl Sat {
     /// one clause with variable `i` (0-indexed), excluding `i` itself.
     ///
     /// This is the precomputed set of variables whose gain may change when
-    /// variable `i` is flipped, used by [`super::neighbor::SatFlipNeighbor`].
+    /// variable `i` is flipped, and the swap neighborhood is built from it.
     pub fn var_neighbors(&self, i: usize) -> &[usize] {
         &self.var_neighbors[i]
     }
@@ -239,6 +245,64 @@ impl Sat {
             gain += will_be_sat as i64 - was_sat as i64;
         }
         gain
+    }
+
+    /// Adds `sign` times clause `c`'s share of every flip gain to `gain`,
+    /// reading the assignment `x`.
+    ///
+    /// A clause adds to the gain of each variable in it the change in its own
+    /// satisfaction if that variable flipped, and nothing to any other
+    /// variable. Taking out the shares of the clauses that hold `i` before
+    /// flipping `i` and adding them back after updates every gain the flip
+    /// changes, in O(length) per clause. A variable that occurs twice flips
+    /// all its occurrences at once, as in [`Sat::calc_gain`].
+    pub(crate) fn add_clause_shares(&self, c: usize, x: &[bool], gain: &mut [i64], sign: i64) {
+        let clause = &self.clauses[c];
+        let var = |lit: i64| lit.unsigned_abs() as usize - 1;
+        let sat = |lit: i64| x[var(lit)] == (lit > 0);
+        let true_now = clause.iter().filter(|&&lit| sat(lit)).count();
+        let was = (true_now > 0) as i64;
+        if self.distinct_vars[c] {
+            for &lit in clause {
+                let s = sat(lit) as usize;
+                let after = true_now - s + (1 - s);
+                gain[var(lit)] += sign * ((after > 0) as i64 - was);
+            }
+            return;
+        }
+        for (p, &lit) in clause.iter().enumerate() {
+            let v = var(lit);
+            if clause[..p].iter().any(|&l| var(l) == v) {
+                continue;
+            }
+            let (mut s, mut u) = (0, 0);
+            for &l in clause.iter().filter(|&&l| var(l) == v) {
+                if sat(l) {
+                    s += 1;
+                } else {
+                    u += 1;
+                }
+            }
+            let after = true_now - s + u;
+            gain[v] += sign * ((after > 0) as i64 - was);
+        }
+    }
+
+    /// Sets `gain[i]` to [`Sat::calc_gain`] of every variable under `x`.
+    ///
+    /// Every clause adds its share to the gains of its own variables, so one
+    /// pass over the clauses gives every gain, where asking each variable
+    /// walks every clause once per variable in it.
+    pub(crate) fn fill_gains(&self, x: &[bool], gain: &mut [i64]) {
+        gain.fill(0);
+        for c in 0..self.clauses.len() {
+            self.add_clause_shares(c, x, gain, 1);
+        }
+    }
+
+    /// The indices of the clauses that hold variable `i` (0-indexed).
+    pub(crate) fn clauses_of(&self, i: usize) -> &[usize] {
+        &self.clauses_per_var[i]
     }
 
     /// Loads a MaxSAT instance from a DIMACS CNF file.
@@ -327,6 +391,10 @@ impl crate::trait_defs::BinaryProblem for Sat {
 
     fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_ {
         0..self.n_vars
+    }
+
+    fn random_variable(&self, rng: &mut impl rand::Rng) -> Option<usize> {
+        (self.n_vars > 0).then(|| rng.random_range(0..self.n_vars))
     }
 
     fn variable(sol: &SatSolution, i: usize) -> bool {

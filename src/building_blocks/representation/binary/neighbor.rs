@@ -38,19 +38,73 @@ where
     })
 }
 
+/// Every pair [`differing_pairs`] yields, in the same order, with the value
+/// `row(i)` lists for `j`, or `W::default()` when it lists none.
+///
+/// The swap moves price a pair by the interaction between its two variables,
+/// which a lookup in `i`'s row finds by binary search. Here one pass over
+/// `row(i)` fills a dense scratch before the pairs of `i` are listed and
+/// another clears it after, so a pair costs O(1) and an `i` its row length on
+/// top. The per-problem `*SwapNeighbor::iter` impls delegate to this function.
+pub fn differing_pairs_by_row<P, W, I>(
+    prob: &P,
+    sol: &P::Solution,
+    row: impl Fn(usize) -> I + Send,
+) -> impl Iterator<Item = (usize, usize, W)> + Send
+where
+    P: BinaryProblem + Sync,
+    P::Solution: Sync,
+    W: Copy + Default + Send,
+    I: Iterator<Item = (usize, W)>,
+{
+    let mut dense = vec![W::default(); crate::trait_defs::variable_count(prob)];
+    prob.variable_indices().flat_map(move |i| {
+        for (j, w) in row(i) {
+            if let Some(slot) = dense.get_mut(j) {
+                *slot = w;
+            }
+        }
+        let pairs: Vec<(usize, usize, W)> = prob
+            .variable_indices()
+            .filter(|&j| j < i && P::variable(sol, i) != P::variable(sol, j))
+            .map(|j| (i, j, dense[j]))
+            .collect();
+        for (j, _) in row(i) {
+            if let Some(slot) = dense.get_mut(j) {
+                *slot = W::default();
+            }
+        }
+        pairs
+    })
+}
+
+/// Draws of two variables before [`random_differing_pair`] falls back to its
+/// counting pass. A draw lands with the probability that two variables
+/// differ, about one half on a balanced assignment.
+const PAIR_DRAWS: usize = 16;
+
 /// A uniformly random pair `(i, j)` with `j < i` whose values differ in
 /// `sol`, or `None` when every variable holds the same value.
 ///
-/// O(n) and allocation free: one pass counts each side, then one variable is
-/// drawn from each side, so every differing pair is hit with equal
-/// probability, the distribution of sampling [`differing_pairs`] uniformly.
-/// The per-problem `*SwapNeighbor::random_neighbor` impls delegate to this
-/// function.
+/// Two variables are drawn with [`BinaryProblem::random_variable`] and kept
+/// if they differ, which is uniform over the differing pairs and O(1) per
+/// draw on the built-in problems. When sixteen draws all miss, the
+/// values are nearly all equal, and one O(n) pass counts each side and draws
+/// one variable from each, uniform too. Either way the distribution is that of
+/// sampling [`differing_pairs`] uniformly. The per-problem
+/// `*SwapNeighbor::random_neighbor` impls delegate to this function.
 pub fn random_differing_pair<P: BinaryProblem>(
     prob: &P,
     sol: &P::Solution,
     rng: &mut impl Rng,
 ) -> Option<(usize, usize)> {
+    for _ in 0..PAIR_DRAWS {
+        let a = prob.random_variable(rng)?;
+        let b = prob.random_variable(rng)?;
+        if P::variable(sol, a) != P::variable(sol, b) {
+            return Some((a.max(b), a.min(b)));
+        }
+    }
     let (mut n_false, mut n_true) = (0, 0);
     for i in prob.variable_indices() {
         if P::variable(sol, i) {
@@ -73,4 +127,100 @@ pub fn random_differing_pair<P: BinaryProblem>(
         .filter(|&i| P::variable(sol, i))
         .nth(k_true)?;
     Some((a.max(b), a.min(b)))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::{HashMap, HashSet};
+
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    use super::*;
+    use crate::building_blocks::instance::Graph;
+    use crate::problem::MaxCut;
+
+    /// Both the drawing and the counting path reach exactly the differing
+    /// pairs, each about equally often.
+    #[test]
+    fn random_pairs_are_uniform_over_the_differing_pairs() {
+        let mc = MaxCut::new(Graph::from_edges((0..12).map(|i| (i, (i + 1) % 12, 1.0))));
+        let mut rng = SmallRng::seed_from_u64(5);
+        // Balanced, where the draws land, and one-sided, where they mostly
+        // miss and the counting pass answers.
+        for ones in [6, 1] {
+            let values: Vec<bool> = (0..12).map(|i| i < ones).collect();
+            let sol = mc.solution_from_assignment(&values).unwrap();
+            let listed: HashSet<_> = differing_pairs(&mc, &sol).collect();
+            let mut counts = HashMap::new();
+            for _ in 0..400 * listed.len() {
+                let pair = random_differing_pair(&mc, &sol, &mut rng).unwrap();
+                *counts.entry(pair).or_insert(0usize) += 1;
+            }
+            assert_eq!(counts.keys().copied().collect::<HashSet<_>>(), listed);
+            assert!(
+                counts.values().all(|&c| (250..550).contains(&c)),
+                "{counts:?}"
+            );
+        }
+        let same = mc.solution_from_assignment(&[false; 12]).unwrap();
+        assert!(random_differing_pair(&mc, &same, &mut rng).is_none());
+    }
+
+    /// The swap scans that read the interaction from a dense row price every
+    /// pair as the moves' own constructors do, in the order `differing_pairs`
+    /// lists them, on MaxCut, QUBO and Vertex Cover.
+    #[test]
+    fn row_scans_price_pairs_as_the_constructors_do() {
+        use crate::problem::{
+            MaxCutSolution, MaxCutSwapNeighbor, Qubo, QuboSolution, QuboSwapNeighbor, VertexCover,
+            VertexCoverSwapNeighbor,
+        };
+        use crate::search_state::{MoveToNeighbor, ProblemTrait};
+        use rand::Rng;
+
+        let mut rng = SmallRng::seed_from_u64(9);
+        let edges: Vec<(usize, usize, f32)> = (0..40)
+            .map(|_| {
+                (
+                    rng.random_range(0..15),
+                    rng.random_range(0..15),
+                    rng.random_range(-3.0..3.0),
+                )
+            })
+            .filter(|&(a, b, _)| a != b)
+            .collect();
+        let graph = Graph::from_edges(edges.iter().copied());
+        let mc = MaxCut::new(graph.clone());
+        let qubo = Qubo::from_entries(edges.iter().map(|&(a, b, w)| (a, b, w as i32)));
+        let vc = VertexCover::new(graph);
+        for _ in 0..5 {
+            let sol: MaxCutSolution = mc.new_solution(&mut rng);
+            let scanned: Vec<_> = MaxCutSwapNeighbor::iter(&mc, &sol)
+                .map(|m| (m.i, m.j, m.gain))
+                .collect();
+            let built: Vec<_> = differing_pairs(&mc, &sol)
+                .map(|(i, j)| (i, j, MaxCutSwapNeighbor::new(&mc, &sol, i, j).gain))
+                .collect();
+            assert_eq!(scanned, built);
+
+            let sol: QuboSolution = qubo.new_solution(&mut rng);
+            let scanned: Vec<_> = QuboSwapNeighbor::iter(&qubo, &sol)
+                .map(|m| (m.i, m.j, m.gain))
+                .collect();
+            let built: Vec<_> = differing_pairs(&qubo, &sol)
+                .map(|(i, j)| (i, j, QuboSwapNeighbor::new(&qubo, &sol, i, j).gain))
+                .collect();
+            assert_eq!(scanned, built);
+
+            let sol = vc.new_solution(&mut rng);
+            let scanned: Vec<_> = VertexCoverSwapNeighbor::iter(&vc, &sol)
+                .map(|m| (m.i, m.j, m.gain))
+                .collect();
+            let built: Vec<_> = differing_pairs(&vc, &sol)
+                .map(|(i, j)| (i, j, VertexCoverSwapNeighbor::new(&vc, &sol, i, j).gain))
+                .collect();
+            assert_eq!(scanned, built);
+        }
+    }
 }

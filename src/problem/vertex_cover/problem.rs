@@ -166,6 +166,11 @@ impl crate::trait_defs::BinaryProblem for VertexCover {
         self.graph.iter_on_vertices().copied()
     }
 
+    fn random_variable(&self, rng: &mut impl rand::Rng) -> Option<usize> {
+        let v = &self.graph.vertices;
+        (!v.is_empty()).then(|| v[rng.random_range(0..v.len())])
+    }
+
     fn variable(sol: &VertexCoverSolution, i: usize) -> bool {
         sol.x[i]
     }

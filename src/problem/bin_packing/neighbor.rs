@@ -11,7 +11,7 @@ use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 ///
 /// A drawn pair is uniform over all pairs and kept only if feasible, which is
 /// uniform over the feasible ones. When most pairs are infeasible the draws
-/// rarely land, and the fallback lists them instead, which is uniform too.
+/// rarely land, and the fallback counts them instead, which is uniform too.
 const RANDOM_DRAWS: usize = 64;
 
 /// The objective and fill term once the loads of the touched bins change,
@@ -65,6 +65,49 @@ impl BinPackingRelocateNeighbor {
             to,
             gain: priced(prob, sol, &changes).0 - sol.objective,
         })
+    }
+
+    /// A move drawn uniformly from the feasible ones, or `None` if there are
+    /// none, without listing them.
+    ///
+    /// With the bins sorted by load, the bins an item fits into are a prefix,
+    /// so each item's count is one binary search and the draw costs
+    /// O(n log B) rather than the O(n B) of the full neighborhood.
+    fn uniform_feasible(
+        prob: &BinPacking,
+        sol: &BinPackingSolution,
+        rng: &mut SmallRng,
+    ) -> Option<Self> {
+        let mut order: Vec<usize> = (0..sol.num_bins()).collect();
+        order.sort_unstable_by_key(|&b| sol.loads[b]);
+        let fits_in = |item: usize| {
+            let Some(room) = prob.capacity.checked_sub(prob.sizes[item]) else {
+                return 0;
+            };
+            let k = order.partition_point(|&b| sol.loads[b] <= room);
+            k - usize::from(sol.loads[sol.bin_of[item]] <= room)
+        };
+        let total: usize = (0..prob.num_items()).map(fits_in).sum();
+        if total == 0 {
+            return None;
+        }
+        let mut r = rng.random_range(0..total);
+        for item in 0..prob.num_items() {
+            let k = fits_in(item);
+            if r >= k {
+                r -= k;
+                continue;
+            }
+            let from = sol.bin_of[item];
+            let to = order
+                .iter()
+                .copied()
+                .filter(|&b| b != from)
+                .nth(r)
+                .expect("the count covers this bin");
+            return Self::new(prob, sol, item, to);
+        }
+        unreachable!("the draw is below the total count")
     }
 }
 
@@ -154,7 +197,7 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
                 return Some(m);
             }
         }
-        Self::iter(prob, sol).choose(rng)
+        Self::uniform_feasible(prob, sol, rng)
     }
 }
 
@@ -329,5 +372,40 @@ mod tests {
         assert_eq!(after.num_bins(), 2);
         assert!(m.gain < 0.0);
         assert!(after.bin_of.iter().all(|&b| b < 2));
+    }
+
+    /// The draw without listing reaches exactly the moves the listing has,
+    /// each about equally often.
+    #[test]
+    fn uniform_draw_covers_the_listed_moves_evenly() {
+        let bp = instance();
+        let sol = bp.new_solution(&mut SmallRng::seed_from_u64(3));
+        let listed: std::collections::HashSet<_> = BinPackingRelocateNeighbor::iter(&bp, &sol)
+            .map(|m| (m.item, m.to))
+            .collect();
+        let mut rng = SmallRng::seed_from_u64(4);
+        let draws = 200 * listed.len();
+        let mut counts = std::collections::HashMap::new();
+        for _ in 0..draws {
+            let m = BinPackingRelocateNeighbor::uniform_feasible(&bp, &sol, &mut rng).unwrap();
+            *counts.entry((m.item, m.to)).or_insert(0usize) += 1;
+        }
+        assert_eq!(
+            counts
+                .keys()
+                .copied()
+                .collect::<std::collections::HashSet<_>>(),
+            listed
+        );
+        assert!(counts.values().all(|&c| (100..300).contains(&c)));
+
+        let tight = BinPacking::new("full", 10, vec![6, 4, 5, 5]);
+        let full = tight.solution_from_bins(vec![0, 0, 1, 1]).unwrap();
+        assert!(
+            BinPackingRelocateNeighbor::iter(&tight, &full)
+                .next()
+                .is_none()
+        );
+        assert!(BinPackingRelocateNeighbor::uniform_feasible(&tight, &full, &mut rng).is_none());
     }
 }

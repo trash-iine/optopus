@@ -253,4 +253,73 @@ mod default_move_warning_tests {
             "expected exactly one random_neighbor warning, got {count}: {logs}"
         );
     }
+    // A binary problem that keeps the default random_variable.
+    struct ToyBits;
+
+    #[derive(Clone, Debug)]
+    struct ToyBitsSolution(Vec<bool>);
+
+    impl Evaluate for ToyBitsSolution {
+        fn evaluate(&self) -> Evaluable<f64> {
+            Evaluable::Maximize(self.0.iter().filter(|&&b| b).count() as f64)
+        }
+    }
+
+    impl ProblemTrait for ToyBits {
+        type Solution = ToyBitsSolution;
+        fn new_solution(&self, _rng: &mut impl rand::Rng) -> Self::Solution {
+            ToyBitsSolution(vec![false, true, false])
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    struct ToyFlip(usize);
+
+    impl MoveToNeighbor<ToyBits> for ToyFlip {
+        fn apply_to_solution(
+            &self,
+            _prob: &ToyBits,
+            sol: &mut ToyBitsSolution,
+        ) -> Result<(), crate::error::OptError> {
+            sol.0[self.0] = !sol.0[self.0];
+            Ok(())
+        }
+        fn iter(_p: &ToyBits, s: &ToyBitsSolution) -> impl Iterator<Item = Self> + Send {
+            (0..s.0.len()).map(ToyFlip)
+        }
+    }
+
+    impl crate::trait_defs::BinaryProblem for ToyBits {
+        type Flip = ToyFlip;
+        fn variable_indices(&self) -> impl Iterator<Item = usize> + Send + '_ {
+            0..3
+        }
+        fn variable(sol: &ToyBitsSolution, i: usize) -> bool {
+            sol.0[i]
+        }
+        fn flip_move(_sol: &ToyBitsSolution, i: usize) -> ToyFlip {
+            ToyFlip(i)
+        }
+    }
+
+    /// The default draw still lands on every variable, and says once that it
+    /// walks the indices.
+    #[test]
+    fn default_random_variable_warns_once_and_draws_every_variable() {
+        use crate::trait_defs::BinaryProblem;
+        use rand::SeedableRng;
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+        let mut seen = [false; 3];
+        let logs = captured(|| {
+            for _ in 0..100 {
+                seen[ToyBits.random_variable(&mut rng).unwrap()] = true;
+            }
+        });
+        assert_eq!(seen, [true; 3]);
+        let count = logs.matches("BinaryProblem::random_variable").count();
+        assert_eq!(
+            count, 1,
+            "expected exactly one warning, got {count}: {logs}"
+        );
+    }
 }

@@ -18,7 +18,7 @@
 use super::{MaxCut, MaxCutSolution};
 use crate::{
     building_blocks::{
-        representation::{differing_pairs, random_differing_pair},
+        representation::{differing_pairs_by_row, random_differing_pair},
         search::{TabuKey, TabuMemory},
     },
     error::OptError,
@@ -242,10 +242,18 @@ impl MaxCutSwapNeighbor {
     /// for them, so this does not pay for a separate `has_edge` lookup, the
     /// perturbation operators call it once per move.
     pub fn new(prob: &MaxCut, sol: &MaxCutSolution, i: usize, j: usize) -> Self {
+        Self::with_weight(sol, i, j, || prob.graph.get_weight(i, j))
+    }
+
+    /// The swap of `i` and `j` joined by an edge of weight `w()`, `0.0` for
+    /// none, the one place the correction is written. The weight is read
+    /// after the two gains, the order `new` has always read them in.
+    #[inline(always)]
+    fn with_weight(sol: &MaxCutSolution, i: usize, j: usize, w: impl FnOnce() -> f32) -> Self {
         Self {
             i,
             j,
-            gain: sol.gain[i] + sol.gain[j] + 2.0 * prob.graph.get_weight(i, j),
+            gain: sol.gain[i] + sol.gain[j] + 2.0 * w(),
         }
     }
 }
@@ -297,7 +305,8 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
     /// The gain is computed as `gain[i] + gain[j] + 2*w(i,j)` to account for
     /// the interaction when both vertices are flipped simultaneously.
     fn iter(prob: &MaxCut, sol: &MaxCutSolution) -> impl Iterator<Item = Self> + Send {
-        differing_pairs(prob, sol).map(move |(i, j)| Self::new(prob, sol, i, j))
+        differing_pairs_by_row(prob, sol, |i| prob.graph.neighbors(i).copied())
+            .map(move |(i, j, w)| Self::with_weight(sol, i, j, || w))
     }
 
     /// Returns `true` if applying this swap to `src` would produce a solution

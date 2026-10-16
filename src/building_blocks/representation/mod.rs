@@ -13,8 +13,9 @@ mod permutation;
 pub(crate) use binary::fixed_by;
 pub use binary::{
     BinaryFixing, BinaryRelaxation, apply_swap_as_two_flips, binary_node, binary_ranges,
-    binary_solution_with, binary_value, differing_pairs, lift_binary_solution,
-    lift_compact_binary_solution, random_differing_pair, uniform_binary_crossover, variable_slots,
+    binary_solution_with, binary_value, differing_pairs, differing_pairs_by_row,
+    lift_binary_solution, lift_compact_binary_solution, random_differing_pair,
+    uniform_binary_crossover, variable_slots,
 };
 pub use integer::{DomainRestriction, IntVar, IntVars};
 pub use permutation::{check_permutation, order_crossover};
