@@ -193,7 +193,8 @@ fn removal_gain(prob: &Tsp, sol: &TspSolution, pos: usize) -> f64 {
 fn insertion_cost(prob: &Tsp, sol: &TspSolution, pos: usize, ins: usize) -> f64 {
     let n = sol.tour.len();
     let ins_next = (ins + 1) % n;
-    prob.distance(sol.tour[ins], sol.tour[pos]) + prob.distance(sol.tour[pos], sol.tour[ins_next])
+    prob.distance_to(sol.tour[ins], sol.tour[pos])
+        + prob.distance(sol.tour[pos], sol.tour[ins_next])
         - prob.distance(sol.tour[ins], sol.tour[ins_next])
 }
 

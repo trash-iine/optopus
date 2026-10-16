@@ -97,7 +97,7 @@ impl TspPartial {
         }
         let prev = self.tour[self.before(place)];
         let next = self.tour[place];
-        prob.distance(prev, c) + prob.distance(c, next) - prob.distance(prev, next)
+        prob.distance_to(prev, c) + prob.distance(c, next) - prob.distance(prev, next)
     }
 
     /// Reverses the cyclic segment from index `start` forward to index
