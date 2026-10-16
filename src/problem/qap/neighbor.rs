@@ -1,7 +1,7 @@
 use rand::rngs::SmallRng;
 
 use super::problem::{Qap, QapSolution};
-use crate::building_blocks::search::{TabuMemory, random_distinct_pair};
+use crate::building_blocks::search::{TabuMemory, pair_scan, random_distinct_pair};
 use crate::error::OptError;
 use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 
@@ -110,18 +110,22 @@ impl MoveToNeighbor<Qap> for QapSwapNeighbor {
     fn iter(prob: &Qap, sol: &QapSolution) -> impl Iterator<Item = Self> + Send {
         let n = sol.assignment.len();
         let deltas = prob.swap_deltas(sol);
-        (0..n)
-            .flat_map(move |i| (i + 1..n).map(move |j| (i, j)))
-            .map(move |(i, j)| match deltas {
-                Some(d) => Self {
-                    i,
-                    j,
-                    loc_i: sol.assignment[i],
-                    loc_j: sol.assignment[j],
-                    gain: d[i * n + j],
-                },
-                None => Self::new(prob, sol, i, j),
-            })
+        pair_scan(
+            n,
+            move |i| i + 1..n,
+            move |i, j| {
+                Some(match deltas {
+                    Some(d) => Self {
+                        i,
+                        j,
+                        loc_i: sol.assignment[i],
+                        loc_j: sol.assignment[j],
+                        gain: d[i * n + j],
+                    },
+                    None => Self::new(prob, sol, i, j),
+                })
+            },
+        )
     }
 
     fn random_neighbor(prob: &Qap, sol: &QapSolution, rng: &mut SmallRng) -> Option<Self> {

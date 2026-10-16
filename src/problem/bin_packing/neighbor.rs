@@ -3,7 +3,7 @@ use rand::rngs::SmallRng;
 use rand::seq::IteratorRandom;
 
 use super::problem::{BinPacking, BinPackingSolution};
-use crate::building_blocks::search::{TabuKey, TabuMemory};
+use crate::building_blocks::search::{TabuKey, TabuMemory, pair_scan};
 use crate::error::OptError;
 use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 
@@ -176,10 +176,11 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
     }
 
     fn iter(prob: &BinPacking, sol: &BinPackingSolution) -> impl Iterator<Item = Self> + Send {
-        let bins = sol.num_bins();
-        (0..prob.num_items())
-            .flat_map(move |item| (0..bins).map(move |to| (item, to)))
-            .filter_map(move |(item, to)| Self::new(prob, sol, item, to))
+        pair_scan(
+            prob.num_items(),
+            move |_| 0..sol.num_bins(),
+            move |item, to| Self::new(prob, sol, item, to),
+        )
     }
 
     fn random_neighbor(
