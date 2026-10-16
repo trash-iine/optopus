@@ -3,7 +3,7 @@
 - Status: reference
 - Area: all
 - Date: 2026-09-07
-- Code: Cargo.toml (`lto = "fat"`), src/building_blocks/search/tabu.rs
+- Code: Cargo.toml (`lto = "fat"`), src/building_blocks/search/tabu.rs, src/heuristic/specific/max_cut/mod.rs (`max_cut_descent`)
 
 ## Decision
 
@@ -13,8 +13,8 @@ unattributed until the instruction streams have been compared.
 
 Code layout. A semantically identical change, with the same instruction stream
 and heap layout, moved Breakout Local Search by 7 to 10%. Two spellings of the
-same stop condition differ by 7%, which is why `descend` hands `LocalSearch` an
-unreachable iteration cap rather than an empty condition.
+same stop condition differ by 7%, which is why `max_cut_descent` hands
+`LocalSearch` an unreachable iteration cap rather than an empty condition.
 
 Heap layout. A scan walks the graph's vertex list, the solution's gains and
 the dense tabu array in lockstep, and where the allocator puts them decides

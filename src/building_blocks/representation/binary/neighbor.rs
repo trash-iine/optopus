@@ -69,8 +69,7 @@ where
 /// row is in `dense`, its value, and the `j`s still to list for it.
 ///
 /// `fold`, which is how `max_by` and `filter` drive a scan, finishes the
-/// current `i` and then runs the rest as two plain loops, which is what the
-/// tour's 2-opt scan gained by (decisions/0020).
+/// current `i` and then runs the rest as two plain loops.
 struct RowPairs<'a, P: BinaryProblem, R, K, W, O> {
     sol: &'a P::Solution,
     row: R,

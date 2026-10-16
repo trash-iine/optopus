@@ -169,7 +169,7 @@ type Runs<'a> =
 /// cleared when it ends.
 ///
 /// `fold`, which is how `max_by` and `filter` drive a scan, runs as two plain
-/// loops, as the binary swap scan does (decisions/0020).
+/// loops.
 struct SwapScan<'a, 's> {
     prob: &'a Sat,
     sol: &'s SatSolution,
