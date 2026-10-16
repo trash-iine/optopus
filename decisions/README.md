@@ -38,6 +38,7 @@ Read the table, open the one file you need.
 | [0028](0028-parallel-tempering-is-level-with-population-annealing-on-the-g-set.md) | heuristic, max_cut | reference | Parallel tempering shares the Metropolis sweep with population annealing, and is level with it on the G-set |
 | [0029](0029-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
 | [0030](0030-a-profile-loop-over-every-problem.md) | all | reference | A profile loop over every problem, what each fix measured against the alignment noise, and what was left |
+| [0032](0032-nested-scans-as-plain-loops.md) | max_cut, qubo, vertex_cover, sat, qap, bin_packing, vrp | reference | Nested neighborhood scans pay as plain loops where the adapters collected rows or nested three deep, and only measured against both a tabu and a descent run |
 
 ## Writing a new record
 

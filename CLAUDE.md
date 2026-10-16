@@ -97,6 +97,8 @@ src/
 │       ├── ruin_recreate.rs  the destroy / repair operators over any Ruinable, plus
 │       │                     restricted_candidate_insertion (GRASP's construction)
 │       ├── sampling.rs       random_distinct_pair, the endpoints the position moves draw
+│       ├── pair_scan.rs      pair_scan, two nested index ranges as plain loops, which the
+│       │                     QAP, bin packing relocate and VRP swap / 2-opt scans list with
 │       ├── adaptive_weights.rs  AdaptiveWeights, the roulette the operators are picked by
 │       ├── metropolis.rs     boltzmann_accept and the Metropolis sweep PA and PT share
 │       └── anchored_sweep.rs AnchoredSweep, the anchor widening and shuffled sweep
