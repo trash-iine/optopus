@@ -37,6 +37,7 @@ Read the table, open the one file you need.
 | [0027](0027-grasp-is-a-composition-and-its-construction-is-only-as-good-as-the-insertion-cost.md) | heuristic, flow_shop, bin_packing | reference | GRASP is `Iterated` with a construction step, and it pays only where cheapest insertion is a good greedy rule |
 | [0028](0028-parallel-tempering-is-level-with-population-annealing-on-the-g-set.md) | heuristic, max_cut | reference | Parallel tempering shares the Metropolis sweep with population annealing, and is level with it on the G-set |
 | [0029](0029-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
+| [0031](0031-tsp-distance-time-is-loop-shape-not-memory.md) | tsp | reference | The TSP's distance time was the scan's loop shape, not the matrix's memory, and f32 storage is not worth it |
 
 ## Writing a new record
 
