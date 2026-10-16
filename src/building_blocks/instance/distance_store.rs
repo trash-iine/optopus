@@ -137,6 +137,14 @@ enum Store {
 pub struct DistanceStore {
     n: usize,
     store: Store,
+    /// Whether `distance(i, j) == distance(j, i)` for every pair, checked on
+    /// the matrix when it is built rather than assumed from the formula.
+    symmetric: bool,
+}
+
+/// Whether the `n × n` row-major `matrix` equals its transpose exactly.
+fn is_symmetric_matrix(matrix: &[f64], n: usize) -> bool {
+    (0..n).all(|i| (i + 1..n).all(|j| matrix[i * n + j] == matrix[j * n + i]))
 }
 
 impl DistanceStore {
@@ -158,6 +166,7 @@ impl DistanceStore {
         }
         Self {
             n,
+            symmetric: is_symmetric_matrix(&matrix, n),
             store: Store::Full {
                 matrix,
                 geometry: Some(geometry),
@@ -184,6 +193,9 @@ impl DistanceStore {
         Self {
             n,
             store: Store::Nearest { rows, geometry },
+            // Not checked, so the callers that read a row instead of a column
+            // keep to the order they were asked in.
+            symmetric: false,
         }
     }
 
@@ -206,11 +218,23 @@ impl DistanceStore {
         }
         Ok(Self {
             n,
+            symmetric: is_symmetric_matrix(&flat, n),
             store: Store::Full {
                 matrix: flat,
                 geometry: None,
             },
         })
+    }
+
+    /// Whether every pair has the same distance both ways, exactly.
+    ///
+    /// A full matrix is checked once when it is built. A nearest-neighbour
+    /// store answers `false`, which only means the question was not asked.
+    /// A caller that walks one node's distances to many others reads them as
+    /// `distance(c, x)` when this holds, along `c`'s row, rather than down a
+    /// column.
+    pub fn is_symmetric(&self) -> bool {
+        self.symmetric
     }
 
     /// The number of nodes.
@@ -418,5 +442,23 @@ mod tests {
         let store =
             DistanceStore::from_coordinates(vec![(0.0, 0.0), (1.0, 1.0)], EdgeWeightType::Ceil2d);
         assert_eq!(store.distance(0, 1), 2.0);
+    }
+
+    /// A store says it is symmetric only when its matrix equals its
+    /// transpose, and a nearest-neighbour store never claims it.
+    #[test]
+    fn symmetry_is_read_off_the_matrix() {
+        let coords = vec![(0.0, 0.0), (3.0, 4.0), (6.0, 0.0)];
+        assert!(
+            DistanceStore::from_coordinates(coords.clone(), EdgeWeightType::Euc2d).is_symmetric()
+        );
+        assert!(
+            !DistanceStore::nearest_from_coordinates(coords, EdgeWeightType::Euc2d, 1)
+                .is_symmetric()
+        );
+        let sym = vec![vec![0.0, 2.0], vec![2.0, 0.0]];
+        assert!(DistanceStore::from_matrix(sym).unwrap().is_symmetric());
+        let asym = vec![vec![0.0, 2.0], vec![3.0, 0.0]];
+        assert!(!DistanceStore::from_matrix(asym).unwrap().is_symmetric());
     }
 }
