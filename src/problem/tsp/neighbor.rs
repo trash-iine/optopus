@@ -94,6 +94,104 @@ impl EnabledTabu for TspTwoOptNeighbor {
     }
 }
 
+/// Every 2-opt move of a tour, `i` outer and `j` inner, the order the scan
+/// has always listed them in.
+///
+/// The length of every tour edge is read once up front, so a move `(i, j)`
+/// reads its two tour edges from that array, and `fold`, which is how
+/// `max_by` and `filter` drive a scan, runs as two plain loops. The gain is
+/// `calc_2opt_gain_cities` with the same operands in the same order.
+struct TwoOptScan<'p, 's> {
+    prob: &'p Tsp,
+    tour: &'s [usize],
+    edges: Vec<f64>,
+    i: usize,
+    j: usize,
+    max_j: usize,
+    a: usize,
+    b: usize,
+}
+
+impl<'p, 's> TwoOptScan<'p, 's> {
+    fn new(prob: &'p Tsp, sol: &'s TspSolution) -> Self {
+        let tour = &sol.tour[..];
+        let edges = (0..tour.len())
+            .map(|k| {
+                let (c, d) = prob.get_edge_from(&sol.tour, k);
+                prob.distance(c, d)
+            })
+            .collect();
+        let mut scan = Self {
+            prob,
+            tour,
+            edges,
+            i: 0,
+            j: 0,
+            max_j: 0,
+            a: 0,
+            b: 0,
+        };
+        scan.start_row(0);
+        scan
+    }
+
+    /// Moves to the moves of outer edge `i`. With `i = 0`, `j = n - 1` would
+    /// reverse the entire tour, which is the same tour, so it is left out.
+    fn start_row(&mut self, i: usize) {
+        let n = self.tour.len();
+        self.i = i;
+        self.j = i + 2;
+        self.max_j = if i == 0 { n.saturating_sub(1) } else { n };
+        if i + 1 < n {
+            (self.a, self.b) = (self.tour[i], self.tour[i + 1]);
+        }
+    }
+}
+
+impl Iterator for TwoOptScan<'_, '_> {
+    type Item = TspTwoOptNeighbor;
+
+    #[inline]
+    fn next(&mut self) -> Option<TspTwoOptNeighbor> {
+        let n = self.tour.len();
+        while self.j >= self.max_j {
+            if self.i + 2 >= n {
+                return None;
+            }
+            self.start_row(self.i + 1);
+        }
+        let (i, j) = (self.i, self.j);
+        self.j += 1;
+        let (c, d) = (self.tour[j], self.tour[(j + 1) % n]);
+        let gain = self.prob.distance(self.a, c) + self.prob.distance(self.b, d)
+            - self.edges[i]
+            - self.edges[j];
+        Some(TspTwoOptNeighbor { i, j, gain })
+    }
+
+    /// The same moves as `next`, as two plain loops, which is how `max_by`
+    /// and `filter` drive a scan.
+    fn fold<B, F: FnMut(B, Self::Item) -> B>(mut self, init: B, mut f: F) -> B {
+        let n = self.tour.len();
+        let mut acc = init;
+        while self.j < self.max_j {
+            acc = f(acc, self.next().expect("j is in range"));
+        }
+        for i in self.i + 1..n.saturating_sub(1) {
+            let max_j = if i == 0 { n - 1 } else { n };
+            let (a, b) = (self.tour[i], self.tour[i + 1]);
+            let d_ab = self.edges[i];
+            for j in i + 2..max_j {
+                let (c, d) = (self.tour[j], self.tour[(j + 1) % n]);
+                let gain =
+                    self.prob.distance(a, c) + self.prob.distance(b, d) - d_ab - self.edges[j];
+                acc = f(acc, TspTwoOptNeighbor { i, j, gain });
+            }
+        }
+        acc
+    }
+}
+
 impl MoveToNeighbor<Tsp> for TspTwoOptNeighbor {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
     /// what holds the tabu map.
@@ -108,25 +206,7 @@ impl MoveToNeighbor<Tsp> for TspTwoOptNeighbor {
     }
 
     fn iter(prob: &Tsp, sol: &TspSolution) -> impl Iterator<Item = Self> + Send {
-        let n = sol.tour.len();
-        (0..n - 1).flat_map(move |i| {
-            // When i=0, j=n-1 would reverse the entire tour (trivially equivalent for undirected),
-            // so exclude that case to avoid redundant moves
-            let max_j = if i == 0 { n - 1 } else { n };
-            // The outer edge and its length are shared by every j of this row,
-            // so they are looked up once. The sum is `calc_2opt_gain_cities`
-            // with the same operands in the same order.
-            let (a, b) = prob.get_edge_from(&sol.tour, i);
-            let d_ab = prob.distance(a, b);
-            (i + 2..max_j).map(move |j| {
-                let (c, d) = prob.get_edge_from(&sol.tour, j);
-                Self {
-                    i,
-                    j,
-                    gain: prob.distance(a, c) + prob.distance(b, d) - d_ab - prob.distance(c, d),
-                }
-            })
-        })
+        TwoOptScan::new(prob, sol)
     }
 
     fn move_to_be_better_than(&self, _: &Tsp, src: &TspSolution, other: &TspSolution) -> bool {
@@ -193,7 +273,8 @@ fn removal_gain(prob: &Tsp, sol: &TspSolution, pos: usize) -> f64 {
 fn insertion_cost(prob: &Tsp, sol: &TspSolution, pos: usize, ins: usize) -> f64 {
     let n = sol.tour.len();
     let ins_next = (ins + 1) % n;
-    prob.distance(sol.tour[ins], sol.tour[pos]) + prob.distance(sol.tour[pos], sol.tour[ins_next])
+    prob.distance_to(sol.tour[ins], sol.tour[pos])
+        + prob.distance(sol.tour[pos], sol.tour[ins_next])
         - prob.distance(sol.tour[ins], sol.tour[ins_next])
 }
 
@@ -521,5 +602,48 @@ mod tests {
             <TspTwoOptNeighbor as MoveToNeighbor<Tsp>>::random_neighbor(&tsp, &sol, &mut rng)
                 .is_none()
         );
+    }
+
+    /// The scan lists every move `(i, j)` in the order it always has, with
+    /// the gain `new` gives, whether it is read by `next`, by `fold`, or by
+    /// `next` for a while and `fold` for the rest.
+    #[test]
+    fn two_opt_scan_lists_the_moves_new_builds() {
+        use rand::{Rng, SeedableRng, seq::SliceRandom};
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(12);
+        for n in [3usize, 4, 5, 9, 30] {
+            let coords = (0..n)
+                .map(|_| (rng.random_range(0.0..100.0), rng.random_range(0.0..100.0)))
+                .collect();
+            let tsp = Tsp::new("random".to_string(), coords);
+            let mut tour: Vec<usize> = (0..n).collect();
+            tour.shuffle(&mut rng);
+            let objective = tsp.calculate_tour_length(&tour).unwrap();
+            let sol = TspSolution { tour, objective };
+            let expected: Vec<(usize, usize, f64)> = (0..n.saturating_sub(1))
+                .flat_map(|i| (i + 2..if i == 0 { n - 1 } else { n }).map(move |j| (i, j)))
+                .map(|(i, j)| (i, j, TspTwoOptNeighbor::new(&tsp, &sol, i, j).gain))
+                .collect();
+            let by_next: Vec<_> = {
+                let mut it = TspTwoOptNeighbor::iter(&tsp, &sol);
+                std::iter::from_fn(|| it.next())
+                    .map(|m| (m.i, m.j, m.gain))
+                    .collect()
+            };
+            let by_fold: Vec<_> = TspTwoOptNeighbor::iter(&tsp, &sol)
+                .map(|m| (m.i, m.j, m.gain))
+                .collect();
+            assert_eq!(by_next, expected, "n = {n}");
+            assert_eq!(by_fold, expected, "n = {n}");
+            for k in 0..expected.len() {
+                let mut it = TspTwoOptNeighbor::iter(&tsp, &sol);
+                let head: Vec<_> = it.by_ref().take(k).map(|m| (m.i, m.j, m.gain)).collect();
+                let tail = it.fold(head, |mut acc, m| {
+                    acc.push((m.i, m.j, m.gain));
+                    acc
+                });
+                assert_eq!(tail, expected, "n = {n}, k = {k}");
+            }
+        }
     }
 }

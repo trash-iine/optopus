@@ -295,6 +295,30 @@ impl Tsp {
         self.distances.distance(i, j)
     }
 
+    /// Whether every pair of cities has the same distance both ways, see
+    /// [`DistanceStore::is_symmetric`].
+    #[inline]
+    pub(crate) fn is_symmetric(&self) -> bool {
+        self.distances.is_symmetric()
+    }
+
+    /// The distance from `from` to `c`, read along `c`'s row when the
+    /// distances are symmetric.
+    ///
+    /// An insertion scan prices one city `c` against many places, so reading
+    /// `distance(c, from)` keeps every lookup in the one row of the matrix
+    /// that belongs to `c` instead of jumping to a new row per place. The
+    /// value is the same, since the store checked the matrix equals its
+    /// transpose.
+    #[inline]
+    pub(crate) fn distance_to(&self, from: usize, c: usize) -> f64 {
+        if self.is_symmetric() {
+            self.distance(c, from)
+        } else {
+            self.distance(from, c)
+        }
+    }
+
     /// For each city, its `k` nearest other cities in ascending distance.
     ///
     /// The candidate lists that Lin-Kernighan and the anchored tour descent
