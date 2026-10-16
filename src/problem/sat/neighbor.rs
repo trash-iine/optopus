@@ -155,6 +155,94 @@ impl Evaluate for SatSwapNeighbor {
     }
 }
 
+/// Whether two clause-sharing pairs have the same `i`, which is what splits
+/// the pair list into the runs [`SwapScan`] prices one at a time.
+fn same_i(a: &(usize, usize), b: &(usize, usize)) -> bool {
+    a.0 == b.0
+}
+
+type Runs<'a> =
+    std::slice::ChunkBy<'a, (usize, usize), fn(&(usize, usize), &(usize, usize)) -> bool>;
+
+/// The swap scan, a run of clause-sharing pairs with the same `i` at a time.
+/// `shift` holds the prices of `run`'s `i`, set when the run starts and
+/// cleared when it ends.
+///
+/// `fold`, which is how `max_by` and `filter` drive a scan, runs as two plain
+/// loops, as the binary swap scan does (decisions/0031).
+struct SwapScan<'a, 's> {
+    prob: &'a Sat,
+    sol: &'s SatSolution,
+    x: Vec<bool>,
+    shift: Vec<i64>,
+    runs: Runs<'a>,
+    run: &'a [(usize, usize)],
+}
+
+impl SwapScan<'_, '_> {
+    /// The change each clause of `i` makes to the gains of the variables it
+    /// holds when `i` flips.
+    fn price(&mut self, i: usize) {
+        let prob = self.prob;
+        for &c in prob.clauses_of(i) {
+            prob.add_clause_shares(c, &self.x, &mut self.shift, -1);
+        }
+        self.x[i] = !self.x[i];
+        for &c in prob.clauses_of(i) {
+            prob.add_clause_shares(c, &self.x, &mut self.shift, 1);
+        }
+        self.x[i] = !self.x[i];
+    }
+
+    fn clear(&mut self, i: usize) {
+        for &c in self.prob.clauses_of(i) {
+            for &lit in self.prob.clause(c) {
+                self.shift[lit.unsigned_abs() as usize - 1] = 0;
+            }
+        }
+    }
+}
+
+impl Iterator for SwapScan<'_, '_> {
+    type Item = SatSwapNeighbor;
+
+    fn next(&mut self) -> Option<SatSwapNeighbor> {
+        loop {
+            if let Some((&(i, j), rest)) = self.run.split_first() {
+                self.run = rest;
+                let gain = self.sol.gain[i] + self.sol.gain[j] + self.shift[j];
+                if rest.is_empty() {
+                    self.clear(i);
+                }
+                return Some(SatSwapNeighbor { i, j, gain });
+            }
+            self.run = self.runs.next()?;
+            self.price(self.run[0].0);
+        }
+    }
+
+    fn fold<B, F: FnMut(B, Self::Item) -> B>(mut self, init: B, mut f: F) -> B {
+        let mut acc = init;
+        if let Some(&(i, _)) = self.run.first() {
+            for &(i, j) in self.run {
+                let gain = self.sol.gain[i] + self.sol.gain[j] + self.shift[j];
+                acc = f(acc, SatSwapNeighbor { i, j, gain });
+            }
+            self.clear(i);
+        }
+        while let Some(run) = self.runs.next() {
+            let i = run[0].0;
+            self.price(i);
+            for &(i, j) in run {
+                let gain = self.sol.gain[i] + self.sol.gain[j] + self.shift[j];
+                acc = f(acc, SatSwapNeighbor { i, j, gain });
+            }
+            self.clear(i);
+        }
+        acc
+    }
+}
+
 impl MoveToNeighbor<Sat> for SatSwapNeighbor {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
     /// what holds the tabu map.
@@ -180,35 +268,14 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
     /// value [`SatSwapNeighbor::new`] reads with one walk of `j`'s clauses per
     /// pair.
     fn iter(prob: &Sat, sol: &SatSolution) -> impl Iterator<Item = Self> + Send {
-        let mut x = sol.x.clone();
-        let mut shift = vec![0i64; prob.n_vars()];
-        prob.clause_sharing_pairs()
-            .chunk_by(|a, b| a.0 == b.0)
-            .flat_map(move |run| {
-                let i = run[0].0;
-                for &c in prob.clauses_of(i) {
-                    prob.add_clause_shares(c, &x, &mut shift, -1);
-                }
-                x[i] = !x[i];
-                for &c in prob.clauses_of(i) {
-                    prob.add_clause_shares(c, &x, &mut shift, 1);
-                }
-                x[i] = !x[i];
-                let moves: Vec<Self> = run
-                    .iter()
-                    .map(|&(i, j)| Self {
-                        i,
-                        j,
-                        gain: sol.gain[i] + sol.gain[j] + shift[j],
-                    })
-                    .collect();
-                for &c in prob.clauses_of(i) {
-                    for &lit in prob.clause(c) {
-                        shift[lit.unsigned_abs() as usize - 1] = 0;
-                    }
-                }
-                moves
-            })
+        SwapScan {
+            prob,
+            sol,
+            x: sol.x.clone(),
+            shift: vec![0i64; prob.n_vars()],
+            runs: prob.clause_sharing_pairs().chunk_by(same_i),
+            run: &[],
+        }
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
@@ -433,7 +500,8 @@ mod tests {
 
     /// The scan that prices a run of pairs from one pass over the clauses of
     /// their first variable agrees with pricing every pair on its own, on a
-    /// random formula and on one with tautologies and repeated literals.
+    /// random formula and on one with tautologies and repeated literals,
+    /// whether it is read by `next`, by `fold`, or by both in turn.
     #[test]
     fn swap_scan_prices_every_pair_as_new_does() {
         use rand::{Rng, SeedableRng};
@@ -461,6 +529,17 @@ mod tests {
                     .map(|&(i, j)| (i, j, SatSwapNeighbor::new(&sat, &sol, i, j).gain))
                     .collect();
                 assert_eq!(scanned, priced);
+                // `collect` reads by `next`, `fold` by its own loops, and a
+                // scan may switch from the first to the second at any pair.
+                for k in 0..=priced.len() {
+                    let mut it = SatSwapNeighbor::iter(&sat, &sol);
+                    let head: Vec<_> = it.by_ref().take(k).map(|m| (m.i, m.j, m.gain)).collect();
+                    let all = it.fold(head, |mut acc, m| {
+                        acc.push((m.i, m.j, m.gain));
+                        acc
+                    });
+                    assert_eq!(all, priced, "switched after {k}");
+                }
             }
         }
     }

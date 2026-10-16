@@ -4,7 +4,7 @@ use rand::rngs::SmallRng;
 use super::ops::pricing::{SlotEdit, apply, price};
 use super::ops::{before, insertion_cost, node_at, removal_gain, reversal_delta};
 use super::problem::{Vrp, VrpSolution};
-use crate::building_blocks::{search::TabuMemory, search::random_distinct_pair};
+use crate::building_blocks::search::{TabuMemory, pair_scan, random_distinct_pair};
 use crate::error::OptError;
 use crate::trait_defs::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 
@@ -467,17 +467,26 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
     fn iter(prob: &Vrp, sol: &VrpSolution) -> impl Iterator<Item = Self> + Send {
         let penalty = prob.penalty_weight();
         let v = sol.routes.len();
-        (0..v).flat_map(move |r1| {
-            ((r1 + 1)..v).flat_map(move |r2| {
-                (0..sol.routes[r1].len()).flat_map(move |i1| {
-                    let a = Swapped::new(prob, sol, r1, i1);
-                    (0..sol.routes[r2].len()).map(move |i2| {
-                        let b = Swapped::new(prob, sol, r2, i2);
-                        Self::with_sides(prob, sol, &a, i1, &b, i2, penalty)
-                    })
-                })
+        let firsts: Vec<(usize, usize, usize)> = (0..v)
+            .flat_map(|r1| {
+                ((r1 + 1)..v)
+                    .flat_map(move |r2| (0..sol.routes[r1].len()).map(move |i1| (r1, r2, i1)))
             })
-        })
+            .collect();
+        pair_scan(
+            firsts.len(),
+            move |k| {
+                let (r1, r2, i1) = firsts[k];
+                (
+                    (Swapped::new(prob, sol, r1, i1), r2, i1),
+                    0..sol.routes[r2].len(),
+                )
+            },
+            move |(a, r2, i1), _, i2| {
+                let b = Swapped::new(prob, sol, *r2, i2);
+                Some(Self::with_sides(prob, sol, a, *i1, &b, i2, penalty))
+            },
+        )
     }
 
     fn move_to_be_better_than(&self, _: &Vrp, src: &VrpSolution, other: &VrpSolution) -> bool {
@@ -620,13 +629,17 @@ impl MoveToNeighbor<Vrp> for VrpTwoOptNeighbor {
 
     fn iter(prob: &Vrp, sol: &VrpSolution) -> impl Iterator<Item = Self> + Send {
         let penalty = prob.penalty_weight();
-        let v = sol.routes.len();
-        (0..v).flat_map(move |r| {
-            let len = sol.routes[r].len();
-            (0..len).flat_map(move |p| {
-                ((p + 1)..len).map(move |q| Self::priced(prob, sol, r, p, q, penalty))
-            })
-        })
+        let starts: Vec<(usize, usize)> = (0..sol.routes.len())
+            .flat_map(|r| (0..sol.routes[r].len()).map(move |p| (r, p)))
+            .collect();
+        pair_scan(
+            starts.len(),
+            move |k| {
+                let (r, p) = starts[k];
+                ((r, p), p + 1..sol.routes[r].len())
+            },
+            move |&(r, p), _, q| Some(Self::priced(prob, sol, r, p, q, penalty)),
+        )
     }
 
     fn move_to_be_better_than(&self, _: &Vrp, src: &VrpSolution, other: &VrpSolution) -> bool {
