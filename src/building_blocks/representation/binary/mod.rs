@@ -11,4 +11,6 @@ pub use fix::{
     BinaryFixing, BinaryRelaxation, binary_node, binary_ranges, binary_solution_with, binary_value,
     variable_slots,
 };
-pub use neighbor::{apply_swap_as_two_flips, differing_pairs, random_differing_pair};
+pub use neighbor::{
+    apply_swap_as_two_flips, differing_pairs, differing_pairs_by_row, random_differing_pair,
+};

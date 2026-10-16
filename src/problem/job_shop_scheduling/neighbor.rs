@@ -2,7 +2,7 @@ use rand::Rng;
 use rand::rngs::SmallRng;
 use rayon::prelude::*;
 
-use super::problem::{JobShopScheduling, JobShopSolution};
+use super::problem::{JobShopScheduling, JobShopSolution, PartialSchedule};
 use crate::{
     building_blocks::search::{TabuKey, TabuMemory},
     error::OptError,
@@ -11,11 +11,110 @@ use crate::{
 
 /// Minimum operation-sequence length for parallel neighborhood evaluation.
 ///
-/// Each candidate costs a full O(n) schedule decode, so the neighborhood scan
-/// is O(n²) (swap) / O(n³) (relocate), heavy enough for rayon to pay off on
-/// larger instances. Candidates are collected in index order, so results are
-/// identical to the serial path regardless of thread count.
+/// Each candidate costs a schedule of the sequence after the prefix it
+/// shares with the solution, so the neighborhood scan is O(n²) (swap) /
+/// O(n³) (relocate), heavy enough for rayon to pay off on larger instances.
+/// Candidates are collected in index order, so results are identical to the
+/// serial path regardless of thread count.
 const PARALLEL_ITER_MIN_OPS: usize = 400;
+
+/// Swap positions a parallel scan hands each task, which schedules the
+/// prefix before its first position once.
+const PARALLEL_SWAP_CHUNK: usize = 32;
+
+/// When each operation of `operations` finishes, and the latest finish from
+/// each position on, one longer so that past the end reads zero.
+fn trace(prob: &JobShopScheduling, operations: &[usize]) -> (Vec<u32>, Vec<u32>) {
+    let mut partial = PartialSchedule::new(prob);
+    let finish: Vec<u32> = operations.iter().map(|&j| partial.push(prob, j)).collect();
+    let mut latest = vec![0; finish.len() + 1];
+    for p in (0..finish.len()).rev() {
+        latest[p] = latest[p + 1].max(finish[p]);
+    }
+    (finish, latest)
+}
+
+/// The swaps of positions `range` with their gains over `base`.
+///
+/// Swapping `i` and `i + 1` leaves the schedule of `operations[..i]` as it
+/// is, so the prefix is scheduled once and advanced by one operation per
+/// position, and each candidate schedules only from `i` on.
+fn swap_scan(
+    prob: &JobShopScheduling,
+    operations: &[usize],
+    base: i64,
+    (finish, latest): (&[u32], &[u32]),
+    range: std::ops::Range<usize>,
+) -> Vec<JobShopSwapNeighbor> {
+    let mut prefix = PartialSchedule::new(prob);
+    for &j in &operations[..range.start] {
+        prefix.push(prob, j);
+    }
+    let (mut work, mut shadow) = (prefix.clone(), prefix.clone());
+    let mut items = Vec::with_capacity(range.len());
+    for i in range {
+        if operations[i] != operations[i + 1] {
+            work.clone_from(&prefix);
+            work.push(prob, operations[i + 1]);
+            work.push(prob, operations[i]);
+            shadow.clone_from(&prefix);
+            shadow.push(prob, operations[i]);
+            shadow.push(prob, operations[i + 1]);
+            let makespan =
+                work.finish_against(prob, &mut shadow, operations, i + 2, finish, latest);
+            items.push(JobShopSwapNeighbor {
+                i,
+                gain: i64::from(makespan) - base,
+            });
+        }
+        prefix.push(prob, operations[i]);
+    }
+    items
+}
+
+/// The relocations of `operations[from]` to every other place, with their
+/// gains over `base`, `prefix` and `work` being scratch.
+///
+/// With `from` taken out the rest reads `rest`, and the move to `to` puts the
+/// operation back before `rest[to]`, so the schedule of `rest[..to]` is
+/// shared by every later `to` and advanced by one operation per place.
+fn relocate_row(
+    prob: &JobShopScheduling,
+    operations: &[usize],
+    base: i64,
+    from: usize,
+    (prefix, work): &mut (PartialSchedule, PartialSchedule),
+) -> Vec<JobShopRelocateNeighbor> {
+    let n = operations.len();
+    let moved = operations[from];
+    let rest = |k: usize| {
+        if k < from {
+            operations[k]
+        } else {
+            operations[k + 1]
+        }
+    };
+    *prefix = PartialSchedule::new(prob);
+    let mut row = Vec::with_capacity(n.saturating_sub(1));
+    for to in 0..n {
+        if to != from {
+            work.clone_from(prefix);
+            work.push(prob, moved);
+            for k in to..n - 1 {
+                work.push(prob, rest(k));
+            }
+            row.push(JobShopRelocateNeighbor {
+                from,
+                to,
+                gain: i64::from(work.makespan) - base,
+            });
+        }
+        if to < n - 1 {
+            prefix.push(prob, rest(to));
+        }
+    }
+    row
+}
 
 /// Adjacent-pair swap on the operation sequence.
 ///
@@ -120,39 +219,30 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
     }
 
     fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
-        let n = sol.operations.len();
+        let ops = &sol.operations[..];
+        let positions = ops.len().saturating_sub(1);
         let base = i64::from(sol.objective);
-        let items: Vec<Self> = if n >= PARALLEL_ITER_MIN_OPS {
-            (0..n.saturating_sub(1))
+        let (finish, latest) = trace(prob, ops);
+        let traced = (&finish[..], &latest[..]);
+        let items: Vec<Self> = if ops.len() >= PARALLEL_ITER_MIN_OPS {
+            (0..positions)
                 .into_par_iter()
-                .filter(|&i| sol.operations[i] != sol.operations[i + 1])
-                .map_init(
-                    || sol.operations.clone(),
-                    |tentative, i| {
-                        tentative.swap(i, i + 1);
-                        let makespan = prob.compute_makespan(tentative);
-                        tentative.swap(i, i + 1);
-                        JobShopSwapNeighbor {
-                            i,
-                            gain: i64::from(makespan) - base,
-                        }
-                    },
-                )
+                .step_by(PARALLEL_SWAP_CHUNK)
+                .map(|start| {
+                    swap_scan(
+                        prob,
+                        ops,
+                        base,
+                        traced,
+                        start..(start + PARALLEL_SWAP_CHUNK).min(positions),
+                    )
+                })
+                .collect::<Vec<Vec<Self>>>()
+                .into_iter()
+                .flatten()
                 .collect()
         } else {
-            let mut items = Vec::with_capacity(n.saturating_sub(1));
-            let mut tentative = sol.operations.clone();
-            for i in 0..n.saturating_sub(1) {
-                if sol.operations[i] == sol.operations[i + 1] {
-                    continue; // identity swap (same job)
-                }
-                tentative.swap(i, i + 1);
-                let makespan = prob.compute_makespan(&tentative);
-                tentative.swap(i, i + 1);
-                let gain = i64::from(makespan) - base;
-                items.push(JobShopSwapNeighbor { i, gain });
-            }
-            items
+            swap_scan(prob, ops, base, traced, 0..positions)
         };
         items.into_iter()
     }
@@ -301,38 +391,23 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
     }
 
     fn iter(prob: &JobShopScheduling, sol: &JobShopSolution) -> impl Iterator<Item = Self> + Send {
-        let n = sol.operations.len();
+        let ops = &sol.operations[..];
+        let n = ops.len();
         let base = i64::from(sol.objective);
-        let relocate_row = |tentative: &mut Vec<usize>, from: usize| {
-            let mut row = Vec::with_capacity(n.saturating_sub(1));
-            for to in 0..n {
-                if to == from {
-                    continue; // identity move
-                }
-                relocate_in_place(tentative, from, to);
-                let makespan = prob.compute_makespan(tentative);
-                relocate_in_place(tentative, to, from);
-                let gain = i64::from(makespan) - base;
-                row.push(JobShopRelocateNeighbor { from, to, gain });
-            }
-            row
-        };
+        let scratch = || (PartialSchedule::new(prob), PartialSchedule::new(prob));
         let items: Vec<Self> = if n >= PARALLEL_ITER_MIN_OPS {
             (0..n)
                 .into_par_iter()
-                .map_init(
-                    || sol.operations.clone(),
-                    |buf, from| relocate_row(buf, from),
-                )
+                .map_init(scratch, |s, from| relocate_row(prob, ops, base, from, s))
                 .collect::<Vec<Vec<Self>>>()
                 .into_iter()
                 .flatten()
                 .collect()
         } else {
             let mut items = Vec::with_capacity(n * n.saturating_sub(1));
-            let mut tentative = sol.operations.clone();
+            let mut s = scratch();
             for from in 0..n {
-                items.extend(relocate_row(&mut tentative, from));
+                items.extend(relocate_row(prob, ops, base, from, &mut s));
             }
             items
         };
@@ -571,6 +646,74 @@ mod tests {
                         n.from, n.to, src.operations, other.objective, got, expected,
                     );
                 }
+            }
+        }
+    }
+
+    /// A random instance with `n_jobs` jobs on `n_machines` machines and a
+    /// shuffled sequence for it.
+    fn random_case(
+        n_jobs: usize,
+        n_machines: usize,
+        seed: u64,
+    ) -> (JobShopScheduling, JobShopSolution) {
+        use rand::SeedableRng;
+        use rand::seq::SliceRandom;
+        let mut rng = SmallRng::seed_from_u64(seed);
+        let jobs = (0..n_jobs)
+            .map(|_| {
+                let mut machines: Vec<usize> = (0..n_machines).collect();
+                machines.shuffle(&mut rng);
+                machines
+                    .into_iter()
+                    .map(|m| (m, rng.random_range(1..20)))
+                    .collect()
+            })
+            .collect();
+        let inst = JobShopScheduling::new("random".to_string(), n_machines, jobs);
+        let sol = crate::search_state::ProblemTrait::new_solution(&inst, &mut rng);
+        (inst, sol)
+    }
+
+    /// The scans that schedule only past the shared prefix list the same
+    /// moves, in the same order, at the gains a full decode gives, on the
+    /// serial path and on the parallel one.
+    #[test]
+    fn scans_price_every_move_as_a_full_decode() {
+        for (n_jobs, n_machines) in [(6, 4), (20, 20)] {
+            let (inst, sol) = random_case(n_jobs, n_machines, 11);
+            let n = sol.operations.len();
+            let decoded =
+                |ops: &[usize]| i64::from(inst.compute_makespan(ops)) - i64::from(sol.objective);
+            let swaps: Vec<_> = JobShopSwapNeighbor::iter(&inst, &sol)
+                .map(|m| (m.i, m.gain))
+                .collect();
+            let expected: Vec<_> = (0..n - 1)
+                .filter(|&i| sol.operations[i] != sol.operations[i + 1])
+                .map(|i| {
+                    let mut ops = sol.operations.clone();
+                    ops.swap(i, i + 1);
+                    (i, decoded(&ops))
+                })
+                .collect();
+            assert_eq!(swaps, expected);
+            if n < PARALLEL_ITER_MIN_OPS {
+                let relocates: Vec<_> = JobShopRelocateNeighbor::iter(&inst, &sol)
+                    .map(|m| (m.from, m.to, m.gain))
+                    .collect();
+                let expected: Vec<_> = (0..n)
+                    .flat_map(|from| {
+                        (0..n)
+                            .filter(move |&to| to != from)
+                            .map(move |to| (from, to))
+                    })
+                    .map(|(from, to)| {
+                        let mut ops = sol.operations.clone();
+                        relocate_in_place(&mut ops, from, to);
+                        (from, to, decoded(&ops))
+                    })
+                    .collect();
+                assert_eq!(relocates, expected);
             }
         }
     }

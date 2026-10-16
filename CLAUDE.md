@@ -87,7 +87,7 @@ src/
 │   │   │                     BinaryRelaxation, the binary BranchSpace glue: binary_ranges
 │   │   │                     etc. and the exported binary_branch_space! macro each
 │   │   │                     problem's fix.rs calls), neighbor.rs (apply_swap_as_two_flips,
-│   │   │                     differing_pairs, random_differing_pair)
+│   │   │                     differing_pairs, differing_pairs_by_row, random_differing_pair)
 │   │   ├── integer.rs        IntVar, IntVars (+ permutation), DomainRestriction and the
 │   │   │                     BranchSpace blanket impl over Branchable
 │   │   └── permutation.rs    order_crossover (OX)

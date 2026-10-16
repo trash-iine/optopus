@@ -18,7 +18,7 @@
 use super::problem::{Coefficient, Qubo};
 use crate::{
     building_blocks::{
-        representation::{differing_pairs, random_differing_pair},
+        representation::{differing_pairs_by_row, random_differing_pair},
         search::{TabuKey, TabuMemory},
     },
     error::OptError,
@@ -217,10 +217,16 @@ impl QuboSwapNeighbor {
     /// assert_eq!(swap.gain, sol.gain[0] + sol.gain[1] - qubo.get_q(0, 1));
     /// ```
     pub fn new(prob: &Qubo, sol: &QuboSolution, i: usize, j: usize) -> Self {
+        Self::with_q(sol, i, j, prob.get_q(i, j))
+    }
+
+    /// The swap of `i` and `j` whose interaction is `q`, the one place the
+    /// correction is written.
+    fn with_q(sol: &QuboSolution, i: usize, j: usize, q: Coefficient) -> Self {
         Self {
             i,
             j,
-            gain: sol.gain[i] + sol.gain[j] - prob.get_q(i, j),
+            gain: sol.gain[i] + sol.gain[j] - q,
         }
     }
 }
@@ -265,7 +271,8 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
     /// Returns a lazy iterator over all valid swap pairs `(i, j)` where
     /// `i` and `j` have different values.
     fn iter(prob: &Qubo, sol: &QuboSolution) -> impl Iterator<Item = Self> + Send {
-        differing_pairs(prob, sol).map(move |(i, j)| Self::new(prob, sol, i, j))
+        differing_pairs_by_row(prob, sol, |i| prob.iter_on_adjacency(i).copied())
+            .map(move |(i, j, q)| Self::with_q(sol, i, j, q))
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {

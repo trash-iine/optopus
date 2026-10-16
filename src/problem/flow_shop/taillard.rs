@@ -27,11 +27,43 @@ pub(crate) struct HeadsTails {
 impl HeadsTails {
     /// Tabulates `sequence` from scratch in O(nm), reusing the buffers.
     pub(crate) fn rebuild(&mut self, prob: &FlowShop, sequence: &[usize]) {
+        self.resize(prob, sequence.len());
+        self.heads_from(prob, sequence, 0);
+        self.tails_before(prob, sequence, sequence.len());
+    }
+
+    /// Tabulates `rest`, the sequence `full` covers with the job at position
+    /// `k` taken out, in O((n - k) m) for the heads and O(km) for the tails.
+    ///
+    /// The heads before `k` are those of `full`, since the prefix is the same,
+    /// and so are the tails from `k` on, shifted by one place, so only the
+    /// heads after the gap and the tails before it are scheduled.
+    pub(crate) fn rebuild_without(
+        &mut self,
+        prob: &FlowShop,
+        full: &HeadsTails,
+        rest: &[usize],
+        k: usize,
+    ) {
         let m = prob.n_machines;
-        self.m = m;
-        self.heads.resize(sequence.len() * m, 0);
-        self.tails.resize(sequence.len() * m, 0);
-        for (k, &job) in sequence.iter().enumerate() {
+        self.resize(prob, rest.len());
+        self.heads[..k * m].copy_from_slice(&full.heads[..k * m]);
+        self.heads_from(prob, rest, k);
+        self.tails[k * m..].copy_from_slice(&full.tails[(k + 1) * m..]);
+        self.tails_before(prob, rest, k);
+    }
+
+    /// Sizes the table for `n` jobs.
+    fn resize(&mut self, prob: &FlowShop, n: usize) {
+        self.m = prob.n_machines;
+        self.heads.resize(n * self.m, 0);
+        self.tails.resize(n * self.m, 0);
+    }
+
+    /// Fills the heads from position `start` on, those before it being set.
+    fn heads_from(&mut self, prob: &FlowShop, sequence: &[usize], start: usize) {
+        let m = self.m;
+        for (k, &job) in sequence.iter().enumerate().skip(start) {
             if k == 0 {
                 self.heads[..m].fill(0);
             } else {
@@ -39,7 +71,13 @@ impl HeadsTails {
             }
             prob.advance(&mut self.heads[k * m..(k + 1) * m], job);
         }
-        for (k, &job) in sequence.iter().enumerate().rev() {
+    }
+
+    /// Fills the tails of the positions before `end`, those from it on being
+    /// set.
+    fn tails_before(&mut self, prob: &FlowShop, sequence: &[usize], end: usize) {
+        let m = self.m;
+        for (k, &job) in sequence[..end].iter().enumerate().rev() {
             let mut next_machine = 0;
             for i in (0..m).rev() {
                 let busy =
@@ -179,6 +217,34 @@ mod tests {
                         prob.makespan(&edited)
                     );
                 }
+            }
+        }
+    }
+
+    /// Taking a job out of a tabulated sequence gives the same table as
+    /// tabulating the shorter sequence from scratch, at every position.
+    #[test]
+    fn rebuild_without_matches_a_rebuild() {
+        let prob = random_instance(9, 4, 3);
+        let mut rng = SmallRng::seed_from_u64(4);
+        let (mut full, mut without, mut fresh) = (
+            HeadsTails::default(),
+            HeadsTails::default(),
+            HeadsTails::default(),
+        );
+        for _ in 0..10 {
+            let mut seq: Vec<usize> = (0..prob.n_jobs).collect();
+            seq.shuffle(&mut rng);
+            full.rebuild(&prob, &seq);
+            for k in 0..seq.len() {
+                let mut rest = seq.clone();
+                rest.remove(k);
+                without.rebuild_without(&prob, &full, &rest, k);
+                fresh.rebuild(&prob, &rest);
+                assert_eq!(
+                    (&without.heads, &without.tails),
+                    (&fresh.heads, &fresh.tails)
+                );
             }
         }
     }

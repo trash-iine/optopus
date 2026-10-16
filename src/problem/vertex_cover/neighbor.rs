@@ -3,7 +3,7 @@
 use super::VertexCover;
 use crate::{
     building_blocks::{
-        representation::{differing_pairs, random_differing_pair},
+        representation::{differing_pairs_by_row, random_differing_pair},
         search::{TabuKey, TabuMemory},
     },
     error::OptError,
@@ -181,11 +181,19 @@ impl VertexCoverSwapNeighbor {
     /// # Ok::<(), optopus::error::OptError>(())
     /// ```
     pub fn new(prob: &VertexCover, sol: &VertexCoverSolution, i: usize, j: usize) -> Self {
-        let edge_correction = if prob.graph.has_edge(i, j) {
-            prob.penalty_weight()
-        } else {
-            0
-        };
+        Self::with_edge(prob, sol, i, j, prob.graph.has_edge(i, j))
+    }
+
+    /// The swap of `i` and `j`, adjacent or not, the one place the
+    /// correction is written.
+    fn with_edge(
+        prob: &VertexCover,
+        sol: &VertexCoverSolution,
+        i: usize,
+        j: usize,
+        adjacent: bool,
+    ) -> Self {
+        let edge_correction = if adjacent { prob.penalty_weight() } else { 0 };
         Self {
             i,
             j,
@@ -234,7 +242,10 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
     }
 
     fn iter(prob: &VertexCover, sol: &VertexCoverSolution) -> impl Iterator<Item = Self> + Send {
-        differing_pairs(prob, sol).map(move |(i, j)| Self::new(prob, sol, i, j))
+        differing_pairs_by_row(prob, sol, |i| {
+            prob.graph.neighbors(i).map(|&(j, _)| (j, true))
+        })
+        .map(move |(i, j, adjacent)| Self::with_edge(prob, sol, i, j, adjacent))
     }
 
     fn move_to_be_better_than(

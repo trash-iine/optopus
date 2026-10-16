@@ -215,22 +215,86 @@ impl JobShopScheduling {
     /// sequence, handing each operation's finish time to `on_finish` in
     /// sequence order, and returns the makespan.
     fn schedule(&self, operations: &[usize], mut on_finish: impl FnMut(u32)) -> u32 {
-        let mut machine_release = vec![0u32; self.n_machines];
-        let mut job_release = vec![0u32; self.n_jobs];
-        let mut job_op_idx = vec![0usize; self.n_jobs];
-        let mut makespan = 0u32;
+        let mut partial = PartialSchedule::new(self);
         for &j in operations {
-            let k = job_op_idx[j];
-            let (machine, duration) = self.jobs[j][k];
-            let start = machine_release[machine].max(job_release[j]);
-            let finish = start + duration;
-            machine_release[machine] = finish;
-            job_release[j] = finish;
-            job_op_idx[j] = k + 1;
-            on_finish(finish);
-            makespan = makespan.max(finish);
+            on_finish(partial.push(self, j));
         }
-        makespan
+        partial.makespan
+    }
+}
+
+/// The left-shift schedule partway through a sequence, everything the start
+/// of the next operation depends on.
+///
+/// Two sequences that share a prefix share the schedule of that prefix, so a
+/// neighborhood scan copies it and schedules only what follows.
+#[derive(Debug, Clone)]
+pub(crate) struct PartialSchedule {
+    machine_release: Vec<u32>,
+    job_release: Vec<u32>,
+    job_op_idx: Vec<usize>,
+    /// The latest finish so far.
+    pub(crate) makespan: u32,
+}
+
+impl PartialSchedule {
+    /// The schedule of the empty prefix.
+    pub(crate) fn new(prob: &JobShopScheduling) -> Self {
+        Self {
+            machine_release: vec![0; prob.n_machines],
+            job_release: vec![0; prob.n_jobs],
+            job_op_idx: vec![0; prob.n_jobs],
+            makespan: 0,
+        }
+    }
+
+    /// Schedules the next operation of job `j` as early as its machine and
+    /// its job allow, and returns its finish time.
+    #[inline]
+    pub(crate) fn push(&mut self, prob: &JobShopScheduling, j: usize) -> u32 {
+        let k = self.job_op_idx[j];
+        let (machine, duration) = prob.jobs[j][k];
+        let finish = self.machine_release[machine].max(self.job_release[j]) + duration;
+        self.machine_release[machine] = finish;
+        self.job_release[j] = finish;
+        self.job_op_idx[j] = k + 1;
+        self.makespan = self.makespan.max(finish);
+        finish
+    }
+
+    /// Schedules `operations[at..]` and returns the makespan, given that this
+    /// schedule has taken the same operations as `base` up to `at`, `base`
+    /// being the schedule of the solution's own sequence at `at`.
+    ///
+    /// `finish[p]` is when the solution's operation `p` finishes and
+    /// `latest[p]` the latest of `finish[p..]`. Once every release time here
+    /// equals the solution's, the rest of the schedule is the solution's too,
+    /// so the walk stops there. `base` is scratch afterwards.
+    pub(crate) fn finish_against(
+        &mut self,
+        prob: &JobShopScheduling,
+        base: &mut PartialSchedule,
+        operations: &[usize],
+        at: usize,
+        finish: &[u32],
+        latest: &[u32],
+    ) -> u32 {
+        let differs = |a: &[u32], b: &[u32]| a.iter().zip(b).filter(|(x, y)| x != y).count();
+        let mut apart = differs(&self.machine_release, &base.machine_release)
+            + differs(&self.job_release, &base.job_release);
+        for (p, &j) in operations.iter().enumerate().skip(at) {
+            if apart == 0 {
+                return self.makespan.max(latest[p]);
+            }
+            let machine = prob.jobs[j][self.job_op_idx[j]].0;
+            apart -= usize::from(self.machine_release[machine] != base.machine_release[machine])
+                + usize::from(self.job_release[j] != base.job_release[j]);
+            let ours = self.push(prob, j);
+            base.machine_release[machine] = finish[p];
+            base.job_release[j] = finish[p];
+            apart += 2 * usize::from(ours != finish[p]);
+        }
+        self.makespan
     }
 }
 

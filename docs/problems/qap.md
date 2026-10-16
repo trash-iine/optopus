@@ -50,10 +50,13 @@ your own, and returns an error if it is not a permutation of the locations.
 
 | Type | Config | Move | Cost |
 |---|---|---|---|
-| `QapSwapNeighbor` | `Swap` | Exchange the locations of two facilities. | O(n) per move, O(n³) per scan |
+| `QapSwapNeighbor` | `Swap` | Exchange the locations of two facilities. | O(n) per move, O(n³) for the first scan and O(n²) for each scan after |
 
 The move is priced by the general formula for matrices that need not be
-symmetric, `Qap::swap_delta`. Its tabu rule forbids each facility the
+symmetric, `Qap::swap_delta`. The first full scan of a solution keeps the
+delta of every pair in it, and each applied swap updates them in O(n²) with
+Taillard's formula, so a tabu search pays O(n²) per step after its first. A
+search that only draws random moves never builds the table. Its tabu rule forbids each facility the
 location it just left, and a move is tabu only when it would put both of its
 facilities back, which is Taillard's rule.
 

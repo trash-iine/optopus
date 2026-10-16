@@ -123,13 +123,15 @@ impl MoveToNeighbor<FlowShop> for FlowShopInsertNeighbor {
         let base = i64::from(sol.objective);
         let mut moves = Vec::with_capacity(n * n.saturating_sub(1));
         let mut rest = Vec::with_capacity(n);
+        let mut full = HeadsTails::default();
+        full.rebuild(prob, &sol.sequence);
         let mut ht = HeadsTails::default();
         for from in 0..n {
             let job = sol.sequence[from];
             rest.clear();
             rest.extend_from_slice(&sol.sequence[..from]);
             rest.extend_from_slice(&sol.sequence[from + 1..]);
-            ht.rebuild(prob, &rest);
+            ht.rebuild_without(prob, &full, &rest, from);
             moves.extend((0..n).filter(|&to| to != from).map(|to| Self {
                 job,
                 from,

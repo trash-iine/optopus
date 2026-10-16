@@ -588,6 +588,11 @@ impl BinaryProblem for Qubo {
         self.iter_on_variables().copied()
     }
 
+    fn random_variable(&self, rng: &mut impl rand::Rng) -> Option<usize> {
+        let v = &self.variables;
+        (!v.is_empty()).then(|| v[rng.random_range(0..v.len())])
+    }
+
     fn variable(sol: &QuboSolution, i: usize) -> bool {
         sol.x[i]
     }
