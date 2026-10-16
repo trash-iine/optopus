@@ -142,7 +142,7 @@ src/
     │                         IntervalRelaxation in formula.rs
     ├── vrp/                  one problem for the homogeneous and the heterogeneous
     │                         fleet (VehicleType slots, service time, TotalTime or
-    │                         Makespan; CVRPLIB or TOML instances; decisions/0024)
+    │                         Makespan; CVRPLIB or TOML instances; decisions/0014)
     │                         + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
     │                         ops/ (pricing.rs = the one route-edit price, RouteState,
     │                         granular.rs, Descent), ruin.rs (Ruinable + LocalRepair)
@@ -213,7 +213,7 @@ direction. `Summary` aggregates those across runs.
 MaxCut instance suites: besides the G-set, `examples/generate_dense_maxcut.rs`,
 `generate_sparse_maxcut.rs` and `generate_hard_maxcut.rs` produce suites locally
 from fixed seeds, so they are never committed. The hard suite has an exact
-optimum by construction; see `decisions/0010`.
+optimum by construction, and its generator records where its parameters come from.
 
 ## Documentation site (`docs/` + `mkdocs.yml`)
 

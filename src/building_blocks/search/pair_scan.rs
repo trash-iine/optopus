@@ -47,10 +47,8 @@ where
     // The rows are walked in locals, from ranges `inner` has just built, and
     // the position is written back only when a move is found. A search that
     // rejects most pairs, `filter` looking for its first match, spends the
-    // scan here, and a position kept in `self` is stored and the row's
-    // operands reloaded on every pair. The rest of the current row is walked
-    // apart from the rows after it, so those run from their start the way
-    // `fold` runs them (decisions/0032).
+    // scan here. The rest of the current row is walked apart from the rows
+    // after it, so those run from their start the way `fold` runs them.
     #[inline]
     fn next(&mut self) -> Option<T> {
         let mut i = self.i;

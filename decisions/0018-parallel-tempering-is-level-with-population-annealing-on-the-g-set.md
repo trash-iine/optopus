@@ -15,7 +15,23 @@ which it calls. `heuristic::boltzmann_accept` stays as a re-export, so no public
 path changed. Population annealing's pinned trajectories in
 `tests/pa_trajectory.rs` are unchanged.
 
-## Measurement
+## Do not retry
+
+Do not read the G32 and G35 rows as parallel tempering being weaker before
+its ladder has been tuned for 2000 vertices, more replicas being the first
+thing to try.
+
+Do not build a replica-set component for the two to share yet. Beyond the
+sweep they share only the setup and the write-back, `sweep_length` and
+`best_replica` beside the sweep, and the parts that differ, resampling and
+exchange, are most of each. The isoenergetic cluster move would be the third
+user and the operation that justifies one.
+
+Do not move the sweep back into either heuristic. It is the one piece the two
+share, and the isoenergetic cluster move 0010 points to would be the next
+component both take from outside.
+
+## Appendix
 
 G1, G11, G14 (n = 800) and G22, G32, G35 (n = 2000), 20 s by five runs, seed 42,
 `data/benchmarks/maxcut/replica_annealers.toml`. Parallel tempering with 20
@@ -37,19 +53,3 @@ on the two sparse 2000-vertex graphs, by 1.6 and 9.8. Both are clearly ahead of
 simulated annealing everywhere. That is the finding of Wang, Machta and
 Katzgraber on spin glasses, population annealing comparable to parallel
 tempering and better than simulated annealing. The ladder here was not tuned.
-
-## Do not retry
-
-Do not read the G32 and G35 rows as parallel tempering being weaker before
-its ladder has been tuned for 2000 vertices, more replicas being the first
-thing to try.
-
-Do not build a replica-set component for the two to share yet. Beyond the
-sweep they share only the setup and the write-back, `sweep_length` and
-`best_replica` beside the sweep, and the parts that differ, resampling and
-exchange, are most of each. The isoenergetic cluster move would be the third
-user and the operation that justifies one.
-
-Do not move the sweep back into either heuristic. It is the one piece the two
-share, and the isoenergetic cluster move 0016 points to would be the next
-component both take from outside.

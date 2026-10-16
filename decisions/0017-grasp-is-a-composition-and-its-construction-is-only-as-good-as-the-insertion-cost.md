@@ -18,7 +18,15 @@ problem-specific construction.
 The price of that genericity is that the greedy rule is "cheapest insertion
 first", whatever that means on the problem.
 
-## Measurement
+## Do not retry
+
+Do not read the bin packing row as GRASP being weak there. A size-ordered
+construction would be a different greedy rule, which `Ruinable` does not
+express, and adding one would need a second problem that wants it.
+
+Do not add a `Grasp` type to make the composition shorter.
+
+## Appendix
 
 Same time budget per arm, seed 42, `alpha = 0.2`, the descent a `LocalSearch`
 over `Relocate`, against multi-start descent (`Restart` with
@@ -41,11 +49,3 @@ pays. On bin packing the cheapest element to insert is one that fits an open
 bin, so the large items are left for last and each opens a bin, the opposite of
 First Fit Decreasing, and GRASP loses even to random restarts. ALNS on the same
 `Ruinable` is far ahead there.
-
-## Do not retry
-
-Do not read the bin packing row as GRASP being weak there. A size-ordered
-construction would be a different greedy rule, which `Ruinable` does not
-express, and adding one would need a second problem that wants it.
-
-Do not add a `Grasp` type to make the composition shorter.

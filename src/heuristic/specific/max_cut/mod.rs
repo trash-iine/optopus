@@ -51,8 +51,6 @@ pub enum PerturbationType {
 /// flip, and because recording is a mode the search turns on, its `apply`
 /// writes the prohibitions the kick then reads. What ends a descent is the
 /// local optimum it reports, not the budget, so the cap below is never reached.
-/// An unreachable cap rather than an empty `StopCondition`, which says the same
-/// thing and measured 7% slower. See decisions/0003.
 pub fn max_cut_descent() -> Box<dyn Heuristic<MaxCut>> {
     Box::new(LocalSearch::<MaxCutFlipNeighbor>::new(
         StopCondition::iterations(u64::MAX),
