@@ -8,57 +8,49 @@ Read the table, open the one file you need.
 
 | Record | Area | Status | Summary |
 |---|---|---|---|
-| [0001](0001-bls-round-uses-generic-heuristics.md) | max_cut | adopted | Three quarters of a Breakout Local Search round are generic heuristics |
-| [0002](0002-auxiliary-gain-indexes-removed.md) | max_cut, qubo | adopted | The optional improving-move and plateau indexes were all removed |
-| [0003](0003-maxcut-timings-follow-code-alignment.md) | max_cut | reference | A timing difference on MaxCut is not on its own evidence, and how to A/B here |
-| [0004](0004-tabu-memory-stays-inline.md) | search_state | adopted | Fat LTO removes the allocation-layout cliff, so the sparse map is not boxed |
-| [0005](0005-best-swap-keeps-the-first-tied-best.md) | max_cut | adopted | Ties keep the lowest vertex index; sampling them uniformly was rejected |
-| [0006](0006-local-search-takes-its-stop-condition-as-given.md) | heuristic | adopted | `LocalSearch::new` no longer forces `max_failed_update` |
-| [0007](0007-rl-bls-plateau-operators-removed.md) | max_cut | adopted | The learned controller gave up two plateau operators that were paying |
-| [0008](0008-hgs-and-alns-are-level-at-30s.md) | vrp | reference | HGS no longer beats ALNS at equal budget |
-| [0009](0009-maxcut-kernelization-pays-on-sparse-only.md) | max_cut | adopted | Exact reduction is worth crossing to on sparse graphs and nowhere else |
-| [0010](0010-planted-instance-hardness.md) | max_cut | reference | Where the planted suites are hard, and why published parameters do not transfer |
-| [0011](0011-vrp-distance-is-symmetrized.md) | vrp | adopted | The broken-pairs count is asymmetric at the depot, so `Distance` takes the larger direction |
-| [0012](0012-alns-descent-is-anchored.md) | vrp | adopted | The descent after each ruin is anchored at the re-inserted customers |
-| [0013](0013-no-run-sub-wrapper.md) | search_state | adopted | The clone/merge triad has no wrapper, and should not get one |
-| [0014](0014-documentation-is-split-three-ways.md) | all | adopted | Documentation is split three ways, and each part has one audience |
-| [0015](0015-generalizing-a-heuristic-costs-nothing-except-where-a-trait-repeats-work.md) | heuristic, vrp | reference | Generalizing a heuristic is free, except where the trait asks at a finer granularity than the answer changes at |
-| [0016](0016-population-annealing-drops-the-cluster-move.md) | heuristic, max_cut, qubo | adopted | Population annealing drops the non-local cluster move and runs on every problem |
-| [0017](0017-rankable-is-derived-from-evaluate.md) | heuristic, all | adopted | Rankable is derived from Evaluate, and the derivation costs nothing |
-| [0018](0018-alns-on-routes-needs-the-local-repair.md) | vrp | reference | Ruin-and-recreate on routes needs the local repair, and needs it most on large instances |
-| [0019](0019-the-stagnation-test-compares-solutions-not-objectives.md) | max_cut, heuristic | adopted | The BLS stagnation test compares solutions, not their objectives |
-| [0020](0020-alns-on-a-tour-needs-the-local-repair-too.md) | tsp | reference | The second `Ruinable` needs its anchored descent for the same reason the first did |
-| [0021](0021-tabu-tenure-means-one-thing.md) | max_cut, benchmark | adopted | `tabu_tenure` means one thing under every kind, and the paper's `2γ` is written into the config |
-| [0022](0022-integer-problems-have-two-layers-and-no-framework-cache.md) | integer | adopted | `IntegerProblem` sits on `IntAssignment`; a move-pricing cache lives in the user's solution, not the framework |
-| [0023](0023-formula-problem-moved-onto-the-integer-layer.md) | integer | adopted | `FormulaProblem` runs on `IntAssignment` and the binary module is deleted, with identical trajectories |
-| [0024](0024-vrp-is-one-problem-with-a-fleet.md) | vrp | adopted | The VRP is one problem, homogeneous and heterogeneous fleet alike, and the unification cost nothing once the layout was fixed |
-| [0025](0025-max-cut-branch-and-bound-needs-the-eigenvalue-bound.md) | max_cut, heuristic | adopted | Branch-and-bound on MaxCut needs the certified eigenvalue bound, which takes the median G-set gap from 34% to 6% |
-| [0026](0026-iterated-greedy-beats-alns-on-the-flow-shop.md) | heuristic, flow_shop | reference | Iterated Greedy is its own heuristic, and on the flow shop it beats ALNS on the same `Ruinable` |
-| [0027](0027-grasp-is-a-composition-and-its-construction-is-only-as-good-as-the-insertion-cost.md) | heuristic, flow_shop, bin_packing | reference | GRASP is `Iterated` with a construction step, and it pays only where cheapest insertion is a good greedy rule |
-| [0028](0028-parallel-tempering-is-level-with-population-annealing-on-the-g-set.md) | heuristic, max_cut | reference | Parallel tempering shares the Metropolis sweep with population annealing, and is level with it on the G-set |
-| [0029](0029-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
-| [0030](0030-a-profile-loop-over-every-problem.md) | all | reference | A profile loop over every problem, what each fix measured against the alignment noise, and what was left |
-| [0031](0031-tsp-distance-time-is-loop-shape-not-memory.md) | tsp | reference | The TSP's distance time was the scan's loop shape, not the matrix's memory, and f32 storage is not worth it |
-| [0032](0032-nested-scans-as-plain-loops.md) | max_cut, qubo, vertex_cover, sat, qap, bin_packing, vrp | reference | Nested neighborhood scans pay as plain loops where the adapters collected rows or nested three deep, and only measured against both a tabu and a descent run |
+| [0001](0001-bls-round-uses-generic-heuristics-and-the-gain-indexes-are-gone.md) | max_cut, qubo | adopted | Three quarters of a Breakout Local Search round are generic heuristics, and the gain indexes they made idle are gone |
+| [0002](0002-a-timing-difference-follows-layout-before-it-follows-the-change.md) | all | reference | A timing difference follows code and heap layout before it follows the change, and how to A/B here |
+| [0003](0003-best-swap-keeps-the-first-tied-best.md) | max_cut | adopted | Ties keep the lowest vertex index; sampling them uniformly was rejected |
+| [0004](0004-rl-bls-plateau-operators-removed.md) | max_cut | adopted | The learned controller gave up two plateau operators that were paying |
+| [0005](0005-maxcut-kernelization-pays-on-sparse-only.md) | max_cut | adopted | Exact reduction is worth crossing to on sparse graphs and nowhere else |
+| [0006](0006-ruin-and-recreate-needs-an-anchored-local-repair-on-routes-and-tours.md) | vrp, tsp | adopted | Ruin-and-recreate needs an anchored local repair on routes and on tours, most of all on large instances |
+| [0007](0007-no-run-sub-wrapper.md) | search_state | adopted | The clone/merge triad has no wrapper, and should not get one |
+| [0008](0008-documentation-is-split-three-ways.md) | all | adopted | Documentation is split three ways, and each part has one audience |
+| [0009](0009-an-abstraction-costs-nothing-except-where-a-trait-asks-finer-than-the-answer-changes.md) | heuristic, all | reference | An abstraction costs nothing, except where a trait asks at a finer granularity than its answer changes at |
+| [0010](0010-population-annealing-drops-the-cluster-move.md) | heuristic, max_cut, qubo | adopted | Population annealing drops the non-local cluster move and runs on every problem |
+| [0011](0011-the-stagnation-test-compares-solutions-not-objectives.md) | max_cut, heuristic | adopted | The BLS stagnation test compares solutions, not their objectives |
+| [0012](0012-tabu-tenure-means-one-thing.md) | max_cut, benchmark | adopted | `tabu_tenure` means one thing under every kind, and the paper's `2γ` is written into the config |
+| [0013](0013-integer-problems-have-two-layers-and-the-formula-problem-sits-on-them.md) | integer | adopted | `IntegerProblem` and `FormulaProblem` sit on `IntAssignment`, and a move-pricing cache lives in the user's solution, not the framework |
+| [0014](0014-vrp-is-one-problem-with-a-fleet.md) | vrp | adopted | The VRP is one problem, homogeneous and heterogeneous fleet alike, and the unification cost nothing once the layout was fixed |
+| [0015](0015-max-cut-branch-and-bound-needs-the-eigenvalue-bound.md) | max_cut, heuristic | adopted | Branch-and-bound on MaxCut needs the certified eigenvalue bound, which takes the median G-set gap from 34% to 6% |
+| [0016](0016-iterated-greedy-beats-alns-on-the-flow-shop.md) | heuristic, flow_shop | reference | Iterated Greedy is its own heuristic, and on the flow shop it beats ALNS on the same `Ruinable` |
+| [0017](0017-grasp-is-a-composition-and-its-construction-is-only-as-good-as-the-insertion-cost.md) | heuristic, flow_shop, bin_packing | reference | GRASP is `Iterated` with a construction step, and it pays only where cheapest insertion is a good greedy rule |
+| [0018](0018-parallel-tempering-is-level-with-population-annealing-on-the-g-set.md) | heuristic, max_cut | reference | Parallel tempering shares the Metropolis sweep with population annealing, and is level with it on the G-set |
+| [0019](0019-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
+| [0020](0020-a-profile-loop-found-the-cost-in-the-problems-pricing-and-in-the-shape-of-the-scans.md) | all | reference | A profile loop over every problem found the cost in the problems' pricing and in the shape of their scans, and what was left |
 
 ## Writing a new record
 
-Copy the shape of an existing file and keep it under 40 lines.
+Copy the shape of an existing file. Everything above the appendix, the header,
+the decision and what not to retry, stays within 40 lines. The appendix holds
+the measurement, its conditions and tables, and does not count toward that.
+When a new decision continues an existing record, extend that record rather
+than starting another.
 
 ```markdown
 # One-line conclusion
 
 - Status: adopted | rejected | reference
-- Area: max_cut | qubo | vrp | flow_shop | bin_packing | search_state | heuristic | benchmark | all
+- Area: max_cut | qubo | vrp | tsp | flow_shop | bin_packing | integer | search_state | heuristic | benchmark | all
 - Date: YYYY-MM-DD
 - Code: src/... (when there is a specific site)
 
 ## Decision
-Two or three sentences.
-
-## Measurement
-Conditions and numbers.
+What was decided, and why, in a few paragraphs.
 
 ## Do not retry
 What should not be re-proposed, and why.
+
+## Appendix
+The measurement, its conditions and numbers.
 ```

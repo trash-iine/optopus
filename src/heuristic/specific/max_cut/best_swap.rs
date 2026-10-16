@@ -63,7 +63,7 @@ impl Heuristic<MaxCut> for BestSwap {
         for neighbor in MaxCutFlipNeighbor::iter(state.instance, &state.solution) {
             // The comparisons below are `>` and not `>=`, so equal gains keep the
             // lowest vertex index. Sampling ties uniformly was measured and lost;
-            // see decisions/0005.
+            // see decisions/0003.
             let on_side0 = state.solution.x[neighbor.i];
 
             let any = if on_side0 { &mut any_v0 } else { &mut any_v1 };

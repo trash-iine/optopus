@@ -26,13 +26,19 @@ know which of the two kinds was the special one. A number that is transformed
 between the file and the engine has to be documented at every place the number
 appears, and this one was documented at four.
 
-The alternative of keeping the paper's `γ` as the config's meaning and doubling
-in code is what was in place. It buys the ability to copy a parameter out of the
-paper unchanged, at the price above. Copying is a one-time act per config and
-the note beside the value (`# the paper's rand[3, |V|/10], counted twice`)
-carries it.
+Keeping the paper's `γ` as the config's meaning and doubling in code, which is
+what was in place, buys copying a parameter out of the paper unchanged. Copying
+is a one-time act per config, and the note beside the value
+(`# the paper's rand[3, |V|/10], counted twice`) carries it.
 
-## Behaviour
+## Do not retry
+
+Do not reintroduce a per-kind transformation of `tabu_tenure`, and do not add a
+second key (`gamma`) that means the paper's value. One key with one meaning is
+the point. A config that wants the paper's parameter writes the doubled range
+and says so in a comment.
+
+## Appendix
 
 Nothing changed in what the engine runs. Removing the doubling and doubling
 every argument is an identity, and it is checked three ways. The pins in
@@ -45,10 +51,3 @@ change with `[3, 80]` and after it with `[6, 160]`.
 The published records under `docs/benchmarks/data/maxcut/bls_gset_*.slim.toml`
 were rewritten to the doubled ranges too, so what they record is the config
 that reproduces them under the current reading of the key.
-
-## Do not retry
-
-Do not reintroduce a per-kind transformation of `tabu_tenure`, and do not add a
-second key (`gamma`) that means the paper's value. One key with one meaning is
-the point; a config that wants the paper's parameter writes the doubled range
-and says so in a comment.

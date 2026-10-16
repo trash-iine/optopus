@@ -10,19 +10,16 @@
 `Vrp` carries a fleet of `VehicleType`s (capacity, speed, fixed and variable
 cost, minimum and maximum count, route-time limit), service times and an
 objective mode. The homogeneous CVRP is the one-type instance the plain
-constructors build. There is no second problem type: the heterogeneous-fleet
+constructors build. There is no second problem type. The heterogeneous-fleet
 variant was first written as `FleetVrp`, a separate type with its own
 solution, moves and crossover, and was folded in before it was merged.
 
-The reason given for the separate type was that everything reading a CVRP
-route is typed on `&Vrp` and one `capacity: i64`, so that generalizing in
-place would tax every CVRP heuristic with per-slot lookups. An inventory
-showed the premise was oversized. What the route machinery reads of the
-problem is eight things (`distance`, `demands`, `capacity`, `get_n`,
-`num_vehicles`, `route_distance`, `solution_from_routes`, `penalty_weight`);
-every penalty is an explicit argument; and the single-capacity assumption sits
-in five local places. The cost turned out to be one of layout, not of
-generality, and was recovered.
+The separate type was argued for because everything reading a CVRP route is
+typed on `&Vrp` and one `capacity: i64`, so generalizing would tax every CVRP
+heuristic with per-slot lookups. The route machinery turned out to read eight
+things of the problem, every penalty is an explicit argument, and the
+single-capacity assumption sits in five local places. The cost was one of
+layout, not generality, and was recovered (appendix).
 
 What the merge changed, beyond what the rustdoc of `ops/pricing.rs`,
 `RouteState`, `split_giant_tour` and `Vrp::load_file` already says:
@@ -32,9 +29,16 @@ What the merge changed, beyond what the rustdoc of `ops/pricing.rs`,
 - Idle slots of one vehicle type are label-equivalent, so the generic
   relocate, `try_relocate_to_idle` and the ruin's bucket enumeration consider
   one representative per type.
-- `ProblemKind::FleetVrp` is gone; both instance formats are `problem = "Vrp"`.
+- `ProblemKind::FleetVrp` is gone, and both instance formats are `problem = "Vrp"`.
 
-## Measurement
+## Do not retry
+
+Do not reintroduce a homogeneous fast path or a second problem type on the
+grounds of speed. The tax was layout, and the appendix says so. A fleet shortcut
+belongs in `price` as a per-term branch on the type's own numbers, the way an
+infinite route-time limit and a zero cost are skipped now.
+
+## Appendix
 
 Fixed budget on X-n195-k51, seed 1, one thread, main (`70529a3`) against this
 change. The first unified build was what the premise predicted, and the
@@ -88,11 +92,3 @@ The trajectory pins of `tests/alns_generalization.rs` and
 hold bit for bit: with speed 1, no service time and no cost the fleet
 objective reduces to `distance + penalty * overload` exactly, and demo16 did
 not expose the association changes in the two-route moves.
-
-## Do not retry
-
-Do not reintroduce a homogeneous fast path or a second problem type on the
-grounds of speed. The tax was layout, and the table says so. If a fleet term
-ever needs a shortcut, it belongs in `price` as a per-term branch on the
-type's own numbers, the way an infinite route-time limit and a zero cost are
-skipped now.

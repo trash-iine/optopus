@@ -21,11 +21,11 @@ wrapper would have to name `Heuristic` in `search_state`, which must not depend
 on it. Nothing about cloning and merging a state needs to know what a heuristic
 is.
 
-## Measurement
-
-None. This is a layering constraint rather than a performance question.
-
 ## Do not retry
 
 The triad looks like boilerplate worth collapsing. Collapsing it inverts the
 dependency between `search_state` and `heuristic`.
+
+## Appendix
+
+None. This is a layering constraint rather than a performance question.

@@ -7,7 +7,7 @@
 //! the acceptance tallies all matched, over four seeds and two budgets.
 //!
 //! The pins were captured again when the greedy repair became cheapest
-//! element first, which moves the search on purpose (decisions/0029). The agreement above is what the pins held up to
+//! element first, which moves the search on purpose (decisions/0019). The agreement above is what the pins held up to
 //! that change.
 //!
 //! What [`PINS`] freezes is the five scalars of that agreement. The routes are

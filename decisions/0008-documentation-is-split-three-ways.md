@@ -23,15 +23,6 @@ Prose is plain. Bold marks a contract that fails silently, a few times across
 the repository, plus the `**API:**` line each page carries. No em-dashes, and
 colons only where one introduces a list or a code block.
 
-## Measurement
-
-The `CLAUDE.md` split was decided by what a session actually reached for. The
-module map, the benchmark `kind` table and the site conventions were used
-repeatedly and have no equivalent elsewhere. The per-algorithm table, the trait
-descriptions and the `SearchState` narrative were never enough to act on, so the
-work went to the source or to `docs/` every time. Removing them took the file
-from 370 lines to 183 and left one identifier without a home, now 0013.
-
 ## Do not retry
 
 Do not move measurements back into `docs/` or the rustdoc, and do not answer
@@ -41,3 +32,12 @@ A bulk find-and-replace over prose needs a review pass. Replacing every em-dash
 mechanically produced comma splices, damaged six table cells that had held a
 dash, and left eight lines starting with a stray comma where a dash had opened a
 continuation line.
+
+## Appendix
+
+The `CLAUDE.md` split was decided by what a session actually reached for. The
+module map, the benchmark `kind` table and the site conventions were used
+repeatedly and have no equivalent elsewhere. The per-algorithm table, the trait
+descriptions and the `SearchState` narrative were never enough to act on, so the
+work went to the source or to `docs/` every time. Removing them took the file
+from 370 lines to 183 and left one identifier without a home, now 0007.

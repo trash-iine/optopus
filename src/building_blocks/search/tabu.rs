@@ -150,7 +150,7 @@ pub struct TabuMemory {
     //
     // Stored inline rather than boxed. The arrangement the allocator draws for
     // this struct once cost TabuSearch a large slowdown under thin LTO; see
-    // decisions/0004.
+    // decisions/0002.
     sparse: HashMap<TabuKey, u64, BuildHasherDefault<TabuKeyHasher>>,
     tenure: (u64, u64),
 }

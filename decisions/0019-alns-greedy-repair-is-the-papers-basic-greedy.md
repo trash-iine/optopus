@@ -15,7 +15,15 @@ with the measurement below in hand. The random-order repair stays as
 `random_order_insertion` for Iterated Greedy. No function keeps the name
 `greedy_insertion`, so a caller of the old one fails to compile.
 
-## Measurement
+## Do not retry
+
+Going back to the random order for speed trades fidelity for the numbers above
+and is a choice to make with them, not a fix. Repricing only the container the
+last insertion changed, as the paper does, needs `Ruinable` to promise that the
+other containers' costs stay put, and gains nothing on the tour or the flow
+shop, which have a single container.
+
+## Appendix
 
 Old against new, 4 rayon threads, seed 42, the arms run one after the other.
 Average objective of the new arm against the old, per instance.
@@ -29,13 +37,5 @@ Average objective of the new arm against the old, per instance.
 
 At a fixed iteration count (VRP n303 to n502 at 6000, TSP ch150 and dsj1000 at
 10000) the two are within 0.25% everywhere, in both directions. The time lost
-is the k² repricing, and the quality per iteration is the same. Decision 0026
+is the k² repricing, and the quality per iteration is the same. Decision 0016
 was measured with the old repair.
-
-## Do not retry
-
-Going back to the random order for speed trades fidelity for the numbers above
-and is a choice to make with them, not a fix. Repricing only the container the
-last insertion changed, as the paper does, needs `Ruinable` to promise that the
-other containers' costs stay put, and gains nothing on the tour or the flow
-shop, which have a single container.

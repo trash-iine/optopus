@@ -50,7 +50,7 @@ where
     // scan here, and a position kept in `self` is stored and the row's
     // operands reloaded on every pair. The rest of the current row is walked
     // apart from the rows after it, so those run from their start the way
-    // `fold` runs them (decisions/0032).
+    // `fold` runs them (decisions/0020).
     #[inline]
     fn next(&mut self) -> Option<T> {
         let mut i = self.i;

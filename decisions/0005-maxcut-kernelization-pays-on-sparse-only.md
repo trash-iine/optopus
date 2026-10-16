@@ -16,7 +16,12 @@ There is no wrapper heuristic. A wrapper existed and was deleted once
 Whether reduction pays is a property of the instance and not of tuning, so
 `is_trivial()` answers it in one comparison and the crossing can be skipped.
 
-## Measurement
+## Do not retry
+
+The reduction rules are validated by exhaustive brute force on instances of nine
+vertices or fewer, not transcribed from the paper. Keep it that way.
+
+## Appendix
 
 Sparse graphs shrink. G70 goes from 8646 to 2164 vertices, and a tree reduces to
 zero vertices, which solves it exactly without any search. Regular and dense
@@ -24,8 +29,3 @@ graphs do not shrink at all.
 
 Searching the kernel beats searching the original on 9 of 9 sparse instances,
 worth 5673 cut points in total under Breakout Local Search.
-
-## Do not retry
-
-The reduction rules are validated by exhaustive brute force on instances of nine
-vertices or fewer, not transcribed from the paper. Keep it that way.
