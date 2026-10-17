@@ -538,11 +538,16 @@ const PROBLEM_DIRECTION = {
   Tsp: "min",
   JobShop: "min",
   VertexCover: "min",
+  Vrp: "min",
+  FlowShop: "min",
+  Qap: "min",
+  BinPacking: "min",
+  GraphColoring: "min",
 };
 
 // Display labels: internal keys stay in the Rust spelling; only the UI text is
 // prettified.
-const PROBLEM_LABEL = { Qubo: "QUBO", Sat: "SAT", Tsp: "TSP" };
+const PROBLEM_LABEL = { Qubo: "QUBO", Sat: "SAT", Tsp: "TSP", Vrp: "VRP", Qap: "QAP" };
 const problemLabel = (p) => PROBLEM_LABEL[p] ?? p;
 
 // Populated by loadData() before the UI is bootstrapped.
@@ -597,6 +602,17 @@ function heurEntries(h, prefix = "") {
   return out;
 }
 
+// Column name of a heuristic. Variations of one kind fold into one column, so
+// a composition that is a different method, GRASP as an Iterated with a
+// construction step, and the adaptive-noise WalkSat get a column of their own.
+function displayKind(h) {
+  if (h.kind === "Iterated" && (h.steps || []).some(s => s.kind === "GreedyRandomizedConstruction")) {
+    return "GRASP";
+  }
+  if (h.kind === "WalkSat" && h.adaptive_noise) return "WalkSat adaptive";
+  return h.kind;
+}
+
 function fmtHyperparams(heuristic) {
   return heurEntries(heuristic).map(([k, v]) => `${k}=${v}`).join(", ");
 }
@@ -619,7 +635,7 @@ async function loadData() {
       problem: r.problem ?? entry.problem,
       instance: instanceStem(r.instance_path),
       instance_path: r.instance_path,
-      heuristic_kind: r.heuristic.kind,
+      heuristic_kind: displayKind(r.heuristic),
       neighbor: r.heuristic.neighbor ?? null,
       source,
       band,
