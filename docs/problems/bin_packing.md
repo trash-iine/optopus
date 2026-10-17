@@ -46,7 +46,7 @@ bin is over capacity.
 
 | Type | Config | Move |
 |---|---|---|
-| `BinPackingRelocateNeighbor` | `Relocate` | Move one item into another bin with room. Emptying a bin is how the count falls. |
+| `BinPackingRelocateNeighbor` | `Relocate` | Move one item into another bin with room, or into a new bin when it shares its bin. Emptying a bin is how the count falls, and the new bin keeps the neighborhood from running out on a tight packing. |
 | `BinPackingSwapNeighbor` | `Swap` | Exchange two items of different sizes in different bins when both still fit. |
 
 Both are priced in O(1) from the loads, and neither ever overfills a bin.

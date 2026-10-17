@@ -15,12 +15,16 @@ use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 const RANDOM_DRAWS: usize = 64;
 
 /// The objective and fill term once the loads of the touched bins change,
-/// `changes` listing each one's load before and after, in O(1).
+/// `changes` listing each one's load before and after, in O(1). A bin whose
+/// load was 0 before is a new one.
 fn priced(prob: &BinPacking, sol: &BinPackingSolution, changes: &[(u64, u64)]) -> (f64, f64) {
     let mut fill = sol.fill;
     let mut bins = sol.num_bins();
     for &(before, after) in changes {
         fill += prob.sq(after) - prob.sq(before);
+        if before == 0 {
+            bins += 1;
+        }
         if after == 0 {
             bins -= 1;
         }
@@ -28,23 +32,27 @@ fn priced(prob: &BinPacking, sol: &BinPackingSolution, changes: &[(u64, u64)]) -
     (BinPacking::energy_of(bins, fill), fill)
 }
 
-/// Moves one item into another bin that has room for it.
+/// Moves one item into another bin that has room for it, or into a new bin of
+/// its own.
 ///
 /// Emptying a bin is how the bin count falls, and the move does it whenever it
-/// takes the last item out.
+/// takes the last item out. The new bin, numbered `num_bins()`, is offered to
+/// every item that shares its bin, so the neighborhood is never empty while
+/// some bin holds two items, however tight the packing.
 #[derive(Debug, Clone)]
 pub struct BinPackingRelocateNeighbor {
     /// The item that moves.
     pub item: usize,
-    /// The bin it moves to.
+    /// The bin it moves to, `num_bins()` for a new one.
     pub to: usize,
     /// Change in the objective (negative = improvement).
     pub gain: f64,
 }
 
 impl BinPackingRelocateNeighbor {
-    /// Builds the move of `item` into bin `to`, or `None` if it does not fit or
-    /// is already there.
+    /// Builds the move of `item` into bin `to`, `num_bins()` opening a new one,
+    /// or `None` if it does not fit, is already there, or would only move a
+    /// bin's sole item to a new bin.
     pub fn new(
         prob: &BinPacking,
         sol: &BinPackingSolution,
@@ -53,12 +61,17 @@ impl BinPackingRelocateNeighbor {
     ) -> Option<Self> {
         let from = sol.bin_of[item];
         let size = prob.sizes[item];
-        if to == from || sol.loads[to] + size > prob.capacity {
+        let to_load = match sol.loads.get(to) {
+            Some(&load) => load,
+            None if to == sol.num_bins() && sol.loads[from] > size => 0,
+            None => return None,
+        };
+        if to == from || to_load + size > prob.capacity {
             return None;
         }
         let changes = [
             (sol.loads[from], sol.loads[from] - size),
-            (sol.loads[to], sol.loads[to] + size),
+            (to_load, to_load + size),
         ];
         Some(Self {
             item,
@@ -71,8 +84,9 @@ impl BinPackingRelocateNeighbor {
     /// none, without listing them.
     ///
     /// With the bins sorted by load, the bins an item fits into are a prefix,
-    /// so each item's count is one binary search and the draw costs
-    /// O(n log B) rather than the O(n B) of the full neighborhood.
+    /// so each item's count is one binary search, plus the new bin when the
+    /// item shares its bin, and the draw costs O(n log B) rather than the
+    /// O(n B) of the full neighborhood.
     fn uniform_feasible(
         prob: &BinPacking,
         sol: &BinPackingSolution,
@@ -85,7 +99,8 @@ impl BinPackingRelocateNeighbor {
                 return 0;
             };
             let k = order.partition_point(|&b| sol.loads[b] <= room);
-            k - usize::from(sol.loads[sol.bin_of[item]] <= room)
+            let from_load = sol.loads[sol.bin_of[item]];
+            k - usize::from(from_load <= room) + usize::from(from_load > prob.sizes[item])
         };
         let total: usize = (0..prob.num_items()).map(fits_in).sum();
         if total == 0 {
@@ -99,12 +114,15 @@ impl BinPackingRelocateNeighbor {
                 continue;
             }
             let from = sol.bin_of[item];
+            // Past the existing bins it fits into, the last move is the new bin.
+            let room = prob.capacity - prob.sizes[item];
             let to = order
                 .iter()
                 .copied()
+                .take_while(|&b| sol.loads[b] <= room)
                 .filter(|&b| b != from)
                 .nth(r)
-                .expect("the count covers this bin");
+                .unwrap_or(sol.num_bins());
             return Self::new(prob, sol, item, to);
         }
         unreachable!("the draw is below the total count")
@@ -155,11 +173,15 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
     ) -> Result<(), OptError> {
         let size = prob.sizes[self.item];
         let from = sol.bin_of[self.item];
+        let to_load = sol.loads.get(self.to).copied().unwrap_or(0);
         let changes = [
             (sol.loads[from], sol.loads[from] - size),
-            (sol.loads[self.to], sol.loads[self.to] + size),
+            (to_load, to_load + size),
         ];
         (sol.objective, sol.fill) = priced(prob, sol, &changes);
+        if self.to == sol.num_bins() {
+            sol.loads.push(0);
+        }
         sol.loads[from] -= size;
         sol.loads[self.to] += size;
         sol.bin_of[self.item] = self.to;
@@ -178,7 +200,7 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
     fn iter(prob: &BinPacking, sol: &BinPackingSolution) -> impl Iterator<Item = Self> + Send {
         pair_scan(
             prob.num_items(),
-            move |_| ((), 0..sol.num_bins()),
+            move |_| ((), 0..sol.num_bins() + 1),
             move |_, item, to| Self::new(prob, sol, item, to),
         )
     }
@@ -188,12 +210,12 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
         sol: &BinPackingSolution,
         rng: &mut SmallRng,
     ) -> Option<Self> {
-        if sol.num_bins() < 2 {
+        if prob.num_items() == 0 {
             return None;
         }
         for _ in 0..RANDOM_DRAWS {
             let item = rng.random_range(0..prob.num_items());
-            let to = rng.random_range(0..sol.num_bins());
+            let to = rng.random_range(0..=sol.num_bins());
             if let Some(m) = Self::new(prob, sol, item, to) {
                 return Some(m);
             }
@@ -400,13 +422,39 @@ mod tests {
         );
         assert!(counts.values().all(|&c| (100..300).contains(&c)));
 
+        // Two full bins leave only the new bin, which every item is offered.
         let tight = BinPacking::new("full", 10, vec![6, 4, 5, 5]);
         let full = tight.solution_from_bins(vec![0, 0, 1, 1]).unwrap();
+        let opening: Vec<_> = BinPackingRelocateNeighbor::iter(&tight, &full).collect();
+        assert_eq!(opening.len(), 4);
+        assert!(opening.iter().all(|m| m.to == 2 && m.gain > 0.0));
+        let m = BinPackingRelocateNeighbor::uniform_feasible(&tight, &full, &mut rng).unwrap();
+        assert_eq!(m.to, 2);
+
+        // Items alone in their bins with no room elsewhere have no move at all.
+        let apart = BinPacking::new("apart", 10, vec![6, 5]);
+        let alone = apart.solution_from_bins(vec![0, 1]).unwrap();
         assert!(
-            BinPackingRelocateNeighbor::iter(&tight, &full)
+            BinPackingRelocateNeighbor::iter(&apart, &alone)
                 .next()
                 .is_none()
         );
-        assert!(BinPackingRelocateNeighbor::uniform_feasible(&tight, &full, &mut rng).is_none());
+        assert!(BinPackingRelocateNeighbor::uniform_feasible(&apart, &alone, &mut rng).is_none());
+    }
+
+    /// Opening a bin adds it at the end and prices the extra bin.
+    #[test]
+    fn opening_a_bin_adds_it_last() {
+        let bp = BinPacking::new("tiny", 10, vec![6, 4]);
+        let sol = bp.solution_from_bins(vec![0, 0]).unwrap();
+        let m = BinPackingRelocateNeighbor::new(&bp, &sol, 1, 1).unwrap();
+        let mut after = sol.clone();
+        m.apply_to_solution(&bp, &mut after).unwrap();
+        assert_eq!(after.loads, vec![6, 4]);
+        assert_eq!(after.bin_of, vec![0, 1]);
+        let rebuilt = bp.solution_from_bins(after.bin_of.clone()).unwrap();
+        assert!((after.objective - rebuilt.objective).abs() < 1e-9);
+        assert!((after.objective - (sol.objective + m.gain)).abs() < 1e-9);
+        assert!(BinPackingRelocateNeighbor::new(&bp, &after, 1, 2).is_none());
     }
 }

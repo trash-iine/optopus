@@ -40,7 +40,7 @@ bin は常に空きのない `0..num_bins()` で番号付けされ、bin を空�
 
 | 型 | 設定 | 移動 |
 |---|---|---|
-| `BinPackingRelocateNeighbor` | `Relocate` | 品目を一つ、空きのある別の bin に移す。bin を空にすることで数が減る。 |
+| `BinPackingRelocateNeighbor` | `Relocate` | 品目を一つ、空きのある別の bin に移す。ほかの品目と同じ bin にある品目は新しい bin にも移せる。bin を空にすることで数が減り、新しい bin があるので詰まった解でも近傍が尽きない。 |
 | `BinPackingSwapNeighbor` | `Swap` | 別々の bin にある大きさの違う二つの品目を、両方が収まるときに交換する。 |
 
 どちらも負荷から O(1) で価格付けし、bin を容量超過にすることはありません。
