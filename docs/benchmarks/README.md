@@ -107,11 +107,33 @@ seeds are derived deterministically.
 ```bash
 cargo build --release
 
-# Re-run any band/problem; output lands in result/<timestamp>.toml
+# Re-run one config; output lands in result/<timestamp>.toml
 ./target/release/optopus data/benchmarks/maxcut/general_small.toml
 mv result/<timestamp>.toml docs/benchmarks/data/maxcut/general_gset_small.toml
 
 # Regenerate viewer data (slim TOML + index)
+python3 docs/benchmarks/render.py
+```
+
+A whole band takes from a day (small) to about two weeks (large), so the
+published sweep runs through `data/benchmarks/scripts/bench_units.py`. It
+splits every config of a band into one unit per (instance, heuristic), runs
+the units one after another, and skips a finished unit when started again, so
+a run the machine stops loses at most the unit in progress. `merge` writes each
+config's units back as the file a single run of that config would have
+written. A unit holds its heuristic at position 0, so its per-run seeds differ
+from those of a single run of the whole config. A run stopped by the clock
+does not repeat bit for bit in any case. `freeze` copies the release binary
+into the work directory and the sweep runs that copy, so rebuilding the
+repository partway through does not change what the later units run.
+
+```bash
+cargo build --release
+python3 data/benchmarks/scripts/bench_units.py freeze
+python3 data/benchmarks/scripts/bench_units.py split small
+caffeinate -dis python3 data/benchmarks/scripts/bench_units.py run small
+python3 data/benchmarks/scripts/bench_units.py progress
+python3 data/benchmarks/scripts/bench_units.py merge small
 python3 docs/benchmarks/render.py
 ```
 

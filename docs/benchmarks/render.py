@@ -39,6 +39,11 @@ PROBLEM_DIRS = {
     "tsp": "Tsp",
     "jssp": "JobShop",
     "vertex_cover": "VertexCover",
+    "vrp": "Vrp",
+    "flow_shop": "FlowShop",
+    "qap": "Qap",
+    "bin_packing": "BinPacking",
+    "graph_coloring": "GraphColoring",
 }
 
 
