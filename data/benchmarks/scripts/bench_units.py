@@ -12,6 +12,7 @@ parallel. A unit holds its heuristic at index 0, so its per-run seeds differ
 from those of a monolithic run of the same config. A time-limited run does
 not repeat bit for bit anyway.
 
+    python3 data/benchmarks/scripts/bench_units.py freeze
     python3 data/benchmarks/scripts/bench_units.py split small medium large bls
     caffeinate -dis python3 data/benchmarks/scripts/bench_units.py run small medium large bls
     python3 data/benchmarks/scripts/bench_units.py progress
@@ -19,7 +20,9 @@ not repeat bit for bit anyway.
     python3 docs/benchmarks/render.py
 
 `run` takes `--problem <dir>` (e.g. `--problem qap`) to run one problem
-first. The units live under `$OPTOPUS_BENCH_WORK` (default
+first. `freeze` copies `target/release/optopus` into the work directory, and
+`run` uses that copy from then on, so a rebuild during a sweep that takes
+weeks does not change the binary halfway, which can move timings by itself. The units live under `$OPTOPUS_BENCH_WORK` (default
 `~/optopus_bench_work`), outside the repository and outside `/tmp`, which a
 restart clears. Requires `tomli_w` (`pip install tomli-w`).
 """
@@ -29,6 +32,7 @@ import argparse
 import glob
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -40,9 +44,10 @@ import tomli_w
 REPO = Path(__file__).resolve().parents[3]
 CONFIGS = REPO / "data" / "benchmarks"
 CURATED = REPO / "docs" / "benchmarks" / "data"
-BIN = REPO / "target" / "release" / "optopus"
+BUILT = REPO / "target" / "release" / "optopus"
 WORK = Path(os.environ.get("OPTOPUS_BENCH_WORK", Path.home() / "optopus_bench_work"))
 UNITS = WORK / "units"
+FROZEN = WORK / "optopus"
 
 BANDS = ("small", "medium", "large", "bls")
 # The order problems run in within a band, cheapest first, so whole problems
@@ -133,9 +138,22 @@ def is_done(unit: dict) -> bool:
     return (UNITS / unit["key"] / "res.toml").exists()
 
 
+def freeze() -> None:
+    if not BUILT.exists():
+        sys.exit(f"{BUILT} not found, run `cargo build --release` first")
+    WORK.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(BUILT, FROZEN)
+    head = subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
+                          capture_output=True, text=True).stdout.strip()
+    (WORK / "optopus.txt").write_text(f"{head} {time.strftime('%Y-%m-%d %H:%M')}\n")
+    print(f"froze {BUILT} as {FROZEN} (HEAD {head})")
+
+
 def run(bands: list[str], problem: str | None) -> None:
-    if not BIN.exists():
-        sys.exit(f"{BIN} not found, run `cargo build --release` first")
+    binary = FROZEN if FROZEN.exists() else BUILT
+    if not binary.exists():
+        sys.exit(f"{binary} not found, run `cargo build --release` first")
+    print(f"binary {binary}", flush=True)
     units = load_units(bands, problem)
     todo = [u for u in units if not is_done(u)]
     print(f"{len(units) - len(todo)}/{len(units)} done, {len(todo)} to run", flush=True)
@@ -147,7 +165,7 @@ def run(bands: list[str], problem: str | None) -> None:
             stale.unlink()
         start = time.time()
         with open(d / "log.txt", "w") as log:
-            rc = subprocess.run([str(BIN), "unit.toml"], cwd=d, stdout=log, stderr=log).returncode
+            rc = subprocess.run([str(binary), "unit.toml"], cwd=d, stdout=log, stderr=log).returncode
         results = sorted((d / "result").glob("*.toml")) if (d / "result").exists() else []
         if rc != 0 or not results:
             print(f"[{i}/{len(todo)}] FAIL {unit['key']} rc={rc}, see {d / 'log.txt'}", flush=True)
@@ -200,13 +218,15 @@ def merge(bands: list[str], partial: bool) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("command", choices=("split", "run", "progress", "merge"))
+    ap.add_argument("command", choices=("freeze", "split", "run", "progress", "merge"))
     ap.add_argument("bands", nargs="*", choices=BANDS + ("all",))
     ap.add_argument("--problem", help="run only this problem directory, e.g. qap")
     ap.add_argument("--partial", action="store_true", help="merge configs with units still missing")
     args = ap.parse_args()
     bands = list(BANDS) if not args.bands or "all" in args.bands else args.bands
-    if args.command == "split":
+    if args.command == "freeze":
+        freeze()
+    elif args.command == "split":
         split(bands)
     elif args.command == "run":
         run(bands, args.problem)

@@ -123,9 +123,13 @@ a run the machine stops loses at most the unit in progress. `merge` writes each
 config's units back as the file a single run of that config would have
 written. A unit holds its heuristic at position 0, so its per-run seeds differ
 from those of a single run of the whole config. A run stopped by the clock
-does not repeat bit for bit in any case.
+does not repeat bit for bit in any case. `freeze` copies the release binary
+into the work directory and the sweep runs that copy, so rebuilding the
+repository partway through does not change what the later units run.
 
 ```bash
+cargo build --release
+python3 data/benchmarks/scripts/bench_units.py freeze
 python3 data/benchmarks/scripts/bench_units.py split small
 caffeinate -dis python3 data/benchmarks/scripts/bench_units.py run small
 python3 data/benchmarks/scripts/bench_units.py progress
