@@ -46,6 +46,14 @@ replace it with a `max_iteration` no larger than the smallest
 `n_accepted + n_rejected` a run reached, which is how many iterations it got
 through.
 
+Each run's seed is derived from the master seed and three positions: the
+instance's among the files the `[[instances]]` entries match, in order (a
+glob's matches sorted by path), the heuristic's among the `[[heuristics]]`, and
+the run's index. The path does not enter, so the same instance read from
+another path, such as a new temporary file, repeats its runs. Inserting an
+instance or a heuristic, or a glob matching one more file, shifts the seeds of
+the ones after it. For other runs of the same config, give it another `seed`.
+
 ## Heuristic kinds
 
 Every value below is a valid `kind` tag for a `[[heuristics]]` block. Each links

@@ -571,6 +571,76 @@ max_iteration = 10
     assert!(result.is_err(), "empty glob must be rejected");
 }
 
+const SIX_VERTICES: &str = "6 9\n1 2 1\n2 3 1\n3 4 1\n4 5 1\n5 6 1\n6 1 1\n1 4 1\n2 5 1\n3 6 1\n";
+
+/// A seeded tabu search with one `[[instances]]` entry per path.
+fn seeded_config(paths: &[&str]) -> String {
+    let instances: String = paths
+        .iter()
+        .map(|path| format!("[[instances]]\npath = \"{path}\"\nproblem = \"MaxCut\"\n\n"))
+        .collect();
+    format!(
+        r#"
+num_runs = 3
+seed = 99
+
+{instances}[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [1, 3]
+
+[heuristics.stop_condition]
+max_iteration = 300
+"#
+    )
+}
+
+/// The seeds come from positions in the config, not from the path, so the same
+/// instance read from another path, as a server writing each request to a new
+/// temp file does, repeats its seeded runs.
+#[test]
+fn a_seeded_run_repeats_when_the_instance_moves() {
+    let a = write_temp_file("seed_path_a", SIX_VERTICES);
+    let b = write_temp_file("seed_path_b", SIX_VERTICES);
+    let first = run_benchmark(&seeded_config(&[&a.display().to_string()]));
+    let second = run_benchmark(&seeded_config(&[&b.display().to_string()]));
+    let _ = std::fs::remove_file(&a);
+    let _ = std::fs::remove_file(&b);
+
+    for (x, y) in first.results[0].runs.iter().zip(&second.results[0].runs) {
+        assert_eq!(x.status, "success");
+        assert_eq!(x.seed, y.seed, "the seed must not depend on the path");
+        assert_eq!(x.best_objective, y.best_objective);
+        assert_eq!(x.best_iteration, y.best_iteration);
+        assert_eq!(x.solution, y.solution);
+    }
+}
+
+/// Instances in one config draw from their own streams, even when they are the
+/// same file.
+#[test]
+fn instances_in_one_config_get_their_own_seeds() {
+    let path = write_temp_file("seed_position", SIX_VERTICES);
+    let path_str = path.display().to_string();
+    let report = run_benchmark(&seeded_config(&[&path_str, &path_str]));
+    let _ = std::fs::remove_file(&path);
+
+    let seeds = |i: usize| {
+        report.results[i]
+            .runs
+            .iter()
+            .map(|r| r.seed.expect("a seeded config reports each run's seed"))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(report.results.len(), 2);
+    assert!(
+        seeds(0).iter().all(|s| !seeds(1).contains(s)),
+        "{:?} and {:?} must not share a seed",
+        seeds(0),
+        seeds(1)
+    );
+}
+
 /// A heterogeneous-fleet instance goes through the same pipeline as a CVRPLIB
 /// one, the TOML format being chosen by the file extension. This pins the
 /// whole path: `ProblemKind::Vrp` with a `.toml` path, `Vrp::load_file`, a

@@ -68,10 +68,12 @@ fn monotone_trajectory(
 
 /// Derives a per-run u64 seed from the master seed and the run coordinates.
 /// Using a hash keeps the seed deterministic and well-mixed even when the master
-/// is small (e.g. `seed = 0`).
+/// is small (e.g. `seed = 0`). An instance enters by its position among the
+/// expanded instances, not its path, so the seeds depend on the config alone
+/// and the same instance read from another path repeats its runs.
 fn derive_run_seed(
     master: u64,
-    instance_path: &str,
+    instance_idx: usize,
     heuristic_idx: usize,
     run_index: usize,
 ) -> u64 {
@@ -79,7 +81,7 @@ fn derive_run_seed(
     use std::hash::{Hash, Hasher};
     let mut h = DefaultHasher::new();
     master.hash(&mut h);
-    instance_path.hash(&mut h);
+    (instance_idx as u64).hash(&mut h);
     (heuristic_idx as u64).hash(&mut h);
     (run_index as u64).hash(&mut h);
     // Clear the top bit so the seed fits in TOML's signed i64 range when
@@ -91,6 +93,8 @@ fn derive_run_seed(
 /// instance file exactly once and sharing it across all heuristics and runs.
 struct InstanceVisitor<'a> {
     config: &'a BenchmarkConfig,
+    /// The instance's position among the expanded instances.
+    instance_idx: usize,
     instance_path: &'a str,
     problem_kind: &'a ProblemKind,
 }
@@ -122,7 +126,7 @@ impl ProblemVisitor for InstanceVisitor<'_> {
                 .into_par_iter()
                 .map(|run_index| {
                     let run_seed = master_seed
-                        .map(|m| derive_run_seed(m, self.instance_path, heuristic_idx, run_index));
+                        .map(|m| derive_run_seed(m, self.instance_idx, heuristic_idx, run_index));
                     let result = run_typed::<P>(&instance, heuristic_cfg, run_index, run_seed);
 
                     tracing::info!(
@@ -301,15 +305,17 @@ impl Benchmark {
 
         // Instances run in parallel with each other, and each (heuristic, run)
         // pair inside an instance runs in parallel too (rayon nests fine).
-        // Per-run seeds are derived from (master, path, heuristic, run), so the
-        // report is independent of scheduling order.
+        // Per-run seeds are derived from (master, instance, heuristic, run)
+        // positions, so the report is independent of scheduling order.
         let results: Vec<InstanceHeuristicResult> = instance_paths
             .par_iter()
-            .map(|(instance_path, problem_kind)| {
+            .enumerate()
+            .map(|(instance_idx, (instance_path, problem_kind))| {
                 with_problem(
                     problem_kind,
                     InstanceVisitor {
                         config: &config,
+                        instance_idx,
                         instance_path,
                         problem_kind,
                     },
