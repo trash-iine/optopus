@@ -6,21 +6,24 @@
 //! [`ProblemKind`] variant.
 
 use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
-use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
+use super::factory::{
+    ConfigurableProblem, NeighborVisitor, ProvingSearch, build_heuristic, invalid_neighbor,
+};
+use crate::building_blocks::representation::BinaryRelaxation;
 use crate::error::OptError;
 use crate::heuristic::{
-    AdaptiveLargeNeighborhoodSearch, GreedyRandomizedConstruction, Heuristic,
+    AdaptiveLargeNeighborhoodSearch, BranchAndBound, GreedyRandomizedConstruction, Heuristic,
     HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
     WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
     iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
     BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
-    BinPackingSwapNeighbor, FlowShop, FlowShopInsertNeighbor, FlowShopOrderCrossover,
-    FlowShopSolution, FlowShopSwapNeighbor, GraphColoring, GraphColoringRecolorNeighbor,
-    GraphColoringSolution, GraphColoringSwapNeighbor, GraphColoringUniformCrossover,
-    JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
-    JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
+    BinPackingSwapNeighbor, EigenvalueRelaxation, FlowShop, FlowShopInsertNeighbor,
+    FlowShopOrderCrossover, FlowShopSolution, FlowShopSwapNeighbor, GraphColoring,
+    GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
+    GraphColoringUniformCrossover, JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling,
+    JobShopSolution, JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
     MaxCutUniformCrossover, Qap, QapOrderCrossover, QapSolution, QapSwapNeighbor, QuboFlipNeighbor,
     QuboSwapNeighbor, QuboUniformCrossover, SatUniformCrossover, TspOrderCrossover, VertexCover,
     VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
@@ -35,7 +38,7 @@ use crate::problem::{
     },
 };
 use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
-use crate::trait_defs::Ruinable;
+use crate::trait_defs::{BranchSpace, Relaxation, Ruinable};
 
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
@@ -262,6 +265,16 @@ impl ConfigurableProblem for MaxCut {
         }
     }
 
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        match bnb_relaxation(config, Self::NAME, true)? {
+            None => branch_and_bound(config, cond, BinaryRelaxation),
+            Some(eigen) => branch_and_bound(config, cond, eigen),
+        }
+    }
+
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(MaxCutUniformCrossover)),
@@ -300,6 +313,14 @@ impl ConfigurableProblem for Qubo {
             NeighborKind::Swap => Ok(visitor.visit::<QuboSwapNeighbor>()),
             other => Err(invalid_neighbor::<Self>(other)),
         }
+    }
+
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        bnb_relaxation(config, Self::NAME, false)?;
+        branch_and_bound(config, cond, BinaryRelaxation)
     }
 
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
@@ -355,6 +376,14 @@ impl ConfigurableProblem for Sat {
                 config.kind_name()
             ))),
         }
+    }
+
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        bnb_relaxation(config, Self::NAME, false)?;
+        branch_and_bound(config, cond, BinaryRelaxation)
     }
 
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
@@ -513,6 +542,14 @@ impl ConfigurableProblem for VertexCover {
         }
     }
 
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        bnb_relaxation(config, Self::NAME, false)?;
+        branch_and_bound(config, cond, BinaryRelaxation)
+    }
+
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(VertexCoverUniformCrossover)),
@@ -629,6 +666,90 @@ where
     Ok(Box::new(GreedyRandomizedConstruction::<P>::new(
         cond, alpha,
     )))
+}
+
+/// A `BranchAndBound` config's search, `steps[0]` searching each node and
+/// `relaxation` pruning them.
+fn branch_and_bound<P, R>(
+    config: &HeuristicConfig,
+    cond: StopCondition,
+    relaxation: R,
+) -> Result<Box<dyn ProvingSearch<P>>, OptError>
+where
+    P: ConfigurableProblem + BranchSpace,
+    P::Solution: BenchmarkSolution + Distance + Evaluate,
+    R: Relaxation<P> + 'static,
+{
+    let steps = config.steps();
+    if steps.len() != 1 {
+        return Err(OptError::Config(format!(
+            "BranchAndBound requires exactly 1 step (the search of each node), but got {}",
+            steps.len()
+        )));
+    }
+    let node_search = build_heuristic::<P>(&steps[0])?;
+    Ok(Box::new(BranchAndBound::new(cond, node_search, relaxation)))
+}
+
+/// The bound a `BranchAndBound` config names on `problem`: `None` for
+/// "Binary", the default, and the eigenvalue bound with its limits for
+/// "Eigenvalue", which only a problem with `has_eigenvalue` takes. The limits
+/// are refused alongside any other bound, so a config cannot set them to no
+/// effect.
+fn bnb_relaxation(
+    config: &HeuristicConfig,
+    problem: &str,
+    has_eigenvalue: bool,
+) -> Result<Option<EigenvalueRelaxation>, OptError> {
+    let HeuristicConfig::BranchAndBound {
+        relaxation,
+        eigen_max_iterations,
+        eigen_lanczos_steps,
+        eigen_certify_limit,
+        ..
+    } = config
+    else {
+        unreachable!("bnb_relaxation is only called on a BranchAndBound config");
+    };
+    let limits = [
+        ("eigen_max_iterations", *eigen_max_iterations),
+        ("eigen_lanczos_steps", *eigen_lanczos_steps),
+        ("eigen_certify_limit", *eigen_certify_limit),
+    ];
+    match relaxation.as_deref().unwrap_or("Binary") {
+        "Binary" => {
+            if let Some((name, _)) = limits.iter().find(|(_, v)| v.is_some()) {
+                return Err(OptError::Config(format!(
+                    "'{name}' applies only to relaxation = 'Eigenvalue'"
+                )));
+            }
+            Ok(None)
+        }
+        "Eigenvalue" if has_eigenvalue => {
+            if let Some((name, _)) = limits.iter().find(|(_, v)| *v == Some(0)) {
+                return Err(OptError::Config(format!("'{name}' must be at least 1")));
+            }
+            let mut eigen = EigenvalueRelaxation::new();
+            if let Some(n) = *eigen_max_iterations {
+                eigen = eigen.with_max_iterations(n);
+            }
+            if let Some(n) = *eigen_lanczos_steps {
+                eigen = eigen.with_lanczos_steps(n);
+            }
+            if let Some(n) = *eigen_certify_limit {
+                eigen = eigen.with_certify_limit(n);
+            }
+            Ok(Some(eigen))
+        }
+        other => Err(OptError::Config(format!(
+            "Unknown relaxation '{other}' for {problem} (expected {})",
+            if has_eigenvalue {
+                "'Binary' or 'Eigenvalue'"
+            } else {
+                "'Binary'"
+            }
+        ))),
+    }
 }
 
 impl BenchmarkProblem for BinPacking {

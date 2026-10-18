@@ -196,6 +196,7 @@ kinds fail at parse time.
 | `IteratedGreedy` | FlowShop | | `removal_count`, `temperature_factor` |
 | `GreedyRandomizedConstruction` | VRP, TSP, FlowShop, BinPacking | | `alpha` (one construction, GRASP is `Iterated` with it as `steps[1]`) |
 | `HybridGeneticSearch` | VRP | | `min_population_size`, `generation_size`, `granularity`, `target_feasible`, `restart_generations` |
+| `BranchAndBound` | MaxCut, Qubo, Sat, VertexCover | `steps[0]` = node search | `relaxation` (`Binary` / `Eigenvalue` on MaxCut), `eigen_max_iterations`, `eigen_lanczos_steps`, `eigen_certify_limit` |
 | `Sequential` | all | `steps` | |
 | `Iterated` | all | `steps[0]` = search, `steps[1]` = perturbation | |
 | `VariableNeighborhoodSearch` | all | `steps[0]` = search, `steps[1..]` = shakes | |

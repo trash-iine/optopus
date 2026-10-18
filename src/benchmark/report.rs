@@ -38,6 +38,17 @@ pub struct SingleRunResult {
     /// `SearchState::new_with_seed(instance, seed)` reproduces this single run exactly.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<u64>,
+    /// Whether the run proved `best_objective` optimal. Set only for a
+    /// heuristic that bounds the objective (`BranchAndBound` at the top level)
+    /// whose run succeeded.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proven_optimal: Option<bool>,
+    /// The best objective a solution the run had not ruled out could reach:
+    /// at least `best_objective` on a maximized problem, at most it on a
+    /// minimized one, and equal to it once proven optimal. Set as
+    /// `proven_optimal` is, and absent while the run had bounded nothing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dual_bound: Option<f64>,
     pub solution: Vec<usize>,
     /// Anytime trajectory: `(elapsed_secs, objective)` per strict improvement
     /// of the incumbent, monotone in both time and objective.
@@ -242,6 +253,8 @@ mod report_tests {
             n_rejected: Some(1),
             n_best_updates: Some(2),
             seed: None,
+            proven_optimal: None,
+            dual_bound: None,
             solution: vec![],
             trajectory: vec![],
         }

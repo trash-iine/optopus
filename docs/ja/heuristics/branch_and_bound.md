@@ -111,7 +111,26 @@ BranchAndBound::new(
 
 ## ベンチマーク設定 { #benchmark-config }
 
-`BranchAndBound` は今のところライブラリ専用です。
+```toml
+[[heuristics]]
+kind = "BranchAndBound"
+relaxation = "Binary"        # 任意 (既定値を表示)。MaxCut では "Eigenvalue" も使える
+# eigen_max_iterations = 100 # 任意、"Eigenvalue" のときだけ (既定値を表示)
+# eigen_lanczos_steps = 30
+# eigen_certify_limit = 3000
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+
+[[heuristics.steps]]         # ちょうど 1 つ: 各ノードの探索
+kind = "LocalSearch"
+neighbor = "Flip"
+[heuristics.steps.stop_condition]
+max_iteration = 100          # ノードごとの予算
+```
+
+MaxCut、Qubo、Sat、VertexCover で動きます。`eigen_` の上限は `"Eigenvalue"` 以外の緩和と一緒に書くとエラーになります。
+トップレベルの `BranchAndBound` の実行は `proven_optimal` と `dual_bound` を報告します ([レポート](../guide/benchmarking.md#output-report) を参照)。
+問題全体を一度も評価し終えていない、まだ上界が無限のあいだは bound を出力しません。
 
 ## 参考文献 { #references }
 

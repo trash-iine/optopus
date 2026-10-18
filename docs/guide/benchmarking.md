@@ -80,6 +80,7 @@ algorithm's own page; this table is only the index.
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop only |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
+| [`BranchAndBound`](../heuristics/branch_and_bound.md#benchmark-config) | MaxCut, Qubo, Sat, VertexCover |
 
 Unknown kinds and missing required fields fail at parse time, before any run
 starts.
@@ -165,13 +166,17 @@ BenchmarkReport
         ├── initial_objective / improvement: Option<f64>
         ├── n_accepted / n_rejected / n_best_updates: Option<u64>
         ├── seed: Option<u64>                    (this run's derived seed)
+        ├── proven_optimal / dual_bound: Option  (BranchAndBound only)
         ├── solution: Vec<usize>                 (0-indexed, problem-specific encoding)
         └── trajectory: Vec<(f64, f64)>          (elapsed_secs, objective) per improvement
 ```
 
 `trajectory` is the anytime curve, monotone in the problem's optimization
 direction. It is what the benchmark viewer plots. The `Option` fields are
-absent for runs that ended in an error.
+absent for runs that ended in an error. `proven_optimal` and `dual_bound` are
+set only for a top-level `BranchAndBound`: whether the run proved
+`best_objective` optimal, and the best objective a solution not yet ruled out
+could reach, equal to `best_objective` once proven.
 
 Solution encoding:
 

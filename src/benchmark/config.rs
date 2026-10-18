@@ -296,6 +296,31 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Branch-and-bound (MaxCut, Qubo, Sat and VertexCover): `steps[0]`
+    /// searches each node, its stop condition a budget per node. A run that
+    /// searches every node proves its best solution optimal, which the report
+    /// gives as `proven_optimal` and `dual_bound`.
+    BranchAndBound {
+        steps: Vec<HeuristicConfig>,
+        /// The bound a node is pruned by: "Binary" (default), or "Eigenvalue"
+        /// on MaxCut, the eigenvalue bound of Delorme and Poljak.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        relaxation: Option<String>,
+        /// Eigenvalue bound only: subgradient steps per bound. Default: 100.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        eigen_max_iterations: Option<usize>,
+        /// Eigenvalue bound only: Lanczos steps per eigenvalue estimate.
+        /// Default: 30.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        eigen_lanczos_steps: Option<usize>,
+        /// Eigenvalue bound only: the largest folded graph the bound is
+        /// certified on; above it the positive weights bound the node instead.
+        /// Its dense factorization costs the cube of this. Default: 3000.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        eigen_certify_limit: Option<usize>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Repeats its `steps` cycle until `stop_condition` is met.
     Sequential {
         steps: Vec<HeuristicConfig>,
@@ -376,6 +401,7 @@ impl HeuristicConfig {
             Self::GreedyRandomizedConstruction { .. } => "GreedyRandomizedConstruction",
             Self::HybridGeneticSearch { .. } => "HybridGeneticSearch",
             Self::WalkSat { .. } => "WalkSat",
+            Self::BranchAndBound { .. } => "BranchAndBound",
             Self::Sequential { .. } => "Sequential",
             Self::Iterated { .. } => "Iterated",
             Self::VariableNeighborhoodSearch { .. } => "VariableNeighborhoodSearch",
@@ -403,7 +429,8 @@ impl HeuristicConfig {
     /// Nested sub-heuristics (empty for non-composite kinds).
     pub fn steps(&self) -> &[HeuristicConfig] {
         match self {
-            Self::Sequential { steps, .. }
+            Self::BranchAndBound { steps, .. }
+            | Self::Sequential { steps, .. }
             | Self::Iterated { steps, .. }
             | Self::VariableNeighborhoodSearch { steps, .. }
             | Self::Restart { steps, .. }
@@ -431,6 +458,7 @@ impl HeuristicConfig {
             | Self::GreedyRandomizedConstruction { stop_condition, .. }
             | Self::HybridGeneticSearch { stop_condition, .. }
             | Self::WalkSat { stop_condition, .. }
+            | Self::BranchAndBound { stop_condition, .. }
             | Self::Sequential { stop_condition, .. }
             | Self::Iterated { stop_condition, .. }
             | Self::VariableNeighborhoodSearch { stop_condition, .. }

@@ -70,6 +70,7 @@ max_failed_update = 5_000
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop のみ |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP のみ |
+| [`BranchAndBound`](../heuristics/branch_and_bound.md#benchmark-config) | MaxCut, Qubo, Sat, VertexCover |
 
 未知の kind や必須フィールドの欠落は、実行が始まる前のパースの時点でエラーになります。
 
@@ -150,12 +151,14 @@ BenchmarkReport
         ├── initial_objective / improvement: Option<f64>
         ├── n_accepted / n_rejected / n_best_updates: Option<u64>
         ├── seed: Option<u64>                    (この実行に導出されたシード)
+        ├── proven_optimal / dual_bound: Option  (BranchAndBound のみ)
         ├── solution: Vec<usize>                 (0 始まり、問題ごとの符号化)
         └── trajectory: Vec<(f64, f64)>          (改善ごとの (elapsed_secs, objective))
 ```
 
 `trajectory` は anytime 曲線で、問題の最適化の向きに単調です。ベンチマークビューアが描くのはこれです。
 エラーで終わった実行では `Option` のフィールドは出力されません。
+`proven_optimal` と `dual_bound` が出るのはトップレベルの `BranchAndBound` だけです。前者はその実行が `best_objective` の最適性を証明したかどうか、後者はまだ除外されていない解が到達しうる最良の目的関数値で、証明が済むと `best_objective` に一致します。
 
 解の符号化は次のとおりです。
 

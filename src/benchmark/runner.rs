@@ -3,11 +3,10 @@
 use rayon::prelude::*;
 
 use super::config::{BenchmarkConfig, HeuristicConfig, ProblemKind, validate_config};
-use super::factory::{ConfigurableProblem, build_heuristic};
+use super::factory::{ConfigurableProblem, Search, build_search};
 use super::problems::{BenchmarkProblem, BenchmarkSolution, ProblemVisitor, with_problem};
 use super::report::{BenchmarkReport, InstanceHeuristicResult, SingleRunResult, compute_summary};
 use crate::error::OptError;
-use crate::heuristic::Heuristic;
 use crate::search_state::{Distance, Evaluate, SearchState};
 
 // ---------------------------------------------------------------------------
@@ -36,6 +35,8 @@ fn failed_run(run_index: usize, status: String, seed: Option<u64>) -> SingleRunR
         n_rejected: None,
         n_best_updates: None,
         seed,
+        proven_optimal: None,
+        dual_bound: None,
         solution: Vec::new(),
         trajectory: Vec::new(),
     }
@@ -179,7 +180,7 @@ where
     P: ConfigurableProblem,
     P::Solution: BenchmarkSolution + Distance + Evaluate,
 {
-    let heuristic = match build_heuristic::<P>(config) {
+    let search = match build_search::<P>(config) {
         Ok(h) => h,
         Err(e) => {
             let msg = match e {
@@ -195,12 +196,12 @@ where
             return failed_run(run_index, format!("error loading instance: {}", e), seed);
         }
     };
-    run_problem::<P>(instance, heuristic, P::MINIMIZE, run_index, seed)
+    run_problem::<P>(instance, search, P::MINIMIZE, run_index, seed)
 }
 
 fn run_problem<P>(
     instance: &P,
-    mut heuristic: Box<dyn Heuristic<P>>,
+    mut search: Search<P>,
     minimize: bool,
     run_index: usize,
     seed: Option<u64>,
@@ -215,7 +216,10 @@ where
     };
     state.set_objective_probe(|s| s.best_objective_f64());
     let initial_objective = state.initial_solution.best_objective_f64();
-    let status = heuristic.run(&mut state);
+    let status = match &mut search {
+        Search::Plain(h) => h.run(&mut state),
+        Search::Proving(h) => h.run(&mut state),
+    };
     // Timed from `state.start_time`, the origin the trajectory points are
     // reported against, so `time_to_best_secs <= total_time_secs` holds.
     let total_time = state.duration();
@@ -231,6 +235,21 @@ where
         .last()
         .map(|&(elapsed, _)| elapsed)
         .unwrap_or_else(|| (state.best_time - state.start_time).as_secs_f64());
+    // A run that failed proved nothing, and one that took no node proved
+    // nothing either. The bound is infinite until the search has bounded the
+    // whole problem, which a report cannot carry.
+    let (proven_optimal, dual_bound) = match &search {
+        Search::Proving(h) if status.is_ok() => {
+            let certificate = h.certificate();
+            (
+                Some(certificate.is_some_and(|c| c.proven_optimal)),
+                certificate
+                    .map(|c| c.dual_bound.raw())
+                    .filter(|b| b.is_finite()),
+            )
+        }
+        _ => (None, None),
+    };
     SingleRunResult {
         run_index,
         status: status_str(status),
@@ -244,6 +263,8 @@ where
         n_rejected: Some(state.n_rejected),
         n_best_updates: Some(state.n_best_updates),
         seed,
+        proven_optimal,
+        dual_bound,
         solution: state.best_solution.encode_as_indices(),
         trajectory,
     }

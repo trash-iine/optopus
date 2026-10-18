@@ -676,3 +676,185 @@ max_iteration = 2000
         assert_eq!(customers, (1..=6).collect::<Vec<_>>(), "{:?}", run.solution);
     }
 }
+
+/// Runs a seeded `BranchAndBound` with a short local search per node on
+/// `instance`, `extra` adding fields to the heuristic, and returns its runs.
+fn branch_and_bound_runs(
+    tag: &str,
+    problem: &str,
+    instance: &str,
+    neighbor: &str,
+    extra: &str,
+) -> Vec<optopus::benchmark::SingleRunResult> {
+    let path = write_temp_file(tag, instance);
+    let config_toml = format!(
+        r#"
+num_runs = 2
+seed = 5
+
+[[instances]]
+path = "{}"
+problem = "{problem}"
+
+[[heuristics]]
+kind = "BranchAndBound"
+{extra}
+[heuristics.stop_condition]
+max_iteration = 10_000
+
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "{neighbor}"
+[heuristics.steps.stop_condition]
+max_iteration = 100
+"#,
+        path.display()
+    );
+    let report = run_benchmark(&config_toml);
+    let _ = std::fs::remove_file(&path);
+    report.results.into_iter().next().unwrap().runs
+}
+
+/// `BranchAndBound` runs from a config on every problem it bounds, proves the
+/// optimum of a small instance, and reports a dual bound on the objective's
+/// own scale: equal to `best_objective` once that is proven.
+#[test]
+fn branch_and_bound_proves_small_instances_optimal() {
+    let cases = [
+        // A 5-cycle cuts at most 4 edges.
+        (
+            "bnb_max_cut",
+            "MaxCut",
+            "5 5\n1 2 1\n2 3 1\n3 4 1\n4 5 1\n5 1 1\n",
+            "Flip",
+            "",
+            4.0,
+        ),
+        (
+            "bnb_max_cut_eigen",
+            "MaxCut",
+            "5 5\n1 2 1\n2 3 1\n3 4 1\n4 5 1\n5 1 1\n",
+            "Flip",
+            "relaxation = \"Eigenvalue\"\neigen_max_iterations = 50\n",
+            4.0,
+        ),
+        // Minimizes -x1 - x2 - x3 + 2 x1 x2: two of the three set, -2.
+        (
+            "bnb_qubo",
+            "Qubo",
+            "3 4\n1 1 -1\n2 2 -1\n3 3 -1\n1 2 2\n",
+            "Flip",
+            "",
+            -2.0,
+        ),
+        // (x1 or x2) and (not x1 or x2) and (not x2 or x3): all three hold.
+        (
+            "bnb_sat",
+            "Sat",
+            "p cnf 3 3\n1 2 0\n-1 2 0\n-2 3 0\n",
+            "Flip",
+            "",
+            3.0,
+        ),
+        // A path of four vertices is covered by its two inner vertices.
+        (
+            "bnb_vertex_cover",
+            "VertexCover",
+            "4 3\n1 2\n2 3\n3 4\n",
+            "Flip",
+            "",
+            2.0,
+        ),
+    ];
+    for (tag, problem, instance, neighbor, extra, optimum) in cases {
+        for run in branch_and_bound_runs(tag, problem, instance, neighbor, extra) {
+            assert_eq!(run.status, "success", "{tag}");
+            assert_eq!(run.best_objective, optimum, "{tag}");
+            assert_eq!(run.proven_optimal, Some(true), "{tag}");
+            assert_eq!(run.dual_bound, Some(optimum), "{tag}");
+        }
+    }
+}
+
+/// Only `BranchAndBound` carries a certificate; other kinds leave both keys
+/// out of the report.
+#[test]
+fn a_heuristic_that_bounds_nothing_reports_no_certificate() {
+    let instance = write_temp_file("no_certificate", "3 3\n1 2 1\n1 3 1\n2 3 1\n");
+    let report = run_benchmark(&seeded_config(&[&instance.display().to_string()]));
+    let _ = std::fs::remove_file(&instance);
+    for run in &report.results[0].runs {
+        assert_eq!(run.proven_optimal, None);
+        assert_eq!(run.dual_bound, None);
+    }
+    let toml = toml::to_string(&report).unwrap();
+    assert!(!toml.contains("proven_optimal") && !toml.contains("dual_bound"));
+}
+
+/// A `BranchAndBound` config the factory cannot build fails at startup, with
+/// a message naming what is wrong.
+#[test]
+fn branch_and_bound_configs_that_cannot_run_are_rejected() {
+    let triangle = "3 3\n1 2 1\n1 3 1\n2 3 1\n";
+    let tour = "NAME: t\nTYPE: TSP\nDIMENSION: 3\nEDGE_WEIGHT_TYPE: EUC_2D\nNODE_COORD_SECTION\n\
+                1 0 0\n2 1 0\n3 0 1\nEOF\n";
+    let leaf = "[[heuristics.steps]]\nkind = \"LocalSearch\"\nneighbor = \"Flip\"\n";
+    let cases = [
+        (
+            "bnb_bad_eigen_qubo",
+            "Qubo",
+            triangle,
+            "relaxation = \"Eigenvalue\"\n",
+            leaf,
+            "relaxation 'Eigenvalue'",
+        ),
+        (
+            "bnb_bad_tsp",
+            "Tsp",
+            tour,
+            "",
+            "[[heuristics.steps]]\nkind = \"LocalSearch\"\nneighbor = \"TwoOpt\"\n",
+            "not supported for Tsp",
+        ),
+        (
+            "bnb_bad_steps",
+            "MaxCut",
+            triangle,
+            "",
+            &format!("{leaf}{leaf}"),
+            "exactly 1 step",
+        ),
+        (
+            "bnb_bad_limit",
+            "MaxCut",
+            triangle,
+            "eigen_certify_limit = 10\n",
+            leaf,
+            "only to relaxation = 'Eigenvalue'",
+        ),
+        (
+            "bnb_bad_zero",
+            "MaxCut",
+            triangle,
+            "relaxation = \"Eigenvalue\"\neigen_lanczos_steps = 0\n",
+            leaf,
+            "at least 1",
+        ),
+    ];
+    for (tag, problem, instance, extra, steps, needle) in cases {
+        let path = write_temp_file(tag, instance);
+        let config_toml = format!(
+            "num_runs = 1\n\n[[instances]]\npath = \"{}\"\nproblem = \"{problem}\"\n\n\
+             [[heuristics]]\nkind = \"BranchAndBound\"\n{extra}\n{steps}",
+            path.display()
+        );
+        let config: BenchmarkConfig = toml::from_str(&config_toml).expect("config parses");
+        let result = Benchmark::run_from_config(config, "benchmark_e2e");
+        let _ = std::fs::remove_file(&path);
+        let Err(err) = result else {
+            panic!("{tag}: must be rejected");
+        };
+        let msg = err.to_string();
+        assert!(msg.contains(needle), "{tag}: {msg}");
+    }
+}
