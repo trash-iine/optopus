@@ -474,6 +474,13 @@ pub struct InstanceConfig {
     /// Path to the instance file; glob patterns (e.g. `"data/instances/max_cut/G[1-9]*"`) are supported.
     pub path: String,
     pub problem: ProblemKind,
+    /// Starts every run on this instance from this solution instead of a random
+    /// one, written as a report's `solution` is (the problem's index encoding).
+    /// A solution that does not fit the instance fails every run on it. It
+    /// names one instance: a `path` matching more than one file is a config
+    /// error.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub initial_solution: Option<Vec<usize>>,
 }
 
 /// Top-level benchmark configuration read from a TOML file.
@@ -536,6 +543,7 @@ mod validate_tests {
         InstanceConfig {
             path: "dummy".to_string(),
             problem,
+            initial_solution: None,
         }
     }
 

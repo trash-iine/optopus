@@ -24,6 +24,7 @@ seed = 42                              # 任意のマスターシード。設定
 [[instances]]
 path = "data/instances/max_cut/G*"     # ファイルパスまたは glob (Gset のファイルには拡張子がない)
 problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | BinPacking | Vrp | GraphColoring
+# initial_solution = [0, 3, 5]        # 任意。すべての実行をここから始める (下を参照)
 
 [[heuristics]]
 kind = "LocalSearch"                   # 下の kind 一覧を参照
@@ -44,6 +45,12 @@ max_failed_update = 5_000
 パスは使わないので、同じインスタンスを別のパス (たとえば新しい一時ファイル) から読んでも、実行は同じ結果を繰り返します。
 インスタンスやヒューリスティクスを途中に挿入したり、glob が一致するファイルが 1 つ増えたりすると、それより後ろのシードがずれます。
 同じ config で別の実行が欲しいときは、別の `seed` を与えてください。
+
+`initial_solution` を書くと、そのインスタンスのすべての実行をランダムな解ではなくその解から始めます。あるベンチマークの最良解から次のベンチマークを続けられます。
+書き方はレポートの `solution` と同じで ([出力レポート](#output-report) の符号化の表を参照)、インスタンスに合わない解を与えると各実行が `initial solution error: …` で失敗します。1 つのインスタンスを指すので、`path` が 2 つ以上のファイルに一致すると config エラーになります。
+自前で新しい解を引くヒューリスティクス (`PopulationAnnealing`、`ParallelTempering`、`GeneticAlgorithm`、最初のリスタート以降の `Restart`、`GreedyRandomizedConstruction`) では、最初の暫定解になるだけです。また、同じシードでもランダムな開始とは別の乱数を引きます。
+
+`Benchmark::evaluate_solution(problem, path, solution)` は、同じ符号化の解を何も実行せずに採点します。返すのは、その解で終わった実行が報告する `best_objective` です。
 
 ## ヒューリスティクスの kind { #heuristic-kinds }
 
@@ -173,4 +180,4 @@ BenchmarkReport
 | FlowShop | ジョブの順序 |
 | Qap | 各施設の場所 |
 | BinPacking | 各品目の bin |
-| VRP | すべてのルートをデポ (`0`) を区切りにして平たくしたもの。`0, r0…, 0, r1…, 0` (空いているスロットは省略) |
+| VRP | すべてのルートをデポ (`0`) を区切りにして平たくしたもの。`0, r0…, 0, r1…, 0`。車両が 1 種類なら空いているスロットは省略します。複数の車種がある車両群ではすべてのスロットを並べ、空いているものは `0, 0` になるので、どのルートをどの車種が走ったかが符号化に残ります |

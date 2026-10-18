@@ -858,3 +858,232 @@ fn branch_and_bound_configs_that_cannot_run_are_rejected() {
         assert!(msg.contains(needle), "{tag}: {msg}");
     }
 }
+
+/// A small instance of every benchmark problem, with a neighbor it accepts:
+/// written to a temp file, or bundled when its format is long.
+fn every_problem() -> Vec<(&'static str, &'static str, String)> {
+    let inline = |tag: &str, text: &str| write_temp_file(tag, text).display().to_string();
+    let tsp = "NAME: five\nTYPE: TSP\nDIMENSION: 5\nEDGE_WEIGHT_TYPE: EUC_2D\nNODE_COORD_SECTION\n\
+               1 0 0\n2 3 0\n3 3 4\n4 0 4\n5 1 2\nEOF\n";
+    vec![
+        ("MaxCut", "Flip", inline("decode_max_cut", SIX_VERTICES)),
+        (
+            "Qubo",
+            "Flip",
+            inline("decode_qubo", "3 4\n1 1 -1\n2 2 -1\n3 3 -1\n1 2 2\n"),
+        ),
+        (
+            "Sat",
+            "Flip",
+            inline("decode_sat", "p cnf 3 3\n1 2 0\n-1 2 0\n-2 3 0\n"),
+        ),
+        ("Tsp", "TwoOpt", inline("decode_tsp", tsp)),
+        (
+            "VertexCover",
+            "Flip",
+            inline("decode_vertex_cover", "4 3\n1 2\n2 3\n3 4\n"),
+        ),
+        (
+            "JobShop",
+            "Swap",
+            inline("decode_job_shop", "2 2\n0 3 1 2\n1 2 0 4\n"),
+        ),
+        (
+            "FlowShop",
+            "Swap",
+            inline("decode_flow_shop", "3 2\n3 2 4\n2 5 1\n"),
+        ),
+        (
+            "Qap",
+            "Swap",
+            inline(
+                "decode_qap",
+                "3\n0 1 2\n1 0 1\n2 1 0\n0 3 1\n3 0 2\n1 2 0\n",
+            ),
+        ),
+        (
+            "BinPacking",
+            "Relocate",
+            inline("decode_bin_packing", "5 10\n6\n4\n5\n5\n3\n"),
+        ),
+        (
+            "Vrp",
+            "Relocate",
+            "data/instances/vrp/demo16.vrp".to_string(),
+        ),
+        (
+            "Vrp",
+            "Relocate",
+            "data/instances/vrp/demo_fleet.toml".to_string(),
+        ),
+        (
+            "GraphColoring",
+            "Flip",
+            "data/instances/graph_coloring/example.txt".to_string(),
+        ),
+    ]
+}
+
+/// One seeded local search of `max_iteration` iterations on `path`, starting
+/// from `initial_solution` when given.
+fn local_search_report(
+    problem: &str,
+    neighbor: &str,
+    path: &str,
+    max_iteration: u64,
+    initial_solution: Option<&[usize]>,
+) -> BenchmarkReport {
+    let start = initial_solution.map_or(String::new(), |s| format!("initial_solution = {s:?}\n"));
+    run_benchmark(&format!(
+        r#"
+num_runs = 2
+seed = 13
+
+[[instances]]
+path = "{path}"
+problem = "{problem}"
+{start}
+[[heuristics]]
+kind = "LocalSearch"
+neighbor = "{neighbor}"
+
+[heuristics.stop_condition]
+max_iteration = {max_iteration}
+"#
+    ))
+}
+
+fn assert_close(a: f64, b: f64, what: &str) {
+    assert!(
+        (a - b).abs() <= 1e-9 * a.abs().max(1.0),
+        "{what}: {a} != {b}"
+    );
+}
+
+/// Every problem reads back the `solution` its report writes: scored by
+/// `evaluate_solution` it gives the run's `best_objective`, and a run started
+/// from it with no iterations to spend reports it as its initial and best
+/// objective.
+#[test]
+fn every_problem_decodes_the_solutions_its_report_encodes() {
+    for (problem, neighbor, path) in every_problem() {
+        let report = local_search_report(problem, neighbor, &path, 200, None);
+        let kind: optopus::benchmark::ProblemKind =
+            toml::Value::String(problem.into()).try_into().unwrap();
+        for run in &report.results[0].runs {
+            assert_eq!(run.status, "success", "{path}");
+            let score = Benchmark::evaluate_solution(&kind, &path, &run.solution)
+                .unwrap_or_else(|e| panic!("{path}: {e}"));
+            assert_close(score, run.best_objective, &path);
+
+            let again = local_search_report(problem, neighbor, &path, 0, Some(&run.solution));
+            for warm in &again.results[0].runs {
+                assert_eq!(warm.status, "success", "{path}");
+                assert_close(warm.initial_objective.unwrap(), run.best_objective, &path);
+                assert_close(warm.best_objective, run.best_objective, &path);
+            }
+        }
+        if path.contains("optopus_e2e_") {
+            let _ = std::fs::remove_file(&path);
+        }
+    }
+}
+
+/// A run warm-started from a local optimum cannot leave it, so the descent
+/// takes no step: it reports the start as its best at iteration 0.
+#[test]
+fn a_warm_start_from_a_local_optimum_stays_there() {
+    let path = write_temp_file("warm_local_optimum", SIX_VERTICES);
+    let path = path.display().to_string();
+    let first = local_search_report("MaxCut", "Flip", &path, 1_000, None);
+    let optimum = &first.results[0].runs[0];
+    let again = local_search_report("MaxCut", "Flip", &path, 1_000, Some(&optimum.solution));
+    let _ = std::fs::remove_file(&path);
+    for run in &again.results[0].runs {
+        assert_eq!(run.initial_objective, Some(optimum.best_objective));
+        assert_eq!(run.best_objective, optimum.best_objective);
+        assert_eq!(run.n_best_updates, Some(0));
+    }
+}
+
+/// A solution that does not fit the instance is a config error when scored,
+/// and fails every run it was meant to start.
+#[test]
+fn a_solution_that_does_not_fit_is_rejected() {
+    use optopus::benchmark::ProblemKind;
+    let tsp = write_temp_file(
+        "misfit_tsp",
+        "NAME: t\nTYPE: TSP\nDIMENSION: 3\nEDGE_WEIGHT_TYPE: EUC_2D\nNODE_COORD_SECTION\n\
+         1 0 0\n2 1 0\n3 0 1\nEOF\n",
+    );
+    let tsp = tsp.display().to_string();
+    let cut = write_temp_file("misfit_max_cut", "3 3\n1 2 1\n1 3 1\n2 3 1\n");
+    let cut = cut.display().to_string();
+    let fleet = "data/instances/vrp/demo_fleet.toml";
+    let cases: [(ProblemKind, &str, &[usize], &str); 5] = [
+        (ProblemKind::Tsp, &tsp, &[0, 1, 1], "already arrived"),
+        (ProblemKind::Tsp, &tsp, &[0, 1, 7], "outside"),
+        (
+            ProblemKind::MaxCut,
+            &cut,
+            &[0, 3],
+            "outside the 3 variables",
+        ),
+        (ProblemKind::MaxCut, &cut, &[1, 1], "twice"),
+        (
+            ProblemKind::Vrp,
+            fleet,
+            &[0, 1, 2, 3, 4, 5, 6, 0],
+            "one route per slot",
+        ),
+    ];
+    for (kind, path, solution, needle) in cases {
+        let Err(err) = Benchmark::evaluate_solution(&kind, path, solution) else {
+            panic!("{solution:?} on {path} must be rejected");
+        };
+        let msg = err.to_string();
+        assert!(
+            matches!(err, optopus::error::OptError::Config(_)) && msg.contains(needle),
+            "{solution:?}: {msg}"
+        );
+    }
+
+    let report = local_search_report("MaxCut", "Flip", &cut, 10, Some(&[5]));
+    for run in &report.results[0].runs {
+        assert!(
+            run.status.starts_with("initial solution error"),
+            "{}",
+            run.status
+        );
+    }
+    let _ = std::fs::remove_file(&tsp);
+    let _ = std::fs::remove_file(&cut);
+}
+
+/// An initial solution fits one instance, so on a glob that matches more than
+/// one file it is refused.
+#[test]
+fn an_initial_solution_on_a_glob_matching_several_files_is_rejected() {
+    let a = write_temp_file("initial_glob_1", SIX_VERTICES);
+    let b = write_temp_file("initial_glob_2", SIX_VERTICES);
+    let pattern = a
+        .display()
+        .to_string()
+        .replace("initial_glob_1", "initial_glob_?");
+    let config_toml = format!(
+        "num_runs = 1\n\n[[instances]]\npath = \"{pattern}\"\nproblem = \"MaxCut\"\n\
+         initial_solution = [0]\n\n[[heuristics]]\nkind = \"LocalSearch\"\nneighbor = \"Flip\"\n"
+    );
+    let config: BenchmarkConfig = toml::from_str(&config_toml).expect("config parses");
+    let result = Benchmark::run_from_config(config, "benchmark_e2e");
+    let _ = std::fs::remove_file(&a);
+    let _ = std::fs::remove_file(&b);
+    let Err(err) = result else {
+        panic!("an initial solution on several files must be rejected");
+    };
+    assert!(
+        err.to_string()
+            .contains("'initial_solution' names one instance"),
+        "{err}"
+    );
+}

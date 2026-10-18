@@ -34,7 +34,7 @@ library and carry none of that material.
 
 1. `ProblemKind` variant in `src/benchmark/config.rs`
 2. `with_problem` arm in `src/benchmark/problems.rs`
-3. One impl block in `src/benchmark/problems.rs`: `BenchmarkProblem` (load_instance) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (`NAME`, `MINIMIZE`, `VALID_NEIGHBORS`, `with_neighbor` registry, optional `build_special_heuristic`, `build_crossover`)
+3. One impl block in `src/benchmark/problems.rs`: `BenchmarkProblem` (load_instance, decode_indices, the inverse of encode) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (`NAME`, `MINIMIZE`, `VALID_NEIGHBORS`, `with_neighbor` registry, optional `build_special_heuristic`, `build_crossover`)
 
 Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). Each move's `MoveToNeighbor` impl also needs `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` next to its `EnabledTabu` impl. Without it the move compiles and silently has no tabu list, and `trait_defs/tabu.rs` has the test that pins every built-in move.
 
