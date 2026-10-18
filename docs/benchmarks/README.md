@@ -121,8 +121,9 @@ splits every config of a band into one unit per (instance, heuristic), runs
 the units one after another, and skips a finished unit when started again, so
 a run the machine stops loses at most the unit in progress. `merge` writes each
 config's units back as the file a single run of that config would have
-written. A unit holds its heuristic at position 0, so its per-run seeds differ
-from those of a single run of the whole config. A run stopped by the clock
+written. A unit holds its instance and its heuristic at position 0, so its
+per-run seeds differ from those of a single run of the whole config, and the
+units of one master seed all draw the same seeds. A run stopped by the clock
 does not repeat bit for bit in any case. `freeze` copies the release binary
 into the work directory and the sweep runs that copy, so rebuilding the
 repository partway through does not change what the later units run.
