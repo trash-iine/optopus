@@ -34,7 +34,7 @@ library and carry none of that material.
 
 1. `ProblemKind` variant in `src/benchmark/config.rs`
 2. `with_problem` arm in `src/benchmark/problems.rs`
-3. One impl block in `src/benchmark/problems.rs`: `BenchmarkProblem` (load_instance) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (`NAME`, `MINIMIZE`, `VALID_NEIGHBORS`, `with_neighbor` registry, optional `build_special_heuristic`, `build_crossover`)
+3. One impl block in `src/benchmark/problems.rs`: `BenchmarkProblem` (load_instance, decode_indices, the inverse of encode) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (`NAME`, `MINIMIZE`, `VALID_NEIGHBORS`, `with_neighbor` registry, optional `build_special_heuristic`, `build_crossover`)
 
 Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). Each move's `MoveToNeighbor` impl also needs `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` next to its `EnabledTabu` impl. Without it the move compiles and silently has no tabu list, and `trait_defs/tabu.rs` has the test that pins every built-in move.
 
@@ -196,6 +196,7 @@ kinds fail at parse time.
 | `IteratedGreedy` | FlowShop | | `removal_count`, `temperature_factor` |
 | `GreedyRandomizedConstruction` | VRP, TSP, FlowShop, BinPacking | | `alpha` (one construction, GRASP is `Iterated` with it as `steps[1]`) |
 | `HybridGeneticSearch` | VRP | | `min_population_size`, `generation_size`, `granularity`, `target_feasible`, `restart_generations` |
+| `BranchAndBound` | MaxCut, Qubo, Sat, VertexCover | `steps[0]` = node search | `relaxation` (`Binary` / `Eigenvalue` on MaxCut), `eigen_max_iterations`, `eigen_lanczos_steps`, `eigen_certify_limit` |
 | `Sequential` | all | `steps` | |
 | `Iterated` | all | `steps[0]` = search, `steps[1]` = perturbation | |
 | `VariableNeighborhoodSearch` | all | `steps[0]` = search, `steps[1..]` = shakes | |

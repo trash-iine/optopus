@@ -24,6 +24,7 @@ seed = 42                              # 任意のマスターシード。設定
 [[instances]]
 path = "data/instances/max_cut/G*"     # ファイルパスまたは glob (Gset のファイルには拡張子がない)
 problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | BinPacking | Vrp | GraphColoring
+# initial_solution = [0, 3, 5]        # 任意。すべての実行をここから始める (下を参照)
 
 [[heuristics]]
 kind = "LocalSearch"                   # 下の kind 一覧を参照
@@ -44,6 +45,12 @@ max_failed_update = 5_000
 パスは使わないので、同じインスタンスを別のパス (たとえば新しい一時ファイル) から読んでも、実行は同じ結果を繰り返します。
 インスタンスやヒューリスティクスを途中に挿入したり、glob が一致するファイルが 1 つ増えたりすると、それより後ろのシードがずれます。
 同じ config で別の実行が欲しいときは、別の `seed` を与えてください。
+
+`initial_solution` を書くと、そのインスタンスのすべての実行をランダムな解ではなくその解から始めます。あるベンチマークの最良解から次のベンチマークを続けられます。
+書き方はレポートの `solution` と同じで ([出力レポート](#output-report) の符号化の表を参照)、インスタンスに合わない解を与えると各実行が `initial solution error: …` で失敗します。1 つのインスタンスを指すので、`path` が 2 つ以上のファイルに一致すると config エラーになります。
+自前で新しい解を引くヒューリスティクス (`PopulationAnnealing`、`ParallelTempering`、`GeneticAlgorithm`、最初のリスタート以降の `Restart`、`GreedyRandomizedConstruction`) では、最初の暫定解になるだけです。また、同じシードでもランダムな開始とは別の乱数を引きます。
+
+`Benchmark::evaluate_solution(problem, path, solution)` は、同じ符号化の解を何も実行せずに採点します。返すのは、その解で終わった実行が報告する `best_objective` です。
 
 ## ヒューリスティクスの kind { #heuristic-kinds }
 
@@ -70,6 +77,7 @@ max_failed_update = 5_000
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop のみ |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP のみ |
+| [`BranchAndBound`](../heuristics/branch_and_bound.md#benchmark-config) | MaxCut, Qubo, Sat, VertexCover |
 
 未知の kind や必須フィールドの欠落は、実行が始まる前のパースの時点でエラーになります。
 
@@ -150,12 +158,14 @@ BenchmarkReport
         ├── initial_objective / improvement: Option<f64>
         ├── n_accepted / n_rejected / n_best_updates: Option<u64>
         ├── seed: Option<u64>                    (この実行に導出されたシード)
+        ├── proven_optimal / dual_bound: Option  (BranchAndBound のみ)
         ├── solution: Vec<usize>                 (0 始まり、問題ごとの符号化)
         └── trajectory: Vec<(f64, f64)>          (改善ごとの (elapsed_secs, objective))
 ```
 
 `trajectory` は anytime 曲線で、問題の最適化の向きに単調です。ベンチマークビューアが描くのはこれです。
 エラーで終わった実行では `Option` のフィールドは出力されません。
+`proven_optimal` と `dual_bound` が出るのはトップレベルの `BranchAndBound` だけです。前者はその実行が `best_objective` の最適性を証明したかどうか、後者はまだ除外されていない解が到達しうる最良の目的関数値で、証明が済むと `best_objective` に一致します。
 
 解の符号化は次のとおりです。
 
@@ -170,4 +180,4 @@ BenchmarkReport
 | FlowShop | ジョブの順序 |
 | Qap | 各施設の場所 |
 | BinPacking | 各品目の bin |
-| VRP | すべてのルートをデポ (`0`) を区切りにして平たくしたもの。`0, r0…, 0, r1…, 0` (空いているスロットは省略) |
+| VRP | すべてのルートをデポ (`0`) を区切りにして平たくしたもの。`0, r0…, 0, r1…, 0`。車両が 1 種類なら空いているスロットは省略します。複数の車種がある車両群ではすべてのスロットを並べ、空いているものは `0, 0` になるので、どのルートをどの車種が走ったかが符号化に残ります |

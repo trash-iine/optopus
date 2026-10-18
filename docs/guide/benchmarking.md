@@ -24,6 +24,7 @@ seed = 42                              # optional master seed; when set, reruns 
 [[instances]]
 path = "data/instances/max_cut/G*"     # file path or glob (Gset files have no extension)
 problem = "MaxCut"                     # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | BinPacking | Vrp | GraphColoring
+# initial_solution = [0, 3, 5]        # optional; every run starts here (see below)
 
 [[heuristics]]
 kind = "LocalSearch"                   # see kinds below
@@ -54,6 +55,21 @@ another path, such as a new temporary file, repeats its runs. Inserting an
 instance or a heuristic, or a glob matching one more file, shifts the seeds of
 the ones after it. For other runs of the same config, give it another `seed`.
 
+An `initial_solution` starts every run on the instance from that solution
+instead of a random one, so the best solution of one benchmark can continue in
+the next. It is written as a report's `solution` is (see the encoding table
+under [Output report](#output-report)), and a solution that does not fit the
+instance fails each run with `initial solution error: …`. It names one
+instance, so a `path` matching more than one file is a config error. A heuristic that draws fresh solutions of its
+own (`PopulationAnnealing`, `ParallelTempering`, `GeneticAlgorithm`, `Restart`
+after its first restart, `GreedyRandomizedConstruction`) starts only its first
+incumbent there, and a warm start draws other random numbers than a random
+start under the same seed.
+
+`Benchmark::evaluate_solution(problem, path, solution)` scores a solution in
+the same encoding without running anything: the `best_objective` a run ending
+on it would report.
+
 ## Heuristic kinds
 
 Every value below is a valid `kind` tag for a `[[heuristics]]` block. Each links
@@ -80,6 +96,7 @@ algorithm's own page; this table is only the index.
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop only |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
+| [`BranchAndBound`](../heuristics/branch_and_bound.md#benchmark-config) | MaxCut, Qubo, Sat, VertexCover |
 
 Unknown kinds and missing required fields fail at parse time, before any run
 starts.
@@ -165,13 +182,17 @@ BenchmarkReport
         ├── initial_objective / improvement: Option<f64>
         ├── n_accepted / n_rejected / n_best_updates: Option<u64>
         ├── seed: Option<u64>                    (this run's derived seed)
+        ├── proven_optimal / dual_bound: Option  (BranchAndBound only)
         ├── solution: Vec<usize>                 (0-indexed, problem-specific encoding)
         └── trajectory: Vec<(f64, f64)>          (elapsed_secs, objective) per improvement
 ```
 
 `trajectory` is the anytime curve, monotone in the problem's optimization
 direction. It is what the benchmark viewer plots. The `Option` fields are
-absent for runs that ended in an error.
+absent for runs that ended in an error. `proven_optimal` and `dual_bound` are
+set only for a top-level `BranchAndBound`: whether the run proved
+`best_objective` optimal, and the best objective a solution not yet ruled out
+could reach, equal to `best_objective` once proven.
 
 Solution encoding:
 
@@ -186,4 +207,4 @@ Solution encoding:
 | FlowShop | job sequence |
 | Qap | the location of each facility |
 | BinPacking | the bin of each item |
-| VRP | all routes flattened with the depot (`0`) as separator: `0, r0…, 0, r1…, 0` (idle slots omitted) |
+| VRP | all routes flattened with the depot (`0`) as separator: `0, r0…, 0, r1…, 0`. Idle slots are omitted when every vehicle is of one type; a fleet of several types lists every slot, an idle one as `0, 0`, so the encoding says which type ran each route |

@@ -6,21 +6,24 @@
 //! [`ProblemKind`] variant.
 
 use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
-use super::factory::{ConfigurableProblem, NeighborVisitor, invalid_neighbor};
+use super::factory::{
+    ConfigurableProblem, NeighborVisitor, ProvingSearch, build_heuristic, invalid_neighbor,
+};
+use crate::building_blocks::representation::BinaryRelaxation;
 use crate::error::OptError;
 use crate::heuristic::{
-    AdaptiveLargeNeighborhoodSearch, GreedyRandomizedConstruction, Heuristic,
+    AdaptiveLargeNeighborhoodSearch, BranchAndBound, GreedyRandomizedConstruction, Heuristic,
     HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
     WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
     iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
     BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
-    BinPackingSwapNeighbor, FlowShop, FlowShopInsertNeighbor, FlowShopOrderCrossover,
-    FlowShopSolution, FlowShopSwapNeighbor, GraphColoring, GraphColoringRecolorNeighbor,
-    GraphColoringSolution, GraphColoringSwapNeighbor, GraphColoringUniformCrossover,
-    JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
-    JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
+    BinPackingSwapNeighbor, EigenvalueRelaxation, FlowShop, FlowShopInsertNeighbor,
+    FlowShopOrderCrossover, FlowShopSolution, FlowShopSwapNeighbor, GraphColoring,
+    GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
+    GraphColoringUniformCrossover, JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling,
+    JobShopSolution, JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
     MaxCutUniformCrossover, Qap, QapOrderCrossover, QapSolution, QapSwapNeighbor, QuboFlipNeighbor,
     QuboSwapNeighbor, QuboUniformCrossover, SatUniformCrossover, TspOrderCrossover, VertexCover,
     VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
@@ -35,7 +38,7 @@ use crate::problem::{
     },
 };
 use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
-use crate::trait_defs::Ruinable;
+use crate::trait_defs::{BinaryProblem, BranchSpace, Relaxation, Ruinable};
 
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
@@ -44,6 +47,43 @@ use crate::trait_defs::Ruinable;
 /// Problem types that can load an instance from a file path.
 pub trait BenchmarkProblem: ProblemTrait + Sized {
     fn load_instance(path: &str) -> Result<Self, OptError>;
+
+    /// The solution `indices` stands for, the inverse of
+    /// [`BenchmarkSolution::encode_as_indices`], so a report's `solution` can
+    /// start a run or be scored again. Indices that do not make a solution of
+    /// this instance are an [`OptError::Config`] saying why.
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError>;
+}
+
+/// The error for indices that do not make a solution of the instance.
+fn misfit(err: OptError) -> OptError {
+    let detail = match err {
+        OptError::InvalidState(m) | OptError::Config(m) => m,
+        other => other.to_string(),
+    };
+    OptError::Config(format!("the solution does not fit the instance: {detail}"))
+}
+
+/// The binary assignment that sets exactly the variables in `indices`.
+fn binary_from_indices<P: BinaryProblem>(
+    prob: &P,
+    indices: &[usize],
+) -> Result<P::Solution, OptError> {
+    let n = prob.variable_indices().max().map_or(0, |i| i + 1);
+    let mut x = vec![false; n];
+    for &i in indices {
+        if i >= n {
+            return Err(misfit(OptError::InvalidState(format!(
+                "index {i} is outside the {n} variables"
+            ))));
+        }
+        if std::mem::replace(&mut x[i], true) {
+            return Err(misfit(OptError::InvalidState(format!(
+                "index {i} is given twice"
+            ))));
+        }
+    }
+    prob.solution_from_assignment(&x).map_err(misfit)
 }
 
 /// Solution types that expose generic metrics needed by the benchmark runner.
@@ -55,6 +95,10 @@ pub trait BenchmarkSolution: Clone {
 impl BenchmarkProblem for MaxCut {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         MaxCut::load_file(path)
+    }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        binary_from_indices(self, indices)
     }
 }
 
@@ -76,6 +120,10 @@ impl BenchmarkProblem for Qubo {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         Qubo::load_file(path)
     }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        binary_from_indices(self, indices)
+    }
 }
 
 impl BenchmarkSolution for QuboSolution {
@@ -95,6 +143,10 @@ impl BenchmarkSolution for QuboSolution {
 impl BenchmarkProblem for Sat {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         Sat::load_file(path)
+    }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        binary_from_indices(self, indices)
     }
 }
 
@@ -116,6 +168,18 @@ impl BenchmarkProblem for Tsp {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         Tsp::load_file(path)
     }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        let tour = indices.to_vec();
+        if let Some(&city) = tour.iter().find(|&&c| c >= self.get_n()) {
+            return Err(misfit(OptError::InvalidState(format!(
+                "city {city} is outside the {} cities",
+                self.get_n()
+            ))));
+        }
+        let objective = self.calculate_tour_length(&tour).map_err(misfit)?;
+        Ok(TspSolution { tour, objective })
+    }
 }
 
 impl BenchmarkSolution for TspSolution {
@@ -131,6 +195,46 @@ impl BenchmarkProblem for Vrp {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         Vrp::load_file(path)
     }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        // `encode_as_indices` writes `0, r0…, 0, r1…, 0`, every slot when the
+        // fleet has more than one vehicle type and the busy ones otherwise,
+        // where any slot serves as well as another.
+        if indices.first() != Some(&0) || indices.last() != Some(&0) {
+            return Err(misfit(OptError::InvalidState(
+                "the routes start and end at the depot 0".into(),
+            )));
+        }
+        // Every 0 after the first closes a route, so `0, 0` is one idle slot.
+        let mut routes = Vec::new();
+        let mut route = Vec::new();
+        for &c in &indices[1..] {
+            if c == 0 {
+                routes.push(std::mem::take(&mut route));
+            } else {
+                route.push(c);
+            }
+        }
+        let slots = self.num_slots();
+        if routes.len() != slots {
+            if self.vehicle_types().len() > 1 {
+                return Err(misfit(OptError::InvalidState(format!(
+                    "a fleet of several vehicle types needs one route per slot, {slots}, \
+                     but {} were given",
+                    routes.len()
+                ))));
+            }
+            routes.retain(|r| !r.is_empty());
+            if routes.len() > slots {
+                return Err(misfit(OptError::InvalidState(format!(
+                    "{} routes for {slots} vehicles",
+                    routes.len()
+                ))));
+            }
+            routes.resize(slots, Vec::new());
+        }
+        self.solution_from_routes(routes).map_err(misfit)
+    }
 }
 
 impl BenchmarkSolution for VrpSolution {
@@ -140,10 +244,17 @@ impl BenchmarkSolution for VrpSolution {
         self.objective
     }
     fn encode_as_indices(&self) -> Vec<usize> {
-        // Flatten with the depot (0) as the separator, `0, r0…, 0, r1…, 0`;
-        // an idle slot leaves no trace.
+        // Flatten with the depot (0) as the separator, `0, r0…, 0, r1…, 0`.
+        // An idle slot leaves no trace when every vehicle is of one type. In a
+        // fleet of several types it stays as an empty route, `0, 0`, so the
+        // encoding still says which type ran each route.
+        let several_types = self.used_count.len() > 1;
         let mut out = vec![0];
-        for route in self.routes.iter().filter(|route| !route.is_empty()) {
+        for route in self
+            .routes
+            .iter()
+            .filter(|route| several_types || !route.is_empty())
+        {
             out.extend_from_slice(route);
             out.push(0);
         }
@@ -154,6 +265,10 @@ impl BenchmarkSolution for VrpSolution {
 impl BenchmarkProblem for VertexCover {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         VertexCover::load_file(path)
+    }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        binary_from_indices(self, indices)
     }
 }
 
@@ -176,6 +291,16 @@ impl BenchmarkProblem for JobShopScheduling {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         JobShopScheduling::load_file(path)
     }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        let operations = indices.to_vec();
+        let (objective, completion_times) = self.decode(&operations).map_err(misfit)?;
+        Ok(JobShopSolution {
+            operations,
+            objective,
+            completion_times,
+        })
+    }
 }
 
 impl BenchmarkSolution for JobShopSolution {
@@ -191,6 +316,11 @@ impl BenchmarkProblem for FlowShop {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         FlowShop::load_file(path)
     }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        self.solution_from_sequence(indices.to_vec())
+            .map_err(misfit)
+    }
 }
 
 impl BenchmarkSolution for FlowShopSolution {
@@ -205,6 +335,10 @@ impl BenchmarkSolution for FlowShopSolution {
 impl BenchmarkProblem for GraphColoring {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         GraphColoring::load_file(path)
+    }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        self.solution_from_colors(indices.to_vec()).map_err(misfit)
     }
 }
 
@@ -262,6 +396,16 @@ impl ConfigurableProblem for MaxCut {
         }
     }
 
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        match bnb_relaxation(config, Self::NAME, true)? {
+            None => branch_and_bound(config, cond, BinaryRelaxation),
+            Some(eigen) => branch_and_bound(config, cond, eigen),
+        }
+    }
+
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(MaxCutUniformCrossover)),
@@ -300,6 +444,14 @@ impl ConfigurableProblem for Qubo {
             NeighborKind::Swap => Ok(visitor.visit::<QuboSwapNeighbor>()),
             other => Err(invalid_neighbor::<Self>(other)),
         }
+    }
+
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        bnb_relaxation(config, Self::NAME, false)?;
+        branch_and_bound(config, cond, BinaryRelaxation)
     }
 
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
@@ -355,6 +507,14 @@ impl ConfigurableProblem for Sat {
                 config.kind_name()
             ))),
         }
+    }
+
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        bnb_relaxation(config, Self::NAME, false)?;
+        branch_and_bound(config, cond, BinaryRelaxation)
     }
 
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
@@ -513,6 +673,14 @@ impl ConfigurableProblem for VertexCover {
         }
     }
 
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        bnb_relaxation(config, Self::NAME, false)?;
+        branch_and_bound(config, cond, BinaryRelaxation)
+    }
+
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(VertexCoverUniformCrossover)),
@@ -552,6 +720,11 @@ impl ConfigurableProblem for JobShopScheduling {
 impl BenchmarkProblem for Qap {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         Qap::load_file(path)
+    }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        self.solution_from_assignment(indices.to_vec())
+            .map_err(misfit)
     }
 }
 
@@ -631,9 +804,97 @@ where
     )))
 }
 
+/// A `BranchAndBound` config's search, `steps[0]` searching each node and
+/// `relaxation` pruning them.
+fn branch_and_bound<P, R>(
+    config: &HeuristicConfig,
+    cond: StopCondition,
+    relaxation: R,
+) -> Result<Box<dyn ProvingSearch<P>>, OptError>
+where
+    P: ConfigurableProblem + BranchSpace,
+    P::Solution: BenchmarkSolution + Distance + Evaluate,
+    R: Relaxation<P> + 'static,
+{
+    let steps = config.steps();
+    if steps.len() != 1 {
+        return Err(OptError::Config(format!(
+            "BranchAndBound requires exactly 1 step (the search of each node), but got {}",
+            steps.len()
+        )));
+    }
+    let node_search = build_heuristic::<P>(&steps[0])?;
+    Ok(Box::new(BranchAndBound::new(cond, node_search, relaxation)))
+}
+
+/// The bound a `BranchAndBound` config names on `problem`: `None` for
+/// "Binary", the default, and the eigenvalue bound with its limits for
+/// "Eigenvalue", which only a problem with `has_eigenvalue` takes. The limits
+/// are refused alongside any other bound, so a config cannot set them to no
+/// effect.
+fn bnb_relaxation(
+    config: &HeuristicConfig,
+    problem: &str,
+    has_eigenvalue: bool,
+) -> Result<Option<EigenvalueRelaxation>, OptError> {
+    let HeuristicConfig::BranchAndBound {
+        relaxation,
+        eigen_max_iterations,
+        eigen_lanczos_steps,
+        eigen_certify_limit,
+        ..
+    } = config
+    else {
+        unreachable!("bnb_relaxation is only called on a BranchAndBound config");
+    };
+    let limits = [
+        ("eigen_max_iterations", *eigen_max_iterations),
+        ("eigen_lanczos_steps", *eigen_lanczos_steps),
+        ("eigen_certify_limit", *eigen_certify_limit),
+    ];
+    match relaxation.as_deref().unwrap_or("Binary") {
+        "Binary" => {
+            if let Some((name, _)) = limits.iter().find(|(_, v)| v.is_some()) {
+                return Err(OptError::Config(format!(
+                    "'{name}' applies only to relaxation = 'Eigenvalue'"
+                )));
+            }
+            Ok(None)
+        }
+        "Eigenvalue" if has_eigenvalue => {
+            if let Some((name, _)) = limits.iter().find(|(_, v)| *v == Some(0)) {
+                return Err(OptError::Config(format!("'{name}' must be at least 1")));
+            }
+            let mut eigen = EigenvalueRelaxation::new();
+            if let Some(n) = *eigen_max_iterations {
+                eigen = eigen.with_max_iterations(n);
+            }
+            if let Some(n) = *eigen_lanczos_steps {
+                eigen = eigen.with_lanczos_steps(n);
+            }
+            if let Some(n) = *eigen_certify_limit {
+                eigen = eigen.with_certify_limit(n);
+            }
+            Ok(Some(eigen))
+        }
+        other => Err(OptError::Config(format!(
+            "Unknown relaxation '{other}' for {problem} (expected {})",
+            if has_eigenvalue {
+                "'Binary' or 'Eigenvalue'"
+            } else {
+                "'Binary'"
+            }
+        ))),
+    }
+}
+
 impl BenchmarkProblem for BinPacking {
     fn load_instance(path: &str) -> Result<Self, OptError> {
         BinPacking::load_file(path)
+    }
+
+    fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
+        self.solution_from_bins(indices.to_vec()).map_err(misfit)
     }
 }
 

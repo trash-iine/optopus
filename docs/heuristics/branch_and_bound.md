@@ -175,7 +175,28 @@ conditions](../guide/stop_conditions.md).
 
 ## Benchmark config
 
-`BranchAndBound` is library only for now.
+```toml
+[[heuristics]]
+kind = "BranchAndBound"
+relaxation = "Binary"        # optional (default shown); "Eigenvalue" on MaxCut
+# eigen_max_iterations = 100 # optional, "Eigenvalue" only (defaults shown)
+# eigen_lanczos_steps = 30
+# eigen_certify_limit = 3000
+[heuristics.stop_condition]
+max_duration_secs = 30.0
+
+[[heuristics.steps]]         # exactly one: the search of each node
+kind = "LocalSearch"
+neighbor = "Flip"
+[heuristics.steps.stop_condition]
+max_iteration = 100          # a budget per node
+```
+
+It runs on MaxCut, Qubo, Sat and VertexCover. The `eigen_` limits are refused
+with any relaxation but `"Eigenvalue"`. A run of a top-level `BranchAndBound`
+reports `proven_optimal` and `dual_bound` (see the
+[report](../guide/benchmarking.md#output-report)); the bound is left out while
+it is still unbounded, before the whole problem has been bounded once.
 
 ## References
 

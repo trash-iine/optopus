@@ -9,13 +9,46 @@ use super::config::{HeuristicConfig, NeighborKind};
 use super::problems::{BenchmarkProblem, BenchmarkSolution};
 use crate::error::OptError;
 use crate::heuristic::{
-    BeamSearch, GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing, LocalSearch,
-    ParallelTempering, ParentSelection, PopulationAnnealing, RandomWalk,
+    BeamSearch, BranchAndBound, GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing,
+    LocalSearch, ParallelTempering, ParentSelection, PopulationAnnealing, RandomWalk,
     ReinforcementLearningSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing,
     StopCondition, TabuSearch, VariableNeighborhoodSearch,
 };
-use crate::search_state::{Crossover, Distance, MoveToNeighbor, ProblemTrait};
-use crate::trait_defs::{EnabledTabu, Evaluate, Rankable};
+use crate::search_state::{Crossover, Distance, Evaluable, MoveToNeighbor, ProblemTrait};
+use crate::trait_defs::{BranchSpace, EnabledTabu, Evaluate, Rankable, Relaxation};
+
+// ---------------------------------------------------------------------------
+// ProvingSearch: a search whose run can prove something about its best solution
+// ---------------------------------------------------------------------------
+
+/// What a run proved about the best solution it left in the search state.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Certificate {
+    /// Whether no solution can beat the best one, as far as the bound tells.
+    pub proven_optimal: bool,
+    /// The best objective a solution not yet ruled out could reach, in the
+    /// problem's direction: the best one's once it is proven optimal, and
+    /// unbounded until the search has bounded the whole problem.
+    pub dual_bound: Evaluable<f64>,
+}
+
+/// A search that can say what its last run proved. Only [`BranchAndBound`]
+/// is one, and a run asks only a top-level one, as [`build_search`] builds
+/// it: a nested one searched a part of the run.
+pub(crate) trait ProvingSearch<P: ProblemTrait>: Heuristic<P> {
+    /// `None` until the run has taken a node.
+    fn certificate(&self) -> Option<Certificate>;
+}
+
+impl<P: BranchSpace, R: Relaxation<P>> ProvingSearch<P> for BranchAndBound<P, R> {
+    fn certificate(&self) -> Option<Certificate> {
+        let incumbent = self.last_incumbent()?;
+        Some(Certificate {
+            proven_optimal: self.proven_against(incumbent),
+            dual_bound: self.dual_bound_against(incumbent),
+        })
+    }
+}
 
 // ---------------------------------------------------------------------------
 // ConfigurableProblem: per-problem registration for the config-driven factory
@@ -64,6 +97,18 @@ where
         kind: &NeighborKind,
         visitor: V,
     ) -> Result<V::Output, OptError>;
+
+    /// A `BranchAndBound` config's search, on the problems with a relaxation.
+    fn build_branch_and_bound(
+        config: &HeuristicConfig,
+        _cond: StopCondition,
+    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+        Err(OptError::Config(format!(
+            "heuristic '{}' is not supported for {}",
+            config.kind_name(),
+            Self::NAME
+        )))
+    }
 
     /// Problem-specific heuristics (BLS on MaxCut, LKH on TSP).
     fn build_special_heuristic(
@@ -379,6 +424,28 @@ where
 /// [`ConfigurableProblem::build_special_heuristic`]; neighbor-parameterized
 /// base kinds go through [`ConfigurableProblem::with_neighbor`] +
 /// [`BaseBuilder`].
+/// The search a run executes: a top-level `BranchAndBound` keeps its type,
+/// so the run can read what it proved.
+pub(crate) enum Search<P: ProblemTrait> {
+    Plain(Box<dyn Heuristic<P>>),
+    Proving(Box<dyn ProvingSearch<P>>),
+}
+
+/// The search for a run of `config`, as [`build_heuristic`] builds it.
+pub(crate) fn build_search<P>(config: &HeuristicConfig) -> Result<Search<P>, OptError>
+where
+    P: ConfigurableProblem,
+    P::Solution: BenchmarkSolution + Distance + Evaluate,
+{
+    match config {
+        HeuristicConfig::BranchAndBound { .. } => {
+            let cond = config.stop_condition().to_stop_condition();
+            P::build_branch_and_bound(config, cond).map(Search::Proving)
+        }
+        _ => build_heuristic::<P>(config).map(Search::Plain),
+    }
+}
+
 pub(crate) fn build_heuristic<P>(
     config: &HeuristicConfig,
 ) -> Result<Box<dyn Heuristic<P>>, OptError>
@@ -524,6 +591,9 @@ where
         | HeuristicConfig::GreedyRandomizedConstruction { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
+        HeuristicConfig::BranchAndBound { .. } => {
+            P::build_branch_and_bound(config, cond).map(|b| b as Box<dyn Heuristic<P>>)
+        }
         HeuristicConfig::LocalSearch { neighbor, .. }
         | HeuristicConfig::PopulationAnnealing { neighbor, .. }
         | HeuristicConfig::ParallelTempering { neighbor, .. }
@@ -878,5 +948,47 @@ mod factory_tests {
         )
         .expect_err("SubProblem crossover is MaxCut-only for now");
         assert!(err.to_string().contains("SubProblem"), "{err}");
+    }
+
+    /// A top-level `BranchAndBound` keeps its type, so a run can read what it
+    /// proved: nothing before it takes a node, and the optimum after it has
+    /// searched the whole triangle. A nested one is built as a plain step.
+    #[test]
+    fn a_top_level_branch_and_bound_reports_what_it_proved() {
+        use crate::building_blocks::instance::Graph;
+        use crate::problem::MaxCut;
+        use crate::search_state::SearchState;
+
+        let bnb = HeuristicConfig::BranchAndBound {
+            steps: vec![HeuristicConfig::LocalSearch {
+                neighbor: NeighborKind::Flip,
+                stop_condition: StopConditionConfig::default(),
+            }],
+            relaxation: None,
+            eigen_max_iterations: None,
+            eigen_lanczos_steps: None,
+            eigen_certify_limit: None,
+            stop_condition: StopConditionConfig::default(),
+        };
+        let Ok(Search::Proving(mut search)) = build_search::<MaxCut>(&bnb) else {
+            panic!("a top-level BranchAndBound builds as a proving search");
+        };
+        assert!(search.certificate().is_none());
+
+        let prob = MaxCut::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
+        let mut state = SearchState::new_with_seed(&prob, 1);
+        search.run(&mut state).unwrap();
+        let certificate = search.certificate().expect("the run took a node");
+        assert!(certificate.proven_optimal);
+        assert_eq!(certificate.dual_bound.raw(), 2.0);
+
+        let nested = HeuristicConfig::Sequential {
+            steps: vec![bnb],
+            stop_condition: StopConditionConfig::default(),
+        };
+        assert!(matches!(
+            build_search::<MaxCut>(&nested),
+            Ok(Search::Plain(_))
+        ));
     }
 }

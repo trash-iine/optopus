@@ -73,6 +73,10 @@ pub struct BranchAndBound<P, R> {
     /// bound, so it is searched before anything is bounded and the first
     /// bounds are computed against a searched incumbent.
     open: BinaryHeap<Node>,
+    /// The best solution's objective when the last node was done with. Every
+    /// node dropped so far was dropped against it or a worse one, since the
+    /// best solution only improves. `None` until a run takes a node.
+    incumbent: Option<Evaluable<f64>>,
 }
 
 /// An open node, the ranges narrowed from the whole problem's and the bound
@@ -146,6 +150,7 @@ impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
             heuristic,
             relaxation,
             open: BinaryHeap::from([Node::root()]),
+            incumbent: None,
         }
     }
 
@@ -154,15 +159,33 @@ impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
     /// search has proven it optimal, and it is unbounded until the whole
     /// problem has been searched and split once.
     pub fn dual_bound(&self, incumbent: &P::Solution) -> Evaluable<f64> {
-        let incumbent = incumbent.evaluate();
-        let open = self.open.peek().map_or(f64::INFINITY, |n| n.bound);
-        directed_like(incumbent, open.min(incumbent.minimized()))
+        self.dual_bound_against(incumbent.evaluate())
     }
 
     /// Whether no assignment can beat `incumbent`, as far as the relaxation is
     /// a bound.
     pub fn is_proven_optimal(&self, incumbent: &P::Solution) -> bool {
-        let best = incumbent.evaluate().minimized();
+        self.proven_against(incumbent.evaluate())
+    }
+
+    /// The best solution's objective when the last run was last done with a
+    /// node, which [`dual_bound_against`](Self::dual_bound_against) and
+    /// [`proven_against`](Self::proven_against) can be trusted with: the
+    /// nodes dropped were dropped against it or a worse one. `None` until a
+    /// run takes a node.
+    pub(crate) fn last_incumbent(&self) -> Option<Evaluable<f64>> {
+        self.incumbent
+    }
+
+    /// [`dual_bound`](Self::dual_bound) of an objective.
+    pub(crate) fn dual_bound_against(&self, incumbent: Evaluable<f64>) -> Evaluable<f64> {
+        let open = self.open.peek().map_or(f64::INFINITY, |n| n.bound);
+        directed_like(incumbent, open.min(incumbent.minimized()))
+    }
+
+    /// [`is_proven_optimal`](Self::is_proven_optimal) of an objective.
+    pub(crate) fn proven_against(&self, incumbent: Evaluable<f64>) -> bool {
+        let best = incumbent.minimized();
         self.open.peek().is_none_or(|n| n.bound >= best)
     }
 
@@ -197,6 +220,7 @@ impl<P: BranchSpace, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
     fn clear(&mut self) {
         self.open.clear();
         self.open.push(Node::root());
+        self.incumbent = None;
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -211,6 +235,15 @@ impl<P: BranchSpace, R: Relaxation<P>> Heuristic<P> for BranchAndBound<P, R> {
     /// Takes the open node with the best bound, and prunes, evaluates or
     /// searches and splits it.
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
+        let taken = self.take_node(state);
+        self.incumbent = Some(state.best_solution.evaluate());
+        taken
+    }
+}
+
+impl<P: BranchSpace, R: Relaxation<P>> BranchAndBound<P, R> {
+    /// One iteration of [`run_once`](Heuristic::run_once).
+    fn take_node(&mut self, state: &mut SearchState<'_, P>) -> Result<(), OptError> {
         let prob = state.instance;
         let whole = prob.ranges();
         let whole = whole.as_ref();
