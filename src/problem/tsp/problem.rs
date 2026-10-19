@@ -1,5 +1,4 @@
 use rand::seq::SliceRandom;
-use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
 use crate::building_blocks::instance::{DistanceStore, EdgeWeightType};
@@ -351,33 +350,39 @@ impl Tsp {
     /// Calculates the total length of a tour.
     ///
     /// Returns an error if the tour length does not match the number of cities,
-    /// or if any city appears more than once.
+    /// if a city is out of range, or if any city appears more than once.
     pub fn calculate_tour_length(&self, tour: &TspTour) -> Result<f64, OptError> {
-        if self.get_n() != tour.len() {
+        let n = self.get_n();
+        if n != tour.len() {
             return Err(OptError::InvalidState(format!(
                 "The size of TSP ({}) and length of tour ({}) are not matched",
-                self.get_n(),
+                n,
                 tour.len()
             )));
         }
 
-        let mut arrived = HashSet::new();
-
-        let mut length = 0.0;
-        for ind in 0..self.get_n() {
-            let i = tour[ind];
-
-            if arrived.contains(&i) {
+        // Every city is checked before any distance is read: an edge reaches the next city
+        // of the tour, so an out-of-range one would index the distances before its turn.
+        let mut arrived = vec![false; n];
+        for &i in tour {
+            if i >= n {
+                return Err(OptError::InvalidState(format!(
+                    "The city {} is out of range for a TSP of {} cities",
+                    i, n
+                )));
+            }
+            if std::mem::replace(&mut arrived[i], true) {
                 return Err(OptError::InvalidState(format!(
                     "The city {} is already arrived",
                     i
                 )));
             }
+        }
 
+        let mut length = 0.0;
+        for ind in 0..n {
             let e = self.get_edge_from(tour, ind);
             length += self.distance(e.0, e.1);
-
-            arrived.insert(i);
         }
 
         Ok(length)
@@ -458,6 +463,17 @@ mod tsp_coord_tests {
         let path = make_test_tsp_file();
         let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
         assert!(tsp.calculate_tour_length(&vec![0, 1, 0, 2]).is_err());
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn test_out_of_range_tour() {
+        let path = make_test_tsp_file();
+        let tsp = Tsp::load_file(path.to_str().unwrap()).unwrap();
+        // The out-of-range city is last, so the edge into it is read before its turn.
+        let err = tsp.calculate_tour_length(&vec![0, 1, 2, 9]).unwrap_err();
+        assert!(err.to_string().contains("out of range"), "{err}");
+        assert!(tsp.calculate_tour_length(&vec![9, 1, 2, 3]).is_err());
         let _ = std::fs::remove_file(&path);
     }
 
