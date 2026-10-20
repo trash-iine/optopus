@@ -2,7 +2,7 @@
 # Profile: Qap / large (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
