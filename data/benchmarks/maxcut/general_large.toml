@@ -2,7 +2,7 @@
 # Profile: MaxCut / large (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
@@ -10,31 +10,11 @@ path = "data/instances/max_cut/G55"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/instances/max_cut/G56"
-problem = "MaxCut"
-
-[[instances]]
-path = "data/instances/max_cut/G57"
-problem = "MaxCut"
-
-[[instances]]
 path = "data/instances/max_cut/G58"
 problem = "MaxCut"
 
 [[instances]]
-path = "data/instances/max_cut/G59"
-problem = "MaxCut"
-
-[[instances]]
 path = "data/instances/max_cut/G60"
-problem = "MaxCut"
-
-[[instances]]
-path = "data/instances/max_cut/G61"
-problem = "MaxCut"
-
-[[instances]]
-path = "data/instances/max_cut/G62"
 problem = "MaxCut"
 
 [[instances]]
@@ -43,18 +23,6 @@ problem = "MaxCut"
 
 [[instances]]
 path = "data/instances/max_cut/G64"
-problem = "MaxCut"
-
-[[instances]]
-path = "data/instances/max_cut/G65"
-problem = "MaxCut"
-
-[[instances]]
-path = "data/instances/max_cut/G66"
-problem = "MaxCut"
-
-[[instances]]
-path = "data/instances/max_cut/G67"
 problem = "MaxCut"
 
 [[instances]]

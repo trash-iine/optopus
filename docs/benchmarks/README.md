@@ -1,7 +1,7 @@
 # Benchmarks
 
 Aggregated comparison of the general heuristics, and the problem-specific solvers. 
-Each row is `(problem, instance, neighbor, heuristic)` averaged over 10 runs.
+Each row is `(problem, instance, neighbor, heuristic)` averaged over 10 runs (5 at the large band).
 
 The numbers themselves (and the exact configuration behind each one) live in
 the [benchmark viewer](viewer.html); click any cell. This file covers how those
@@ -74,19 +74,20 @@ comprehensive (problem × heuristic) benchmark sweep. The intent is that every
 TOML under `data/benchmarks/<problem>/` follows one of the size-band profiles
 below, so results from different runs remain comparable.
 
-`num_runs = 10` for every (problem, heuristic, instance) triple, matching the
-existing BreakoutLocalSearch reports, and `seed = 42` on every config so per-run
+`num_runs = 10` for every (problem, heuristic, instance) triple at the small and
+medium bands, matching the existing BreakoutLocalSearch reports, `num_runs = 5`
+at the large band, where one run takes ten minutes, and `seed = 42` on every config so per-run
 seeds are derived deterministically.
 
 ### Size bands per problem
 
 | Problem | small | medium | large |
 |---|---|---|---|
-| MaxCut (GSET) | G1–G21, G43–G47, G51–G54 (n ≤ 1000) | G22–G42 (n = 2000), G48–G50 (n = 3000) | G55–G81 (n ≥ 5000) |
+| MaxCut (GSET) | G1–G21, G43–G47, G51–G54 (n ≤ 1000) | G22–G42 (n = 2000), G48–G50 (n = 3000) | G55, G58, G60, G63, G64, G70, G72, G77, G81 (n ≥ 5000) |
 | QUBO (bqp) | bqp50, bqp100 | bqp250, bqp500 | bqp1000 |
 | SAT (uf*) | uf50, uf75 | uf100, uf150 | uf200 |
 | TSP (TSPLIB) | burma14, eil51, att48, berlin52 | eil101, ch150 | dsj1000 |
-| JSSP (OR-Library) | ft06, ft10, ft20, la01–la05, abz5 | la06–la25, abz6–abz9, orb01–orb10 | la26–la40, swv*, yn*, ta* |
+| JSSP (OR-Library) | ft06, ft10, ft20, la01–la05, abz5 | la06–la25, abz6–abz9, orb01–orb10 | la26, la29, la32, la36, la38, la40, swv01, swv06, swv11, swv16, yn1, yn3 |
 | VertexCover | data/instances/max_cut/sample.txt + GSET small | GSET medium | GSET large |
 | CVRP (CVRPLIB X) | demo16 + X-n101…X-n195 (n ≤ 200) | X-n214…X-n459 | X-n502…X-n1001 |
 
@@ -115,7 +116,7 @@ mv result/<timestamp>.toml docs/benchmarks/data/maxcut/general_gset_small.toml
 python3 docs/benchmarks/render.py
 ```
 
-A whole band takes from a day (small) to about two weeks (large), so the
+A whole band takes from a day (small) to about a week (large), so the
 published sweep runs through `data/benchmarks/scripts/bench_units.py`. It
 splits every config of a band into one unit per (instance, heuristic), runs
 the units one after another, and skips a finished unit when started again, so
