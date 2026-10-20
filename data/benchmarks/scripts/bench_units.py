@@ -20,7 +20,10 @@ not repeat bit for bit anyway.
     python3 docs/benchmarks/render.py
 
 `run` takes `--problem <dir>` (e.g. `--problem qap`) to run one problem
-first. `freeze` copies `target/release/optopus` into the work directory, and
+first, and `--threads <n>` to run the runs of a unit on n threads instead of
+one per core. A time limit counts from the start of each run, so fewer threads
+than runs keep every budget and lengthen the unit. The first line of each
+unit's `log.txt` records the thread count it ran with. `freeze` copies `target/release/optopus` into the work directory, and
 `run` uses that copy from then on, so a rebuild during a sweep that takes
 weeks does not change the binary halfway, which can move timings by itself. The units live under `$OPTOPUS_BENCH_WORK` (default
 `~/optopus_bench_work`), outside the repository and outside `/tmp`, which a
@@ -149,11 +152,14 @@ def freeze() -> None:
     print(f"froze {BUILT} as {FROZEN} (HEAD {head})")
 
 
-def run(bands: list[str], problem: str | None) -> None:
+def run(bands: list[str], problem: str | None, threads: int | None) -> None:
     binary = FROZEN if FROZEN.exists() else BUILT
     if not binary.exists():
         sys.exit(f"{binary} not found, run `cargo build --release` first")
-    print(f"binary {binary}", flush=True)
+    env = dict(os.environ)
+    if threads:
+        env["RAYON_NUM_THREADS"] = str(threads)
+    print(f"binary {binary}, threads {threads or 'one per core'}", flush=True)
     units = load_units(bands, problem)
     todo = [u for u in units if not is_done(u)]
     print(f"{len(units) - len(todo)}/{len(units)} done, {len(todo)} to run", flush=True)
@@ -165,7 +171,10 @@ def run(bands: list[str], problem: str | None) -> None:
             stale.unlink()
         start = time.time()
         with open(d / "log.txt", "w") as log:
-            rc = subprocess.run([str(binary), "unit.toml"], cwd=d, stdout=log, stderr=log).returncode
+            log.write(f"threads {threads or os.cpu_count()}\n")
+            log.flush()
+            rc = subprocess.run([str(binary), "unit.toml"], cwd=d, env=env,
+                                stdout=log, stderr=log).returncode
         results = sorted((d / "result").glob("*.toml")) if (d / "result").exists() else []
         if rc != 0 or not results:
             print(f"[{i}/{len(todo)}] FAIL {unit['key']} rc={rc}, see {d / 'log.txt'}", flush=True)
@@ -221,6 +230,7 @@ def main() -> int:
     ap.add_argument("command", choices=("freeze", "split", "run", "progress", "merge"))
     ap.add_argument("bands", nargs="*", choices=BANDS + ("all",))
     ap.add_argument("--problem", help="run only this problem directory, e.g. qap")
+    ap.add_argument("--threads", type=int, help="run the runs of a unit on this many threads")
     ap.add_argument("--partial", action="store_true", help="merge configs with units still missing")
     args = ap.parse_args()
     bands = list(BANDS) if not args.bands or "all" in args.bands else args.bands
@@ -229,7 +239,7 @@ def main() -> int:
     elif args.command == "split":
         split(bands)
     elif args.command == "run":
-        run(bands, args.problem)
+        run(bands, args.problem, args.threads)
     elif args.command == "progress":
         progress()
     else:
