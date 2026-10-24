@@ -116,6 +116,9 @@ def split(bands: list[str]) -> None:
         for config in band_configs(band):
             doc = tomllib.loads(config.read_text())
             for unit in units_of(band, config):
+                # A finished unit keeps the unit.toml it ran with.
+                if is_done(unit):
+                    continue
                 d = UNITS / unit["key"]
                 d.mkdir(parents=True, exist_ok=True)
                 one = {k: v for k, v in doc.items() if k not in ("instances", "heuristics")}
