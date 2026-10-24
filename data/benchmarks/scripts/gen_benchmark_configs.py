@@ -21,14 +21,15 @@ Usage: python3 data/benchmarks/scripts/gen_benchmark_configs.py
 """
 from __future__ import annotations
 
+from glob import glob
 from pathlib import Path
 from typing import Iterable
 
 OUT = Path(__file__).resolve().parent.parent
+REPO = OUT.parent.parent
 
 BANDS = ("small", "medium", "large")
-# Five runs at the large band, where a run takes ten minutes.
-NUM_RUNS = {"small": 10, "medium": 10, "large": 5}
+NUM_RUNS = 5
 # Master seed: makes every run reproducible (per-run seeds are derived from it).
 SEED = 42
 DURATION = {"small": 30.0, "medium": 120.0, "large": 600.0}
@@ -101,7 +102,7 @@ REPLICA_T_HOT = {"MaxCut": 10.0, "Qubo": 100.0, "Sat": 10.0, "Tsp": 10.0,
 
 GSET_SMALL = list(range(1, 22)) + list(range(43, 48)) + list(range(51, 55))
 GSET_MEDIUM = list(range(22, 43)) + list(range(48, 51))
-GSET_LARGE = [55, 58, 60, 63, 64, 70, 72, 77, 81]
+GSET_LARGE = list(range(55, 68)) + [70, 72, 77, 81]
 
 
 def gset(ns: Iterable[int]) -> list[str]:
@@ -118,6 +119,12 @@ def qaplib(names: Iterable[str]) -> list[str]:
     return [f"data/instances/qap/{n}.dat" for n in names]
 
 
+def first_files(patterns: Iterable[str], k: int = 3) -> list[str]:
+    """The first `k` files in name order of each glob, one class of instances each."""
+    return [str(Path(f).relative_to(REPO))
+            for pattern in patterns for f in sorted(glob(str(REPO / pattern)))[:k]]
+
+
 def falkenauer(classes: Iterable[str], per_class: int = 5) -> list[str]:
     return [f"data/instances/bin_packing/falkenauer/{c}_{i:02d}.txt"
             for c in classes for i in range(per_class)]
@@ -125,63 +132,57 @@ def falkenauer(classes: Iterable[str], per_class: int = 5) -> list[str]:
 
 # Instance globs per (problem, band). Lists become multiple [[instances]] blocks.
 INSTANCES: dict[tuple[str, str], list[str]] = {
+    # The whole G-set.
     ("MaxCut", "small"): gset(GSET_SMALL),
     ("MaxCut", "medium"): gset(GSET_MEDIUM),
     ("MaxCut", "large"): gset(GSET_LARGE),
-    ("Qubo", "small"):  ["data/instances/qubo/bqp/bqp50_*.txt",  "data/instances/qubo/bqp/bqp100_*.txt"],
-    ("Qubo", "medium"): ["data/instances/qubo/bqp/bqp250_*.txt", "data/instances/qubo/bqp/bqp500_*.txt"],
-    ("Qubo", "large"):  ["data/instances/qubo/bqp/bqp1000_*.txt"],
-    ("Sat", "small"):  ["data/instances/sat/satlib/uf50-218/*.cnf",  "data/instances/sat/satlib/uf75-325/*.cnf"],
-    ("Sat", "medium"): ["data/instances/sat/satlib/uf100-430/*.cnf", "data/instances/sat/satlib/uf150-645/*.cnf"],
-    ("Sat", "large"):  ["data/instances/sat/satlib/uf200-860/*.cnf"],
+    ("Qubo", "small"):  first_files(["data/instances/qubo/bqp/bqp50_*.txt", "data/instances/qubo/bqp/bqp100_*.txt"]),
+    ("Qubo", "medium"): first_files(["data/instances/qubo/bqp/bqp250_*.txt", "data/instances/qubo/bqp/bqp500_*.txt"]),
+    ("Qubo", "large"):  first_files(["data/instances/qubo/bqp/bqp1000_*.txt"]),
+    ("Sat", "small"):  first_files(["data/instances/sat/satlib/uf50-218/*.cnf", "data/instances/sat/satlib/uf75-325/*.cnf"]),
+    ("Sat", "medium"): first_files(["data/instances/sat/satlib/uf100-430/*.cnf", "data/instances/sat/satlib/uf150-645/*.cnf"]),
+    ("Sat", "large"):  first_files(["data/instances/sat/satlib/uf200-860/*.cnf"]),
     ("Tsp", "small"):  ["data/instances/tsp/burma14.tsp", "data/instances/tsp/eil51.tsp",
                        "data/instances/tsp/att48.tsp", "data/instances/tsp/berlin52.tsp"],
     ("Tsp", "medium"): ["data/instances/tsp/eil101.tsp", "data/instances/tsp/ch150.tsp"],
     ("Tsp", "large"):  ["data/instances/tsp/dsj1000.tsp"],
-    ("JobShop", "small"):  ["data/instances/jssp/orlib/ft06.txt",  "data/instances/jssp/orlib/ft10.txt",
-                            "data/instances/jssp/orlib/ft20.txt",
-                            *[f"data/instances/jssp/orlib/la0{n}.txt" for n in range(1, 6)],
-                            "data/instances/jssp/orlib/abz5.txt"],
-    ("JobShop", "medium"): [*[f"data/instances/jssp/orlib/la{n:02d}.txt" for n in range(6, 26)],
-                            *[f"data/instances/jssp/orlib/abz{n}.txt" for n in range(6, 10)],
-                            *[f"data/instances/jssp/orlib/orb{n:02d}.txt" for n in range(1, 11)]],
-    # One or two of each shape among la26-40, swv01-20 and yn1-4.
-    ("JobShop", "large"):  [*[f"data/instances/jssp/orlib/la{n}.txt" for n in (26, 29, 32, 36, 38, 40)],
-                            *[f"data/instances/jssp/orlib/swv{n:02d}.txt" for n in (1, 6, 11, 16)],
-                            *[f"data/instances/jssp/orlib/yn{n}.txt" for n in (1, 3)]],
-    ("VertexCover", "small"): gset(GSET_SMALL),
-    ("VertexCover", "medium"): gset(GSET_MEDIUM),
-    ("VertexCover", "large"): gset(GSET_LARGE),
+    # One or two of each shape (jobs x machines).
+    ("JobShop", "small"):  [f"data/instances/jssp/orlib/{n}.txt" for n in ("ft06", "ft10", "ft20", "la01", "abz5")],
+    ("JobShop", "medium"): [f"data/instances/jssp/orlib/{n}.txt" for n in (
+                                "la06", "la11", "la16", "la19", "la21", "la24", "abz7", "orb01")],
+    ("JobShop", "large"):  [f"data/instances/jssp/orlib/{n}.txt" for n in (
+                                "la26", "la32", "la36", "swv01", "swv11", "yn1")],
+    # A vertex cover ignores the edge weights, and the G-set graphs with ±1
+    # weights share their edges with an unweighted one, so one graph of each
+    # kind (random, toroidal, planar) and size, plus the sparse G70.
+    ("VertexCover", "small"): gset((1, 11, 14, 43, 51)),
+    ("VertexCover", "medium"): gset((22, 32, 35, 48)),
+    ("VertexCover", "large"): gset((55, 58, 70, 81)),
     # CVRPLIB "X" set, banded by customer count (see data/instances/README.md).
-    ("Vrp", "small"):  ["data/instances/vrp/demo16.vrp",
-                        *[f"data/instances/vrp/X-n{n}-k{k}.vrp" for n, k in (
-                            (101, 25), (110, 13), (125, 30), (139, 10),
-                            (153, 22), (176, 26), (195, 51))]],
+    ("Vrp", "small"):  [f"data/instances/vrp/X-n{n}-k{k}.vrp" for n, k in (
+                            (101, 25), (139, 10), (176, 26), (195, 51))],
     ("Vrp", "medium"): [f"data/instances/vrp/X-n{n}-k{k}.vrp" for n, k in (
-                            (214, 11), (242, 48), (270, 35), (303, 21),
-                            (344, 43), (401, 29), (459, 26))],
+                            (214, 11), (303, 21), (401, 29))],
     ("Vrp", "large"):  [f"data/instances/vrp/X-n{n}-k{k}.vrp" for n, k in (
-                            (502, 39), (561, 42), (627, 43), (701, 44),
-                            (801, 40), (895, 37), (1001, 43))],
+                            (502, 39), (701, 44), (1001, 43))],
     # Taillard classes of ten: 20 jobs (ta001-030), 50 and 100 jobs (ta031-090),
     # 200 and 500 jobs (ta091-120).
-    ("FlowShop", "small"):  taillard_pfsp((1, 11, 21)),
-    ("FlowShop", "medium"): taillard_pfsp((31, 41, 51, 61, 71, 81)),
-    ("FlowShop", "large"):  taillard_pfsp((91, 101, 111)),
+    ("FlowShop", "small"):  taillard_pfsp((1, 11, 21), per_class=1),
+    ("FlowShop", "medium"): taillard_pfsp((31, 41, 51, 61, 71, 81), per_class=1),
+    ("FlowShop", "large"):  taillard_pfsp((91, 101, 111), per_class=1),
     # QAPLIB, banded by n. Not bundled, fetch with data/instances/scripts/fetch_qaplib.sh.
-    ("Qap", "small"):  qaplib(("nug12", "nug20", "nug30", "tai12a", "tai15a",
-                               "tai17a", "tai20a", "tai25a", "tai30a")),
-    ("Qap", "medium"): qaplib(("tai35a", "tai40a", "sko42", "tai50a", "sko56", "tai60a")),
-    ("Qap", "large"):  qaplib(("sko72", "tai80a", "sko100a", "tai100a")),
-    # Falkenauer's uniform (u) and triplet (t) classes, the first five of each
-    # (three at the large band).
-    ("BinPacking", "small"):  falkenauer(("u120", "t60")),
-    ("BinPacking", "medium"): falkenauer(("u250", "t120", "t249")),
-    ("BinPacking", "large"):  falkenauer(("u500", "u1000", "t501"), per_class=3),
-    # A subset of the G-set covering its random, toroidal and planar graphs.
-    ("GraphColoring", "small"):  gset((1, 2, 3, 11, 12, 13, 14, 15, 16, 43)),
-    ("GraphColoring", "medium"): gset((22, 23, 32, 33, 35, 36, 48, 49)),
-    ("GraphColoring", "large"):  gset((55, 56, 57, 60, 62, 70)),
+    ("Qap", "small"):  qaplib(("nug20", "tai20a", "tai30a")),
+    ("Qap", "medium"): qaplib(("tai40a", "sko42", "tai60a")),
+    ("Qap", "large"):  qaplib(("sko100a", "tai100a")),
+    # Falkenauer's uniform (u) and triplet (t) classes, two of each (one at the
+    # large band).
+    ("BinPacking", "small"):  falkenauer(("u120", "t60"), per_class=2),
+    ("BinPacking", "medium"): falkenauer(("u250", "t120", "t249"), per_class=2),
+    ("BinPacking", "large"):  falkenauer(("u500", "u1000", "t501"), per_class=1),
+    # One G-set graph of each kind and size, as for the vertex cover.
+    ("GraphColoring", "small"):  gset((1, 11, 14, 43)),
+    ("GraphColoring", "medium"): gset((22, 32, 35, 48)),
+    ("GraphColoring", "large"):  gset((55, 62, 70)),
 }
 
 PROBLEM_DIR = {
@@ -208,7 +209,7 @@ def header(title: str, band: str) -> str:
     return (f"# Auto-generated by data/benchmarks/scripts/gen_benchmark_configs.py, do not edit by hand.\n"
             f"# Profile: {title}\n"
             f"# See docs/benchmarks/README.md#profiles\n\n"
-            f"num_runs = {NUM_RUNS[band]}\nseed = {SEED}\n")
+            f"num_runs = {NUM_RUNS}\nseed = {SEED}\n")
 
 
 def instance_blocks(problem: str, band: str) -> str:

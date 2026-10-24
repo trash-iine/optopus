@@ -2,7 +2,7 @@
 # Profile: JobShop / medium (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
@@ -10,39 +10,7 @@ path = "data/instances/jssp/orlib/la06.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/instances/jssp/orlib/la07.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la08.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la09.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la10.txt"
-problem = "JobShop"
-
-[[instances]]
 path = "data/instances/jssp/orlib/la11.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la12.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la13.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la14.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la15.txt"
 problem = "JobShop"
 
 [[instances]]
@@ -50,19 +18,7 @@ path = "data/instances/jssp/orlib/la16.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/instances/jssp/orlib/la17.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la18.txt"
-problem = "JobShop"
-
-[[instances]]
 path = "data/instances/jssp/orlib/la19.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la20.txt"
 problem = "JobShop"
 
 [[instances]]
@@ -70,23 +26,7 @@ path = "data/instances/jssp/orlib/la21.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/instances/jssp/orlib/la22.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la23.txt"
-problem = "JobShop"
-
-[[instances]]
 path = "data/instances/jssp/orlib/la24.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la25.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/abz6.txt"
 problem = "JobShop"
 
 [[instances]]
@@ -94,51 +34,7 @@ path = "data/instances/jssp/orlib/abz7.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/instances/jssp/orlib/abz8.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/abz9.txt"
-problem = "JobShop"
-
-[[instances]]
 path = "data/instances/jssp/orlib/orb01.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb02.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb03.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb04.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb05.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb06.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb07.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb08.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb09.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/orb10.txt"
 problem = "JobShop"
 
 [[heuristics]]

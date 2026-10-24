@@ -2,12 +2,8 @@
 # Profile: Qap / medium (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
-
-[[instances]]
-path = "data/instances/qap/tai35a.dat"
-problem = "Qap"
 
 [[instances]]
 path = "data/instances/qap/tai40a.dat"
@@ -15,14 +11,6 @@ problem = "Qap"
 
 [[instances]]
 path = "data/instances/qap/sko42.dat"
-problem = "Qap"
-
-[[instances]]
-path = "data/instances/qap/tai50a.dat"
-problem = "Qap"
-
-[[instances]]
-path = "data/instances/qap/sko56.dat"
 problem = "Qap"
 
 [[instances]]

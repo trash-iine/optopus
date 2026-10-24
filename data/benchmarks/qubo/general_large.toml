@@ -6,7 +6,15 @@ num_runs = 5
 seed = 42
 
 [[instances]]
-path = "data/instances/qubo/bqp/bqp1000_*.txt"
+path = "data/instances/qubo/bqp/bqp1000_1.txt"
+problem = "Qubo"
+
+[[instances]]
+path = "data/instances/qubo/bqp/bqp1000_10.txt"
+problem = "Qubo"
+
+[[instances]]
+path = "data/instances/qubo/bqp/bqp1000_2.txt"
 problem = "Qubo"
 
 [[heuristics]]

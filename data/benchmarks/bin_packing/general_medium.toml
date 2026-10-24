@@ -2,7 +2,7 @@
 # Profile: BinPacking / medium (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
@@ -14,18 +14,6 @@ path = "data/instances/bin_packing/falkenauer/u250_01.txt"
 problem = "BinPacking"
 
 [[instances]]
-path = "data/instances/bin_packing/falkenauer/u250_02.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/u250_03.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/u250_04.txt"
-problem = "BinPacking"
-
-[[instances]]
 path = "data/instances/bin_packing/falkenauer/t120_00.txt"
 problem = "BinPacking"
 
@@ -34,35 +22,11 @@ path = "data/instances/bin_packing/falkenauer/t120_01.txt"
 problem = "BinPacking"
 
 [[instances]]
-path = "data/instances/bin_packing/falkenauer/t120_02.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t120_03.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t120_04.txt"
-problem = "BinPacking"
-
-[[instances]]
 path = "data/instances/bin_packing/falkenauer/t249_00.txt"
 problem = "BinPacking"
 
 [[instances]]
 path = "data/instances/bin_packing/falkenauer/t249_01.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t249_02.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t249_03.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t249_04.txt"
 problem = "BinPacking"
 
 [[heuristics]]

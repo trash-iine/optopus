@@ -2,7 +2,7 @@
 # Profile: GraphColoring / medium (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
@@ -10,15 +10,7 @@ path = "data/instances/max_cut/G22"
 problem = "GraphColoring"
 
 [[instances]]
-path = "data/instances/max_cut/G23"
-problem = "GraphColoring"
-
-[[instances]]
 path = "data/instances/max_cut/G32"
-problem = "GraphColoring"
-
-[[instances]]
-path = "data/instances/max_cut/G33"
 problem = "GraphColoring"
 
 [[instances]]
@@ -26,15 +18,7 @@ path = "data/instances/max_cut/G35"
 problem = "GraphColoring"
 
 [[instances]]
-path = "data/instances/max_cut/G36"
-problem = "GraphColoring"
-
-[[instances]]
 path = "data/instances/max_cut/G48"
-problem = "GraphColoring"
-
-[[instances]]
-path = "data/instances/max_cut/G49"
 problem = "GraphColoring"
 
 [[heuristics]]

@@ -2,15 +2,31 @@
 # Profile: Qubo / small (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
-path = "data/instances/qubo/bqp/bqp50_*.txt"
+path = "data/instances/qubo/bqp/bqp50_1.txt"
 problem = "Qubo"
 
 [[instances]]
-path = "data/instances/qubo/bqp/bqp100_*.txt"
+path = "data/instances/qubo/bqp/bqp50_10.txt"
+problem = "Qubo"
+
+[[instances]]
+path = "data/instances/qubo/bqp/bqp50_2.txt"
+problem = "Qubo"
+
+[[instances]]
+path = "data/instances/qubo/bqp/bqp100_1.txt"
+problem = "Qubo"
+
+[[instances]]
+path = "data/instances/qubo/bqp/bqp100_10.txt"
+problem = "Qubo"
+
+[[instances]]
+path = "data/instances/qubo/bqp/bqp100_2.txt"
 problem = "Qubo"
 
 [[heuristics]]

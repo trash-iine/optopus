@@ -10,10 +10,6 @@ path = "data/instances/jssp/orlib/la26.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/instances/jssp/orlib/la29.txt"
-problem = "JobShop"
-
-[[instances]]
 path = "data/instances/jssp/orlib/la32.txt"
 problem = "JobShop"
 
@@ -22,19 +18,7 @@ path = "data/instances/jssp/orlib/la36.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/instances/jssp/orlib/la38.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la40.txt"
-problem = "JobShop"
-
-[[instances]]
 path = "data/instances/jssp/orlib/swv01.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/swv06.txt"
 problem = "JobShop"
 
 [[instances]]
@@ -42,15 +26,7 @@ path = "data/instances/jssp/orlib/swv11.txt"
 problem = "JobShop"
 
 [[instances]]
-path = "data/instances/jssp/orlib/swv16.txt"
-problem = "JobShop"
-
-[[instances]]
 path = "data/instances/jssp/orlib/yn1.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/yn3.txt"
 problem = "JobShop"
 
 [[heuristics]]

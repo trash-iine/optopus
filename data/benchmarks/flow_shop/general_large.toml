@@ -10,35 +10,11 @@ path = "data/instances/flow_shop/taillard/ta091.txt"
 problem = "FlowShop"
 
 [[instances]]
-path = "data/instances/flow_shop/taillard/ta092.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta093.txt"
-problem = "FlowShop"
-
-[[instances]]
 path = "data/instances/flow_shop/taillard/ta101.txt"
 problem = "FlowShop"
 
 [[instances]]
-path = "data/instances/flow_shop/taillard/ta102.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta103.txt"
-problem = "FlowShop"
-
-[[instances]]
 path = "data/instances/flow_shop/taillard/ta111.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta112.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta113.txt"
 problem = "FlowShop"
 
 [[heuristics]]

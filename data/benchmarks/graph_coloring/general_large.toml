@@ -10,18 +10,6 @@ path = "data/instances/max_cut/G55"
 problem = "GraphColoring"
 
 [[instances]]
-path = "data/instances/max_cut/G56"
-problem = "GraphColoring"
-
-[[instances]]
-path = "data/instances/max_cut/G57"
-problem = "GraphColoring"
-
-[[instances]]
-path = "data/instances/max_cut/G60"
-problem = "GraphColoring"
-
-[[instances]]
 path = "data/instances/max_cut/G62"
 problem = "GraphColoring"
 

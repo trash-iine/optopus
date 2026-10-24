@@ -14,27 +14,7 @@ path = "data/instances/max_cut/G58"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/instances/max_cut/G60"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G63"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G64"
-problem = "VertexCover"
-
-[[instances]]
 path = "data/instances/max_cut/G70"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G72"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G77"
 problem = "VertexCover"
 
 [[instances]]
