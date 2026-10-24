@@ -2,7 +2,7 @@
 # Profile: FlowShop / medium (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
@@ -10,23 +10,7 @@ path = "data/instances/flow_shop/taillard/ta031.txt"
 problem = "FlowShop"
 
 [[instances]]
-path = "data/instances/flow_shop/taillard/ta032.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta033.txt"
-problem = "FlowShop"
-
-[[instances]]
 path = "data/instances/flow_shop/taillard/ta041.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta042.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta043.txt"
 problem = "FlowShop"
 
 [[instances]]
@@ -34,23 +18,7 @@ path = "data/instances/flow_shop/taillard/ta051.txt"
 problem = "FlowShop"
 
 [[instances]]
-path = "data/instances/flow_shop/taillard/ta052.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta053.txt"
-problem = "FlowShop"
-
-[[instances]]
 path = "data/instances/flow_shop/taillard/ta061.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta062.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta063.txt"
 problem = "FlowShop"
 
 [[instances]]
@@ -58,23 +26,7 @@ path = "data/instances/flow_shop/taillard/ta071.txt"
 problem = "FlowShop"
 
 [[instances]]
-path = "data/instances/flow_shop/taillard/ta072.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta073.txt"
-problem = "FlowShop"
-
-[[instances]]
 path = "data/instances/flow_shop/taillard/ta081.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta082.txt"
-problem = "FlowShop"
-
-[[instances]]
-path = "data/instances/flow_shop/taillard/ta083.txt"
 problem = "FlowShop"
 
 [[heuristics]]

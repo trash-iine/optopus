@@ -2,7 +2,7 @@
 # Profile: BinPacking / small (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
@@ -14,35 +14,11 @@ path = "data/instances/bin_packing/falkenauer/u120_01.txt"
 problem = "BinPacking"
 
 [[instances]]
-path = "data/instances/bin_packing/falkenauer/u120_02.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/u120_03.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/u120_04.txt"
-problem = "BinPacking"
-
-[[instances]]
 path = "data/instances/bin_packing/falkenauer/t60_00.txt"
 problem = "BinPacking"
 
 [[instances]]
 path = "data/instances/bin_packing/falkenauer/t60_01.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t60_02.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t60_03.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t60_04.txt"
 problem = "BinPacking"
 
 [[heuristics]]

@@ -2,31 +2,15 @@
 # Profile: Vrp / small (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
-
-[[instances]]
-path = "data/instances/vrp/demo16.vrp"
-problem = "Vrp"
 
 [[instances]]
 path = "data/instances/vrp/X-n101-k25.vrp"
 problem = "Vrp"
 
 [[instances]]
-path = "data/instances/vrp/X-n110-k13.vrp"
-problem = "Vrp"
-
-[[instances]]
-path = "data/instances/vrp/X-n125-k30.vrp"
-problem = "Vrp"
-
-[[instances]]
 path = "data/instances/vrp/X-n139-k10.vrp"
-problem = "Vrp"
-
-[[instances]]
-path = "data/instances/vrp/X-n153-k22.vrp"
 problem = "Vrp"
 
 [[instances]]

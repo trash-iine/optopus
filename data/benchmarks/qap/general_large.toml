@@ -6,14 +6,6 @@ num_runs = 5
 seed = 42
 
 [[instances]]
-path = "data/instances/qap/sko72.dat"
-problem = "Qap"
-
-[[instances]]
-path = "data/instances/qap/tai80a.dat"
-problem = "Qap"
-
-[[instances]]
 path = "data/instances/qap/sko100a.dat"
 problem = "Qap"
 

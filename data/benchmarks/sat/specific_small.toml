@@ -2,15 +2,31 @@
 # Profile: Sat / small (problem-specific heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
-path = "data/instances/sat/satlib/uf50-218/*.cnf"
+path = "data/instances/sat/satlib/uf50-218/uf50-01.cnf"
 problem = "Sat"
 
 [[instances]]
-path = "data/instances/sat/satlib/uf75-325/*.cnf"
+path = "data/instances/sat/satlib/uf50-218/uf50-010.cnf"
+problem = "Sat"
+
+[[instances]]
+path = "data/instances/sat/satlib/uf50-218/uf50-0100.cnf"
+problem = "Sat"
+
+[[instances]]
+path = "data/instances/sat/satlib/uf75-325/uf75-01.cnf"
+problem = "Sat"
+
+[[instances]]
+path = "data/instances/sat/satlib/uf75-325/uf75-010.cnf"
+problem = "Sat"
+
+[[instances]]
+path = "data/instances/sat/satlib/uf75-325/uf75-0100.cnf"
 problem = "Sat"
 
 [[heuristics]]

@@ -2,7 +2,7 @@
 # Profile: JobShop / small (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
@@ -19,22 +19,6 @@ problem = "JobShop"
 
 [[instances]]
 path = "data/instances/jssp/orlib/la01.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la02.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la03.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la04.txt"
-problem = "JobShop"
-
-[[instances]]
-path = "data/instances/jssp/orlib/la05.txt"
 problem = "JobShop"
 
 [[instances]]

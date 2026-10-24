@@ -10,23 +10,7 @@ path = "data/instances/vrp/X-n502-k39.vrp"
 problem = "Vrp"
 
 [[instances]]
-path = "data/instances/vrp/X-n561-k42.vrp"
-problem = "Vrp"
-
-[[instances]]
-path = "data/instances/vrp/X-n627-k43.vrp"
-problem = "Vrp"
-
-[[instances]]
 path = "data/instances/vrp/X-n701-k44.vrp"
-problem = "Vrp"
-
-[[instances]]
-path = "data/instances/vrp/X-n801-k40.vrp"
-problem = "Vrp"
-
-[[instances]]
-path = "data/instances/vrp/X-n895-k37.vrp"
 problem = "Vrp"
 
 [[instances]]

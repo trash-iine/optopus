@@ -2,7 +2,7 @@
 # Profile: VertexCover / small (general heuristics)
 # See docs/benchmarks/README.md#profiles
 
-num_runs = 10
+num_runs = 5
 seed = 42
 
 [[instances]]
@@ -10,51 +10,7 @@ path = "data/instances/max_cut/G1"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/instances/max_cut/G2"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G3"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G4"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G5"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G6"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G7"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G8"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G9"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G10"
-problem = "VertexCover"
-
-[[instances]]
 path = "data/instances/max_cut/G11"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G12"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G13"
 problem = "VertexCover"
 
 [[instances]]
@@ -62,67 +18,11 @@ path = "data/instances/max_cut/G14"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/instances/max_cut/G15"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G16"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G17"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G18"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G19"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G20"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G21"
-problem = "VertexCover"
-
-[[instances]]
 path = "data/instances/max_cut/G43"
 problem = "VertexCover"
 
 [[instances]]
-path = "data/instances/max_cut/G44"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G45"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G46"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G47"
-problem = "VertexCover"
-
-[[instances]]
 path = "data/instances/max_cut/G51"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G52"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G53"
-problem = "VertexCover"
-
-[[instances]]
-path = "data/instances/max_cut/G54"
 problem = "VertexCover"
 
 [[heuristics]]

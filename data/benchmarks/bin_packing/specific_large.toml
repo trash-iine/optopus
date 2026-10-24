@@ -10,35 +10,11 @@ path = "data/instances/bin_packing/falkenauer/u500_00.txt"
 problem = "BinPacking"
 
 [[instances]]
-path = "data/instances/bin_packing/falkenauer/u500_01.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/u500_02.txt"
-problem = "BinPacking"
-
-[[instances]]
 path = "data/instances/bin_packing/falkenauer/u1000_00.txt"
 problem = "BinPacking"
 
 [[instances]]
-path = "data/instances/bin_packing/falkenauer/u1000_01.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/u1000_02.txt"
-problem = "BinPacking"
-
-[[instances]]
 path = "data/instances/bin_packing/falkenauer/t501_00.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t501_01.txt"
-problem = "BinPacking"
-
-[[instances]]
-path = "data/instances/bin_packing/falkenauer/t501_02.txt"
 problem = "BinPacking"
 
 [[heuristics]]
