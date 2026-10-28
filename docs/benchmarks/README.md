@@ -1,7 +1,7 @@
 # Benchmarks
 
 Aggregated comparison of the general heuristics, and the problem-specific solvers. 
-Each row is `(problem, instance, neighbor, heuristic)` averaged over five runs (ten in the small and medium bands of the 2026-10 sweep).
+Each row is `(problem, instance, neighbor, heuristic)` averaged over five runs (ten in the small and medium bands of the 2026-10 sweep, and in its BLS runs on the G-set graphs of 1000 and 10000 vertices).
 
 The numbers themselves (and the exact configuration behind each one) live in
 the [benchmark viewer](viewer.html); click any cell. This file covers how those
@@ -76,7 +76,8 @@ below, so results from different runs remain comparable.
 
 `num_runs = 5` for every (problem, heuristic, instance) triple, and `seed = 42` on every config so per-run
 seeds are derived deterministically. The small and medium bands of the 2026-10 sweep
-ran ten runs, the count before this profile.
+ran ten runs, the count before this profile, and so did its BLS runs on the G-set
+graphs of 1000 and 10000 vertices.
 
 ### Size bands per problem
 

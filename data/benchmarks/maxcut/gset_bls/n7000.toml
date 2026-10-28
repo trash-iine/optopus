@@ -1,4 +1,4 @@
-num_runs = 10
+num_runs = 5
 
 [[instances]]
 path = "data/instances/max_cut/G60"
