@@ -1,4 +1,4 @@
-timestamp = "20260716_061026"
+timestamp = "20261017_230032"
 config_file = "data/benchmarks/jssp/general_small.toml"
 
 [[results]]
@@ -14,19 +14,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 69.0
-avg_objective = 77.4
-worst_objective = 96.0
-std_objective = 7.748548251124206
+best_objective = 67.0
+avg_objective = 82.9
+worst_objective = 92.0
+std_objective = 7.462573282722254
 best_time_to_best_secs = 0.0
-avg_time_to_best_secs = 0.0001889375
-avg_total_time_secs = 0.00026156249999999997
-avg_initial_objective = 85.2
-avg_improvement = 7.8
-avg_n_accepted = 1.3
+avg_time_to_best_secs = 0.0005737540999999999
+avg_total_time_secs = 0.0008878081999999999
+avg_initial_objective = 91.0
+avg_improvement = 8.1
+avg_n_accepted = 1.8
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.5166666666666667
-avg_n_best_updates = 1.3
+avg_acceptance_rate = 0.53
+avg_n_best_updates = 1.8
 
 [[results]]
 problem = "JobShop"
@@ -42,18 +42,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 57.0
-avg_objective = 62.6
-worst_objective = 68.0
-std_objective = 3.7735924528226414
-best_time_to_best_secs = 0.00248325
-avg_time_to_best_secs = 0.0033845709000000007
-avg_total_time_secs = 0.0035572293000000004
-avg_initial_objective = 85.2
-avg_improvement = 22.6
-avg_n_accepted = 3.9
+avg_objective = 61.2
+worst_objective = 70.0
+std_objective = 3.682390527904394
+best_time_to_best_secs = 0.002919041
+avg_time_to_best_secs = 0.0036387042
+avg_total_time_secs = 0.0037746625
+avg_initial_objective = 91.0
+avg_improvement = 29.8
+avg_n_accepted = 4.1
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.768095238095238
-avg_n_best_updates = 3.9
+avg_acceptance_rate = 0.7799999999999999
+avg_n_best_updates = 4.1
 
 [[results]]
 problem = "JobShop"
@@ -73,18 +73,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 58.0
-avg_objective = 59.9
-worst_objective = 64.0
-std_objective = 2.3853720883753127
-best_time_to_best_secs = 0.012471917
-avg_time_to_best_secs = 9.057935466600002
-avg_total_time_secs = 29.9999989835
-avg_initial_objective = 85.2
-avg_improvement = 25.3
-avg_n_accepted = 5357125.5
+avg_objective = 58.6
+worst_objective = 61.0
+std_objective = 1.019803902718557
+best_time_to_best_secs = 0.004995708
+avg_time_to_best_secs = 4.1331456623000005
+avg_total_time_secs = 30.0000022332
+avg_initial_objective = 91.0
+avg_improvement = 32.4
+avg_n_accepted = 6729793.9
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 8.8
+avg_n_best_updates = 10.3
 
 [[results]]
 problem = "JobShop"
@@ -103,19 +103,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 57.0
-avg_objective = 61.5
-worst_objective = 66.0
-std_objective = 3.383784863137726
-best_time_to_best_secs = 0.001800958
-avg_time_to_best_secs = 0.0269463958
-avg_total_time_secs = 30.000145229199994
-avg_initial_objective = 85.2
-avg_improvement = 23.7
-avg_n_accepted = 109334.4
+best_objective = 55.0
+avg_objective = 58.8
+worst_objective = 70.0
+std_objective = 4.190465367951393
+best_time_to_best_secs = 0.003407458
+avg_time_to_best_secs = 3.6244585291999996
+avg_total_time_secs = 30.0000578876
+avg_initial_objective = 91.0
+avg_improvement = 32.2
+avg_n_accepted = 218497.1
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 4.8
+avg_n_best_updates = 5.5
 
 [[results]]
 problem = "JobShop"
@@ -132,18 +132,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 55.0
-avg_objective = 58.4
-worst_objective = 66.0
-std_objective = 2.690724809414742
-best_time_to_best_secs = 0.003213084
-avg_time_to_best_secs = 0.018580204300000003
-avg_total_time_secs = 29.9999956249
-avg_initial_objective = 85.2
-avg_improvement = 26.8
-avg_n_accepted = 37281387.9
-avg_n_rejected = 4724324.2
-avg_acceptance_rate = 0.8875871326064806
-avg_n_best_updates = 8.3
+avg_objective = 58.3
+worst_objective = 63.0
+std_objective = 1.9519221295943134
+best_time_to_best_secs = 0.003243708
+avg_time_to_best_secs = 0.0153135624
+avg_total_time_secs = 30.000000537299996
+avg_initial_objective = 91.0
+avg_improvement = 32.7
+avg_n_accepted = 42222451.9
+avg_n_rejected = 5322045.5
+avg_acceptance_rate = 0.8880657656468264
+avg_n_best_updates = 11.1
 
 [[results]]
 problem = "JobShop"
@@ -160,18 +160,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 55.0
-avg_objective = 55.2
-worst_objective = 57.0
-std_objective = 0.6
-best_time_to_best_secs = 0.003521292
-avg_time_to_best_secs = 0.006024146
-avg_total_time_secs = 29.999997079100005
-avg_initial_objective = 85.2
-avg_improvement = 30.0
-avg_n_accepted = 28944550.8
-avg_n_rejected = 52091257.4
-avg_acceptance_rate = 0.35732905716228996
-avg_n_best_updates = 10.7
+avg_objective = 55.0
+worst_objective = 55.0
+std_objective = 0.0
+best_time_to_best_secs = 0.003590667
+avg_time_to_best_secs = 0.005578683199999999
+avg_total_time_secs = 30.0000002834
+avg_initial_objective = 91.0
+avg_improvement = 36.0
+avg_n_accepted = 34409642.8
+avg_n_rejected = 61306517.8
+avg_acceptance_rate = 0.35949709978098754
+avg_n_best_updates = 12.7
 
 [[results]]
 problem = "JobShop"
@@ -190,18 +190,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 55.0
-avg_objective = 58.0
-worst_objective = 61.0
-std_objective = 1.4832396974191326
-best_time_to_best_secs = 0.004035
-avg_time_to_best_secs = 0.019318895999999995
-avg_total_time_secs = 7.432367479200001
-avg_initial_objective = 85.2
-avg_improvement = 27.2
-avg_n_accepted = 8867423.5
-avg_n_rejected = 1132576.5
-avg_acceptance_rate = 0.8867423499999999
-avg_n_best_updates = 10.7
+avg_objective = 57.4
+worst_objective = 60.0
+std_objective = 1.4282856857085702
+best_time_to_best_secs = 0.006240792
+avg_time_to_best_secs = 0.0206047418
+avg_total_time_secs = 7.003411566999999
+avg_initial_objective = 91.0
+avg_improvement = 33.6
+avg_n_accepted = 8890929.8
+avg_n_rejected = 1109070.2
+avg_acceptance_rate = 0.88909298
+avg_n_best_updates = 11.3
 
 [[results]]
 problem = "JobShop"
@@ -220,18 +220,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 55.0
-avg_objective = 55.2
-worst_objective = 57.0
-std_objective = 0.5999999999999999
-best_time_to_best_secs = 0.005559916
-avg_time_to_best_secs = 0.0087382251
-avg_total_time_secs = 3.4589518959000003
-avg_initial_objective = 85.2
-avg_improvement = 30.0
-avg_n_accepted = 3578321.6
-avg_n_rejected = 6421678.4
-avg_acceptance_rate = 0.35783216
-avg_n_best_updates = 11.0
+avg_objective = 55.0
+worst_objective = 55.0
+std_objective = 0.0
+best_time_to_best_secs = 0.004956375
+avg_time_to_best_secs = 0.0076301667000000005
+avg_total_time_secs = 3.2002359917
+avg_initial_objective = 91.0
+avg_improvement = 36.0
+avg_n_accepted = 3577863.1
+avg_n_rejected = 6422136.9
+avg_acceptance_rate = 0.35778631
+avg_n_best_updates = 12.2
 
 [[results]]
 problem = "JobShop"
@@ -260,18 +260,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 55.0
-avg_objective = 56.2
-worst_objective = 58.0
-std_objective = 1.2489995996796797
-best_time_to_best_secs = 0.009304
-avg_time_to_best_secs = 0.35076574169999997
-avg_total_time_secs = 30.000754112600003
-avg_initial_objective = 85.2
-avg_improvement = 29.0
-avg_n_accepted = 5049081.7
+avg_objective = 55.2
+worst_objective = 57.0
+std_objective = 0.6
+best_time_to_best_secs = 0.01655
+avg_time_to_best_secs = 0.08161278309999999
+avg_total_time_secs = 30.000311125000003
+avg_initial_objective = 91.0
+avg_improvement = 35.8
+avg_n_accepted = 6517730.4
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 3533.1
+avg_n_best_updates = 4795.7
 
 [[results]]
 problem = "JobShop"
@@ -305,15 +305,15 @@ best_objective = 55.0
 avg_objective = 55.0
 worst_objective = 55.0
 std_objective = 0.0
-best_time_to_best_secs = 0.007052417
-avg_time_to_best_secs = 0.0407595501
-avg_total_time_secs = 30.000036841700002
-avg_initial_objective = 85.2
-avg_improvement = 30.2
-avg_n_accepted = 38724451.5
-avg_n_rejected = 2740132.6
-avg_acceptance_rate = 0.9339168734407185
-avg_n_best_updates = 149608.4
+best_time_to_best_secs = 0.006538292
+avg_time_to_best_secs = 0.044078625100000005
+avg_total_time_secs = 30.0000682375
+avg_initial_objective = 91.0
+avg_improvement = 36.0
+avg_n_accepted = 42538701.8
+avg_n_rejected = 3008162.2
+avg_acceptance_rate = 0.9339551280530294
+avg_n_best_updates = 164428.1
 
 [[results]]
 problem = "JobShop"
@@ -345,15 +345,134 @@ best_objective = 55.0
 avg_objective = 55.0
 worst_objective = 55.0
 std_objective = 0.0
-best_time_to_best_secs = 0.608467041
-avg_time_to_best_secs = 5.948089212400001
-avg_total_time_secs = 30.158861979000005
-avg_initial_objective = 85.2
-avg_improvement = 30.2
-avg_n_accepted = 5390000.0
+best_time_to_best_secs = 0.734214625
+avg_time_to_best_secs = 5.359701925
+avg_total_time_secs = 30.048992787600003
+avg_initial_objective = 91.0
+avg_improvement = 36.0
+avg_n_accepted = 6820000.0
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 842.7
+avg_n_best_updates = 1092.4
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Swap", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 55.0
+avg_objective = 58.4
+worst_objective = 62.0
+std_objective = 1.9595917942265426
+best_time_to_best_secs = 0.001857458
+avg_time_to_best_secs = 2.9465339123
+avg_total_time_secs = 30.0000055999
+avg_initial_objective = 91.0
+avg_improvement = 32.6
+avg_n_accepted = 20324690.1
+avg_n_rejected = 1591919.2
+avg_acceptance_rate = 0.9275564699883118
+avg_n_best_updates = 1752323.4
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Swap"
+population_size = 20
+initial_beta = 0.01
+delta_beta = 0.001225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 55.0
+avg_objective = 55.0
+worst_objective = 55.0
+std_objective = 0.0
+best_time_to_best_secs = 2.909357292
+avg_time_to_best_secs = 4.0424530875
+avg_total_time_secs = 30.006711474999996
+avg_initial_objective = 91.0
+avg_improvement = 36.0
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 7.5
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Swap"
+num_replicas = 20
+beta_min = 0.01
+beta_max = 0.5
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 55.0
+avg_objective = 55.0
+worst_objective = 55.0
+std_objective = 0.0
+best_time_to_best_secs = 0.022085708
+avg_time_to_best_secs = 0.1002635332
+avg_total_time_secs = 30.0001969997
+avg_initial_objective = 91.0
+avg_improvement = 36.0
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 7.6
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft06.txt"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 55.0
+avg_objective = 55.0
+worst_objective = 55.0
+std_objective = 0.0
+best_time_to_best_secs = 0.010716458
+avg_time_to_best_secs = 0.13576100430000002
+avg_total_time_secs = 30.0000043876
+avg_initial_objective = 91.0
+avg_improvement = 36.0
+avg_n_accepted = 5562429.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 14.3
 
 [[results]]
 problem = "JobShop"
@@ -368,19 +487,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1427.0
-avg_objective = 1585.4
-worst_objective = 1808.0
-std_objective = 108.4409516741715
-best_time_to_best_secs = 0.0
-avg_time_to_best_secs = 0.0012106500000000002
-avg_total_time_secs = 0.0014061332
-avg_initial_objective = 1737.0
-avg_improvement = 151.6
-avg_n_accepted = 3.5
+best_objective = 1370.0
+avg_objective = 1566.6
+worst_objective = 1785.0
+std_objective = 138.35476139258816
+best_time_to_best_secs = 0.000723959
+avg_time_to_best_secs = 0.0017135210000000002
+avg_total_time_secs = 0.0019425958
+avg_initial_objective = 1714.0
+avg_improvement = 147.4
+avg_n_accepted = 3.1
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.6858333333333333
-avg_n_best_updates = 3.5
+avg_acceptance_rate = 0.6975
+avg_n_best_updates = 3.1
 
 [[results]]
 problem = "JobShop"
@@ -395,80 +514,18 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1072.0
-avg_objective = 1154.7
-worst_objective = 1237.0
-std_objective = 54.10184839725904
-best_time_to_best_secs = 0.026885125
-avg_time_to_best_secs = 0.0469829208
-avg_total_time_secs = 0.049923316599999996
-avg_initial_objective = 1737.0
-avg_improvement = 582.3
-avg_n_accepted = 13.4
+best_objective = 1051.0
+avg_objective = 1138.4
+worst_objective = 1221.0
+std_objective = 56.33329388558777
+best_time_to_best_secs = 0.016282916
+avg_time_to_best_secs = 0.030392254
+avg_total_time_secs = 0.0316524582
+avg_initial_objective = 1714.0
+avg_improvement = 575.6
+avg_n_accepted = 13.9
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.9278830891330893
-avg_n_best_updates = 13.4
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/ft10.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 1323.0
-avg_objective = 1461.4
-worst_objective = 1590.0
-std_objective = 82.97373078270013
-best_time_to_best_secs = 0.007719333
-avg_time_to_best_secs = 2.8454234833
-avg_total_time_secs = 30.000013808400002
-avg_initial_objective = 1737.0
-avg_improvement = 275.6
-avg_n_accepted = 991964.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 12.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/ft10.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Relocate"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 1057.0
-avg_objective = 1151.7
-worst_objective = 1237.0
-std_objective = 54.582139936063335
-best_time_to_best_secs = 0.044889583
-avg_time_to_best_secs = 0.2164007085
-avg_total_time_secs = 30.0016542083
-avg_initial_objective = 1737.0
-avg_improvement = 585.3
-avg_n_accepted = 7886.2
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
+avg_acceptance_rate = 0.928118596379466
 avg_n_best_updates = 13.9
 
 [[results]]
@@ -476,6 +533,68 @@ problem = "JobShop"
 instance_path = "data/instances/jssp/orlib/ft10.txt"
 
 [results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1272.0
+avg_objective = 1430.4
+worst_objective = 1633.0
+std_objective = 116.98991409519027
+best_time_to_best_secs = 0.00554025
+avg_time_to_best_secs = 4.2958273039999995
+avg_total_time_secs = 30.0000076207
+avg_initial_objective = 1714.0
+avg_improvement = 283.6
+avg_n_accepted = 2110513.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 12.4
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1031.0
+avg_objective = 1134.6
+worst_objective = 1221.0
+std_objective = 60.13351810762447
+best_time_to_best_secs = 0.018017584
+avg_time_to_best_secs = 0.9562829544
+avg_total_time_secs = 30.000994808500003
+avg_initial_objective = 1714.0
+avg_improvement = 579.4
+avg_n_accepted = 15522.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 14.8
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
+
+[results.heuristic]
 kind = "LateAcceptanceHillClimbing"
 neighbor = "Swap"
 history_length = 100
@@ -485,19 +604,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 999.0
-avg_objective = 1049.3
-worst_objective = 1105.0
-std_objective = 38.94624500513496
-best_time_to_best_secs = 0.140376625
-avg_time_to_best_secs = 3.6671455209999997
-avg_total_time_secs = 29.999997366600006
-avg_initial_objective = 1737.0
-avg_improvement = 687.7
-avg_n_accepted = 15892808.0
-avg_n_rejected = 1351573.3
-avg_acceptance_rate = 0.9216145103513748
-avg_n_best_updates = 53.5
+best_objective = 980.0
+avg_objective = 1048.8
+worst_objective = 1087.0
+std_objective = 32.63678905774893
+best_time_to_best_secs = 0.11073625
+avg_time_to_best_secs = 3.2504477416999995
+avg_total_time_secs = 30.0000008333
+avg_initial_objective = 1714.0
+avg_improvement = 665.2
+avg_n_accepted = 16672001.9
+avg_n_rejected = 1415515.0
+avg_acceptance_rate = 0.92174319819938
+avg_n_best_updates = 51.2
 
 [[results]]
 problem = "JobShop"
@@ -513,19 +632,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 938.0
-avg_objective = 973.3
-worst_objective = 1003.0
-std_objective = 21.128416883429768
-best_time_to_best_secs = 0.01253875
-avg_time_to_best_secs = 0.7307232960000001
-avg_total_time_secs = 29.999986675000002
-avg_initial_objective = 1737.0
-avg_improvement = 763.7
-avg_n_accepted = 11517303.6
-avg_n_rejected = 41867832.9
-avg_acceptance_rate = 0.21586305215022814
-avg_n_best_updates = 52.2
+best_objective = 951.0
+avg_objective = 976.0
+worst_objective = 1011.0
+std_objective = 19.29248558377069
+best_time_to_best_secs = 0.009137958
+avg_time_to_best_secs = 0.8284525417000002
+avg_total_time_secs = 30.000000508399996
+avg_initial_objective = 1714.0
+avg_improvement = 738.0
+avg_n_accepted = 12602531.9
+avg_n_rejected = 44149400.8
+avg_acceptance_rate = 0.22230024349850677
+avg_n_best_updates = 50.1
 
 [[results]]
 problem = "JobShop"
@@ -544,18 +663,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 996.0
-avg_objective = 1050.2
-worst_objective = 1111.0
-std_objective = 42.0899037775094
-best_time_to_best_secs = 0.058997166
-avg_time_to_best_secs = 0.9476313958999999
-avg_total_time_secs = 16.6087491124
-avg_initial_objective = 1737.0
-avg_improvement = 686.8
-avg_n_accepted = 9250533.2
-avg_n_rejected = 749466.8
-avg_acceptance_rate = 0.92505332
-avg_n_best_updates = 50.4
+avg_objective = 1048.0
+worst_objective = 1101.0
+std_objective = 32.2335229225724
+best_time_to_best_secs = 0.110611916
+avg_time_to_best_secs = 1.1117886582
+avg_total_time_secs = 17.833166879199997
+avg_initial_objective = 1714.0
+avg_improvement = 666.0
+avg_n_accepted = 9229400.5
+avg_n_rejected = 770599.5
+avg_acceptance_rate = 0.92294005
+avg_n_best_updates = 52.8
 
 [[results]]
 problem = "JobShop"
@@ -573,19 +692,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 937.0
-avg_objective = 972.4
+best_objective = 963.0
+avg_objective = 978.7
 worst_objective = 1005.0
-std_objective = 19.386593305684215
-best_time_to_best_secs = 0.01900225
-avg_time_to_best_secs = 0.23351526660000005
-avg_total_time_secs = 5.5658634667
-avg_initial_objective = 1737.0
-avg_improvement = 764.6
-avg_n_accepted = 2191572.6
-avg_n_rejected = 7808427.4
-avg_acceptance_rate = 0.21915726000000002
-avg_n_best_updates = 49.7
+std_objective = 16.607528413343147
+best_time_to_best_secs = 0.005761458
+avg_time_to_best_secs = 0.11514850400000001
+avg_total_time_secs = 5.0127973041
+avg_initial_objective = 1714.0
+avg_improvement = 735.3
+avg_n_accepted = 2252106.9
+avg_n_rejected = 7747893.1
+avg_acceptance_rate = 0.22521069
+avg_n_best_updates = 47.4
 
 [[results]]
 problem = "JobShop"
@@ -613,19 +732,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1099.0
-avg_objective = 1141.1
-worst_objective = 1210.0
-std_objective = 31.05623930871219
-best_time_to_best_secs = 1.052594458
-avg_time_to_best_secs = 4.0886273583
-avg_total_time_secs = 30.002435141899998
-avg_initial_objective = 1737.0
-avg_improvement = 595.9
-avg_n_accepted = 928084.2
+best_objective = 1134.0
+avg_objective = 1167.7
+worst_objective = 1200.0
+std_objective = 18.504323819042945
+best_time_to_best_secs = 0.84107875
+avg_time_to_best_secs = 1.5581413415999998
+avg_total_time_secs = 30.0010538874
+avg_initial_objective = 1714.0
+avg_improvement = 546.3
+avg_n_accepted = 2009637.3
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 2106.3
+avg_n_best_updates = 2755.1
 
 [[results]]
 problem = "JobShop"
@@ -655,19 +774,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 967.0
-avg_objective = 992.5
-worst_objective = 1026.0
-std_objective = 16.96614275549985
-best_time_to_best_secs = 0.558566
-avg_time_to_best_secs = 14.130458825100002
-avg_total_time_secs = 30.0001449042
-avg_initial_objective = 1737.0
-avg_improvement = 744.5
-avg_n_accepted = 15760009.2
-avg_n_rejected = 1350897.4
-avg_acceptance_rate = 0.9210128506157383
-avg_n_best_updates = 12072.0
+best_objective = 937.0
+avg_objective = 971.7
+worst_objective = 1004.0
+std_objective = 19.995249435803498
+best_time_to_best_secs = 5.376283875
+avg_time_to_best_secs = 17.117349841699998
+avg_total_time_secs = 30.000096287499996
+avg_initial_objective = 1714.0
+avg_improvement = 742.3
+avg_n_accepted = 21552820.6
+avg_n_rejected = 1869726.6
+avg_acceptance_rate = 0.9201663138343132
+avg_n_best_updates = 17061.4
 
 [[results]]
 problem = "JobShop"
@@ -695,19 +814,138 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1168.0
-avg_objective = 1243.5
-worst_objective = 1337.0
-std_objective = 50.705522381689356
-best_time_to_best_secs = 0.016009083
-avg_time_to_best_secs = 14.368720437499997
-avg_total_time_secs = 30.489858029300002
-avg_initial_objective = 1737.0
-avg_improvement = 493.5
-avg_n_accepted = 965000.0
+best_objective = 1129.0
+avg_objective = 1238.5
+worst_objective = 1315.0
+std_objective = 47.9546660920499
+best_time_to_best_secs = 2.853675
+avg_time_to_best_secs = 18.3220879835
+avg_total_time_secs = 30.217543316799997
+avg_initial_objective = 1714.0
+avg_improvement = 475.5
+avg_n_accepted = 2195000.0
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 206.3
+avg_n_best_updates = 458.7
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Swap", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1081.0
+avg_objective = 1221.2
+worst_objective = 1428.0
+std_objective = 84.18883536431657
+best_time_to_best_secs = 0.043217042
+avg_time_to_best_secs = 10.6927821373
+avg_total_time_secs = 30.000009816699997
+avg_initial_objective = 1714.0
+avg_improvement = 492.8
+avg_n_accepted = 7227589.7
+avg_n_rejected = 562793.2
+avg_acceptance_rate = 0.927880738654507
+avg_n_best_updates = 661725.6
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Swap"
+population_size = 20
+initial_beta = 0.01
+delta_beta = 0.001225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 936.0
+avg_objective = 946.3
+worst_objective = 961.0
+std_objective = 7.7207512587830465
+best_time_to_best_secs = 16.298814333
+avg_time_to_best_secs = 21.2005011667
+avg_total_time_secs = 30.035485428999998
+avg_initial_objective = 1714.0
+avg_improvement = 767.7
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 27.6
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Swap"
+num_replicas = 20
+beta_min = 0.01
+beta_max = 0.5
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 945.0
+avg_objective = 959.3
+worst_objective = 971.0
+std_objective = 7.376313442364011
+best_time_to_best_secs = 8.370594792
+avg_time_to_best_secs = 21.783352916699997
+avg_total_time_secs = 30.001701220899996
+avg_initial_objective = 1714.0
+avg_improvement = 754.7
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 54.1
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft10.txt"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 983.0
+avg_objective = 1012.2
+worst_objective = 1094.0
+std_objective = 31.69163927599833
+best_time_to_best_secs = 2.396749833
+avg_time_to_best_secs = 11.877456183300001
+avg_total_time_secs = 30.000015316600003
+avg_initial_objective = 1714.0
+avg_improvement = 701.8
+avg_n_accepted = 1852157.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 58.0
 
 [[results]]
 problem = "JobShop"
@@ -722,19 +960,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1776.0
-avg_objective = 1962.2
-worst_objective = 2128.0
-std_objective = 121.05932430011329
-best_time_to_best_secs = 0.0
-avg_time_to_best_secs = 0.0009847793
-avg_total_time_secs = 0.0011971041
-avg_initial_objective = 2067.4
-avg_improvement = 105.2
-avg_n_accepted = 2.7
+best_objective = 1727.0
+avg_objective = 1979.7
+worst_objective = 2183.0
+std_objective = 161.44909414425342
+best_time_to_best_secs = 0.000699167
+avg_time_to_best_secs = 0.0023600126
+avg_total_time_secs = 0.0026275250000000003
+avg_initial_objective = 2198.5
+avg_improvement = 218.8
+avg_n_accepted = 5.4
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.6290476190476191
-avg_n_best_updates = 2.7
+avg_acceptance_rate = 0.7967460317460318
+avg_n_best_updates = 5.4
 
 [[results]]
 problem = "JobShop"
@@ -749,19 +987,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1326.0
-avg_objective = 1394.2
-worst_objective = 1550.0
-std_objective = 59.61845351902379
-best_time_to_best_secs = 0.046595875
-avg_time_to_best_secs = 0.08093840000000001
-avg_total_time_secs = 0.0841224876
-avg_initial_objective = 2067.4
-avg_improvement = 673.2
-avg_n_accepted = 22.7
+best_objective = 1324.0
+avg_objective = 1418.7
+worst_objective = 1604.0
+std_objective = 75.12396421914914
+best_time_to_best_secs = 0.02051175
+avg_time_to_best_secs = 0.0389148833
+avg_total_time_secs = 0.0403399167
+avg_initial_objective = 2198.5
+avg_improvement = 779.8
+avg_n_accepted = 19.8
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.9529810700052636
-avg_n_best_updates = 22.7
+avg_acceptance_rate = 0.9457919098781167
+avg_n_best_updates = 19.8
 
 [[results]]
 problem = "JobShop"
@@ -780,19 +1018,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1631.0
-avg_objective = 1832.0
-worst_objective = 2077.0
-std_objective = 129.31047908039008
-best_time_to_best_secs = 0.002075375
-avg_time_to_best_secs = 1.5583472791000001
-avg_total_time_secs = 30.000014454299997
-avg_initial_objective = 2067.4
-avg_improvement = 235.4
-avg_n_accepted = 906486.8
+best_objective = 1715.0
+avg_objective = 1885.8
+worst_objective = 2096.0
+std_objective = 141.55126279902981
+best_time_to_best_secs = 0.001621708
+avg_time_to_best_secs = 3.0092430457
+avg_total_time_secs = 30.000012337600005
+avg_initial_objective = 2198.5
+avg_improvement = 312.7
+avg_n_accepted = 1838131.0
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 9.4
+avg_n_best_updates = 11.6
 
 [[results]]
 problem = "JobShop"
@@ -811,19 +1049,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1304.0
-avg_objective = 1383.3
-worst_objective = 1550.0
-std_objective = 64.41901893074746
-best_time_to_best_secs = 0.039240083
-avg_time_to_best_secs = 0.34501223350000004
-avg_total_time_secs = 30.001469820799997
-avg_initial_objective = 2067.4
-avg_improvement = 684.1
-avg_n_accepted = 7375.4
+best_objective = 1324.0
+avg_objective = 1401.9
+worst_objective = 1529.0
+std_objective = 59.69329945647166
+best_time_to_best_secs = 0.023605375
+avg_time_to_best_secs = 1.9150986335
+avg_total_time_secs = 30.000846237599994
+avg_initial_objective = 2198.5
+avg_improvement = 796.6
+avg_n_accepted = 16282.9
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 24.2
+avg_n_best_updates = 21.5
 
 [[results]]
 problem = "JobShop"
@@ -840,18 +1078,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 1178.0
-avg_objective = 1209.1
-worst_objective = 1249.0
-std_objective = 23.18814352206748
-best_time_to_best_secs = 1.179138709
-avg_time_to_best_secs = 9.2863913668
-avg_total_time_secs = 29.999996391499998
-avg_initial_objective = 2067.4
-avg_improvement = 858.3
-avg_n_accepted = 16350652.2
-avg_n_rejected = 1784739.5
-avg_acceptance_rate = 0.9015803210676626
-avg_n_best_updates = 103.9
+avg_objective = 1229.2
+worst_objective = 1278.0
+std_objective = 31.688483712541377
+best_time_to_best_secs = 0.566220208
+avg_time_to_best_secs = 7.360287941699999
+avg_total_time_secs = 30.000000716899997
+avg_initial_objective = 2198.5
+avg_improvement = 969.3
+avg_n_accepted = 16110522.5
+avg_n_rejected = 1835262.6
+avg_acceptance_rate = 0.8976888320411467
+avg_n_best_updates = 108.0
 
 [[results]]
 problem = "JobShop"
@@ -868,18 +1106,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 1165.0
-avg_objective = 1178.8
-worst_objective = 1199.0
-std_objective = 7.769169839822013
-best_time_to_best_secs = 0.041792166
-avg_time_to_best_secs = 1.5315493626
-avg_total_time_secs = 29.999998354000002
-avg_initial_objective = 2067.4
-avg_improvement = 888.6
-avg_n_accepted = 9727791.4
-avg_n_rejected = 43263947.2
-avg_acceptance_rate = 0.18363816934211616
-avg_n_best_updates = 80.1
+avg_objective = 1177.7
+worst_objective = 1188.0
+std_objective = 5.1778373863998475
+best_time_to_best_secs = 0.0086805
+avg_time_to_best_secs = 1.2171051668000001
+avg_total_time_secs = 30.000001829299997
+avg_initial_objective = 2198.5
+avg_improvement = 1020.8
+avg_n_accepted = 10446281.2
+avg_n_rejected = 46605687.5
+avg_acceptance_rate = 0.18297443663076124
+avg_n_best_updates = 81.6
 
 [[results]]
 problem = "JobShop"
@@ -897,19 +1135,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1177.0
-avg_objective = 1227.8
-worst_objective = 1297.0
-std_objective = 33.68916739843833
-best_time_to_best_secs = 0.519019083
-avg_time_to_best_secs = 4.272178845800001
-avg_total_time_secs = 16.311230087600002
-avg_initial_objective = 2067.4
-avg_improvement = 839.6
-avg_n_accepted = 9015023.5
-avg_n_rejected = 984976.5
-avg_acceptance_rate = 0.90150235
-avg_n_best_updates = 103.0
+best_objective = 1178.0
+avg_objective = 1212.8
+worst_objective = 1248.0
+std_objective = 24.46139816118449
+best_time_to_best_secs = 0.467228917
+avg_time_to_best_secs = 5.4765645792
+avg_total_time_secs = 16.4334651917
+avg_initial_objective = 2198.5
+avg_improvement = 985.7
+avg_n_accepted = 8957051.4
+avg_n_rejected = 1042948.6
+avg_acceptance_rate = 0.8957051400000001
+avg_n_best_updates = 113.3
 
 [[results]]
 problem = "JobShop"
@@ -928,18 +1166,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 1175.0
-avg_objective = 1177.4
-worst_objective = 1178.0
-std_objective = 1.2000000000000002
-best_time_to_best_secs = 0.008369917
-avg_time_to_best_secs = 0.9551837834000001
-avg_total_time_secs = 5.536559437499999
-avg_initial_objective = 2067.4
-avg_improvement = 890.0
-avg_n_accepted = 1834787.7
-avg_n_rejected = 8165212.3
-avg_acceptance_rate = 0.18347877
-avg_n_best_updates = 82.0
+avg_objective = 1179.1
+worst_objective = 1192.0
+std_objective = 4.3920382511995495
+best_time_to_best_secs = 0.02038375
+avg_time_to_best_secs = 0.44690532100000013
+avg_total_time_secs = 5.057300629399999
+avg_initial_objective = 2198.5
+avg_improvement = 1019.4
+avg_n_accepted = 1868142.8
+avg_n_rejected = 8131857.2
+avg_acceptance_rate = 0.18681427999999997
+avg_n_best_updates = 82.5
 
 [[results]]
 problem = "JobShop"
@@ -967,19 +1205,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1483.0
-avg_objective = 1562.6
-worst_objective = 1620.0
-std_objective = 41.93614193032067
-best_time_to_best_secs = 0.571053
-avg_time_to_best_secs = 2.6166271917999997
-avg_total_time_secs = 30.001992945800005
-avg_initial_objective = 2067.4
-avg_improvement = 504.8
-avg_n_accepted = 910374.9
+best_objective = 1499.0
+avg_objective = 1548.2
+worst_objective = 1605.0
+std_objective = 27.396350121868426
+best_time_to_best_secs = 0.124499583
+avg_time_to_best_secs = 1.1839085417
+avg_total_time_secs = 30.0018298961
+avg_initial_objective = 2198.5
+avg_improvement = 650.3
+avg_n_accepted = 1791007.3
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 2166.2
+avg_n_best_updates = 4903.7
 
 [[results]]
 problem = "JobShop"
@@ -1010,18 +1248,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 1173.0
-avg_objective = 1180.2
-worst_objective = 1192.0
-std_objective = 6.079473661428265
-best_time_to_best_secs = 0.986679208
-avg_time_to_best_secs = 13.449124224899998
-avg_total_time_secs = 30.000149849999996
-avg_initial_objective = 2067.4
-avg_improvement = 887.2
-avg_n_accepted = 16231527.4
-avg_n_rejected = 1733404.8
-avg_acceptance_rate = 0.903528038475276
-avg_n_best_updates = 25088.2
+avg_objective = 1178.7
+worst_objective = 1182.0
+std_objective = 2.451530134426253
+best_time_to_best_secs = 2.465338208
+avg_time_to_best_secs = 11.9824928958
+avg_total_time_secs = 30.000115549999997
+avg_initial_objective = 2198.5
+avg_improvement = 1019.8
+avg_n_accepted = 15726768.3
+avg_n_rejected = 1678601.9
+avg_acceptance_rate = 0.9035560597761441
+avg_n_best_updates = 24300.4
 
 [[results]]
 problem = "JobShop"
@@ -1049,19 +1287,138 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1523.0
-avg_objective = 1636.2
-worst_objective = 1707.0
-std_objective = 52.8692727394656
-best_time_to_best_secs = 2.852566917
-avg_time_to_best_secs = 16.895013545900003
-avg_total_time_secs = 30.649637316399996
-avg_initial_objective = 2067.4
-avg_improvement = 431.2
-avg_n_accepted = 940000.0
+best_objective = 1512.0
+avg_objective = 1593.8
+worst_objective = 1675.0
+std_objective = 51.16209534411193
+best_time_to_best_secs = 1.6985380829999999
+avg_time_to_best_secs = 11.4072760416
+avg_total_time_secs = 30.256361237700002
+avg_initial_objective = 2198.5
+avg_improvement = 604.7
+avg_n_accepted = 1850000.0
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 181.8
+avg_n_best_updates = 377.3
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Swap", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1529.0
+avg_objective = 1623.8
+worst_objective = 1715.0
+std_objective = 60.697281652476
+best_time_to_best_secs = 0.006482458
+avg_time_to_best_secs = 4.436710420700001
+avg_total_time_secs = 30.0000259164
+avg_initial_objective = 2198.5
+avg_improvement = 574.7
+avg_n_accepted = 7301926.5
+avg_n_rejected = 575517.1
+avg_acceptance_rate = 0.9269958035109062
+avg_n_best_updates = 587636.0
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Swap"
+population_size = 20
+initial_beta = 0.01
+delta_beta = 0.001225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1175.0
+avg_objective = 1180.2
+worst_objective = 1183.0
+std_objective = 2.227105745132009
+best_time_to_best_secs = 19.523957375
+avg_time_to_best_secs = 26.3612747666
+avg_total_time_secs = 30.0588843208
+avg_initial_objective = 2198.5
+avg_improvement = 1018.3
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 36.5
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Swap"
+num_replicas = 20
+beta_min = 0.01
+beta_max = 0.5
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1178.0
+avg_objective = 1178.8
+worst_objective = 1180.0
+std_objective = 0.9797958971132713
+best_time_to_best_secs = 8.977825125
+avg_time_to_best_secs = 20.1867178248
+avg_total_time_secs = 30.000969229
+avg_initial_objective = 2198.5
+avg_improvement = 1019.7
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 90.7
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/ft20.txt"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1178.0
+avg_objective = 1206.2
+worst_objective = 1240.0
+std_objective = 21.465320868787405
+best_time_to_best_secs = 5.4376415
+avg_time_to_best_secs = 18.7210323083
+avg_total_time_secs = 30.000010508499997
+avg_initial_objective = 2198.5
+avg_improvement = 992.3
+avg_n_accepted = 1649807.9
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 121.9
 
 [[results]]
 problem = "JobShop"
@@ -1076,19 +1433,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 821.0
-avg_objective = 949.7
-worst_objective = 1090.0
-std_objective = 84.80807744548864
-best_time_to_best_secs = 0.0
-avg_time_to_best_secs = 0.00032387510000000003
-avg_total_time_secs = 0.0004986749
-avg_initial_objective = 1047.4
-avg_improvement = 97.7
-avg_n_accepted = 1.9
+best_objective = 818.0
+avg_objective = 940.5
+worst_objective = 1044.0
+std_objective = 73.35973009764962
+best_time_to_best_secs = 5.9417e-05
+avg_time_to_best_secs = 0.0009033625
+avg_total_time_secs = 0.0011274252000000001
+avg_initial_objective = 1069.3
+avg_improvement = 128.8
+avg_n_accepted = 2.2
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.47738095238095235
-avg_n_best_updates = 1.9
+avg_acceptance_rate = 0.6516666666666666
+avg_n_best_updates = 2.2
 
 [[results]]
 problem = "JobShop"
@@ -1103,19 +1460,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 666.0
-avg_objective = 710.9
-worst_objective = 775.0
-std_objective = 29.6831602091152
-best_time_to_best_secs = 0.004645875
-avg_time_to_best_secs = 0.007792608599999999
-avg_total_time_secs = 0.0081865917
-avg_initial_objective = 1047.4
-avg_improvement = 336.5
-avg_n_accepted = 8.5
+best_objective = 674.0
+avg_objective = 713.6
+worst_objective = 786.0
+std_objective = 35.245425235057105
+best_time_to_best_secs = 0.004350583
+avg_time_to_best_secs = 0.0061826373
+avg_total_time_secs = 0.0065030624
+avg_initial_objective = 1069.3
+avg_improvement = 355.7
+avg_n_accepted = 8.6
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.8823473748473749
-avg_n_best_updates = 8.5
+avg_acceptance_rate = 0.8715104340104339
+avg_n_best_updates = 8.6
 
 [[results]]
 problem = "JobShop"
@@ -1134,19 +1491,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 726.0
-avg_objective = 780.9
-worst_objective = 849.0
-std_objective = 42.45574166116993
-best_time_to_best_secs = 0.015179417
-avg_time_to_best_secs = 4.5105744543
-avg_total_time_secs = 30.000004004100003
-avg_initial_objective = 1047.4
-avg_improvement = 266.5
-avg_n_accepted = 3030048.3
+best_objective = 694.0
+avg_objective = 765.2
+worst_objective = 870.0
+std_objective = 58.44792554060409
+best_time_to_best_secs = 0.006536542
+avg_time_to_best_secs = 3.805186029099999
+avg_total_time_secs = 30.000004033399996
+avg_initial_objective = 1069.3
+avg_improvement = 304.1
+avg_n_accepted = 4509027.3
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 12.9
+avg_n_best_updates = 13.8
 
 [[results]]
 problem = "JobShop"
@@ -1159,516 +1516,6 @@ tabu_tenure = [
     3,
     30,
 ]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 666.0
-avg_objective = 707.7
-worst_objective = 749.0
-std_objective = 24.27776760742223
-best_time_to_best_secs = 0.003366625
-avg_time_to_best_secs = 0.043258041799999994
-avg_total_time_secs = 30.000261337399998
-avg_initial_objective = 1047.4
-avg_improvement = 339.7
-avg_n_accepted = 48777.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 8.9
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la01.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Swap"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 666.0
-avg_objective = 682.7
-worst_objective = 715.0
-std_objective = 15.447006182429007
-best_time_to_best_secs = 0.008552042
-avg_time_to_best_secs = 0.0313682043
-avg_total_time_secs = 29.999995041599995
-avg_initial_objective = 1047.4
-avg_improvement = 364.7
-avg_n_accepted = 30120114.2
-avg_n_rejected = 3062514.6
-avg_acceptance_rate = 0.9076982768438231
-avg_n_best_updates = 22.6
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la01.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Relocate"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 666.0
-avg_objective = 666.0
-worst_objective = 666.0
-std_objective = 0.0
-best_time_to_best_secs = 0.003218208
-avg_time_to_best_secs = 0.0689430624
-avg_total_time_secs = 29.99999725
-avg_initial_objective = 1047.4
-avg_improvement = 381.4
-avg_n_accepted = 25376674.6
-avg_n_rejected = 46289046.2
-avg_acceptance_rate = 0.35408122480083964
-avg_n_best_updates = 19.3
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la01.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 666.0
-avg_objective = 682.3
-worst_objective = 759.0
-std_objective = 29.00706810417075
-best_time_to_best_secs = 0.014980125
-avg_time_to_best_secs = 0.0947646041
-avg_total_time_secs = 8.528814516599999
-avg_initial_objective = 1047.4
-avg_improvement = 365.1
-avg_n_accepted = 9095534.6
-avg_n_rejected = 904465.4
-avg_acceptance_rate = 0.90955346
-avg_n_best_updates = 21.8
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la01.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Relocate"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 666.0
-avg_objective = 666.0
-worst_objective = 666.0
-std_objective = 0.0
-best_time_to_best_secs = 0.0050555
-avg_time_to_best_secs = 0.013080712599999999
-avg_total_time_secs = 4.158069542
-avg_initial_objective = 1047.4
-avg_improvement = 381.4
-avg_n_accepted = 3543676.5
-avg_n_rejected = 6456323.5
-avg_acceptance_rate = 0.35436765000000003
-avg_n_best_updates = 20.6
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la01.txt"
-
-[results.heuristic]
-kind = "GeneticAlgorithm"
-population_size = 50
-crossover_kind = "Ppx"
-parent_selection = "Tournament"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 666.0
-avg_objective = 668.3
-worst_objective = 678.0
-std_objective = 3.407345007480164
-best_time_to_best_secs = 0.025806667
-avg_time_to_best_secs = 1.4207181208
-avg_total_time_secs = 30.0008085335
-avg_initial_objective = 1047.4
-avg_improvement = 379.1
-avg_n_accepted = 3009562.7
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 3117.3
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la01.txt"
-
-[results.heuristic]
-kind = "Iterated"
-
-[[results.heuristic.steps]]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 1
-
-[[results.heuristic.steps]]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 5.0
-cooling_rate = 0.99
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 666.0
-avg_objective = 666.0
-worst_objective = 666.0
-std_objective = 0.0
-best_time_to_best_secs = 0.014207959
-avg_time_to_best_secs = 2.4882565083
-avg_total_time_secs = 30.000083695899995
-avg_initial_objective = 1047.4
-avg_improvement = 381.4
-avg_n_accepted = 30748154.7
-avg_n_rejected = 3064314.2
-avg_acceptance_rate = 0.9093691119454915
-avg_n_best_updates = 16136.5
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la01.txt"
-
-[results.heuristic]
-kind = "Restart"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 50000
-
-[results.heuristic.restart_condition]
-max_failed_update = 5000
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 678.0
-avg_objective = 686.5
-worst_objective = 705.0
-std_objective = 8.777812939451376
-best_time_to_best_secs = 5.132073125
-avg_time_to_best_secs = 15.632882370799999
-avg_total_time_secs = 30.2612632293
-avg_initial_objective = 1047.4
-avg_improvement = 360.9
-avg_n_accepted = 2965000.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 713.3
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 813.0
-avg_objective = 976.9
-worst_objective = 1114.0
-std_objective = 88.35321159980548
-best_time_to_best_secs = 0.0
-avg_time_to_best_secs = 0.0005740834
-avg_total_time_secs = 0.0006668958
-avg_initial_objective = 1134.3
-avg_improvement = 157.4
-avg_n_accepted = 3.0
-avg_n_rejected = 1.0
-avg_acceptance_rate = 0.6438888888888888
-avg_n_best_updates = 3.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "LocalSearch"
-neighbor = "Relocate"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 714.0
-avg_objective = 766.8
-worst_objective = 842.0
-std_objective = 42.33627286382211
-best_time_to_best_secs = 0.003687583
-avg_time_to_best_secs = 0.0075829999
-avg_total_time_secs = 0.0079551084
-avg_initial_objective = 1134.3
-avg_improvement = 367.5
-avg_n_accepted = 8.0
-avg_n_rejected = 1.0
-avg_acceptance_rate = 0.8665140415140415
-avg_n_best_updates = 8.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 712.0
-avg_objective = 822.3
-worst_objective = 1034.0
-std_objective = 87.95345359904863
-best_time_to_best_secs = 0.002038875
-avg_time_to_best_secs = 2.3120996375
-avg_total_time_secs = 29.9999997209
-avg_initial_objective = 1134.3
-avg_improvement = 312.0
-avg_n_accepted = 3046566.9
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 12.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Relocate"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 676.0
-avg_objective = 743.1
-worst_objective = 828.0
-std_objective = 45.02321623340563
-best_time_to_best_secs = 0.003407584
-avg_time_to_best_secs = 4.7967061918
-avg_total_time_secs = 30.000298362499997
-avg_initial_objective = 1134.3
-avg_improvement = 391.2
-avg_n_accepted = 49366.3
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 9.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Swap"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 655.0
-avg_objective = 678.5
-worst_objective = 705.0
-std_objective = 14.568802284333465
-best_time_to_best_secs = 0.01040125
-avg_time_to_best_secs = 0.48820443750000003
-avg_total_time_secs = 29.999994141900004
-avg_initial_objective = 1134.3
-avg_improvement = 455.8
-avg_n_accepted = 30353180.4
-avg_n_rejected = 4007059.3
-avg_acceptance_rate = 0.8834837584648122
-avg_n_best_updates = 28.1
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Relocate"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 655.0
-avg_objective = 658.8
-worst_objective = 671.0
-std_objective = 4.853864439804639
-best_time_to_best_secs = 0.004846333
-avg_time_to_best_secs = 1.0754388040999998
-avg_total_time_secs = 29.9999992416
-avg_initial_objective = 1134.3
-avg_improvement = 475.5
-avg_n_accepted = 18265300.0
-avg_n_rejected = 59144296.4
-avg_acceptance_rate = 0.23622545056417876
-avg_n_best_updates = 29.3
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 669.0
-avg_objective = 697.4
-worst_objective = 735.0
-std_objective = 26.593984282164264
-best_time_to_best_secs = 0.018628667
-avg_time_to_best_secs = 0.0700148542
-avg_total_time_secs = 8.874391045900001
-avg_initial_objective = 1134.3
-avg_improvement = 436.9
-avg_n_accepted = 8850821.3
-avg_n_rejected = 1149178.7
-avg_acceptance_rate = 0.88508213
-avg_n_best_updates = 26.9
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Relocate"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 655.0
-avg_objective = 656.5
-worst_objective = 665.0
-std_objective = 3.2015621187164243
-best_time_to_best_secs = 0.007513416
-avg_time_to_best_secs = 0.5685125625
-avg_total_time_secs = 3.6795129
-avg_initial_objective = 1134.3
-avg_improvement = 477.8
-avg_n_accepted = 2450362.3
-avg_n_rejected = 7549637.7
-avg_acceptance_rate = 0.24503623000000002
-avg_n_best_updates = 31.5
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "GeneticAlgorithm"
-population_size = 50
-crossover_kind = "Ppx"
-parent_selection = "Tournament"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 200
 
 [results.heuristic.stop_condition]
 max_duration_secs = 30.0
@@ -1676,220 +1523,22 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 672.0
-avg_objective = 719.8
-worst_objective = 762.0
-std_objective = 24.522642598219303
-best_time_to_best_secs = 0.026849416
-avg_time_to_best_secs = 1.9089716916000004
-avg_total_time_secs = 30.000733528999994
-avg_initial_objective = 1134.3
-avg_improvement = 414.5
-avg_n_accepted = 2997938.9
+avg_objective = 701.5
+worst_objective = 786.0
+std_objective = 35.688233354986906
+best_time_to_best_secs = 0.00481325
+avg_time_to_best_secs = 0.0101524376
+avg_total_time_secs = 30.00008364170001
+avg_initial_objective = 1069.3
+avg_improvement = 367.8
+avg_n_accepted = 98470.8
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 5727.5
+avg_n_best_updates = 9.8
 
 [[results]]
 problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "Iterated"
-
-[[results.heuristic.steps]]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 1
-
-[[results.heuristic.steps]]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 5.0
-cooling_rate = 0.99
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 655.0
-avg_objective = 655.0
-worst_objective = 655.0
-std_objective = 0.0
-best_time_to_best_secs = 0.090814708
-avg_time_to_best_secs = 7.9126890832
-avg_total_time_secs = 30.000089691799996
-avg_initial_objective = 1134.3
-avg_improvement = 479.3
-avg_n_accepted = 28687046.8
-avg_n_rejected = 3929372.0
-avg_acceptance_rate = 0.8795371096078709
-avg_n_best_updates = 21428.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la02.txt"
-
-[results.heuristic]
-kind = "Restart"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 50000
-
-[results.heuristic.restart_condition]
-max_failed_update = 5000
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 701.0
-avg_objective = 725.5
-worst_objective = 743.0
-std_objective = 15.068178390236824
-best_time_to_best_secs = 0.003434792
-avg_time_to_best_secs = 10.1699959251
-avg_total_time_secs = 30.1750134835
-avg_initial_objective = 1134.3
-avg_improvement = 408.8
-avg_n_accepted = 3060000.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 587.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 753.0
-avg_objective = 858.3
-worst_objective = 932.0
-std_objective = 51.70889672000361
-best_time_to_best_secs = 0.000121042
-avg_time_to_best_secs = 0.0005545541
-avg_total_time_secs = 0.0006495293
-avg_initial_objective = 992.4
-avg_improvement = 134.1
-avg_n_accepted = 2.7
-avg_n_rejected = 1.0
-avg_acceptance_rate = 0.71
-avg_n_best_updates = 2.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "LocalSearch"
-neighbor = "Relocate"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 644.0
-avg_objective = 684.0
-worst_objective = 747.0
-std_objective = 34.888393485513205
-best_time_to_best_secs = 0.003212416
-avg_time_to_best_secs = 0.006666353999999999
-avg_total_time_secs = 0.007088570800000001
-avg_initial_objective = 992.4
-avg_improvement = 308.4
-avg_n_accepted = 8.3
-avg_n_rejected = 1.0
-avg_acceptance_rate = 0.852075702075702
-avg_n_best_updates = 8.3
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 651.0
-avg_objective = 721.3
-worst_objective = 788.0
-std_objective = 42.81133027599119
-best_time_to_best_secs = 0.00679975
-avg_time_to_best_secs = 3.1183644584000003
-avg_total_time_secs = 30.000002170700004
-avg_initial_objective = 992.4
-avg_improvement = 271.1
-avg_n_accepted = 2867589.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 15.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Relocate"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 621.0
-avg_objective = 663.0
-worst_objective = 738.0
-std_objective = 33.391615714128
-best_time_to_best_secs = 0.0029075
-avg_time_to_best_secs = 0.0190010334
-avg_total_time_secs = 30.0001580832
-avg_initial_objective = 992.4
-avg_improvement = 329.4
-avg_n_accepted = 48689.1
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 10.3
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
 kind = "LateAcceptanceHillClimbing"
@@ -1901,643 +1550,119 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 619.0
-avg_objective = 636.4
-worst_objective = 704.0
-std_objective = 24.038302768706444
-best_time_to_best_secs = 0.007856875
-avg_time_to_best_secs = 0.36510205839999993
-avg_total_time_secs = 29.999998866700004
-avg_initial_objective = 992.4
-avg_improvement = 356.0
-avg_n_accepted = 30294300.8
-avg_n_rejected = 4191866.1
-avg_acceptance_rate = 0.8786357868132976
-avg_n_best_updates = 27.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Relocate"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 597.0
-avg_objective = 613.1
-worst_objective = 620.0
-std_objective = 8.166394553289718
-best_time_to_best_secs = 0.005611
-avg_time_to_best_secs = 0.0172267374
-avg_total_time_secs = 29.999994458200007
-avg_initial_objective = 992.4
-avg_improvement = 379.3
-avg_n_accepted = 22367029.5
-avg_n_rejected = 60127474.8
-avg_acceptance_rate = 0.27214156473892104
-avg_n_best_updates = 27.2
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 611.0
-avg_objective = 638.6
-worst_objective = 714.0
-std_objective = 30.958682142494375
-best_time_to_best_secs = 0.02233475
-avg_time_to_best_secs = 0.2990294417
-avg_total_time_secs = 8.778328625099999
-avg_initial_objective = 992.4
-avg_improvement = 353.8
-avg_n_accepted = 8754083.5
-avg_n_rejected = 1245916.5
-avg_acceptance_rate = 0.8754083500000001
-avg_n_best_updates = 25.8
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Relocate"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 597.0
-avg_objective = 608.4
-worst_objective = 617.0
-std_objective = 7.525955088890711
-best_time_to_best_secs = 0.00564025
-avg_time_to_best_secs = 0.028919133200000002
-avg_total_time_secs = 3.7561331209000004
-avg_initial_objective = 992.4
-avg_improvement = 384.0
-avg_n_accepted = 2618283.8
-avg_n_rejected = 7381716.2
-avg_acceptance_rate = 0.26182838
-avg_n_best_updates = 27.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "GeneticAlgorithm"
-population_size = 50
-crossover_kind = "Ppx"
-parent_selection = "Tournament"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 624.0
-avg_objective = 638.1
-worst_objective = 670.0
-std_objective = 13.750999963639007
-best_time_to_best_secs = 0.192129834
-avg_time_to_best_secs = 2.7255555043
-avg_total_time_secs = 30.0010961043
-avg_initial_objective = 992.4
-avg_improvement = 354.3
-avg_n_accepted = 2902447.4
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 4021.2
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "Iterated"
-
-[[results.heuristic.steps]]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 1
-
-[[results.heuristic.steps]]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 5.0
-cooling_rate = 0.99
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 597.0
-avg_objective = 602.8
-worst_objective = 605.0
-std_objective = 3.0265491900843116
-best_time_to_best_secs = 0.464647875
-avg_time_to_best_secs = 5.779485833400001
-avg_total_time_secs = 30.0000795374
-avg_initial_objective = 992.4
-avg_improvement = 389.6
-avg_n_accepted = 28311131.8
-avg_n_rejected = 3736796.7
-avg_acceptance_rate = 0.883435183096896
-avg_n_best_updates = 24963.2
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la03.txt"
-
-[results.heuristic]
-kind = "Restart"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 50000
-
-[results.heuristic.restart_condition]
-max_failed_update = 5000
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 626.0
-avg_objective = 654.0
-worst_objective = 686.0
-std_objective = 16.419500601419035
-best_time_to_best_secs = 0.549410584
-avg_time_to_best_secs = 16.118892062599997
-avg_total_time_secs = 30.294944304100007
-avg_initial_objective = 992.4
-avg_improvement = 338.4
-avg_n_accepted = 3030000.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 804.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 765.0
-avg_objective = 953.6
-worst_objective = 1113.0
-std_objective = 104.50760737860186
-best_time_to_best_secs = 0.0
-avg_time_to_best_secs = 0.00043870430000000004
-avg_total_time_secs = 0.0005118084
-avg_initial_objective = 1075.2
-avg_improvement = 121.6
-avg_n_accepted = 3.0
-avg_n_rejected = 1.0
-avg_acceptance_rate = 0.6733333333333333
-avg_n_best_updates = 3.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "LocalSearch"
-neighbor = "Relocate"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 639.0
-avg_objective = 684.5
-worst_objective = 754.0
-std_objective = 37.72598573927526
-best_time_to_best_secs = 0.004874209
-avg_time_to_best_secs = 0.008177016799999999
-avg_total_time_secs = 0.0085547044
-avg_initial_objective = 1075.2
-avg_improvement = 390.7
-avg_n_accepted = 9.7
-avg_n_rejected = 1.0
-avg_acceptance_rate = 0.9026215451215454
-avg_n_best_updates = 9.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 693.0
-avg_objective = 786.0
-worst_objective = 890.0
-std_objective = 59.894907963866174
-best_time_to_best_secs = 0.003767916
-avg_time_to_best_secs = 3.7352514165999997
-avg_total_time_secs = 30.000011775
-avg_initial_objective = 1075.2
-avg_improvement = 289.2
-avg_n_accepted = 3105621.6
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 12.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "TabuSearch"
-neighbor = "Relocate"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 632.0
-avg_objective = 678.9
-worst_objective = 754.0
-std_objective = 37.044432780108814
-best_time_to_best_secs = 0.005335
-avg_time_to_best_secs = 1.1263053707
-avg_total_time_secs = 30.000321379099994
-avg_initial_objective = 1075.2
-avg_improvement = 396.3
-avg_n_accepted = 48882.9
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 10.4
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Swap"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 590.0
-avg_objective = 625.6
-worst_objective = 688.0
-std_objective = 28.38732111348304
-best_time_to_best_secs = 0.011795208
-avg_time_to_best_secs = 0.11551493720000001
-avg_total_time_secs = 29.9999880373
-avg_initial_objective = 1075.2
-avg_improvement = 449.6
-avg_n_accepted = 30840926.1
-avg_n_rejected = 4042648.0
-avg_acceptance_rate = 0.883973937871497
-avg_n_best_updates = 29.8
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Relocate"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 590.0
-avg_objective = 593.9
-worst_objective = 607.0
-std_objective = 5.467174773134658
-best_time_to_best_secs = 0.005037458
-avg_time_to_best_secs = 0.03639892900000001
-avg_total_time_secs = 29.999999820899994
-avg_initial_objective = 1075.2
-avg_improvement = 481.3
-avg_n_accepted = 19371867.6
-avg_n_rejected = 60755849.4
-avg_acceptance_rate = 0.24222343084905518
-avg_n_best_updates = 28.6
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 604.0
-avg_objective = 623.2
-worst_objective = 674.0
-std_objective = 22.198198125073123
-best_time_to_best_secs = 0.018469583
-avg_time_to_best_secs = 0.056424657899999994
-avg_total_time_secs = 9.2491246541
-avg_initial_objective = 1075.2
-avg_improvement = 452.0
-avg_n_accepted = 8798987.1
-avg_n_rejected = 1201012.9
-avg_acceptance_rate = 0.87989871
-avg_n_best_updates = 30.6
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Relocate"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 590.0
-avg_objective = 597.2
-worst_objective = 611.0
-std_objective = 8.399999999999999
-best_time_to_best_secs = 0.006599333
-avg_time_to_best_secs = 0.037880349900000006
-avg_total_time_secs = 3.7428331878
-avg_initial_objective = 1075.2
-avg_improvement = 478.0
-avg_n_accepted = 2621096.2
-avg_n_rejected = 7378903.8
-avg_acceptance_rate = 0.26210962
-avg_n_best_updates = 31.8
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "GeneticAlgorithm"
-population_size = 50
-crossover_kind = "Ppx"
-parent_selection = "Tournament"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 607.0
-avg_objective = 633.3
-worst_objective = 693.0
-std_objective = 24.847736315407086
-best_time_to_best_secs = 0.10788475
-avg_time_to_best_secs = 1.379142546
-avg_total_time_secs = 30.0009189208
-avg_initial_objective = 1075.2
-avg_improvement = 441.9
-avg_n_accepted = 2974139.2
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 5615.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "Iterated"
-
-[[results.heuristic.steps]]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 1
-
-[[results.heuristic.steps]]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 5.0
-cooling_rate = 0.99
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 590.0
-avg_objective = 590.0
-worst_objective = 590.0
-std_objective = 0.0
-best_time_to_best_secs = 0.514731333
-avg_time_to_best_secs = 1.3641479791999997
-avg_total_time_secs = 30.000097583499997
-avg_initial_objective = 1075.2
-avg_improvement = 485.2
-avg_n_accepted = 29988031.6
-avg_n_rejected = 3435092.6
-avg_acceptance_rate = 0.8972008715363762
-avg_n_best_updates = 27071.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la04.txt"
-
-[results.heuristic]
-kind = "Restart"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 50000
-
-[results.heuristic.restart_condition]
-max_failed_update = 5000
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 602.0
-avg_objective = 646.0
+best_objective = 666.0
+avg_objective = 675.2
 worst_objective = 692.0
-std_objective = 24.22395508582362
-best_time_to_best_secs = 1.429427167
-avg_time_to_best_secs = 10.5902748335
-avg_total_time_secs = 30.214422720900007
-avg_initial_objective = 1075.2
-avg_improvement = 429.2
-avg_n_accepted = 3040000.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 592.0
+std_objective = 10.361467077590893
+best_time_to_best_secs = 0.009787667
+avg_time_to_best_secs = 0.6011850294000001
+avg_total_time_secs = 30.000000641899998
+avg_initial_objective = 1069.3
+avg_improvement = 394.1
+avg_n_accepted = 32573471.9
+avg_n_rejected = 3473059.5
+avg_acceptance_rate = 0.9035938425203887
+avg_n_best_updates = 24.1
 
 [[results]]
 problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 697.0
-avg_objective = 819.9
-worst_objective = 979.0
-std_objective = 80.61693370502255
-best_time_to_best_secs = 0.0
-avg_time_to_best_secs = 0.0002653833
-avg_total_time_secs = 0.00039770429999999997
-avg_initial_objective = 898.3
-avg_improvement = 78.4
-avg_n_accepted = 2.0
-avg_n_rejected = 1.0
-avg_acceptance_rate = 0.47904761904761906
-avg_n_best_updates = 2.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
-
-[results.heuristic]
-kind = "LocalSearch"
+kind = "LateAcceptanceHillClimbing"
 neighbor = "Relocate"
+history_length = 100
 
 [results.heuristic.stop_condition]
 max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 609.1
-worst_objective = 638.0
-std_objective = 17.32887763243771
-best_time_to_best_secs = 0.003922042
-avg_time_to_best_secs = 0.0061048582
-avg_total_time_secs = 0.006607575
-avg_initial_objective = 898.3
-avg_improvement = 289.2
-avg_n_accepted = 5.7
-avg_n_rejected = 1.0
-avg_acceptance_rate = 0.8446428571428569
-avg_n_best_updates = 5.7
+best_objective = 666.0
+avg_objective = 666.0
+worst_objective = 666.0
+std_objective = 0.0
+best_time_to_best_secs = 0.003435041
+avg_time_to_best_secs = 0.08123115010000001
+avg_total_time_secs = 30.000001079100002
+avg_initial_objective = 1069.3
+avg_improvement = 403.3
+avg_n_accepted = 24076793.0
+avg_n_rejected = 44207397.8
+avg_acceptance_rate = 0.35262778650155324
+avg_n_best_updates = 18.9
 
 [[results]]
 problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 666.0
+avg_objective = 675.3
+worst_objective = 715.0
+std_objective = 14.832734070291963
+best_time_to_best_secs = 0.008465917
+avg_time_to_best_secs = 0.0445102042
+avg_total_time_secs = 8.1195535917
+avg_initial_objective = 1069.3
+avg_improvement = 394.0
+avg_n_accepted = 9044957.6
+avg_n_rejected = 955042.4
+avg_acceptance_rate = 0.90449576
+avg_n_best_updates = 22.7
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/la01.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 666.0
+avg_objective = 666.0
+worst_objective = 666.0
+std_objective = 0.0
+best_time_to_best_secs = 0.00450425
+avg_time_to_best_secs = 0.007352766600000002
+avg_total_time_secs = 3.4994796332
+avg_initial_objective = 1069.3
+avg_improvement = 403.3
+avg_n_accepted = 3546560.9
+avg_n_rejected = 6453439.1
+avg_acceptance_rate = 0.35465609000000003
+avg_n_best_updates = 22.8
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/la01.txt"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Ppx"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
 kind = "TabuSearch"
 neighbor = "Swap"
 tabu_tenure = [
@@ -2545,293 +1670,228 @@ tabu_tenure = [
     30,
 ]
 
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
 [results.heuristic.stop_condition]
 max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 642.0
-worst_objective = 680.0
-std_objective = 31.9343075703858
-best_time_to_best_secs = 0.01107525
-avg_time_to_best_secs = 3.6704586458
-avg_total_time_secs = 30.0000038749
-avg_initial_objective = 898.3
-avg_improvement = 256.3
-avg_n_accepted = 3003091.2
+best_objective = 666.0
+avg_objective = 675.3
+worst_objective = 698.0
+std_objective = 10.276672613253764
+best_time_to_best_secs = 0.040509416
+avg_time_to_best_secs = 0.5552247624
+avg_total_time_secs = 30.000710870800003
+avg_initial_objective = 1069.3
+avg_improvement = 394.0
+avg_n_accepted = 4413039.5
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
+avg_n_best_updates = 5167.7
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/la01.txt"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 666.0
+avg_objective = 666.0
+worst_objective = 666.0
+std_objective = 0.0
+best_time_to_best_secs = 0.019469041
+avg_time_to_best_secs = 0.2681271581
+avg_total_time_secs = 30.0000658041
+avg_initial_objective = 1069.3
+avg_improvement = 403.3
+avg_n_accepted = 33977825.7
+avg_n_rejected = 3410466.7
+avg_acceptance_rate = 0.9086422151485387
+avg_n_best_updates = 16551.0
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/la01.txt"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    30,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 666.0
+avg_objective = 677.0
+worst_objective = 694.0
+std_objective = 10.373041983911952
+best_time_to_best_secs = 8.580480209
+avg_time_to_best_secs = 18.8485394584
+avg_total_time_secs = 30.195551371000004
+avg_initial_objective = 1069.3
+avg_improvement = 392.3
+avg_n_accepted = 4570000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1110.4
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/la01.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Swap", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 694.0
+avg_objective = 739.0
+worst_objective = 783.0
+std_objective = 23.16031087874254
+best_time_to_best_secs = 0.018129167
+avg_time_to_best_secs = 8.517187425
+avg_total_time_secs = 30.0000069042
+avg_initial_objective = 1069.3
+avg_improvement = 330.3
+avg_n_accepted = 14708831.3
+avg_n_rejected = 1135175.7
+avg_acceptance_rate = 0.9284961441526223
+avg_n_best_updates = 1465161.7
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/la01.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Swap"
+population_size = 20
+initial_beta = 0.01
+delta_beta = 0.001225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 666.0
+avg_objective = 666.0
+worst_objective = 666.0
+std_objective = 0.0
+best_time_to_best_secs = 0.995158625
+avg_time_to_best_secs = 1.4945122791000003
+avg_total_time_secs = 30.0131339999
+avg_initial_objective = 1069.3
+avg_improvement = 403.3
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 9.6
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/la01.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Swap"
+num_replicas = 20
+beta_min = 0.01
+beta_max = 0.5
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 666.0
+avg_objective = 666.0
+worst_objective = 666.0
+std_objective = 0.0
+best_time_to_best_secs = 0.03126525
+avg_time_to_best_secs = 0.09886888329999999
+avg_total_time_secs = 30.0003377667
+avg_initial_objective = 1069.3
+avg_improvement = 403.3
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
 avg_n_best_updates = 13.4
 
 [[results]]
 problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
+instance_path = "data/instances/jssp/orlib/la01.txt"
 
 [results.heuristic]
-kind = "TabuSearch"
-neighbor = "Relocate"
-tabu_tenure = [
-    3,
-    30,
-]
+kind = "ReinforcementLearningSearch"
+neighbor = "Swap"
 
 [results.heuristic.stop_condition]
 max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 599.4
-worst_objective = 638.0
-std_objective = 14.05844941663198
-best_time_to_best_secs = 0.00325475
-avg_time_to_best_secs = 0.017478804199999996
-avg_total_time_secs = 30.000220979199998
-avg_initial_objective = 898.3
-avg_improvement = 298.9
-avg_n_accepted = 48597.2
+best_objective = 666.0
+avg_objective = 666.0
+worst_objective = 666.0
+std_objective = 0.0
+best_time_to_best_secs = 0.047951166
+avg_time_to_best_secs = 0.31604378349999995
+avg_total_time_secs = 30.000004733500003
+avg_initial_objective = 1069.3
+avg_improvement = 403.3
+avg_n_accepted = 3799964.2
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 6.7
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Swap"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 593.0
-worst_objective = 593.0
-std_objective = 0.0
-best_time_to_best_secs = 0.006564917
-avg_time_to_best_secs = 0.014565041800000001
-avg_total_time_secs = 29.9999964584
-avg_initial_objective = 898.3
-avg_improvement = 305.3
-avg_n_accepted = 32743433.3
-avg_n_rejected = 2019743.5
-avg_acceptance_rate = 0.9418979714800064
-avg_n_best_updates = 17.4
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
-
-[results.heuristic]
-kind = "LateAcceptanceHillClimbing"
-neighbor = "Relocate"
-history_length = 100
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 593.0
-worst_objective = 593.0
-std_objective = 0.0
-best_time_to_best_secs = 0.002115667
-avg_time_to_best_secs = 0.0031181041999999996
-avg_total_time_secs = 29.9999976584
-avg_initial_objective = 898.3
-avg_improvement = 305.3
-avg_n_accepted = 32245881.1
-avg_n_rejected = 35441409.1
-avg_acceptance_rate = 0.47639488581390027
-avg_n_best_updates = 13.0
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 594.9
-worst_objective = 612.0
-std_objective = 5.699999999999999
-best_time_to_best_secs = 0.0092595
-avg_time_to_best_secs = 0.029135779100000002
-avg_total_time_secs = 8.7427252625
-avg_initial_objective = 898.3
-avg_improvement = 303.4
-avg_n_accepted = 9350754.0
-avg_n_rejected = 649246.0
-avg_acceptance_rate = 0.9350754
-avg_n_best_updates = 17.1
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
-
-[results.heuristic]
-kind = "SimulatedAnnealing"
-neighbor = "Relocate"
-initial_temperature = 100.0
-cooling_rate = 0.9995
-
-[results.heuristic.stop_condition]
-max_iteration = 10000000
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 593.0
-worst_objective = 593.0
-std_objective = 0.0
-best_time_to_best_secs = 0.000887708
-avg_time_to_best_secs = 0.0038926499000000005
-avg_total_time_secs = 4.6523922999
-avg_initial_objective = 898.3
-avg_improvement = 305.3
-avg_n_accepted = 4764003.4
-avg_n_rejected = 5235996.6
-avg_acceptance_rate = 0.47640034
-avg_n_best_updates = 12.5
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
-
-[results.heuristic]
-kind = "GeneticAlgorithm"
-population_size = 50
-crossover_kind = "Ppx"
-parent_selection = "Tournament"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 593.0
-worst_objective = 593.0
-std_objective = 0.0
-best_time_to_best_secs = 0.002422416
-avg_time_to_best_secs = 0.0448134292
-avg_total_time_secs = 30.0009191166
-avg_initial_objective = 898.3
-avg_improvement = 305.3
-avg_n_accepted = 3011546.5
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 21226.3
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
-
-[results.heuristic]
-kind = "Iterated"
-
-[[results.heuristic.steps]]
-kind = "LocalSearch"
-neighbor = "Swap"
-
-[results.heuristic.steps.stop_condition]
-max_failed_update = 1
-
-[[results.heuristic.steps]]
-kind = "SimulatedAnnealing"
-neighbor = "Swap"
-initial_temperature = 5.0
-cooling_rate = 0.99
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 200
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 593.0
-worst_objective = 593.0
-std_objective = 0.0
-best_time_to_best_secs = 0.006770417
-avg_time_to_best_secs = 0.010829045899999999
-avg_total_time_secs = 30.0000832957
-avg_initial_objective = 898.3
-avg_improvement = 305.3
-avg_n_accepted = 30313539.1
-avg_n_rejected = 2000776.0
-avg_acceptance_rate = 0.938084808661172
-avg_n_best_updates = 11990.3
-
-[[results]]
-problem = "JobShop"
-instance_path = "data/instances/jssp/orlib/la05.txt"
-
-[results.heuristic]
-kind = "Restart"
-
-[[results.heuristic.steps]]
-kind = "TabuSearch"
-neighbor = "Swap"
-tabu_tenure = [
-    3,
-    30,
-]
-
-[results.heuristic.steps.stop_condition]
-max_iteration = 50000
-
-[results.heuristic.restart_condition]
-max_failed_update = 5000
-
-[results.heuristic.stop_condition]
-max_duration_secs = 30.0
-
-[results.summary]
-num_successful_runs = 10
-best_objective = 593.0
-avg_objective = 593.0
-worst_objective = 593.0
-std_objective = 0.0
-best_time_to_best_secs = 0.62809925
-avg_time_to_best_secs = 2.0036997707
-avg_total_time_secs = 30.173833558300004
-avg_initial_objective = 898.3
-avg_improvement = 305.3
-avg_n_accepted = 3035000.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 640.8
+avg_n_best_updates = 23.2
 
 [[results]]
 problem = "JobShop"
@@ -2846,19 +1906,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1810.0
-avg_objective = 2008.5
-worst_objective = 2283.0
-std_objective = 151.04254367561478
-best_time_to_best_secs = 0.000521208
-avg_time_to_best_secs = 0.0011746666999999998
-avg_total_time_secs = 0.0013692836
-avg_initial_objective = 2144.6
-avg_improvement = 136.1
-avg_n_accepted = 2.5
+best_objective = 1783.0
+avg_objective = 1957.9
+worst_objective = 2193.0
+std_objective = 110.35619601997887
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 0.0017379458000000001
+avg_total_time_secs = 0.0022607707000000003
+avg_initial_objective = 2084.0
+avg_improvement = 126.1
+avg_n_accepted = 1.8
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.6933333333333332
-avg_n_best_updates = 2.5
+avg_acceptance_rate = 0.5833333333333333
+avg_n_best_updates = 1.8
 
 [[results]]
 problem = "JobShop"
@@ -2873,19 +1933,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1273.0
-avg_objective = 1471.6
-worst_objective = 1618.0
-std_objective = 98.70075987549437
-best_time_to_best_secs = 0.036305083
-avg_time_to_best_secs = 0.0452600042
-avg_total_time_secs = 0.0478871917
-avg_initial_objective = 2144.6
-avg_improvement = 673.0
-avg_n_accepted = 12.8
+best_objective = 1307.0
+avg_objective = 1421.1
+worst_objective = 1495.0
+std_objective = 51.22392019359706
+best_time_to_best_secs = 0.021202208
+avg_time_to_best_secs = 0.030938616700000005
+avg_total_time_secs = 0.0325863499
+avg_initial_objective = 2084.0
+avg_improvement = 662.9
+avg_n_accepted = 14.6
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.9236273448773448
-avg_n_best_updates = 12.8
+avg_acceptance_rate = 0.9276224564908775
+avg_n_best_updates = 14.6
 
 [[results]]
 problem = "JobShop"
@@ -2904,19 +1964,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1702.0
-avg_objective = 1850.5
-worst_objective = 2114.0
-std_objective = 118.01800710061156
-best_time_to_best_secs = 0.008075917
-avg_time_to_best_secs = 1.3573964417999995
-avg_total_time_secs = 30.000015441699997
-avg_initial_objective = 2144.6
-avg_improvement = 294.1
-avg_n_accepted = 1000556.4
+best_objective = 1600.0
+avg_objective = 1743.1
+worst_objective = 1825.0
+std_objective = 72.01867813282885
+best_time_to_best_secs = 0.007965791
+avg_time_to_best_secs = 0.7299416041000002
+avg_total_time_secs = 30.0000075707
+avg_initial_objective = 2084.0
+avg_improvement = 340.9
+avg_n_accepted = 2328873.4
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 8.6
+avg_n_best_updates = 9.7
 
 [[results]]
 problem = "JobShop"
@@ -2935,19 +1995,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1259.0
-avg_objective = 1459.5
-worst_objective = 1618.0
-std_objective = 104.31802337084422
-best_time_to_best_secs = 0.027748541
-avg_time_to_best_secs = 0.2871060663999999
-avg_total_time_secs = 30.0021349418
-avg_initial_objective = 2144.6
-avg_improvement = 685.1
-avg_n_accepted = 7874.0
+best_objective = 1307.0
+avg_objective = 1406.0
+worst_objective = 1495.0
+std_objective = 54.70648956019752
+best_time_to_best_secs = 0.02536125
+avg_time_to_best_secs = 0.06204791680000001
+avg_total_time_secs = 30.000971196100004
+avg_initial_objective = 2084.0
+avg_improvement = 678.0
+avg_n_accepted = 16824.5
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 14.1
+avg_n_best_updates = 16.0
 
 [[results]]
 problem = "JobShop"
@@ -2963,19 +2023,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1258.0
-avg_objective = 1352.4
-worst_objective = 1450.0
-std_objective = 57.135278068807885
-best_time_to_best_secs = 0.045288042
-avg_time_to_best_secs = 2.1141913497
-avg_total_time_secs = 29.999997658399998
-avg_initial_objective = 2144.6
-avg_improvement = 792.2
-avg_n_accepted = 16510998.8
-avg_n_rejected = 1062704.1
-avg_acceptance_rate = 0.9395078781777289
-avg_n_best_updates = 35.8
+best_objective = 1252.0
+avg_objective = 1313.8
+worst_objective = 1534.0
+std_objective = 78.23272972356263
+best_time_to_best_secs = 0.054537375
+avg_time_to_best_secs = 0.7408485042
+avg_total_time_secs = 30.00000135
+avg_initial_objective = 2084.0
+avg_improvement = 770.2
+avg_n_accepted = 17024065.9
+avg_n_rejected = 1074364.0
+avg_acceptance_rate = 0.9406415408932078
+avg_n_best_updates = 39.1
 
 [[results]]
 problem = "JobShop"
@@ -2992,18 +2052,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 1239.0
-avg_objective = 1257.8
-worst_objective = 1269.0
-std_objective = 9.019977827023743
-best_time_to_best_secs = 0.00833075
-avg_time_to_best_secs = 2.5346280041999996
-avg_total_time_secs = 29.999999054299998
-avg_initial_objective = 2144.6
-avg_improvement = 886.8
-avg_n_accepted = 13684260.6
-avg_n_rejected = 39066696.3
-avg_acceptance_rate = 0.25942773262271
-avg_n_best_updates = 39.9
+avg_objective = 1254.9
+worst_objective = 1284.0
+std_objective = 11.103603018840326
+best_time_to_best_secs = 0.004623417
+avg_time_to_best_secs = 0.09736220009999999
+avg_total_time_secs = 30.000000491699996
+avg_initial_objective = 2084.0
+avg_improvement = 829.1
+avg_n_accepted = 14236074.9
+avg_n_rejected = 40550793.9
+avg_acceptance_rate = 0.25981711308166744
+avg_n_best_updates = 38.2
 
 [[results]]
 problem = "JobShop"
@@ -3022,18 +2082,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 1252.0
-avg_objective = 1319.6
-worst_objective = 1448.0
-std_objective = 61.78705366013175
-best_time_to_best_secs = 0.132583584
-avg_time_to_best_secs = 1.2053853876000002
-avg_total_time_secs = 16.407387133199997
-avg_initial_objective = 2144.6
-avg_improvement = 825.0
-avg_n_accepted = 9395964.6
-avg_n_rejected = 604035.4
-avg_acceptance_rate = 0.93959646
-avg_n_best_updates = 41.4
+avg_objective = 1346.2
+worst_objective = 1452.0
+std_objective = 76.32273580002227
+best_time_to_best_secs = 0.037646167
+avg_time_to_best_secs = 0.20165476250000003
+avg_total_time_secs = 13.082293237600002
+avg_initial_objective = 2084.0
+avg_improvement = 737.8
+avg_n_accepted = 9392709.2
+avg_n_rejected = 607290.8
+avg_acceptance_rate = 0.93927092
+avg_n_best_updates = 36.5
 
 [[results]]
 problem = "JobShop"
@@ -3052,18 +2112,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 1239.0
-avg_objective = 1247.4
-worst_objective = 1258.0
-std_objective = 6.421837743200929
-best_time_to_best_secs = 0.007527458
-avg_time_to_best_secs = 0.19399344579999997
-avg_total_time_secs = 5.7556057209
-avg_initial_objective = 2144.6
-avg_improvement = 897.2
-avg_n_accepted = 2559198.4
-avg_n_rejected = 7440801.6
-avg_acceptance_rate = 0.25591983999999995
-avg_n_best_updates = 40.7
+avg_objective = 1245.3
+worst_objective = 1253.0
+std_objective = 5.441507144165117
+best_time_to_best_secs = 0.007123125
+avg_time_to_best_secs = 0.19456765010000002
+avg_total_time_secs = 4.788397754100001
+avg_initial_objective = 2084.0
+avg_improvement = 838.7
+avg_n_accepted = 2550767.7
+avg_n_rejected = 7449232.3
+avg_acceptance_rate = 0.25507677000000006
+avg_n_best_updates = 41.1
 
 [[results]]
 problem = "JobShop"
@@ -3091,19 +2151,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1301.0
-avg_objective = 1338.9
-worst_objective = 1387.0
-std_objective = 29.132284496757205
-best_time_to_best_secs = 0.9344785
-avg_time_to_best_secs = 2.1621191418
-avg_total_time_secs = 30.0025924458
-avg_initial_objective = 2144.6
-avg_improvement = 805.7
-avg_n_accepted = 952964.2
+best_objective = 1282.0
+avg_objective = 1329.8
+worst_objective = 1373.0
+std_objective = 27.585503439306663
+best_time_to_best_secs = 0.35240475
+avg_time_to_best_secs = 2.1021542207
+avg_total_time_secs = 30.000996362299997
+avg_initial_objective = 2084.0
+avg_improvement = 754.2
+avg_n_accepted = 2227246.0
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 921.5
+avg_n_best_updates = 2276.7
 
 [[results]]
 problem = "JobShop"
@@ -3133,19 +2193,19 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1250.0
-avg_objective = 1272.9
-worst_objective = 1326.0
-std_objective = 25.045758123881978
-best_time_to_best_secs = 3.703406667
-avg_time_to_best_secs = 10.193667662500001
-avg_total_time_secs = 30.0001229334
-avg_initial_objective = 2144.6
-avg_improvement = 871.7
-avg_n_accepted = 16392861.5
-avg_n_rejected = 1115282.5
-avg_acceptance_rate = 0.9362478744637903
-avg_n_best_updates = 5589.3
+best_objective = 1239.0
+avg_objective = 1288.1
+worst_objective = 1380.0
+std_objective = 44.53638961568394
+best_time_to_best_secs = 0.076673542
+avg_time_to_best_secs = 8.6261524581
+avg_total_time_secs = 30.000143575000003
+avg_initial_objective = 2084.0
+avg_improvement = 795.9
+avg_n_accepted = 18245719.8
+avg_n_rejected = 1233136.5
+avg_acceptance_rate = 0.9366892411580473
+avg_n_best_updates = 5075.2
 
 [[results]]
 problem = "JobShop"
@@ -3173,16 +2233,135 @@ max_duration_secs = 30.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 1446.0
-avg_objective = 1577.9
-worst_objective = 1634.0
-std_objective = 53.38436100582266
-best_time_to_best_secs = 4.5665975
-avg_time_to_best_secs = 13.748277975000002
-avg_total_time_secs = 30.427329166499998
-avg_initial_objective = 2144.6
-avg_improvement = 566.7
-avg_n_accepted = 990000.0
+best_objective = 1463.0
+avg_objective = 1534.4
+worst_objective = 1588.0
+std_objective = 43.94132451349186
+best_time_to_best_secs = 6.550141834
+avg_time_to_best_secs = 17.1428076292
+avg_total_time_secs = 30.1783308499
+avg_initial_objective = 2084.0
+avg_improvement = 549.6
+avg_n_accepted = 2345000.0
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 165.2
+avg_n_best_updates = 394.5
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Swap", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Swap", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1383.0
+avg_objective = 1534.2
+worst_objective = 1605.0
+std_objective = 64.65415686558754
+best_time_to_best_secs = 0.043756375
+avg_time_to_best_secs = 4.639965425
+avg_total_time_secs = 30.000010245800002
+avg_initial_objective = 2084.0
+avg_improvement = 549.8
+avg_n_accepted = 8490172.6
+avg_n_rejected = 675924.0
+avg_acceptance_rate = 0.926312958239502
+avg_n_best_updates = 604428.9
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Swap"
+population_size = 20
+initial_beta = 0.01
+delta_beta = 0.001225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1239.0
+avg_objective = 1245.0
+worst_objective = 1253.0
+std_objective = 3.82099463490856
+best_time_to_best_secs = 12.811936
+avg_time_to_best_secs = 20.7122142792
+avg_total_time_secs = 30.0591617041
+avg_initial_objective = 2084.0
+avg_improvement = 839.0
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 21.3
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Swap"
+num_replicas = 20
+beta_min = 0.01
+beta_max = 0.5
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1234.0
+avg_objective = 1241.5
+worst_objective = 1250.0
+std_objective = 3.8535697735995385
+best_time_to_best_secs = 3.630972625
+avg_time_to_best_secs = 10.1976813666
+avg_total_time_secs = 30.000944329200003
+avg_initial_objective = 2084.0
+avg_improvement = 842.5
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 38.6
+
+[[results]]
+problem = "JobShop"
+instance_path = "data/instances/jssp/orlib/abz5.txt"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1244.0
+avg_objective = 1264.5
+worst_objective = 1283.0
+std_objective = 13.093891705677116
+best_time_to_best_secs = 2.5856667079999998
+avg_time_to_best_secs = 6.6471296668
+avg_total_time_secs = 30.000008724999997
+avg_initial_objective = 2084.0
+avg_improvement = 819.5
+avg_n_accepted = 1904789.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 44.4

@@ -1,4 +1,4 @@
-timestamp = "20260804_080506"
+timestamp = "20261030_161355"
 config_file = "data/benchmarks/maxcut/gset_bls/n9000.toml"
 
 [[results]]
@@ -20,17 +20,17 @@ q = 0.5
 max_iteration = 1800000000
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 6356.0
-avg_objective = 6351.2
-worst_objective = 6348.0
-std_objective = 3.249615361854384
-best_time_to_best_secs = 6529.361176083
-avg_time_to_best_secs = 12903.6841958999
-avg_total_time_secs = 22683.8355684377
-avg_initial_objective = 34.8
-avg_improvement = 6316.4
-avg_n_accepted = 1332063278.3
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 2565.6
+num_successful_runs = 5
+best_objective = 6358.0
+avg_objective = 6352.8
+worst_objective = 6350.0
+std_objective = 2.9933259094191533
+best_time_to_best_secs = 1634.961067917
+avg_time_to_best_secs = 4151.989182016599
+avg_total_time_secs = 12440.2123859834
+avg_initial_objective = -0.8
+avg_improvement = 6353.6
+avg_n_accepted = 1322705414.2
+avg_n_rejected = 12584532.0
+avg_acceptance_rate = 0.9905754311170062
+avg_n_best_updates = 2654.8

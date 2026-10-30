@@ -1,4 +1,4 @@
-timestamp = "20260724_235525"
+timestamp = "20261021_234835"
 config_file = "data/benchmarks/tsp/general_large.toml"
 
 [[results]]
@@ -13,20 +13,20 @@ neighbor = "TwoOpt"
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 20133878.0
-avg_objective = 20366519.7
-worst_objective = 20641869.0
-std_objective = 163798.0508681651
-best_time_to_best_secs = 4.515261583
-avg_time_to_best_secs = 4.6194150542
-avg_total_time_secs = 4.6214624042
-avg_initial_objective = 557846241.3
-avg_improvement = 537479721.6
-avg_n_accepted = 1300.1
+num_successful_runs = 5
+best_objective = 20296383.0
+avg_objective = 20408103.6
+worst_objective = 20579454.0
+std_objective = 120471.6633347444
+best_time_to_best_secs = 2.008589375
+avg_time_to_best_secs = 2.0325179748
+avg_total_time_secs = 2.0338853666
+avg_initial_objective = 552331173.4
+avg_improvement = 531923069.8
+avg_n_accepted = 1300.6
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.9992313676363315
-avg_n_best_updates = 1300.1
+avg_acceptance_rate = 0.9992316278034652
+avg_n_best_updates = 1300.6
 
 [[results]]
 problem = "Tsp"
@@ -40,20 +40,20 @@ neighbor = "Relocate"
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 40763768.0
-avg_objective = 43847590.2
-worst_objective = 47945959.0
-std_objective = 1803349.7807378802
-best_time_to_best_secs = 27.377157084
-avg_time_to_best_secs = 28.0236043208
-avg_total_time_secs = 28.0296609626
-avg_initial_objective = 557846241.3
-avg_improvement = 513998651.1
-avg_n_accepted = 2510.9
+num_successful_runs = 5
+best_objective = 42403959.0
+avg_objective = 44276188.8
+worst_objective = 45332563.0
+std_objective = 1059926.033565437
+best_time_to_best_secs = 8.090677875
+avg_time_to_best_secs = 8.253921891400001
+avg_total_time_secs = 8.2575184498
+avg_initial_objective = 552331173.4
+avg_improvement = 508054984.6
+avg_n_accepted = 2462.0
 avg_n_rejected = 1.0
-avg_acceptance_rate = 0.9996015733087867
-avg_n_best_updates = 2510.9
+avg_acceptance_rate = 0.9995937437096847
+avg_n_best_updates = 2462.0
 
 [[results]]
 problem = "Tsp"
@@ -71,20 +71,20 @@ tabu_tenure = [
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 19865022.0
-avg_objective = 20069662.8
-worst_objective = 20200297.0
-std_objective = 98904.57458560752
-best_time_to_best_secs = 24.830265833
-avg_time_to_best_secs = 156.04725348749997
-avg_total_time_secs = 600.0064595624999
-avg_initial_objective = 557846241.3
-avg_improvement = 537776578.5
-avg_n_accepted = 39061.3
+num_successful_runs = 5
+best_objective = 20013413.0
+avg_objective = 20087362.8
+worst_objective = 20281581.0
+std_objective = 101397.52045962465
+best_time_to_best_secs = 4.994843625
+avg_time_to_best_secs = 146.6188661418
+avg_total_time_secs = 600.00186105
+avg_initial_objective = 552331173.4
+avg_improvement = 532243810.6
+avg_n_accepted = 152545.2
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 1489.1
+avg_n_best_updates = 1485.2
 
 [[results]]
 problem = "Tsp"
@@ -102,20 +102,20 @@ tabu_tenure = [
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 40598385.0
-avg_objective = 42908335.0
-worst_objective = 44793743.0
-std_objective = 1155271.3492508156
-best_time_to_best_secs = 113.151633583
-avg_time_to_best_secs = 324.35134039999997
-avg_total_time_secs = 600.0147612498
-avg_initial_objective = 557846241.3
-avg_improvement = 514937906.3
-avg_n_accepted = 17147.3
+num_successful_runs = 5
+best_objective = 41023578.0
+avg_objective = 43051719.8
+worst_objective = 44615341.0
+std_objective = 1190936.6871335185
+best_time_to_best_secs = 126.047596875
+avg_time_to_best_secs = 219.12860363340002
+avg_total_time_secs = 600.003266467
+avg_initial_objective = 552331173.4
+avg_improvement = 509279453.6
+avg_n_accepted = 87982.2
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 2602.9
+avg_n_best_updates = 2584.8
 
 [[results]]
 problem = "Tsp"
@@ -130,20 +130,20 @@ history_length = 2000
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 19485064.0
-avg_objective = 19705286.1
-worst_objective = 19910712.0
-std_objective = 137623.23198897054
-best_time_to_best_secs = 1.148563
-avg_time_to_best_secs = 1.41389015
-avg_total_time_secs = 599.9999974626999
-avg_initial_objective = 557846241.3
-avg_improvement = 538140955.2
-avg_n_accepted = 1999262.4
-avg_n_rejected = 12999165228.3
-avg_acceptance_rate = 0.00015756784133443715
-avg_n_best_updates = 5864.2
+num_successful_runs = 5
+best_objective = 19598113.0
+avg_objective = 19770304.4
+worst_objective = 19951527.0
+std_objective = 122533.1067811471
+best_time_to_best_secs = 0.8296985
+avg_time_to_best_secs = 0.9833583666000001
+avg_total_time_secs = 600.0000000914
+avg_initial_objective = 552331173.4
+avg_improvement = 532560869.0
+avg_n_accepted = 1996921.6
+avg_n_rejected = 19097133980.0
+avg_acceptance_rate = 0.0001062889212264451
+avg_n_best_updates = 5857.0
 
 [[results]]
 problem = "Tsp"
@@ -158,20 +158,20 @@ history_length = 2000
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 21919940.0
-avg_objective = 22717535.9
-worst_objective = 23781444.0
-std_objective = 541818.1009419028
-best_time_to_best_secs = 1.660618167
-avg_time_to_best_secs = 1.9046482166
-avg_total_time_secs = 599.9999972210001
-avg_initial_objective = 557846241.3
-avg_improvement = 535128705.4
-avg_n_accepted = 1730889.5
-avg_n_rejected = 12283581914.8
-avg_acceptance_rate = 0.00014370474911421053
-avg_n_best_updates = 5708.8
+num_successful_runs = 5
+best_objective = 21940080.0
+avg_objective = 22784016.0
+worst_objective = 23531466.0
+std_objective = 626244.9935918051
+best_time_to_best_secs = 1.046433208
+avg_time_to_best_secs = 1.2129319418
+avg_total_time_secs = 600.00000015
+avg_initial_objective = 552331173.4
+avg_improvement = 529547157.4
+avg_n_accepted = 1727416.4
+avg_n_rejected = 18177349047.6
+avg_acceptance_rate = 9.621522493013002e-05
+avg_n_best_updates = 5649.4
 
 [[results]]
 problem = "Tsp"
@@ -188,20 +188,20 @@ max_iteration = 200000000
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 20838472.0
-avg_objective = 21242409.3
-worst_objective = 21600800.0
-std_objective = 271425.69200392585
-best_time_to_best_secs = 0.154956292
-avg_time_to_best_secs = 0.2603238041
-avg_total_time_secs = 10.1796191375
-avg_initial_objective = 557846241.3
-avg_improvement = 536603832.0
-avg_n_accepted = 5746.2
-avg_n_rejected = 199994253.8
-avg_acceptance_rate = 2.8730999999999993e-05
-avg_n_best_updates = 5738.8
+num_successful_runs = 5
+best_objective = 20828902.0
+avg_objective = 21233304.8
+worst_objective = 21722326.0
+std_objective = 321110.1811698906
+best_time_to_best_secs = 0.129254709
+avg_time_to_best_secs = 0.1638285248
+avg_total_time_secs = 6.709965474799999
+avg_initial_objective = 552331173.4
+avg_improvement = 531097868.6
+avg_n_accepted = 5781.8
+avg_n_rejected = 199994218.2
+avg_acceptance_rate = 2.8908999999999997e-05
+avg_n_best_updates = 5774.0
 
 [[results]]
 problem = "Tsp"
@@ -218,20 +218,20 @@ max_iteration = 200000000
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 37057946.0
-avg_objective = 39373720.3
-worst_objective = 43149325.0
-std_objective = 1653145.5684833715
-best_time_to_best_secs = 0.800161209
-avg_time_to_best_secs = 1.1718494499
-avg_total_time_secs = 10.776228124900003
-avg_initial_objective = 557846241.3
-avg_improvement = 518472521.0
-avg_n_accepted = 8018.5
-avg_n_rejected = 199991981.5
-avg_acceptance_rate = 4.00925e-05
-avg_n_best_updates = 7992.5
+num_successful_runs = 5
+best_objective = 38374763.0
+avg_objective = 39884229.8
+worst_objective = 41384146.0
+std_objective = 1114154.8757158315
+best_time_to_best_secs = 0.808199541
+avg_time_to_best_secs = 0.9953431666000002
+avg_total_time_secs = 6.8493437668
+avg_initial_objective = 552331173.4
+avg_improvement = 512446943.6
+avg_n_accepted = 8165.6
+avg_n_rejected = 199991834.4
+avg_acceptance_rate = 4.0828e-05
+avg_n_best_updates = 8117.8
 
 [[results]]
 problem = "Tsp"
@@ -258,20 +258,20 @@ max_failed_update = 200
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 19770956.0
-avg_objective = 19831272.6
-worst_objective = 19893171.0
-std_objective = 34333.18943879232
-best_time_to_best_secs = 21.720780334
-avg_time_to_best_secs = 324.0938132084
-avg_total_time_secs = 610.1183719416001
-avg_initial_objective = 557846241.3
-avg_improvement = 538014968.7
-avg_n_accepted = 45234.0
+num_successful_runs = 5
+best_objective = 19455319.0
+avg_objective = 19594868.4
+worst_objective = 19661074.0
+std_objective = 73931.14050953089
+best_time_to_best_secs = 532.179254375
+avg_time_to_best_secs = 561.3246730334
+avg_total_time_secs = 600.4059739664
+avg_initial_objective = 552331173.4
+avg_improvement = 532736305.0
+avg_n_accepted = 223926.4
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 33725.2
+avg_n_best_updates = 116901.4
 
 [[results]]
 problem = "Tsp"
@@ -300,20 +300,20 @@ max_iteration = 200
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 20133878.0
-avg_objective = 20366519.7
-worst_objective = 20641869.0
-std_objective = 163798.0508681651
-best_time_to_best_secs = 4.672620666
-avg_time_to_best_secs = 4.8011423582
-avg_total_time_secs = 600.0009599208
-avg_initial_objective = 557846241.3
-avg_improvement = 537479721.6
-avg_n_accepted = 1302.1
-avg_n_rejected = 38192653.2
-avg_acceptance_rate = 3.409206823846098e-05
-avg_n_best_updates = 1301.1
+num_successful_runs = 5
+best_objective = 20296383.0
+avg_objective = 20408103.6
+worst_objective = 20579454.0
+std_objective = 120471.6633347444
+best_time_to_best_secs = 2.01903225
+avg_time_to_best_secs = 2.0575399502000002
+avg_total_time_secs = 600.0008237666
+avg_initial_objective = 552331173.4
+avg_improvement = 531923069.8
+avg_n_accepted = 1300.6
+avg_n_rejected = 72401889.4
+avg_acceptance_rate = 1.7963459076220124e-05
+avg_n_best_updates = 1300.6
 
 [[results]]
 problem = "Tsp"
@@ -340,17 +340,136 @@ max_failed_update = 50000
 max_duration_secs = 600.0
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 19831996.0
-avg_objective = 20063191.9
-worst_objective = 20162173.0
-std_objective = 95248.97806113197
-best_time_to_best_secs = 24.607924667
-avg_time_to_best_secs = 163.55283119170002
-avg_total_time_secs = 770.0018062542
-avg_initial_objective = 557846241.3
-avg_improvement = 537783049.4
-avg_n_accepted = 50000.0
+num_successful_runs = 5
+best_objective = 19908813.0
+avg_objective = 20017527.8
+worst_objective = 20104757.0
+std_objective = 65445.81630448198
+best_time_to_best_secs = 4.996822
+avg_time_to_best_secs = 426.2089542502
+avg_total_time_secs = 685.7378363584
+avg_initial_objective = 552331173.4
+avg_improvement = 532313645.6
+avg_n_accepted = 230000.0
 avg_n_rejected = 0.0
 avg_acceptance_rate = 1.0
-avg_n_best_updates = 1484.8
+avg_n_best_updates = 3100.4
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/dsj1000.tsp"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "TwoOpt", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "TwoOpt", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "TwoOpt", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "TwoOpt", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 18810442.0
+avg_objective = 18875712.6
+worst_objective = 18922819.0
+std_objective = 43692.48094855681
+best_time_to_best_secs = 495.820203625
+avg_time_to_best_secs = 561.9451946084
+avg_total_time_secs = 600.0072390916
+avg_initial_objective = 552331173.4
+avg_improvement = 533455460.8
+avg_n_accepted = 694459.8
+avg_n_rejected = 25960.8
+avg_acceptance_rate = 0.9639642669044557
+avg_n_best_updates = 391827.8
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/dsj1000.tsp"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "TwoOpt"
+population_size = 20
+initial_beta = 0.1
+delta_beta = 0.01225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 20638549.0
+avg_objective = 20713988.2
+worst_objective = 20819368.0
+std_objective = 60141.708048242195
+best_time_to_best_secs = 6.513747625
+avg_time_to_best_secs = 10.4932593584
+avg_total_time_secs = 603.1432653416001
+avg_initial_objective = 552331173.4
+avg_improvement = 531617185.2
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 1.6
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/dsj1000.tsp"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "TwoOpt"
+num_replicas = 20
+beta_min = 0.1
+beta_max = 5.0
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 20659198.0
+avg_objective = 20750800.2
+worst_objective = 20858343.0
+std_objective = 70757.81751128282
+best_time_to_best_secs = 1.173125167
+avg_time_to_best_secs = 1.4305677418
+avg_total_time_secs = 600.0690422166001
+avg_initial_objective = 552331173.4
+avg_improvement = 531580373.2
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 10.0
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/dsj1000.tsp"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "TwoOpt"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 25967665.0
+avg_objective = 26433645.0
+worst_objective = 26873938.0
+std_objective = 371246.2827768111
+best_time_to_best_secs = 532.89818025
+avg_time_to_best_secs = 579.8910242334001
+avg_total_time_secs = 600.0033328416
+avg_initial_objective = 552331173.4
+avg_improvement = 525897528.4
+avg_n_accepted = 31049.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 3805.8

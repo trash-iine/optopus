@@ -1,5 +1,65 @@
 [
   {
+    "path": "bin_packing/general_falkenauer_large.slim.toml",
+    "problem": "BinPacking"
+  },
+  {
+    "path": "bin_packing/general_falkenauer_medium.slim.toml",
+    "problem": "BinPacking"
+  },
+  {
+    "path": "bin_packing/general_falkenauer_small.slim.toml",
+    "problem": "BinPacking"
+  },
+  {
+    "path": "bin_packing/specific_falkenauer_large.slim.toml",
+    "problem": "BinPacking"
+  },
+  {
+    "path": "bin_packing/specific_falkenauer_medium.slim.toml",
+    "problem": "BinPacking"
+  },
+  {
+    "path": "bin_packing/specific_falkenauer_small.slim.toml",
+    "problem": "BinPacking"
+  },
+  {
+    "path": "flow_shop/general_taillard_large.slim.toml",
+    "problem": "FlowShop"
+  },
+  {
+    "path": "flow_shop/general_taillard_medium.slim.toml",
+    "problem": "FlowShop"
+  },
+  {
+    "path": "flow_shop/general_taillard_small.slim.toml",
+    "problem": "FlowShop"
+  },
+  {
+    "path": "flow_shop/specific_taillard_large.slim.toml",
+    "problem": "FlowShop"
+  },
+  {
+    "path": "flow_shop/specific_taillard_medium.slim.toml",
+    "problem": "FlowShop"
+  },
+  {
+    "path": "flow_shop/specific_taillard_small.slim.toml",
+    "problem": "FlowShop"
+  },
+  {
+    "path": "graph_coloring/general_gset_large.slim.toml",
+    "problem": "GraphColoring"
+  },
+  {
+    "path": "graph_coloring/general_gset_medium.slim.toml",
+    "problem": "GraphColoring"
+  },
+  {
+    "path": "graph_coloring/general_gset_small.slim.toml",
+    "problem": "GraphColoring"
+  },
+  {
     "path": "jssp/general_orlib_large.slim.toml",
     "problem": "JobShop"
   },
@@ -68,6 +128,18 @@
     "problem": "MaxCut"
   },
   {
+    "path": "qap/general_qaplib_large.slim.toml",
+    "problem": "Qap"
+  },
+  {
+    "path": "qap/general_qaplib_medium.slim.toml",
+    "problem": "Qap"
+  },
+  {
+    "path": "qap/general_qaplib_small.slim.toml",
+    "problem": "Qap"
+  },
+  {
     "path": "qubo/general_bqp_large.slim.toml",
     "problem": "Qubo"
   },
@@ -89,6 +161,18 @@
   },
   {
     "path": "sat/general_uf_small.slim.toml",
+    "problem": "Sat"
+  },
+  {
+    "path": "sat/specific_uf_large.slim.toml",
+    "problem": "Sat"
+  },
+  {
+    "path": "sat/specific_uf_medium.slim.toml",
+    "problem": "Sat"
+  },
+  {
+    "path": "sat/specific_uf_small.slim.toml",
     "problem": "Sat"
   },
   {
@@ -116,6 +200,18 @@
     "problem": "Tsp"
   },
   {
+    "path": "tsp/specific_tsplib_large.slim.toml",
+    "problem": "Tsp"
+  },
+  {
+    "path": "tsp/specific_tsplib_medium.slim.toml",
+    "problem": "Tsp"
+  },
+  {
+    "path": "tsp/specific_tsplib_small.slim.toml",
+    "problem": "Tsp"
+  },
+  {
     "path": "vertex_cover/general_gset_large.slim.toml",
     "problem": "VertexCover"
   },
@@ -126,5 +222,29 @@
   {
     "path": "vertex_cover/general_gset_small.slim.toml",
     "problem": "VertexCover"
+  },
+  {
+    "path": "vrp/general_cvrplib_large.slim.toml",
+    "problem": "Vrp"
+  },
+  {
+    "path": "vrp/general_cvrplib_medium.slim.toml",
+    "problem": "Vrp"
+  },
+  {
+    "path": "vrp/general_cvrplib_small.slim.toml",
+    "problem": "Vrp"
+  },
+  {
+    "path": "vrp/hgs_cvrplib_large.slim.toml",
+    "problem": "Vrp"
+  },
+  {
+    "path": "vrp/hgs_cvrplib_medium.slim.toml",
+    "problem": "Vrp"
+  },
+  {
+    "path": "vrp/hgs_cvrplib_small.slim.toml",
+    "problem": "Vrp"
   }
 ]

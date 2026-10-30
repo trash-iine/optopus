@@ -18,38 +18,53 @@ settings are what they are, and how to reproduce a run.
 
 Small (≤30s budget), medium (120s), and large (600s) bands.
 
-| Problem | Instances (small / medium / large) | Neighbors | Heuristics |
-|---|---|---|---|
-| MaxCut (GSET) | 30 / 24 / 17 | Flip, Swap | LS, TS, LAHC, SA, GA, Iterated, Restart, BLS |
-| QUBO (bqp) | 20 / 20 / 10 | Flip, Swap | LS, TS, LAHC, SA, GA, Iterated, Restart |
-| MaxSAT (uf) | 20 / 20 / 10 | Flip, Swap | LS, TS, LAHC, SA, GA, Iterated, Restart |
-| TSP (TSPLIB) | 4 / 2 / 1 | TwoOpt, Relocate | LS, TS, LAHC, SA, GA, Iterated, Restart, LKH |
-| JSSP (OR-Library) | 9 / 34 / 39 | Swap, Relocate | LS, TS, LAHC, SA, GA, Iterated, Restart |
-| VertexCover (GSET) | 30 / 24 / 17 | Flip, Swap | LS, TS, LAHC, SA, GA, Iterated, Restart |
+Every problem runs the eleven general heuristics, LS, TS, LAHC, SA, GA,
+Iterated, Restart, VNS, PA, PT and RL. The last column lists the
+problem-specific solvers that run beside them.
 
-CVRP has run configs and a size-band profile (below) but no published
-results yet, there is no `data/vrp/` under this directory, so the viewer has
-no CVRP rows. The bespoke CVRP comparison is
-[below](#hgs-against-alns-on-cvrp) instead. The same holds for
-`PopulationAnnealing` and `WalkSatForSat`: implemented and
-configurable, not part of this sweep.
+| Problem | Instances (small / medium / large) | Neighbors | Problem-specific |
+|---|---|---|---|
+| MaxCut (GSET) | 30 / 24 / 17 | Flip, Swap | BLS |
+| QUBO (bqp) | 6 / 6 / 3 | Flip, Swap | |
+| MaxSAT (uf) | 6 / 6 / 3 | Flip, Swap | WalkSat, WalkSat adaptive |
+| TSP (TSPLIB) | 4 / 2 / 1 | TwoOpt, Relocate | LKH, ALNS, GRASP |
+| JSSP (OR-Library) | 5 / 8 / 6 | Swap, Relocate | |
+| VertexCover (GSET) | 5 / 4 / 4 | Flip, Swap | |
+| GraphColoring (GSET) | 4 / 4 / 3 | Flip, Swap | |
+| QAP (QAPLIB) | 3 / 3 / 2 | Swap | |
+| FlowShop (Taillard) | 3 / 6 / 3 | Relocate, Swap | IG, ALNS, GRASP |
+| BinPacking (Falkenauer) | 4 / 6 / 3 | Relocate, Swap | ALNS, GRASP |
+| CVRP (CVRPLIB X) | 4 / 3 / 3 | Relocate, Swap, TwoOpt | HGS, ALNS, GRASP |
+
+`Restart` and `PopulationAnnealing` check the clock only between whole inner
+steps, so on the CVRP, the flow shop, graph coloring and dsj1000 a run can
+overshoot its budget by as much as 60%.
 
 ## HGS against ALNS on CVRP
 
-30 s per run, 3 runs, seed 42, `μ=25 λ=40 Γ=20`, against the CVRPLIB best-known
-solutions (`data/instances/scripts/fetch_cvrp.sh`).
-[HGS](../heuristics/hgs.md) is `HybridGeneticSearchForVrp` and
-[ALNS](../heuristics/alns.md) is `AdaptiveLargeNeighborhoodSearch` at the same
-budget.
+The CVRP rows of the sweep put [HGS](../heuristics/hgs.md)
+(`HybridGeneticSearch`) and [ALNS](../heuristics/alns.md)
+(`AdaptiveLargeNeighborhoodSearch`) side by side at the same budget. The gaps
+below are to the CVRPLIB best-known solutions
+(`data/instances/scripts/fetch_cvrp.sh`), over ten runs at the small and medium
+bands and five at the large one.
 
-| Instance | BKS | ALNS best | HGS best | ALNS gap | HGS gap |
-|---|---|---|---|---|---|
-| X-n101-k25 | 27591 | 27597 | 27597 | +0.02% | +0.02% |
-| X-n195-k51 | 44225 | 44334 | 44506 | +0.25% | +0.64% |
-| X-n502-k39 | 69226 | 69872 | 70025 | +0.93% | +1.15% |
+| Instance | Budget | BKS | ALNS mean gap | HGS mean gap | ALNS best gap | HGS best gap |
+|---|---|---|---|---|---|---|
+| X-n101-k25 | 30 s | 27591 | +0.34% | +0.14% | +0.00% | +0.02% |
+| X-n139-k10 | 30 s | 13590 | +0.14% | +0.11% | +0.00% | +0.00% |
+| X-n176-k26 | 30 s | 47812 | +1.47% | +1.11% | +0.98% | +0.83% |
+| X-n195-k51 | 30 s | 44225 | +1.91% | +0.64% | +1.55% | +0.46% |
+| X-n214-k11 | 120 s | 10856 | +1.30% | +1.22% | +0.43% | +0.79% |
+| X-n303-k21 | 120 s | 21736 | +1.23% | +1.66% | +0.63% | +1.32% |
+| X-n401-k29 | 120 s | 66154 | +1.51% | +1.80% | +0.96% | +1.57% |
+| X-n502-k39 | 600 s | 69226 | +0.25% | +0.76% | +0.19% | +0.64% |
+| X-n701-k44 | 600 s | 81923 | +2.20% | +3.17% | +2.09% | +2.91% |
+| X-n1001-k43 | 600 s | 72355 | +3.07% | +5.11% | +2.95% | +4.62% |
 
-The two are level at this budget, with every difference between them under
-0.7%, so either is a reasonable default for CVRP.
+HGS is ahead on the small instances and ALNS from about 300 customers up, and
+the lead of ALNS widens on the largest two. GRASP, the third solver in these
+configs, ends 4% to 22% above the best-known solution.
 
 Reproduce with `data/benchmarks/vrp/hgs_{small,medium,large}.toml`.
 
@@ -77,7 +92,9 @@ below, so results from different runs remain comparable.
 `num_runs = 5` for every (problem, heuristic, instance) triple, and `seed = 42` on every config so per-run
 seeds are derived deterministically. The small and medium bands of the 2026-10 sweep
 ran ten runs, the count before this profile, and so did its BLS runs on the G-set
-graphs of 1000 and 10000 vertices.
+graphs of 1000 and 10000 vertices. That sweep ran the runs of one
+(instance, heuristic) pair on ten threads through the small band and most of
+the medium one, and on five threads from there on.
 
 ### Size bands per problem
 
@@ -89,6 +106,10 @@ graphs of 1000 and 10000 vertices.
 | TSP (TSPLIB) | burma14, eil51, att48, berlin52 | eil101, ch150 | dsj1000 |
 | JSSP (OR-Library) | ft06, ft10, ft20, la01, abz5 | la06, la11, la16, la19, la21, la24, abz7, orb01 | la26, la32, la36, swv01, swv11, yn1 |
 | VertexCover | G1, G11, G14, G43, G51 | G22, G32, G35, G48 | G55, G58, G70, G81 |
+| GraphColoring | G1, G11, G14, G43 | G22, G32, G35, G48 | G55, G62, G70 |
+| QAP (QAPLIB) | nug20, tai20a, tai30a | sko42, tai40a, tai60a | sko100a, tai100a |
+| FlowShop (Taillard) | ta001, ta011, ta021 | ta031, ta041, ta051, ta061, ta071, ta081 | ta091, ta101, ta111 |
+| BinPacking (Falkenauer) | t60, u120 (two of each) | t120, t249, u250 (two of each) | t501, u500, u1000 (one of each) |
 | CVRP (CVRPLIB X) | X-n101, X-n139, X-n176, X-n195 | X-n214, X-n303, X-n401 | X-n502, X-n701, X-n1001 |
 
 ## Pipeline & reproduce

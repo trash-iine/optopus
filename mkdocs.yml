@@ -61,8 +61,8 @@ markdown_extensions:
 # the pattern keeps a local build matching what CI publishes.
 exclude_docs: |
   benchmarks/render.py
-  benchmarks/data/*.toml
-  !benchmarks/data/*.slim.toml
+  benchmarks/data/**/*.toml
+  !benchmarks/data/**/*.slim.toml
 
 # rustdoc ships a Markdown font license under `static.files/`, which would
 # otherwise be reported as a page missing from the nav. Nothing under `api/`

@@ -1,4 +1,4 @@
-timestamp = "20260806_091719"
+timestamp = "20261028_060431"
 config_file = "data/benchmarks/maxcut/gset_bls/n10000.toml"
 
 [[results]]
@@ -21,19 +21,19 @@ max_iteration = 2000000000
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 6940.0
-avg_objective = 6934.4
-worst_objective = 6926.0
-std_objective = 3.5552777669262356
-best_time_to_best_secs = 11074.332349583
-avg_time_to_best_secs = 19324.568755112403
-avg_total_time_secs = 28033.4558057959
-avg_initial_objective = -20.6
-avg_improvement = 6955.0
-avg_n_accepted = 1479717933.1
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 2819.0
+best_objective = 6938.0
+avg_objective = 6935.6
+worst_objective = 6932.0
+std_objective = 1.9595917942265426
+best_time_to_best_secs = 4695.689013042
+avg_time_to_best_secs = 9962.833979258501
+avg_total_time_secs = 15312.198635683602
+avg_initial_objective = -67.0
+avg_improvement = 7002.6
+avg_n_accepted = 1470593991.1
+avg_n_rejected = 12594905.1
+avg_acceptance_rate = 0.9915082258567429
+avg_n_best_updates = 2938.9
 
 [[results]]
 problem = "MaxCut"
@@ -55,19 +55,19 @@ max_iteration = 2000000000
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 9583.0
-avg_objective = 9575.9
-worst_objective = 9569.0
-std_objective = 3.961060464067672
-best_time_to_best_secs = 5023.321643584
-avg_time_to_best_secs = 11819.040519433398
-avg_total_time_secs = 19146.756701545797
-avg_initial_objective = 5027.7
-avg_improvement = 4548.2
-avg_n_accepted = 1584936629.3
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 2977.1
+best_objective = 9584.0
+avg_objective = 9576.5
+worst_objective = 9570.0
+std_objective = 5.024937810560445
+best_time_to_best_secs = 5630.051974333
+avg_time_to_best_secs = 9285.277434300002
+avg_total_time_secs = 13938.939949325
+avg_initial_objective = 4995.8
+avg_improvement = 4580.7
+avg_n_accepted = 1571729559.8
+avg_n_rejected = 10189776.4
+avg_acceptance_rate = 0.9935585566547879
+avg_n_best_updates = 3136.0
 
 [[results]]
 problem = "MaxCut"
@@ -90,15 +90,15 @@ max_iteration = 2000000000
 [results.summary]
 num_successful_runs = 10
 best_objective = 6994.0
-avg_objective = 6990.4
-worst_objective = 6988.0
-std_objective = 1.7435595774162693
-best_time_to_best_secs = 9201.281521875
-avg_time_to_best_secs = 17533.3737896749
-avg_total_time_secs = 27714.5687193666
-avg_initial_objective = 1.2
-avg_improvement = 6989.2
-avg_n_accepted = 1479685551.2
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 2842.4
+avg_objective = 6990.0
+worst_objective = 6986.0
+std_objective = 2.1908902300206643
+best_time_to_best_secs = 2445.435090625
+avg_time_to_best_secs = 7131.766811262501
+avg_total_time_secs = 15294.6792862666
+avg_initial_objective = -1.6
+avg_improvement = 6991.6
+avg_n_accepted = 1470465034.6
+avg_n_rejected = 12599516.4
+avg_acceptance_rate = 0.9915044045630808
+avg_n_best_updates = 2924.1

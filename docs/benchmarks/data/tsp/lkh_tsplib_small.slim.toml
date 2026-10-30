@@ -1,4 +1,4 @@
-timestamp = "20260716_061026"
+timestamp = "20261017_143552"
 config_file = "data/benchmarks/tsp/lkh_small.toml"
 
 [[results]]
@@ -19,15 +19,15 @@ best_objective = 3323.0
 avg_objective = 3323.0
 worst_objective = 3323.0
 std_objective = 0.0
-best_time_to_best_secs = 0.000162375
-avg_time_to_best_secs = 0.0003349793
-avg_total_time_secs = 0.0004197042
-avg_initial_objective = 6818.8
-avg_improvement = 3495.8
+best_time_to_best_secs = 0.000237417
+avg_time_to_best_secs = 0.000532329
+avg_total_time_secs = 0.0006750210000000001
+avg_initial_objective = 6398.6
+avg_improvement = 3075.6
 avg_n_accepted = 0.0
 avg_n_rejected = 1.0
 avg_acceptance_rate = 0.0
-avg_n_best_updates = 13.9
+avg_n_best_updates = 15.0
 
 [[results]]
 problem = "Tsp"
@@ -44,18 +44,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 426.0
-avg_objective = 429.0
-worst_objective = 435.0
-std_objective = 2.4899799195977463
-best_time_to_best_secs = 0.000530792
-avg_time_to_best_secs = 0.0008840041999999999
-avg_total_time_secs = 0.0009334666
-avg_initial_objective = 1646.9
-avg_improvement = 1217.9
+avg_objective = 428.1
+worst_objective = 431.0
+std_objective = 1.7578395831246947
+best_time_to_best_secs = 0.000589166
+avg_time_to_best_secs = 0.0013069123000000002
+avg_total_time_secs = 0.0013735832
+avg_initial_objective = 1710.3
+avg_improvement = 1282.2
 avg_n_accepted = 0.0
 avg_n_rejected = 1.0
 avg_acceptance_rate = 0.0
-avg_n_best_updates = 49.1
+avg_n_best_updates = 50.8
 
 [[results]]
 problem = "Tsp"
@@ -72,18 +72,18 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 10628.0
-avg_objective = 10680.8
-worst_objective = 10764.0
-std_objective = 57.59479143117023
-best_time_to_best_secs = 0.002095791
-avg_time_to_best_secs = 0.004041283299999999
-avg_total_time_secs = 0.004332958100000001
-avg_initial_objective = 49935.4
-avg_improvement = 39254.6
+avg_objective = 10684.5
+worst_objective = 10811.0
+std_objective = 70.93694383041885
+best_time_to_best_secs = 0.002895458
+avg_time_to_best_secs = 0.0061393209
+avg_total_time_secs = 0.006657908400000001
+avg_initial_objective = 49615.2
+avg_improvement = 38930.7
 avg_n_accepted = 0.0
 avg_n_rejected = 1.0
 avg_acceptance_rate = 0.0
-avg_n_best_updates = 59.5
+avg_n_best_updates = 60.5
 
 [[results]]
 problem = "Tsp"
@@ -100,15 +100,15 @@ max_duration_secs = 30.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 7542.0
-avg_objective = 7565.3
-worst_objective = 7775.0
-std_objective = 69.9
-best_time_to_best_secs = 0.005154667
-avg_time_to_best_secs = 0.0111503753
-avg_total_time_secs = 0.01182445
-avg_initial_objective = 29482.3
-avg_improvement = 21917.0
+avg_objective = 7630.2
+worst_objective = 7958.0
+std_objective = 142.7731067113131
+best_time_to_best_secs = 0.006699917
+avg_time_to_best_secs = 0.013746487500000001
+avg_total_time_secs = 0.014699133100000001
+avg_initial_objective = 29486.9
+avg_improvement = 21856.7
 avg_n_accepted = 0.0
 avg_n_rejected = 1.0
 avg_acceptance_rate = 0.0
-avg_n_best_updates = 81.0
+avg_n_best_updates = 68.0

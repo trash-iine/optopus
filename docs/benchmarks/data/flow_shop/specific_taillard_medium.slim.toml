@@ -1,0 +1,518 @@
+timestamp = "20261018_165122"
+config_file = "data/benchmarks/flow_shop/specific_medium.toml"
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta031.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2724.0
+avg_objective = 2724.0
+worst_objective = 2724.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000172792
+avg_time_to_best_secs = 0.0044667875000000004
+avg_total_time_secs = 120.00003892510001
+avg_initial_objective = 3170.8
+avg_improvement = 446.8
+avg_n_accepted = 1981106.4
+avg_n_rejected = 138021.0
+avg_acceptance_rate = 0.9348695025830935
+avg_n_best_updates = 2.5
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta031.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2724.0
+avg_objective = 2724.0
+worst_objective = 2724.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000353875
+avg_time_to_best_secs = 0.0017769957
+avg_total_time_secs = 120.00002752089999
+avg_initial_objective = 3170.8
+avg_improvement = 446.8
+avg_n_accepted = 1470038.0
+avg_n_rejected = 191319.8
+avg_acceptance_rate = 0.8848408538341126
+avg_n_best_updates = 3.1
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta031.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2724.0
+avg_objective = 2724.0
+worst_objective = 2724.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000509917
+avg_time_to_best_secs = 0.0030943791
+avg_total_time_secs = 120.00009227080002
+avg_initial_objective = 3170.8
+avg_improvement = 446.8
+avg_n_accepted = 1281209.0
+avg_n_rejected = 408539.3
+avg_acceptance_rate = 0.7582254027785661
+avg_n_best_updates = 909358.4
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta041.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3013.0
+avg_objective = 3019.8
+worst_objective = 3023.0
+std_objective = 4.044749683231337
+best_time_to_best_secs = 2.768647542
+avg_time_to_best_secs = 42.3008349875
+avg_total_time_secs = 120.0000682542
+avg_initial_objective = 3821.3
+avg_improvement = 801.5
+avg_n_accepted = 510783.8
+avg_n_rejected = 379580.6
+avg_acceptance_rate = 0.573683798153793
+avg_n_best_updates = 18.7
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta041.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3002.0
+avg_objective = 3012.8
+worst_objective = 3025.0
+std_objective = 5.2497618993626745
+best_time_to_best_secs = 1.4166495000000001
+avg_time_to_best_secs = 42.707144308400004
+avg_total_time_secs = 120.00012409159999
+avg_initial_objective = 3821.3
+avg_improvement = 808.5
+avg_n_accepted = 66593.2
+avg_n_rejected = 562771.9
+avg_acceptance_rate = 0.10583141833428018
+avg_n_best_updates = 20.6
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta041.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3025.0
+avg_objective = 3028.3
+worst_objective = 3033.0
+std_objective = 3.195309061734091
+best_time_to_best_secs = 8.0015415
+avg_time_to_best_secs = 55.3578209752
+avg_total_time_secs = 120.00029038789998
+avg_initial_objective = 3821.3
+avg_improvement = 793.0
+avg_n_accepted = 1135394.1
+avg_n_rejected = 155545.7
+avg_acceptance_rate = 0.8795096366176587
+avg_n_best_updates = 986864.6
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta051.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3855.0
+avg_objective = 3861.5
+worst_objective = 3893.0
+std_objective = 10.660675400742676
+best_time_to_best_secs = 0.375665583
+avg_time_to_best_secs = 50.150744245700004
+avg_total_time_secs = 120.00013515410001
+avg_initial_objective = 4842.1
+avg_improvement = 980.6
+avg_n_accepted = 289325.2
+avg_n_rejected = 239704.1
+avg_acceptance_rate = 0.5463872426041421
+avg_n_best_updates = 36.6
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta051.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3864.0
+avg_objective = 3878.8
+worst_objective = 3893.0
+std_objective = 11.025425161870176
+best_time_to_best_secs = 2.8480104170000002
+avg_time_to_best_secs = 44.5364909041
+avg_total_time_secs = 120.0001277501
+avg_initial_objective = 4842.1
+avg_improvement = 963.3
+avg_n_accepted = 59316.8
+avg_n_rejected = 306050.4
+avg_acceptance_rate = 0.15898779054382442
+avg_n_best_updates = 22.9
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta051.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3914.0
+avg_objective = 3919.2
+worst_objective = 3925.0
+std_objective = 4.1424630354415966
+best_time_to_best_secs = 9.19224125
+avg_time_to_best_secs = 68.6471017211
+avg_total_time_secs = 120.00050345420001
+avg_initial_objective = 4842.1
+avg_improvement = 922.9
+avg_n_accepted = 727004.4
+avg_n_rejected = 74621.2
+avg_acceptance_rate = 0.9069127138701022
+avg_n_best_updates = 654505.5
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta061.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5493.0
+avg_objective = 5493.0
+worst_objective = 5493.0
+std_objective = 0.0
+best_time_to_best_secs = 0.00058475
+avg_time_to_best_secs = 0.0017394666
+avg_total_time_secs = 120.00008515000002
+avg_initial_objective = 6113.9
+avg_improvement = 620.9
+avg_n_accepted = 607397.2
+avg_n_rejected = 25003.9
+avg_acceptance_rate = 0.9604606574966231
+avg_n_best_updates = 2.7
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta061.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5493.0
+avg_objective = 5493.0
+worst_objective = 5493.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000523333
+avg_time_to_best_secs = 0.0033321583
+avg_total_time_secs = 120.00008171249999
+avg_initial_objective = 6113.9
+avg_improvement = 620.9
+avg_n_accepted = 258632.7
+avg_n_rejected = 129788.7
+avg_acceptance_rate = 0.6658572874470027
+avg_n_best_updates = 2.3
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta061.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5493.0
+avg_objective = 5493.0
+worst_objective = 5493.0
+std_objective = 0.0
+best_time_to_best_secs = 0.004337208
+avg_time_to_best_secs = 0.012356250000000001
+avg_total_time_secs = 120.0005236747
+avg_initial_objective = 6113.9
+avg_improvement = 620.9
+avg_n_accepted = 234824.9
+avg_n_rejected = 72581.9
+avg_acceptance_rate = 0.763889926930019
+avg_n_best_updates = 178512.1
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta071.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5770.0
+avg_objective = 5770.0
+worst_objective = 5770.0
+std_objective = 0.0
+best_time_to_best_secs = 0.271874458
+avg_time_to_best_secs = 1.8210069623999998
+avg_total_time_secs = 120.00021527919998
+avg_initial_objective = 6964.7
+avg_improvement = 1194.7
+avg_n_accepted = 189312.3
+avg_n_rejected = 63397.8
+avg_acceptance_rate = 0.7491446592156625
+avg_n_best_updates = 16.0
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta071.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5770.0
+avg_objective = 5770.0
+worst_objective = 5770.0
+std_objective = 0.0
+best_time_to_best_secs = 5.833168375
+avg_time_to_best_secs = 8.197222575
+avg_total_time_secs = 120.00022665409999
+avg_initial_objective = 6964.7
+avg_improvement = 1194.7
+avg_n_accepted = 47688.7
+avg_n_rejected = 116900.8
+avg_acceptance_rate = 0.2897455305063898
+avg_n_best_updates = 15.2
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta071.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 5770.0
+avg_objective = 5771.5
+worst_objective = 5774.0
+std_objective = 1.284523257866513
+best_time_to_best_secs = 6.396463083
+avg_time_to_best_secs = 59.3839766125
+avg_total_time_secs = 120.00154191669999
+avg_initial_objective = 6964.7
+avg_improvement = 1193.2
+avg_n_accepted = 217655.1
+avg_n_rejected = 30017.0
+avg_acceptance_rate = 0.8788021999841445
+avg_n_best_updates = 189153.6
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta081.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6227.0
+avg_objective = 6236.4
+worst_objective = 6245.0
+std_objective = 6.560487786742691
+best_time_to_best_secs = 5.452937042
+avg_time_to_best_secs = 64.7480178292
+avg_total_time_secs = 120.00062787940001
+avg_initial_objective = 7832.6
+avg_improvement = 1596.2
+avg_n_accepted = 64154.3
+avg_n_rejected = 66812.4
+avg_acceptance_rate = 0.48976997103934733
+avg_n_best_updates = 61.4
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta081.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6258.0
+avg_objective = 6269.3
+worst_objective = 6291.0
+std_objective = 8.485870609430716
+best_time_to_best_secs = 33.315088417
+avg_time_to_best_secs = 76.0241370417
+avg_total_time_secs = 120.00081195399999
+avg_initial_objective = 7832.6
+avg_improvement = 1563.3
+avg_n_accepted = 6399.1
+avg_n_rejected = 69247.9
+avg_acceptance_rate = 0.08461698185535813
+avg_n_best_updates = 32.1
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta081.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 120.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 6351.0
+avg_objective = 6369.5
+worst_objective = 6383.0
+std_objective = 9.069178573608527
+best_time_to_best_secs = 1.38428525
+avg_time_to_best_secs = 40.10730223329999
+avg_total_time_secs = 120.0034265999
+avg_initial_objective = 7832.6
+avg_improvement = 1463.1
+avg_n_accepted = 158846.0
+avg_n_rejected = 13069.1
+avg_acceptance_rate = 0.923979612766628
+avg_n_best_updates = 146273.1

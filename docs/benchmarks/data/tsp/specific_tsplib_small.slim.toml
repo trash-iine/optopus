@@ -1,0 +1,234 @@
+timestamp = "20261017_143922"
+config_file = "data/benchmarks/tsp/specific_small.toml"
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 1.8334e-05
+avg_time_to_best_secs = 4.67169e-05
+avg_total_time_secs = 30.0000061292
+avg_initial_objective = 6398.6
+avg_improvement = 3075.6
+avg_n_accepted = 4961340.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1.9
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/burma14.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "TwoOpt", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 3323.0
+avg_objective = 3323.0
+worst_objective = 3323.0
+std_objective = 0.0
+best_time_to_best_secs = 4.25e-05
+avg_time_to_best_secs = 0.00012940829999999999
+avg_total_time_secs = 30.0000013584
+avg_initial_objective = 6398.6
+avg_improvement = 3075.6
+avg_n_accepted = 20968010.0
+avg_n_rejected = 6909721.6
+avg_acceptance_rate = 0.7521418036382979
+avg_n_best_updates = 14295075.6
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.0
+worst_objective = 426.0
+std_objective = 0.0
+best_time_to_best_secs = 0.01597975
+avg_time_to_best_secs = 0.054552225100000004
+avg_total_time_secs = 30.000012345800002
+avg_initial_objective = 1710.3
+avg_improvement = 1284.3
+avg_n_accepted = 1538665.9
+avg_n_rejected = 147517.9
+avg_acceptance_rate = 0.9132067343310709
+avg_n_best_updates = 8.8
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/eil51.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "TwoOpt", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 426.0
+avg_objective = 426.6
+worst_objective = 428.0
+std_objective = 0.66332495807108
+best_time_to_best_secs = 0.146698208
+avg_time_to_best_secs = 9.4254721874
+avg_total_time_secs = 30.000035991600004
+avg_initial_objective = 1710.3
+avg_improvement = 1283.7
+avg_n_accepted = 1438708.2
+avg_n_rejected = 268068.7
+avg_acceptance_rate = 0.8429379388287253
+avg_n_best_updates = 1194013.9
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10628.0
+avg_objective = 10628.0
+worst_objective = 10628.0
+std_objective = 0.0
+best_time_to_best_secs = 0.007699167
+avg_time_to_best_secs = 0.06893557510000001
+avg_total_time_secs = 30.000006391500005
+avg_initial_objective = 49615.2
+avg_improvement = 38987.2
+avg_n_accepted = 2039312.7
+avg_n_rejected = 194032.8
+avg_acceptance_rate = 0.9127238808853774
+avg_n_best_updates = 7.7
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/att48.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "TwoOpt", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 10628.0
+avg_objective = 10628.0
+worst_objective = 10628.0
+std_objective = 0.0
+best_time_to_best_secs = 0.003931708
+avg_time_to_best_secs = 0.103305325
+avg_total_time_secs = 30.0000505708
+avg_initial_objective = 49615.2
+avg_improvement = 38987.2
+avg_n_accepted = 1695616.1
+avg_n_rejected = 310032.8
+avg_acceptance_rate = 0.845419981330618
+avg_n_best_updates = 1414728.2
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7565.3
+worst_objective = 7775.0
+std_objective = 69.89999999999999
+best_time_to_best_secs = 0.000211083
+avg_time_to_best_secs = 0.013691816700000003
+avg_total_time_secs = 30.0000070623
+avg_initial_objective = 29486.9
+avg_improvement = 21921.6
+avg_n_accepted = 1834979.7
+avg_n_rejected = 8956.9
+avg_acceptance_rate = 0.9951487252884228
+avg_n_best_updates = 9.3
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/berlin52.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "TwoOpt", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 7542.0
+avg_objective = 7542.0
+worst_objective = 7542.0
+std_objective = 0.0
+best_time_to_best_secs = 0.001385375
+avg_time_to_best_secs = 0.04776161250000001
+avg_total_time_secs = 30.000041020700003
+avg_initial_objective = 29486.9
+avg_improvement = 21944.9
+avg_n_accepted = 1704696.4
+avg_n_rejected = 231596.2
+avg_acceptance_rate = 0.8803919376465638
+avg_n_best_updates = 1489129.7

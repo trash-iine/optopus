@@ -1,0 +1,234 @@
+timestamp = "20261018_053506"
+config_file = "data/benchmarks/bin_packing/specific_small.toml"
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 48.0
+avg_objective = 48.0
+worst_objective = 48.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000824625
+avg_time_to_best_secs = 0.0017778874
+avg_total_time_secs = 30.0000077959
+avg_initial_objective = 51.1
+avg_improvement = 3.1
+avg_n_accepted = 918288.4
+avg_n_rejected = 460091.5
+avg_acceptance_rate = 0.666692122281358
+avg_n_best_updates = 54.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 6.35e-05
+avg_time_to_best_secs = 0.0011250291
+avg_total_time_secs = 30.000109320900002
+avg_initial_objective = 51.1
+avg_improvement = 2.1
+avg_n_accepted = 1300145.5
+avg_n_rejected = 81310.1
+avg_acceptance_rate = 0.941141499205074
+avg_n_best_updates = 1219242.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 0.00071375
+avg_time_to_best_secs = 0.0013801792000000001
+avg_total_time_secs = 30.000021829199994
+avg_initial_objective = 51.7
+avg_improvement = 2.7
+avg_n_accepted = 500751.3
+avg_n_rejected = 879711.1
+avg_acceptance_rate = 0.36286753182087333
+avg_n_best_updates = 78.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.4
+worst_objective = 50.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 2.7125e-05
+avg_time_to_best_secs = 11.089608491800002
+avg_total_time_secs = 30.0004190167
+avg_initial_objective = 51.7
+avg_improvement = 2.3
+avg_n_accepted = 1058828.8
+avg_n_rejected = 86646.2
+avg_acceptance_rate = 0.924357698386674
+avg_n_best_updates = 972987.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000376042
+avg_time_to_best_secs = 0.0010655124000000001
+avg_total_time_secs = 30.0000029164
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 4644689.6
+avg_n_rejected = 1991959.5
+avg_acceptance_rate = 0.7004278615836179
+avg_n_best_updates = 54.9
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.5
+worst_objective = 23.0
+std_objective = 0.5
+best_time_to_best_secs = 4.125e-06
+avg_time_to_best_secs = 9.630000000000001e-05
+avg_total_time_secs = 30.000018074900005
+avg_initial_objective = 22.6
+avg_improvement = 0.1
+avg_n_accepted = 949082.6
+avg_n_rejected = 669069.4
+avg_acceptance_rate = 0.5865224107232384
+avg_n_best_updates = 584314.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000206417
+avg_time_to_best_secs = 0.0007335167
+avg_total_time_secs = 30.000002058400003
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 5365034.5
+avg_n_rejected = 1229818.5
+avg_acceptance_rate = 0.8133279096782315
+avg_n_best_updates = 51.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.5
+worst_objective = 23.0
+std_objective = 0.5
+best_time_to_best_secs = 3.167e-06
+avg_time_to_best_secs = 0.000204229
+avg_total_time_secs = 30.000020228999993
+avg_initial_objective = 22.6
+avg_improvement = 0.1
+avg_n_accepted = 687691.3
+avg_n_rejected = 687690.0
+avg_acceptance_rate = 0.5000004744421236
+avg_n_best_updates = 343853.3

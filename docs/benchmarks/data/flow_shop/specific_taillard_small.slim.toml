@@ -1,0 +1,260 @@
+timestamp = "20261017_162051"
+config_file = "data/benchmarks/flow_shop/specific_small.toml"
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta001.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1278.0
+avg_objective = 1278.0
+worst_objective = 1278.0
+std_objective = 0.0
+best_time_to_best_secs = 8.2458e-05
+avg_time_to_best_secs = 0.0006421582000000001
+avg_total_time_secs = 30.000007291499998
+avg_initial_objective = 1546.3
+avg_improvement = 268.3
+avg_n_accepted = 1629778.1
+avg_n_rejected = 799915.8
+avg_acceptance_rate = 0.6707844106670038
+avg_n_best_updates = 3.1
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta001.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1278.0
+avg_objective = 1278.0
+worst_objective = 1278.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000861
+avg_time_to_best_secs = 0.0039768749999999995
+avg_total_time_secs = 30.000007308500006
+avg_initial_objective = 1546.3
+avg_improvement = 268.3
+avg_n_accepted = 2338027.8
+avg_n_rejected = 454584.4
+avg_acceptance_rate = 0.8372225150957122
+avg_n_best_updates = 3.4
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta001.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1278.0
+avg_objective = 1278.0
+worst_objective = 1278.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000233375
+avg_time_to_best_secs = 0.0021864252
+avg_total_time_secs = 30.000014921000002
+avg_initial_objective = 1546.3
+avg_improvement = 268.3
+avg_n_accepted = 1931037.3
+avg_n_rejected = 1103246.5
+avg_acceptance_rate = 0.6364062346813056
+avg_n_best_updates = 1021361.0
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta011.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1582.0
+avg_objective = 1582.0
+worst_objective = 1582.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000488417
+avg_time_to_best_secs = 0.008613237299999998
+avg_total_time_secs = 30.0000170541
+avg_initial_objective = 2031.3
+avg_improvement = 449.3
+avg_n_accepted = 946092.1
+avg_n_rejected = 502897.2
+avg_acceptance_rate = 0.6529321304546534
+avg_n_best_updates = 8.0
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta011.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1582.0
+avg_objective = 1582.0
+worst_objective = 1582.0
+std_objective = 0.0
+best_time_to_best_secs = 0.0015945
+avg_time_to_best_secs = 0.0373844831
+avg_total_time_secs = 30.000009762500003
+avg_initial_objective = 2031.3
+avg_improvement = 449.3
+avg_n_accepted = 1169313.7
+avg_n_rejected = 492033.8
+avg_acceptance_rate = 0.7038338324043092
+avg_n_best_updates = 8.7
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta011.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 1582.0
+avg_objective = 1582.0
+worst_objective = 1582.0
+std_objective = 0.0
+best_time_to_best_secs = 0.019380667
+avg_time_to_best_secs = 0.10925987499999998
+avg_total_time_secs = 30.000018258399997
+avg_initial_objective = 2031.3
+avg_improvement = 449.3
+avg_n_accepted = 1827517.1
+avg_n_rejected = 397183.6
+avg_acceptance_rate = 0.8214662474254176
+avg_n_best_updates = 1457876.5
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta021.txt"
+
+[results.heuristic]
+kind = "IteratedGreedy"
+removal_count = 4
+temperature_factor = 0.4
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2297.0
+avg_objective = 2297.0
+worst_objective = 2297.0
+std_objective = 0.0
+best_time_to_best_secs = 0.010746792
+avg_time_to_best_secs = 0.06598647910000001
+avg_total_time_secs = 30.0000148334
+avg_initial_objective = 2770.7
+avg_improvement = 473.7
+avg_n_accepted = 524145.6
+avg_n_rejected = 314838.4
+avg_acceptance_rate = 0.6247391014912493
+avg_n_best_updates = 10.7
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta021.txt"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2297.0
+avg_objective = 2297.0
+worst_objective = 2297.0
+std_objective = 0.0
+best_time_to_best_secs = 0.023105
+avg_time_to_best_secs = 0.09806308350000001
+avg_total_time_secs = 30.0000184374
+avg_initial_objective = 2770.7
+avg_improvement = 473.7
+avg_n_accepted = 925516.8
+avg_n_rejected = 122562.9
+avg_acceptance_rate = 0.8831011494361297
+avg_n_best_updates = 14.7
+
+[[results]]
+problem = "FlowShop"
+instance_path = "data/instances/flow_shop/taillard/ta021.txt"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 2297.0
+avg_objective = 2297.0
+worst_objective = 2297.0
+std_objective = 0.0
+best_time_to_best_secs = 0.00902575
+avg_time_to_best_secs = 1.3207649708
+avg_total_time_secs = 30.000037029099996
+avg_initial_objective = 2770.7
+avg_improvement = 473.7
+avg_n_accepted = 1205206.2
+avg_n_rejected = 185188.4
+avg_acceptance_rate = 0.8668086571011454
+avg_n_best_updates = 1021102.4
