@@ -1,0 +1,1894 @@
+timestamp = "20261018_051126"
+config_file = "data/benchmarks/bin_packing/general_small.toml"
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.6
+worst_objective = 51.0
+std_objective = 0.66332495807108
+best_time_to_best_secs = 4.2583e-05
+avg_time_to_best_secs = 7.71e-05
+avg_total_time_secs = 0.00010620829999999999
+avg_initial_objective = 51.1
+avg_improvement = 1.5
+avg_n_accepted = 12.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9188196117607882
+avg_n_best_updates = 12.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 51.1
+worst_objective = 52.0
+std_objective = 0.5385164807134504
+best_time_to_best_secs = 3.9041e-05
+avg_time_to_best_secs = 6.02206e-05
+avg_total_time_secs = 0.0015944749000000001
+avg_initial_objective = 51.1
+avg_improvement = -0.0
+avg_n_accepted = 53.3
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9814596749367407
+avg_n_best_updates = 53.3
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 48.0
+avg_objective = 48.0
+worst_objective = 48.0
+std_objective = 0.0
+best_time_to_best_secs = 0.001260042
+avg_time_to_best_secs = 2.3883023875
+avg_total_time_secs = 30.0000041209
+avg_initial_objective = 51.1
+avg_improvement = 3.1
+avg_n_accepted = 6136169.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 113.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 51.1
+worst_objective = 52.0
+std_objective = 0.5385164807134504
+best_time_to_best_secs = 3.4042e-05
+avg_time_to_best_secs = 4.90084e-05
+avg_total_time_secs = 30.0000223124
+avg_initial_objective = 51.1
+avg_improvement = -0.0
+avg_n_accepted = 1047815.1
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 57.0
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000700958
+avg_time_to_best_secs = 0.0014310417
+avg_total_time_secs = 30.000001008299996
+avg_initial_objective = 51.1
+avg_improvement = 2.1
+avg_n_accepted = 151685.5
+avg_n_rejected = 84465759.8
+avg_acceptance_rate = 0.0016387496172006414
+avg_n_best_updates = 53.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 51.1
+worst_objective = 52.0
+std_objective = 0.5385164807134504
+best_time_to_best_secs = 8.33e-07
+avg_time_to_best_secs = 4.1292e-06
+avg_total_time_secs = 30.000005278899998
+avg_initial_objective = 51.1
+avg_improvement = -0.0
+avg_n_accepted = 4479117.0
+avg_n_rejected = 263532642.4
+avg_acceptance_rate = 0.01677364629046487
+avg_n_best_updates = 202.2
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 10.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 48.0
+avg_objective = 48.9
+worst_objective = 49.0
+std_objective = 0.29999999999999993
+best_time_to_best_secs = 0.002460416
+avg_time_to_best_secs = 0.0052128791
+avg_total_time_secs = 3.9555633667000003
+avg_initial_objective = 51.1
+avg_improvement = 2.2
+avg_n_accepted = 26063.5
+avg_n_rejected = 9973936.5
+avg_acceptance_rate = 0.00260635
+avg_n_best_updates = 58.1
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 10.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 51.1
+worst_objective = 52.0
+std_objective = 0.5385164807134504
+best_time_to_best_secs = 1.291e-06
+avg_time_to_best_secs = 3.3455999999999998e-06
+avg_total_time_secs = 1.1462250582000002
+avg_initial_objective = 51.1
+avg_improvement = -0.0
+avg_n_accepted = 189874.0
+avg_n_rejected = 9810126.0
+avg_acceptance_rate = 0.018987399999999998
+avg_n_best_updates = 247.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Group"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 48.0
+avg_objective = 48.0
+worst_objective = 48.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000862583
+avg_time_to_best_secs = 0.0024241916
+avg_total_time_secs = 30.000466766700004
+avg_initial_objective = 51.1
+avg_improvement = 3.1
+avg_n_accepted = 5548484.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 5971.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 48.0
+avg_objective = 48.0
+worst_objective = 48.0
+std_objective = 0.0
+best_time_to_best_secs = 0.051680208
+avg_time_to_best_secs = 0.22588079160000002
+avg_total_time_secs = 30.000126991500004
+avg_initial_objective = 51.1
+avg_improvement = 3.1
+avg_n_accepted = 21761510.7
+avg_n_rejected = 997295.5
+avg_acceptance_rate = 0.9561797881135323
+avg_n_best_updates = 2794947.5
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 48.0
+avg_objective = 48.0
+worst_objective = 48.0
+std_objective = 0.0
+best_time_to_best_secs = 0.001545917
+avg_time_to_best_secs = 0.0093614541
+avg_total_time_secs = 30.101425187500002
+avg_initial_objective = 51.1
+avg_improvement = 3.1
+avg_n_accepted = 6120000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 9348.9
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 48.0
+avg_objective = 48.0
+worst_objective = 48.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000997875
+avg_time_to_best_secs = 0.0033769916999999996
+avg_total_time_secs = 30.000046662400003
+avg_initial_objective = 51.1
+avg_improvement = 3.1
+avg_n_accepted = 7767888.4
+avg_n_rejected = 375421.3
+avg_acceptance_rate = 0.9538978106118566
+avg_n_best_updates = 3388372.0
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Relocate"
+population_size = 20
+initial_beta = 0.1
+delta_beta = 0.01225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 50.9
+worst_objective = 51.0
+std_objective = 0.29999999999999993
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 6.3299359292
+avg_total_time_secs = 30.011366108299995
+avg_initial_objective = 51.1
+avg_improvement = 0.2
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 1.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Relocate"
+num_replicas = 20
+beta_min = 0.1
+beta_max = 5.0
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 50.3
+worst_objective = 51.0
+std_objective = 0.45825756949558394
+best_time_to_best_secs = 0.000666625
+avg_time_to_best_secs = 7.9109709958
+avg_total_time_secs = 30.000177745599995
+avg_initial_objective = 51.1
+avg_improvement = 0.8
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 6.3
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_00.txt"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 48.0
+avg_objective = 48.0
+worst_objective = 48.0
+std_objective = 0.0
+best_time_to_best_secs = 0.1246195
+avg_time_to_best_secs = 0.17840961249999995
+avg_total_time_secs = 30.000008691699996
+avg_initial_objective = 51.1
+avg_improvement = 3.1
+avg_n_accepted = 3132003.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 73.5
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 50.3
+worst_objective = 51.0
+std_objective = 0.45825756949558394
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 5.61249e-05
+avg_total_time_secs = 7.47541e-05
+avg_initial_objective = 51.7
+avg_improvement = 1.4
+avg_n_accepted = 9.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.78125
+avg_n_best_updates = 9.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 51.0
+avg_objective = 51.7
+worst_objective = 53.0
+std_objective = 0.9
+best_time_to_best_secs = 3.4208e-05
+avg_time_to_best_secs = 6.283749999999998e-05
+avg_total_time_secs = 0.0016722416999999997
+avg_initial_objective = 51.7
+avg_improvement = -0.0
+avg_n_accepted = 54.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9819135278508689
+avg_n_best_updates = 54.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000646291
+avg_time_to_best_secs = 0.010034416600000002
+avg_total_time_secs = 30.000003183399997
+avg_initial_objective = 51.7
+avg_improvement = 2.7
+avg_n_accepted = 5823048.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 118.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 51.0
+avg_objective = 51.7
+worst_objective = 53.0
+std_objective = 0.9
+best_time_to_best_secs = 3.1625e-05
+avg_time_to_best_secs = 5.05708e-05
+avg_total_time_secs = 30.000020999999997
+avg_initial_objective = 51.7
+avg_improvement = -0.0
+avg_n_accepted = 1086407.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 63.6
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 50.0
+worst_objective = 51.0
+std_objective = 0.6324555320336759
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 0.0011692623
+avg_total_time_secs = 30.000002208100007
+avg_initial_objective = 51.7
+avg_improvement = 1.7
+avg_n_accepted = 70126.6
+avg_n_rejected = 71071249.1
+avg_acceptance_rate = 0.0009191437913640882
+avg_n_best_updates = 34.5
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 51.0
+avg_objective = 51.7
+worst_objective = 53.0
+std_objective = 0.9
+best_time_to_best_secs = 1.958e-06
+avg_time_to_best_secs = 5.366399999999999e-06
+avg_total_time_secs = 30.000000933399996
+avg_initial_objective = 51.7
+avg_improvement = -0.0
+avg_n_accepted = 4927246.4
+avg_n_rejected = 225512249.2
+avg_acceptance_rate = 0.021480082723726403
+avg_n_best_updates = 220.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 10.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 50.0
+worst_objective = 50.0
+std_objective = 0.0
+best_time_to_best_secs = 0.00239525
+avg_time_to_best_secs = 0.0047008249
+avg_total_time_secs = 3.4576541417
+avg_initial_objective = 51.7
+avg_improvement = 1.7
+avg_n_accepted = 13680.4
+avg_n_rejected = 9986319.6
+avg_acceptance_rate = 0.00136804
+avg_n_best_updates = 42.6
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 10.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 51.0
+avg_objective = 51.7
+worst_objective = 53.0
+std_objective = 0.9
+best_time_to_best_secs = 1.416e-06
+avg_time_to_best_secs = 6.195700000000001e-06
+avg_total_time_secs = 1.2650169666999997
+avg_initial_objective = 51.7
+avg_improvement = -0.0
+avg_n_accepted = 243514.7
+avg_n_rejected = 9756485.3
+avg_acceptance_rate = 0.024351469999999993
+avg_n_best_updates = 289.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Group"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000943542
+avg_time_to_best_secs = 0.0048255793000000005
+avg_total_time_secs = 30.0007021168
+avg_initial_objective = 51.7
+avg_improvement = 2.7
+avg_n_accepted = 5679001.5
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2127.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 0.002874458
+avg_time_to_best_secs = 0.046499241499999996
+avg_total_time_secs = 30.0001454083
+avg_initial_objective = 51.7
+avg_improvement = 2.7
+avg_n_accepted = 22570228.6
+avg_n_rejected = 1043438.2
+avg_acceptance_rate = 0.9558120749762663
+avg_n_best_updates = 2725547.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 0.00149
+avg_time_to_best_secs = 0.0190337002
+avg_total_time_secs = 30.0945367584
+avg_initial_objective = 51.7
+avg_improvement = 2.7
+avg_n_accepted = 5955000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 10663.6
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 0.00048675
+avg_time_to_best_secs = 0.0010712792
+avg_total_time_secs = 30.0000436291
+avg_initial_objective = 51.7
+avg_improvement = 2.7
+avg_n_accepted = 7630126.9
+avg_n_rejected = 365501.0
+avg_acceptance_rate = 0.9542877245895764
+avg_n_best_updates = 3366362.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Relocate"
+population_size = 20
+initial_beta = 0.1
+delta_beta = 0.01225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 51.0
+avg_objective = 51.2
+worst_objective = 52.0
+std_objective = 0.4
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 7.7391313208
+avg_total_time_secs = 30.016230979299998
+avg_initial_objective = 51.7
+avg_improvement = 0.5
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 3.2
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Relocate"
+num_replicas = 20
+beta_min = 0.1
+beta_max = 5.0
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 50.0
+avg_objective = 50.9
+worst_objective = 51.0
+std_objective = 0.2999999999999999
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 6.6798308624
+avg_total_time_secs = 30.000166570699996
+avg_initial_objective = 51.7
+avg_improvement = 0.8
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 5.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/u120_01.txt"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 49.0
+avg_objective = 49.0
+worst_objective = 49.0
+std_objective = 0.0
+best_time_to_best_secs = 0.099038125
+avg_time_to_best_secs = 0.13202245419999997
+avg_total_time_secs = 30.000008033300002
+avg_initial_objective = 51.7
+avg_improvement = 2.7
+avg_n_accepted = 2513747.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 78.3
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.5
+worst_objective = 23.0
+std_objective = 0.5
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 3.4042000000000004e-06
+avg_total_time_secs = 7.933299999999999e-06
+avg_initial_objective = 22.6
+avg_improvement = 0.1
+avg_n_accepted = 1.1
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.37499999999999994
+avg_n_best_updates = 1.1
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.6
+worst_objective = 23.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 1.9375e-05
+avg_time_to_best_secs = 2.7575e-05
+avg_total_time_secs = 0.0003884541
+avg_initial_objective = 22.6
+avg_improvement = -0.0
+avg_n_accepted = 37.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9736047378640637
+avg_n_best_updates = 37.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 2.1042e-05
+avg_time_to_best_secs = 8.269589999999999e-05
+avg_total_time_secs = 30.000001095899997
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 19646925.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 47.0
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.6
+worst_objective = 23.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 1.6e-05
+avg_time_to_best_secs = 2.1587500000000003e-05
+avg_total_time_secs = 30.000003987499998
+avg_initial_objective = 22.6
+avg_improvement = -0.0
+avg_n_accepted = 3953948.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1243.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 22.0
+worst_objective = 23.0
+std_objective = 0.7745966692414834
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 0.0001132708
+avg_total_time_secs = 30.000000408299996
+avg_initial_objective = 22.6
+avg_improvement = 0.6
+avg_n_accepted = 310.0
+avg_n_rejected = 211877091.9
+avg_acceptance_rate = 1.547012867140296e-06
+avg_n_best_updates = 11.6
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.6
+worst_objective = 23.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 7.5e-07
+avg_time_to_best_secs = 4.521e-06
+avg_total_time_secs = 30.0000005419
+avg_initial_objective = 22.6
+avg_improvement = -0.0
+avg_n_accepted = 2806448.9
+avg_n_rejected = 378441446.6
+avg_acceptance_rate = 0.0074108795199984605
+avg_n_best_updates = 116.2
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 10.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.1
+worst_objective = 22.0
+std_objective = 0.3
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 0.0015086916
+avg_total_time_secs = 2.0866336791
+avg_initial_objective = 22.6
+avg_improvement = 1.5
+avg_n_accepted = 9940.3
+avg_n_rejected = 9990059.7
+avg_acceptance_rate = 0.0009940300000000001
+avg_n_best_updates = 16.5
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 10.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.6
+worst_objective = 23.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 1.167e-06
+avg_time_to_best_secs = 3.7040000000000005e-06
+avg_total_time_secs = 0.8239517081999999
+avg_initial_objective = 22.6
+avg_improvement = -0.0
+avg_n_accepted = 116759.1
+avg_n_rejected = 9883240.9
+avg_acceptance_rate = 0.011675910000000001
+avg_n_best_updates = 177.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Group"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 20.0
+avg_objective = 20.9
+worst_objective = 21.0
+std_objective = 0.3
+best_time_to_best_secs = 0.000198167
+avg_time_to_best_secs = 2.3450143293
+avg_total_time_secs = 30.000191629199996
+avg_initial_objective = 22.6
+avg_improvement = 1.7
+avg_n_accepted = 17334570.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 4532.5
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000285375
+avg_time_to_best_secs = 0.0015050042000000002
+avg_total_time_secs = 30.000014691699995
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 108952302.1
+avg_n_rejected = 6076987.4
+avg_acceptance_rate = 0.9471701654257376
+avg_n_best_updates = 4358436.9
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 1.2834e-05
+avg_time_to_best_secs = 6.78001e-05
+avg_total_time_secs = 30.0251815125
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 19845000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 14498.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000160917
+avg_time_to_best_secs = 0.0004956999
+avg_total_time_secs = 30.0000148999
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 21870258.8
+avg_n_rejected = 1220987.3
+avg_acceptance_rate = 0.9471236588731438
+avg_n_best_updates = 7626001.0
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Relocate"
+population_size = 20
+initial_beta = 0.1
+delta_beta = 0.01225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 2.158038333
+avg_time_to_best_secs = 5.694870783500001
+avg_total_time_secs = 30.004202321100003
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 10.6
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Relocate"
+num_replicas = 20
+beta_min = 0.1
+beta_max = 5.0
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.0377775
+avg_time_to_best_secs = 0.4195802165
+avg_total_time_secs = 30.0000802373
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 12.9
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_00.txt"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.010820375
+avg_time_to_best_secs = 0.016003783299999998
+avg_total_time_secs = 30.0000036332
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 5368555.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 42.8
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.5
+worst_objective = 23.0
+std_objective = 0.5
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 6.0582e-06
+avg_total_time_secs = 1.0479300000000001e-05
+avg_initial_objective = 22.6
+avg_improvement = 0.1
+avg_n_accepted = 1.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.4916666666666666
+avg_n_best_updates = 1.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.6
+worst_objective = 23.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 2.2041e-05
+avg_time_to_best_secs = 3.01041e-05
+avg_total_time_secs = 0.0004022001
+avg_initial_objective = 22.6
+avg_improvement = -0.0
+avg_n_accepted = 37.2
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9736623809853551
+avg_n_best_updates = 37.2
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 2.0667e-05
+avg_time_to_best_secs = 5.59792e-05
+avg_total_time_secs = 30.000001337700002
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 20241895.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 47.5
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.6
+worst_objective = 23.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 9.916e-06
+avg_time_to_best_secs = 1.6099899999999998e-05
+avg_total_time_secs = 30.000004775
+avg_initial_objective = 22.6
+avg_improvement = -0.0
+avg_n_accepted = 3847272.7
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 44.9
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Relocate"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.6
+worst_objective = 23.0
+std_objective = 0.66332495807108
+best_time_to_best_secs = 0.0
+avg_time_to_best_secs = 0.0001224791
+avg_total_time_secs = 30.000001728999997
+avg_initial_objective = 22.6
+avg_improvement = 1.0
+avg_n_accepted = 476.8
+avg_n_rejected = 207440720.9
+avg_acceptance_rate = 2.0528767553108403e-06
+avg_n_best_updates = 17.0
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 100
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.6
+worst_objective = 23.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 1.709e-06
+avg_time_to_best_secs = 6.258399999999999e-06
+avg_total_time_secs = 30.000000137399997
+avg_initial_objective = 22.6
+avg_improvement = -0.0
+avg_n_accepted = 1134589.8
+avg_n_rejected = 355182847.2
+avg_acceptance_rate = 0.0032333595514553713
+avg_n_best_updates = 138.9
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 10.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.1
+worst_objective = 22.0
+std_objective = 0.3
+best_time_to_best_secs = 0.001070833
+avg_time_to_best_secs = 0.0018134666000000001
+avg_total_time_secs = 2.0101828666
+avg_initial_objective = 22.6
+avg_improvement = 1.5
+avg_n_accepted = 10859.3
+avg_n_rejected = 9989140.7
+avg_acceptance_rate = 0.0010859300000000001
+avg_n_best_updates = 16.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 10.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 10000000
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 22.0
+avg_objective = 22.6
+worst_objective = 23.0
+std_objective = 0.4898979485566356
+best_time_to_best_secs = 7.08e-07
+avg_time_to_best_secs = 5.749900000000001e-06
+avg_total_time_secs = 0.7763940041999999
+avg_initial_objective = 22.6
+avg_improvement = -0.0
+avg_n_accepted = 68368.4
+avg_n_rejected = 9931631.6
+avg_acceptance_rate = 0.006836839999999999
+avg_n_best_updates = 178.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 50
+crossover_kind = "Group"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000189
+avg_time_to_best_secs = 0.0002793002
+avg_total_time_secs = 30.0002281752
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 17013769.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2097.6
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Relocate"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000784792
+avg_time_to_best_secs = 0.0018605251000000003
+avg_total_time_secs = 30.000031945799996
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 107736801.1
+avg_n_rejected = 6002050.6
+avg_acceptance_rate = 0.9472295592057902
+avg_n_best_updates = 4321383.1
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Relocate"
+tabu_tenure = [
+    3,
+    15,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 5000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 2.4459e-05
+avg_time_to_best_secs = 7.203770000000001e-05
+avg_total_time_secs = 30.0384404626
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 20475000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 15724.1
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Relocate", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Relocate", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 6.0625e-05
+avg_time_to_best_secs = 0.0004847418
+avg_total_time_secs = 30.0000978168
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 21650013.4
+avg_n_rejected = 1199744.8
+avg_acceptance_rate = 0.9474940381818442
+avg_n_best_updates = 7653523.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Relocate"
+population_size = 20
+initial_beta = 0.1
+delta_beta = 0.01225
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 1.5204609580000001
+avg_time_to_best_secs = 5.5940796374
+avg_total_time_secs = 30.0036137249
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 10.4
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Relocate"
+num_replicas = 20
+beta_min = 0.1
+beta_max = 5.0
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.020208667
+avg_time_to_best_secs = 0.2958043876
+avg_total_time_secs = 30.000072962499996
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 12.7
+
+[[results]]
+problem = "BinPacking"
+instance_path = "data/instances/bin_packing/falkenauer/t60_01.txt"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Relocate"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 30.0
+
+[results.summary]
+num_successful_runs = 10
+best_objective = 21.0
+avg_objective = 21.0
+worst_objective = 21.0
+std_objective = 0.0
+best_time_to_best_secs = 0.009503916
+avg_time_to_best_secs = 0.016191229
+avg_total_time_secs = 30.000003737299995
+avg_initial_objective = 22.6
+avg_improvement = 1.6
+avg_n_accepted = 5450604.3
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 42.9

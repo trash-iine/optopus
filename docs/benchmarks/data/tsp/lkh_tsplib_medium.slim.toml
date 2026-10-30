@@ -1,4 +1,4 @@
-timestamp = "20260717_143815"
+timestamp = "20261018_062249"
 config_file = "data/benchmarks/tsp/lkh_medium.toml"
 
 [[results]]
@@ -16,18 +16,18 @@ max_duration_secs = 120.0
 [results.summary]
 num_successful_runs = 10
 best_objective = 629.0
-avg_objective = 635.7
-worst_objective = 642.0
-std_objective = 4.001249804748512
-best_time_to_best_secs = 0.002380542
-avg_time_to_best_secs = 0.0052023207
-avg_total_time_secs = 0.005431775200000001
-avg_initial_objective = 3512.8
-avg_improvement = 2877.1
+avg_objective = 635.1
+worst_objective = 643.0
+std_objective = 5.337602458033007
+best_time_to_best_secs = 0.003153625
+avg_time_to_best_secs = 0.006007329400000001
+avg_total_time_secs = 0.0062535083
+avg_initial_objective = 3425.3
+avg_improvement = 2790.2
 avg_n_accepted = 0.0
 avg_n_rejected = 1.0
 avg_acceptance_rate = 0.0
-avg_n_best_updates = 107.2
+avg_n_best_updates = 110.3
 
 [[results]]
 problem = "Tsp"
@@ -43,16 +43,16 @@ max_duration_secs = 120.0
 
 [results.summary]
 num_successful_runs = 10
-best_objective = 6555.0
-avg_objective = 6584.7
-worst_objective = 6646.0
-std_objective = 26.19179260760897
-best_time_to_best_secs = 0.009362708
-avg_time_to_best_secs = 0.0194581873
-avg_total_time_secs = 0.0199077083
-avg_initial_objective = 54051.7
-avg_improvement = 47467.0
+best_objective = 6554.0
+avg_objective = 6582.8
+worst_objective = 6660.0
+std_objective = 34.979422522391644
+best_time_to_best_secs = 0.012736334
+avg_time_to_best_secs = 0.020508954199999995
+avg_total_time_secs = 0.020918154200000004
+avg_initial_objective = 54282.9
+avg_improvement = 47700.1
 avg_n_accepted = 0.0
 avg_n_rejected = 1.0
 avg_acceptance_rate = 0.0
-avg_n_best_updates = 187.0
+avg_n_best_updates = 192.3

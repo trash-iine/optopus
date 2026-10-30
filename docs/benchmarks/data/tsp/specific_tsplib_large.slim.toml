@@ -1,0 +1,60 @@
+timestamp = "20261022_000838"
+config_file = "data/benchmarks/tsp/specific_large.toml"
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/dsj1000.tsp"
+
+[results.heuristic]
+kind = "AdaptiveLargeNeighborhoodSearch"
+removal_fraction = 0.15
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 18851032.0
+avg_objective = 18902725.2
+worst_objective = 18980502.0
+std_objective = 48336.43442125205
+best_time_to_best_secs = 242.29610625
+avg_time_to_best_secs = 411.7437981168
+avg_total_time_secs = 600.0012435666
+avg_initial_objective = 552331173.4
+avg_improvement = 533428448.2
+avg_n_accepted = 171239.6
+avg_n_rejected = 11068.0
+avg_acceptance_rate = 0.9392092649262083
+avg_n_best_updates = 145.0
+
+[[results]]
+problem = "Tsp"
+instance_path = "data/instances/tsp/dsj1000.tsp"
+
+[results.heuristic]
+kind = "Iterated"
+steps = [
+    { kind = "LocalSearch", neighbor = "TwoOpt", stop_condition = {} },
+    { kind = "GreedyRandomizedConstruction", alpha = 0.2, stop_condition = {} },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 19850997.0
+avg_objective = 19925217.6
+worst_objective = 20006321.0
+std_objective = 60098.347543339325
+best_time_to_best_secs = 308.272466417
+avg_time_to_best_secs = 410.90601056699995
+avg_total_time_secs = 600.1726452836
+avg_initial_objective = 552331173.4
+avg_improvement = 532405955.8
+avg_n_accepted = 86099.6
+avg_n_rejected = 1094.6
+avg_acceptance_rate = 0.9874462627739996
+avg_n_best_updates = 85010.2

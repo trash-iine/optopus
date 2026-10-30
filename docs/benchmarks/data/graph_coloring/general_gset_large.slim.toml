@@ -1,0 +1,1421 @@
+timestamp = "20261024_120636"
+config_file = "data/benchmarks/graph_coloring/general_large.toml"
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.071882667
+avg_time_to_best_secs = 0.0802708418
+avg_total_time_secs = 0.080355975
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 609.4
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9983606804405852
+avg_n_best_updates = 609.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 16.360319
+avg_time_to_best_secs = 17.320815708399998
+avg_total_time_secs = 17.350877617
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 305.2
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9967322473688156
+avg_n_best_updates = 305.2
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.165269125
+avg_time_to_best_secs = 0.1729413504
+avg_total_time_secs = 600.0001010002
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 2167249.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 609.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 24.830210625
+avg_time_to_best_secs = 25.9699290166
+avg_total_time_secs = 600.0620898835999
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 8058.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 305.2
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 775171.0
+avg_objective = 781172.2
+worst_objective = 785173.0
+std_objective = 4899.959281463469
+best_time_to_best_secs = 92.858483584
+avg_time_to_best_secs = 301.2569213416
+avg_total_time_secs = 600.0000000916
+avg_initial_objective = 3935803.0
+avg_improvement = 3154630.8
+avg_n_accepted = 11260945615.8
+avg_n_rejected = 3117878009.0
+avg_acceptance_rate = 0.7831596046886047
+avg_n_best_updates = 576.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 830182.0
+avg_objective = 837183.4
+worst_objective = 840184.0
+std_objective = 4000.8
+best_time_to_best_secs = 42.925749167
+avg_time_to_best_secs = 312.2995451752
+avg_total_time_secs = 600.0000000582
+avg_initial_objective = 3935803.0
+avg_improvement = 3098619.6
+avg_n_accepted = 5946127976.4
+avg_n_rejected = 3363736712.0
+avg_acceptance_rate = 0.6386948564516726
+avg_n_best_updates = 530.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 3.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.011669875
+avg_time_to_best_secs = 0.013521066600000001
+avg_total_time_secs = 9.359880083
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 143339072.2
+avg_n_rejected = 56660927.8
+avg_acceptance_rate = 0.716695361
+avg_n_best_updates = 719.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 3.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.011899875
+avg_time_to_best_secs = 0.0128998168
+avg_total_time_secs = 8.314412699799998
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 67864544.0
+avg_n_rejected = 64270912.2
+avg_acceptance_rate = 0.5135983639299317
+avg_n_best_updates = 675.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.184311625
+avg_time_to_best_secs = 0.1899339166
+avg_total_time_secs = 600.0928314748
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 2123705.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1362065.2
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.073725334
+avg_time_to_best_secs = 0.0841630502
+avg_total_time_secs = 600.000050025
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 601893299.8
+avg_n_rejected = 242106953.6
+avg_acceptance_rate = 0.713143502421807
+avg_n_best_updates = 609.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.166360709
+avg_time_to_best_secs = 0.17414497499999998
+avg_total_time_secs = 609.1171498916
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 2200000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 26134.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Flip", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.076775084
+avg_time_to_best_secs = 0.08466508319999999
+avg_total_time_secs = 600.0002822834
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 17920126.8
+avg_n_rejected = 1201437.8
+avg_acceptance_rate = 0.937168475810043
+avg_n_best_updates = 3903361.2
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Flip"
+population_size = 20
+initial_beta = 33.3333
+delta_beta = 4.08333
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 1.8406533330000001
+avg_time_to_best_secs = 1.8718617002000002
+avg_total_time_secs = 600.7381169168
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 1.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Flip"
+num_replicas = 20
+beta_min = 33.3333
+beta_max = 1666.67
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 0.038339834
+avg_time_to_best_secs = 0.03941656720000001
+avg_total_time_secs = 600.0124730588001
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 1.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G55"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 16.0
+avg_objective = 16.0
+worst_objective = 16.0
+std_objective = 0.0
+best_time_to_best_secs = 14.342652042
+avg_time_to_best_secs = 17.538541125200002
+avg_total_time_secs = 600.0016623335999
+avg_initial_objective = 3935803.0
+avg_improvement = 3935787.0
+avg_n_accepted = 254184.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 712.2
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.135658125
+avg_time_to_best_secs = 0.1387844834
+avg_total_time_secs = 0.1388363336
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 1802.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9994454209689583
+avg_n_best_updates = 1802.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 76.00890775
+avg_time_to_best_secs = 78.03394613319999
+avg_total_time_secs = 78.07317019999999
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 903.6
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9988942758844539
+avg_n_best_updates = 903.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.195280792
+avg_time_to_best_secs = 0.198443833
+avg_total_time_secs = 600.0000499664
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 5653059.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1802.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 124.765616375
+avg_time_to_best_secs = 126.79511747500001
+avg_total_time_secs = 600.0472691998
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 4396.6
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 903.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 4942711.0
+avg_objective = 4945511.4
+worst_objective = 4949712.0
+std_objective = 3429.775537845006
+best_time_to_best_secs = 223.034772542
+avg_time_to_best_secs = 384.911108742
+avg_total_time_secs = 600.0000000834
+avg_initial_objective = 19658813.0
+avg_improvement = 14713301.6
+avg_n_accepted = 7404361966.2
+avg_n_rejected = 6789438374.2
+avg_acceptance_rate = 0.5217072155726916
+avg_n_best_updates = 1719.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5096733.0
+avg_objective = 5107934.6
+worst_objective = 5117736.0
+std_objective = 7139.647122932617
+best_time_to_best_secs = 377.076239334
+avg_time_to_best_secs = 463.6614070918
+avg_total_time_secs = 600.000000067
+avg_initial_objective = 19658813.0
+avg_improvement = 14550878.4
+avg_n_accepted = 4044433249.6
+avg_n_rejected = 7969233156.2
+avg_acceptance_rate = 0.3366552100916308
+avg_n_best_updates = 1475.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 3.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.026725875
+avg_time_to_best_secs = 0.028367524999999998
+avg_total_time_secs = 7.7898242581999995
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 70133030.2
+avg_n_rejected = 129866969.8
+avg_acceptance_rate = 0.350665151
+avg_n_best_updates = 2340.2
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 3.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.023947792
+avg_time_to_best_secs = 0.0255626254
+avg_total_time_secs = 7.8145146086000015
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 21930754.0
+avg_n_rejected = 156138492.2
+avg_acceptance_rate = 0.1231585719922268
+avg_n_best_updates = 2069.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.20688275
+avg_time_to_best_secs = 0.20984758340000004
+avg_total_time_secs = 600.0704218001999
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 5510366.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 4587286.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.119479333
+avg_time_to_best_secs = 0.1387018668
+avg_total_time_secs = 600.0000458833999
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 503647337.2
+avg_n_rejected = 939675890.0
+avg_acceptance_rate = 0.3489497863449392
+avg_n_best_updates = 1802.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.193694417
+avg_time_to_best_secs = 0.19795895859999998
+avg_total_time_secs = 603.1496006834
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 5680000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 201408.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Flip", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.123373541
+avg_time_to_best_secs = 0.13780326639999999
+avg_total_time_secs = 600.0002135748
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 21915862.2
+avg_n_rejected = 1125423.0
+avg_acceptance_rate = 0.9511562735332815
+avg_n_best_updates = 8785939.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Flip"
+population_size = 20
+initial_beta = 33.3333
+delta_beta = 4.08333
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.411211917
+avg_time_to_best_secs = 0.42777475039999996
+avg_total_time_secs = 600.142458992
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 1.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Flip"
+num_replicas = 20
+beta_min = 33.3333
+beta_max = 1666.67
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 0.01754675
+avg_time_to_best_secs = 0.0205899332
+avg_total_time_secs = 600.0051288166
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 2.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G62"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 5.0
+avg_objective = 5.0
+worst_objective = 5.0
+std_objective = 0.0
+best_time_to_best_secs = 2.866986125
+avg_time_to_best_secs = 3.0825538752
+avg_total_time_secs = 600.0001999002
+avg_initial_objective = 19658813.0
+avg_improvement = 19658808.0
+avg_n_accepted = 768924.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 2221.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.133349708
+avg_time_to_best_secs = 0.1469430416
+avg_total_time_secs = 0.14706867499999998
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 828.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9987942073216949
+avg_n_best_updates = 828.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "LocalSearch"
+neighbor = "Swap"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 68.322123584
+avg_time_to_best_secs = 70.7236205588
+avg_total_time_secs = 70.8184529252
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 414.8
+avg_n_rejected = 1.0
+avg_acceptance_rate = 0.9975936744072772
+avg_n_best_updates = 414.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.277166833
+avg_time_to_best_secs = 0.28713434179999997
+avg_total_time_secs = 600.0001775838
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 1776872.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 828.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "TabuSearch"
+neighbor = "Swap"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 126.732920792
+avg_time_to_best_secs = 130.90160025839998
+avg_total_time_secs = 600.1262803333999
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 2197.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 414.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Flip"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 2020212.0
+avg_objective = 2028212.8
+worst_objective = 2040214.0
+std_objective = 7484.063105025238
+best_time_to_best_secs = 367.151179875
+avg_time_to_best_secs = 453.1792002
+avg_total_time_secs = 600.0000001082
+avg_initial_objective = 9864996.4
+avg_improvement = 7836783.6
+avg_n_accepted = 11262368453.6
+avg_n_rejected = 2047608385.8
+avg_acceptance_rate = 0.8461635801897339
+avg_n_best_updates = 738.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "LateAcceptanceHillClimbing"
+neighbor = "Swap"
+history_length = 2000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 2170227.0
+avg_objective = 2176227.6
+worst_objective = 2180228.0
+std_objective = 4899.469383514913
+best_time_to_best_secs = 109.191691334
+avg_time_to_best_secs = 383.5378661918
+avg_total_time_secs = 600.0000000918001
+avg_initial_objective = 9864996.4
+avg_improvement = 7688768.8
+avg_n_accepted = 6955849520.0
+avg_n_rejected = 2561389018.4
+avg_acceptance_rate = 0.7308684253180007
+avg_n_best_updates = 693.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 3.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.020543875
+avg_time_to_best_secs = 0.022433633200000004
+avg_total_time_secs = 9.3096758916
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 160114177.2
+avg_n_rejected = 39885822.8
+avg_acceptance_rate = 0.800570886
+avg_n_best_updates = 923.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "SimulatedAnnealing"
+neighbor = "Swap"
+initial_temperature = 3.0
+cooling_rate = 0.9995
+
+[results.heuristic.stop_condition]
+max_iteration = 200000000
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.020536042
+avg_time_to_best_secs = 0.0222024416
+avg_total_time_secs = 8.163542658199999
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 78117626.4
+avg_n_rejected = 43764747.6
+avg_acceptance_rate = 0.6409263663737871
+avg_n_best_updates = 892.6
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "GeneticAlgorithm"
+population_size = 200
+crossover_kind = "Uniform"
+parent_selection = "Tournament"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.31015225
+avg_time_to_best_secs = 0.3189506334
+avg_total_time_secs = 600.1179708668
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 1745068.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 1218548.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "Iterated"
+
+[[results.heuristic.steps]]
+kind = "LocalSearch"
+neighbor = "Flip"
+
+[results.heuristic.steps.stop_condition]
+max_failed_update = 1
+
+[[results.heuristic.steps]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 5.0
+cooling_rate = 0.99
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 200
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.139786458
+avg_time_to_best_secs = 0.1465632748
+avg_total_time_secs = 600.0000801829999
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 502806068.4
+avg_n_rejected = 128390438.4
+avg_acceptance_rate = 0.7965919719189658
+avg_n_best_updates = 828.8
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "Restart"
+
+[[results.heuristic.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [
+    3,
+    500,
+]
+
+[results.heuristic.steps.stop_condition]
+max_iteration = 50000
+
+[results.heuristic.restart_condition]
+max_failed_update = 50000
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.278121875
+avg_time_to_best_secs = 0.287466025
+avg_total_time_secs = 608.0674327
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 1800000.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 29317.4
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "VariableNeighborhoodSearch"
+steps = [
+    { kind = "LocalSearch", neighbor = "Flip", stop_condition = { max_failed_update = 1 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 5 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 10 } },
+    { kind = "RandomWalk", neighbor = "Flip", stop_condition = { max_iteration = 20 } },
+]
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.136196792
+avg_time_to_best_secs = 0.1462682252
+avg_total_time_secs = 600.0002669336
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 15474003.8
+avg_n_rejected = 1106800.6
+avg_acceptance_rate = 0.9332480783617854
+avg_n_best_updates = 2561345.2
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "PopulationAnnealing"
+neighbor = "Flip"
+population_size = 20
+initial_beta = 33.3333
+delta_beta = 4.08333
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 1.87943375
+avg_time_to_best_secs = 1.9993023836
+avg_total_time_secs = 600.5493454333999
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 1.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "ParallelTempering"
+neighbor = "Flip"
+num_replicas = 20
+beta_min = 33.3333
+beta_max = 1666.67
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 0.040801375
+avg_time_to_best_secs = 0.042706875
+avg_total_time_secs = 600.0191959916
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 0.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 0.0
+avg_n_best_updates = 1.0
+
+[[results]]
+problem = "GraphColoring"
+instance_path = "data/instances/max_cut/G70"
+
+[results.heuristic]
+kind = "ReinforcementLearningSearch"
+neighbor = "Flip"
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 10.0
+avg_objective = 10.0
+worst_objective = 10.0
+std_objective = 0.0
+best_time_to_best_secs = 18.827459584
+avg_time_to_best_secs = 21.0338473416
+avg_total_time_secs = 600.0013640166001
+avg_initial_objective = 9864996.4
+avg_improvement = 9864986.4
+avg_n_accepted = 205884.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 922.0

@@ -1,4 +1,4 @@
-timestamp = "20260804_142344"
+timestamp = "20261030_010926"
 config_file = "data/benchmarks/maxcut/gset_bls/n5000.toml"
 
 [[results]]
@@ -20,20 +20,20 @@ q = 0.5
 max_iteration = 1000000000
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 10290.0
-avg_objective = 10268.7
-worst_objective = 10252.0
-std_objective = 11.21650569473399
-best_time_to_best_secs = 772.414257125
-avg_time_to_best_secs = 3462.760977854101
-avg_total_time_secs = 5932.872440970999
-avg_initial_objective = 6230.0
-avg_improvement = 4038.7
-avg_n_accepted = 780269730.7
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 1944.4
+num_successful_runs = 5
+best_objective = 10287.0
+avg_objective = 10268.2
+worst_objective = 10260.0
+std_objective = 10.609429767899874
+best_time_to_best_secs = 413.848718209
+avg_time_to_best_secs = 1827.9467983250001
+avg_total_time_secs = 3832.9072025666
+avg_initial_objective = 6160.0
+avg_improvement = 4108.2
+avg_n_accepted = 769171705.6
+avg_n_rejected = 10724706.8
+avg_acceptance_rate = 0.9862482169815048
+avg_n_best_updates = 2166.2
 
 [[results]]
 problem = "MaxCut"
@@ -54,20 +54,20 @@ q = 0.5
 max_iteration = 1000000000
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 4001.0
-avg_objective = 3982.4
-worst_objective = 3965.0
-std_objective = 9.8812954616285
-best_time_to_best_secs = 1181.102379875
-avg_time_to_best_secs = 3003.1302180585
-avg_total_time_secs = 5846.913130496
-avg_initial_objective = -24.8
-avg_improvement = 4007.2
-avg_n_accepted = 780651349.1
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 1951.8
+num_successful_runs = 5
+best_objective = 4008.0
+avg_objective = 3989.8
+worst_objective = 3979.0
+std_objective = 10.4
+best_time_to_best_secs = 857.593318667
+avg_time_to_best_secs = 1968.5921187667998
+avg_total_time_secs = 3822.4585061749995
+avg_initial_objective = -14.2
+avg_improvement = 4004.0
+avg_n_accepted = 768952536.6
+avg_n_rejected = 10739201.2
+avg_acceptance_rate = 0.986226078686748
+avg_n_best_updates = 2146.0
 
 [[results]]
 problem = "MaxCut"
@@ -88,20 +88,20 @@ q = 0.5
 max_iteration = 1000000000
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 3490.0
-avg_objective = 3488.6
+num_successful_runs = 5
+best_objective = 3492.0
+avg_objective = 3488.4
 worst_objective = 3486.0
-std_objective = 1.562049935181331
-best_time_to_best_secs = 1164.441765583
-avg_time_to_best_secs = 2826.2770990124
-avg_total_time_secs = 7269.546200070799
-avg_initial_objective = 12.0
-avg_improvement = 3476.6
-avg_n_accepted = 740190999.0
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 1400.7
+std_objective = 1.9595917942265424
+best_time_to_best_secs = 843.49509675
+avg_time_to_best_secs = 1577.8465143583999
+avg_total_time_secs = 3716.6433295916004
+avg_initial_objective = -13.6
+avg_improvement = 3502.0
+avg_n_accepted = 730827897.2
+avg_n_rejected = 12510849.4
+avg_acceptance_rate = 0.9831693831904728
+avg_n_best_updates = 1472.0
 
 [[results]]
 problem = "MaxCut"
@@ -122,20 +122,20 @@ q = 0.5
 max_iteration = 1000000000
 
 [results.summary]
-num_successful_runs = 10
+num_successful_runs = 5
 best_objective = 19263.0
-avg_objective = 19250.4
-worst_objective = 19238.0
-std_objective = 8.212186067059125
-best_time_to_best_secs = 446.511264209
-avg_time_to_best_secs = 3505.2942311499996
-avg_total_time_secs = 6605.112352283199
-avg_initial_objective = 14743.6
-avg_improvement = 4506.8
-avg_n_accepted = 759536579.7
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 1770.2
+avg_objective = 19252.4
+worst_objective = 19245.0
+std_objective = 6.916646586316233
+best_time_to_best_secs = 1484.883177042
+avg_time_to_best_secs = 2873.8130181418
+avg_total_time_secs = 3822.4953596086
+avg_initial_objective = 14715.6
+avg_improvement = 4536.8
+avg_n_accepted = 752356468.0
+avg_n_rejected = 11509121.6
+avg_acceptance_rate = 0.9849330352932784
+avg_n_best_updates = 1991.0
 
 [[results]]
 problem = "MaxCut"
@@ -156,17 +156,17 @@ q = 0.5
 max_iteration = 1000000000
 
 [results.summary]
-num_successful_runs = 10
-best_objective = 6041.0
-avg_objective = 6024.9
-worst_objective = 6009.0
-std_objective = 11.22007130102122
-best_time_to_best_secs = 2271.789844209
-avg_time_to_best_secs = 4467.071636958601
-avg_total_time_secs = 6281.5563633125
-avg_initial_objective = 50.7
-avg_improvement = 5974.2
-avg_n_accepted = 767756688.3
-avg_n_rejected = 0.0
-avg_acceptance_rate = 1.0
-avg_n_best_updates = 2125.9
+num_successful_runs = 5
+best_objective = 6036.0
+avg_objective = 6028.6
+worst_objective = 6022.0
+std_objective = 5.1613951602255765
+best_time_to_best_secs = 851.427826375
+avg_time_to_best_secs = 2560.0680250084
+avg_total_time_secs = 3815.3219923750003
+avg_initial_objective = -30.2
+avg_improvement = 6058.8
+avg_n_accepted = 760079519.6
+avg_n_rejected = 11151146.6
+avg_acceptance_rate = 0.9855405877066872
+avg_n_best_updates = 2339.8

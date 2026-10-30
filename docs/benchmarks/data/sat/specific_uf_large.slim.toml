@@ -1,0 +1,167 @@
+timestamp = "20261024_205620"
+config_file = "data/benchmarks/sat/specific_large.toml"
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "WalkSat"
+noise = 0.3
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.001103083
+avg_time_to_best_secs = 0.004925258399999999
+avg_total_time_secs = 0.0049336082
+avg_initial_objective = 755.4
+avg_improvement = 104.6
+avg_n_accepted = 52097.0
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 69.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+
+[results.heuristic]
+kind = "WalkSat"
+noise = 0.3
+adaptive_noise = true
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 2.011939584
+avg_time_to_best_secs = 13.524468000000002
+avg_total_time_secs = 13.5244809834
+avg_initial_objective = 755.4
+avg_improvement = 104.6
+avg_n_accepted = 106127286.8
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 70.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "WalkSat"
+noise = 0.3
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.0010735
+avg_time_to_best_secs = 0.0103172248
+avg_total_time_secs = 0.0103250664
+avg_initial_objective = 752.2
+avg_improvement = 107.8
+avg_n_accepted = 117639.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 71.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+
+[results.heuristic]
+kind = "WalkSat"
+noise = 0.3
+adaptive_noise = true
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.1321725
+avg_time_to_best_secs = 0.5813401499999999
+avg_total_time_secs = 0.58134815
+avg_initial_objective = 752.2
+avg_improvement = 107.8
+avg_n_accepted = 4561472.4
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 72.2
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "WalkSat"
+noise = 0.3
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.000775583
+avg_time_to_best_secs = 0.005844525200000001
+avg_total_time_secs = 0.0058522168
+avg_initial_objective = 754.0
+avg_improvement = 106.0
+avg_n_accepted = 61102.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 71.8
+
+[[results]]
+problem = "Sat"
+instance_path = "data/instances/sat/satlib/uf200-860/uf200-0100.cnf"
+
+[results.heuristic]
+kind = "WalkSat"
+noise = 0.3
+adaptive_noise = true
+
+[results.heuristic.stop_condition]
+max_duration_secs = 600.0
+
+[results.summary]
+num_successful_runs = 5
+best_objective = 860.0
+avg_objective = 860.0
+worst_objective = 860.0
+std_objective = 0.0
+best_time_to_best_secs = 0.658674167
+avg_time_to_best_secs = 3.4893242
+avg_total_time_secs = 3.4893323334
+avg_initial_objective = 754.0
+avg_improvement = 106.0
+avg_n_accepted = 27567746.2
+avg_n_rejected = 0.0
+avg_acceptance_rate = 1.0
+avg_n_best_updates = 68.6
