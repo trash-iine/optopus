@@ -282,6 +282,7 @@ impl Evaluate for VrpSolution {
         Evaluable::Minimize(self.objective)
     }
 }
+crate::rank_by_objective!(VrpSolution);
 
 impl Distance for VrpSolution {
     /// Broken-pairs dissimilarity: how many of the two solutions' customer

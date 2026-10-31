@@ -55,6 +55,7 @@ impl crate::trait_defs::Evaluate for SatSolution {
         crate::trait_defs::Evaluable::Maximize(self.n_satisfied as f64)
     }
 }
+crate::rank_by_objective!(SatSolution);
 
 impl Distance for SatSolution {
     fn distance(&self, other: &Self) -> usize {

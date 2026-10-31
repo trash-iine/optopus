@@ -134,6 +134,7 @@ impl Evaluate for BinPackingRelocateNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
+crate::rank_by_objective!(BinPackingRelocateNeighbor);
 
 impl EnabledTabu for BinPackingRelocateNeighbor {
     /// The move is tabu while the item it moves is.
@@ -267,6 +268,7 @@ impl Evaluate for BinPackingSwapNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
+crate::rank_by_objective!(BinPackingSwapNeighbor);
 
 impl EnabledTabu for BinPackingSwapNeighbor {
     /// Keyed by the two items, so swapping them back is what is blocked.

@@ -158,6 +158,7 @@ impl Evaluate for IntChangeNeighbor {
         Evaluable::Minimize(self.cost)
     }
 }
+crate::rank_by_objective!(IntChangeNeighbor);
 
 impl EnabledTabu for IntChangeNeighbor {
     /// The move is tabu while variable `var` is still blocked at the current
@@ -249,6 +250,7 @@ impl Evaluate for IntSwapNeighbor {
         Evaluable::Minimize(self.cost)
     }
 }
+crate::rank_by_objective!(IntSwapNeighbor);
 
 impl EnabledTabu for IntSwapNeighbor {
     /// Keyed by the pair of variables.
@@ -366,6 +368,7 @@ impl Evaluate for IntReverseNeighbor {
         Evaluable::Minimize(self.cost)
     }
 }
+crate::rank_by_objective!(IntReverseNeighbor);
 
 impl EnabledTabu for IntReverseNeighbor {
     /// Keyed by the two ends of the reversed range.
@@ -620,6 +623,7 @@ mod tests {
             Evaluable::Minimize(self.total)
         }
     }
+    crate::rank_by_objective!(OwnSolution);
 
     impl ProblemTrait for Own {
         type Solution = OwnSolution;

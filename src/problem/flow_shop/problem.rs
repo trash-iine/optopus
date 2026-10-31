@@ -22,6 +22,7 @@ impl Evaluate for FlowShopSolution {
         Evaluable::Minimize(f64::from(self.objective))
     }
 }
+crate::rank_by_objective!(FlowShopSolution);
 
 impl Distance for FlowShopSolution {
     /// The number of positions holding different jobs.

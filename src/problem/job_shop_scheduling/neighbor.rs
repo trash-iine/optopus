@@ -186,6 +186,7 @@ impl Evaluate for JobShopSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(JobShopSwapNeighbor);
 
 impl EnabledTabu for JobShopSwapNeighbor {
     /// The move is tabu while position `i` is still blocked at the current iteration.
@@ -353,6 +354,7 @@ impl Evaluate for JobShopRelocateNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(JobShopRelocateNeighbor);
 
 impl EnabledTabu for JobShopRelocateNeighbor {
     /// Keyed by the `(from, to)` move, so re-making the same relocation is what is blocked.

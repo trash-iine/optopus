@@ -11,10 +11,11 @@ use super::rankable::Rankable;
 /// struct MyProblem { /* ... */ }
 /// struct MySolution { value: f64 }
 ///
-/// // Evaluate is what a solution states; Rankable follows from it.
+/// // The order is the objective, so Rankable is derived from Evaluate.
 /// impl Evaluate for MySolution {
 ///     fn evaluate(&self) -> Evaluable<f64> { Evaluable::Maximize(self.value) }
 /// }
+/// optopus::rank_by_objective!(MySolution);
 /// impl ProblemTrait for MyProblem {
 ///     type Solution = MySolution;
 ///     fn new_solution(&self, _rng: &mut impl rand::Rng) -> MySolution {

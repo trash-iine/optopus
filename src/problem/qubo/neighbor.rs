@@ -70,6 +70,7 @@ impl Evaluate for QuboFlipNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(QuboFlipNeighbor);
 
 impl Evaluate<Coefficient> for QuboFlipNeighbor {
     fn evaluate(&self) -> Evaluable<Coefficient> {
@@ -236,6 +237,7 @@ impl Evaluate for QuboSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(QuboSwapNeighbor);
 
 impl EnabledTabu for QuboSwapNeighbor {
     /// A swap is tabu unless both variables it moves are free.

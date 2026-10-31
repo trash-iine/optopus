@@ -46,6 +46,7 @@ impl Evaluate for VertexCoverFlipNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(VertexCoverFlipNeighbor);
 
 impl EnabledTabu for VertexCoverFlipNeighbor {
     /// The move is tabu while vertex `i` is still blocked at the current iteration.
@@ -207,6 +208,7 @@ impl Evaluate for VertexCoverSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(VertexCoverSwapNeighbor);
 
 impl EnabledTabu for VertexCoverSwapNeighbor {
     /// A swap is tabu unless both vertexs it moves are free.

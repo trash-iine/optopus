@@ -46,6 +46,7 @@ impl Evaluate for GraphColoringRecolorNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(GraphColoringRecolorNeighbor);
 
 impl EnabledTabu for GraphColoringRecolorNeighbor {
     /// The move is tabu while vertex `v` is still blocked at the current iteration.
@@ -155,6 +156,7 @@ impl Evaluate for GraphColoringSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(GraphColoringSwapNeighbor);
 
 impl EnabledTabu for GraphColoringSwapNeighbor {
     /// A swap is tabu unless both vertices it recolors are free.

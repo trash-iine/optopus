@@ -74,6 +74,7 @@ impl Evaluate for FlowShopInsertNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(FlowShopInsertNeighbor);
 
 impl EnabledTabu for FlowShopInsertNeighbor {
     /// The move is tabu while the job it moves is.
@@ -192,6 +193,7 @@ impl Evaluate for FlowShopSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(FlowShopSwapNeighbor);
 
 impl EnabledTabu for FlowShopSwapNeighbor {
     /// Keyed by the two positions, so swapping them back is what is blocked.

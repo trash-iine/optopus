@@ -24,6 +24,7 @@ moves.
 | [`ProblemTrait`](../traits.md#core-trait-reference) | the problem struct | `type Solution`, `new_solution(rng) -> Solution` |
 | [`MoveToNeighbor<P>`](../traits.md#core-trait-reference) | the neighbor type | `iter`, `apply_to_solution`, `move_to_be_better_than` |
 | [`Evaluate`](../traits.md#core-trait-reference) | the neighbor type | `evaluate(&self) -> Evaluable<f64>`, a second, separate impl |
+| [`Rankable`](../traits.md#core-trait-reference) | `Solution` and the neighbor type | `is_better_than`, written by `optopus::rank_by_objective!` in one line |
 
 `Evaluate` really is implemented twice. On the solution it reports the
 objective, wrapped in `Evaluable::Maximize` or `Evaluable::Minimize` according
@@ -55,13 +56,17 @@ impl Evaluate for MyMove {
         Evaluable::Minimize(self.delta) // a minimizing problem, negative improves
     }
 }
+optopus::rank_by_objective!(MyMove);
 ```
 
-Both impls also give you [`Rankable`](../traits.md#core-trait-reference), which
-is how `LocalSearch`, `RandomWalk`, `BeamSearch` and `TabuSearch` pick a move
-and how every heuristic decides whether a solution is an improvement. It is
-derived rather than written. `is_better_than` compares the two `evaluate`
-values with the direction applied, so there is nothing to implement.
+The last line gives the move [`Rankable`](../traits.md#core-trait-reference),
+and the solution takes the same line beside its own `Evaluate`. `Rankable` is
+how `LocalSearch`, `RandomWalk`, `BeamSearch` and `TabuSearch` pick a
+move and how every heuristic decides whether a solution is an improvement.
+`rank_by_objective!` compares the two `evaluate` values with the direction
+applied. A problem whose order is not its objective, one that compares
+violations before cost for example, implements `Rankable` by hand instead and
+keeps `Evaluate` as the number the annealing heuristics read.
 
 ## Skeleton
 
@@ -79,6 +84,7 @@ impl Evaluate for MySolution {
     // Maximize or Minimize, whichever way the problem goes.
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
+optopus::rank_by_objective!(MySolution);
 
 impl ProblemTrait for MyProblem {
     type Solution = MySolution;
@@ -105,9 +111,10 @@ impl MoveToNeighbor<MyProblem> for MyMove {
 impl Evaluate for MyMove {
     // The change applying this move would make. Report the cached gain here.
     // `LocalSearch` and `TabuSearch` select with `max_by(rank_cmp)`, which
-    // reads this through the derived `Rankable`.
+    // reads this through `Rankable`.
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
+optopus::rank_by_objective!(MyMove);
 ```
 
 `examples/custom_problem.rs` shows the cached-gain form.

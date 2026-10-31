@@ -45,6 +45,7 @@ impl Evaluate for OneMaxSolution {
         Evaluable::Maximize(self.objective() as f64)
     }
 }
+optopus::rank_by_objective!(OneMaxSolution);
 
 impl ProblemTrait for OneMaxProblem {
     type Solution = OneMaxSolution;
@@ -114,7 +115,7 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
 
 impl Evaluate for FlipMove {
     /// The change this move would make. `LocalSearch` selects with
-    /// `max_by(rank_cmp)`, which reads this through the derived `Rankable`, so
+    /// `max_by(rank_cmp)`, which reads this through `Rankable`, so
     /// reporting the cached gain here is what makes the search
     /// *best*-improving; a constant would compile but leave every candidate
     /// tied, degrading the selection to an arbitrary improving move.
@@ -122,6 +123,7 @@ impl Evaluate for FlipMove {
         Evaluable::Maximize(f64::from(self.gain))
     }
 }
+optopus::rank_by_objective!(FlipMove);
 
 // ─── Tabu policy ────────────────────────────────────────────
 impl EnabledTabu for FlipMove {

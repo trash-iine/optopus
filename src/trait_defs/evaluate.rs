@@ -44,6 +44,11 @@ impl Evaluable<f64> {
     /// comparison itself does not restate it. This is the body every
     /// [`MoveToNeighbor::move_to_be_better_than`](crate::trait_defs::MoveToNeighbor::move_to_be_better_than)
     /// override in the crate spells out.
+    ///
+    /// It agrees with the solution's [`Rankable`](super::Rankable) only where
+    /// the solution ranks by its objective through
+    /// [`rank_by_objective!`](crate::rank_by_objective). An override for a
+    /// solution ranked by hand compares in that order instead.
     pub fn improves_over(self, from: Evaluable<f64>, over: Evaluable<f64>) -> bool {
         from.minimized() + self.minimized() < over.minimized()
     }
@@ -80,7 +85,8 @@ impl Evaluable<f64> {
 ///
 /// [`Rankable`](super::Rankable) answers "is this better?" and is enough for a
 /// search that only compares. Implement this as well where the number itself is
-/// used.
+/// used. Where the two agree, [`rank_by_objective!`](crate::rank_by_objective)
+/// derives the `Rankable` impl from this one.
 ///
 /// `T` is the numeric type returned (default `f64`). Use `T = f64` for
 /// compatibility with [`boltzmann_accept`](crate::building_blocks::search::boltzmann_accept).

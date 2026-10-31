@@ -96,6 +96,10 @@ where
     /// <div class="warning">
     /// The default implementation clones the solution and applies the move to it, which may be inefficient.
     /// Override this method with a more efficient implementation if possible.
+    /// A gain-based override built on
+    /// <code>Evaluable::improves_over</code> fits a solution that ranks by its
+    /// objective, and one ranked by hand needs an override that compares in
+    /// the same order as its <code>Rankable</code>.
     ///
     /// When this default is invoked at runtime, a one-shot
     /// <code>tracing::warn!</code> is emitted per concrete Move type (via
@@ -149,6 +153,7 @@ mod default_move_warning_tests {
             Evaluable::Maximize(f64::from(self.value))
         }
     }
+    crate::rank_by_objective!(ToySolution);
 
     impl ProblemTrait for ToyProblem {
         type Solution = ToySolution;
@@ -264,6 +269,7 @@ mod default_move_warning_tests {
             Evaluable::Maximize(self.0.iter().filter(|&&b| b).count() as f64)
         }
     }
+    crate::rank_by_objective!(ToyBitsSolution);
 
     impl ProblemTrait for ToyBits {
         type Solution = ToyBitsSolution;

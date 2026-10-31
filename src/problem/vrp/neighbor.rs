@@ -189,6 +189,7 @@ impl Evaluate for VrpRelocateNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
+crate::rank_by_objective!(VrpRelocateNeighbor);
 
 impl EnabledTabu for VrpRelocateNeighbor {
     /// Keyed by `(customer, slot)`: may this customer enter its destination
@@ -433,6 +434,7 @@ impl Evaluate for VrpSwapNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
+crate::rank_by_objective!(VrpSwapNeighbor);
 
 impl EnabledTabu for VrpSwapNeighbor {
     /// Keyed by the unordered customer pair.
@@ -599,6 +601,7 @@ impl Evaluate for VrpTwoOptNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
+crate::rank_by_objective!(VrpTwoOptNeighbor);
 
 impl EnabledTabu for VrpTwoOptNeighbor {
     /// Keyed by the `(slot, p, q)` triple.

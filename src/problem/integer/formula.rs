@@ -813,6 +813,7 @@ impl Evaluate for FormulaSolution {
         self.objective
     }
 }
+crate::rank_by_objective!(FormulaSolution);
 
 impl Distance for FormulaSolution {
     /// The number of variables whose values differ.
