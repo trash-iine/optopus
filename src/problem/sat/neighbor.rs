@@ -52,6 +52,7 @@ impl Evaluate for SatFlipNeighbor {
         Evaluable::Maximize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(SatFlipNeighbor);
 
 impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
@@ -154,6 +155,7 @@ impl Evaluate for SatSwapNeighbor {
         Evaluable::Maximize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(SatSwapNeighbor);
 
 /// Whether two clause-sharing pairs have the same `i`, which is what splits
 /// the pair list into the runs [`SwapScan`] prices one at a time.

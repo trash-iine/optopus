@@ -30,6 +30,7 @@ impl crate::trait_defs::Evaluate for TspSolution {
         crate::trait_defs::Evaluable::Minimize(self.objective)
     }
 }
+crate::rank_by_objective!(TspSolution);
 
 impl Distance for TspSolution {
     /// Position-based dissimilarity: number of cities whose tour position differs.

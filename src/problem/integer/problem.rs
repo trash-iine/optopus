@@ -35,6 +35,7 @@ impl Evaluate for IntSolution {
         self.objective
     }
 }
+crate::rank_by_objective!(IntSolution);
 
 impl crate::search_state::Distance for IntSolution {
     /// The number of variables whose values differ.

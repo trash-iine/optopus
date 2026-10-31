@@ -80,7 +80,8 @@ impl Evaluable<f64> {
 ///
 /// [`Rankable`](super::Rankable) answers "is this better?" and is enough for a
 /// search that only compares. Implement this as well where the number itself is
-/// used.
+/// used. Where the two agree, [`rank_by_objective!`](crate::rank_by_objective)
+/// derives the `Rankable` impl from this one.
 ///
 /// `T` is the numeric type returned (default `f64`). Use `T = f64` for
 /// compatibility with [`boltzmann_accept`](crate::building_blocks::search::boltzmann_accept).

@@ -79,6 +79,7 @@ impl Evaluate for MaxCutSolution {
         Evaluable::Maximize(self.objective as f64)
     }
 }
+crate::rank_by_objective!(MaxCutSolution);
 
 impl Distance for MaxCutSolution {
     fn distance(&self, other: &Self) -> usize {

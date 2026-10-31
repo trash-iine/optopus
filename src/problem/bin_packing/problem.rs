@@ -60,6 +60,7 @@ impl Evaluate for BinPackingSolution {
         Evaluable::Minimize(self.objective)
     }
 }
+crate::rank_by_objective!(BinPackingSolution);
 
 impl Distance for BinPackingSolution {
     /// Hamming distance after relabelling the bins of each packing in order

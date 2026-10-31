@@ -39,6 +39,7 @@ impl Evaluate for QapSolution {
         Evaluable::Minimize(self.objective as f64)
     }
 }
+crate::rank_by_objective!(QapSolution);
 
 impl Distance for QapSolution {
     /// The number of facilities placed at different locations.

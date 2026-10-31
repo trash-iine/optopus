@@ -79,6 +79,7 @@ impl Evaluate for TspTwoOptNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
+crate::rank_by_objective!(TspTwoOptNeighbor);
 
 impl EnabledTabu for TspTwoOptNeighbor {
     /// Keyed by the `(i, j)` pair, normalized so that `i < j`.
@@ -342,6 +343,7 @@ impl Evaluate for TspRelocateNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
+crate::rank_by_objective!(TspRelocateNeighbor);
 
 impl EnabledTabu for TspRelocateNeighbor {
     /// Keyed by the `(pos, ins)` pair.

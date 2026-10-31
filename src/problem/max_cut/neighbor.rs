@@ -156,6 +156,7 @@ impl Evaluate for MaxCutFlipNeighbor {
         Evaluable::Maximize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(MaxCutFlipNeighbor);
 
 impl MaxCutFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
@@ -264,6 +265,7 @@ impl Evaluate for MaxCutSwapNeighbor {
         Evaluable::Maximize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(MaxCutSwapNeighbor);
 
 impl EnabledTabu for MaxCutSwapNeighbor {
     /// A swap is tabu unless both vertexs it moves are free.

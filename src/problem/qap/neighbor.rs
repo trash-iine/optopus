@@ -70,6 +70,7 @@ impl Evaluate for QapSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
+crate::rank_by_objective!(QapSwapNeighbor);
 
 impl EnabledTabu for QapSwapNeighbor {
     /// The move is tabu only when it would put both facilities back where

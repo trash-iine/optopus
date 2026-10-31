@@ -55,13 +55,16 @@ impl Evaluate for MyMove {
         Evaluable::Minimize(self.delta) // a minimizing problem, negative improves
     }
 }
+optopus::rank_by_objective!(MySolution, MyMove);
 ```
 
-Both impls also give you [`Rankable`](../traits.md#core-trait-reference), which
-is how `LocalSearch`, `RandomWalk`, `BeamSearch` and `TabuSearch` pick a move
-and how every heuristic decides whether a solution is an improvement. It is
-derived rather than written. `is_better_than` compares the two `evaluate`
-values with the direction applied, so there is nothing to implement.
+The last line gives both types [`Rankable`](../traits.md#core-trait-reference),
+which is how `LocalSearch`, `RandomWalk`, `BeamSearch` and `TabuSearch` pick a
+move and how every heuristic decides whether a solution is an improvement.
+`rank_by_objective!` compares the two `evaluate` values with the direction
+applied. A problem whose order is not its objective, one that compares
+violations before cost for example, implements `Rankable` by hand instead and
+keeps `Evaluate` as the number the annealing heuristics read.
 
 ## Skeleton
 
@@ -79,6 +82,7 @@ impl Evaluate for MySolution {
     // Maximize or Minimize, whichever way the problem goes.
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
+optopus::rank_by_objective!(MySolution);
 
 impl ProblemTrait for MyProblem {
     type Solution = MySolution;
@@ -108,6 +112,7 @@ impl Evaluate for MyMove {
     // reads this through the derived `Rankable`.
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
+optopus::rank_by_objective!(MyMove);
 ```
 
 `examples/custom_problem.rs` shows the cached-gain form.

@@ -49,6 +49,7 @@ impl Evaluate for GraphColoringSolution {
         Evaluable::Minimize(self.objective as f64)
     }
 }
+crate::rank_by_objective!(GraphColoringSolution);
 
 /// Hamming distance over the color assignments.
 impl Distance for GraphColoringSolution {

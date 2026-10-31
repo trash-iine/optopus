@@ -37,6 +37,7 @@ impl crate::trait_defs::Evaluate for VertexCoverSolution {
         crate::trait_defs::Evaluable::Minimize(self.objective as f64)
     }
 }
+crate::rank_by_objective!(VertexCoverSolution);
 
 impl Distance for VertexCoverSolution {
     fn distance(&self, other: &Self) -> usize {

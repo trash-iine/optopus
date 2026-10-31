@@ -46,11 +46,13 @@ impl Evaluate for MyMove {
         Evaluable::Minimize(self.delta) // 最小化問題。負なら改善
     }
 }
+optopus::rank_by_objective!(MySolution, MyMove);
 ```
 
-どちらの impl からも [`Rankable`](../traits.md#core-trait-reference) が得られます。
+最後の行で二つの型に [`Rankable`](../traits.md#core-trait-reference) が付きます。
 `LocalSearch`、`RandomWalk`、`BeamSearch`、`TabuSearch` が move を選ぶのも、どのヒューリスティクスでも解が改善したかを判断するのもこれを通してです。
-これは書くものではなく導出されるものです。`is_better_than` は向きを反映したうえで二つの `evaluate` の値を比べるので、実装することは何もありません。
+`rank_by_objective!` は向きを反映したうえで二つの `evaluate` の値を比べます。
+順序が目的関数値そのものでない問題、たとえば違反をコストより先に比べる問題は、`Rankable` を手で実装し、`Evaluate` は焼きなまし系のヒューリスティクスが読む数値として残します。
 
 ## 骨組み { #skeleton }
 
@@ -68,6 +70,7 @@ impl Evaluate for MySolution {
     // 問題の向きに合わせて Maximize か Minimize。
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
+optopus::rank_by_objective!(MySolution);
 
 impl ProblemTrait for MyProblem {
     type Solution = MySolution;
@@ -97,6 +100,7 @@ impl Evaluate for MyMove {
     // 導出された `Rankable` を通してこれを読む。
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
+optopus::rank_by_objective!(MyMove);
 ```
 
 gain をキャッシュする形は `examples/custom_problem.rs` にあります。

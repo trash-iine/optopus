@@ -30,6 +30,7 @@ impl crate::trait_defs::Evaluate for JobShopSolution {
         crate::trait_defs::Evaluable::Minimize(f64::from(self.objective))
     }
 }
+crate::rank_by_objective!(JobShopSolution);
 
 impl Distance for JobShopSolution {
     /// Position-based dissimilarity: number of positions where the job index differs.

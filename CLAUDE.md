@@ -58,7 +58,7 @@ src/
 ├── trait_defs/               every trait the problem side implements and a heuristic calls;
 │                             a trait both implemented and used inside one layer
 │                             (Heuristic, PerturbationSchedule, ChangeDelta) stays by its type
-│   ├── rankable.rs           Rankable (blanket impl over Evaluate), rank_cmp,
+│   ├── rankable.rs           Rankable, rank_by_objective! (Rankable from Evaluate), rank_cmp,
 │   │                         filter_best, Distance
 │   ├── problem.rs            ProblemTrait
 │   ├── neighbor.rs           MoveToNeighbor

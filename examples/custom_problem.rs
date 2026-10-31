@@ -45,6 +45,7 @@ impl Evaluate for OneMaxSolution {
         Evaluable::Maximize(self.objective() as f64)
     }
 }
+optopus::rank_by_objective!(OneMaxSolution);
 
 impl ProblemTrait for OneMaxProblem {
     type Solution = OneMaxSolution;
@@ -122,6 +123,7 @@ impl Evaluate for FlipMove {
         Evaluable::Maximize(f64::from(self.gain))
     }
 }
+optopus::rank_by_objective!(FlipMove);
 
 // ─── Tabu policy ────────────────────────────────────────────
 impl EnabledTabu for FlipMove {

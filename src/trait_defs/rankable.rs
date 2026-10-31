@@ -2,37 +2,69 @@ use super::Evaluate;
 
 /// Is for comparing two solutions, or two moves, by quality.
 ///
-/// Almost every heuristic uses this to decide which of two is better.
-/// [`Rankable::is_better_than`] returns `true` if `self` is strictly better
-/// than `other`.
+/// Every heuristic decides which of two is better through this and nothing
+/// else. [`Rankable::is_better_than`] returns `true` if `self` is strictly
+/// better than `other`.
 ///
-/// **Nothing in this crate implements it by hand.** It is derived from
-/// [`Evaluate`] by the blanket impl below, so implementing `Evaluate` on a
-/// solution or a move is what makes it rankable. The two would otherwise state
-/// the same fact twice, once as a number with a direction and once as a
-/// comparison, and a problem that changed one and not the other would rank
-/// against an objective it no longer optimizes.
+/// It is separate from [`Evaluate`] because an order need not be a number. A
+/// problem whose constraints cannot be priced, or whose solutions are compared
+/// violations first and cost second, states its order here, and every
+/// heuristic that only compares solutions then runs on it. `Evaluate` is the
+/// number a heuristic reads where it needs to know how much worse a candidate
+/// is, not only whether it is worse, and it may be a surrogate that the order
+/// does not follow.
 ///
-/// A type that does *not* implement `Evaluate` may still implement this
-/// directly, which is the escape hatch for an order that is not a comparison of
-/// one number, a lexicographic objective for example. That costs `Evaluate`,
-/// and with it every heuristic that computes with the objective rather than
-/// only comparing solutions.
+/// Where the order is the objective, [`rank_by_objective!`](crate::rank_by_objective)
+/// writes this impl from the `Evaluate` one in one line, and the built-in
+/// problems use it for every solution and move.
 pub trait Rankable {
     fn is_better_than(&self, other: &Self) -> bool;
 }
 
-/// Better means a lower [`minimized`](super::Evaluable::minimized) value, which
-/// is the objective with its direction already applied.
+/// Whether `a` is better than `b` by their objectives, which is a lower
+/// [`minimized`](super::Evaluable::minimized) value, the objective with its
+/// direction already applied.
 ///
 /// Strict, so two equal values rank as neither better, which is what
 /// [`rank_cmp`] reports as `Equal` and what the tie rules downstream are
-/// written against.
-impl<T: Evaluate> Rankable for T {
-    #[inline]
-    fn is_better_than(&self, other: &Self) -> bool {
-        self.evaluate().minimized() < other.evaluate().minimized()
-    }
+/// written against. [`rank_by_objective!`](crate::rank_by_objective) implements
+/// [`Rankable`] with this.
+#[inline]
+pub fn better_by_objective<T: Evaluate>(a: &T, b: &T) -> bool {
+    a.evaluate().minimized() < b.evaluate().minimized()
+}
+
+/// Implements [`Rankable`] for each type given by comparing objectives, with
+/// [`better_by_objective`].
+///
+/// A solution or a move of your own whose order is its objective calls
+/// `optopus::rank_by_objective!(MySolution, MyMove);` beside its
+/// [`Evaluate`] impl. One whose order is something else, violations before
+/// cost for example, implements [`Rankable`] by hand instead.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// struct Cost(f64);
+/// impl Evaluate for Cost {
+///     fn evaluate(&self) -> Evaluable<f64> {
+///         Evaluable::Minimize(self.0)
+///     }
+/// }
+/// optopus::rank_by_objective!(Cost);
+///
+/// assert!(Cost(1.0).is_better_than(&Cost(2.0)));
+/// ```
+#[macro_export]
+macro_rules! rank_by_objective {
+    ($($ty:ty),* $(,)?) => {$(
+        impl $crate::trait_defs::Rankable for $ty {
+            #[inline]
+            fn is_better_than(&self, other: &Self) -> bool {
+                $crate::trait_defs::better_by_objective(self, other)
+            }
+        }
+    )*};
 }
 
 /// Total-order comparator derived from [`Rankable::is_better_than`], for use
@@ -104,6 +136,7 @@ mod tests {
                 Evaluable::Maximize(self.0)
             }
         }
+        crate::rank_by_objective!(Cut);
 
         let items = [Cut(1.0), Cut(3.0), Cut(2.0), Cut(3.0), Cut(3.0)];
 
@@ -122,7 +155,7 @@ mod tests {
         assert!(filter_best(std::iter::empty::<Cut>()).is_empty());
     }
 
-    /// The blanket impl derives the same order the direction states.
+    /// `rank_by_objective!` derives the same order the direction states.
     #[test]
     fn better_means_a_lower_minimized_value() {
         struct Maximized(f64);
@@ -137,6 +170,7 @@ mod tests {
                 Evaluable::Minimize(self.0)
             }
         }
+        crate::rank_by_objective!(Maximized, Minimized);
 
         assert!(Maximized(2.0).is_better_than(&Maximized(1.0)));
         assert!(!Maximized(1.0).is_better_than(&Maximized(2.0)));
@@ -151,13 +185,50 @@ mod tests {
         );
     }
 
-    /// A type that does not implement [`Evaluate`] may still implement
-    /// [`Rankable`] by hand, which is the escape hatch for an order that is not
-    /// a comparison of one number: a lexicographic objective, say. The blanket
-    /// impl does not close it, here or in a downstream crate, because the crate
-    /// that owns the type is the one that decides whether it is `Evaluate`.
+    /// A type ranks by an order of its own and still reports a number. Here
+    /// violations come first and cost second, while `evaluate` is a penalized
+    /// surrogate that disagrees with that order, and the order is what
+    /// `rank_cmp` and `filter_best` follow.
     #[test]
-    fn a_type_without_evaluate_can_still_rank_by_hand() {
+    fn an_order_of_its_own_beside_a_surrogate_number() {
+        #[derive(Clone, Copy, Debug)]
+        struct Constrained {
+            violations: u32,
+            cost: f64,
+        }
+        impl Rankable for Constrained {
+            fn is_better_than(&self, other: &Self) -> bool {
+                (self.violations, self.cost) < (other.violations, other.cost)
+            }
+        }
+        impl Evaluate for Constrained {
+            fn evaluate(&self) -> Evaluable<f64> {
+                Evaluable::Minimize(self.cost + 10.0 * f64::from(self.violations))
+            }
+        }
+
+        let feasible = Constrained {
+            violations: 0,
+            cost: 100.0,
+        };
+        let cheap = Constrained {
+            violations: 1,
+            cost: 1.0,
+        };
+        assert!(feasible.is_better_than(&cheap));
+        assert!(
+            !better_by_objective(&feasible, &cheap),
+            "the surrogate disagrees"
+        );
+
+        let best = filter_best([cheap, feasible, cheap].into_iter());
+        assert_eq!(best.len(), 1);
+        assert_eq!(best[0].violations, 0);
+    }
+
+    /// An order with no number at all ranks by hand and needs no `Evaluate`.
+    #[test]
+    fn an_order_without_a_number() {
         struct Lexicographic(u32, u32);
         impl Rankable for Lexicographic {
             fn is_better_than(&self, other: &Self) -> bool {

@@ -54,6 +54,7 @@ impl Evaluate for QuboSolution {
         Evaluable::Minimize(self.objective as f64)
     }
 }
+crate::rank_by_objective!(QuboSolution);
 
 impl Distance for QuboSolution {
     fn distance(&self, other: &Self) -> usize {
