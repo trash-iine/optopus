@@ -2,32 +2,38 @@
 //! fitness, a blend of how good a solution is and how much diversity it
 //! contributes.
 //!
-//! Selecting purely on cost collapses a population onto one basin within a few
-//! hundred generations. Blending in a diversity rank is what lets a genetic
-//! search keep going for millions of them. The scheme was introduced
-//! for HGS on vehicle routing, but nothing in it is about routes. It needs a
-//! cost per member and a distance between two members, and no more.
+//! Selecting purely on quality collapses a population onto one basin within a
+//! few hundred generations. Blending in a diversity rank is what lets a genetic
+//! search keep going for millions of them. The scheme was introduced for HGS on
+//! vehicle routing, but nothing in it is about routes. It needs an order on
+//! members, which of two is better, and a distance between two members, and no
+//! more. The order is only ever ranked, never added up, so it need not be a
+//! number. The genetic algorithm passes the solution's
+//! [`Rankable`](crate::trait_defs::Rankable) order.
 //!
-//! Both are closures rather than trait methods, because the cost is not always
-//! a property of the member alone. HGS adapts a capacity penalty as it runs, so
-//! the same individual is worth different amounts at different generations, and
-//! a trait would have to smuggle the penalty in through the member.
+//! Both are closures rather than trait methods, because the order is not always
+//! a property of the member alone. HGS ranks by a cost with a capacity penalty
+//! it adapts as it runs, so the same two individuals can swap places from one
+//! generation to the next, and a trait would have to smuggle the penalty in
+//! through the member.
 //!
 //! Both are given once, to [`BiasedFitnessPopulation::new`], and no other
 //! method takes either. Two calls on one population therefore cannot rank
-//! against two different costs or measure against two different distances.
+//! against two different orders or measure against two different distances.
 //!
-//! Only the cost can be replaced, through
-//! [`set_cost`](BiasedFitnessPopulation::set_cost), which re-ranks, so a cost
-//! cannot move while the order still reflects the old one. There is no
+//! Only the order can be replaced, through
+//! [`set_order`](BiasedFitnessPopulation::set_order), which re-ranks, so an
+//! order cannot move while the ranking still reflects the old one. There is no
 //! `set_distance`, because nothing moves a distance and because the pairwise
 //! matrix is built one row at a time and kept. Rows measured under two metrics
 //! would sit in it together with no way to tell them apart.
 
+use std::cmp::Ordering;
+
 use rand::Rng;
 
-/// What a member is worth, lower being better.
-pub type CostFn<T> = Box<dyn Fn(&T) -> f64>;
+/// Which of two members is better, `Less` when the first is.
+pub type OrderFn<T> = Box<dyn Fn(&T, &T) -> Ordering>;
 
 /// How far apart two members are.
 pub type DistanceFn<T> = Box<dyn Fn(&T, &T) -> f64>;
@@ -51,10 +57,10 @@ const CLONE_FITNESS_PENALTY: f64 = 100.0;
 ///   Hybrid Genetic Algorithm for Multidepot and Periodic Vehicle Routing
 ///   Problems." *Operations Research*, 60(3), 611-624, 2012.
 pub struct BiasedFitnessPopulation<T> {
-    /// What a member is worth, lower being better, and how far apart two
-    /// members are. Boxed rather than type parameters so that neither `Members`
-    /// in the genetic algorithm nor HGS's `Subpopulation` has to carry them.
-    cost: CostFn<T>,
+    /// Which of two members is better, and how far apart two members are.
+    /// Boxed rather than type parameters so that neither `Members` in the
+    /// genetic algorithm nor HGS's `Subpopulation` has to carry them.
+    order: OrderFn<T>,
     distance: DistanceFn<T>,
     members: Vec<T>,
     fitness: Vec<f64>,
@@ -71,17 +77,18 @@ impl<T> BiasedFitnessPopulation<T> {
     /// Creates an empty population, ranked on the two quantities and tuned by
     /// the two counts.
     ///
-    /// `cost` is what a member is worth, lower being better, and `distance` is
-    /// how far apart two of them are. This is the only place either is given.
+    /// `order` says which of two members is better, `Less` when the first is,
+    /// and `distance` is how far apart two of them are. This is the only place
+    /// either is given.
     ///
-    /// `n_elite` is how many members the cost rank alone keeps alive and
+    /// `n_elite` is how many members the quality rank alone keeps alive and
     /// `n_closest` is how many nearest members are averaged into a diversity
     /// contribution, the `nbElite` and `nbClose` of HGS, whose published values
     /// are `4` and `5`. Neither is defaulted.
     ///
     /// `n_elite` enters the blend as `1 - n_elite / N`, so **a population of
-    /// `n_elite` or fewer ranks on cost alone**. The diversity half is
-    /// multiplied by zero and biased fitness degenerates to the cost-only
+    /// `n_elite` or fewer ranks on quality alone**. The diversity half is
+    /// multiplied by zero and biased fitness degenerates to the quality-only
     /// selection it exists to replace. Keep it well below the population size.
     ///
     /// A population smaller than `n_closest + 1` averages over everyone, which
@@ -91,11 +98,16 @@ impl<T> BiasedFitnessPopulation<T> {
     /// # Panics
     ///
     /// Panics if either argument is zero.
-    pub fn new(n_elite: usize, n_closest: usize, cost: CostFn<T>, distance: DistanceFn<T>) -> Self {
+    pub fn new(
+        n_elite: usize,
+        n_closest: usize,
+        order: OrderFn<T>,
+        distance: DistanceFn<T>,
+    ) -> Self {
         assert!(n_elite >= 1, "n_elite must be at least 1");
         assert!(n_closest >= 1, "n_closest must be at least 1");
         Self {
-            cost,
+            order,
             distance,
             members: Vec::new(),
             fitness: Vec::new(),
@@ -105,18 +117,19 @@ impl<T> BiasedFitnessPopulation<T> {
         }
     }
 
-    /// Replaces the cost and re-ranks, which is the only way to change it.
+    /// Replaces the order and re-ranks, which is the only way to change it.
     ///
-    /// Callers need it when the cost moves, as HGS's capacity penalty does,
-    /// because the cost half of the ranking depends on it and the distance half
-    /// does not. The re-rank is not optional: a population ordered by a cost it
-    /// no longer uses looks exactly like one that is ordered correctly.
-    pub fn set_cost(&mut self, cost: CostFn<T>) {
-        self.cost = cost;
+    /// Callers need it when the order moves, as it does under HGS's capacity
+    /// penalty, because the quality half of the ranking depends on it and the
+    /// distance half does not. The re-rank is not optional, since a population
+    /// ranked by an order it no longer uses looks exactly like one that is
+    /// ranked correctly.
+    pub fn set_order(&mut self, order: OrderFn<T>) {
+        self.order = order;
         self.rerank();
     }
 
-    /// How many members the cost rank alone keeps alive.
+    /// How many members the quality rank alone keeps alive.
     pub fn n_elite(&self) -> usize {
         self.n_elite
     }
@@ -193,11 +206,9 @@ impl<T> BiasedFitnessPopulation<T> {
         self.distances = grown;
     }
 
-    /// The cheapest member.
+    /// The best member, the first of them if several tie.
     pub fn best(&self) -> Option<&T> {
-        self.members
-            .iter()
-            .min_by(|a, b| (self.cost)(a).total_cmp(&(self.cost)(b)))
+        self.members.iter().min_by(|a, b| (self.order)(a, b))
     }
 
     /// Recomputes biased fitness for every member from the cached distances.
@@ -207,7 +218,7 @@ impl<T> BiasedFitnessPopulation<T> {
             &self.members,
             &self.distances,
             &alive,
-            self.cost.as_ref(),
+            self.order.as_ref(),
             self.n_closest,
             self.n_elite,
         )
@@ -231,7 +242,7 @@ impl<T> BiasedFitnessPopulation<T> {
                 &self.members,
                 &self.distances,
                 &alive,
-                self.cost.as_ref(),
+                self.order.as_ref(),
                 self.n_closest,
                 self.n_elite,
             );
@@ -268,9 +279,10 @@ impl<T> BiasedFitnessPopulation<T> {
 
 /// Biased fitness of the living members, plus the index of the worst one.
 ///
-/// `fitness = rank_cost / (N-1) + (1 - n_elite/N) · rank_diversity / (N-1)`,
-/// where `rank_diversity` orders members by decreasing contribution, so a
-/// solution earns its place either by being cheap or by being unlike the rest.
+/// `fitness = rank_quality / (N-1) + (1 - n_elite/N) · rank_diversity / (N-1)`,
+/// where `rank_quality` orders members by `order` and `rank_diversity` by
+/// decreasing contribution, so a solution earns its place either by being good
+/// or by being unlike the rest.
 /// Clones are pushed to the back of the queue outright.
 ///
 /// The returned vector is indexed like `members`, and dead entries hold `0.0`.
@@ -278,7 +290,7 @@ fn biased_fitness<T>(
     members: &[T],
     distances: &[f64],
     alive: &[bool],
-    cost: &dyn Fn(&T) -> f64,
+    order: &dyn Fn(&T, &T) -> Ordering,
     n_closest: usize,
     n_elite: usize,
 ) -> (Option<usize>, Vec<f64>) {
@@ -311,15 +323,15 @@ fn biased_fitness<T>(
         contribution[a] = neighbor_distances[..keep].iter().sum::<f64>() / keep as f64;
     }
 
-    let mut by_cost: Vec<usize> = (0..m).collect();
-    by_cost.sort_by(|&x, &y| cost(&members[living[x]]).total_cmp(&cost(&members[living[y]])));
+    let mut by_quality: Vec<usize> = (0..m).collect();
+    by_quality.sort_by(|&x, &y| order(&members[living[x]], &members[living[y]]));
     let mut by_diversity: Vec<usize> = (0..m).collect();
     by_diversity.sort_by(|&x, &y| contribution[y].total_cmp(&contribution[x]));
 
-    let mut rank_cost = vec![0usize; m];
+    let mut rank_quality = vec![0usize; m];
     let mut rank_diversity = vec![0usize; m];
-    for (rank, &x) in by_cost.iter().enumerate() {
-        rank_cost[x] = rank;
+    for (rank, &x) in by_quality.iter().enumerate() {
+        rank_quality[x] = rank;
     }
     for (rank, &x) in by_diversity.iter().enumerate() {
         rank_diversity[x] = rank;
@@ -330,7 +342,7 @@ fn biased_fitness<T>(
     let mut worst = living[0];
     let mut worst_fitness = f64::NEG_INFINITY;
     for (a, &i) in living.iter().enumerate() {
-        let mut value = rank_cost[a] as f64 / denominator
+        let mut value = rank_quality[a] as f64 / denominator
             + elite_weight * rank_diversity[a] as f64 / denominator;
         fitness[i] = value;
         if is_clone[a] {
@@ -388,8 +400,8 @@ mod tests {
         ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
     }
 
-    fn by_cost(p: &Point) -> f64 {
-        p.cost
+    fn by_cost(a: &Point, b: &Point) -> Ordering {
+        a.cost.total_cmp(&b.cost)
     }
 
     /// All pairwise distances, row-major, what the population builds

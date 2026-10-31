@@ -20,7 +20,7 @@ mod tabu;
 
 pub use adaptive_weights::AdaptiveWeights;
 pub use anchored_sweep::AnchoredSweep;
-pub use biased_fitness::{BiasedFitnessPopulation, CostFn, DistanceFn, binary_tournament};
+pub use biased_fitness::{BiasedFitnessPopulation, DistanceFn, OrderFn, binary_tournament};
 pub use metropolis::{best_replica, boltzmann_accept, metropolis_sweeps, sweep_length};
 pub use pair_scan::{PairScan, pair_scan};
 pub use ruin_recreate::{

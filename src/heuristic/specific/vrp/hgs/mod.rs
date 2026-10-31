@@ -519,8 +519,8 @@ impl HybridGeneticSearch {
     /// is told anyway: an exception here is the next thing to get wrong.
     fn set_penalty(&mut self, penalty: f64) {
         self.penalty_capacity = penalty;
-        self.feasible.set_cost(penalized(penalty));
-        self.infeasible.set_cost(penalized(penalty));
+        self.feasible.set_order(penalized(penalty));
+        self.infeasible.set_order(penalized(penalty));
     }
 
     /// Steers the capacity penalty toward the target feasible share.

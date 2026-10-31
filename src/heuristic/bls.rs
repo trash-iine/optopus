@@ -3,7 +3,7 @@
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::search_state::SearchState;
-use crate::trait_defs::{Distance, Evaluate, ProblemTrait};
+use crate::trait_defs::{Distance, ProblemTrait, Rankable};
 use rand::Rng;
 
 /// The two decisions BLS takes between a descent and the kick that follows
@@ -90,7 +90,11 @@ pub struct AdaptivePerturbation<P: ProblemTrait> {
     l0: u64,
     omega: u64,
     l: u64,
-    prev_best_energy: Option<f64>,
+    /// The best a round ago, which `omega` asks the descent to beat.
+    ///
+    /// Held as a solution and compared through `Rankable`, so the rule reads
+    /// the problem's own order, which need not be a number.
+    prev_best: Option<P::Solution>,
     /// The local optimum the previous round ended on, `Cp` in the Max-Cut paper.
     ///
     /// This holds the solution, not its objective value. The rule is to
@@ -115,7 +119,7 @@ pub struct AdaptivePerturbation<P: ProblemTrait> {
 
 impl<P: ProblemTrait> AdaptivePerturbation<P>
 where
-    P::Solution: Distance + Evaluate,
+    P::Solution: Distance,
 {
     /// # Panics
     ///
@@ -142,7 +146,7 @@ where
             l0,
             omega: 0,
             l: l0,
-            prev_best_energy: None,
+            prev_best: None,
             prev_local_optimum: None,
             random,
             directed,
@@ -152,12 +156,12 @@ where
 
 impl<P: ProblemTrait> PerturbationSchedule<P> for AdaptivePerturbation<P>
 where
-    P::Solution: Distance + Evaluate,
+    P::Solution: Distance,
 {
     fn reset(&mut self) {
         self.omega = 0;
         self.l = self.l0;
-        self.prev_best_energy = None;
+        self.prev_best = None;
         // Dropped rather than kept: `clear()` also runs when the same schedule
         // is reused on a different instance, which a meta-heuristic that
         // rebuilds its sub-problem every round does. A retained solution would
@@ -173,15 +177,17 @@ where
     }
 
     fn determine_jump_magnitude(&mut self, state: &mut SearchState<'_, P>) -> u64 {
-        let current = state.solution.evaluate().minimized();
-        if let Some(prev) = self.prev_best_energy
-            && prev <= current
+        if let Some(prev) = &self.prev_best
+            && !state.solution.is_better_than(prev)
         {
             self.omega += 1;
         } else {
             self.omega = 0;
         }
-        self.prev_best_energy = Some(state.best_solution.evaluate().minimized());
+        match &mut self.prev_best {
+            Some(prev) => prev.clone_from(&state.best_solution),
+            None => self.prev_best = Some(state.best_solution.clone()),
+        }
 
         let unchanged = self
             .prev_local_optimum

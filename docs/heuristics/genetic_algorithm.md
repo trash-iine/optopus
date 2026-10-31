@@ -100,7 +100,8 @@ diversity rank, the same scheme
 It changes survivor selection as well, trimming by the same rank with clones
 evicted first. The two halves go together, since ranking parents by diversity
 while evicting on cost alone lets the population converge one eviction at a
-time. It needs `Evaluate` on the solution, which every problem here implements.
+time. The quality rank is the solution's own `Rankable` order, so it needs no
+number and works on a problem whose order is not one.
 
 `n_closest` is how many nearest members are averaged into a member's diversity
 contribution, the `nbClose` of HGS. `n_elite` is how many members the cost rank
