@@ -115,7 +115,7 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
 
 impl Evaluate for FlipMove {
     /// The change this move would make. `LocalSearch` selects with
-    /// `max_by(rank_cmp)`, which reads this through the derived `Rankable`, so
+    /// `max_by(rank_cmp)`, which reads this through `Rankable`, so
     /// reporting the cached gain here is what makes the search
     /// *best*-improving; a constant would compile but leave every candidate
     /// tied, degrading the selection to an arbitrary improving move.

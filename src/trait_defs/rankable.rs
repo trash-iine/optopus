@@ -40,7 +40,10 @@ pub fn better_by_objective<T: Evaluate>(a: &T, b: &T) -> bool {
 /// A solution or a move of your own whose order is its objective calls
 /// `optopus::rank_by_objective!(MySolution, MyMove);` beside its
 /// [`Evaluate`] impl. One whose order is something else, violations before
-/// cost for example, implements [`Rankable`] by hand instead.
+/// cost for example, implements [`Rankable`] by hand instead, and so do its
+/// moves, since a move ranked by its delta follows the objective and not that
+/// order. A generic type, which the macro cannot name, writes the impl with
+/// [`better_by_objective`].
 ///
 /// ```
 /// use optopus::prelude::*;

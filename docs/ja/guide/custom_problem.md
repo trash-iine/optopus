@@ -21,6 +21,7 @@
 | [`ProblemTrait`](../traits.md#core-trait-reference) | 問題の構造体 | `type Solution`, `new_solution(rng) -> Solution` |
 | [`MoveToNeighbor<P>`](../traits.md#core-trait-reference) | 近傍の型 | `iter`, `apply_to_solution`, `move_to_be_better_than` |
 | [`Evaluate`](../traits.md#core-trait-reference) | 近傍の型 | `evaluate(&self) -> Evaluable<f64>`。上とは別の、二つ目の impl |
+| [`Rankable`](../traits.md#core-trait-reference) | `Solution` と近傍の型 | `is_better_than`。`optopus::rank_by_objective!` の 1 行で書ける |
 
 `Evaluate` は本当に二回実装します。解に対しては目的関数値を返し、問題が最大化か最小化かに応じて
 `Evaluable::Maximize` または `Evaluable::Minimize` で包みます。move に対しては、その move を適用したときの変化量を同じように包んで返します。
@@ -46,10 +47,10 @@ impl Evaluate for MyMove {
         Evaluable::Minimize(self.delta) // 最小化問題。負なら改善
     }
 }
-optopus::rank_by_objective!(MySolution, MyMove);
+optopus::rank_by_objective!(MyMove);
 ```
 
-最後の行で二つの型に [`Rankable`](../traits.md#core-trait-reference) が付きます。
+最後の行で move に [`Rankable`](../traits.md#core-trait-reference) が付きます。解にも、それ自身の `Evaluate` の隣に同じ 1 行を書きます。
 `LocalSearch`、`RandomWalk`、`BeamSearch`、`TabuSearch` が move を選ぶのも、どのヒューリスティクスでも解が改善したかを判断するのもこれを通してです。
 `rank_by_objective!` は向きを反映したうえで二つの `evaluate` の値を比べます。
 順序が目的関数値そのものでない問題、たとえば違反をコストより先に比べる問題は、`Rankable` を手で実装し、`Evaluate` は焼きなまし系のヒューリスティクスが読む数値として残します。
@@ -97,7 +98,7 @@ impl MoveToNeighbor<MyProblem> for MyMove {
 impl Evaluate for MyMove {
     // この move を適用したときの変化量。キャッシュした gain をここで返す。
     // `LocalSearch` と `TabuSearch` は `max_by(rank_cmp)` で選び、
-    // 導出された `Rankable` を通してこれを読む。
+    // `Rankable` を通してこれを読む。
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
 optopus::rank_by_objective!(MyMove);
