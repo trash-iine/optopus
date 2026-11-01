@@ -90,6 +90,54 @@ impl Evaluable<f64> {
 ///
 /// `T` is the numeric type returned (default `f64`). Use `T = f64` for
 /// compatibility with [`boltzmann_accept`](crate::building_blocks::search::boltzmann_accept).
+///
+/// # Deriving it
+///
+/// Where the number is one field, `#[derive(Evaluate)]` writes the impl, and
+/// the field is marked `#[objective(minimize)]` or `#[objective(maximize)]`.
+/// The field is read as an `f64`, so any numeric field works. On a solution
+/// it is the objective and on a move the change the move makes, and every
+/// built-in solution and move whose number is a field uses it.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Evaluate, Rankable)]
+/// struct Schedule {
+///     order: Vec<usize>,
+///     #[objective(minimize)]
+///     makespan: u32,
+/// }
+///
+/// let s = Schedule { order: vec![1, 0], makespan: 12 };
+/// assert!(matches!(s.evaluate(), Evaluable::Minimize(m) if m == 12.0));
+/// ```
+///
+/// Exactly one field is marked, so the number is stated once.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Evaluate)]
+/// struct Two {
+///     #[objective(minimize)]
+///     cost: f64,
+///     #[objective(minimize)]
+///     time: f64,
+/// }
+/// ```
+///
+/// The direction is `minimize` or `maximize` and nothing else.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Evaluate)]
+/// struct Lower {
+///     #[objective(min)]
+///     cost: f64,
+/// }
+/// ```
 pub trait Evaluate<T = f64> {
     fn evaluate(&self) -> Evaluable<T>;
 }

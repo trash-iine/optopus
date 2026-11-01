@@ -4,7 +4,7 @@ use rand::rngs::SmallRng;
 use super::problem::{Qap, QapSolution};
 use crate::building_blocks::search::{TabuMemory, pair_scan, random_distinct_pair};
 use crate::error::OptError;
-use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
+use crate::search_state::{EnabledTabu, Evaluate, MoveToNeighbor};
 
 /// Exchanges the locations of two facilities, the move every QAP local search
 /// is built on.
@@ -14,7 +14,7 @@ use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 /// The move remembers the
 /// two locations it takes the facilities from, which is what the tabu list of
 /// Taillard's robust tabu search is about.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct QapSwapNeighbor {
     /// The first facility.
     pub i: usize,
@@ -25,6 +25,7 @@ pub struct QapSwapNeighbor {
     /// Where `j` is before the move.
     pub loc_j: usize,
     /// Change in cost (negative = improvement).
+    #[objective(minimize)]
     pub gain: i64,
 }
 
@@ -63,12 +64,6 @@ impl QapSwapNeighbor {
             loc_j: sol.assignment[j],
             gain: prob.swap_delta(&sol.assignment, i, j),
         }
-    }
-}
-
-impl Evaluate for QapSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 

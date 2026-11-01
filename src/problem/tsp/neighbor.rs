@@ -3,7 +3,7 @@ use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::search::TabuMemory,
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -13,13 +13,14 @@ use rand::rngs::SmallRng;
 ///
 /// Implemented by reversing the sub-segment `tour[i+1..=j]`.
 /// `gain` is the change in tour length after the move (negative = improvement).
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct TspTwoOptNeighbor {
     /// Smallest index of the two removed edges.
     pub i: usize,
     /// Largest index of the two removed edges.
     pub j: usize,
     /// Change in tour length (negative = improvement).
+    #[objective(minimize)]
     pub gain: f64,
 }
 
@@ -72,12 +73,6 @@ impl TspTwoOptNeighbor {
             j,
             gain: prob.calc_2opt_gain_cities(e1, e2),
         }
-    }
-}
-
-impl Evaluate for TspTwoOptNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
     }
 }
 
@@ -248,13 +243,14 @@ impl MoveToNeighbor<Tsp> for TspTwoOptNeighbor {
 ///
 /// `pos` and `ins` are indices in the original tour before the move is applied.
 /// `gain` is the change in tour length (negative = improvement).
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct TspRelocateNeighbor {
     /// Index of the city to be relocated.
     pub pos: usize,
     /// Index of the city after which the relocated city will be inserted.
     pub ins: usize,
     /// Change in tour length (negative = improvement).
+    #[objective(minimize)]
     pub gain: f64,
 }
 
@@ -335,12 +331,6 @@ impl TspRelocateNeighbor {
             ins,
             gain: insertion_cost(prob, sol, pos, ins) - removal_gain(prob, sol, pos),
         }
-    }
-}
-
-impl Evaluate for TspRelocateNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
     }
 }
 

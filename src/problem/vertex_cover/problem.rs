@@ -1,8 +1,8 @@
 use crate::building_blocks::instance::Graph;
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
-use crate::trait_defs::Rankable;
 use crate::trait_defs::check_assignment;
+use crate::trait_defs::{Evaluate, Rankable};
 
 /// The Minimum Vertex Cover problem.
 ///
@@ -18,31 +18,20 @@ pub struct VertexCover {
 }
 
 /// A solution for the Vertex Cover problem.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct VertexCoverSolution {
     /// `cover[v] = true` iff vertex `v` is selected.
+    #[distance(hamming)]
     pub x: Vec<bool>,
     /// `gain[v]` = change in `objective` if vertex `v` is flipped (negative = improving).
     pub gain: Vec<i32>,
     /// Penalty-augmented objective: `cover_size + penalty_weight * uncovered_edges`.
+    #[objective(minimize)]
     pub objective: i32,
     /// Number of vertices currently in the cover.
     pub cover_size: usize,
     /// Number of edges currently uncovered (both endpoints out of the cover).
     pub uncovered_edges: usize,
-}
-
-impl crate::trait_defs::Evaluate for VertexCoverSolution {
-    /// Vertex Cover minimizes its penalty-augmented objective.
-    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
-        crate::trait_defs::Evaluable::Minimize(self.objective as f64)
-    }
-}
-
-impl Distance for VertexCoverSolution {
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(&self.x, &other.x)
-    }
 }
 
 impl VertexCover {

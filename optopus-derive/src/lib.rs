@@ -34,6 +34,123 @@ pub fn derive_rankable(input: TokenStream) -> TokenStream {
     }
 }
 
+/// Implements `optopus::trait_defs::Evaluate` from one field.
+///
+/// The field is marked `#[objective(minimize)]` or `#[objective(maximize)]`,
+/// and `evaluate` returns it as an `f64` in `Evaluable::Minimize` or
+/// `Evaluable::Maximize`. On a solution the field is its objective, and on a
+/// move it is the change the move would make. Exactly one field is marked.
+///
+/// The `Evaluate` page of the optopus documentation has examples.
+#[proc_macro_derive(Evaluate, attributes(objective))]
+pub fn derive_evaluate(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match evaluate(&input) {
+        Ok(tokens) => tokens.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+/// Implements `optopus::trait_defs::Distance` from one field.
+///
+/// The field is marked `#[distance(hamming)]`, and `distance` counts the
+/// positions at which the two values of that field differ, through
+/// `optopus::building_blocks::representation::hamming_distance`. The field is
+/// a slice or anything that derefs to one, such as a `Vec`. Exactly one field
+/// is marked.
+#[proc_macro_derive(Distance, attributes(distance))]
+pub fn derive_distance(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match distance(&input) {
+        Ok(tokens) => tokens.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+fn evaluate(input: &DeriveInput) -> syn::Result<TokenStream2> {
+    let (field, keyword) = marked_field(input, "objective")?;
+    let variant = match keyword.to_string().as_str() {
+        "minimize" => quote!(Minimize),
+        "maximize" => quote!(Maximize),
+        other => {
+            return Err(syn::Error::new(
+                keyword.span(),
+                format!("expected `minimize` or `maximize`, found `{other}`"),
+            ));
+        }
+    };
+    let name = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    Ok(quote! {
+        impl #impl_generics ::optopus::trait_defs::Evaluate for #name #ty_generics #where_clause {
+            #[inline]
+            fn evaluate(&self) -> ::optopus::trait_defs::Evaluable<f64> {
+                ::optopus::trait_defs::Evaluable::#variant(self.#field as f64)
+            }
+        }
+    })
+}
+
+fn distance(input: &DeriveInput) -> syn::Result<TokenStream2> {
+    let (field, keyword) = marked_field(input, "distance")?;
+    if keyword != "hamming" {
+        return Err(syn::Error::new(
+            keyword.span(),
+            format!("expected `hamming`, found `{keyword}`"),
+        ));
+    }
+    let name = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    Ok(quote! {
+        impl #impl_generics ::optopus::trait_defs::Distance for #name #ty_generics #where_clause {
+            #[inline]
+            fn distance(&self, other: &Self) -> usize {
+                ::optopus::building_blocks::representation::hamming_distance(
+                    &self.#field,
+                    &other.#field,
+                )
+            }
+        }
+    })
+}
+
+/// The one field of a struct carrying `#[attr(keyword)]`, as the expression
+/// that reaches it from `self`, and the keyword.
+fn marked_field(input: &DeriveInput, attr: &str) -> syn::Result<(TokenStream2, Ident)> {
+    let Data::Struct(data) = &input.data else {
+        return Err(syn::Error::new(
+            input.ident.span(),
+            format!("`#[{attr}(..)]` marks a field, so this derive needs a struct"),
+        ));
+    };
+    let mut found: Option<(TokenStream2, Ident)> = None;
+    for (i, field) in data.fields.iter().enumerate() {
+        for a in field.attrs.iter().filter(|a| a.path().is_ident(attr)) {
+            if found.is_some() {
+                return Err(syn::Error::new(
+                    a.span(),
+                    format!("only one field can be marked `#[{attr}(..)]`"),
+                ));
+            }
+            let keyword = a.parse_args::<Ident>()?;
+            let access = match &field.ident {
+                Some(ident) => quote!(#ident),
+                None => {
+                    let index = Index::from(i);
+                    quote!(#index)
+                }
+            };
+            found = Some((access, keyword));
+        }
+    }
+    found.ok_or_else(|| {
+        syn::Error::new(
+            input.ident.span(),
+            format!("mark the field this derive reads with `#[{attr}(..)]`"),
+        )
+    })
+}
+
 #[derive(Clone, Copy)]
 enum Direction {
     Min,

@@ -176,6 +176,40 @@ pub fn filter_best<R: Rankable, T: Iterator<Item = R>>(iter: T) -> Vec<R> {
 /// For bit-vector solutions this is the standard Hamming distance, the
 /// number of variables that differ. For other encodings any application-
 /// meaningful integer dissimilarity measure works.
+///
+/// # Deriving it
+///
+/// Where the distance is the Hamming distance over one field, a `Vec` or
+/// anything else that derefs to a slice, `#[derive(Distance)]` writes the impl
+/// and the field is marked `#[distance(hamming)]`. The other fields are not
+/// read.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Distance)]
+/// struct Coloring {
+///     #[distance(hamming)]
+///     colors: Vec<usize>,
+///     colors_used: usize,
+/// }
+///
+/// let a = Coloring { colors: vec![0, 1, 2], colors_used: 3 };
+/// let b = Coloring { colors: vec![0, 2, 2], colors_used: 2 };
+/// assert_eq!(a.distance(&b), 1);
+/// ```
+///
+/// The kind of distance is named, and `hamming` is the only one.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Distance)]
+/// struct Tour {
+///     #[distance(euclidean)]
+///     cities: Vec<usize>,
+/// }
+/// ```
 pub trait Distance {
     fn distance(&self, other: &Self) -> usize;
 }
@@ -191,13 +225,8 @@ mod tests {
     /// every candidate is a tie, so a disagreement is not a corner case.
     #[test]
     fn filter_best_keeps_every_tie_and_agrees_with_max_by() {
-        #[derive(Clone, Copy, Debug, Rankable)]
-        struct Cut(f64);
-        impl Evaluate for Cut {
-            fn evaluate(&self) -> Evaluable<f64> {
-                Evaluable::Maximize(self.0)
-            }
-        }
+        #[derive(Clone, Copy, Debug, Rankable, Evaluate)]
+        struct Cut(#[objective(maximize)] f64);
 
         let items = [Cut(1.0), Cut(3.0), Cut(2.0), Cut(3.0), Cut(3.0)];
 
@@ -219,20 +248,10 @@ mod tests {
     /// The derive with no attribute ranks in the order the direction states.
     #[test]
     fn better_means_a_lower_minimized_value() {
-        #[derive(Rankable)]
-        struct Maximized(f64);
-        impl Evaluate for Maximized {
-            fn evaluate(&self) -> Evaluable<f64> {
-                Evaluable::Maximize(self.0)
-            }
-        }
-        #[derive(Rankable)]
-        struct Minimized(f64);
-        impl Evaluate for Minimized {
-            fn evaluate(&self) -> Evaluable<f64> {
-                Evaluable::Minimize(self.0)
-            }
-        }
+        #[derive(Rankable, Evaluate)]
+        struct Maximized(#[objective(maximize)] f64);
+        #[derive(Rankable, Evaluate)]
+        struct Minimized(#[objective(minimize)] f64);
 
         assert!(Maximized(2.0).is_better_than(&Maximized(1.0)));
         assert!(!Maximized(1.0).is_better_than(&Maximized(2.0)));

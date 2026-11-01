@@ -45,8 +45,9 @@ Implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/
 ## Module Map
 
 ```
-optopus-derive/               the proc-macro crate of the workspace, #[derive(Rankable)],
-                              re-exported as optopus::trait_defs::Rankable beside the trait
+optopus-derive/               the proc-macro crate of the workspace, the derives of Rankable,
+                              Evaluate and Distance, each re-exported from optopus::trait_defs
+                              beside its trait
 src/
 ├── lib.rs / main.rs / prelude.rs / error.rs (OptError)
 ├── benchmark/

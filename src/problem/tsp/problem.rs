@@ -1,4 +1,4 @@
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Evaluate, Rankable};
 use rand::seq::SliceRandom;
 use std::sync::{Arc, Mutex};
 
@@ -17,28 +17,19 @@ pub type TspEdge = (usize, usize);
 ///
 /// Move gains are computed on the fly from [`Tsp::distance`], so no
 /// per-solution gain cache is kept.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct TspSolution {
     /// Ordered sequence of city indices representing the tour.
+    ///
+    /// Two tours are compared position by position, so their distance is the
+    /// number of cities whose tour position differs. A rotation of the same
+    /// tour is far from it, so this is a diversity proxy for parent selection
+    /// rather than a distance between tours.
+    #[distance(hamming)]
     pub tour: TspTour,
     /// Total tour length.
+    #[objective(minimize)]
     pub objective: f64,
-}
-
-impl crate::trait_defs::Evaluate for TspSolution {
-    /// TSP minimizes the tour length.
-    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
-        crate::trait_defs::Evaluable::Minimize(self.objective)
-    }
-}
-
-impl Distance for TspSolution {
-    /// Position-based dissimilarity: number of cities whose tour position differs.
-    /// Not a metric in the strict sense, but a useful diversity proxy for GA
-    /// parent selection.
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(&self.tour, &other.tour)
-    }
 }
 
 impl ProblemTrait for Tsp {

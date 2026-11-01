@@ -4,31 +4,19 @@ use rand::seq::SliceRandom;
 use super::taillard::HeadsTails;
 use crate::building_blocks::representation::check_permutation;
 use crate::error::OptError;
-use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
+use crate::search_state::{Distance, Evaluate, ProblemTrait};
 
 /// A solution to the permutation flow shop, the order the jobs run in.
 ///
 /// Every machine processes the jobs in this one order.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct FlowShopSolution {
     /// A permutation of `0..n_jobs`, the job run first coming first.
+    #[distance(hamming)]
     pub sequence: Vec<usize>,
     /// The makespan of `sequence`, when the last job leaves the last machine.
+    #[objective(minimize)]
     pub objective: u32,
-}
-
-impl Evaluate for FlowShopSolution {
-    /// The flow shop minimizes the makespan.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(f64::from(self.objective))
-    }
-}
-
-impl Distance for FlowShopSolution {
-    /// The number of positions holding different jobs.
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(&self.sequence, &other.sequence)
-    }
 }
 
 /// A permutation flow shop instance, `Fm | prmu | Cmax`.

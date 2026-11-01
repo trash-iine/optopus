@@ -58,12 +58,19 @@ impl ProblemTrait for OneMaxProblem {
 
 // ─── Neighborhood definition (single-bit flip) ──────────────
 /// `Clone` is what `TabuSearch` asks of a move besides `EnabledTabu`.
-#[derive(Clone, Rankable)]
+#[derive(Clone, Rankable, Evaluate)]
 struct FlipMove {
     index: usize,
     /// Change in objective this flip would cause, cached at construction time.
-    /// Every built-in move type carries one; it is what lets `Rankable` below
-    /// compare two moves without touching a solution.
+    /// Every built-in move type carries one, and it is what lets the derived
+    /// `Rankable` compare two moves without touching a solution.
+    ///
+    /// `#[objective(maximize)]` makes this the move's `Evaluate`, and
+    /// `LocalSearch` selects with `max_by(rank_cmp)`, which reads it through
+    /// `Rankable`. Reporting the real gain here is what makes the search
+    /// best-improving. A constant would compile but leave every candidate
+    /// tied, degrading the selection to an arbitrary improving move.
+    #[objective(maximize)]
     gain: i32,
 }
 
@@ -109,17 +116,6 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
         self.apply_to_solution(prob, &mut cloned)
             .expect("apply_to_solution should not fail");
         cloned.is_better_than(other)
-    }
-}
-
-impl Evaluate for FlipMove {
-    /// The change this move would make. `LocalSearch` selects with
-    /// `max_by(rank_cmp)`, which reads this through `Rankable`, so
-    /// reporting the cached gain here is what makes the search
-    /// *best*-improving; a constant would compile but leave every candidate
-    /// tied, degrading the selection to an arbitrary improving move.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Maximize(f64::from(self.gain))
     }
 }
 

@@ -1,17 +1,12 @@
-//! What `#[derive(Rankable)]` writes, for each way of naming the order.
+//! What the derives write: `Rankable` for each way of naming the order, and
+//! `Evaluate` and `Distance` from one marked field.
 
-use optopus::trait_defs::{Evaluable, Evaluate, Rankable, rank_cmp};
+use optopus::trait_defs::{Distance, Evaluable, Evaluate, Rankable, rank_cmp};
 use std::cmp::Ordering;
 
 /// No attribute, so the order is the objective, here maximized.
-#[derive(Rankable)]
-struct Cut(f64);
-
-impl Evaluate for Cut {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Maximize(self.0)
-    }
-}
+#[derive(Rankable, Evaluate)]
+struct Cut(#[objective(maximize)] f64);
 
 #[test]
 fn no_attribute_ranks_by_the_objective() {
@@ -124,4 +119,77 @@ fn a_generic_type_ranks_by_its_objective() {
         _tag: 'b',
     };
     assert!(a.is_better_than(&b));
+}
+
+/// A minimized integer objective, read as an `f64`.
+#[derive(Evaluate, Rankable)]
+struct Makespan {
+    _sequence: Vec<usize>,
+    #[objective(minimize)]
+    makespan: u32,
+}
+
+/// A maximized gain on a move, in a tuple struct.
+#[derive(Evaluate, Rankable)]
+struct Gain(#[objective(maximize)] i64);
+
+/// A generic type gets the impl for every parameter.
+#[derive(Evaluate)]
+struct Tagged<T> {
+    _tag: T,
+    #[objective(minimize)]
+    cost: f64,
+}
+
+#[test]
+fn evaluate_wraps_the_marked_field_in_its_direction() {
+    let short = Makespan {
+        _sequence: vec![],
+        makespan: 7,
+    };
+    let long = Makespan {
+        _sequence: vec![],
+        makespan: 9,
+    };
+    assert!(matches!(short.evaluate(), Evaluable::Minimize(v) if v == 7.0));
+    assert!(short.is_better_than(&long));
+
+    assert!(matches!(Gain(-3).evaluate(), Evaluable::Maximize(v) if v == -3.0));
+    assert!(Gain(2).is_better_than(&Gain(1)));
+
+    let tagged = Tagged {
+        _tag: "a",
+        cost: 1.5,
+    };
+    assert!(matches!(tagged.evaluate(), Evaluable::Minimize(v) if v == 1.5));
+}
+
+/// Hamming distance over the marked field, the others ignored.
+#[derive(Distance)]
+struct Assigned {
+    #[distance(hamming)]
+    colors: Vec<usize>,
+    _used: usize,
+}
+
+#[derive(Distance)]
+struct Bits(#[distance(hamming)] Vec<bool>);
+
+#[test]
+fn distance_counts_differing_positions_of_the_marked_field() {
+    let a = Assigned {
+        colors: vec![0, 1, 2, 1],
+        _used: 3,
+    };
+    let b = Assigned {
+        colors: vec![0, 2, 2, 0],
+        _used: 99,
+    };
+    assert_eq!(a.distance(&b), 2);
+    assert_eq!(a.distance(&a), 0);
+
+    assert_eq!(
+        Bits(vec![true, false, true]).distance(&Bits(vec![false, false, false])),
+        2
+    );
 }

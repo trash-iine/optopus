@@ -7,7 +7,7 @@ use super::problem::{JobShopScheduling, JobShopSolution, PartialSchedule};
 use crate::{
     building_blocks::search::{TabuKey, TabuMemory},
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 
 /// Minimum operation-sequence length for parallel neighborhood evaluation.
@@ -123,11 +123,12 @@ fn relocate_row(
 /// makespan (negative = improvement) relative to the solution the move was
 /// enumerated from; the schedule is re-decoded after the swap to obtain the
 /// exact value.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct JobShopSwapNeighbor {
     /// Left index of the swapped pair (swaps `operations[i]` and `operations[i+1]`).
     pub i: usize,
     /// Change in makespan (negative = improvement).
+    #[objective(minimize)]
     pub gain: i64,
 }
 
@@ -179,12 +180,6 @@ impl JobShopSwapNeighbor {
             i,
             gain: i64::from(makespan) - i64::from(sol.objective),
         }
-    }
-}
-
-impl Evaluate for JobShopSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 
@@ -286,13 +281,14 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
 /// `gain` is the change in makespan (negative = improvement) relative to the
 /// solution the move was enumerated from; the schedule is re-decoded after
 /// the relocation to obtain the exact value.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct JobShopRelocateNeighbor {
     /// Index of the operation to be relocated.
     pub from: usize,
     /// Destination index, in post-removal indexing (`to ∈ 0..n-1`).
     pub to: usize,
     /// Change in makespan (negative = improvement).
+    #[objective(minimize)]
     pub gain: i64,
 }
 
@@ -346,12 +342,6 @@ impl JobShopRelocateNeighbor {
             to,
             gain: i64::from(makespan) - i64::from(sol.objective),
         }
-    }
-}
-
-impl Evaluate for JobShopRelocateNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 

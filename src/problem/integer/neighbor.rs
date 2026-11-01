@@ -7,7 +7,7 @@ use crate::{
         search::{TabuKey, TabuMemory, random_distinct_pair},
     },
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
     trait_defs::IntAssignment,
 };
 use rand::Rng;
@@ -128,15 +128,16 @@ impl<P: IntAssignment> Iterator for Changes<'_, '_, P> {
 /// current one. On a binary variable this is a flip.
 ///
 /// `cost` is the change the move makes to the objective with its direction
-/// applied, so lower is better. It is what [`Evaluable::minimized`] reports
+/// applied, so lower is better. It is what [`Evaluable::minimized`](crate::trait_defs::Evaluable::minimized) reports
 /// for the move.
-#[derive(Debug, Clone, Copy, Rankable)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
 pub struct IntChangeNeighbor {
     /// The variable to change.
     pub var: usize,
     /// The value it takes.
     pub value: i64,
     /// The change the move makes, with the direction applied, lower is better.
+    #[objective(minimize)]
     pub cost: f64,
 }
 
@@ -149,14 +150,6 @@ impl IntChangeNeighbor {
             value,
             cost: direction(sol) * prob.assign_delta(sol, var, value),
         }
-    }
-}
-
-impl Evaluate for IntChangeNeighbor {
-    /// The cost, which is a change of a minimized quantity whatever the
-    /// problem's direction.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.cost)
     }
 }
 
@@ -221,13 +214,14 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
 /// differ and fit each other's range are moves. On a
 /// [permutation](crate::building_blocks::representation::IntVars::permutation)
 /// the result is again one.
-#[derive(Debug, Clone, Copy, Rankable)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
 pub struct IntSwapNeighbor {
     /// The smaller of the two variables.
     pub i: usize,
     /// The larger of the two variables.
     pub j: usize,
     /// The change the move makes, with the direction applied, lower is better.
+    #[objective(minimize)]
     pub cost: f64,
 }
 
@@ -240,14 +234,6 @@ impl IntSwapNeighbor {
             j,
             cost: direction(sol) * prob.assign_swap_delta(sol, i, j),
         }
-    }
-}
-
-impl Evaluate for IntSwapNeighbor {
-    /// The cost, which is a change of a minimized quantity whatever the
-    /// problem's direction.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.cost)
     }
 }
 
@@ -338,13 +324,14 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
 /// value fits its new variable's range. On a
 /// [permutation](crate::building_blocks::representation::IntVars::permutation)
 /// read as a tour this is a 2-opt move, and the result is again a permutation.
-#[derive(Debug, Clone, Copy, Rankable)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
 pub struct IntReverseNeighbor {
     /// The first variable of the range.
     pub i: usize,
     /// The last variable of the range.
     pub j: usize,
     /// The change the move makes, with the direction applied, lower is better.
+    #[objective(minimize)]
     pub cost: f64,
 }
 
@@ -357,14 +344,6 @@ impl IntReverseNeighbor {
             j,
             cost: direction(sol) * prob.assign_reverse_delta(sol, i, j),
         }
-    }
-}
-
-impl Evaluate for IntReverseNeighbor {
-    /// The cost, which is a change of a minimized quantity whatever the
-    /// problem's direction.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.cost)
     }
 }
 
@@ -433,7 +412,7 @@ mod tests {
     use crate::heuristic::{Heuristic, LocalSearch, StopCondition, TabuSearch};
     use crate::problem::{IntSolution, IntegerProblem};
     use crate::search_state::{ProblemTrait, SearchState};
-    use crate::trait_defs::IntAssignment;
+    use crate::trait_defs::{Evaluable, IntAssignment};
     use rand::SeedableRng;
 
     /// Minimizes the sum of (x_i - t_i)^2, with ranges of different widths and
@@ -609,17 +588,12 @@ mod tests {
     /// its own, which caches each variable's term.
     struct Own(IntVars);
 
-    #[derive(Clone, Rankable)]
+    #[derive(Clone, Rankable, Evaluate)]
     struct OwnSolution {
         x: Vec<i64>,
         terms: Vec<f64>,
+        #[objective(minimize)]
         total: f64,
-    }
-
-    impl Evaluate for OwnSolution {
-        fn evaluate(&self) -> Evaluable<f64> {
-            Evaluable::Minimize(self.total)
-        }
     }
 
     impl ProblemTrait for Own {
