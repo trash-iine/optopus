@@ -51,6 +51,127 @@ pub fn derive_evaluate(input: TokenStream) -> TokenStream {
     }
 }
 
+/// Implements `optopus::trait_defs::EnabledTabu` from the keys a move touches.
+///
+/// The keys are named on the type, `#[tabu(dense(i), dense(j))]` for example,
+/// and the move is enabled when every key is free and forbids every key when
+/// applied, in the order written. Each key reads fields of the move, and each
+/// field is a `usize`.
+///
+/// - `dense(f)` is `TabuKey::DenseVar(f)`, an index bounded by the instance.
+/// - `var(f)` is `TabuKey::Var(f)`, an index of any size.
+/// - `pair(a, b)` is `TabuKey::Pair(a, b)`, so `(a, b)` and `(b, a)` differ.
+/// - `unordered(a, b)` is `TabuKey::Pair(min, max)`, so they are the same.
+/// - `triple(a, b, c)` is `TabuKey::Triple(a, b, c)`.
+///
+/// A move that checks other keys than it forbids implements the trait by hand.
+#[proc_macro_derive(EnabledTabu, attributes(tabu))]
+pub fn derive_enabled_tabu(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match enabled_tabu(&input) {
+        Ok(tokens) => tokens.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+fn enabled_tabu(input: &DeriveInput) -> syn::Result<TokenStream2> {
+    let mut keys = Vec::new();
+    for attr in input.attrs.iter().filter(|a| a.path().is_ident("tabu")) {
+        let entries =
+            attr.parse_args_with(syn::punctuated::Punctuated::<Meta, Token![,]>::parse_terminated)?;
+        for entry in entries {
+            keys.push(tabu_key(&entry)?);
+        }
+    }
+    if keys.is_empty() {
+        return Err(syn::Error::new(
+            input.ident.span(),
+            "name the keys this move touches, as in `#[tabu(dense(i))]`",
+        ));
+    }
+    let name = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    Ok(quote! {
+        impl #impl_generics ::optopus::trait_defs::EnabledTabu for #name #ty_generics #where_clause {
+            #[inline]
+            fn is_move_enabled(
+                &self,
+                tabu: &::optopus::building_blocks::search::TabuMemory,
+                iteration: u64,
+            ) -> bool {
+                #(tabu.is_enabled(#keys, iteration))&&*
+            }
+
+            #[inline]
+            fn add_to_tabu_map(
+                &self,
+                tabu: &mut ::optopus::building_blocks::search::TabuMemory,
+                iteration: u64,
+                rng: &mut ::optopus::rand::rngs::SmallRng,
+            ) {
+                #(tabu.forbid(#keys, iteration, rng);)*
+            }
+        }
+    })
+}
+
+/// One key of `#[tabu(..)]` as the `TabuKey` expression it builds from `self`.
+fn tabu_key(entry: &Meta) -> syn::Result<TokenStream2> {
+    let Meta::List(list) = entry else {
+        return Err(syn::Error::new(
+            entry.span(),
+            "expected a key such as `dense(i)` or `pair(i, j)`",
+        ));
+    };
+    let shape = list.path.require_ident()?;
+    let fields: Vec<syn::Member> = list
+        .parse_args_with(syn::punctuated::Punctuated::<syn::Member, Token![,]>::parse_terminated)?
+        .into_iter()
+        .collect();
+    let arity = |n: usize| -> syn::Result<()> {
+        if fields.len() == n {
+            Ok(())
+        } else {
+            Err(syn::Error::new(
+                list.span(),
+                format!("`{shape}` takes {n} field(s), found {}", fields.len()),
+            ))
+        }
+    };
+    let key = quote!(::optopus::building_blocks::search::TabuKey);
+    match shape.to_string().as_str() {
+        "dense" => {
+            arity(1)?;
+            let a = &fields[0];
+            Ok(quote!(#key::DenseVar(self.#a)))
+        }
+        "var" => {
+            arity(1)?;
+            let a = &fields[0];
+            Ok(quote!(#key::Var(self.#a)))
+        }
+        "pair" => {
+            arity(2)?;
+            let (a, b) = (&fields[0], &fields[1]);
+            Ok(quote!(#key::Pair(self.#a, self.#b)))
+        }
+        "unordered" => {
+            arity(2)?;
+            let (a, b) = (&fields[0], &fields[1]);
+            Ok(quote!(#key::Pair(self.#a.min(self.#b), self.#a.max(self.#b))))
+        }
+        "triple" => {
+            arity(3)?;
+            let (a, b, c) = (&fields[0], &fields[1], &fields[2]);
+            Ok(quote!(#key::Triple(self.#a, self.#b, self.#c)))
+        }
+        other => Err(syn::Error::new(
+            shape.span(),
+            format!("expected `dense`, `var`, `pair`, `unordered` or `triple`, found `{other}`"),
+        )),
+    }
+}
+
 /// Implements `optopus::trait_defs::Distance` from one field.
 ///
 /// The field is marked `#[distance(hamming)]`, and `distance` counts the

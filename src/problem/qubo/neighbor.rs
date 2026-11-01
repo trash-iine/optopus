@@ -18,16 +18,12 @@
 use super::problem::{Coefficient, Qubo};
 use crate::trait_defs::Rankable;
 use crate::{
-    building_blocks::{
-        representation::{differing_pairs_by_row, random_differing_pair},
-        search::{TabuKey, TabuMemory},
-    },
+    building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
     problem::qubo::problem::QuboSolution,
     search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
-use rand::rngs::SmallRng;
 
 /// A flip move that toggles a single variable `i`.
 ///
@@ -45,25 +41,14 @@ use rand::rngs::SmallRng;
 /// LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(1000))
 ///     .run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i))]
 pub struct QuboFlipNeighbor {
     /// Index of the variable to flip.
     pub i: usize,
     /// Change in objective value when this variable is flipped (negative = improvement).
     #[objective(minimize)]
     pub gain: Coefficient,
-}
-
-impl EnabledTabu for QuboFlipNeighbor {
-    /// The move is tabu while variable `i` is still blocked at the current iteration.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-    }
-
-    /// Applying the move forbids variable `i` for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
-    }
 }
 
 // QUBO is a minimization problem: gain = change in energy (positive = worsening).
@@ -185,7 +170,8 @@ impl QuboFlipNeighbor {
 ///     (5, 10),
 /// ).run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i), dense(j))]
 pub struct QuboSwapNeighbor {
     /// Index of the first variable to flip.
     pub i: usize,
@@ -226,20 +212,6 @@ impl QuboSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] - q,
         }
-    }
-}
-
-impl EnabledTabu for QuboSwapNeighbor {
-    /// A swap is tabu unless both variables it moves are free.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-            && tabu.is_enabled(TabuKey::DenseVar(self.j), iteration)
-    }
-
-    /// Applying the swap forbids both variables, each for its own drawn tenure.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
-        tabu.forbid(TabuKey::DenseVar(self.j), iteration, rng);
     }
 }
 

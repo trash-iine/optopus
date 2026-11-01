@@ -273,7 +273,8 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
 ///
 /// Both routes keep their length, so occupancy — and with it `used_count`, the
 /// fixed cost and the `min_count` shortfall — cannot change.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(unordered(c1, c2))]
 pub struct VrpSwapNeighbor {
     pub r1: usize,
     pub i1: usize,
@@ -425,20 +426,6 @@ impl VrpSwapNeighbor {
     }
 }
 
-impl EnabledTabu for VrpSwapNeighbor {
-    /// Keyed by the unordered customer pair.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        let key = (self.c1.min(self.c2), self.c1.max(self.c2));
-        tabu.is_enabled(key, iteration)
-    }
-
-    /// Applying it forbids that customer pair, so an immediate re-swap is out.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        let key = (self.c1.min(self.c2), self.c1.max(self.c2));
-        tabu.forbid(key, iteration, rng);
-    }
-}
-
 impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
     /// what holds the tabu map.
@@ -510,7 +497,8 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
 /// fixed cost are all invariant: the only primitive change is the travelled
 /// distance, which propagates into the route's time (and from there the makespan
 /// and the route-time excess) and into the distance-proportional cost.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(triple(r, p, q))]
 pub struct VrpTwoOptNeighbor {
     pub r: usize,
     pub p: usize,
@@ -583,18 +571,6 @@ impl VrpTwoOptNeighbor {
             q,
             gain: price(prob, sol, penalty, &edit).gain,
         }
-    }
-}
-
-impl EnabledTabu for VrpTwoOptNeighbor {
-    /// Keyed by the `(slot, p, q)` triple.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled((self.r, self.p, self.q), iteration)
-    }
-
-    /// Applying it forbids that triple.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid((self.r, self.p, self.q), iteration, rng);
     }
 }
 

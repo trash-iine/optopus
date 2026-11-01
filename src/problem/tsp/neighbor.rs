@@ -1,19 +1,18 @@
 use super::problem::{Tsp, TspSolution};
 use crate::trait_defs::Rankable;
 use crate::{
-    building_blocks::search::TabuMemory,
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
-use rand::rngs::SmallRng;
 
 /// A 2-opt move that removes edges `(tour[i], tour[i+1])` and `(tour[j], tour[(j+1)%n])`,
 /// then reconnects as `(tour[i], tour[j])` and `(tour[i+1], tour[(j+1)%n])`.
 ///
 /// Implemented by reversing the sub-segment `tour[i+1..=j]`.
 /// `gain` is the change in tour length after the move (negative = improvement).
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(unordered(i, j))]
 pub struct TspTwoOptNeighbor {
     /// Smallest index of the two removed edges.
     pub i: usize,
@@ -73,20 +72,6 @@ impl TspTwoOptNeighbor {
             j,
             gain: prob.calc_2opt_gain_cities(e1, e2),
         }
-    }
-}
-
-impl EnabledTabu for TspTwoOptNeighbor {
-    /// Keyed by the `(i, j)` pair, normalized so that `i < j`.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        let key = (self.i.min(self.j), self.i.max(self.j));
-        tabu.is_enabled(key, iteration)
-    }
-
-    /// Applying it forbids that edge pair.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        let key = (self.i.min(self.j), self.i.max(self.j));
-        tabu.forbid(key, iteration, rng);
     }
 }
 
@@ -243,7 +228,8 @@ impl MoveToNeighbor<Tsp> for TspTwoOptNeighbor {
 ///
 /// `pos` and `ins` are indices in the original tour before the move is applied.
 /// `gain` is the change in tour length (negative = improvement).
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(pair(pos, ins))]
 pub struct TspRelocateNeighbor {
     /// Index of the city to be relocated.
     pub pos: usize,
@@ -331,18 +317,6 @@ impl TspRelocateNeighbor {
             ins,
             gain: insertion_cost(prob, sol, pos, ins) - removal_gain(prob, sol, pos),
         }
-    }
-}
-
-impl EnabledTabu for TspRelocateNeighbor {
-    /// Keyed by the `(pos, ins)` pair.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled((self.pos, self.ins), iteration)
-    }
-
-    /// Applying it forbids that `(pos, ins)` pair.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid((self.pos, self.ins), iteration, rng);
     }
 }
 

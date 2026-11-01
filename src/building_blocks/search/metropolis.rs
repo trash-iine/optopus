@@ -160,6 +160,10 @@ mod tests {
             surrogate: f64,
         }
         impl MoveToNeighbor<Line> for Step {
+            fn tabu_policy(&self) -> Option<&dyn crate::trait_defs::EnabledTabu> {
+                None
+            }
+
             fn apply_to_solution(
                 &self,
                 _: &Line,

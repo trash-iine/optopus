@@ -12,12 +12,10 @@
 //! cargo run --example custom_problem
 //! ```
 
-use optopus::building_blocks::search::{TabuKey, TabuMemory};
 use optopus::prelude::*;
 // optopus re-exports the rand it is built against. The trait signatures below
 // name rand types, and this keeps them the same version without a dependency.
 use optopus::rand;
-use optopus::rand::rngs::SmallRng;
 
 // ─── Problem definition ─────────────────────────────────────
 /// Maximize the number of bits set to 1 among `n` binary variables (OneMax).
@@ -58,7 +56,12 @@ impl ProblemTrait for OneMaxProblem {
 
 // ─── Neighborhood definition (single-bit flip) ──────────────
 /// `Clone` is what `TabuSearch` asks of a move besides `EnabledTabu`.
-#[derive(Clone, Rankable, Evaluate)]
+///
+/// `#[tabu(dense(index))]` is the tabu policy. The flip is allowed once bit
+/// `index` is no longer forbidden, and applying it forbids that bit for a
+/// tenure the memory draws from the range given to `TabuSearch::new`.
+#[derive(Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(index))]
 struct FlipMove {
     index: usize,
     /// Change in objective this flip would cause, cached at construction time.
@@ -99,9 +102,8 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
         (0..prob.n).map(move |i| FlipMove::new(prob, sol, i))
     }
 
-    /// Hands this move's tabu policy to the search state. Without this line
-    /// the `EnabledTabu` impl below still compiles, and `TabuSearch` runs with
-    /// no tabu list at all.
+    /// Hands this move's tabu policy to the search state. Every move states
+    /// this, and one without a policy returns `None`.
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
         Some(self)
     }
@@ -116,20 +118,6 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
         self.apply_to_solution(prob, &mut cloned)
             .expect("apply_to_solution should not fail");
         cloned.is_better_than(other)
-    }
-}
-
-// ─── Tabu policy ────────────────────────────────────────────
-impl EnabledTabu for FlipMove {
-    /// The flip is allowed once bit `index` is no longer forbidden.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.index), iteration)
-    }
-
-    /// Applying the flip forbids bit `index` for a tenure the memory draws
-    /// from the range given to `TabuSearch::new`.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.index), iteration, rng);
     }
 }
 

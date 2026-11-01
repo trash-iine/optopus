@@ -1,11 +1,9 @@
 use crate::trait_defs::Rankable;
 use rand::Rng;
-use rand::rngs::SmallRng;
 use rayon::prelude::*;
 
 use super::problem::{JobShopScheduling, JobShopSolution, PartialSchedule};
 use crate::{
-    building_blocks::search::{TabuKey, TabuMemory},
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
@@ -123,7 +121,8 @@ fn relocate_row(
 /// makespan (negative = improvement) relative to the solution the move was
 /// enumerated from; the schedule is re-decoded after the swap to obtain the
 /// exact value.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i))]
 pub struct JobShopSwapNeighbor {
     /// Left index of the swapped pair (swaps `operations[i]` and `operations[i+1]`).
     pub i: usize,
@@ -180,18 +179,6 @@ impl JobShopSwapNeighbor {
             i,
             gain: i64::from(makespan) - i64::from(sol.objective),
         }
-    }
-}
-
-impl EnabledTabu for JobShopSwapNeighbor {
-    /// The move is tabu while position `i` is still blocked at the current iteration.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-    }
-
-    /// Applying the move forbids position `i` for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
     }
 }
 
@@ -281,7 +268,8 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
 /// `gain` is the change in makespan (negative = improvement) relative to the
 /// solution the move was enumerated from; the schedule is re-decoded after
 /// the relocation to obtain the exact value.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(pair(from, to))]
 pub struct JobShopRelocateNeighbor {
     /// Index of the operation to be relocated.
     pub from: usize,
@@ -342,18 +330,6 @@ impl JobShopRelocateNeighbor {
             to,
             gain: i64::from(makespan) - i64::from(sol.objective),
         }
-    }
-}
-
-impl EnabledTabu for JobShopRelocateNeighbor {
-    /// Keyed by the `(from, to)` move, so re-making the same relocation is what is blocked.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled((self.from, self.to), iteration)
-    }
-
-    /// Applying it forbids that `(from, to)` pair.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid((self.from, self.to), iteration, rng);
     }
 }
 
@@ -649,6 +625,7 @@ mod tests {
         seed: u64,
     ) -> (JobShopScheduling, JobShopSolution) {
         use rand::SeedableRng;
+        use rand::rngs::SmallRng;
         use rand::seq::SliceRandom;
         let mut rng = SmallRng::seed_from_u64(seed);
         let jobs = (0..n_jobs)
