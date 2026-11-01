@@ -45,11 +45,12 @@ use rand::rngs::SmallRng;
 /// LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(1000))
 ///     .run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct QuboFlipNeighbor {
     /// Index of the variable to flip.
     pub i: usize,
     /// Change in objective value when this variable is flipped (negative = improvement).
+    #[objective(minimize)]
     pub gain: Coefficient,
 }
 
@@ -66,11 +67,6 @@ impl EnabledTabu for QuboFlipNeighbor {
 }
 
 // QUBO is a minimization problem: gain = change in energy (positive = worsening).
-impl Evaluate for QuboFlipNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
-    }
-}
 
 impl Evaluate<Coefficient> for QuboFlipNeighbor {
     fn evaluate(&self) -> Evaluable<Coefficient> {
@@ -189,13 +185,14 @@ impl QuboFlipNeighbor {
 ///     (5, 10),
 /// ).run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct QuboSwapNeighbor {
     /// Index of the first variable to flip.
     pub i: usize,
     /// Index of the second variable to flip.
     pub j: usize,
     /// Combined change in objective value when both variables are flipped (negative = improvement).
+    #[objective(minimize)]
     pub gain: Coefficient,
 }
 
@@ -229,12 +226,6 @@ impl QuboSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] - q,
         }
-    }
-}
-
-impl Evaluate for QuboSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 

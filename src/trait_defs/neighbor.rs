@@ -143,15 +143,10 @@ mod default_move_warning_tests {
     #[derive(Debug)]
     struct ToyProblem;
 
-    #[derive(Clone, Debug, Rankable)]
+    #[derive(Clone, Debug, Rankable, Evaluate)]
     struct ToySolution {
+        #[objective(maximize)]
         value: i32,
-    }
-
-    impl Evaluate for ToySolution {
-        fn evaluate(&self) -> Evaluable<f64> {
-            Evaluable::Maximize(f64::from(self.value))
-        }
     }
 
     impl ProblemTrait for ToyProblem {

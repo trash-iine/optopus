@@ -9,7 +9,7 @@ use crate::{
     },
     error::OptError,
     problem::vertex_cover::problem::VertexCoverSolution,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -20,11 +20,12 @@ use rand::rngs::SmallRng;
 /// (negative = improvement, since Vertex Cover is minimization). Applying the
 /// move refreshes the gain of every neighbor of `i` and the uncovered-edge
 /// count, i.e. O(degree(i)) work.
-#[derive(Debug, Clone, Copy, Rankable)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
 pub struct VertexCoverFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
     /// Change in objective after the flip.
+    #[objective(minimize)]
     pub gain: i32,
 }
 
@@ -39,12 +40,6 @@ impl VertexCoverFlipNeighbor {
     /// at the call site.
     pub fn new(_prob: &VertexCover, sol: &VertexCoverSolution, i: usize) -> Self {
         <VertexCover as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
-    }
-}
-
-impl Evaluate for VertexCoverFlipNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 
@@ -154,10 +149,11 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
 /// Only pairs `(i, j)` with `cover[i] != cover[j]` and `i < j` are enumerated.
 /// Applying the move performs two flips in sequence (`apply_to_iteration`
 /// returns `iter + 2`), each doing O(degree) work.
-#[derive(Debug, Clone, Copy, Rankable)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
 pub struct VertexCoverSwapNeighbor {
     pub i: usize,
     pub j: usize,
+    #[objective(minimize)]
     pub gain: i32,
 }
 
@@ -200,12 +196,6 @@ impl VertexCoverSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] - edge_correction,
         }
-    }
-}
-
-impl Evaluate for VertexCoverSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 

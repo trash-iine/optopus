@@ -7,7 +7,7 @@ use super::ops::{before, insertion_cost, node_at, removal_gain, reversal_delta};
 use super::problem::{Vrp, VrpSolution};
 use crate::building_blocks::search::{TabuMemory, pair_scan, random_distinct_pair};
 use crate::error::OptError;
-use crate::trait_defs::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
+use crate::trait_defs::{EnabledTabu, Evaluate, MoveToNeighbor};
 
 // ---------------------------------------------------------------------------
 // Relocate (inter-slot shift)
@@ -22,7 +22,7 @@ use crate::trait_defs::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 /// slots of different vehicle types differ in capacity, speed, cost and
 /// route-time limit, relocating across a type boundary is also how the search
 /// reassigns work between vehicle types.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct VrpRelocateNeighbor {
     /// Source slot index.
     pub from_r: usize,
@@ -35,6 +35,7 @@ pub struct VrpRelocateNeighbor {
     /// The relocated customer (cached for `apply` / tabu keying).
     pub customer: usize,
     /// Change in objective (negative = improvement).
+    #[objective(minimize)]
     pub gain: f64,
 }
 
@@ -185,12 +186,6 @@ impl VrpRelocateNeighbor {
     }
 }
 
-impl Evaluate for VrpRelocateNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
-    }
-}
-
 impl EnabledTabu for VrpRelocateNeighbor {
     /// Keyed by `(customer, slot)`: may this customer enter its destination
     /// slot?
@@ -278,7 +273,7 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
 ///
 /// Both routes keep their length, so occupancy — and with it `used_count`, the
 /// fixed cost and the `min_count` shortfall — cannot change.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct VrpSwapNeighbor {
     pub r1: usize,
     pub i1: usize,
@@ -289,6 +284,7 @@ pub struct VrpSwapNeighbor {
     /// Customer originally at `(r2, i2)`.
     pub c2: usize,
     /// Change in objective (negative = improvement).
+    #[objective(minimize)]
     pub gain: f64,
 }
 
@@ -429,12 +425,6 @@ impl VrpSwapNeighbor {
     }
 }
 
-impl Evaluate for VrpSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
-    }
-}
-
 impl EnabledTabu for VrpSwapNeighbor {
     /// Keyed by the unordered customer pair.
     fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
@@ -520,12 +510,13 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
 /// fixed cost are all invariant: the only primitive change is the travelled
 /// distance, which propagates into the route's time (and from there the makespan
 /// and the route-time excess) and into the distance-proportional cost.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct VrpTwoOptNeighbor {
     pub r: usize,
     pub p: usize,
     pub q: usize,
     /// Change in objective (negative = improvement).
+    #[objective(minimize)]
     pub gain: f64,
 }
 
@@ -592,12 +583,6 @@ impl VrpTwoOptNeighbor {
             q,
             gain: price(prob, sol, penalty, &edit).gain,
         }
-    }
-}
-
-impl Evaluate for VrpTwoOptNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
     }
 }
 

@@ -2,19 +2,20 @@ use crate::trait_defs::Rankable;
 use rand::seq::SliceRandom;
 
 use crate::error::OptError;
-use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
+use crate::search_state::{Distance, Evaluate, ProblemTrait};
 
 /// A packing, every item in a bin and no bin over capacity.
 ///
 /// Bins are numbered `0..num_bins()` with no empty one among them, so the
 /// number of bins in use is the length of `loads`.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct BinPackingSolution {
     /// `bin_of[i]` is the bin item `i` is in.
     pub bin_of: Vec<usize>,
     /// `loads[b]` is the total size packed into bin `b`.
     pub loads: Vec<u64>,
     /// `num_bins − mean((load / capacity)²)`, see [`BinPacking::energy`].
+    #[objective(minimize)]
     pub objective: f64,
     /// `Σ (load / capacity)²`, kept beside the loads so a move prices the
     /// objective in O(1).
@@ -53,13 +54,6 @@ fn relabel(bin_of: &[usize]) -> Vec<usize> {
             label[b]
         })
         .collect()
-}
-
-impl Evaluate for BinPackingSolution {
-    /// Bin packing minimizes the bins used, with fuller bins breaking ties.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.objective)
-    }
 }
 
 impl Distance for BinPackingSolution {

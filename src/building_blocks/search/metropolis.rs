@@ -153,14 +153,11 @@ mod tests {
         }
         /// A step along the line, with a surrogate number that need not agree
         /// with the step.
+        #[derive(Evaluate)]
         struct Step {
             by: i32,
+            #[objective(minimize)]
             surrogate: f64,
-        }
-        impl Evaluate for Step {
-            fn evaluate(&self) -> Evaluable<f64> {
-                Evaluable::Minimize(self.surrogate)
-            }
         }
         impl MoveToNeighbor<Line> for Step {
             fn apply_to_solution(

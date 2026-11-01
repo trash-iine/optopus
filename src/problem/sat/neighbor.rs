@@ -3,7 +3,7 @@ use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::search::{TabuKey, TabuMemory},
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -14,11 +14,12 @@ use rand::rngs::SmallRng;
 /// (positive = improvement, since MaxSAT is maximized). Applying the move
 /// updates the gains through the clauses that hold `i` and no others, in
 /// O(total length of those clauses).
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct SatFlipNeighbor {
     /// Index of the variable to flip.
     pub i: usize,
     /// Change in satisfied-clause count when this variable is flipped (positive = improvement).
+    #[objective(maximize)]
     pub gain: i64,
 }
 
@@ -45,12 +46,6 @@ impl EnabledTabu for SatFlipNeighbor {
     /// Applying the move forbids variable `i` for a tenure the memory draws.
     fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
         tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
-    }
-}
-
-impl Evaluate for SatFlipNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Maximize(self.gain as f64)
     }
 }
 
@@ -108,13 +103,14 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
 /// Applying the move performs two flips in sequence (`apply_to_iteration`
 /// returns `iter + 2`), each refreshing its own O(clauses containing that
 /// variable) set of neighbor gains.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct SatSwapNeighbor {
     /// Index of the first variable to flip.
     pub i: usize,
     /// Index of the second variable to flip.
     pub j: usize,
     /// Combined change in satisfied-clause count (positive = improvement).
+    #[objective(maximize)]
     pub gain: i64,
 }
 
@@ -147,12 +143,6 @@ impl EnabledTabu for SatSwapNeighbor {
     fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
         tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
         tabu.forbid(TabuKey::DenseVar(self.j), iteration, rng);
-    }
-}
-
-impl Evaluate for SatSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Maximize(self.gain as f64)
     }
 }
 
