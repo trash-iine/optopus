@@ -38,7 +38,7 @@ println!("cut weight = {}", state.best_solution.objective);
 2. `β` を `delta_beta` だけ進めます。ただし `reset_period` ステップごとに `initial_beta` に戻し、
    集団が収束した後に多様性を取り戻します。全体の最良解はリセットをまたいで残ります。
 3. Metropolis スイープ。新しい `β` で各レプリカを `sweeps_per_step` 回スイープします。提案された move は、
-   [SA](simulated_annealing.md) が使うのと同じ `boltzmann_accept` ヘルパーを通して確率 `min(1, exp(-β · ΔE))` で受理されます。
+   [SA](simulated_annealing.md) が使うのと同じ `metropolis_accept` ヘルパーを通して確率 `min(1, exp(-β · ΔE))` で受理されます。
 
 最初のリサンプリングの前にスイープはありません。手法はランダムな集団から始まり、それは高温ではスイープが作るはずの分布にすでになっています。
 

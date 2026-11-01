@@ -44,7 +44,7 @@ The population is seeded with `population_size` random solutions. Each
    converged; the global best survives the reset.
 3. Metropolis sweeps, every replica is swept `sweeps_per_step` times at the new
    `β`. A proposed move is accepted with probability `min(1, exp(-β · ΔE))`
-   through the same `boltzmann_accept` helper
+   through the same `metropolis_accept` helper
    [SA](simulated_annealing.md) uses.
 
 There is no sweep before the first resampling. The method starts from a random
