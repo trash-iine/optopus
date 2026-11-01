@@ -101,6 +101,9 @@ impl MoveToNeighbor<MyProblem> for MyMove {
     fn iter(prob: &MyProblem, sol: &MySolution) -> impl Iterator<Item = Self> + Send {
         std::iter::empty() // enumerate moves lazily
     }
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        None // no tabu policy yet, see Adding tabu
+    }
     fn apply_to_solution(&self, prob: &MyProblem, sol: &mut MySolution) -> Result<(), OptError> {
         todo!()
     }
@@ -138,7 +141,7 @@ heuristic. Full signatures are in the
 | `Sequential`, `Iterated`, `VariableNeighborhoodSearch`, `Restart` | nothing |
 | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing` | [`Evaluate<f64>`](../traits.md#core-trait-reference) on the move |
 | `ReinforcementLearningSearch` | [`Evaluate<f64>`](../traits.md#core-trait-reference) + `Clone` on the move |
-| `TabuSearch` | [`EnabledTabu`](../traits.md#core-trait-reference) + `Clone` on the move, plus `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` in its `MoveToNeighbor` impl, that one line is what hands the policy to the [`SearchState`](../search_state.md#remembering-tabu-moves), which owns the memory, see [Adding tabu](#adding-tabu) |
+| `TabuSearch` | [`EnabledTabu`](../traits.md#core-trait-reference) + `Clone` on the move, and `tabu_policy` in its `MoveToNeighbor` impl returning `Some(self)` rather than `None`, which is what hands the policy to the [`SearchState`](../search_state.md#remembering-tabu-moves) that owns the memory, see [Adding tabu](#adding-tabu) |
 | `GeneticAlgorithm` | [`Distance`](../traits.md#core-trait-reference) on the solution (with any parent selection, not only `DistantTopK`) plus a [`Crossover<P>`](../traits.md#core-trait-reference) impl ([`SubProblemExtractable`](../traits.md#core-trait-reference) on the problem only if you use `SubProblemBasedCrossover`) |
 | the CLI benchmark (TOML config) | all of the above |
 
@@ -152,28 +155,16 @@ benchmark cannot register partially.
 ## Adding tabu
 
 `TabuSearch` keeps a tabu list for a move only when the move says what applying
-it forbids. That takes three additions to the move of the skeleton, `Clone`, an
-`EnabledTabu` impl, and one method in its `MoveToNeighbor` impl. `TabuKey` and
-`TabuMemory` are search machinery that knows no problem, so they are imported
-from `optopus::building_blocks::search` rather than the prelude.
+it forbids. That takes `Clone`, the keys the move touches in `#[tabu(..)]`, and
+`Some(self)` in place of the skeleton's `None`.
 
 ```rust
-use optopus::building_blocks::search::{TabuKey, TabuMemory};
-use optopus::rand::rngs::SmallRng;
-
-#[derive(Clone)]
-struct MyMove { index: usize }
-
-impl EnabledTabu for MyMove {
-    // Allowed once the variable it touches is no longer forbidden.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.index), iteration)
-    }
-    // Applying it forbids that variable for a tenure drawn from the range
-    // given to `TabuSearch::new`.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.index), iteration, rng);
-    }
+#[derive(Clone, Evaluate, Rankable, EnabledTabu)]
+#[tabu(dense(index))] // allowed once `index` is free, and forbids it when applied
+struct MyMove {
+    index: usize,
+    #[objective(minimize)]
+    delta: f64,
 }
 
 impl MoveToNeighbor<MyProblem> for MyMove {
@@ -184,15 +175,21 @@ impl MoveToNeighbor<MyProblem> for MyMove {
 }
 ```
 
-**Without `tabu_policy` the `EnabledTabu` impl still compiles, and `TabuSearch`
-runs with no tabu list at all.**
+The move is allowed while every key it names is free, and applying it forbids
+every one of them for a tenure drawn from the range given to `TabuSearch::new`.
+`dense(i)` suits an index bounded by the instance, such as a variable, and
+`var(i)` is an index of any size. A move over two indices names both,
+`dense(i), dense(j)`, or forbids the pair with `pair(i, j)`, or with
+`unordered(i, j)` when `(i, j)` and `(j, i)` are the same move. `triple(a, b, c)`
+keys three. The [`EnabledTabu`](../api/optopus/trait_defs/trait.EnabledTabu.html)
+rustdoc lists the forms. A move that checks other keys than it forbids, as the
+VRP relocate does, implements `EnabledTabu` by hand with
+[`TabuKey`](../api/optopus/building_blocks/search/enum.TabuKey.html) and
+`TabuMemory` from `optopus::building_blocks::search`.
 
-`TabuKey::DenseVar(i)` suits an index bounded by the instance, such as a
-variable. A move over two variables forbids a `TabuKey::Pair(i, j)`, and an
-index of any size is a `TabuKey::Var(i)`. The
-[`TabuKey`](../api/optopus/building_blocks/search/enum.TabuKey.html) rustdoc
-lists every shape. `examples/custom_problem.rs` runs `TabuSearch` with this
-policy on its OneMax problem.
+`tabu_policy` has no default, so a move always says whether it has a policy.
+`examples/custom_problem.rs` runs `TabuSearch` with this policy on its OneMax
+problem.
 
 ## Performance note
 

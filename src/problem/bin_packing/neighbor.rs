@@ -4,7 +4,7 @@ use rand::rngs::SmallRng;
 use rand::seq::IteratorRandom;
 
 use super::problem::{BinPacking, BinPackingSolution};
-use crate::building_blocks::search::{TabuKey, TabuMemory, pair_scan};
+use crate::building_blocks::search::pair_scan;
 use crate::error::OptError;
 use crate::search_state::{EnabledTabu, Evaluate, MoveToNeighbor};
 
@@ -40,7 +40,8 @@ fn priced(prob: &BinPacking, sol: &BinPackingSolution, changes: &[(u64, u64)]) -
 /// takes the last item out. The new bin, numbered `num_bins()`, is offered to
 /// every item that shares its bin, so the neighborhood is never empty while
 /// some bin holds two items, however tight the packing.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(item))]
 pub struct BinPackingRelocateNeighbor {
     /// The item that moves.
     pub item: usize,
@@ -131,18 +132,6 @@ impl BinPackingRelocateNeighbor {
     }
 }
 
-impl EnabledTabu for BinPackingRelocateNeighbor {
-    /// The move is tabu while the item it moves is.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.item), iteration)
-    }
-
-    /// Moving an item forbids moving it again for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.item), iteration, rng);
-    }
-}
-
 impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
     /// what holds the tabu map.
@@ -225,7 +214,8 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
 ///
 /// It keeps the bin count and moves load from one bin to the other, which is
 /// how a nearly full bin gets the last bit of room filled.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(pair(i, j))]
 pub struct BinPackingSwapNeighbor {
     /// The first item, `i < j`.
     pub i: usize,
@@ -256,18 +246,6 @@ impl BinPackingSwapNeighbor {
             j,
             gain: priced(prob, sol, &changes).0 - sol.objective,
         })
-    }
-}
-
-impl EnabledTabu for BinPackingSwapNeighbor {
-    /// Keyed by the two items, so swapping them back is what is blocked.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled((self.i, self.j), iteration)
-    }
-
-    /// Applying it forbids that pair.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid((self.i, self.j), iteration, rng);
     }
 }
 

@@ -36,7 +36,7 @@ library and carry none of that material.
 2. `with_problem` arm in `src/benchmark/problems.rs`
 3. One impl block in `src/benchmark/problems.rs`: `BenchmarkProblem` (load_instance, decode_indices, the inverse of encode) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (`NAME`, `MINIMIZE`, `VALID_NEIGHBORS`, `with_neighbor` registry, optional `build_special_heuristic`, `build_crossover`)
 
-Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). Each move's `MoveToNeighbor` impl also needs `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }` next to its `EnabledTabu` impl. Without it the move compiles and silently has no tabu list, and `trait_defs/tabu.rs` has the test that pins every built-in move.
+Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). A move's tabu policy is `#[derive(EnabledTabu)]` with `#[tabu(..)]` keys (by hand only when it checks other keys than it forbids), and its `MoveToNeighbor::tabu_policy`, which has no default, returns `Some(self)`. A built-in move with a policy that returned `None` would run with no tabu list, and `trait_defs/tabu.rs` has the test that pins every one.
 
 ### Add a new base metaheuristic
 
@@ -46,8 +46,8 @@ Implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/
 
 ```
 optopus-derive/               the proc-macro crate of the workspace, the derives of Rankable,
-                              Evaluate and Distance, each re-exported from optopus::trait_defs
-                              beside its trait
+                              Evaluate, Distance and EnabledTabu, each re-exported from
+                              optopus::trait_defs beside its trait
 src/
 ├── lib.rs / main.rs / prelude.rs / error.rs (OptError)
 ├── benchmark/

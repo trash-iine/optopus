@@ -1,12 +1,10 @@
 use super::problem::{Sat, SatSolution};
 use crate::trait_defs::Rankable;
 use crate::{
-    building_blocks::search::{TabuKey, TabuMemory},
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
-use rand::rngs::SmallRng;
 
 /// A flip move that toggles a single variable `i`.
 ///
@@ -14,7 +12,8 @@ use rand::rngs::SmallRng;
 /// (positive = improvement, since MaxSAT is maximized). Applying the move
 /// updates the gains through the clauses that hold `i` and no others, in
 /// O(total length of those clauses).
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i))]
 pub struct SatFlipNeighbor {
     /// Index of the variable to flip.
     pub i: usize,
@@ -34,18 +33,6 @@ impl SatFlipNeighbor {
     /// site.
     pub fn new(_prob: &Sat, sol: &SatSolution, i: usize) -> Self {
         <Sat as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
-    }
-}
-
-impl EnabledTabu for SatFlipNeighbor {
-    /// The move is tabu while variable `i` is still blocked at the current iteration.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-    }
-
-    /// Applying the move forbids variable `i` for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
     }
 }
 
@@ -103,7 +90,8 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
 /// Applying the move performs two flips in sequence (`apply_to_iteration`
 /// returns `iter + 2`), each refreshing its own O(clauses containing that
 /// variable) set of neighbor gains.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i), dense(j))]
 pub struct SatSwapNeighbor {
     /// Index of the first variable to flip.
     pub i: usize,
@@ -129,20 +117,6 @@ impl SatSwapNeighbor {
             j,
             gain: sol.gain[i] + gain_j_after_flip_i,
         }
-    }
-}
-
-impl EnabledTabu for SatSwapNeighbor {
-    /// A swap is tabu unless both variables it moves are free.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-            && tabu.is_enabled(TabuKey::DenseVar(self.j), iteration)
-    }
-
-    /// Applying the swap forbids both variables, each for its own drawn tenure.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
-        tabu.forbid(TabuKey::DenseVar(self.j), iteration, rng);
     }
 }
 

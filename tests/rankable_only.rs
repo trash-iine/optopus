@@ -6,7 +6,6 @@
 //! below reports a number, so a heuristic that still read one would not
 //! compile against it.
 
-use optopus::building_blocks::search::{TabuKey, TabuMemory};
 use optopus::error::OptError;
 use optopus::heuristic::{
     AdaptivePerturbation, BeamSearch, BreakoutLocalSearch, GeneticAlgorithm, Heuristic, Iterated,
@@ -82,7 +81,8 @@ impl Pick {
 
 /// Flip one item, carrying the solution it leads to so that two flips of the
 /// same solution compare by where they land.
-#[derive(Clone)]
+#[derive(Clone, EnabledTabu)]
+#[tabu(var(i))]
 struct Flip {
     i: usize,
     after: Picked,
@@ -123,16 +123,6 @@ impl MoveToNeighbor<Pick> for Flip {
 
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
         Some(self)
-    }
-}
-
-impl EnabledTabu for Flip {
-    fn is_move_enabled(&self, tabu: &TabuMemory, iter: u64) -> bool {
-        tabu.is_enabled(TabuKey::Var(self.i), iter)
-    }
-
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iter: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::Var(self.i), iter, rng);
     }
 }
 

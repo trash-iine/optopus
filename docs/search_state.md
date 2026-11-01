@@ -86,11 +86,12 @@ before the descent and again before the kick. Until it is armed the tenure is
 forbid only what it hands to `record_tabu`.
 
 A move type opts in by implementing
-[`EnabledTabu`](traits.md#core-trait-reference) and overriding
-`MoveToNeighbor::tabu_policy` with `Some(self)`. **Implementing the trait
-without the one-line override leaves the move with no tabu policy**, so applying
-it records nothing and `TabuSearch` runs with an empty list and no complaint;
-`trait_defs/tabu.rs` pins every built-in move against that. `tabu_allows` and
+[`EnabledTabu`](traits.md#core-trait-reference), usually through
+`#[derive(EnabledTabu)]`, and returning `Some(self)` from
+`MoveToNeighbor::tabu_policy`. That method has no default, so every move says
+whether it has a policy. A move that returns `None` records nothing when
+applied, and `trait_defs/tabu.rs` checks that every built-in move with a policy
+hands it over. `tabu_allows` and
 `record_tabu` are bounded on `EnabledTabu`, so asking about a move that has no
 policy is a compile error.
 

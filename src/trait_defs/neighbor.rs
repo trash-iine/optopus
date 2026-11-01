@@ -69,27 +69,26 @@ where
         Self::iter(prob, sol).choose(rng)
     }
 
-    /// This move's tabu policy, or `None` when it has none, which is the
-    /// default.
+    /// This move's tabu policy, or `None` when it has none.
     ///
     /// [`apply`](crate::search_state::SearchState::apply) records the move it
     /// applies while the state is recording, and it is handed the move as a
     /// bare [`MoveToNeighbor`], so it cannot name [`EnabledTabu`]. This is how it
-    /// asks. A move implementing that trait **must** override this with one
-    /// line, or it will run with no tabu list and no complaint.
+    /// asks. A move implementing that trait returns itself.
     ///
     /// ```ignore
     /// fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }
     /// ```
     ///
-    /// Leaving the default in place keeps tabu optional, since applying such a
-    /// move records nothing and succeeds normally. That is what lets a new
-    /// problem implement three traits and still run
+    /// A move without one returns `None`, and applying it records nothing and
+    /// succeeds normally, which is what lets it run
     /// [`LocalSearch`](crate::heuristic::LocalSearch) and
     /// [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing).
-    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
-        None
-    }
+    ///
+    /// There is no default. A default of `None` would let a move that
+    /// implements [`EnabledTabu`] forget this line and run with no tabu list
+    /// and no complaint, so every move states which of the two it is.
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu>;
 
     /// Returns `true` if applying this move to `src` yields a solution better than `other`.
     ///
@@ -161,6 +160,10 @@ mod default_move_warning_tests {
     struct NaiveAddOne;
 
     impl MoveToNeighbor<ToyProblem> for NaiveAddOne {
+        fn tabu_policy(&self) -> Option<&dyn crate::trait_defs::EnabledTabu> {
+            None
+        }
+
         fn apply_to_solution(
             &self,
             _prob: &ToyProblem,
@@ -275,6 +278,10 @@ mod default_move_warning_tests {
     struct ToyFlip(usize);
 
     impl MoveToNeighbor<ToyBits> for ToyFlip {
+        fn tabu_policy(&self) -> Option<&dyn crate::trait_defs::EnabledTabu> {
+            None
+        }
+
         fn apply_to_solution(
             &self,
             _prob: &ToyBits,

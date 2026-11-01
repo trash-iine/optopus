@@ -3,7 +3,7 @@
 use super::problem::{GraphColoring, GraphColoringSolution};
 use crate::trait_defs::Rankable;
 use crate::{
-    building_blocks::search::{TabuKey, TabuMemory, random_distinct_pair},
+    building_blocks::search::random_distinct_pair,
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
@@ -15,7 +15,8 @@ use rand::rngs::SmallRng;
 /// `gain` holds the change in (penalty-augmented) objective after the move
 /// (negative = improvement, since Graph Coloring is minimization). Applying it
 /// refreshes the `gamma` row of every neighbor of `v`, i.e. O(degree(v)) work.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(v))]
 pub struct GraphColoringRecolorNeighbor {
     /// The vertex to recolor.
     pub v: usize,
@@ -40,18 +41,6 @@ impl GraphColoringRecolorNeighbor {
             new_color,
             gain: prob.recolor_gain(sol, v, new_color),
         }
-    }
-}
-
-impl EnabledTabu for GraphColoringRecolorNeighbor {
-    /// The move is tabu while vertex `v` is still blocked at the current iteration.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.v), iteration)
-    }
-
-    /// Applying the move forbids vertex `v` for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.v), iteration, rng);
     }
 }
 
@@ -124,7 +113,8 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringRecolorNeighbor {
 /// and `j < i` are enumerated. Applying the move performs two recolors in
 /// sequence (`apply_to_iteration` returns `iter + 2`), each doing O(degree)
 /// work.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i), dense(j))]
 pub struct GraphColoringSwapNeighbor {
     pub i: usize,
     pub j: usize,
@@ -144,20 +134,6 @@ impl GraphColoringSwapNeighbor {
             j,
             gain: prob.swap_gain(sol, i, j),
         }
-    }
-}
-
-impl EnabledTabu for GraphColoringSwapNeighbor {
-    /// A swap is tabu unless both vertices it recolors are free.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-            && tabu.is_enabled(TabuKey::DenseVar(self.j), iteration)
-    }
-
-    /// Applying the swap forbids both vertices, each for its own drawn tenure.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
-        tabu.forbid(TabuKey::DenseVar(self.j), iteration, rng);
     }
 }
 

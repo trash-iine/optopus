@@ -5,7 +5,7 @@ use rand::rngs::SmallRng;
 
 use super::problem::{FlowShop, FlowShopSolution};
 use super::taillard::HeadsTails;
-use crate::building_blocks::search::{TabuKey, TabuMemory, random_distinct_pair};
+use crate::building_blocks::search::random_distinct_pair;
 use crate::error::OptError;
 use crate::search_state::{EnabledTabu, Evaluate, MoveToNeighbor};
 
@@ -22,7 +22,8 @@ fn shifted(objective: u32, gain: i64) -> u32 {
 /// relies on. [`iter`](MoveToNeighbor::iter) prices all `n (n - 1)`
 /// insertions in O(n²m) with Taillard's heads and tails, one O(nm)
 /// tabulation per job taken out.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(job))]
 pub struct FlowShopInsertNeighbor {
     /// The job that moves.
     pub job: usize,
@@ -68,18 +69,6 @@ impl FlowShopInsertNeighbor {
             to,
             gain: i64::from(prob.makespan(&moved)) - i64::from(sol.objective),
         }
-    }
-}
-
-impl EnabledTabu for FlowShopInsertNeighbor {
-    /// The move is tabu while the job it moves is.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.job), iteration)
-    }
-
-    /// Moving a job forbids moving it again for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.job), iteration, rng);
     }
 }
 
@@ -154,7 +143,8 @@ impl MoveToNeighbor<FlowShop> for FlowShopInsertNeighbor {
 ///
 /// Priced from the heads before the first position and the tails after the
 /// second, so only the stretch between them is rescheduled.
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(pair(i, j))]
 pub struct FlowShopSwapNeighbor {
     /// The earlier position.
     pub i: usize,
@@ -181,18 +171,6 @@ impl FlowShopSwapNeighbor {
             j,
             gain: i64::from(prob.makespan(&swapped)) - i64::from(sol.objective),
         }
-    }
-}
-
-impl EnabledTabu for FlowShopSwapNeighbor {
-    /// Keyed by the two positions, so swapping them back is what is blocked.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled((self.i, self.j), iteration)
-    }
-
-    /// Applying it forbids that pair of positions.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid((self.i, self.j), iteration, rng);
     }
 }
 

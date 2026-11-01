@@ -2,10 +2,7 @@
 
 use crate::trait_defs::Rankable;
 use crate::{
-    building_blocks::{
-        representation::IntVar,
-        search::{TabuKey, TabuMemory, random_distinct_pair},
-    },
+    building_blocks::{representation::IntVar, search::random_distinct_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
     trait_defs::IntAssignment,
@@ -130,7 +127,8 @@ impl<P: IntAssignment> Iterator for Changes<'_, '_, P> {
 /// `cost` is the change the move makes to the objective with its direction
 /// applied, so lower is better. It is what [`Evaluable::minimized`](crate::trait_defs::Evaluable::minimized) reports
 /// for the move.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(var))]
 pub struct IntChangeNeighbor {
     /// The variable to change.
     pub var: usize,
@@ -150,19 +148,6 @@ impl IntChangeNeighbor {
             value,
             cost: direction(sol) * prob.assign_delta(sol, var, value),
         }
-    }
-}
-
-impl EnabledTabu for IntChangeNeighbor {
-    /// The move is tabu while variable `var` is still blocked at the current
-    /// iteration.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.var), iteration)
-    }
-
-    /// Applying the move forbids variable `var` for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.var), iteration, rng);
     }
 }
 
@@ -214,7 +199,8 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
 /// differ and fit each other's range are moves. On a
 /// [permutation](crate::building_blocks::representation::IntVars::permutation)
 /// the result is again one.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+#[tabu(pair(i, j))]
 pub struct IntSwapNeighbor {
     /// The smaller of the two variables.
     pub i: usize,
@@ -234,17 +220,6 @@ impl IntSwapNeighbor {
             j,
             cost: direction(sol) * prob.assign_swap_delta(sol, i, j),
         }
-    }
-}
-
-impl EnabledTabu for IntSwapNeighbor {
-    /// Keyed by the pair of variables.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled((self.i, self.j), iteration)
-    }
-
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid((self.i, self.j), iteration, rng);
     }
 }
 
@@ -324,7 +299,8 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
 /// value fits its new variable's range. On a
 /// [permutation](crate::building_blocks::representation::IntVars::permutation)
 /// read as a tour this is a 2-opt move, and the result is again a permutation.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+#[tabu(pair(i, j))]
 pub struct IntReverseNeighbor {
     /// The first variable of the range.
     pub i: usize,
@@ -344,17 +320,6 @@ impl IntReverseNeighbor {
             j,
             cost: direction(sol) * prob.assign_reverse_delta(sol, i, j),
         }
-    }
-}
-
-impl EnabledTabu for IntReverseNeighbor {
-    /// Keyed by the two ends of the reversed range.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled((self.i, self.j), iteration)
-    }
-
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid((self.i, self.j), iteration, rng);
     }
 }
 
