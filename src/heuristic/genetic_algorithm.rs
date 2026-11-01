@@ -2,8 +2,9 @@ use super::{Heuristic, StopCondition};
 use crate::building_blocks::search::{BiasedFitnessPopulation, binary_tournament};
 use crate::error::OptError;
 use crate::search_state::{
-    Crossover, Distance, Evaluate, ProblemTrait, Rankable, SearchState, SearchStateCloneType,
+    Crossover, Distance, ProblemTrait, Rankable, SearchState, SearchStateCloneType,
 };
+use crate::trait_defs::rank_cmp;
 
 /// How [`GeneticAlgorithm`] picks the two parents for each crossover step.
 #[derive(Clone, Copy, Debug, Default)]
@@ -62,20 +63,20 @@ enum Members<S> {
     Ranked(BiasedFitnessPopulation<S>),
 }
 
-impl<S: Distance + Evaluate + 'static> Members<S> {
-    /// Builds the representation the strategy needs, and with it the cost the
-    /// ranked one is ordered by. Separate from the rest of the impl because
-    /// only this needs to know what a member is worth.
+impl<S: Distance + Rankable + 'static> Members<S> {
+    /// Builds the representation the strategy needs, and with it the order the
+    /// ranked one is ranked by. Separate from the rest of the impl because
+    /// only this needs to know how members compare.
     fn for_strategy(strategy: ParentSelection) -> Self {
         match strategy {
             ParentSelection::BiasedFitness { n_elite, n_closest } => {
                 // The one place the two quantities the ranking reads are
-                // stated. A solution's objective with its direction applied,
-                // and the distance its own impl defines.
+                // stated. The solution's own order, better first, and the
+                // distance its own impl defines.
                 Self::Ranked(BiasedFitnessPopulation::new(
                     n_elite,
                     n_closest,
-                    Box::new(|s: &S| s.evaluate().minimized()),
+                    Box::new(|a: &S, b: &S| rank_cmp(b, a)),
                     Box::new(|a: &S, b: &S| a.distance(b) as f64),
                 ))
             }
@@ -197,7 +198,7 @@ where
     // `'static` because the ranked representation owns a boxed cost closure
     // whose signature names the solution type. Every solution here is owned
     // data, so it costs nothing in practice.
-    P::Solution: Distance + Evaluate + 'static,
+    P::Solution: Distance + 'static,
 {
     /// # Panics
     ///
@@ -388,7 +389,7 @@ where
 impl<P, C> Heuristic<P> for GeneticAlgorithm<P, C>
 where
     P: ProblemTrait,
-    P::Solution: Distance + Evaluate + 'static,
+    P::Solution: Distance + 'static,
     C: Crossover<P>,
 {
     /// Clears the population so the next `run` starts fresh.

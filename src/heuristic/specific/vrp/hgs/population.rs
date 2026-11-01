@@ -5,7 +5,7 @@
 //! population onto one basin within a few hundred generations; blending in a
 //! diversity rank is what lets HGS keep searching for millions of them.
 
-use crate::building_blocks::search::{BiasedFitnessPopulation, CostFn};
+use crate::building_blocks::search::{BiasedFitnessPopulation, OrderFn};
 use crate::problem::vrp::RouteAdjacency;
 
 pub(super) use crate::building_blocks::search::binary_tournament;
@@ -88,13 +88,13 @@ fn broken_pairs(a: &Individual, b: &Individual) -> f64 {
     a.broken_pairs_distance(b)
 }
 
-/// The cost the ranking is ordered by, under `penalty`.
+/// The order the ranking reads, cheaper first under `penalty`.
 ///
 /// `HybridGeneticSearch::set_penalty` is the only place a penalty other than
 /// the starting one reaches this, which is what keeps the ranking and the
 /// weight it ranks through in step.
-pub(super) fn penalized(penalty: f64) -> CostFn<Individual> {
-    Box::new(move |m| m.cost(penalty))
+pub(super) fn penalized(penalty: f64) -> OrderFn<Individual> {
+    Box::new(move |a, b| a.cost(penalty).total_cmp(&b.cost(penalty)))
 }
 
 /// An empty sub-population ranked under `penalty`, with the `nbElite` and
@@ -139,7 +139,7 @@ mod tests {
     /// The ranking itself lives in `building_blocks::search::BiasedFitnessPopulation` and is
     /// tested there. What is this wrapper's own is that the penalty reaches the
     /// cost, so a member that is cheap only while infeasibility is cheap stops
-    /// winning once the penalty rises, and that `set_cost` is what moves it.
+    /// winning once the penalty rises, and that `set_order` is what moves it.
     #[test]
     fn the_penalty_reaches_the_cost_the_ranking_reads() {
         let n = 6;
@@ -156,7 +156,7 @@ mod tests {
             "at a penalty of 1 the excess costs 5, so the short route wins"
         );
 
-        pop.set_cost(penalized(10.0));
+        pop.set_order(penalized(10.0));
         assert_eq!(
             pop.best().map(|m| m.base),
             Some(20.0),
