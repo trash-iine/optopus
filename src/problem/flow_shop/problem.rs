@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::seq::SliceRandom;
 
 use super::taillard::HeadsTails;
@@ -8,7 +9,7 @@ use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 /// A solution to the permutation flow shop, the order the jobs run in.
 ///
 /// Every machine processes the jobs in this one order.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct FlowShopSolution {
     /// A permutation of `0..n_jobs`, the job run first coming first.
     pub sequence: Vec<usize>,
@@ -22,7 +23,6 @@ impl Evaluate for FlowShopSolution {
         Evaluable::Minimize(f64::from(self.objective))
     }
 }
-crate::rank_by_objective!(FlowShopSolution);
 
 impl Distance for FlowShopSolution {
     /// The number of positions holding different jobs.

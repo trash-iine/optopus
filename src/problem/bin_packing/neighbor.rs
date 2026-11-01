@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::Rng;
 use rand::rngs::SmallRng;
 use rand::seq::IteratorRandom;
@@ -39,7 +40,7 @@ fn priced(prob: &BinPacking, sol: &BinPackingSolution, changes: &[(u64, u64)]) -
 /// takes the last item out. The new bin, numbered `num_bins()`, is offered to
 /// every item that shares its bin, so the neighborhood is never empty while
 /// some bin holds two items, however tight the packing.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct BinPackingRelocateNeighbor {
     /// The item that moves.
     pub item: usize,
@@ -134,7 +135,6 @@ impl Evaluate for BinPackingRelocateNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
-crate::rank_by_objective!(BinPackingRelocateNeighbor);
 
 impl EnabledTabu for BinPackingRelocateNeighbor {
     /// The move is tabu while the item it moves is.
@@ -230,7 +230,7 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
 ///
 /// It keeps the bin count and moves load from one bin to the other, which is
 /// how a nearly full bin gets the last bit of room filled.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct BinPackingSwapNeighbor {
     /// The first item, `i < j`.
     pub i: usize,
@@ -268,7 +268,6 @@ impl Evaluate for BinPackingSwapNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
-crate::rank_by_objective!(BinPackingSwapNeighbor);
 
 impl EnabledTabu for BinPackingSwapNeighbor {
     /// Keyed by the two items, so swapping them back is what is blocked.

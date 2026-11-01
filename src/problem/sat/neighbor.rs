@@ -1,4 +1,5 @@
 use super::problem::{Sat, SatSolution};
+use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::search::{TabuKey, TabuMemory},
     error::OptError,
@@ -13,7 +14,7 @@ use rand::rngs::SmallRng;
 /// (positive = improvement, since MaxSAT is maximized). Applying the move
 /// updates the gains through the clauses that hold `i` and no others, in
 /// O(total length of those clauses).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct SatFlipNeighbor {
     /// Index of the variable to flip.
     pub i: usize,
@@ -52,7 +53,6 @@ impl Evaluate for SatFlipNeighbor {
         Evaluable::Maximize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(SatFlipNeighbor);
 
 impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
@@ -108,7 +108,7 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
 /// Applying the move performs two flips in sequence (`apply_to_iteration`
 /// returns `iter + 2`), each refreshing its own O(clauses containing that
 /// variable) set of neighbor gains.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct SatSwapNeighbor {
     /// Index of the first variable to flip.
     pub i: usize,
@@ -155,7 +155,6 @@ impl Evaluate for SatSwapNeighbor {
         Evaluable::Maximize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(SatSwapNeighbor);
 
 /// Whether two clause-sharing pairs have the same `i`, which is what splits
 /// the pair list into the runs [`SwapScan`] prices one at a time.

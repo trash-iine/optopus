@@ -1,5 +1,6 @@
 //! The moves every [`IntAssignment`] gets.
 
+use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::{
         representation::IntVar,
@@ -129,7 +130,7 @@ impl<P: IntAssignment> Iterator for Changes<'_, '_, P> {
 /// `cost` is the change the move makes to the objective with its direction
 /// applied, so lower is better. It is what [`Evaluable::minimized`] reports
 /// for the move.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Rankable)]
 pub struct IntChangeNeighbor {
     /// The variable to change.
     pub var: usize,
@@ -158,7 +159,6 @@ impl Evaluate for IntChangeNeighbor {
         Evaluable::Minimize(self.cost)
     }
 }
-crate::rank_by_objective!(IntChangeNeighbor);
 
 impl EnabledTabu for IntChangeNeighbor {
     /// The move is tabu while variable `var` is still blocked at the current
@@ -221,7 +221,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
 /// differ and fit each other's range are moves. On a
 /// [permutation](crate::building_blocks::representation::IntVars::permutation)
 /// the result is again one.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Rankable)]
 pub struct IntSwapNeighbor {
     /// The smaller of the two variables.
     pub i: usize,
@@ -250,7 +250,6 @@ impl Evaluate for IntSwapNeighbor {
         Evaluable::Minimize(self.cost)
     }
 }
-crate::rank_by_objective!(IntSwapNeighbor);
 
 impl EnabledTabu for IntSwapNeighbor {
     /// Keyed by the pair of variables.
@@ -339,7 +338,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
 /// value fits its new variable's range. On a
 /// [permutation](crate::building_blocks::representation::IntVars::permutation)
 /// read as a tour this is a 2-opt move, and the result is again a permutation.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Rankable)]
 pub struct IntReverseNeighbor {
     /// The first variable of the range.
     pub i: usize,
@@ -368,7 +367,6 @@ impl Evaluate for IntReverseNeighbor {
         Evaluable::Minimize(self.cost)
     }
 }
-crate::rank_by_objective!(IntReverseNeighbor);
 
 impl EnabledTabu for IntReverseNeighbor {
     /// Keyed by the two ends of the reversed range.
@@ -611,7 +609,7 @@ mod tests {
     /// its own, which caches each variable's term.
     struct Own(IntVars);
 
-    #[derive(Clone)]
+    #[derive(Clone, Rankable)]
     struct OwnSolution {
         x: Vec<i64>,
         terms: Vec<f64>,
@@ -623,7 +621,6 @@ mod tests {
             Evaluable::Minimize(self.total)
         }
     }
-    crate::rank_by_objective!(OwnSolution);
 
     impl ProblemTrait for Own {
         type Solution = OwnSolution;

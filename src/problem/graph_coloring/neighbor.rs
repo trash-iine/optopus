@@ -1,6 +1,7 @@
 //! Neighborhood move types for the [`GraphColoring`] problem.
 
 use super::problem::{GraphColoring, GraphColoringSolution};
+use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::search::{TabuKey, TabuMemory, random_distinct_pair},
     error::OptError,
@@ -14,7 +15,7 @@ use rand::rngs::SmallRng;
 /// `gain` holds the change in (penalty-augmented) objective after the move
 /// (negative = improvement, since Graph Coloring is minimization). Applying it
 /// refreshes the `gamma` row of every neighbor of `v`, i.e. O(degree(v)) work.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Rankable)]
 pub struct GraphColoringRecolorNeighbor {
     /// The vertex to recolor.
     pub v: usize,
@@ -46,7 +47,6 @@ impl Evaluate for GraphColoringRecolorNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(GraphColoringRecolorNeighbor);
 
 impl EnabledTabu for GraphColoringRecolorNeighbor {
     /// The move is tabu while vertex `v` is still blocked at the current iteration.
@@ -129,7 +129,7 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringRecolorNeighbor {
 /// and `j < i` are enumerated. Applying the move performs two recolors in
 /// sequence (`apply_to_iteration` returns `iter + 2`), each doing O(degree)
 /// work.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Rankable)]
 pub struct GraphColoringSwapNeighbor {
     pub i: usize,
     pub j: usize,
@@ -156,7 +156,6 @@ impl Evaluate for GraphColoringSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(GraphColoringSwapNeighbor);
 
 impl EnabledTabu for GraphColoringSwapNeighbor {
     /// A swap is tabu unless both vertices it recolors are free.

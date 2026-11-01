@@ -45,6 +45,10 @@
 //! - [`prelude`] re-exports the commonly used types and traits.
 //! - [`error`] defines the unified error type.
 
+// The derive macros expand to `::optopus::...` paths, which this makes resolve
+// inside the crate as well as outside it.
+extern crate self as optopus;
+
 pub mod benchmark;
 pub mod building_blocks;
 pub mod error;

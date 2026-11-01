@@ -18,9 +18,9 @@ Every heuristic runs under the search state, recording its behavior and enable t
    traits (`ProblemTrait` on the problem, `Evaluate` on the solution and on the
    move, `MoveToNeighbor` on the solution move across the problem) and
    `LocalSearch`, `RandomWalk`, `BeamSearch`, `SimulatedAnnealing` and every
-   meta-heuristic work as-is. `Rankable` is one line,
-   `optopus::rank_by_objective!(MySolution, MyMove);`, where the order is the
-   objective. The rest are unlocked one trait at a time, with `EnabledTabu` for
+   meta-heuristic work as-is. `Rankable` is
+   `#[derive(Rankable)]` on each, which compares objectives unless `rank`
+   attributes name other keys. The rest are unlocked one trait at a time, with `EnabledTabu` for
    Tabu Search and `Distance` + a `Crossover` for Genetic Algorithm. 
    Full signatures and the per-heuristic requirement matrix are in
    [Core traits](traits.md#core-trait-reference).

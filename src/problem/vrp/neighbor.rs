@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::Rng;
 use rand::rngs::SmallRng;
 
@@ -21,7 +22,7 @@ use crate::trait_defs::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 /// slots of different vehicle types differ in capacity, speed, cost and
 /// route-time limit, relocating across a type boundary is also how the search
 /// reassigns work between vehicle types.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct VrpRelocateNeighbor {
     /// Source slot index.
     pub from_r: usize,
@@ -189,7 +190,6 @@ impl Evaluate for VrpRelocateNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
-crate::rank_by_objective!(VrpRelocateNeighbor);
 
 impl EnabledTabu for VrpRelocateNeighbor {
     /// Keyed by `(customer, slot)`: may this customer enter its destination
@@ -278,7 +278,7 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
 ///
 /// Both routes keep their length, so occupancy — and with it `used_count`, the
 /// fixed cost and the `min_count` shortfall — cannot change.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct VrpSwapNeighbor {
     pub r1: usize,
     pub i1: usize,
@@ -434,7 +434,6 @@ impl Evaluate for VrpSwapNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
-crate::rank_by_objective!(VrpSwapNeighbor);
 
 impl EnabledTabu for VrpSwapNeighbor {
     /// Keyed by the unordered customer pair.
@@ -521,7 +520,7 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
 /// fixed cost are all invariant: the only primitive change is the travelled
 /// distance, which propagates into the route's time (and from there the makespan
 /// and the route-time excess) and into the distance-proportional cost.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct VrpTwoOptNeighbor {
     pub r: usize,
     pub p: usize,
@@ -601,7 +600,6 @@ impl Evaluate for VrpTwoOptNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
-crate::rank_by_objective!(VrpTwoOptNeighbor);
 
 impl EnabledTabu for VrpTwoOptNeighbor {
     /// Keyed by the `(slot, p, q)` triple.

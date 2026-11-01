@@ -9,13 +9,13 @@ use super::rankable::Rankable;
 ///
 /// ```rust,ignore
 /// struct MyProblem { /* ... */ }
+/// // The order is the objective, so Rankable is derived from Evaluate.
+/// #[derive(Clone, Rankable)]
 /// struct MySolution { value: f64 }
 ///
-/// // The order is the objective, so Rankable is derived from Evaluate.
 /// impl Evaluate for MySolution {
 ///     fn evaluate(&self) -> Evaluable<f64> { Evaluable::Maximize(self.value) }
 /// }
-/// optopus::rank_by_objective!(MySolution);
 /// impl ProblemTrait for MyProblem {
 ///     type Solution = MySolution;
 ///     fn new_solution(&self, _rng: &mut impl rand::Rng) -> MySolution {

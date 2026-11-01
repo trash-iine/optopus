@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use std::collections::HashSet;
 
 use crate::error::OptError;
@@ -34,7 +35,7 @@ static ZERO_COEFF: Coefficient = 0;
 /// println!("objective = {}", sol.objective);
 /// println!("x = {:?}", sol.x);
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct QuboSolution {
     /// The variable assignment: `x[i] = true` means variable `i` is set to 1.
     /// Sized to `max_variable_id + 1`; only indices in `Qubo::iter_on_variables`
@@ -54,7 +55,6 @@ impl Evaluate for QuboSolution {
         Evaluable::Minimize(self.objective as f64)
     }
 }
-crate::rank_by_objective!(QuboSolution);
 
 impl Distance for QuboSolution {
     fn distance(&self, other: &Self) -> usize {

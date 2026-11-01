@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::seq::SliceRandom;
 
 use crate::error::OptError;
@@ -12,7 +13,7 @@ use crate::search_state::{Distance, ProblemTrait};
 /// `objective` is the makespan (Cmax) obtained by left-shift semi-active
 /// scheduling, and `completion_times` are the per-position completion times
 /// in the same order as `operations`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct JobShopSolution {
     /// Permutation-with-repetition of length `n_jobs * n_machines`; the
     /// k-th occurrence of job `j` is operation `O(j, k)`.
@@ -30,7 +31,6 @@ impl crate::trait_defs::Evaluate for JobShopSolution {
         crate::trait_defs::Evaluable::Minimize(f64::from(self.objective))
     }
 }
-crate::rank_by_objective!(JobShopSolution);
 
 impl Distance for JobShopSolution {
     /// Position-based dissimilarity: number of positions where the job index differs.

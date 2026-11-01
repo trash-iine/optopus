@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::rngs::SmallRng;
 
 use super::problem::{Qap, QapSolution};
@@ -13,7 +14,7 @@ use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
 /// The move remembers the
 /// two locations it takes the facilities from, which is what the tabu list of
 /// Taillard's robust tabu search is about.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct QapSwapNeighbor {
     /// The first facility.
     pub i: usize,
@@ -70,7 +71,6 @@ impl Evaluate for QapSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(QapSwapNeighbor);
 
 impl EnabledTabu for QapSwapNeighbor {
     /// The move is tabu only when it would put both facilities back where

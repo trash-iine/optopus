@@ -1,6 +1,7 @@
 use crate::building_blocks::instance::Graph;
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
+use crate::trait_defs::Rankable;
 use crate::trait_defs::check_assignment;
 
 /// The Minimum Vertex Cover problem.
@@ -17,7 +18,7 @@ pub struct VertexCover {
 }
 
 /// A solution for the Vertex Cover problem.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct VertexCoverSolution {
     /// `cover[v] = true` iff vertex `v` is selected.
     pub x: Vec<bool>,
@@ -37,7 +38,6 @@ impl crate::trait_defs::Evaluate for VertexCoverSolution {
         crate::trait_defs::Evaluable::Minimize(self.objective as f64)
     }
 }
-crate::rank_by_objective!(VertexCoverSolution);
 
 impl Distance for VertexCoverSolution {
     fn distance(&self, other: &Self) -> usize {
