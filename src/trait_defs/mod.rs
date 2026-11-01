@@ -6,8 +6,8 @@
 //! optional capabilities such as [`EnabledTabu`] (TabuSearch), [`Crossover`] /
 //! [`SubProblemExtractable`] / [`Distance`] (GeneticAlgorithm) unlock additional
 //! heuristics. [`Rankable`] is the order every heuristic compares by, and
-//! [`rank_by_objective!`](crate::rank_by_objective) writes it from [`Evaluate`]
-//! where the order is the objective.
+//! `#[derive(Rankable)]` writes it, from [`Evaluate`] where the order is the
+//! objective and from named keys where it is not.
 //!
 //! Every trait the problem side implements and a heuristic calls is defined
 //! here, including the ones of one family of problems, such as
@@ -36,6 +36,7 @@ pub use crossover::{Crossover, SubProblemExtractable};
 pub use evaluate::{Evaluable, Evaluate};
 pub use int_assignment::IntAssignment;
 pub use neighbor::MoveToNeighbor;
+pub use optopus_derive::Rankable;
 pub use problem::ProblemTrait;
 pub use rankable::{Distance, Rankable, better_by_objective, filter_best, rank_cmp};
 pub use reduction::ProblemReduction;

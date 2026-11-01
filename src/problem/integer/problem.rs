@@ -1,6 +1,7 @@
 use crate::building_blocks::representation::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
+use crate::trait_defs::Rankable;
 use crate::trait_defs::{Branchable, IntAssignment};
 use rand::Rng;
 
@@ -12,7 +13,7 @@ use rand::Rng;
 /// [`new_solution`](ProblemTrait::new_solution) or
 /// [`IntegerProblem::solution_from`] and changed only by the moves of this
 /// module.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Rankable)]
 pub struct IntSolution {
     values: Vec<i64>,
     objective: Evaluable<f64>,
@@ -35,7 +36,6 @@ impl Evaluate for IntSolution {
         self.objective
     }
 }
-crate::rank_by_objective!(IntSolution);
 
 impl crate::search_state::Distance for IntSolution {
     /// The number of variables whose values differ.

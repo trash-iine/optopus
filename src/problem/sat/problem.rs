@@ -1,5 +1,6 @@
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
+use crate::trait_defs::Rankable;
 use crate::trait_defs::check_assignment;
 
 fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
@@ -9,7 +10,7 @@ fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
 }
 
 /// A solution to the MaxSAT problem.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct SatSolution {
     /// Variable assignment; `x[i]` is the truth value of variable `i + 1`
     /// (DIMACS literals are 1-indexed, `x` is 0-indexed).
@@ -55,7 +56,6 @@ impl crate::trait_defs::Evaluate for SatSolution {
         crate::trait_defs::Evaluable::Maximize(self.n_satisfied as f64)
     }
 }
-crate::rank_by_objective!(SatSolution);
 
 impl Distance for SatSolution {
     fn distance(&self, other: &Self) -> usize {

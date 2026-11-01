@@ -45,6 +45,8 @@ Implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/
 ## Module Map
 
 ```
+optopus-derive/               the proc-macro crate of the workspace, #[derive(Rankable)],
+                              re-exported as optopus::trait_defs::Rankable beside the trait
 src/
 ├── lib.rs / main.rs / prelude.rs / error.rs (OptError)
 ├── benchmark/
@@ -58,7 +60,7 @@ src/
 ├── trait_defs/               every trait the problem side implements and a heuristic calls;
 │                             a trait both implemented and used inside one layer
 │                             (Heuristic, PerturbationSchedule, ChangeDelta) stays by its type
-│   ├── rankable.rs           Rankable, rank_by_objective! (Rankable from Evaluate), rank_cmp,
+│   ├── rankable.rs           Rankable (derived by optopus-derive), better_by_objective, rank_cmp,
 │   │                         filter_best, Distance
 │   ├── problem.rs            ProblemTrait
 │   ├── neighbor.rs           MoveToNeighbor

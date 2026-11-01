@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use std::iter::once;
 
 use rand::rngs::SmallRng;
@@ -21,7 +22,7 @@ fn shifted(objective: u32, gain: i64) -> u32 {
 /// relies on. [`iter`](MoveToNeighbor::iter) prices all `n (n - 1)`
 /// insertions in O(n²m) with Taillard's heads and tails, one O(nm)
 /// tabulation per job taken out.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct FlowShopInsertNeighbor {
     /// The job that moves.
     pub job: usize,
@@ -74,7 +75,6 @@ impl Evaluate for FlowShopInsertNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(FlowShopInsertNeighbor);
 
 impl EnabledTabu for FlowShopInsertNeighbor {
     /// The move is tabu while the job it moves is.
@@ -159,7 +159,7 @@ impl MoveToNeighbor<FlowShop> for FlowShopInsertNeighbor {
 ///
 /// Priced from the heads before the first position and the tails after the
 /// second, so only the stretch between them is rescheduled.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct FlowShopSwapNeighbor {
     /// The earlier position.
     pub i: usize,
@@ -193,7 +193,6 @@ impl Evaluate for FlowShopSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(FlowShopSwapNeighbor);
 
 impl EnabledTabu for FlowShopSwapNeighbor {
     /// Keyed by the two positions, so swapping them back is what is blocked.

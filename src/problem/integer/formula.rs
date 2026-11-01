@@ -1,6 +1,7 @@
 //! Problems whose objective and constraints are arithmetic expressions over
 //! integer variables, with every delta derived from the expressions.
 
+use crate::trait_defs::Rankable;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use crate::building_blocks::representation::IntVars;
@@ -789,7 +790,7 @@ fn interaction_neighbors(objective: &Poly, constraints: &[Poly], n: usize) -> Ve
 }
 
 /// A solution of a [`FormulaProblem`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct FormulaSolution {
     values: Vec<i64>,
     objective: Evaluable<f64>,
@@ -813,7 +814,6 @@ impl Evaluate for FormulaSolution {
         self.objective
     }
 }
-crate::rank_by_objective!(FormulaSolution);
 
 impl Distance for FormulaSolution {
     /// The number of variables whose values differ.

@@ -1,6 +1,7 @@
 use crate::building_blocks::instance::Graph;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
+use crate::trait_defs::Rankable;
 use rand::Rng;
 
 /// The Graph Coloring problem in a self-contained, penalty-augmented form.
@@ -26,7 +27,7 @@ pub struct GraphColoring {
 }
 
 /// A solution for the Graph Coloring problem.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct GraphColoringSolution {
     /// `colors[v]` = color assigned to vertex `v`, in `0..k`.
     pub colors: Vec<usize>,
@@ -49,7 +50,6 @@ impl Evaluate for GraphColoringSolution {
         Evaluable::Minimize(self.objective as f64)
     }
 }
-crate::rank_by_objective!(GraphColoringSolution);
 
 /// Hamming distance over the color assignments.
 impl Distance for GraphColoringSolution {

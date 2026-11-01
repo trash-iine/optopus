@@ -24,7 +24,7 @@ moves.
 | [`ProblemTrait`](../traits.md#core-trait-reference) | the problem struct | `type Solution`, `new_solution(rng) -> Solution` |
 | [`MoveToNeighbor<P>`](../traits.md#core-trait-reference) | the neighbor type | `iter`, `apply_to_solution`, `move_to_be_better_than` |
 | [`Evaluate`](../traits.md#core-trait-reference) | the neighbor type | `evaluate(&self) -> Evaluable<f64>`, a second, separate impl |
-| [`Rankable`](../traits.md#core-trait-reference) | `Solution` and the neighbor type | `is_better_than`, written by `optopus::rank_by_objective!` in one line |
+| [`Rankable`](../traits.md#core-trait-reference) | `Solution` and the neighbor type | `is_better_than`, written by `#[derive(Rankable)]` |
 
 `Evaluate` really is implemented twice. On the solution it reports the
 objective, wrapped in `Evaluable::Maximize` or `Evaluable::Minimize` according
@@ -42,6 +42,7 @@ problem, so what it needs is cached when the move is built, the way
 `FlipMove::new` in `examples/custom_problem.rs` caches its gain.
 
 ```rust
+#[derive(Rankable)]
 struct MyMove { index: usize, delta: f64 }
 
 impl MyMove {
@@ -56,17 +57,18 @@ impl Evaluate for MyMove {
         Evaluable::Minimize(self.delta) // a minimizing problem, negative improves
     }
 }
-optopus::rank_by_objective!(MyMove);
 ```
 
-The last line gives the move [`Rankable`](../traits.md#core-trait-reference),
-and the solution takes the same line beside its own `Evaluate`. `Rankable` is
-how `LocalSearch`, `RandomWalk`, `BeamSearch` and `TabuSearch` pick a
-move and how every heuristic decides whether a solution is an improvement.
-`rank_by_objective!` compares the two `evaluate` values with the direction
-applied. A problem whose order is not its objective, one that compares
-violations before cost for example, implements `Rankable` by hand instead and
-keeps `Evaluate` as the number the annealing heuristics read.
+`#[derive(Rankable)]` gives the move [`Rankable`](../traits.md#core-trait-reference),
+and the solution derives it the same way. `Rankable` is how `LocalSearch`,
+`RandomWalk`, `BeamSearch` and `TabuSearch` pick a move and how every
+heuristic decides whether a solution is an improvement. With no `rank`
+attribute it compares the two `evaluate` values with the direction applied.
+A problem whose order is not its objective, one that compares violations
+before cost for example, names its keys instead, as in
+`#[rank(min = violation(), min = cost)]`, and keeps `Evaluate` as the number
+the annealing heuristics read. The [`Rankable` rustdoc](../api/optopus/trait_defs/trait.Rankable.html)
+has the forms.
 
 ## Skeleton
 
@@ -77,20 +79,20 @@ use optopus::rand; // the rand optopus is built against
 
 struct MyProblem { /* ... */ }
 
-#[derive(Clone)]
+#[derive(Clone, Rankable)]
 struct MySolution { /* ... */ }
 
 impl Evaluate for MySolution {
     // Maximize or Minimize, whichever way the problem goes.
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
-optopus::rank_by_objective!(MySolution);
 
 impl ProblemTrait for MyProblem {
     type Solution = MySolution;
     fn new_solution(&self, rng: &mut impl rand::Rng) -> Self::Solution { todo!() }
 }
 
+#[derive(Rankable)]
 struct MyMove { /* coordinates of the move */ }
 
 impl MoveToNeighbor<MyProblem> for MyMove {
@@ -114,7 +116,6 @@ impl Evaluate for MyMove {
     // reads this through `Rankable`.
     fn evaluate(&self) -> Evaluable<f64> { todo!() }
 }
-optopus::rank_by_objective!(MyMove);
 ```
 
 `examples/custom_problem.rs` shows the cached-gain form.

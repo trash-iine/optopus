@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::seq::SliceRandom;
 
 use crate::error::OptError;
@@ -7,7 +8,7 @@ use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 ///
 /// Bins are numbered `0..num_bins()` with no empty one among them, so the
 /// number of bins in use is the length of `loads`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct BinPackingSolution {
     /// `bin_of[i]` is the bin item `i` is in.
     pub bin_of: Vec<usize>,
@@ -60,7 +61,6 @@ impl Evaluate for BinPackingSolution {
         Evaluable::Minimize(self.objective)
     }
 }
-crate::rank_by_objective!(BinPackingSolution);
 
 impl Distance for BinPackingSolution {
     /// Hamming distance after relabelling the bins of each packing in order

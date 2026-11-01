@@ -1,6 +1,7 @@
 use crate::building_blocks::instance::Graph;
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
+use crate::trait_defs::Rankable;
 use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate, check_assignment};
 
 /// The MaxCut problem instance, an undirected weighted graph.
@@ -61,7 +62,7 @@ pub struct MaxCut {
 /// // sol.x[i], which side vertex i is on
 /// // sol.gain[i], how much flipping vertex i would change the objective
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct MaxCutSolution {
     /// The cut assignment for each vertex: `x[i]` is the side of vertex `i`.
     /// Sized to `max_vertex_id + 1`; only indices in `MaxCut::graph.vertices` are meaningful.
@@ -79,7 +80,6 @@ impl Evaluate for MaxCutSolution {
         Evaluable::Maximize(self.objective as f64)
     }
 }
-crate::rank_by_objective!(MaxCutSolution);
 
 impl Distance for MaxCutSolution {
     fn distance(&self, other: &Self) -> usize {

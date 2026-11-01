@@ -249,6 +249,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "glob",
+ "optopus-derive",
  "rand",
  "rand_chacha",
  "rayon",
@@ -257,6 +258,15 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "optopus-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

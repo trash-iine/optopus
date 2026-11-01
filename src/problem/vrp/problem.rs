@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
@@ -247,7 +248,7 @@ pub enum ObjectiveMode {
 /// All three violations (capacity, route time, minimum fleet usage) are soft,
 /// weighted by [`Vrp::penalty_weight`] exactly as [`crate::problem::Vrp`]
 /// handles capacity.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct VrpSolution {
     /// Ordered customers per slot; length is always `num_slots`.
     pub routes: Vec<Vec<usize>>,
@@ -282,7 +283,6 @@ impl Evaluate for VrpSolution {
         Evaluable::Minimize(self.objective)
     }
 }
-crate::rank_by_objective!(VrpSolution);
 
 impl Distance for VrpSolution {
     /// Broken-pairs dissimilarity: how many of the two solutions' customer

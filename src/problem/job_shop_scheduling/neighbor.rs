@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::Rng;
 use rand::rngs::SmallRng;
 use rayon::prelude::*;
@@ -122,7 +123,7 @@ fn relocate_row(
 /// makespan (negative = improvement) relative to the solution the move was
 /// enumerated from; the schedule is re-decoded after the swap to obtain the
 /// exact value.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct JobShopSwapNeighbor {
     /// Left index of the swapped pair (swaps `operations[i]` and `operations[i+1]`).
     pub i: usize,
@@ -186,7 +187,6 @@ impl Evaluate for JobShopSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(JobShopSwapNeighbor);
 
 impl EnabledTabu for JobShopSwapNeighbor {
     /// The move is tabu while position `i` is still blocked at the current iteration.
@@ -286,7 +286,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
 /// `gain` is the change in makespan (negative = improvement) relative to the
 /// solution the move was enumerated from; the schedule is re-decoded after
 /// the relocation to obtain the exact value.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct JobShopRelocateNeighbor {
     /// Index of the operation to be relocated.
     pub from: usize,
@@ -354,7 +354,6 @@ impl Evaluate for JobShopRelocateNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(JobShopRelocateNeighbor);
 
 impl EnabledTabu for JobShopRelocateNeighbor {
     /// Keyed by the `(from, to)` move, so re-making the same relocation is what is blocked.
