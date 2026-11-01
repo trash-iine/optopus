@@ -27,10 +27,14 @@ println!("cut weight = {}", state.best_solution.objective);
 Each `run_once`:
 
 1. Draw a uniformly random neighbor with `state.random_neighbor`.
-2. Read its worsening, `evaluate().minimized()`. Accept the move when the
-   worsening is negative, and otherwise with probability `exp(−worsening / T)`,
+2. Accept the move when the problem's order says it improves, through
+   `move_to_be_better_than`. Otherwise read its worsening,
+   `evaluate().minimized()`, and accept with probability `exp(−worsening / T)`,
    so a move that leaves the objective unchanged is always accepted. The shared
-   helper `boltzmann_accept(delta, T, rng)` makes this decision.
+   helper `metropolis_accept(mv, prob, sol, T, rng)` makes this decision. The
+   worsening may be a surrogate the order does not follow, such as a penalized
+   cost beside a violations-first order, and the best the search reports still
+   follows the order.
 3. Apply an accepted move, or count the iteration as rejected.
 4. Multiply `T` by `cooling_rate`.
 

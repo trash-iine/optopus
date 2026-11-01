@@ -26,8 +26,9 @@ println!("cut weight = {}", state.best_solution.objective);
 各 `run_once` で次を行います。
 
 1. `state.random_neighbor` で一様ランダムに近傍を一つ引きます。
-2. その悪化量 `evaluate().minimized()` を読みます。悪化量が負なら受理し、そうでなければ確率 `exp(−worsening / T)` で受理します。
-   目的関数を変えない move は常に受理されます。この判定は共通のヘルパー `boltzmann_accept(delta, T, rng)` が行います。
+2. 問題の順序が改善と言えば、`move_to_be_better_than` を通して受理します。そうでなければ悪化量 `evaluate().minimized()` を読み、確率 `exp(−worsening / T)` で受理します。
+   目的関数を変えない move は常に受理されます。この判定は共通のヘルパー `metropolis_accept(mv, prob, sol, T, rng)` が行います。
+   悪化量は、違反優先の順序に添えた罰則つきコストのように、順序と一致しない代理の数値でもよく、探索が報告する最良解はあくまで順序に従います。
 3. 受理した move を適用し、棄却したときは反復を棄却として数えます。
 4. `T` を `cooling_rate` 倍します。
 

@@ -3,7 +3,7 @@ use crate::error::OptError;
 use crate::search_state::SearchState;
 use crate::trait_defs::{Evaluate, MoveToNeighbor, ProblemTrait};
 
-use crate::building_blocks::search::boltzmann_accept;
+use crate::building_blocks::search::metropolis_accept;
 
 /// Simulated annealing heuristic.
 ///
@@ -60,8 +60,10 @@ where
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let neighbor: N = state.random_neighbor("SimulatedAnnealing")?;
-        if boltzmann_accept(
-            neighbor.evaluate(),
+        if metropolis_accept(
+            &neighbor,
+            state.instance,
+            &state.solution,
             self.current_temperature,
             &mut state.rng,
         ) {
@@ -135,8 +137,10 @@ where
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let neighbor: N = state.random_neighbor("SimulatedAnnealing (bang-bang)")?;
 
-        if boltzmann_accept(
-            neighbor.evaluate(),
+        if metropolis_accept(
+            &neighbor,
+            state.instance,
+            &state.solution,
             self.current_temperature,
             &mut state.rng,
         ) {
