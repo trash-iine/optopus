@@ -2,8 +2,9 @@
 
 use rayon::prelude::*;
 
-use super::config::{BenchmarkConfig, HeuristicConfig, ProblemKind, validate_config};
+use super::config::{BenchmarkConfig, HeuristicConfig, validate_config};
 use super::factory::{ConfigurableProblem, Search, build_search};
+use super::problems::ProblemKind;
 use super::problems::{BenchmarkProblem, BenchmarkSolution, ProblemVisitor, with_problem};
 use super::report::{BenchmarkReport, InstanceHeuristicResult, SingleRunResult, compute_summary};
 use crate::error::OptError;

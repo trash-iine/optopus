@@ -10,7 +10,7 @@
 //!   and config validation
 //! - `factory`, the generic heuristic factory (`build_heuristic` + visitors)
 //! - `problems`, per-problem registration: to add a problem to the benchmark,
-//!   add a [`ProblemKind`] variant, a `with_problem` arm, and one impl block here
+//!   add one line to its problem table and one impl block per trait there
 //! - `runner`, the parallel run loop and per-run metrics
 //! - `report`, the output report types and summary statistics
 mod config;
@@ -20,9 +20,8 @@ mod report;
 mod runner;
 
 pub use config::{
-    BenchmarkConfig, HeuristicConfig, InstanceConfig, NeighborKind, ProblemKind,
-    StopConditionConfig,
+    BenchmarkConfig, HeuristicConfig, InstanceConfig, NeighborKind, StopConditionConfig,
 };
-pub use problems::{BenchmarkProblem, BenchmarkSolution};
+pub use problems::{BenchmarkProblem, BenchmarkSolution, ProblemKind};
 pub use report::{BenchmarkReport, InstanceHeuristicResult, SingleRunResult, Summary};
 pub use runner::Benchmark;

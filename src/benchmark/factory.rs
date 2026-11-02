@@ -6,7 +6,7 @@
 //! [`ConfigurableProblem`] impls in [`super::problems`].
 
 use super::config::{HeuristicConfig, NeighborKind};
-use super::problems::{BenchmarkProblem, BenchmarkSolution};
+use super::problems::{BenchmarkProblem, BenchmarkSolution, Registered};
 use crate::error::OptError;
 use crate::heuristic::{
     BeamSearch, BranchAndBound, GeneticAlgorithm, Heuristic, Iterated, LateAcceptanceHillClimbing,
@@ -76,23 +76,22 @@ pub(crate) trait NeighborVisitor<P: ProblemTrait> {
 
 /// Per-problem registration point for the benchmark factory.
 ///
-/// Adding a new problem to the benchmark requires exactly:
-/// 1. a variant in [`ProblemKind`],
-/// 2. an arm in [`with_problem`],
-/// 3. an impl of this trait (plus [`BenchmarkProblem`] / [`BenchmarkSolution`]).
-pub(crate) trait ConfigurableProblem: BenchmarkProblem + Send + Sync + 'static
+/// Adding a new problem to the benchmark takes one line in the problem table
+/// of [`super::problems`], which gives the problem its
+/// [`ProblemKind`](super::problems::ProblemKind) variant and its
+/// [`Registered`] name and direction, and an impl of this trait (plus
+/// [`BenchmarkProblem`] / [`BenchmarkSolution`]).
+pub(crate) trait ConfigurableProblem:
+    Registered + BenchmarkProblem + Send + Sync + 'static
 where
     Self::Solution: BenchmarkSolution + Distance + Evaluate,
 {
-    /// Problem name used in error messages (matches the `ProblemKind` variant).
-    const NAME: &'static str;
-    /// Whether the problem is minimized (drives report statistics).
-    const MINIMIZE: bool;
     /// The neighborhood kinds this problem supports.
     const VALID_NEIGHBORS: &'static [NeighborKind];
 
     /// The neighbor registry: maps a [`NeighborKind`] to the concrete move
-    /// type by invoking `visitor` with it.
+    /// type by invoking `visitor` with it. The `neighbors!` table in
+    /// [`super::problems`] writes it together with `VALID_NEIGHBORS`.
     fn with_neighbor<V: NeighborVisitor<Self>>(
         kind: &NeighborKind,
         visitor: V,
@@ -103,11 +102,7 @@ where
         config: &HeuristicConfig,
         _cond: StopCondition,
     ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
-        Err(OptError::Config(format!(
-            "heuristic '{}' is not supported for {}",
-            config.kind_name(),
-            Self::NAME
-        )))
+        Err(unsupported::<Self>(config))
     }
 
     /// Problem-specific heuristics (BLS on MaxCut, LKH on TSP).
@@ -115,16 +110,21 @@ where
         config: &HeuristicConfig,
         _cond: StopCondition,
     ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
-        Err(OptError::Config(format!(
-            "heuristic '{}' is not supported for {}",
-            config.kind_name(),
-            Self::NAME
-        )))
+        Err(unsupported::<Self>(config))
     }
 
     /// Builds the crossover operator selected by `crossover_kind`
     /// (with a problem-specific default when `None`).
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError>;
+}
+
+/// Shared error for a heuristic the problem has no builder for.
+pub(crate) fn unsupported<P: Registered>(config: &HeuristicConfig) -> OptError {
+    OptError::Config(format!(
+        "heuristic '{}' is not supported for {}",
+        config.kind_name(),
+        P::NAME
+    ))
 }
 
 /// Shared error for a `(problem, neighbor)` mismatch.
@@ -614,7 +614,7 @@ where
 /// tenure out of order, an unknown crossover) surface once at startup instead
 /// of once per run.
 pub(crate) fn check_build(
-    kind: &crate::benchmark::config::ProblemKind,
+    kind: &crate::benchmark::problems::ProblemKind,
     config: &HeuristicConfig,
 ) -> Result<(), OptError> {
     struct BuildCheck<'a> {
@@ -636,7 +636,8 @@ pub(crate) fn check_build(
 #[cfg(test)]
 mod factory_tests {
     use super::*;
-    use crate::benchmark::config::{ProblemKind, StopConditionConfig};
+    use crate::benchmark::config::StopConditionConfig;
+    use crate::benchmark::problems::ProblemKind;
 
     fn try_build(kind: &ProblemKind, config: &HeuristicConfig) -> Result<(), OptError> {
         check_build(kind, config)

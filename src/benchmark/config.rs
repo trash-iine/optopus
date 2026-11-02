@@ -2,49 +2,13 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::problems::ProblemKind;
 use crate::error::OptError;
 use crate::heuristic::StopCondition;
 
 // ---------------------------------------------------------------------------
 // Config types (Deserialize + Serialize) — used as input from a TOML file
 // ---------------------------------------------------------------------------
-
-/// Problem type discriminant used in config files.
-///
-/// `FormulaProblem` and `IntegerProblem` are intentionally absent. They are
-/// library-only, built in code from an [`Expr`](crate::problem::Expr) or a
-/// closure, and have no instance file format for the benchmark runner to load.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub enum ProblemKind {
-    MaxCut,
-    Qubo,
-    Sat,
-    Tsp,
-    VertexCover,
-    JobShop,
-    FlowShop,
-    Qap,
-    BinPacking,
-    Vrp,
-    GraphColoring,
-}
-
-impl ProblemKind {
-    /// Every kind, in declaration order, for code that sweeps the problems.
-    pub const ALL: &[ProblemKind] = &[
-        ProblemKind::MaxCut,
-        ProblemKind::Qubo,
-        ProblemKind::Sat,
-        ProblemKind::Tsp,
-        ProblemKind::VertexCover,
-        ProblemKind::JobShop,
-        ProblemKind::FlowShop,
-        ProblemKind::Qap,
-        ProblemKind::BinPacking,
-        ProblemKind::Vrp,
-        ProblemKind::GraphColoring,
-    ];
-}
 
 /// Stop condition as expressed in a config file (duration in seconds instead of `Duration`).
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

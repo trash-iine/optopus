@@ -30,11 +30,10 @@ library and carry none of that material.
 
 ## Extension recipes
 
-### Add a new problem to the benchmark (3 sites, all small)
+### Add a new problem to the benchmark (one file, `src/benchmark/problems.rs`)
 
-1. `ProblemKind` variant in `src/benchmark/config.rs`
-2. `with_problem` arm in `src/benchmark/problems.rs`
-3. One impl block in `src/benchmark/problems.rs`: `BenchmarkProblem` (load_instance, decode_indices, the inverse of encode) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (`NAME`, `MINIMIZE`, `VALID_NEIGHBORS`, `with_neighbor` registry, optional `build_special_heuristic`, `build_crossover`)
+1. One row in the `problems!` table, `Variant => ProblemType, minimize;`. It makes the `ProblemKind` variant (the TOML spelling, also the name in error messages), the `with_problem` arm, and the direction the report reads. A test checks that direction against the solution's `Evaluate`, and its `instance` match asks for a small instance of the new kind.
+2. One impl block each: `BenchmarkProblem` (load_instance, decode_indices, the inverse of encode) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (a `neighbors!` table of `NeighborKind => move type`, `build_crossover`, optional `build_special_heuristic` / `build_branch_and_bound`)
 
 Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). A move's tabu policy is `#[derive(EnabledTabu)]` with `#[tabu(..)]` keys (by hand only when it checks other keys than it forbids), and its `MoveToNeighbor::tabu_policy`, which has no default, returns `Some(self)`. A built-in move with a policy that returned `None` would run with no tabu list, and `trait_defs/tabu.rs` has the test that pins every one.
 
@@ -51,10 +50,11 @@ optopus-derive/               the proc-macro crate of the workspace, the derives
 src/
 ├── lib.rs / main.rs / prelude.rs / error.rs (OptError)
 ├── benchmark/
-│   ├── config.rs             ProblemKind, NeighborKind, HeuristicConfig, BenchmarkConfig
+│   ├── config.rs             NeighborKind, HeuristicConfig, BenchmarkConfig
 │   ├── factory.rs            ConfigNeighbor, NeighborVisitor, ConfigurableProblem,
 │   │                         BaseBuilder, build_heuristic (the single generic factory)
-│   ├── problems.rs           all per-problem registration + with_problem
+│   ├── problems.rs           the problems! table (ProblemKind, with_problem, Registered)
+│   │                         and all per-problem registration
 │   ├── runner.rs             run_from_config, run loop, per-run seed derivation
 │   └── report.rs             SingleRunResult, Summary, BenchmarkReport
 ├── search_state/mod.rs       SearchState<'a, P>, SearchStateCloneType
