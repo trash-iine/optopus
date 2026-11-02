@@ -1,13 +1,17 @@
 //! Per-problem registration for the benchmark.
 //!
-//! This file is the single place to touch when adding a new problem:
-//! implement [`BenchmarkProblem`] + [`BenchmarkSolution`] +
-//! [`ConfigurableProblem`], and add the [`with_problem`] arm for the new
-//! [`ProblemKind`] variant.
+//! This file is the single place to touch when adding a new problem: one
+//! line in the `problems!` table, which makes the [`ProblemKind`] variant and
+//! the dispatch to the type, and one impl each of [`BenchmarkProblem`],
+//! [`BenchmarkSolution`] and [`ConfigurableProblem`], whose neighbors are one
+//! `neighbors!` table.
 
-use super::config::{HeuristicConfig, NeighborKind, ProblemKind};
+use serde::{Deserialize, Serialize};
+
+use super::config::{HeuristicConfig, NeighborKind};
 use super::factory::{
     ConfigurableProblem, NeighborVisitor, ProvingSearch, build_heuristic, invalid_neighbor,
+    unsupported,
 };
 use crate::building_blocks::representation::BinaryRelaxation;
 use crate::error::OptError;
@@ -39,6 +43,114 @@ use crate::problem::{
 };
 use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
 use crate::trait_defs::{BinaryProblem, BranchSpace, Relaxation, Ruinable};
+
+// ---------------------------------------------------------------------------
+// The problem table, the one list of the problems a config can name
+// ---------------------------------------------------------------------------
+
+/// What the problem table says about a problem.
+pub(crate) trait Registered {
+    /// The [`ProblemKind`] variant's name, as a config and the error messages
+    /// spell the problem.
+    const NAME: &'static str;
+    /// Whether lower objectives are better. It is the direction the
+    /// solution's `Evaluate` reports, which a test checks for every row, and
+    /// the report reads it where it has no solution to ask.
+    const MINIMIZE: bool;
+}
+
+macro_rules! minimizes {
+    (minimize) => {
+        true
+    };
+    (maximize) => {
+        false
+    };
+}
+
+/// Writes [`ProblemKind`] with its `ALL`, `minimize` and `valid_neighbors`,
+/// [`with_problem`], and every [`Registered`] impl from one list of
+/// `Variant => ProblemType, direction;`.
+macro_rules! problems {
+    ($($kind:ident => $ty:ty, $direction:ident;)+) => {
+        /// Problem type discriminant used in config files.
+        ///
+        /// `FormulaProblem` and `IntegerProblem` are intentionally absent. They are
+        /// library-only, built in code from an [`Expr`](crate::problem::Expr) or a
+        /// closure, and have no instance file format for the benchmark runner to load.
+        #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+        pub enum ProblemKind {
+            $($kind,)+
+        }
+
+        impl ProblemKind {
+            /// Every kind, in declaration order, for code that sweeps the problems.
+            pub const ALL: &[ProblemKind] = &[$(ProblemKind::$kind,)+];
+
+            /// Whether this problem is minimized (drives report statistics).
+            pub fn minimize(&self) -> bool {
+                match self {
+                    $(ProblemKind::$kind => <$ty as Registered>::MINIMIZE,)+
+                }
+            }
+
+            /// The neighborhood kinds supported by this problem.
+            pub fn valid_neighbors(&self) -> &'static [NeighborKind] {
+                match self {
+                    $(ProblemKind::$kind => <$ty as ConfigurableProblem>::VALID_NEIGHBORS,)+
+                }
+            }
+        }
+
+        /// Maps the runtime [`ProblemKind`] to the concrete problem type.
+        pub(crate) fn with_problem<V: ProblemVisitor>(kind: &ProblemKind, visitor: V) -> V::Output {
+            match kind {
+                $(ProblemKind::$kind => visitor.visit::<$ty>(),)+
+            }
+        }
+
+        $(
+            impl Registered for $ty {
+                const NAME: &'static str = stringify!($kind);
+                const MINIMIZE: bool = minimizes!($direction);
+            }
+        )+
+    };
+}
+
+problems! {
+    MaxCut => MaxCut, maximize;
+    Qubo => Qubo, minimize;
+    Sat => Sat, maximize;
+    Tsp => Tsp, minimize;
+    VertexCover => VertexCover, minimize;
+    JobShop => JobShopScheduling, minimize;
+    FlowShop => FlowShop, minimize;
+    Qap => Qap, minimize;
+    BinPacking => BinPacking, minimize;
+    Vrp => Vrp, minimize;
+    GraphColoring => GraphColoring, minimize;
+}
+
+/// Writes `VALID_NEIGHBORS` and `with_neighbor` inside a
+/// [`ConfigurableProblem`] impl from one list of `NeighborKind => move type`,
+/// so the kinds a config may name and the kinds that dispatch are one list.
+macro_rules! neighbors {
+    ($($kind:ident => $mv:ty),+ $(,)?) => {
+        const VALID_NEIGHBORS: &'static [NeighborKind] = &[$(NeighborKind::$kind),+];
+
+        fn with_neighbor<V: NeighborVisitor<Self>>(
+            kind: &NeighborKind,
+            visitor: V,
+        ) -> Result<V::Output, OptError> {
+            match kind {
+                $(NeighborKind::$kind => Ok(visitor.visit::<$mv>()),)+
+                #[allow(unreachable_patterns)]
+                other => Err(invalid_neighbor::<Self>(other)),
+            }
+        }
+    };
+}
 
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
@@ -354,19 +466,9 @@ impl BenchmarkSolution for GraphColoringSolution {
 }
 
 impl ConfigurableProblem for MaxCut {
-    const NAME: &'static str = "MaxCut";
-    const MINIMIZE: bool = false;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Flip => Ok(visitor.visit::<MaxCutFlipNeighbor>()),
-            NeighborKind::Swap => Ok(visitor.visit::<MaxCutSwapNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Flip => MaxCutFlipNeighbor,
+        Swap => MaxCutSwapNeighbor,
     }
 
     fn build_special_heuristic(
@@ -389,10 +491,7 @@ impl ConfigurableProblem for MaxCut {
                 *p0,
                 *q,
             ))),
-            _ => Err(OptError::Config(format!(
-                "heuristic '{}' is not supported for MaxCut",
-                config.kind_name()
-            ))),
+            _ => Err(unsupported::<Self>(config)),
         }
     }
 
@@ -424,26 +523,17 @@ impl ConfigurableProblem for MaxCut {
                 )),
             })),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for MaxCut (expected 'Uniform' or 'SubProblem')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Uniform' or 'SubProblem')",
+                Self::NAME
             ))),
         }
     }
 }
 
 impl ConfigurableProblem for Qubo {
-    const NAME: &'static str = "Qubo";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Flip => Ok(visitor.visit::<QuboFlipNeighbor>()),
-            NeighborKind::Swap => Ok(visitor.visit::<QuboSwapNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Flip => QuboFlipNeighbor,
+        Swap => QuboSwapNeighbor,
     }
 
     fn build_branch_and_bound(
@@ -458,26 +548,17 @@ impl ConfigurableProblem for Qubo {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(QuboUniformCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for Qubo (expected 'Uniform')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Uniform')",
+                Self::NAME
             ))),
         }
     }
 }
 
 impl ConfigurableProblem for Sat {
-    const NAME: &'static str = "Sat";
-    const MINIMIZE: bool = false;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Flip => Ok(visitor.visit::<SatFlipNeighbor>()),
-            NeighborKind::Swap => Ok(visitor.visit::<SatSwapNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Flip => SatFlipNeighbor,
+        Swap => SatSwapNeighbor,
     }
 
     fn build_special_heuristic(
@@ -502,10 +583,7 @@ impl ConfigurableProblem for Sat {
                     adaptive_noise.unwrap_or(false),
                 )))
             }
-            _ => Err(OptError::Config(format!(
-                "heuristic '{}' is not supported for Sat",
-                config.kind_name()
-            ))),
+            _ => Err(unsupported::<Self>(config)),
         }
     }
 
@@ -521,27 +599,17 @@ impl ConfigurableProblem for Sat {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(SatUniformCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for Sat (expected 'Uniform')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Uniform')",
+                Self::NAME
             ))),
         }
     }
 }
 
 impl ConfigurableProblem for Tsp {
-    const NAME: &'static str = "Tsp";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] =
-        &[NeighborKind::TwoOpt, NeighborKind::Relocate];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::TwoOpt => Ok(visitor.visit::<TspTwoOptNeighbor>()),
-            NeighborKind::Relocate => Ok(visitor.visit::<TspRelocateNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        TwoOpt => TspTwoOptNeighbor,
+        Relocate => TspRelocateNeighbor,
     }
 
     fn build_special_heuristic(
@@ -570,10 +638,7 @@ impl ConfigurableProblem for Tsp {
                     alns_params(*removal_fraction, *cooling_rate)?;
                 Ok(Box::new(alns_for_tsp(cond, removal_fraction, cooling_rate)))
             }
-            _ => Err(OptError::Config(format!(
-                "heuristic '{}' is not supported for Tsp",
-                config.kind_name()
-            ))),
+            _ => Err(unsupported::<Self>(config)),
         }
     }
 
@@ -581,31 +646,18 @@ impl ConfigurableProblem for Tsp {
         match kind.unwrap_or("Order") {
             "Order" => Ok(Box::new(TspOrderCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for Tsp (expected 'Order')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Order')",
+                Self::NAME
             ))),
         }
     }
 }
 
 impl ConfigurableProblem for Vrp {
-    const NAME: &'static str = "Vrp";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[
-        NeighborKind::Relocate,
-        NeighborKind::Swap,
-        NeighborKind::TwoOpt,
-    ];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Relocate => Ok(visitor.visit::<VrpRelocateNeighbor>()),
-            NeighborKind::Swap => Ok(visitor.visit::<VrpSwapNeighbor>()),
-            NeighborKind::TwoOpt => Ok(visitor.visit::<VrpTwoOptNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Relocate => VrpRelocateNeighbor,
+        Swap => VrpSwapNeighbor,
+        TwoOpt => VrpTwoOptNeighbor,
     }
 
     fn build_special_heuristic(
@@ -640,10 +692,7 @@ impl ConfigurableProblem for Vrp {
                 target_feasible.unwrap_or(0.2),
                 Some(restart_generations.unwrap_or(20_000)),
             ))),
-            _ => Err(OptError::Config(format!(
-                "heuristic '{}' is not supported for Vrp",
-                config.kind_name()
-            ))),
+            _ => Err(unsupported::<Self>(config)),
         }
     }
 
@@ -651,26 +700,17 @@ impl ConfigurableProblem for Vrp {
         match kind.unwrap_or("Order") {
             "Order" => Ok(Box::new(VrpOrderCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for Vrp (expected 'Order')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Order')",
+                Self::NAME
             ))),
         }
     }
 }
 
 impl ConfigurableProblem for VertexCover {
-    const NAME: &'static str = "VertexCover";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Flip => Ok(visitor.visit::<VertexCoverFlipNeighbor>()),
-            NeighborKind::Swap => Ok(visitor.visit::<VertexCoverSwapNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Flip => VertexCoverFlipNeighbor,
+        Swap => VertexCoverSwapNeighbor,
     }
 
     fn build_branch_and_bound(
@@ -685,33 +725,25 @@ impl ConfigurableProblem for VertexCover {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(VertexCoverUniformCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for VertexCover (expected 'Uniform')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Uniform')",
+                Self::NAME
             ))),
         }
     }
 }
 
 impl ConfigurableProblem for JobShopScheduling {
-    const NAME: &'static str = "JobShop";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Swap, NeighborKind::Relocate];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Swap => Ok(visitor.visit::<JobShopSwapNeighbor>()),
-            NeighborKind::Relocate => Ok(visitor.visit::<JobShopRelocateNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Swap => JobShopSwapNeighbor,
+        Relocate => JobShopRelocateNeighbor,
     }
 
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
         match kind.unwrap_or("Ppx") {
             "Ppx" => Ok(Box::new(JobShopPpxCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for JobShop (expected 'Ppx')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Ppx')",
+                Self::NAME
             ))),
         }
     }
@@ -738,25 +770,16 @@ impl BenchmarkSolution for QapSolution {
 }
 
 impl ConfigurableProblem for Qap {
-    const NAME: &'static str = "Qap";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Swap];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Swap => Ok(visitor.visit::<QapSwapNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Swap => QapSwapNeighbor,
     }
 
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
         match kind.unwrap_or("Order") {
             "Order" => Ok(Box::new(QapOrderCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for Qap (expected 'Order')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Order')",
+                Self::NAME
             ))),
         }
     }
@@ -908,19 +931,9 @@ impl BenchmarkSolution for BinPackingSolution {
 }
 
 impl ConfigurableProblem for BinPacking {
-    const NAME: &'static str = "BinPacking";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Relocate, NeighborKind::Swap];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Relocate => Ok(visitor.visit::<BinPackingRelocateNeighbor>()),
-            NeighborKind::Swap => Ok(visitor.visit::<BinPackingSwapNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Relocate => BinPackingRelocateNeighbor,
+        Swap => BinPackingSwapNeighbor,
     }
 
     fn build_special_heuristic(
@@ -946,10 +959,7 @@ impl ConfigurableProblem for BinPacking {
                     ),
                 ))
             }
-            _ => Err(OptError::Config(format!(
-                "heuristic '{}' is not supported for BinPacking",
-                config.kind_name()
-            ))),
+            _ => Err(unsupported::<Self>(config)),
         }
     }
 
@@ -957,26 +967,17 @@ impl ConfigurableProblem for BinPacking {
         match kind.unwrap_or("Group") {
             "Group" => Ok(Box::new(BinPackingGroupCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for BinPacking (expected 'Group')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Group')",
+                Self::NAME
             ))),
         }
     }
 }
 
 impl ConfigurableProblem for FlowShop {
-    const NAME: &'static str = "FlowShop";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Swap, NeighborKind::Relocate];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            NeighborKind::Swap => Ok(visitor.visit::<FlowShopSwapNeighbor>()),
-            NeighborKind::Relocate => Ok(visitor.visit::<FlowShopInsertNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        Swap => FlowShopSwapNeighbor,
+        Relocate => FlowShopInsertNeighbor,
     }
 
     fn build_special_heuristic(
@@ -1023,10 +1024,7 @@ impl ConfigurableProblem for FlowShop {
                     cooling_rate,
                 )))
             }
-            _ => Err(OptError::Config(format!(
-                "heuristic '{}' is not supported for FlowShop",
-                config.kind_name()
-            ))),
+            _ => Err(unsupported::<Self>(config)),
         }
     }
 
@@ -1034,42 +1032,30 @@ impl ConfigurableProblem for FlowShop {
         match kind.unwrap_or("Order") {
             "Order" => Ok(Box::new(FlowShopOrderCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for FlowShop (expected 'Order')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Order')",
+                Self::NAME
             ))),
         }
     }
 }
 
 impl ConfigurableProblem for GraphColoring {
-    const NAME: &'static str = "GraphColoring";
-    const MINIMIZE: bool = true;
-    const VALID_NEIGHBORS: &'static [NeighborKind] = &[NeighborKind::Flip, NeighborKind::Swap];
-
-    fn with_neighbor<V: NeighborVisitor<Self>>(
-        kind: &NeighborKind,
-        visitor: V,
-    ) -> Result<V::Output, OptError> {
-        match kind {
-            // `Flip` is the single-vertex recolor.
-            NeighborKind::Flip => Ok(visitor.visit::<GraphColoringRecolorNeighbor>()),
-            NeighborKind::Swap => Ok(visitor.visit::<GraphColoringSwapNeighbor>()),
-            other => Err(invalid_neighbor::<Self>(other)),
-        }
+    neighbors! {
+        // `Flip` is the single-vertex recolor.
+        Flip => GraphColoringRecolorNeighbor,
+        Swap => GraphColoringSwapNeighbor,
     }
 
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
         match kind.unwrap_or("Uniform") {
             "Uniform" => Ok(Box::new(GraphColoringUniformCrossover)),
             other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for GraphColoring (expected 'Uniform')"
+                "Unknown crossover_kind '{other}' for {} (expected 'Uniform')",
+                Self::NAME
             ))),
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// Runtime problem dispatch -- the single place mapping ProblemKind to types
-// ---------------------------------------------------------------------------
 
 /// Callback invoked with the concrete problem type for a [`ProblemKind`].
 pub(crate) trait ProblemVisitor {
@@ -1080,55 +1066,73 @@ pub(crate) trait ProblemVisitor {
         P::Solution: BenchmarkSolution + Distance + Evaluate;
 }
 
-/// Maps the runtime [`ProblemKind`] to the concrete problem type.
-pub(crate) fn with_problem<V: ProblemVisitor>(kind: &ProblemKind, visitor: V) -> V::Output {
-    match kind {
-        ProblemKind::MaxCut => visitor.visit::<MaxCut>(),
-        ProblemKind::Qubo => visitor.visit::<Qubo>(),
-        ProblemKind::Sat => visitor.visit::<Sat>(),
-        ProblemKind::Tsp => visitor.visit::<Tsp>(),
-        ProblemKind::VertexCover => visitor.visit::<VertexCover>(),
-        ProblemKind::JobShop => visitor.visit::<JobShopScheduling>(),
-        ProblemKind::FlowShop => visitor.visit::<FlowShop>(),
-        ProblemKind::Qap => visitor.visit::<Qap>(),
-        ProblemKind::BinPacking => visitor.visit::<BinPacking>(),
-        ProblemKind::Vrp => visitor.visit::<Vrp>(),
-        ProblemKind::GraphColoring => visitor.visit::<GraphColoring>(),
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::trait_defs::Evaluable;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
 
-struct MinimizeVisitor;
-impl ProblemVisitor for MinimizeVisitor {
-    type Output = bool;
-    fn visit<P>(self) -> bool
-    where
-        P: ConfigurableProblem,
-        P::Solution: BenchmarkSolution + Distance + Evaluate,
-    {
-        P::MINIMIZE
-    }
-}
-
-struct ValidNeighborsVisitor;
-impl ProblemVisitor for ValidNeighborsVisitor {
-    type Output = &'static [NeighborKind];
-    fn visit<P>(self) -> &'static [NeighborKind]
-    where
-        P: ConfigurableProblem,
-        P::Solution: BenchmarkSolution + Distance + Evaluate,
-    {
-        P::VALID_NEIGHBORS
-    }
-}
-
-impl ProblemKind {
-    /// Whether this problem is minimized (drives report statistics).
-    pub fn minimize(&self) -> bool {
-        with_problem(self, MinimizeVisitor)
+    /// A small instance of `kind`. The match names every kind, so a new row of
+    /// the problem table does not compile here until it has one.
+    fn instance(kind: &ProblemKind) -> String {
+        let written = |name: &str, text: &str| {
+            let path = std::env::temp_dir().join(format!(
+                "optopus_registered_{name}_{}.txt",
+                std::process::id()
+            ));
+            std::fs::write(&path, text).unwrap();
+            path.display().to_string()
+        };
+        match kind {
+            ProblemKind::MaxCut => "data/instances/max_cut/sample.txt".into(),
+            ProblemKind::Qubo => "data/instances/qubo/sample.txt".into(),
+            ProblemKind::Sat => "data/instances/sat/sample.cnf".into(),
+            ProblemKind::Tsp => "data/instances/tsp/test_data.txt".into(),
+            ProblemKind::VertexCover => written("vertex_cover", "4 3\n1 2\n2 3\n3 4\n"),
+            ProblemKind::JobShop => "data/instances/jssp/ft06.txt".into(),
+            ProblemKind::FlowShop => "data/instances/flow_shop/taillard/ta001.txt".into(),
+            ProblemKind::Qap => written("qap", "3\n0 1 2\n1 0 1\n2 1 0\n0 3 1\n3 0 2\n1 2 0\n"),
+            ProblemKind::BinPacking => "data/instances/bin_packing/falkenauer/u120_00.txt".into(),
+            ProblemKind::Vrp => "data/instances/vrp/demo16.vrp".into(),
+            ProblemKind::GraphColoring => "data/instances/graph_coloring/example.txt".into(),
+        }
     }
 
-    /// The neighborhood kinds supported by this problem.
-    pub fn valid_neighbors(&self) -> &'static [NeighborKind] {
-        with_problem(self, ValidNeighborsVisitor)
+    /// The table's direction and the one a solution of the problem evaluates in.
+    struct Directions<'a> {
+        path: &'a str,
+    }
+
+    impl ProblemVisitor for Directions<'_> {
+        type Output = (bool, bool);
+        fn visit<P>(self) -> (bool, bool)
+        where
+            P: ConfigurableProblem,
+            P::Solution: BenchmarkSolution + Distance + Evaluate,
+        {
+            let prob = P::load_instance(self.path).unwrap_or_else(|e| panic!("{}: {e}", self.path));
+            let solution = prob.new_solution(&mut SmallRng::seed_from_u64(0));
+            (
+                P::MINIMIZE,
+                matches!(solution.evaluate(), Evaluable::Minimize(_)),
+            )
+        }
+    }
+
+    /// The report summarises a problem in the direction its row states, and
+    /// the heuristics search in the one its solution's `Evaluate` reports, so
+    /// every row is checked against a solution of its problem.
+    #[test]
+    fn every_row_states_the_direction_its_solution_evaluates_in() {
+        let temp = std::env::temp_dir();
+        for kind in ProblemKind::ALL {
+            let path = instance(kind);
+            let (table, evaluated) = with_problem(kind, Directions { path: &path });
+            assert_eq!(table, evaluated, "{kind:?} minimizes = {evaluated}");
+            if std::path::Path::new(&path).starts_with(&temp) {
+                let _ = std::fs::remove_file(&path);
+            }
+        }
     }
 }

@@ -93,7 +93,7 @@ pub struct Summary {
 #[derive(Serialize)]
 pub struct InstanceHeuristicResult {
     pub instance_path: String,
-    pub problem: crate::benchmark::config::ProblemKind,
+    pub problem: crate::benchmark::problems::ProblemKind,
     pub heuristic: HeuristicConfig,
     pub summary: Summary,
     pub runs: Vec<SingleRunResult>,
@@ -293,7 +293,7 @@ mod report_tests {
     /// itself.
     #[test]
     fn every_problem_kind_summarises_in_its_own_direction() {
-        use crate::benchmark::config::ProblemKind;
+        use crate::benchmark::problems::ProblemKind;
 
         let runs = [run(1.0, "success"), run(5.0, "success")];
         for kind in ProblemKind::ALL {
