@@ -20,6 +20,60 @@ use rand::rngs::SmallRng;
 /// neighborhood scan. Implementing this trait is the whole of opting in, and a
 /// move that does not implement it simply cannot be passed to those methods,
 /// the mistake is a compile error, not a silent no-op.
+///
+/// # Deriving it
+///
+/// Where the move checks the same keys it forbids, `#[derive(EnabledTabu)]`
+/// writes the impl from the keys named in `#[tabu(..)]`. The move is enabled
+/// while every key is free, and applying it forbids every key in the order
+/// written. A key reads `usize` fields of the move.
+///
+/// - `dense(i)` is an index bounded by the instance, such as a variable.
+/// - `var(i)` is an index of any size.
+/// - `pair(i, j)` keys the ordered pair, so `(i, j)` and `(j, i)` differ.
+/// - `unordered(i, j)` keys the pair whichever way round it is.
+/// - `triple(a, b, c)` keys three indices.
+///
+/// ```
+/// use optopus::prelude::*;
+/// use optopus::building_blocks::search::TabuMemory;
+/// use optopus::rand::SeedableRng;
+/// use optopus::rand::rngs::SmallRng;
+///
+/// #[derive(EnabledTabu)]
+/// #[tabu(dense(i), dense(j))]
+/// struct Swap {
+///     i: usize,
+///     j: usize,
+/// }
+///
+/// let mut tabu = TabuMemory::default();
+/// tabu.set_tenure((5, 5));
+/// let mut rng = SmallRng::seed_from_u64(0);
+///
+/// Swap { i: 1, j: 2 }.add_to_tabu_map(&mut tabu, 0, &mut rng);
+/// assert!(!Swap { i: 2, j: 3 }.is_move_enabled(&tabu, 1), "2 is still forbidden");
+/// assert!(Swap { i: 3, j: 4 }.is_move_enabled(&tabu, 1));
+/// ```
+///
+/// A move that checks other keys than it forbids, as the VRP relocate checks
+/// its destination route and forbids the route it left, implements the trait
+/// by hand. A key form other than the five is refused.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(EnabledTabu)]
+/// #[tabu(edge(i, j))]
+/// struct Move {
+///     i: usize,
+///     j: usize,
+/// }
+/// ```
+///
+/// Every move also states its policy in
+/// [`MoveToNeighbor::tabu_policy`](crate::trait_defs::MoveToNeighbor::tabu_policy),
+/// `Some(self)` here, since the search reaches the policy through it.
 pub trait EnabledTabu {
     /// Returns `true` if this move is allowed under the current tabu memory at
     /// the given iteration.
@@ -37,11 +91,11 @@ mod tests {
 
     /// Implementing [`EnabledTabu`](super::EnabledTabu) does nothing on its own.
     /// [`SearchState::apply`](crate::search_state::SearchState::apply) reaches
-    /// a move's policy through [`MoveToNeighbor::tabu_policy`], whose default is
-    /// `None`. A built-in move that implements the one and forgets the other
-    /// would degrade [`TabuSearch`](crate::heuristic::TabuSearch) to a plain
-    /// best-move search without failing to compile, so every built-in move is
-    /// checked here.
+    /// a move's policy through [`MoveToNeighbor::tabu_policy`]. That method has
+    /// no default, so forgetting it fails to compile, but a built-in move that
+    /// implements the policy and returns `None` there would still degrade
+    /// [`TabuSearch`](crate::heuristic::TabuSearch) to a plain best-move search,
+    /// so every built-in move is checked here.
     #[test]
     fn every_built_in_move_hands_over_its_tabu_policy() {
         use crate::problem::*;
@@ -64,7 +118,7 @@ mod tests {
                 $(
                     assert!(
                         MoveToNeighbor::<$problem>::tabu_policy(&$mv).is_some(),
-                        "{} does not override MoveToNeighbor::tabu_policy",
+                        "{} returns None from MoveToNeighbor::tabu_policy",
                         std::any::type_name_of_val(&$mv),
                     );
                 )+

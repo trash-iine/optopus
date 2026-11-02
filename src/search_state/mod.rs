@@ -1073,6 +1073,10 @@ mod tests {
         }
 
         impl MoveToNeighbor<Untabued> for Increment {
+            fn tabu_policy(&self) -> Option<&dyn crate::trait_defs::EnabledTabu> {
+                None
+            }
+
             fn apply_to_solution(
                 &self,
                 _prob: &Untabued,

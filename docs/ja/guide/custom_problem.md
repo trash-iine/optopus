@@ -86,6 +86,9 @@ impl MoveToNeighbor<MyProblem> for MyMove {
     fn iter(prob: &MyProblem, sol: &MySolution) -> impl Iterator<Item = Self> + Send {
         std::iter::empty() // move を遅延的に列挙する
     }
+    fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
+        None // まだタブー方策はない。「タブーを付ける」を参照
+    }
     fn apply_to_solution(&self, prob: &MyProblem, sol: &mut MySolution) -> Result<(), OptError> {
         todo!()
     }
@@ -121,7 +124,7 @@ gain をキャッシュする形は `examples/custom_problem.rs` にあります
 | `Sequential`, `Iterated`, `VariableNeighborhoodSearch`, `Restart` | なし |
 | `SimulatedAnnealing`, `BangBangSimulatedAnnealing`, `LateAcceptanceHillClimbing` | move に [`Evaluate<f64>`](../traits.md#core-trait-reference) |
 | `ReinforcementLearningSearch` | move に [`Evaluate<f64>`](../traits.md#core-trait-reference) と `Clone` |
-| `TabuSearch` | move に [`EnabledTabu`](../traits.md#core-trait-reference) と `Clone`、加えてその `MoveToNeighbor` impl に `fn tabu_policy(&self) -> Option<&dyn EnabledTabu> { Some(self) }`。この1行が、メモリを持つ [`SearchState`](../search_state.md#remembering-tabu-moves) に方策を渡します。[タブーを付ける](#adding-tabu) を参照 |
+| `TabuSearch` | move に [`EnabledTabu`](../traits.md#core-trait-reference) と `Clone`、加えてその `MoveToNeighbor` impl の `tabu_policy` が `None` でなく `Some(self)` を返すこと。これが、メモリを持つ [`SearchState`](../search_state.md#remembering-tabu-moves) に方策を渡します。[タブーを付ける](#adding-tabu) を参照 |
 | `GeneticAlgorithm` | 解に [`Distance`](../traits.md#core-trait-reference) (`DistantTopK` に限らずどの親選択でも必要) と [`Crossover<P>`](../traits.md#core-trait-reference) の impl (`SubProblemBasedCrossover` を使う場合だけ問題に [`SubProblemExtractable`](../traits.md#core-trait-reference)) |
 | CLI ベンチマーク (TOML 設定) | 上のすべて |
 
@@ -133,26 +136,15 @@ gain をキャッシュする形は `examples/custom_problem.rs` にあります
 ## タブーを付ける { #adding-tabu }
 
 `TabuSearch` が move のタブーリストを持つのは、その move が「適用したら何を禁止するか」を述べているときだけです。
-そのためには骨組みの move に三つ足します。`Clone`、`EnabledTabu` の impl、そして `MoveToNeighbor` impl のメソッド一つです。
-`TabuKey` と `TabuMemory` は問題に依存しない探索部品なので、prelude ではなく `optopus::building_blocks::search` から import します。
+そのためには `Clone` と、move が触るキーを書いた `#[tabu(..)]` を付け、骨組みの `None` を `Some(self)` に替えます。
 
 ```rust
-use optopus::building_blocks::search::{TabuKey, TabuMemory};
-use optopus::rand::rngs::SmallRng;
-
-#[derive(Clone)]
-struct MyMove { index: usize }
-
-impl EnabledTabu for MyMove {
-    // 触る変数の禁止が解けていれば許可する。
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.index), iteration)
-    }
-    // 適用したら、その変数を `TabuSearch::new` に渡した範囲から引いた
-    // tenure の間禁止する。
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.index), iteration, rng);
-    }
+#[derive(Clone, Evaluate, Rankable, EnabledTabu)]
+#[tabu(dense(index))] // `index` の禁止が解けていれば許可し、適用したらそれを禁止する
+struct MyMove {
+    index: usize,
+    #[objective(minimize)]
+    delta: f64,
 }
 
 impl MoveToNeighbor<MyProblem> for MyMove {
@@ -163,11 +155,13 @@ impl MoveToNeighbor<MyProblem> for MyMove {
 }
 ```
 
-**`tabu_policy` がないと、`EnabledTabu` の impl はそのままコンパイルが通り、`TabuSearch` はタブーリストなしで動きます。**
+move は書いたキーがすべて空いているときに許可され、適用するとそのすべてを `TabuSearch::new` に渡した範囲から引いた tenure の間禁止します。
+`dense(i)` は変数のようにインスタンスで上限が決まる添字に向き、`var(i)` は大きさに上限のない添字です。
+二つの添字にまたがる move は `dense(i), dense(j)` と両方を書くか、組を `pair(i, j)` で禁止します。`(i, j)` と `(j, i)` が同じ move なら `unordered(i, j)` です。
+`triple(a, b, c)` は三つ組のキーです。書き方の一覧は [`EnabledTabu`](../../api/optopus/trait_defs/trait.EnabledTabu.html) の rustdoc にあります。
+VRP の relocate のように確認するキーと禁止するキーが違う move は、`optopus::building_blocks::search` の [`TabuKey`](../../api/optopus/building_blocks/search/enum.TabuKey.html) と `TabuMemory` を使って `EnabledTabu` を手で実装します。
 
-`TabuKey::DenseVar(i)` は変数のようにインスタンスで上限が決まる添字に向きます。
-二つの変数にまたがる move は `TabuKey::Pair(i, j)` を禁止し、大きさに上限のない添字は `TabuKey::Var(i)` にします。
-すべての形は [`TabuKey`](../../api/optopus/building_blocks/search/enum.TabuKey.html) の rustdoc にあります。
+`tabu_policy` には既定がないので、move は方策があるかどうかを必ず書きます。
 `examples/custom_problem.rs` はこの方策で OneMax 問題に `TabuSearch` をかけます。
 
 ## 性能についての注意 { #performance-note }

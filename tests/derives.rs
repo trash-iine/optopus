@@ -193,3 +193,84 @@ fn distance_counts_differing_positions_of_the_marked_field() {
         2
     );
 }
+
+mod tabu {
+    use optopus::building_blocks::search::TabuMemory;
+    use optopus::rand::SeedableRng;
+    use optopus::rand::rngs::SmallRng;
+    use optopus::trait_defs::EnabledTabu;
+
+    /// A memory where everything forbidden at iteration 0 stays forbidden
+    /// through iteration 3 and is free from 4.
+    fn memory() -> (TabuMemory, SmallRng) {
+        let mut tabu = TabuMemory::default();
+        tabu.set_tenure((3, 3));
+        (tabu, SmallRng::seed_from_u64(0))
+    }
+
+    #[derive(EnabledTabu)]
+    #[tabu(dense(i), dense(j))]
+    struct TwoDense {
+        i: usize,
+        j: usize,
+    }
+
+    #[test]
+    fn every_key_must_be_free_and_every_key_is_forbidden() {
+        let (mut tabu, mut rng) = memory();
+        TwoDense { i: 1, j: 2 }.add_to_tabu_map(&mut tabu, 0, &mut rng);
+        assert!(!TwoDense { i: 1, j: 5 }.is_move_enabled(&tabu, 1));
+        assert!(!TwoDense { i: 5, j: 2 }.is_move_enabled(&tabu, 1));
+        assert!(TwoDense { i: 5, j: 6 }.is_move_enabled(&tabu, 1));
+        assert!(
+            TwoDense { i: 1, j: 2 }.is_move_enabled(&tabu, 4),
+            "freed after the tenure"
+        );
+    }
+
+    #[derive(EnabledTabu)]
+    #[tabu(pair(a, b))]
+    struct Ordered {
+        a: usize,
+        b: usize,
+    }
+
+    #[derive(EnabledTabu)]
+    #[tabu(unordered(a, b))]
+    struct Unordered {
+        a: usize,
+        b: usize,
+    }
+
+    #[test]
+    fn pair_is_ordered_and_unordered_is_not() {
+        let (mut tabu, mut rng) = memory();
+        Ordered { a: 1, b: 2 }.add_to_tabu_map(&mut tabu, 0, &mut rng);
+        assert!(!Ordered { a: 1, b: 2 }.is_move_enabled(&tabu, 1));
+        assert!(Ordered { a: 2, b: 1 }.is_move_enabled(&tabu, 1));
+
+        let (mut tabu, mut rng) = memory();
+        Unordered { a: 1, b: 2 }.add_to_tabu_map(&mut tabu, 0, &mut rng);
+        assert!(!Unordered { a: 2, b: 1 }.is_move_enabled(&tabu, 1));
+    }
+
+    #[derive(EnabledTabu)]
+    #[tabu(triple(0, 1, 2))]
+    struct Triple(usize, usize, usize);
+
+    #[derive(EnabledTabu)]
+    #[tabu(var(0))]
+    struct Large(usize);
+
+    #[test]
+    fn triple_and_var_keys_on_tuple_fields() {
+        let (mut tabu, mut rng) = memory();
+        Triple(1, 2, 3).add_to_tabu_map(&mut tabu, 0, &mut rng);
+        assert!(!Triple(1, 2, 3).is_move_enabled(&tabu, 1));
+        assert!(Triple(1, 3, 2).is_move_enabled(&tabu, 1));
+
+        Large(1 << 40).add_to_tabu_map(&mut tabu, 0, &mut rng);
+        assert!(!Large(1 << 40).is_move_enabled(&tabu, 1));
+        assert!(Large(7).is_move_enabled(&tabu, 1));
+    }
+}

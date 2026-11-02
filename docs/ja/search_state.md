@@ -76,11 +76,10 @@ state.reset_tabu();                        // すべての禁止を解除する
 設定するまでテニュアは `(0, 0)` で、move は記録されますが次の反復で再び許可されます。
 `stop_record_tabu()` はテニュアを残したままにするので、`record_tabu` に渡したものだけを禁止したい探索に使えます。
 
-move 型は [`EnabledTabu`](traits.md#core-trait-reference) を実装し、
-`MoveToNeighbor::tabu_policy` を `Some(self)` でオーバーライドすることで対応します。
-**トレイトを実装しても1行のオーバーライドがなければ、その move にはタブー方策がありません**。
-その場合、適用しても何も記録されず、`TabuSearch` は空のリストのまま何も言わずに動きます。
-`trait_defs/tabu.rs` はすべての組み込み move についてこれを検査しています。
+move 型は [`EnabledTabu`](traits.md#core-trait-reference) を実装し(多くは `#[derive(EnabledTabu)]` で)、
+`MoveToNeighbor::tabu_policy` から `Some(self)` を返すことで対応します。
+このメソッドには既定がないので、どの move も方策があるかどうかを書きます。
+`None` を返す move は適用しても何も記録せず、`trait_defs/tabu.rs` は方策を持つ組み込み move がすべてそれを渡していることを検査しています。
 `tabu_allows` と `record_tabu` は `EnabledTabu` を境界に持つので、方策のない move について問い合わせるとコンパイルエラーになります。
 
 move が禁止する対象は `TabuKey` です。単一のインデックスには `Var(i)`、複合キーには `Pair` と `Triple` を使い、いずれもマップに入ります。

@@ -18,15 +18,11 @@
 use super::{MaxCut, MaxCutSolution};
 use crate::trait_defs::Rankable;
 use crate::{
-    building_blocks::{
-        representation::{differing_pairs_by_row, random_differing_pair},
-        search::{TabuKey, TabuMemory},
-    },
+    building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
-use rand::rngs::SmallRng;
 
 /// A flip move that transfers vertex `i` to the opposite partition side.
 ///
@@ -47,24 +43,14 @@ use rand::rngs::SmallRng;
 /// LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000))
 ///     .run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i))]
 pub struct MaxCutFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
     /// Change in cut weight after the flip (positive = improvement).
     #[objective(maximize)]
     pub gain: f32,
-}
-impl EnabledTabu for MaxCutFlipNeighbor {
-    /// The move is tabu while vertex `i` is still blocked at the current iteration.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-    }
-
-    /// Applying the move forbids vertex `i` for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
-    }
 }
 
 impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
@@ -195,7 +181,8 @@ impl MaxCutFlipNeighbor {
 ///     (5, 10),
 /// ).run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Rankable, Evaluate)]
+#[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i), dense(j))]
 pub struct MaxCutSwapNeighbor {
     /// First vertex to swap (currently on one side).
     pub i: usize,
@@ -247,20 +234,6 @@ impl MaxCutSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] + 2.0 * w(),
         }
-    }
-}
-
-impl EnabledTabu for MaxCutSwapNeighbor {
-    /// A swap is tabu unless both vertexs it moves are free.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-            && tabu.is_enabled(TabuKey::DenseVar(self.j), iteration)
-    }
-
-    /// Applying the swap forbids both vertexs, each for its own drawn tenure.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
-        tabu.forbid(TabuKey::DenseVar(self.j), iteration, rng);
     }
 }
 

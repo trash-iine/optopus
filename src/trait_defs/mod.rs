@@ -36,7 +36,7 @@ pub use crossover::{Crossover, SubProblemExtractable};
 pub use evaluate::{Evaluable, Evaluate};
 pub use int_assignment::IntAssignment;
 pub use neighbor::MoveToNeighbor;
-pub use optopus_derive::{Distance, Evaluate, Rankable};
+pub use optopus_derive::{Distance, EnabledTabu, Evaluate, Rankable};
 pub use problem::ProblemTrait;
 pub use rankable::{Distance, Rankable, better_by_objective, filter_best, rank_cmp};
 pub use reduction::ProblemReduction;

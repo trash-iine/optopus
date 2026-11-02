@@ -3,16 +3,12 @@
 use super::VertexCover;
 use crate::trait_defs::Rankable;
 use crate::{
-    building_blocks::{
-        representation::{differing_pairs_by_row, random_differing_pair},
-        search::{TabuKey, TabuMemory},
-    },
+    building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
     problem::vertex_cover::problem::VertexCoverSolution,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
-use rand::rngs::SmallRng;
 
 /// A flip move that toggles whether vertex `i` is in the cover.
 ///
@@ -20,7 +16,8 @@ use rand::rngs::SmallRng;
 /// (negative = improvement, since Vertex Cover is minimization). Applying the
 /// move refreshes the gain of every neighbor of `i` and the uncovered-edge
 /// count, i.e. O(degree(i)) work.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i))]
 pub struct VertexCoverFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
@@ -40,18 +37,6 @@ impl VertexCoverFlipNeighbor {
     /// at the call site.
     pub fn new(_prob: &VertexCover, sol: &VertexCoverSolution, i: usize) -> Self {
         <VertexCover as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
-    }
-}
-
-impl EnabledTabu for VertexCoverFlipNeighbor {
-    /// The move is tabu while vertex `i` is still blocked at the current iteration.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-    }
-
-    /// Applying the move forbids vertex `i` for a tenure the memory draws.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
     }
 }
 
@@ -149,7 +134,8 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
 /// Only pairs `(i, j)` with `cover[i] != cover[j]` and `i < j` are enumerated.
 /// Applying the move performs two flips in sequence (`apply_to_iteration`
 /// returns `iter + 2`), each doing O(degree) work.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+#[tabu(dense(i), dense(j))]
 pub struct VertexCoverSwapNeighbor {
     pub i: usize,
     pub j: usize,
@@ -196,20 +182,6 @@ impl VertexCoverSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] - edge_correction,
         }
-    }
-}
-
-impl EnabledTabu for VertexCoverSwapNeighbor {
-    /// A swap is tabu unless both vertexs it moves are free.
-    fn is_move_enabled(&self, tabu: &TabuMemory, iteration: u64) -> bool {
-        tabu.is_enabled(TabuKey::DenseVar(self.i), iteration)
-            && tabu.is_enabled(TabuKey::DenseVar(self.j), iteration)
-    }
-
-    /// Applying the swap forbids both vertexs, each for its own drawn tenure.
-    fn add_to_tabu_map(&self, tabu: &mut TabuMemory, iteration: u64, rng: &mut SmallRng) {
-        tabu.forbid(TabuKey::DenseVar(self.i), iteration, rng);
-        tabu.forbid(TabuKey::DenseVar(self.j), iteration, rng);
     }
 }
 
