@@ -3,7 +3,7 @@ use std::collections::HashSet;
 
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
-use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate, check_assignment};
+use crate::trait_defs::{BinaryProblem, Evaluate, check_assignment};
 
 /// Integer coefficient type used in the Q matrix.
 pub type Coefficient = i32;
@@ -35,31 +35,20 @@ static ZERO_COEFF: Coefficient = 0;
 /// println!("objective = {}", sol.objective);
 /// println!("x = {:?}", sol.x);
 /// ```
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct QuboSolution {
     /// The variable assignment: `x[i] = true` means variable `i` is set to 1.
     /// Sized to `max_variable_id + 1`; only indices in `Qubo::iter_on_variables`
     /// are meaningful.
+    #[distance(hamming)]
     pub x: Vec<bool>,
     /// The gain of flipping each variable: `gain[i]` = change in energy when
     /// flipping `i`. Negative = improvement (QUBO is minimized). Sized to
     /// `max_variable_id + 1`.
     pub gain: Vec<Coefficient>,
     /// The current energy `E(x) = Σ Q[i][j] · x[i] · x[j]`.
+    #[objective(minimize)]
     pub objective: Coefficient,
-}
-
-impl Evaluate for QuboSolution {
-    /// QUBO minimizes its energy.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.objective as f64)
-    }
-}
-
-impl Distance for QuboSolution {
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(&self.x, &other.x)
-    }
 }
 
 impl QuboSolution {

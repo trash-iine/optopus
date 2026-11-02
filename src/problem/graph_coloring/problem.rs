@@ -1,6 +1,6 @@
 use crate::building_blocks::instance::Graph;
 use crate::error::OptError;
-use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
+use crate::search_state::{Distance, Evaluate, ProblemTrait};
 use crate::trait_defs::Rankable;
 use rand::Rng;
 
@@ -27,9 +27,10 @@ pub struct GraphColoring {
 }
 
 /// A solution for the Graph Coloring problem.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct GraphColoringSolution {
     /// `colors[v]` = color assigned to vertex `v`, in `0..k`.
+    #[distance(hamming)]
     pub colors: Vec<usize>,
     /// Flat `n * k` matrix: `gamma[v * k + c]` = number of neighbors of `v`
     /// currently colored `c` (the TabuCol Γ matrix; drives O(1) gain deltas).
@@ -41,21 +42,8 @@ pub struct GraphColoringSolution {
     /// Number of edges whose endpoints share a color.
     pub conflicts: usize,
     /// Penalty-augmented objective: `colors_used + penalty_weight * conflicts`.
+    #[objective(minimize)]
     pub objective: i64,
-}
-
-impl Evaluate for GraphColoringSolution {
-    /// Graph Coloring minimizes its penalty-augmented objective.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.objective as f64)
-    }
-}
-
-/// Hamming distance over the color assignments.
-impl Distance for GraphColoringSolution {
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(&self.colors, &other.colors)
-    }
 }
 
 impl GraphColoring {

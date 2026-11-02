@@ -1,7 +1,7 @@
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
-use crate::trait_defs::Rankable;
 use crate::trait_defs::check_assignment;
+use crate::trait_defs::{Evaluate, Rankable};
 
 fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
     if let Err(pos) = v.binary_search(&x) {
@@ -10,16 +10,18 @@ fn insert_unique_sorted(v: &mut Vec<usize>, x: usize) {
 }
 
 /// A solution to the MaxSAT problem.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct SatSolution {
     /// Variable assignment; `x[i]` is the truth value of variable `i + 1`
     /// (DIMACS literals are 1-indexed, `x` is 0-indexed).
+    #[distance(hamming)]
     pub x: Vec<bool>,
     /// Incremental change in satisfied-clause count when flipping each variable
     /// (`gain[i] > 0` means flipping variable `i` increases the number of
     /// satisfied clauses).
     pub gain: Vec<i64>,
     /// Number of currently satisfied clauses.
+    #[objective(maximize)]
     pub n_satisfied: usize,
 }
 
@@ -47,19 +49,6 @@ impl SatSolution {
             gain,
             n_satisfied,
         }
-    }
-}
-
-impl crate::trait_defs::Evaluate for SatSolution {
-    /// MaxSAT maximizes the number of satisfied clauses.
-    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
-        crate::trait_defs::Evaluable::Maximize(self.n_satisfied as f64)
-    }
-}
-
-impl Distance for SatSolution {
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(&self.x, &other.x)
     }
 }
 

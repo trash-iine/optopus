@@ -28,9 +28,10 @@ struct Pick {
 const LIMIT: usize = 4;
 
 /// Fewer violations first, then more value.
-#[derive(Clone, Debug, Rankable)]
+#[derive(Clone, Debug, Rankable, Distance)]
 #[rank(min = violations(), max = value)]
 struct Picked {
+    #[distance(hamming)]
     x: Vec<bool>,
     count: usize,
     value: u32,
@@ -39,12 +40,6 @@ struct Picked {
 impl Picked {
     fn violations(&self) -> usize {
         self.count.saturating_sub(LIMIT)
-    }
-}
-
-impl Distance for Picked {
-    fn distance(&self, other: &Self) -> usize {
-        self.x.iter().zip(&other.x).filter(|(a, b)| a != b).count()
     }
 }
 

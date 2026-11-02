@@ -23,7 +23,7 @@ use crate::{
         search::{TabuKey, TabuMemory},
     },
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -47,11 +47,12 @@ use rand::rngs::SmallRng;
 /// LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000))
 ///     .run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Copy, Rankable)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
 pub struct MaxCutFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
     /// Change in cut weight after the flip (positive = improvement).
+    #[objective(maximize)]
     pub gain: f32,
 }
 impl EnabledTabu for MaxCutFlipNeighbor {
@@ -147,17 +148,6 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
     }
 }
 
-impl Evaluate for MaxCutFlipNeighbor {
-    /// Returns the gain as `Evaluable::Maximize`, since MaxCut is a maximization problem.
-    ///
-    /// This is used by [`SimulatedAnnealing`](crate::heuristic::SimulatedAnnealing) and
-    /// [`LateAcceptanceHillClimbing`](crate::heuristic::LateAcceptanceHillClimbing)
-    /// for acceptance decisions.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Maximize(self.gain as f64)
-    }
-}
-
 impl MaxCutFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
     ///
@@ -205,13 +195,14 @@ impl MaxCutFlipNeighbor {
 ///     (5, 10),
 /// ).run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct MaxCutSwapNeighbor {
     /// First vertex to swap (currently on one side).
     pub i: usize,
     /// Second vertex to swap (currently on the opposite side from `i`).
     pub j: usize,
     /// Combined change in cut weight (positive = improvement).
+    #[objective(maximize)]
     pub gain: f32,
 }
 
@@ -256,13 +247,6 @@ impl MaxCutSwapNeighbor {
             j,
             gain: sol.gain[i] + sol.gain[j] + 2.0 * w(),
         }
-    }
-}
-
-impl Evaluate for MaxCutSwapNeighbor {
-    /// Returns the combined gain as `Evaluable::Maximize`.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Maximize(self.gain as f64)
     }
 }
 

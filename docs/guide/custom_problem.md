@@ -20,10 +20,10 @@ moves.
 
 | Trait | On | Required method(s) |
 |---|---|---|
-| [`Evaluate`](../traits.md#core-trait-reference) | `Solution` | `evaluate(&self) -> Evaluable<f64>` |
+| [`Evaluate`](../traits.md#core-trait-reference) | `Solution` | `evaluate(&self) -> Evaluable<f64>`, or `#[derive(Evaluate)]` with `#[objective(minimize)]` on the field that holds it |
 | [`ProblemTrait`](../traits.md#core-trait-reference) | the problem struct | `type Solution`, `new_solution(rng) -> Solution` |
 | [`MoveToNeighbor<P>`](../traits.md#core-trait-reference) | the neighbor type | `iter`, `apply_to_solution`, `move_to_be_better_than` |
-| [`Evaluate`](../traits.md#core-trait-reference) | the neighbor type | `evaluate(&self) -> Evaluable<f64>`, a second, separate impl |
+| [`Evaluate`](../traits.md#core-trait-reference) | the neighbor type | `evaluate(&self) -> Evaluable<f64>`, a second, separate impl, derived the same way |
 | [`Rankable`](../traits.md#core-trait-reference) | `Solution` and the neighbor type | `is_better_than`, written by `#[derive(Rankable)]` |
 
 `Evaluate` really is implemented twice. On the solution it reports the
@@ -42,8 +42,12 @@ problem, so what it needs is cached when the move is built, the way
 `FlipMove::new` in `examples/custom_problem.rs` caches its gain.
 
 ```rust
-#[derive(Rankable)]
-struct MyMove { index: usize, delta: f64 }
+#[derive(Evaluate, Rankable)]
+struct MyMove {
+    index: usize,
+    #[objective(minimize)] // a minimizing problem, negative improves
+    delta: f64,
+}
 
 impl MyMove {
     fn new(prob: &MyProblem, sol: &MySolution, index: usize) -> Self {
@@ -51,13 +55,11 @@ impl MyMove {
         MyMove { index, delta: after - sol.objective }
     }
 }
-
-impl Evaluate for MyMove {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.delta) // a minimizing problem, negative improves
-    }
-}
 ```
+
+`#[derive(Evaluate)]` reports the marked field, wrapped in the direction the
+attribute names. A number that is not one field, a sum of two of them say, is
+an `impl Evaluate` written by hand instead.
 
 `#[derive(Rankable)]` gives the move [`Rankable`](../traits.md#core-trait-reference),
 and the solution derives it the same way. `Rankable` is how `LocalSearch`,

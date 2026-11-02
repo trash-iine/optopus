@@ -2,7 +2,7 @@ use crate::building_blocks::instance::Graph;
 use crate::error::OptError;
 use crate::search_state::{Distance, ProblemTrait};
 use crate::trait_defs::Rankable;
-use crate::trait_defs::{BinaryProblem, Evaluable, Evaluate, check_assignment};
+use crate::trait_defs::{BinaryProblem, Evaluate, check_assignment};
 
 /// The MaxCut problem instance, an undirected weighted graph.
 ///
@@ -62,29 +62,18 @@ pub struct MaxCut {
 /// // sol.x[i], which side vertex i is on
 /// // sol.gain[i], how much flipping vertex i would change the objective
 /// ```
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct MaxCutSolution {
     /// The cut assignment for each vertex: `x[i]` is the side of vertex `i`.
     /// Sized to `max_vertex_id + 1`; only indices in `MaxCut::graph.vertices` are meaningful.
+    #[distance(hamming)]
     pub x: Vec<bool>,
     /// The gain of flipping each vertex: `gain[i]` = change in cut weight when flipping `i`.
     /// Sized to `max_vertex_id + 1`.
     pub gain: Vec<f32>,
     /// The total weight of edges crossing the cut.
+    #[objective(maximize)]
     pub objective: f32,
-}
-
-impl Evaluate for MaxCutSolution {
-    /// MaxCut maximizes the cut weight.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Maximize(self.objective as f64)
-    }
-}
-
-impl Distance for MaxCutSolution {
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(&self.x, &other.x)
-    }
 }
 
 impl MaxCutSolution {

@@ -6,7 +6,7 @@ use rand::seq::IteratorRandom;
 use super::problem::{BinPacking, BinPackingSolution};
 use crate::building_blocks::search::{TabuKey, TabuMemory, pair_scan};
 use crate::error::OptError;
-use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
+use crate::search_state::{EnabledTabu, Evaluate, MoveToNeighbor};
 
 /// Draws before a random move falls back to listing the neighborhood.
 ///
@@ -40,13 +40,14 @@ fn priced(prob: &BinPacking, sol: &BinPackingSolution, changes: &[(u64, u64)]) -
 /// takes the last item out. The new bin, numbered `num_bins()`, is offered to
 /// every item that shares its bin, so the neighborhood is never empty while
 /// some bin holds two items, however tight the packing.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct BinPackingRelocateNeighbor {
     /// The item that moves.
     pub item: usize,
     /// The bin it moves to, `num_bins()` for a new one.
     pub to: usize,
     /// Change in the objective (negative = improvement).
+    #[objective(minimize)]
     pub gain: f64,
 }
 
@@ -127,12 +128,6 @@ impl BinPackingRelocateNeighbor {
             return Self::new(prob, sol, item, to);
         }
         unreachable!("the draw is below the total count")
-    }
-}
-
-impl Evaluate for BinPackingRelocateNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
     }
 }
 
@@ -230,13 +225,14 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
 ///
 /// It keeps the bin count and moves load from one bin to the other, which is
 /// how a nearly full bin gets the last bit of room filled.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct BinPackingSwapNeighbor {
     /// The first item, `i < j`.
     pub i: usize,
     /// The second item.
     pub j: usize,
     /// Change in the objective (negative = improvement).
+    #[objective(minimize)]
     pub gain: f64,
 }
 
@@ -260,12 +256,6 @@ impl BinPackingSwapNeighbor {
             j,
             gain: priced(prob, sol, &changes).0 - sol.objective,
         })
-    }
-}
-
-impl Evaluate for BinPackingSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain)
     }
 }
 

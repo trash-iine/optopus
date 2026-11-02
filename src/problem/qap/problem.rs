@@ -5,15 +5,17 @@ use rand::seq::SliceRandom;
 
 use crate::building_blocks::representation::check_permutation;
 use crate::error::OptError;
-use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
+use crate::search_state::{Distance, Evaluate, ProblemTrait};
 
 /// A solution to the quadratic assignment problem.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct QapSolution {
     /// `assignment[i]` is the location facility `i` is placed at, a
     /// permutation of `0..n`.
+    #[distance(hamming)]
     pub assignment: Vec<usize>,
     /// The cost `Σ_i Σ_j a[i][j] · b[assignment[i]][assignment[j]]`.
+    #[objective(minimize)]
     pub objective: i64,
     /// The swap deltas of every pair, built by the first full scan of the
     /// swap neighborhood and kept up to date by each applied swap. A search
@@ -32,23 +34,6 @@ pub(super) struct SwapDeltas {
     assignment: Vec<usize>,
     /// `delta[i * n + j]`, for `i < j`.
     delta: Vec<i64>,
-}
-
-impl Evaluate for QapSolution {
-    /// The QAP minimizes its cost.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.objective as f64)
-    }
-}
-
-impl Distance for QapSolution {
-    /// The number of facilities placed at different locations.
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(
-            &self.assignment,
-            &other.assignment,
-        )
-    }
 }
 
 /// A quadratic assignment instance in the Koopmans and Beckmann form.

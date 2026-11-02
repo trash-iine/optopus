@@ -7,7 +7,7 @@ use super::adjacency::RouteAdjacency;
 use super::ops;
 use crate::building_blocks::instance::{DistanceStore, EdgeWeightType};
 use crate::error::OptError;
-use crate::trait_defs::{Distance, Evaluable, Evaluate, ProblemTrait};
+use crate::trait_defs::{Distance, Evaluate, ProblemTrait};
 
 /// Returns the capacity overflow of a route load: `max(0, load - capacity)`.
 #[inline]
@@ -248,7 +248,7 @@ pub enum ObjectiveMode {
 /// All three violations (capacity, route time, minimum fleet usage) are soft,
 /// weighted by [`Vrp::penalty_weight`] exactly as [`crate::problem::Vrp`]
 /// handles capacity.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct VrpSolution {
     /// Ordered customers per slot; length is always `num_slots`.
     pub routes: Vec<Vec<usize>>,
@@ -274,14 +274,8 @@ pub struct VrpSolution {
     /// `Σ variable_cost_per_distance(type) × route_distance` over all slots.
     pub total_cost: f64,
     /// Penalty-augmented objective (see [`Vrp`]); lower is better.
+    #[objective(minimize)]
     pub objective: f64,
-}
-
-impl Evaluate for VrpSolution {
-    /// Vrp minimizes its penalty-augmented objective.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.objective)
-    }
 }
 
 impl Distance for VrpSolution {

@@ -1,4 +1,4 @@
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Evaluate, Rankable};
 use rand::seq::SliceRandom;
 
 use crate::error::OptError;
@@ -13,33 +13,18 @@ use crate::search_state::{Distance, ProblemTrait};
 /// `objective` is the makespan (Cmax) obtained by left-shift semi-active
 /// scheduling, and `completion_times` are the per-position completion times
 /// in the same order as `operations`.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct JobShopSolution {
     /// Permutation-with-repetition of length `n_jobs * n_machines`; the
     /// k-th occurrence of job `j` is operation `O(j, k)`.
+    #[distance(hamming)]
     pub operations: Vec<usize>,
     /// Makespan (Cmax) of the decoded schedule.
+    #[objective(minimize)]
     pub objective: u32,
     /// Finish time of each position in `operations`, decoded by
     /// [`JobShopScheduling::decode`].
     pub completion_times: Vec<u32>,
-}
-
-impl crate::trait_defs::Evaluate for JobShopSolution {
-    /// Job-shop minimizes the makespan.
-    fn evaluate(&self) -> crate::trait_defs::Evaluable<f64> {
-        crate::trait_defs::Evaluable::Minimize(f64::from(self.objective))
-    }
-}
-
-impl Distance for JobShopSolution {
-    /// Position-based dissimilarity: number of positions where the job index differs.
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(
-            &self.operations,
-            &other.operations,
-        )
-    }
 }
 
 /// A Job Shop Scheduling instance.

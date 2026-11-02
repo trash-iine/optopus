@@ -5,7 +5,7 @@ use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::search::{TabuKey, TabuMemory, random_distinct_pair},
     error::OptError,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -15,13 +15,14 @@ use rand::rngs::SmallRng;
 /// `gain` holds the change in (penalty-augmented) objective after the move
 /// (negative = improvement, since Graph Coloring is minimization). Applying it
 /// refreshes the `gamma` row of every neighbor of `v`, i.e. O(degree(v)) work.
-#[derive(Debug, Clone, Copy, Rankable)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
 pub struct GraphColoringRecolorNeighbor {
     /// The vertex to recolor.
     pub v: usize,
     /// The target color.
     pub new_color: usize,
     /// Change in objective after the recolor.
+    #[objective(minimize)]
     pub gain: i64,
 }
 
@@ -39,12 +40,6 @@ impl GraphColoringRecolorNeighbor {
             new_color,
             gain: prob.recolor_gain(sol, v, new_color),
         }
-    }
-}
-
-impl Evaluate for GraphColoringRecolorNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 
@@ -129,11 +124,12 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringRecolorNeighbor {
 /// and `j < i` are enumerated. Applying the move performs two recolors in
 /// sequence (`apply_to_iteration` returns `iter + 2`), each doing O(degree)
 /// work.
-#[derive(Debug, Clone, Copy, Rankable)]
+#[derive(Debug, Clone, Copy, Rankable, Evaluate)]
 pub struct GraphColoringSwapNeighbor {
     pub i: usize,
     pub j: usize,
     /// Change in objective after the swap.
+    #[objective(minimize)]
     pub gain: i64,
 }
 
@@ -148,12 +144,6 @@ impl GraphColoringSwapNeighbor {
             j,
             gain: prob.swap_gain(sol, i, j),
         }
-    }
-}
-
-impl Evaluate for GraphColoringSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 

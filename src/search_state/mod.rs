@@ -1052,14 +1052,8 @@ mod tests {
         /// three traits a local search needs.
         struct Untabued;
 
-        #[derive(Clone, Debug, Rankable)]
-        struct Counter(i32);
-
-        impl Evaluate for Counter {
-            fn evaluate(&self) -> Evaluable<f64> {
-                Evaluable::Maximize(f64::from(self.0))
-            }
-        }
+        #[derive(Clone, Debug, Rankable, Evaluate)]
+        struct Counter(#[objective(maximize)] i32);
 
         impl ProblemTrait for Untabued {
             type Solution = Counter;

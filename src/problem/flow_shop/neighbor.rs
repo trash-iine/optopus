@@ -7,7 +7,7 @@ use super::problem::{FlowShop, FlowShopSolution};
 use super::taillard::HeadsTails;
 use crate::building_blocks::search::{TabuKey, TabuMemory, random_distinct_pair};
 use crate::error::OptError;
-use crate::search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor};
+use crate::search_state::{EnabledTabu, Evaluate, MoveToNeighbor};
 
 /// A makespan moved by a move's gain.
 fn shifted(objective: u32, gain: i64) -> u32 {
@@ -22,7 +22,7 @@ fn shifted(objective: u32, gain: i64) -> u32 {
 /// relies on. [`iter`](MoveToNeighbor::iter) prices all `n (n - 1)`
 /// insertions in O(n²m) with Taillard's heads and tails, one O(nm)
 /// tabulation per job taken out.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct FlowShopInsertNeighbor {
     /// The job that moves.
     pub job: usize,
@@ -31,6 +31,7 @@ pub struct FlowShopInsertNeighbor {
     /// Its position after the move.
     pub to: usize,
     /// Change in makespan (negative = improvement).
+    #[objective(minimize)]
     pub gain: i64,
 }
 
@@ -67,12 +68,6 @@ impl FlowShopInsertNeighbor {
             to,
             gain: i64::from(prob.makespan(&moved)) - i64::from(sol.objective),
         }
-    }
-}
-
-impl Evaluate for FlowShopInsertNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 
@@ -159,13 +154,14 @@ impl MoveToNeighbor<FlowShop> for FlowShopInsertNeighbor {
 ///
 /// Priced from the heads before the first position and the tails after the
 /// second, so only the stretch between them is rescheduled.
-#[derive(Debug, Clone, Rankable)]
+#[derive(Debug, Clone, Rankable, Evaluate)]
 pub struct FlowShopSwapNeighbor {
     /// The earlier position.
     pub i: usize,
     /// The later position.
     pub j: usize,
     /// Change in makespan (negative = improvement).
+    #[objective(minimize)]
     pub gain: i64,
 }
 
@@ -185,12 +181,6 @@ impl FlowShopSwapNeighbor {
             j,
             gain: i64::from(prob.makespan(&swapped)) - i64::from(sol.objective),
         }
-    }
-}
-
-impl Evaluate for FlowShopSwapNeighbor {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.gain as f64)
     }
 }
 

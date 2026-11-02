@@ -17,10 +17,10 @@
 
 | トレイト | 実装先 | 必須のメソッド |
 |---|---|---|
-| [`Evaluate`](../traits.md#core-trait-reference) | `Solution` | `evaluate(&self) -> Evaluable<f64>` |
+| [`Evaluate`](../traits.md#core-trait-reference) | `Solution` | `evaluate(&self) -> Evaluable<f64>`。または `#[derive(Evaluate)]` で、値を持つフィールドに `#[objective(minimize)]` を付ける |
 | [`ProblemTrait`](../traits.md#core-trait-reference) | 問題の構造体 | `type Solution`, `new_solution(rng) -> Solution` |
 | [`MoveToNeighbor<P>`](../traits.md#core-trait-reference) | 近傍の型 | `iter`, `apply_to_solution`, `move_to_be_better_than` |
-| [`Evaluate`](../traits.md#core-trait-reference) | 近傍の型 | `evaluate(&self) -> Evaluable<f64>`。上とは別の、二つ目の impl |
+| [`Evaluate`](../traits.md#core-trait-reference) | 近傍の型 | `evaluate(&self) -> Evaluable<f64>`。上とは別の、二つ目の impl。同じように derive できる |
 | [`Rankable`](../traits.md#core-trait-reference) | `Solution` と近傍の型 | `is_better_than`。`#[derive(Rankable)]` で書ける |
 
 `Evaluate` は本当に二回実装します。解に対しては目的関数値を返し、問題が最大化か最小化かに応じて
@@ -33,8 +33,12 @@
 `examples/custom_problem.rs` の `FlipMove::new` が gain をキャッシュしているのと同じやり方です。
 
 ```rust
-#[derive(Rankable)]
-struct MyMove { index: usize, delta: f64 }
+#[derive(Evaluate, Rankable)]
+struct MyMove {
+    index: usize,
+    #[objective(minimize)] // 最小化問題。負なら改善
+    delta: f64,
+}
 
 impl MyMove {
     fn new(prob: &MyProblem, sol: &MySolution, index: usize) -> Self {
@@ -42,13 +46,10 @@ impl MyMove {
         MyMove { index, delta: after - sol.objective }
     }
 }
-
-impl Evaluate for MyMove {
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Minimize(self.delta) // 最小化問題。負なら改善
-    }
-}
 ```
+
+`#[derive(Evaluate)]` は印を付けたフィールドを、属性が示す向きで包んで返します。
+二つのフィールドの和のように、一つのフィールドで表せない数値は `impl Evaluate` を手で書きます。
 
 `#[derive(Rankable)]` で move に [`Rankable`](../traits.md#core-trait-reference) が付きます。解にも同じように derive します。
 `LocalSearch`、`RandomWalk`、`BeamSearch`、`TabuSearch` が move を選ぶのも、どのヒューリスティクスでも解が改善したかを判断するのもこれを通してです。
