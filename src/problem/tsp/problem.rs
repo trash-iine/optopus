@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use rand::seq::SliceRandom;
 use std::sync::{Arc, Mutex};
 
@@ -16,7 +17,7 @@ pub type TspEdge = (usize, usize);
 ///
 /// Move gains are computed on the fly from [`Tsp::distance`], so no
 /// per-solution gain cache is kept.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct TspSolution {
     /// Ordered sequence of city indices representing the tour.
     pub tour: TspTour,
@@ -30,7 +31,6 @@ impl crate::trait_defs::Evaluate for TspSolution {
         crate::trait_defs::Evaluable::Minimize(self.objective)
     }
 }
-crate::rank_by_objective!(TspSolution);
 
 impl Distance for TspSolution {
     /// Position-based dissimilarity: number of cities whose tour position differs.

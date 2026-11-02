@@ -135,7 +135,7 @@ where
 mod default_move_warning_tests {
     use super::*;
 
-    use crate::trait_defs::{Evaluable, Evaluate, ProblemTrait};
+    use crate::trait_defs::{Evaluable, Evaluate, ProblemTrait, Rankable};
     use std::sync::{Arc, Mutex};
     use tracing_subscriber::fmt::MakeWriter;
 
@@ -143,7 +143,7 @@ mod default_move_warning_tests {
     #[derive(Debug)]
     struct ToyProblem;
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, Rankable)]
     struct ToySolution {
         value: i32,
     }
@@ -153,7 +153,6 @@ mod default_move_warning_tests {
             Evaluable::Maximize(f64::from(self.value))
         }
     }
-    crate::rank_by_objective!(ToySolution);
 
     impl ProblemTrait for ToyProblem {
         type Solution = ToySolution;
@@ -261,7 +260,7 @@ mod default_move_warning_tests {
     // A binary problem that keeps the default random_variable.
     struct ToyBits;
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, Rankable)]
     struct ToyBitsSolution(Vec<bool>);
 
     impl Evaluate for ToyBitsSolution {
@@ -269,7 +268,6 @@ mod default_move_warning_tests {
             Evaluable::Maximize(self.0.iter().filter(|&&b| b).count() as f64)
         }
     }
-    crate::rank_by_objective!(ToyBitsSolution);
 
     impl ProblemTrait for ToyBits {
         type Solution = ToyBitsSolution;

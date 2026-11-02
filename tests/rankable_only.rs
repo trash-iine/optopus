@@ -27,7 +27,9 @@ struct Pick {
 
 const LIMIT: usize = 4;
 
-#[derive(Clone, Debug)]
+/// Fewer violations first, then more value.
+#[derive(Clone, Debug, Rankable)]
+#[rank(min = violations(), max = value)]
 struct Picked {
     x: Vec<bool>,
     count: usize,
@@ -37,13 +39,6 @@ struct Picked {
 impl Picked {
     fn violations(&self) -> usize {
         self.count.saturating_sub(LIMIT)
-    }
-}
-
-/// Fewer violations first, then more value.
-impl Rankable for Picked {
-    fn is_better_than(&self, other: &Self) -> bool {
-        (self.violations(), other.value) < (other.violations(), self.value)
     }
 }
 

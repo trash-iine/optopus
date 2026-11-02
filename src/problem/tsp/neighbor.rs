@@ -1,4 +1,5 @@
 use super::problem::{Tsp, TspSolution};
+use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::search::TabuMemory,
     error::OptError,
@@ -12,7 +13,7 @@ use rand::rngs::SmallRng;
 ///
 /// Implemented by reversing the sub-segment `tour[i+1..=j]`.
 /// `gain` is the change in tour length after the move (negative = improvement).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct TspTwoOptNeighbor {
     /// Smallest index of the two removed edges.
     pub i: usize,
@@ -79,7 +80,6 @@ impl Evaluate for TspTwoOptNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
-crate::rank_by_objective!(TspTwoOptNeighbor);
 
 impl EnabledTabu for TspTwoOptNeighbor {
     /// Keyed by the `(i, j)` pair, normalized so that `i < j`.
@@ -248,7 +248,7 @@ impl MoveToNeighbor<Tsp> for TspTwoOptNeighbor {
 ///
 /// `pos` and `ins` are indices in the original tour before the move is applied.
 /// `gain` is the change in tour length (negative = improvement).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct TspRelocateNeighbor {
     /// Index of the city to be relocated.
     pub pos: usize,
@@ -343,7 +343,6 @@ impl Evaluate for TspRelocateNeighbor {
         Evaluable::Minimize(self.gain)
     }
 }
-crate::rank_by_objective!(TspRelocateNeighbor);
 
 impl EnabledTabu for TspRelocateNeighbor {
     /// Keyed by the `(pos, ins)` pair.

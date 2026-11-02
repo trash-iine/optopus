@@ -17,8 +17,8 @@ Optopus は互いに独立した三つの関心事を分離しています。
 2. 既存のヒューリスティクスを新しい問題に適用する。三つのコアトレイト
    (問題に `ProblemTrait`、解と move に `Evaluate`、問題上の解の move に `MoveToNeighbor`)
    を実装すれば、`LocalSearch`、`RandomWalk`、`BeamSearch`、`SimulatedAnnealing`
-   とすべてのメタヒューリスティクスがそのまま動きます。`Rankable` は順序が目的関数値そのものなら
-   `optopus::rank_by_objective!(MySolution, MyMove);` の 1 行です。残りはトレイトを一つ足すごとに一つずつ使えるようになります。
+   とすべてのメタヒューリスティクスがそのまま動きます。`Rankable` はそれぞれに
+   `#[derive(Rankable)]` を付けるだけで、`rank` 属性で別のキーを書かない限り目的関数値で比べます。残りはトレイトを一つ足すごとに一つずつ使えるようになります。
    Tabu Search には `EnabledTabu`、Genetic Algorithm には `Distance` と `Crossover` です。
    完全なシグネチャとヒューリスティクスごとの要件表は
    [コアトレイト](traits.md#core-trait-reference) にあります。

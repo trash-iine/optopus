@@ -26,7 +26,7 @@ struct OneMaxProblem {
 }
 
 // ─── Solution definition ────────────────────────────────────
-#[derive(Clone)]
+#[derive(Clone, Rankable)]
 struct OneMaxSolution {
     bits: Vec<bool>,
 }
@@ -45,7 +45,6 @@ impl Evaluate for OneMaxSolution {
         Evaluable::Maximize(self.objective() as f64)
     }
 }
-optopus::rank_by_objective!(OneMaxSolution);
 
 impl ProblemTrait for OneMaxProblem {
     type Solution = OneMaxSolution;
@@ -59,7 +58,7 @@ impl ProblemTrait for OneMaxProblem {
 
 // ─── Neighborhood definition (single-bit flip) ──────────────
 /// `Clone` is what `TabuSearch` asks of a move besides `EnabledTabu`.
-#[derive(Clone)]
+#[derive(Clone, Rankable)]
 struct FlipMove {
     index: usize,
     /// Change in objective this flip would cause, cached at construction time.
@@ -123,7 +122,6 @@ impl Evaluate for FlipMove {
         Evaluable::Maximize(f64::from(self.gain))
     }
 }
-optopus::rank_by_objective!(FlipMove);
 
 // ─── Tabu policy ────────────────────────────────────────────
 impl EnabledTabu for FlipMove {

@@ -1,6 +1,7 @@
 //! Neighborhood move types for the [`VertexCover`] problem.
 
 use super::VertexCover;
+use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::{
         representation::{differing_pairs_by_row, random_differing_pair},
@@ -19,7 +20,7 @@ use rand::rngs::SmallRng;
 /// (negative = improvement, since Vertex Cover is minimization). Applying the
 /// move refreshes the gain of every neighbor of `i` and the uncovered-edge
 /// count, i.e. O(degree(i)) work.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Rankable)]
 pub struct VertexCoverFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
@@ -46,7 +47,6 @@ impl Evaluate for VertexCoverFlipNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(VertexCoverFlipNeighbor);
 
 impl EnabledTabu for VertexCoverFlipNeighbor {
     /// The move is tabu while vertex `i` is still blocked at the current iteration.
@@ -154,7 +154,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
 /// Only pairs `(i, j)` with `cover[i] != cover[j]` and `i < j` are enumerated.
 /// Applying the move performs two flips in sequence (`apply_to_iteration`
 /// returns `iter + 2`), each doing O(degree) work.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Rankable)]
 pub struct VertexCoverSwapNeighbor {
     pub i: usize,
     pub j: usize,
@@ -208,7 +208,6 @@ impl Evaluate for VertexCoverSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(VertexCoverSwapNeighbor);
 
 impl EnabledTabu for VertexCoverSwapNeighbor {
     /// A swap is tabu unless both vertexs it moves are free.

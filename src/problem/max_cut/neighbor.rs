@@ -16,6 +16,7 @@
 //! [`EnabledTabu`]: crate::search_state::EnabledTabu
 
 use super::{MaxCut, MaxCutSolution};
+use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::{
         representation::{differing_pairs_by_row, random_differing_pair},
@@ -46,7 +47,7 @@ use rand::rngs::SmallRng;
 /// LocalSearch::<MaxCutFlipNeighbor>::new(StopCondition::iterations(1000))
 ///     .run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Rankable)]
 pub struct MaxCutFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
@@ -156,7 +157,6 @@ impl Evaluate for MaxCutFlipNeighbor {
         Evaluable::Maximize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(MaxCutFlipNeighbor);
 
 impl MaxCutFlipNeighbor {
     /// Builds the flip of vertex `i`, reading its cached gain.
@@ -205,7 +205,7 @@ impl MaxCutFlipNeighbor {
 ///     (5, 10),
 /// ).run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct MaxCutSwapNeighbor {
     /// First vertex to swap (currently on one side).
     pub i: usize,
@@ -265,7 +265,6 @@ impl Evaluate for MaxCutSwapNeighbor {
         Evaluable::Maximize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(MaxCutSwapNeighbor);
 
 impl EnabledTabu for MaxCutSwapNeighbor {
     /// A swap is tabu unless both vertexs it moves are free.

@@ -1,3 +1,4 @@
+use crate::trait_defs::Rankable;
 use std::sync::OnceLock;
 
 use rand::seq::SliceRandom;
@@ -7,7 +8,7 @@ use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait};
 
 /// A solution to the quadratic assignment problem.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct QapSolution {
     /// `assignment[i]` is the location facility `i` is placed at, a
     /// permutation of `0..n`.
@@ -39,7 +40,6 @@ impl Evaluate for QapSolution {
         Evaluable::Minimize(self.objective as f64)
     }
 }
-crate::rank_by_objective!(QapSolution);
 
 impl Distance for QapSolution {
     /// The number of facilities placed at different locations.

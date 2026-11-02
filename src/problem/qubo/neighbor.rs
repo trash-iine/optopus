@@ -16,6 +16,7 @@
 //! [`EnabledTabu`]: crate::search_state::EnabledTabu
 
 use super::problem::{Coefficient, Qubo};
+use crate::trait_defs::Rankable;
 use crate::{
     building_blocks::{
         representation::{differing_pairs_by_row, random_differing_pair},
@@ -44,7 +45,7 @@ use rand::rngs::SmallRng;
 /// LocalSearch::<QuboFlipNeighbor>::new(StopCondition::iterations(1000))
 ///     .run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct QuboFlipNeighbor {
     /// Index of the variable to flip.
     pub i: usize,
@@ -70,7 +71,6 @@ impl Evaluate for QuboFlipNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(QuboFlipNeighbor);
 
 impl Evaluate<Coefficient> for QuboFlipNeighbor {
     fn evaluate(&self) -> Evaluable<Coefficient> {
@@ -189,7 +189,7 @@ impl QuboFlipNeighbor {
 ///     (5, 10),
 /// ).run(&mut state).unwrap();
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Rankable)]
 pub struct QuboSwapNeighbor {
     /// Index of the first variable to flip.
     pub i: usize,
@@ -237,7 +237,6 @@ impl Evaluate for QuboSwapNeighbor {
         Evaluable::Minimize(self.gain as f64)
     }
 }
-crate::rank_by_objective!(QuboSwapNeighbor);
 
 impl EnabledTabu for QuboSwapNeighbor {
     /// A swap is tabu unless both variables it moves are free.

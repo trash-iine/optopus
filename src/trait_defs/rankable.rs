@@ -14,9 +14,104 @@ use super::Evaluate;
 /// is, not only whether it is worse, and it may be a surrogate that the order
 /// does not follow.
 ///
-/// Where the order is the objective, [`rank_by_objective!`](crate::rank_by_objective)
-/// writes this impl from the `Evaluate` one in one line, and the built-in
-/// problems use it for every solution and move.
+/// # Deriving it
+///
+/// `#[derive(Rankable)]` writes the impl, and every built-in solution and move
+/// uses it. With no `rank` attribute the order is the objective, compared by
+/// [`better_by_objective`], so the type also implements `Evaluate`.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Tour(f64);
+///
+/// impl Evaluate for Tour {
+///     fn evaluate(&self) -> Evaluable<f64> {
+///         Evaluable::Minimize(self.0)
+///     }
+/// }
+///
+/// assert!(Tour(1.0).is_better_than(&Tour(2.0)));
+/// ```
+///
+/// An order of keys compared one after another, the first that differs
+/// deciding, is named with `rank` attributes. `min` ranks the lower key better
+/// and `max` the higher one. On fields they are compared in the order the
+/// fields are declared.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Packing {
+///     #[rank(min)]
+///     overfull_bins: u32,
+///     #[rank(min)]
+///     bins: u32,
+/// }
+///
+/// let feasible = Packing { overfull_bins: 0, bins: 9 };
+/// let tight = Packing { overfull_bins: 1, bins: 7 };
+/// assert!(feasible.is_better_than(&tight));
+/// ```
+///
+/// On the type they are compared in the order written, and a key is a field
+/// or a method that takes only `&self`.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// #[rank(min = violation(), min = cost)]
+/// struct Routes {
+///     overload: f64,
+///     lateness: f64,
+///     cost: f64,
+/// }
+///
+/// impl Routes {
+///     fn violation(&self) -> f64 {
+///         self.overload + self.lateness
+///     }
+/// }
+///
+/// let on_time = Routes { overload: 0.0, lateness: 0.0, cost: 120.0 };
+/// let late = Routes { overload: 0.0, lateness: 3.0, cost: 80.0 };
+/// assert!(on_time.is_better_than(&late));
+/// ```
+///
+/// The keys are named in one of the two places, never both, so the order is
+/// written once.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// #[rank(min = cost)]
+/// struct Twice {
+///     #[rank(min)]
+///     cost: f64,
+/// }
+/// ```
+///
+/// A key reads `self` alone, so an expression that is not a field or a method
+/// call with no arguments is refused.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// #[rank(min = cost * 2.0)]
+/// struct Scaled {
+///     cost: f64,
+/// }
+/// ```
+///
+/// A move ranks the same way, by its own fields. A problem whose solution is
+/// ranked by keys gives its moves the keys of the solution each would lead
+/// to, since a move ranked by its delta follows the objective and not that
+/// order.
 pub trait Rankable {
     fn is_better_than(&self, other: &Self) -> bool;
 }
@@ -27,47 +122,11 @@ pub trait Rankable {
 ///
 /// Strict, so two equal values rank as neither better, which is what
 /// [`rank_cmp`] reports as `Equal` and what the tie rules downstream are
-/// written against. [`rank_by_objective!`](crate::rank_by_objective) implements
-/// [`Rankable`] with this.
+/// written against. `#[derive(Rankable)]` with no `rank` attribute implements
+/// [`Rankable`] with this, and an impl written by hand can call it too.
 #[inline]
 pub fn better_by_objective<T: Evaluate>(a: &T, b: &T) -> bool {
     a.evaluate().minimized() < b.evaluate().minimized()
-}
-
-/// Implements [`Rankable`] for each type given by comparing objectives, with
-/// [`better_by_objective`].
-///
-/// A solution or a move of your own whose order is its objective calls
-/// `optopus::rank_by_objective!(MySolution, MyMove);` beside its
-/// [`Evaluate`] impl. One whose order is something else, violations before
-/// cost for example, implements [`Rankable`] by hand instead, and so do its
-/// moves, since a move ranked by its delta follows the objective and not that
-/// order. A generic type, which the macro cannot name, writes the impl with
-/// [`better_by_objective`].
-///
-/// ```
-/// use optopus::prelude::*;
-///
-/// struct Cost(f64);
-/// impl Evaluate for Cost {
-///     fn evaluate(&self) -> Evaluable<f64> {
-///         Evaluable::Minimize(self.0)
-///     }
-/// }
-/// optopus::rank_by_objective!(Cost);
-///
-/// assert!(Cost(1.0).is_better_than(&Cost(2.0)));
-/// ```
-#[macro_export]
-macro_rules! rank_by_objective {
-    ($($ty:ty),* $(,)?) => {$(
-        impl $crate::trait_defs::Rankable for $ty {
-            #[inline]
-            fn is_better_than(&self, other: &Self) -> bool {
-                $crate::trait_defs::better_by_objective(self, other)
-            }
-        }
-    )*};
 }
 
 /// Total-order comparator derived from [`Rankable::is_better_than`], for use
@@ -124,7 +183,7 @@ pub trait Distance {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::trait_defs::Evaluable;
+    use crate::trait_defs::{Evaluable, Rankable};
 
     /// `filter_best` keeps every tie, and `rank_cmp`'s `max_by` keeps the last
     /// of them. `LocalSearch` and `TabuSearch` both rely on the two agreeing,
@@ -132,14 +191,13 @@ mod tests {
     /// every candidate is a tie, so a disagreement is not a corner case.
     #[test]
     fn filter_best_keeps_every_tie_and_agrees_with_max_by() {
-        #[derive(Clone, Copy, Debug)]
+        #[derive(Clone, Copy, Debug, Rankable)]
         struct Cut(f64);
         impl Evaluate for Cut {
             fn evaluate(&self) -> Evaluable<f64> {
                 Evaluable::Maximize(self.0)
             }
         }
-        crate::rank_by_objective!(Cut);
 
         let items = [Cut(1.0), Cut(3.0), Cut(2.0), Cut(3.0), Cut(3.0)];
 
@@ -158,22 +216,23 @@ mod tests {
         assert!(filter_best(std::iter::empty::<Cut>()).is_empty());
     }
 
-    /// `rank_by_objective!` derives the same order the direction states.
+    /// The derive with no attribute ranks in the order the direction states.
     #[test]
     fn better_means_a_lower_minimized_value() {
+        #[derive(Rankable)]
         struct Maximized(f64);
         impl Evaluate for Maximized {
             fn evaluate(&self) -> Evaluable<f64> {
                 Evaluable::Maximize(self.0)
             }
         }
+        #[derive(Rankable)]
         struct Minimized(f64);
         impl Evaluate for Minimized {
             fn evaluate(&self) -> Evaluable<f64> {
                 Evaluable::Minimize(self.0)
             }
         }
-        crate::rank_by_objective!(Maximized, Minimized);
 
         assert!(Maximized(2.0).is_better_than(&Maximized(1.0)));
         assert!(!Maximized(1.0).is_better_than(&Maximized(2.0)));

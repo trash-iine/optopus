@@ -1052,7 +1052,7 @@ mod tests {
         /// three traits a local search needs.
         struct Untabued;
 
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, Rankable)]
         struct Counter(i32);
 
         impl Evaluate for Counter {
@@ -1060,7 +1060,6 @@ mod tests {
                 Evaluable::Maximize(f64::from(self.0))
             }
         }
-        crate::rank_by_objective!(Counter);
 
         impl ProblemTrait for Untabued {
             type Solution = Counter;
@@ -1069,7 +1068,7 @@ mod tests {
             }
         }
 
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, Rankable)]
         struct Increment;
 
         // Every move is worth the same, so none is ever better than another.
@@ -1078,7 +1077,6 @@ mod tests {
                 Evaluable::Minimize(0.0)
             }
         }
-        crate::rank_by_objective!(Increment);
 
         impl MoveToNeighbor<Untabued> for Increment {
             fn apply_to_solution(
