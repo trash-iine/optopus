@@ -158,9 +158,9 @@ where
 // ---------------------------------------------------------------------------
 
 /// Builds the neighbor-parameterized base heuristics once the concrete
-/// neighbor type is known. One arm per base kind: adding a new base heuristic
-/// means adding a [`HeuristicConfig`] variant and following the compile
-/// errors -- this match is written once, not per problem.
+/// neighbor type is known. One arm per base kind, written once rather than
+/// per problem. The match names every kind, so a new [`HeuristicConfig`]
+/// variant does not compile until it has its place here.
 struct BaseBuilder<'c> {
     config: &'c HeuristicConfig,
     cond: StopCondition,
@@ -232,7 +232,23 @@ where
             HeuristicConfig::ParallelTempering { .. } => {
                 build_parallel_tempering::<P, N>(self.config, self.cond)
             }
-            _ => unreachable!("non-neighbor kinds are dispatched before with_neighbor"),
+            // Named one by one, so a new neighbor kind without an arm above
+            // does not compile.
+            HeuristicConfig::BreakoutLocalSearch { .. }
+            | HeuristicConfig::LinKernighanHelsgaun { .. }
+            | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
+            | HeuristicConfig::IteratedGreedy { .. }
+            | HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::HybridGeneticSearch { .. }
+            | HeuristicConfig::WalkSat { .. }
+            | HeuristicConfig::BranchAndBound { .. }
+            | HeuristicConfig::Sequential { .. }
+            | HeuristicConfig::Iterated { .. }
+            | HeuristicConfig::VariableNeighborhoodSearch { .. }
+            | HeuristicConfig::Restart { .. }
+            | HeuristicConfig::GeneticAlgorithm { .. } => {
+                unreachable!("build_heuristic dispatches only the neighbor kinds here")
+            }
         }
     }
 }

@@ -4,7 +4,7 @@
 //! line in the `problems!` table, which makes the [`ProblemKind`] variant and
 //! the dispatch to the type, and one impl each of [`BenchmarkProblem`],
 //! [`BenchmarkSolution`] and [`ConfigurableProblem`], whose neighbors are one
-//! `neighbors!` table.
+//! `neighbors!` table and whose crossovers are one `crossovers!` table.
 
 use serde::{Deserialize, Serialize};
 
@@ -57,6 +57,11 @@ pub(crate) trait Registered {
     /// solution's `Evaluate` reports, which a test checks for every row, and
     /// the report reads it where it has no solution to ask.
     const MINIMIZE: bool;
+
+    /// Reads an instance file, with the problem type's own `load_file`.
+    fn load_instance(path: &str) -> Result<Self, OptError>
+    where
+        Self: Sized;
 }
 
 macro_rules! minimizes {
@@ -70,7 +75,8 @@ macro_rules! minimizes {
 
 /// Writes [`ProblemKind`] with its `ALL`, `minimize` and `valid_neighbors`,
 /// [`with_problem`], and every [`Registered`] impl from one list of
-/// `Variant => ProblemType, direction;`.
+/// `Variant => ProblemType, direction;`. Every problem type reads its
+/// instances with an inherent `load_file(path)`.
 macro_rules! problems {
     ($($kind:ident => $ty:ty, $direction:ident;)+) => {
         /// Problem type discriminant used in config files.
@@ -113,6 +119,10 @@ macro_rules! problems {
             impl Registered for $ty {
                 const NAME: &'static str = stringify!($kind);
                 const MINIMIZE: bool = minimizes!($direction);
+
+                fn load_instance(path: &str) -> Result<Self, OptError> {
+                    <$ty>::load_file(path)
+                }
             }
         )+
     };
@@ -152,14 +162,50 @@ macro_rules! neighbors {
     };
 }
 
+/// Writes `build_crossover` inside a [`ConfigurableProblem`] impl from one
+/// list of `Name => operator`, the name a config's `crossover_kind` gives.
+/// The first row is the default when the config names none.
+macro_rules! crossovers {
+    ($($name:ident => $op:expr),+ $(,)?) => {
+        fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
+            const NAMES: &[&str] = &[$(stringify!($name)),+];
+            match kind.unwrap_or(NAMES[0]) {
+                $(stringify!($name) => Ok(Box::new($op)),)+
+                other => Err(unknown_crossover::<Self>(other, NAMES)),
+            }
+        }
+    };
+}
+
+/// Writes `build_branch_and_bound` inside the [`ConfigurableProblem`] impl
+/// of a binary problem whose one bound is [`BinaryRelaxation`].
+macro_rules! binary_branch_and_bound {
+    () => {
+        fn build_branch_and_bound(
+            config: &HeuristicConfig,
+            cond: StopCondition,
+        ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
+            bnb_relaxation(config, Self::NAME, false)?;
+            branch_and_bound(config, cond, BinaryRelaxation)
+        }
+    };
+}
+
+/// The error for a `crossover_kind` the problem has no row for.
+fn unknown_crossover<P: Registered>(kind: &str, names: &[&str]) -> OptError {
+    OptError::Config(format!(
+        "Unknown crossover_kind '{kind}' for {} (expected '{}')",
+        P::NAME,
+        names.join("' or '")
+    ))
+}
+
 // ---------------------------------------------------------------------------
 // BenchmarkProblem / BenchmarkSolution traits
 // ---------------------------------------------------------------------------
 
-/// Problem types that can load an instance from a file path.
+/// Problem types whose solutions a report writes and a config gives back.
 pub trait BenchmarkProblem: ProblemTrait + Sized {
-    fn load_instance(path: &str) -> Result<Self, OptError>;
-
     /// The solution `indices` stands for, the inverse of
     /// [`BenchmarkSolution::encode_as_indices`], so a report's `solution` can
     /// start a run or be scored again. Indices that do not make a solution of
@@ -199,88 +245,61 @@ fn binary_from_indices<P: BinaryProblem>(
 }
 
 /// Solution types that expose generic metrics needed by the benchmark runner.
-pub trait BenchmarkSolution: Clone {
-    fn best_objective_f64(&self) -> f64;
+pub trait BenchmarkSolution: Clone + Evaluate {
+    /// The objective a report gives, by default the number the solution's
+    /// `Evaluate` reports.
+    fn best_objective_f64(&self) -> f64 {
+        self.evaluate().raw()
+    }
     fn encode_as_indices(&self) -> Vec<usize>;
 }
 
-impl BenchmarkProblem for MaxCut {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        MaxCut::load_file(path)
-    }
+/// The positions of the `true` variables, a binary solution's encoding.
+fn true_indices(x: &[bool]) -> Vec<usize> {
+    x.iter()
+        .enumerate()
+        .filter(|&(_, &v)| v)
+        .map(|(i, _)| i)
+        .collect()
+}
 
+impl BenchmarkProblem for MaxCut {
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         binary_from_indices(self, indices)
     }
 }
 
 impl BenchmarkSolution for MaxCutSolution {
-    fn best_objective_f64(&self) -> f64 {
-        self.objective as f64
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
-        self.x
-            .iter()
-            .enumerate()
-            .filter(|&(_, &v)| v)
-            .map(|(i, _)| i)
-            .collect()
+        true_indices(&self.x)
     }
 }
 
 impl BenchmarkProblem for Qubo {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        Qubo::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         binary_from_indices(self, indices)
     }
 }
 
 impl BenchmarkSolution for QuboSolution {
-    fn best_objective_f64(&self) -> f64 {
-        self.objective as f64
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
-        self.x
-            .iter()
-            .enumerate()
-            .filter(|&(_, &v)| v)
-            .map(|(i, _)| i)
-            .collect()
+        true_indices(&self.x)
     }
 }
 
 impl BenchmarkProblem for Sat {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        Sat::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         binary_from_indices(self, indices)
     }
 }
 
 impl BenchmarkSolution for SatSolution {
-    fn best_objective_f64(&self) -> f64 {
-        self.n_satisfied as f64
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
-        self.x
-            .iter()
-            .enumerate()
-            .filter(|&(_, v)| *v)
-            .map(|(i, _)| i)
-            .collect()
+        true_indices(&self.x)
     }
 }
 
 impl BenchmarkProblem for Tsp {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        Tsp::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         let tour = indices.to_vec();
         if let Some(&city) = tour.iter().find(|&&c| c >= self.get_n()) {
@@ -295,19 +314,12 @@ impl BenchmarkProblem for Tsp {
 }
 
 impl BenchmarkSolution for TspSolution {
-    fn best_objective_f64(&self) -> f64 {
-        self.objective
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
         self.tour.clone()
     }
 }
 
 impl BenchmarkProblem for Vrp {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        Vrp::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         // `encode_as_indices` writes `0, r0…, 0, r1…, 0`, every slot when the
         // fleet has more than one vehicle type and the busy ones otherwise,
@@ -350,11 +362,6 @@ impl BenchmarkProblem for Vrp {
 }
 
 impl BenchmarkSolution for VrpSolution {
-    fn best_objective_f64(&self) -> f64 {
-        // Penalty-augmented objective so infeasible solutions are correctly
-        // penalized; equals the true distance for any feasible best.
-        self.objective
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
         // Flatten with the depot (0) as the separator, `0, r0…, 0, r1…, 0`.
         // An idle slot leaves no trace when every vehicle is of one type. In a
@@ -375,35 +382,18 @@ impl BenchmarkSolution for VrpSolution {
 }
 
 impl BenchmarkProblem for VertexCover {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        VertexCover::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         binary_from_indices(self, indices)
     }
 }
 
 impl BenchmarkSolution for VertexCoverSolution {
-    fn best_objective_f64(&self) -> f64 {
-        // Use penalty-augmented objective so infeasible solutions are correctly penalized.
-        self.objective as f64
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
-        self.x
-            .iter()
-            .enumerate()
-            .filter(|&(_, &v)| v)
-            .map(|(i, _)| i)
-            .collect()
+        true_indices(&self.x)
     }
 }
 
 impl BenchmarkProblem for JobShopScheduling {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        JobShopScheduling::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         let operations = indices.to_vec();
         let (objective, completion_times) = self.decode(&operations).map_err(misfit)?;
@@ -416,19 +406,12 @@ impl BenchmarkProblem for JobShopScheduling {
 }
 
 impl BenchmarkSolution for JobShopSolution {
-    fn best_objective_f64(&self) -> f64 {
-        self.objective as f64
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
         self.operations.clone()
     }
 }
 
 impl BenchmarkProblem for FlowShop {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        FlowShop::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         self.solution_from_sequence(indices.to_vec())
             .map_err(misfit)
@@ -436,29 +419,18 @@ impl BenchmarkProblem for FlowShop {
 }
 
 impl BenchmarkSolution for FlowShopSolution {
-    fn best_objective_f64(&self) -> f64 {
-        f64::from(self.objective)
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
         self.sequence.clone()
     }
 }
 
 impl BenchmarkProblem for GraphColoring {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        GraphColoring::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         self.solution_from_colors(indices.to_vec()).map_err(misfit)
     }
 }
 
 impl BenchmarkSolution for GraphColoringSolution {
-    fn best_objective_f64(&self) -> f64 {
-        // Penalty-augmented objective so improper colorings are penalized.
-        self.objective as f64
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
         // The color assigned to each vertex (0-indexed color ids).
         self.colors.clone()
@@ -512,28 +484,22 @@ impl ConfigurableProblem for MaxCut {
         }
     }
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Uniform") {
-            "Uniform" => Ok(Box::new(MaxCutUniformCrossover)),
-            // Solves the sub-MaxCut formed by the variables the two parents
-            // disagree on (TSHEA/MOH-style memetic recombination). The
-            // sub-problem shrinks as the population converges, so a bounded
-            // BLS is enough to solve it well.
-            "SubProblem" => Ok(Box::new(SubProblemBasedCrossover {
-                sub_heuristic: Box::new(bls_for_max_cut(
-                    StopCondition::iterations(50_000).with_failed_updates(10_000),
-                    (6, 100),
-                    1_000,
-                    20,
-                    0.8,
-                    0.5,
-                )),
-            })),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Uniform' or 'SubProblem')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Uniform => MaxCutUniformCrossover,
+        // Solves the sub-MaxCut formed by the variables the two parents
+        // disagree on (TSHEA/MOH-style memetic recombination). The
+        // sub-problem shrinks as the population converges, so a bounded
+        // BLS is enough to solve it well.
+        SubProblem => SubProblemBasedCrossover {
+            sub_heuristic: Box::new(bls_for_max_cut(
+                StopCondition::iterations(50_000).with_failed_updates(10_000),
+                (6, 100),
+                1_000,
+                20,
+                0.8,
+                0.5,
+            )),
+        },
     }
 }
 
@@ -543,22 +509,10 @@ impl ConfigurableProblem for Qubo {
         Swap => QuboSwapNeighbor,
     }
 
-    fn build_branch_and_bound(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
-        bnb_relaxation(config, Self::NAME, false)?;
-        branch_and_bound(config, cond, BinaryRelaxation)
-    }
+    binary_branch_and_bound!();
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Uniform") {
-            "Uniform" => Ok(Box::new(QuboUniformCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Uniform')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Uniform => QuboUniformCrossover,
     }
 }
 
@@ -594,22 +548,10 @@ impl ConfigurableProblem for Sat {
         }
     }
 
-    fn build_branch_and_bound(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
-        bnb_relaxation(config, Self::NAME, false)?;
-        branch_and_bound(config, cond, BinaryRelaxation)
-    }
+    binary_branch_and_bound!();
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Uniform") {
-            "Uniform" => Ok(Box::new(SatUniformCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Uniform')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Uniform => SatUniformCrossover,
     }
 }
 
@@ -633,30 +575,16 @@ impl ConfigurableProblem for Tsp {
                 num_neighbors.unwrap_or(5),
                 max_depth.unwrap_or(5),
             ))),
-            HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
-                grasp_construction::<Self>(*alpha, cond)
-            }
-            HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
-                removal_fraction,
-                cooling_rate,
-                ..
-            } => {
-                let (removal_fraction, cooling_rate) =
-                    alns_params(*removal_fraction, *cooling_rate)?;
-                Ok(Box::new(alns_for_tsp(cond, removal_fraction, cooling_rate)))
+            HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => {
+                ruin_and_recreate(config, cond, alns_for_tsp)
             }
             _ => Err(unsupported::<Self>(config)),
         }
     }
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Order") {
-            "Order" => Ok(Box::new(TspOrderCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Order')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Order => TspOrderCrossover,
     }
 }
 
@@ -672,17 +600,9 @@ impl ConfigurableProblem for Vrp {
         cond: StopCondition,
     ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
         match config {
-            HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
-                grasp_construction::<Self>(*alpha, cond)
-            }
-            HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
-                removal_fraction,
-                cooling_rate,
-                ..
-            } => {
-                let (removal_fraction, cooling_rate) =
-                    alns_params(*removal_fraction, *cooling_rate)?;
-                Ok(Box::new(alns_for_vrp(cond, removal_fraction, cooling_rate)))
+            HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => {
+                ruin_and_recreate(config, cond, alns_for_vrp)
             }
             HeuristicConfig::HybridGeneticSearch {
                 min_population_size,
@@ -729,14 +649,8 @@ impl ConfigurableProblem for Vrp {
         }
     }
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Order") {
-            "Order" => Ok(Box::new(VrpOrderCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Order')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Order => VrpOrderCrossover,
     }
 }
 
@@ -746,22 +660,10 @@ impl ConfigurableProblem for VertexCover {
         Swap => VertexCoverSwapNeighbor,
     }
 
-    fn build_branch_and_bound(
-        config: &HeuristicConfig,
-        cond: StopCondition,
-    ) -> Result<Box<dyn ProvingSearch<Self>>, OptError> {
-        bnb_relaxation(config, Self::NAME, false)?;
-        branch_and_bound(config, cond, BinaryRelaxation)
-    }
+    binary_branch_and_bound!();
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Uniform") {
-            "Uniform" => Ok(Box::new(VertexCoverUniformCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Uniform')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Uniform => VertexCoverUniformCrossover,
     }
 }
 
@@ -771,22 +673,12 @@ impl ConfigurableProblem for JobShopScheduling {
         Relocate => JobShopRelocateNeighbor,
     }
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Ppx") {
-            "Ppx" => Ok(Box::new(JobShopPpxCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Ppx')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Ppx => JobShopPpxCrossover,
     }
 }
 
 impl BenchmarkProblem for Qap {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        Qap::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         self.solution_from_assignment(indices.to_vec())
             .map_err(misfit)
@@ -794,9 +686,6 @@ impl BenchmarkProblem for Qap {
 }
 
 impl BenchmarkSolution for QapSolution {
-    fn best_objective_f64(&self) -> f64 {
-        self.objective as f64
-    }
     fn encode_as_indices(&self) -> Vec<usize> {
         self.assignment.clone()
     }
@@ -807,14 +696,8 @@ impl ConfigurableProblem for Qap {
         Swap => QapSwapNeighbor,
     }
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Order") {
-            "Order" => Ok(Box::new(QapOrderCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Order')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Order => QapOrderCrossover,
     }
 }
 
@@ -839,25 +722,42 @@ fn alns_params(
     Ok((removal_fraction, cooling_rate))
 }
 
-/// One GRASP construction for any `Ruinable` problem, the alpha checked here
-/// so a bad config fails at startup rather than panicking in a run.
-fn grasp_construction<P>(
-    alpha: Option<f64>,
+/// The GRASP construction or the ALNS of a `GreedyRandomizedConstruction` or
+/// `AdaptiveLargeNeighborhoodSearch` config, on a `Ruinable` problem. `alns`
+/// makes the problem's ALNS from the stop condition, the removal fraction
+/// and the cooling rate, which are checked here so a bad config fails at
+/// startup rather than panicking in a run.
+fn ruin_and_recreate<P>(
+    config: &HeuristicConfig,
     cond: StopCondition,
+    alns: fn(StopCondition, f64, f64) -> AdaptiveLargeNeighborhoodSearch<P>,
 ) -> Result<Box<dyn Heuristic<P>>, OptError>
 where
     P: Ruinable + 'static,
     P::Solution: Evaluate,
 {
-    let alpha = alpha.unwrap_or(0.2);
-    if !(0.0..=1.0).contains(&alpha) {
-        return Err(OptError::Config(format!(
-            "'alpha' must be in [0, 1], got {alpha}"
-        )));
+    match config {
+        HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
+            let alpha = alpha.unwrap_or(0.2);
+            if !(0.0..=1.0).contains(&alpha) {
+                return Err(OptError::Config(format!(
+                    "'alpha' must be in [0, 1], got {alpha}"
+                )));
+            }
+            Ok(Box::new(GreedyRandomizedConstruction::<P>::new(
+                cond, alpha,
+            )))
+        }
+        HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
+            removal_fraction,
+            cooling_rate,
+            ..
+        } => {
+            let (removal_fraction, cooling_rate) = alns_params(*removal_fraction, *cooling_rate)?;
+            Ok(Box::new(alns(cond, removal_fraction, cooling_rate)))
+        }
+        _ => unreachable!("ruin_and_recreate is only called on GRASP and ALNS configs"),
     }
-    Ok(Box::new(GreedyRandomizedConstruction::<P>::new(
-        cond, alpha,
-    )))
 }
 
 /// A `BranchAndBound` config's search, `steps[0]` searching each node and
@@ -945,10 +845,6 @@ fn bnb_relaxation(
 }
 
 impl BenchmarkProblem for BinPacking {
-    fn load_instance(path: &str) -> Result<Self, OptError> {
-        BinPacking::load_file(path)
-    }
-
     fn decode_indices(&self, indices: &[usize]) -> Result<Self::Solution, OptError> {
         self.solution_from_bins(indices.to_vec()).map_err(misfit)
     }
@@ -974,36 +870,18 @@ impl ConfigurableProblem for BinPacking {
         cond: StopCondition,
     ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
         match config {
-            HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
-                grasp_construction::<Self>(*alpha, cond)
-            }
-            HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
-                removal_fraction,
-                cooling_rate,
-                ..
-            } => {
-                let (removal_fraction, cooling_rate) =
-                    alns_params(*removal_fraction, *cooling_rate)?;
-                Ok(Box::new(
-                    AdaptiveLargeNeighborhoodSearch::<BinPacking>::new(
-                        cond,
-                        removal_fraction,
-                        cooling_rate,
-                    ),
-                ))
-            }
+            HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => ruin_and_recreate(
+                config,
+                cond,
+                AdaptiveLargeNeighborhoodSearch::<BinPacking>::new,
+            ),
             _ => Err(unsupported::<Self>(config)),
         }
     }
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Group") {
-            "Group" => Ok(Box::new(BinPackingGroupCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Group')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Group => BinPackingGroupCrossover,
     }
 }
 
@@ -1041,34 +919,16 @@ impl ConfigurableProblem for FlowShop {
                     temperature_factor,
                 )))
             }
-            HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
-                grasp_construction::<Self>(*alpha, cond)
-            }
-            HeuristicConfig::AdaptiveLargeNeighborhoodSearch {
-                removal_fraction,
-                cooling_rate,
-                ..
-            } => {
-                let (removal_fraction, cooling_rate) =
-                    alns_params(*removal_fraction, *cooling_rate)?;
-                Ok(Box::new(alns_for_flow_shop(
-                    cond,
-                    removal_fraction,
-                    cooling_rate,
-                )))
+            HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => {
+                ruin_and_recreate(config, cond, alns_for_flow_shop)
             }
             _ => Err(unsupported::<Self>(config)),
         }
     }
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Order") {
-            "Order" => Ok(Box::new(FlowShopOrderCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Order')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Order => FlowShopOrderCrossover,
     }
 }
 
@@ -1079,14 +939,8 @@ impl ConfigurableProblem for GraphColoring {
         Swap => GraphColoringSwapNeighbor,
     }
 
-    fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError> {
-        match kind.unwrap_or("Uniform") {
-            "Uniform" => Ok(Box::new(GraphColoringUniformCrossover)),
-            other => Err(OptError::Config(format!(
-                "Unknown crossover_kind '{other}' for {} (expected 'Uniform')",
-                Self::NAME
-            ))),
-        }
+    crossovers! {
+        Uniform => GraphColoringUniformCrossover,
     }
 }
 
