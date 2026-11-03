@@ -52,9 +52,6 @@ In the last row `SourceSolution` and `TargetSolution` stand for
 `<Self::Target as ProblemTrait>::Solution`, which is how the trait spells them.
 There is no alias for either.
 
-For QUBO, gain values are integers, so the relevant evaluators are
-`Evaluate<i32>` (and `Evaluable<i32>`).
-
 ## What the core three alone buy you
 
 With `ProblemTrait`, `Rankable` (on the solution and on the move) and

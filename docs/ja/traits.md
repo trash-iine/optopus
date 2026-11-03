@@ -45,9 +45,6 @@
 `<Self::Target as ProblemTrait>::Solution` の略で、トレイトではそう書かれています。
 どちらにも別名はありません。
 
-QUBO では gain の値が整数なので、対応する評価は
-`Evaluate<i32>` (と `Evaluable<i32>`) です。
-
 ## コアの三つだけで得られるもの { #what-the-core-three-alone-buy-you }
 
 `ProblemTrait`、`Rankable` (解と move の両方)、`MoveToNeighbor` があり、ほかに何もない場合は次のようになります。

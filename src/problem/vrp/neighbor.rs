@@ -260,7 +260,11 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
             let to_i = rng.random_range(0..=sol.routes[to_r].len());
             return Some(Self::new(prob, sol, from_r, from_i, to_r, to_i));
         }
-        None
+        // A fleet of many slots with few busy routes misses nearly every draw,
+        // and `None` would read as an empty neighborhood, so the last resort
+        // picks among every move.
+        use rand::seq::IteratorRandom;
+        Self::iter(prob, sol).choose(rng)
     }
 }
 
@@ -483,7 +487,9 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
             let i2 = rng.random_range(0..len2);
             return Some(Self::new(prob, sol, r1, i1, r2, i2));
         }
-        None
+        // As for relocate: two busy routes among many slots are rarely drawn.
+        use rand::seq::IteratorRandom;
+        Self::iter(prob, sol).choose(rng)
     }
 }
 
@@ -1031,6 +1037,28 @@ mod tests {
             .solution_from_routes(vec![vec![1], vec![2], vec![3], vec![4, 5, 6]])
             .unwrap();
         assert!(VrpTwoOptNeighbor::random_neighbor(&prob, &singles, &mut rng).is_some());
+    }
+
+    /// Relocate and swap draw two slots and retry when the pair offers no
+    /// move. Among forty slots with two busy routes nearly every draw misses,
+    /// and the neighborhood is still not empty, so neither may give up.
+    #[test]
+    fn relocate_and_swap_random_neighbors_never_give_up_on_a_sparse_fleet() {
+        let coords = vec![(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (0.0, 1.0), (0.0, 2.0)];
+        let prob = Vrp::new("sparse", coords, vec![0, 1, 1, 1, 1], 4, 40);
+        let mut routes = vec![Vec::new(); 40];
+        routes[0] = vec![1, 2];
+        routes[1] = vec![3, 4];
+        let sol = prob.solution_from_routes(routes).unwrap();
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(3);
+        for _ in 0..50 {
+            let m = VrpRelocateNeighbor::random_neighbor(&prob, &sol, &mut rng)
+                .expect("a customer can always move to another slot");
+            assert_ne!(m.from_r, m.to_r);
+            let s = VrpSwapNeighbor::random_neighbor(&prob, &sol, &mut rng)
+                .expect("two busy routes can always exchange customers");
+            assert_ne!(s.r1, s.r2);
+        }
     }
 
     #[test]

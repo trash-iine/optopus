@@ -118,6 +118,18 @@ where
     fn build_crossover(kind: Option<&str>) -> Result<Box<dyn Crossover<Self>>, OptError>;
 }
 
+/// A `tabu_tenure = [min, max]` with `min > max` is an empty range, which the
+/// constructors panic on.
+pub(crate) fn check_tenure(tenure: (u64, u64)) -> Result<(), OptError> {
+    if tenure.0 > tenure.1 {
+        return Err(OptError::Config(format!(
+            "invalid tabu_tenure range [{}, {}]: min must be <= max",
+            tenure.0, tenure.1
+        )));
+    }
+    Ok(())
+}
+
 /// Shared error for a heuristic the problem has no builder for.
 pub(crate) fn unsupported<P: Registered>(config: &HeuristicConfig) -> OptError {
     OptError::Config(format!(
@@ -165,23 +177,32 @@ where
         match self.config {
             HeuristicConfig::LocalSearch { .. } => Ok(Box::new(LocalSearch::<N>::new(self.cond))),
             HeuristicConfig::TabuSearch { tabu_tenure, .. } => {
-                if tabu_tenure.0 > tabu_tenure.1 {
-                    return Err(OptError::Config(format!(
-                        "invalid tabu_tenure range [{}, {}]: min must be <= max",
-                        tabu_tenure.0, tabu_tenure.1
-                    )));
-                }
+                check_tenure(*tabu_tenure)?;
                 Ok(Box::new(TabuSearch::<N>::new(self.cond, *tabu_tenure)))
             }
             HeuristicConfig::SimulatedAnnealing {
                 initial_temperature,
                 cooling_rate,
                 ..
-            } => Ok(Box::new(SimulatedAnnealing::<N>::new(
-                self.cond,
-                *initial_temperature,
-                *cooling_rate,
-            ))),
+            } => {
+                // A temperature at or below zero, or a rate above one, would
+                // run without complaint and anneal the wrong way.
+                if !(initial_temperature.is_finite() && *initial_temperature > 0.0) {
+                    return Err(OptError::Config(format!(
+                        "'initial_temperature' must be positive and finite, got {initial_temperature}"
+                    )));
+                }
+                if !(*cooling_rate > 0.0 && *cooling_rate <= 1.0) {
+                    return Err(OptError::Config(format!(
+                        "'cooling_rate' must be in (0, 1], got {cooling_rate}"
+                    )));
+                }
+                Ok(Box::new(SimulatedAnnealing::<N>::new(
+                    self.cond,
+                    *initial_temperature,
+                    *cooling_rate,
+                )))
+            }
             HeuristicConfig::LateAcceptanceHillClimbing { history_length, .. } => {
                 if *history_length == 0 {
                     return Err(OptError::Config(
@@ -863,6 +884,62 @@ mod factory_tests {
             msg.contains("not supported for MaxCut") && msg.contains("HybridGeneticSearch"),
             "{msg}"
         );
+    }
+
+    /// A value the constructor of SA, BLS or HGS cannot take is a config
+    /// error at startup. BLS and HGS assert on these, so without the check a
+    /// bad TOML value panicked in a run, and SA ran annealing the wrong way.
+    #[test]
+    fn sa_bls_and_hgs_reject_values_their_constructors_cannot_take() {
+        let sa =
+            |initial_temperature: f64, cooling_rate: f64| HeuristicConfig::SimulatedAnnealing {
+                neighbor: NeighborKind::Flip,
+                initial_temperature,
+                cooling_rate,
+                stop_condition: StopConditionConfig::default(),
+            };
+        try_build(&ProblemKind::MaxCut, &sa(1.0, 1.0)).expect("a rate of one is no cooling");
+        for (t, rate, field) in [
+            (0.0, 0.99, "initial_temperature"),
+            (f64::INFINITY, 0.99, "initial_temperature"),
+            (1.0, 0.0, "cooling_rate"),
+            (1.0, 1.5, "cooling_rate"),
+        ] {
+            let err = try_build(&ProblemKind::MaxCut, &sa(t, rate)).expect_err("must fail");
+            assert!(err.to_string().contains(field), "{err}");
+        }
+
+        let bls = |tabu_tenure: (u64, u64), q: f64| HeuristicConfig::BreakoutLocalSearch {
+            tabu_tenure,
+            t: 100,
+            l0: 5,
+            p0: 0.8,
+            q,
+            stop_condition: StopConditionConfig::default(),
+        };
+        let err = try_build(&ProblemKind::MaxCut, &bls((5, 1), 0.5)).expect_err("must fail");
+        assert!(err.to_string().contains("tabu_tenure"), "{err}");
+        let err = try_build(&ProblemKind::MaxCut, &bls((1, 5), 1.5)).expect_err("must fail");
+        assert!(err.to_string().contains("'q'"), "{err}");
+
+        let hgs = |min_population_size, generation_size, target_feasible| {
+            HeuristicConfig::HybridGeneticSearch {
+                min_population_size,
+                generation_size,
+                granularity: None,
+                target_feasible,
+                restart_generations: None,
+                stop_condition: StopConditionConfig::default(),
+            }
+        };
+        for (config, field) in [
+            (hgs(Some(3), None, None), "min_population_size"),
+            (hgs(None, Some(0), None), "generation_size"),
+            (hgs(None, None, Some(1.0)), "target_feasible"),
+        ] {
+            let err = try_build(&ProblemKind::Vrp, &config).expect_err("must fail");
+            assert!(err.to_string().contains(field), "{err}");
+        }
     }
 
     /// Biased fitness weights its diversity half by `1 - n_elite / N`, so a
