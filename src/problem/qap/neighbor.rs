@@ -1,4 +1,4 @@
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, better_after_move};
 use rand::rngs::SmallRng;
 
 use super::problem::{Qap, QapSolution};
@@ -92,8 +92,7 @@ impl MoveToNeighbor<Qap> for QapSwapNeighbor {
     /// Compares through the cached `gain`, exact since the costs are
     /// integers, relative to the solution the move was built from (`src`).
     fn move_to_be_better_than(&self, _prob: &Qap, src: &QapSolution, other: &QapSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        better_after_move(self, src, other)
     }
 
     fn apply_to_solution(&self, prob: &Qap, sol: &mut QapSolution) -> Result<(), OptError> {

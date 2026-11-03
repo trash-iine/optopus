@@ -15,13 +15,17 @@ minimize  Σ_v x_v   subject to   x_i + x_j ≥ 1  for every edge (i,j) ∈ E
 Vertex Cover is NP-hard. It is equivalent to Independent Set and Clique via
 complementation.
 
-Feasibility is soft: the solver actually optimizes a penalty-augmented
-objective, with `penalty_weight` chosen large enough that any optimum of it
-is feasible (no uncovered edges):
+Solutions are ranked by their uncovered edges first and their cover size
+second, so any cover beats any set that leaves an edge uncovered. Each
+solution also reports one penalized number, and the searches that weigh how
+much worse a candidate is, simulated annealing for one, read that number.
 
 ```text
 objective(x) = cover_size(x) + penalty_weight · uncovered_edges(x)
 ```
+
+With `penalty_weight = n + 1` this number orders solutions exactly as the
+ranking does, since the cover size is at most `n`.
 
 ## Example
 

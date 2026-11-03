@@ -71,7 +71,8 @@ attribute it compares the two `evaluate` values with the direction applied.
 A problem whose order is not its objective, one that compares violations
 before cost for example, names its keys instead, as in
 `#[rank(min = violation(), min = cost)]`, and keeps `Evaluate` as the number
-the annealing heuristics read. The [`Rankable` rustdoc](../api/optopus/trait_defs/trait.Rankable.html)
+the annealing heuristics read. Its moves name the same keys, each holding
+the change the move makes to that key. The [`Rankable` rustdoc](../api/optopus/trait_defs/trait.Rankable.html)
 has the forms.
 
 ## Skeleton
@@ -109,11 +110,10 @@ impl MoveToNeighbor<MyProblem> for MyMove {
     fn apply_to_solution(&self, prob: &MyProblem, sol: &mut MySolution) -> Result<(), OptError> {
         todo!()
     }
-    fn move_to_be_better_than(&self, prob: &MyProblem, src: &MySolution, other: &MySolution) -> bool {
-        // default impl clones src and applies; override for an O(1) gain check
-        let mut cloned = src.clone();
-        self.apply_to_solution(prob, &mut cloned).expect("apply ok");
-        cloned.is_better_than(other)
+    fn move_to_be_better_than(&self, _prob: &MyProblem, src: &MySolution, other: &MySolution) -> bool {
+        // Adds this move's change to src's objective and compares with other.
+        // Without this override, the default clones src and applies the move.
+        better_after_move(self, src, other)
     }
 }
 
@@ -196,11 +196,13 @@ problem.
 ## Performance note
 
 The default `move_to_be_better_than` clones the solution and applies the move.
-Override it with an O(1) check against cached per-variable gains. The one-line
-form is `self.evaluate().improves_over(src.evaluate(), other.evaluate())`, which
-reads the optimization direction from the `Evaluate` impls instead of restating
-it as a comparison operator. `MaxCutFlipNeighbor` and `QuboFlipNeighbor` are the
-reference implementations.
+Where the move and the solution both derive `Rankable`, the O(1) override is
+the one line `better_after_move(self, src, other)`, as in the skeleton. It adds
+the move's change to each key of `src` and compares the result with `other`,
+so the direction and the order of the keys come from the derives and are not
+restated as comparison operators. `MaxCutFlipNeighbor` ranks by the objective
+and `VertexCoverFlipNeighbor` by uncovered edges and then cover size, and both
+override it this way.
 
 ## Next reading
 

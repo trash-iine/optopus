@@ -18,16 +18,18 @@ so a proper coloring always exists (Brooks' theorem gives an even tighter
 bound for almost every graph). There is no separate `k` input; a run reports
 how many of those colors it managed to use.
 
-Feasibility is soft, as for [Vertex Cover](vertex_cover.md). The solver
-optimizes a penalty-augmented objective, with `penalty_weight = n + 1` so
-that removing one conflict always beats any change in the color count and any
-optimum is a proper coloring:
+Solutions are ranked by their conflicts first, the edges whose endpoints
+share a color, and by the colors used second, so the best solution is a
+proper coloring with as few colors as possible. As for
+[Vertex Cover](vertex_cover.md), each solution also reports one penalized
+number for the searches that weigh how much worse a candidate is.
 
 ```text
 objective(c) = colors_used(c) + penalty_weight · conflicts(c)
 ```
 
-where `conflicts` is the number of edges whose endpoints share a color.
+With `penalty_weight = n + 1`, removing one conflict outweighs any change in
+the color count, so this number orders solutions exactly as the ranking does.
 
 ## Example
 

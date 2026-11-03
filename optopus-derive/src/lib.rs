@@ -21,8 +21,14 @@ use syn::{Data, DeriveInput, Expr, Fields, Ident, Index, Meta, Token, parse_macr
 /// - On the type, `#[rank(min = violation(), max = value)]`, compared in the
 ///   order written. A key is a field, or a method that takes only `&self`.
 ///
-/// `min` ranks the lower key better and `max` the higher one. A key needs only
-/// `PartialOrd`, and two keys that are neither less nor greater count as equal.
+/// `min` ranks the lower key better and `max` the higher one. A key is a
+/// number, an integer or a float, and two keys that are neither less nor
+/// greater count as equal.
+///
+/// The derive also implements `optopus::trait_defs::RankKeys`, the same keys
+/// as `f64` turned so that lower is better, which is what
+/// `optopus::trait_defs::better_after_move` adds a move to. With no `rank`
+/// attribute that is the one key `evaluate().minimized()`.
 ///
 /// The `Rankable` page of the optopus documentation has examples.
 #[proc_macro_derive(Rankable, attributes(rank))]
@@ -410,14 +416,14 @@ fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
     let container = container_keys(input)?;
     let fields = field_keys(input)?;
 
-    let body = match (container, fields) {
+    let keys = match (container, fields) {
         (Some((span, _)), Some(_)) => {
             return Err(syn::Error::new(
                 span,
                 "name the keys either on the type or on its fields, not both",
             ));
         }
-        (Some((_, keys)), None) | (None, Some(keys)) => compare_keys(&keys),
+        (Some((_, keys)), None) | (None, Some(keys)) => keys,
         (None, None) => {
             let mut where_clause = where_clause
                 .cloned()
@@ -432,15 +438,39 @@ fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
                         ::optopus::trait_defs::better_by_objective(self, other)
                     }
                 }
+
+                impl #impl_generics ::optopus::trait_defs::RankKeys<1> for #name #ty_generics #where_clause {
+                    #[inline]
+                    fn rank_keys(&self) -> [f64; 1] {
+                        [::optopus::trait_defs::Evaluate::evaluate(self).minimized()]
+                    }
+                }
             });
         }
     };
 
+    let body = compare_keys(&keys);
+    let count = keys.len();
+    let values = keys.iter().map(|key| {
+        let on_self = &key.on_self;
+        let value = quote!(::optopus::trait_defs::RankKey::to_key(&(#on_self)));
+        match key.direction {
+            Direction::Min => value,
+            Direction::Max => quote!(-#value),
+        }
+    });
     Ok(quote! {
         impl #impl_generics ::optopus::trait_defs::Rankable for #name #ty_generics #where_clause {
             #[inline]
             fn is_better_than(&self, other: &Self) -> bool {
                 #body
+            }
+        }
+
+        impl #impl_generics ::optopus::trait_defs::RankKeys<#count> for #name #ty_generics #where_clause {
+            #[inline]
+            fn rank_keys(&self) -> [f64; #count] {
+                [#(#values),*]
             }
         }
     })

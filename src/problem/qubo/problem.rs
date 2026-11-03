@@ -587,7 +587,7 @@ impl BinaryProblem for Qubo {
         sol.x[i]
     }
 
-    fn flip_move(sol: &QuboSolution, i: usize) -> Self::Flip {
+    fn flip_move(&self, sol: &QuboSolution, i: usize) -> Self::Flip {
         super::QuboFlipNeighbor {
             i,
             gain: sol.gain[i],

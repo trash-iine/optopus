@@ -1,7 +1,9 @@
-//! What the derives write: `Rankable` for each way of naming the order, and
-//! `Evaluate` and `Distance` from one marked field.
+//! What the derives write: `Rankable` and `RankKeys` for each way of naming
+//! the order, and `Evaluate` and `Distance` from one marked field.
 
-use optopus::trait_defs::{Distance, Evaluable, Evaluate, Rankable, rank_cmp};
+use optopus::trait_defs::{
+    Distance, Evaluable, Evaluate, RankKeys, Rankable, better_after_move, rank_cmp,
+};
 use std::cmp::Ordering;
 
 /// No attribute, so the order is the objective, here maximized.
@@ -119,6 +121,70 @@ fn a_generic_type_ranks_by_its_objective() {
         _tag: 'b',
     };
     assert!(a.is_better_than(&b));
+}
+
+#[test]
+fn rank_keys_are_the_keys_turned_so_that_lower_is_better() {
+    // No attribute: the one key is the minimized objective.
+    assert_eq!(Cut(2.5).rank_keys(), [-2.5]);
+    // Field keys in declaration order, the `max` one negated.
+    assert_eq!(assignment(3, 7.0).rank_keys(), [3.0, -7.0]);
+    // Keys on the type, a method then a field.
+    let routes = Routes {
+        overload: 2,
+        lateness: 0.5,
+        cost: 40.0,
+    };
+    assert_eq!(routes.rank_keys(), [2.5, 40.0]);
+    // A tuple struct with a const parameter.
+    assert_eq!(Pair::<3>(4, 1).rank_keys(), [-4.0, 1.0]);
+}
+
+/// A move of [`Assignment`], its keys the changes it makes to the solution's.
+#[derive(Rankable)]
+struct Reassign {
+    #[rank(min)]
+    violations: i32,
+    #[rank(max)]
+    value: f64,
+}
+
+#[test]
+fn better_after_move_adds_the_move_to_the_solution_key_by_key() {
+    let at = assignment(1, 10.0);
+    // Removes the violation at a cost in value, which the order prefers.
+    let repair = Reassign {
+        violations: -1,
+        value: -8.0,
+    };
+    assert!(better_after_move(&repair, &at, &at));
+    // Gains value but adds a violation.
+    let greedy = Reassign {
+        violations: 1,
+        value: 50.0,
+    };
+    assert!(!better_after_move(&greedy, &at, &at));
+    // Ties on the first key fall to the second, and `other` need not be `src`.
+    let gain = Reassign {
+        violations: 0,
+        value: 1.0,
+    };
+    assert!(better_after_move(&gain, &at, &assignment(1, 10.5)));
+    assert!(!better_after_move(&gain, &at, &assignment(1, 11.0)));
+    // A move to a solution equal to `other` is not better.
+    let still = Reassign {
+        violations: 0,
+        value: 0.0,
+    };
+    assert!(!better_after_move(&still, &at, &at));
+}
+
+#[test]
+fn better_after_move_with_one_key_is_the_objective_plus_the_gain() {
+    // Maximized, so a gain of 1 on 2 lands at 3.
+    assert!(better_after_move(&Gain(1), &Cut(2.0), &Cut(2.5)));
+    assert!(!better_after_move(&Gain(1), &Cut(2.0), &Cut(3.0)));
+    assert!(!better_after_move(&Gain(-1), &Cut(2.0), &Cut(2.0)));
 }
 
 /// A minimized integer objective, read as an `f64`.

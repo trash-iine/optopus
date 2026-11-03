@@ -282,7 +282,7 @@ impl BinaryProblem for MaxCut {
         sol.x[i]
     }
 
-    fn flip_move(sol: &MaxCutSolution, i: usize) -> Self::Flip {
+    fn flip_move(&self, sol: &MaxCutSolution, i: usize) -> Self::Flip {
         super::MaxCutFlipNeighbor {
             i,
             gain: sol.gain[i],

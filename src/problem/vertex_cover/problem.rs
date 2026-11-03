@@ -9,9 +9,14 @@ use crate::trait_defs::{Evaluate, Rankable};
 /// Given an undirected graph, Vertex Cover seeks the smallest subset of vertices
 /// such that every edge has at least one endpoint in the subset.
 ///
-/// Hard feasibility is handled with a penalty: the augmented objective is
-/// `|cover| + penalty_weight * uncovered_edges`, with `penalty_weight = n + 1`
-/// so any optimum is feasible.
+/// Solutions rank by their uncovered edges first and their cover size second,
+/// so a cover is better than any set that leaves an edge uncovered.
+///
+/// The number a solution reports is the penalized
+/// `|cover| + penalty_weight * uncovered_edges`, with `penalty_weight = n + 1`.
+/// The cover size is at most `n`, so this number orders solutions exactly as
+/// the ranking does. The searches that weigh how much worse a candidate is
+/// read this number.
 pub struct VertexCover {
     /// The underlying graph.
     pub graph: Graph,
@@ -28,10 +33,14 @@ pub struct VertexCoverSolution {
     /// Penalty-augmented objective: `cover_size + penalty_weight * uncovered_edges`.
     #[objective(minimize)]
     pub objective: i32,
-    /// Number of vertices currently in the cover.
-    pub cover_size: usize,
-    /// Number of edges currently uncovered (both endpoints out of the cover).
+    /// Number of edges currently uncovered (both endpoints out of the cover),
+    /// the first thing solutions are ranked by.
+    #[rank(min)]
     pub uncovered_edges: usize,
+    /// Number of vertices currently in the cover, ranked by after the
+    /// uncovered edges.
+    #[rank(min)]
+    pub cover_size: usize,
 }
 
 impl VertexCover {
@@ -53,6 +62,16 @@ impl VertexCover {
     /// Returns the penalty weight applied to each uncovered edge (`graph.len() + 1`).
     pub fn penalty_weight(&self) -> i32 {
         (self.graph.len() as i32) + 1
+    }
+
+    /// The change in uncovered edges inside a penalized `gain` whose cover
+    /// size changes by `cover_delta`. The cover size moves by at most one per
+    /// move, less than the penalty weight, so the split is exact.
+    pub(crate) fn uncovered_delta(&self, gain: i32, cover_delta: i32) -> i32 {
+        let pw = self.penalty_weight();
+        let uncovered = (gain - cover_delta) / pw;
+        debug_assert_eq!(cover_delta + pw * uncovered, gain, "gain splits exactly");
+        uncovered
     }
 
     /// Recomputes `(gain, objective, cover_size, uncovered_edges)` from scratch
@@ -165,10 +184,14 @@ impl crate::trait_defs::BinaryProblem for VertexCover {
         sol.x[i]
     }
 
-    fn flip_move(sol: &VertexCoverSolution, i: usize) -> Self::Flip {
+    fn flip_move(&self, sol: &VertexCoverSolution, i: usize) -> Self::Flip {
+        let gain = sol.gain[i];
+        let cover_delta = if sol.x[i] { -1 } else { 1 };
         super::VertexCoverFlipNeighbor {
             i,
-            gain: sol.gain[i],
+            uncovered_delta: self.uncovered_delta(gain, cover_delta),
+            cover_delta,
+            gain,
         }
     }
 
@@ -278,11 +301,19 @@ mod tests {
         let mut sol = vc.new_solution(&mut rng);
         for _ in 0..200 {
             let i = rand::Rng::random_range(&mut rng, 0..vc.graph.len());
-            let neighbor = VertexCoverFlipNeighbor {
-                i,
-                gain: sol.gain[i],
-            };
+            let neighbor = VertexCoverFlipNeighbor::new(&vc, &sol, i);
+            let (cover_before, uncovered_before) = (sol.cover_size, sol.uncovered_edges);
             neighbor.apply_to_solution(&vc, &mut sol).unwrap();
+            assert_eq!(
+                sol.cover_size as i32 - cover_before as i32,
+                neighbor.cover_delta,
+                "cover_delta is the change in cover size"
+            );
+            assert_eq!(
+                sol.uncovered_edges as i32 - uncovered_before as i32,
+                neighbor.uncovered_delta,
+                "uncovered_delta is the change in uncovered edges"
+            );
 
             let (gain, obj, cs, ue) = vc.calculate_state(&sol.x);
             assert_eq!(sol.gain, gain, "gain drift");

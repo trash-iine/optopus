@@ -34,7 +34,7 @@ pub use crate::heuristic::{
 // Traits
 pub use crate::trait_defs::{
     Branchable, Crossover, Distance, EnabledTabu, Evaluable, Evaluate, IntAssignment,
-    MoveToNeighbor, ProblemTrait, Rankable, SubProblemExtractable,
+    MoveToNeighbor, ProblemTrait, Rankable, SubProblemExtractable, better_after_move,
 };
 
 // Problem and neighbor types

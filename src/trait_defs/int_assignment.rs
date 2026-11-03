@@ -1,4 +1,4 @@
-use super::{Evaluate, ProblemTrait};
+use super::{Evaluate, ProblemTrait, RankKeys};
 use crate::building_blocks::representation::IntVars;
 
 /// A problem whose solutions, of the problem's own type, assign an integer to
@@ -10,9 +10,14 @@ use crate::building_blocks::representation::IntVars;
 /// variable gain updated in [`assign`](Self::assign) and read back in
 /// [`assign_delta`](Self::assign_delta).
 ///
+/// A move prices one number, the change in the objective, so the solution
+/// ranks by that objective too, with `#[derive(Rankable)]` and no `rank`
+/// attribute. That is the one key of [`RankKeys`] the moves add their change
+/// to.
+///
 /// [`IntegerProblem`](crate::problem::IntegerProblem) is the shortcut that
 /// brings its own solution, and is one of these.
-pub trait IntAssignment: ProblemTrait<Solution: Evaluate + Sync> + Sync {
+pub trait IntAssignment: ProblemTrait<Solution: Evaluate + RankKeys<1> + Sync> + Sync {
     /// The variables, fixed for the life of the problem.
     fn domains(&self) -> &IntVars;
 

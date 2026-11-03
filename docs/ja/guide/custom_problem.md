@@ -56,6 +56,7 @@ impl MyMove {
 `LocalSearch`、`RandomWalk`、`BeamSearch`、`TabuSearch` が move を選ぶのも、どのヒューリスティクスでも解が改善したかを判断するのもこれを通してです。
 `rank` 属性がなければ、向きを反映したうえで二つの `evaluate` の値を比べます。
 順序が目的関数値そのものでない問題、たとえば違反をコストより先に比べる問題は、`#[rank(min = violation(), min = cost)]` のように比べるキーを書き、`Evaluate` は焼きなまし系のヒューリスティクスが読む数値として残します。
+その問題の move も同じキーを書き、それぞれに move がそのキーを変える量を持たせます。
 書き方の一覧は [`Rankable` の rustdoc](../../api/optopus/trait_defs/trait.Rankable.html) にあります。
 
 ## 骨組み { #skeleton }
@@ -93,11 +94,10 @@ impl MoveToNeighbor<MyProblem> for MyMove {
     fn apply_to_solution(&self, prob: &MyProblem, sol: &mut MySolution) -> Result<(), OptError> {
         todo!()
     }
-    fn move_to_be_better_than(&self, prob: &MyProblem, src: &MySolution, other: &MySolution) -> bool {
-        // 既定の impl は src をクローンして適用する。O(1) の gain 判定にするならオーバーライドする
-        let mut cloned = src.clone();
-        self.apply_to_solution(prob, &mut cloned).expect("apply ok");
-        cloned.is_better_than(other)
+    fn move_to_be_better_than(&self, _prob: &MyProblem, src: &MySolution, other: &MySolution) -> bool {
+        // この move の変化量を src の目的関数値に足して other と比べる。
+        // オーバーライドしなければ、既定の impl が src をクローンして move を適用する
+        better_after_move(self, src, other)
     }
 }
 
@@ -167,10 +167,11 @@ VRP の relocate のように確認するキーと禁止するキーが違う mo
 
 ## 性能についての注意 { #performance-note }
 
-既定の `move_to_be_better_than` は解をクローンして move を適用します。変数ごとの gain をキャッシュして
-O(1) で判定するようにオーバーライドしてください。1行で書くなら
-`self.evaluate().improves_over(src.evaluate(), other.evaluate())` です。これは最適化の向きを比較演算子として書き直すのではなく、
-`Evaluate` の impl から読み取ります。参照実装は `MaxCutFlipNeighbor` と `QuboFlipNeighbor` です。
+既定の `move_to_be_better_than` は解をクローンして move を適用します。
+move と解がどちらも `Rankable` を derive していれば、O(1) のオーバーライドは骨組みのとおり `better_after_move(self, src, other)` の1行です。
+これは `src` の各キーに move の変化量を足し、その結果を `other` と比べます。
+向きとキーの順序は derive から読むので、比較演算子として書き直すことはありません。
+`MaxCutFlipNeighbor` は目的関数値で、`VertexCoverFlipNeighbor` は未被覆の辺、次に被覆の大きさで比べ、どちらもこの形でオーバーライドしています。
 
 ## 次に読むもの { #next-reading }
 

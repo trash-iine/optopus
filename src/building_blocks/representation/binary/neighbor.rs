@@ -16,8 +16,8 @@ pub fn apply_swap_as_two_flips<P: BinaryProblem>(
     i: usize,
     j: usize,
 ) -> Result<(), OptError> {
-    P::flip_move(sol, i).apply_to_solution(prob, sol)?;
-    P::flip_move(sol, j).apply_to_solution(prob, sol)?;
+    prob.flip_move(sol, i).apply_to_solution(prob, sol)?;
+    prob.flip_move(sol, j).apply_to_solution(prob, sol)?;
     Ok(())
 }
 

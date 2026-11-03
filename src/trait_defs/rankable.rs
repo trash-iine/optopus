@@ -108,12 +108,150 @@ use super::Evaluate;
 /// }
 /// ```
 ///
-/// A move ranks the same way, by its own fields. A problem whose solution is
-/// ranked by keys gives its moves the keys of the solution each would lead
-/// to, since a move ranked by its delta follows the objective and not that
-/// order.
+/// A key is a number, so each field or method named a key returns an integer
+/// or a float.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Named {
+///     #[rank(min)]
+///     name: String,
+/// }
+/// ```
+///
+/// # Moves
+///
+/// A move ranks by the change it makes to each key of the solution, named with
+/// the same attributes in the same order. Two moves from one solution then
+/// rank as the solutions they lead to.
+///
+/// The derive also implements [`RankKeys`], and [`better_after_move`] adds a
+/// move's keys to a solution's to ask whether the move leads somewhere better.
+/// That is the whole body of
+/// [`move_to_be_better_than`](super::MoveToNeighbor::move_to_be_better_than)
+/// for a move derived this way.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Cover {
+///     #[rank(min)]
+///     uncovered: i64,
+///     #[rank(min)]
+///     size: i64,
+/// }
+///
+/// #[derive(Rankable)]
+/// struct Remove {
+///     #[rank(min)]
+///     uncovered: i64,
+///     #[rank(min)]
+///     size: i64,
+/// }
+///
+/// let at = Cover { uncovered: 0, size: 5 };
+/// // Leaves one edge uncovered for a smaller cover, so it is worse.
+/// let remove = Remove { uncovered: 1, size: -1 };
+/// assert!(!better_after_move(&remove, &at, &at));
+/// ```
 pub trait Rankable {
     fn is_better_than(&self, other: &Self) -> bool;
+}
+
+/// The keys a [`Rankable`] order compares, first to last, each as an `f64`
+/// turned so that lower is better.
+///
+/// `#[derive(Rankable)]` implements it. A `max` key is negated, and with no
+/// `rank` attribute the one key is
+/// [`evaluate().minimized()`](super::Evaluable::minimized). A move's keys are
+/// the changes it makes to the solution's, which is what [`better_after_move`]
+/// reads.
+pub trait RankKeys<const N: usize> {
+    fn rank_keys(&self) -> [f64; N];
+}
+
+/// A number a derived key is read as, implemented for every primitive
+/// integer and float.
+pub trait RankKey {
+    fn to_key(&self) -> f64;
+}
+
+macro_rules! rank_key_as_f64 {
+    ($($ty:ty),+) => {
+        $(impl RankKey for $ty {
+            #[inline]
+            fn to_key(&self) -> f64 {
+                *self as f64
+            }
+        })+
+    };
+}
+
+rank_key_as_f64!(
+    i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64
+);
+
+impl<T: RankKey + ?Sized> RankKey for &T {
+    #[inline]
+    fn to_key(&self) -> f64 {
+        (**self).to_key()
+    }
+}
+
+/// Whether applying `mv` to `src` leads to a solution better than `other`.
+///
+/// Each key of `src` plus the same key of `mv` is compared with the key of
+/// `other`, first to last, the first that differs deciding. Strict, so a move
+/// to a solution equal to `other` is not better. A move and a solution with a
+/// different number of keys do not compile.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Cover {
+///     #[rank(min)]
+///     uncovered: i64,
+///     #[rank(min)]
+///     size: i64,
+/// }
+///
+/// #[derive(Rankable, Evaluate)]
+/// struct Flip {
+///     #[objective(minimize)]
+///     gain: i64,
+/// }
+///
+/// let at = Cover { uncovered: 0, size: 5 };
+/// better_after_move(&Flip { gain: -1 }, &at, &at);
+/// ```
+///
+/// With one key this is `src + mv < other` on the minimized objectives, so a
+/// move that reports its change in the objective needs nothing more than this
+/// for its
+/// [`move_to_be_better_than`](super::MoveToNeighbor::move_to_be_better_than).
+#[inline]
+pub fn better_after_move<const N: usize, M, S>(mv: &M, src: &S, other: &S) -> bool
+where
+    M: RankKeys<N>,
+    S: RankKeys<N>,
+{
+    let from = src.rank_keys();
+    let delta = mv.rank_keys();
+    let over = other.rank_keys();
+    for i in 0..N {
+        let after = from[i] + delta[i];
+        if after < over[i] {
+            return true;
+        }
+        if after > over[i] {
+            return false;
+        }
+    }
+    false
 }
 
 /// Whether `a` is better than `b` by their objectives, which is a lower

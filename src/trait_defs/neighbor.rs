@@ -95,10 +95,11 @@ where
     /// <div class="warning">
     /// The default implementation clones the solution and applies the move to it, which may be inefficient.
     /// Override this method with a more efficient implementation if possible.
-    /// A gain-based override built on
-    /// <code>Evaluable::improves_over</code> fits a solution that ranks by its
-    /// objective, and one ranked by hand needs an override that compares in
-    /// the same order as its <code>Rankable</code>.
+    /// Where the move and the solution both derive <code>Rankable</code>, the
+    /// override is the one line
+    /// <code>better_after_move(self, src, other)</code>, which adds the move's
+    /// keys to the solution's. A solution ranked by hand needs an override
+    /// that compares in the same order as its <code>Rankable</code>.
     ///
     /// When this default is invoked at runtime, a one-shot
     /// <code>tracing::warn!</code> is emitted per concrete Move type (via
@@ -119,8 +120,10 @@ where
             tracing::warn!(
                 move_type = std::any::type_name::<Self>(),
                 "Using the default clone+apply implementation of \
-                 move_to_be_better_than. Override it with a gain-based \
-                 O(1) implementation for hot-path heuristics."
+                 move_to_be_better_than. Override it with \
+                 better_after_move(self, src, other) where the move and \
+                 the solution derive Rankable, or another O(1) check, for \
+                 hot-path heuristics."
             );
         });
         let mut cloned = src.clone();
@@ -303,7 +306,7 @@ mod default_move_warning_tests {
         fn variable(sol: &ToyBitsSolution, i: usize) -> bool {
             sol.0[i]
         }
-        fn flip_move(_sol: &ToyBitsSolution, i: usize) -> ToyFlip {
+        fn flip_move(&self, _sol: &ToyBitsSolution, i: usize) -> ToyFlip {
             ToyFlip(i)
         }
     }

@@ -16,7 +16,7 @@
 //! [`EnabledTabu`]: crate::search_state::EnabledTabu
 
 use super::{MaxCut, MaxCutSolution};
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, better_after_move};
 use crate::{
     building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
@@ -116,8 +116,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         src: &MaxCutSolution,
         other: &MaxCutSolution,
     ) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        better_after_move(self, src, other)
     }
 
     /// O(1): picks a uniformly random vertex.
@@ -154,8 +153,8 @@ impl MaxCutFlipNeighbor {
     /// let flip = MaxCutFlipNeighbor::new(&mc, &sol, 1);
     /// assert_eq!(flip.gain, sol.gain[1]);
     /// ```
-    pub fn new(_prob: &MaxCut, sol: &MaxCutSolution, i: usize) -> Self {
-        <MaxCut as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
+    pub fn new(prob: &MaxCut, sol: &MaxCutSolution, i: usize) -> Self {
+        crate::trait_defs::BinaryProblem::flip_move(prob, sol, i)
     }
 }
 
@@ -275,8 +274,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
         src: &MaxCutSolution,
         other: &MaxCutSolution,
     ) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        better_after_move(self, src, other)
     }
 
     /// O(n): one vertex from each side, uniformly over all cross-side pairs.

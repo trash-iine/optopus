@@ -102,16 +102,17 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
         Some(self)
     }
 
+    /// Whether this flip takes `src` somewhere better than `other`, without
+    /// building the flipped solution. Both types derive `Rankable`, so
+    /// `better_after_move` adds the move's `gain` to the solution's objective
+    /// and compares the sum with `other`'s.
     fn move_to_be_better_than(
         &self,
-        prob: &OneMaxProblem,
+        _prob: &OneMaxProblem,
         src: &OneMaxSolution,
         other: &OneMaxSolution,
     ) -> bool {
-        let mut cloned = src.clone();
-        self.apply_to_solution(prob, &mut cloned)
-            .expect("apply_to_solution should not fail");
-        cloned.is_better_than(other)
+        better_after_move(self, src, other)
     }
 }
 
