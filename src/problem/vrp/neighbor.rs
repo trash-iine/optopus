@@ -1,6 +1,7 @@
 use crate::trait_defs::Rankable;
 use rand::Rng;
 use rand::rngs::SmallRng;
+use rand::seq::IteratorRandom;
 
 use super::ops::pricing::{SlotEdit, apply, price};
 use super::ops::{before, insertion_cost, node_at, removal_gain, reversal_delta};
@@ -263,7 +264,6 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
         // A fleet of many slots with few busy routes misses nearly every draw,
         // and `None` would read as an empty neighborhood, so the last resort
         // picks among every move.
-        use rand::seq::IteratorRandom;
         Self::iter(prob, sol).choose(rng)
     }
 }
@@ -488,7 +488,6 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
             return Some(Self::new(prob, sol, r1, i1, r2, i2));
         }
         // As for relocate: two busy routes among many slots are rarely drawn.
-        use rand::seq::IteratorRandom;
         Self::iter(prob, sol).choose(rng)
     }
 }
