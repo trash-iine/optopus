@@ -32,14 +32,14 @@ library and carry none of that material.
 
 ### Add a new problem to the benchmark (one file, `src/benchmark/problems.rs`)
 
-1. One row in the `problems!` table, `Variant => ProblemType, minimize;`. It makes the `ProblemKind` variant (the TOML spelling, also the name in error messages), the `with_problem` arm, and the direction the report reads. A test checks that direction against the solution's `Evaluate`, and its `instance` match asks for a small instance of the new kind.
-2. One impl block each: `BenchmarkProblem` (load_instance, decode_indices, the inverse of encode) + `BenchmarkSolution` (objective/encode) + `ConfigurableProblem` (a `neighbors!` table of `NeighborKind => move type`, `build_crossover`, optional `build_special_heuristic` / `build_branch_and_bound`)
+1. One row in the `problems!` table, `Variant => ProblemType, minimize;`. It makes the `ProblemKind` variant (the TOML spelling, also the name in error messages), the `with_problem` arm, the direction the report reads, and `load_instance`, which calls the type's inherent `load_file(path)`. A test checks that direction against the solution's `Evaluate`, and its `instance` match asks for a small instance of the new kind.
+2. One impl block each: `BenchmarkProblem` (decode_indices, the inverse of encode) + `BenchmarkSolution` (encode_as_indices; best_objective_f64 defaults to the solution's `Evaluate` value) + `ConfigurableProblem` (a `neighbors!` table of `NeighborKind => move type`, a `crossovers!` table of `Name => operator` whose first row is the default, optional `build_special_heuristic` / `build_branch_and_bound`, where `ruin_and_recreate` builds GRASP and ALNS on a `Ruinable` problem and `binary_branch_and_bound!()` the binary bound)
 
 Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). A move's tabu policy is `#[derive(EnabledTabu)]` with `#[tabu(..)]` keys (by hand only when it checks other keys than it forbids), and its `MoveToNeighbor::tabu_policy`, which has no default, returns `Some(self)`. A built-in move with a policy that returned `None` would run with no tabu list, and `trait_defs/tabu.rs` has the test that pins every one.
 
 ### Add a new base metaheuristic
 
-Implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/mod.rs` + prelude, then add one `HeuristicConfig` variant in `src/benchmark/config.rs` and follow the compile errors (one arm in `BaseBuilder::visit` in `src/benchmark/factory.rs`). The base-heuristic dispatch is written once, not per problem.
+Implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/mod.rs` + prelude, then add one `HeuristicConfig` variant in `src/benchmark/config.rs` with its name in the `heuristic_kinds!` list (by whether it carries a `neighbor`, `steps` or neither), and follow the compile errors to its arm in `build_heuristic` and `BaseBuilder::visit` in `src/benchmark/factory.rs`. Every match over the kinds names each one, so none of these is missed silently. The base-heuristic dispatch is written once, not per problem.
 
 ## Module Map
 
@@ -50,7 +50,8 @@ optopus-derive/               the proc-macro crate of the workspace, the derives
 src/
 ├── lib.rs / main.rs / prelude.rs / error.rs (OptError)
 ├── benchmark/
-│   ├── config.rs             NeighborKind, HeuristicConfig, BenchmarkConfig
+│   ├── config.rs             NeighborKind, HeuristicConfig (its accessors from the
+│   │                         heuristic_kinds! list), BenchmarkConfig
 │   ├── factory.rs            ConfigNeighbor, NeighborVisitor, ConfigurableProblem,
 │   │                         BaseBuilder, build_heuristic (the single generic factory)
 │   ├── problems.rs           the problems! table (ProblemKind, with_problem, Registered)

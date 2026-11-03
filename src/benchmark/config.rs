@@ -345,91 +345,61 @@ pub enum HeuristicConfig {
     },
 }
 
-impl HeuristicConfig {
-    /// The `kind` tag as it appears in config files.
-    pub fn kind_name(&self) -> &'static str {
-        match self {
-            Self::LocalSearch { .. } => "LocalSearch",
-            Self::TabuSearch { .. } => "TabuSearch",
-            Self::SimulatedAnnealing { .. } => "SimulatedAnnealing",
-            Self::LateAcceptanceHillClimbing { .. } => "LateAcceptanceHillClimbing",
-            Self::BeamSearch { .. } => "BeamSearch",
-            Self::RandomWalk { .. } => "RandomWalk",
-            Self::ReinforcementLearningSearch { .. } => "ReinforcementLearningSearch",
-            Self::BreakoutLocalSearch { .. } => "BreakoutLocalSearch",
-            Self::PopulationAnnealing { .. } => "PopulationAnnealing",
-            Self::ParallelTempering { .. } => "ParallelTempering",
-            Self::LinKernighanHelsgaun { .. } => "LinKernighanHelsgaun",
-            Self::AdaptiveLargeNeighborhoodSearch { .. } => "AdaptiveLargeNeighborhoodSearch",
-            Self::IteratedGreedy { .. } => "IteratedGreedy",
-            Self::GreedyRandomizedConstruction { .. } => "GreedyRandomizedConstruction",
-            Self::HybridGeneticSearch { .. } => "HybridGeneticSearch",
-            Self::WalkSat { .. } => "WalkSat",
-            Self::BranchAndBound { .. } => "BranchAndBound",
-            Self::Sequential { .. } => "Sequential",
-            Self::Iterated { .. } => "Iterated",
-            Self::VariableNeighborhoodSearch { .. } => "VariableNeighborhoodSearch",
-            Self::Restart { .. } => "Restart",
-            Self::GeneticAlgorithm { .. } => "GeneticAlgorithm",
-        }
-    }
+/// Writes the accessors of [`HeuristicConfig`] from one list of its kinds,
+/// grouped by what they carry besides `stop_condition`: a `neighbor`,
+/// nested `steps`, or neither. Each accessor is one match over every kind, so
+/// a kind missing from the list does not compile.
+macro_rules! heuristic_kinds {
+    (
+        neighbor: $($n:ident),+;
+        steps: $($s:ident),+;
+        other: $($o:ident),+;
+    ) => {
+        impl HeuristicConfig {
+            /// The `kind` tag as it appears in config files.
+            pub fn kind_name(&self) -> &'static str {
+                match self {
+                    $(Self::$n { .. } => stringify!($n),)+
+                    $(Self::$s { .. } => stringify!($s),)+
+                    $(Self::$o { .. } => stringify!($o),)+
+                }
+            }
 
-    /// The neighborhood move this config selects, when the kind uses one.
-    pub fn neighbor(&self) -> Option<&NeighborKind> {
-        match self {
-            Self::LocalSearch { neighbor, .. }
-            | Self::TabuSearch { neighbor, .. }
-            | Self::SimulatedAnnealing { neighbor, .. }
-            | Self::LateAcceptanceHillClimbing { neighbor, .. }
-            | Self::BeamSearch { neighbor, .. }
-            | Self::RandomWalk { neighbor, .. }
-            | Self::ReinforcementLearningSearch { neighbor, .. }
-            | Self::PopulationAnnealing { neighbor, .. }
-            | Self::ParallelTempering { neighbor, .. } => Some(neighbor),
-            _ => None,
-        }
-    }
+            /// The neighborhood move this config selects, when the kind uses one.
+            pub fn neighbor(&self) -> Option<&NeighborKind> {
+                match self {
+                    $(Self::$n { neighbor, .. })|+ => Some(neighbor),
+                    $(Self::$s { .. })|+ | $(Self::$o { .. })|+ => None,
+                }
+            }
 
-    /// Nested sub-heuristics (empty for non-composite kinds).
-    pub fn steps(&self) -> &[HeuristicConfig] {
-        match self {
-            Self::BranchAndBound { steps, .. }
-            | Self::Sequential { steps, .. }
-            | Self::Iterated { steps, .. }
-            | Self::VariableNeighborhoodSearch { steps, .. }
-            | Self::Restart { steps, .. }
-            | Self::GeneticAlgorithm { steps, .. } => steps,
-            _ => &[],
-        }
-    }
+            /// Nested sub-heuristics (empty for non-composite kinds).
+            pub fn steps(&self) -> &[HeuristicConfig] {
+                match self {
+                    $(Self::$s { steps, .. })|+ => steps,
+                    $(Self::$n { .. })|+ | $(Self::$o { .. })|+ => &[],
+                }
+            }
 
-    /// The outer stop condition (every kind carries one).
-    pub fn stop_condition(&self) -> &StopConditionConfig {
-        match self {
-            Self::LocalSearch { stop_condition, .. }
-            | Self::TabuSearch { stop_condition, .. }
-            | Self::SimulatedAnnealing { stop_condition, .. }
-            | Self::LateAcceptanceHillClimbing { stop_condition, .. }
-            | Self::BeamSearch { stop_condition, .. }
-            | Self::RandomWalk { stop_condition, .. }
-            | Self::ReinforcementLearningSearch { stop_condition, .. }
-            | Self::BreakoutLocalSearch { stop_condition, .. }
-            | Self::PopulationAnnealing { stop_condition, .. }
-            | Self::ParallelTempering { stop_condition, .. }
-            | Self::LinKernighanHelsgaun { stop_condition, .. }
-            | Self::AdaptiveLargeNeighborhoodSearch { stop_condition, .. }
-            | Self::IteratedGreedy { stop_condition, .. }
-            | Self::GreedyRandomizedConstruction { stop_condition, .. }
-            | Self::HybridGeneticSearch { stop_condition, .. }
-            | Self::WalkSat { stop_condition, .. }
-            | Self::BranchAndBound { stop_condition, .. }
-            | Self::Sequential { stop_condition, .. }
-            | Self::Iterated { stop_condition, .. }
-            | Self::VariableNeighborhoodSearch { stop_condition, .. }
-            | Self::Restart { stop_condition, .. }
-            | Self::GeneticAlgorithm { stop_condition, .. } => stop_condition,
+            /// The outer stop condition (every kind carries one).
+            pub fn stop_condition(&self) -> &StopConditionConfig {
+                match self {
+                    $(Self::$n { stop_condition, .. })|+
+                    | $(Self::$s { stop_condition, .. })|+
+                    | $(Self::$o { stop_condition, .. })|+ => stop_condition,
+                }
+            }
         }
-    }
+    };
+}
+
+heuristic_kinds! {
+    neighbor: LocalSearch, TabuSearch, SimulatedAnnealing, LateAcceptanceHillClimbing, BeamSearch,
+        RandomWalk, ReinforcementLearningSearch, PopulationAnnealing, ParallelTempering;
+    steps: BranchAndBound, Sequential, Iterated, VariableNeighborhoodSearch, Restart,
+        GeneticAlgorithm;
+    other: BreakoutLocalSearch, LinKernighanHelsgaun, AdaptiveLargeNeighborhoodSearch,
+        IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch, WalkSat;
 }
 
 /// A single instance entry in the config file.
