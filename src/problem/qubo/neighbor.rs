@@ -21,7 +21,7 @@ use crate::{
     building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
     problem::qubo::problem::QuboSolution,
-    search_state::{EnabledTabu, Evaluable, Evaluate, MoveToNeighbor},
+    search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
 };
 use rand::Rng;
 
@@ -49,14 +49,6 @@ pub struct QuboFlipNeighbor {
     /// Change in objective value when this variable is flipped (negative = improvement).
     #[objective(minimize)]
     pub gain: Coefficient,
-}
-
-// QUBO is a minimization problem: gain = change in energy (positive = worsening).
-
-impl Evaluate<Coefficient> for QuboFlipNeighbor {
-    fn evaluate(&self) -> Evaluable<Coefficient> {
-        Evaluable::Minimize(self.gain)
-    }
 }
 
 impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {

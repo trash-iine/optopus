@@ -19,7 +19,8 @@
 //!
 //! [`Qubo`] is the instance, built from entries or set cell by cell, and
 //! [`QuboSolution`] is the assignment, carrying `x`, `gain` and `objective`.
-//! Gains are `i32`, so the relevant evaluators are `Evaluate<i32>`.
+//! Gains are `i32`, and a move reports its gain through `Evaluate<f64>` like
+//! every other move.
 //!
 //! | Move | Description | Iteration cost |
 //! |---|---|---|

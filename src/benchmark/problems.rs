@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 
 use super::config::{HeuristicConfig, NeighborKind};
 use super::factory::{
-    ConfigurableProblem, NeighborVisitor, ProvingSearch, build_heuristic, invalid_neighbor,
-    unsupported,
+    ConfigurableProblem, NeighborVisitor, ProvingSearch, build_heuristic, check_tenure,
+    invalid_neighbor, unsupported,
 };
 use crate::building_blocks::representation::BinaryRelaxation;
 use crate::error::OptError;
@@ -483,14 +483,21 @@ impl ConfigurableProblem for MaxCut {
                 p0,
                 q,
                 ..
-            } => Ok(Box::new(bls_for_max_cut(
-                cond,
-                *tabu_tenure,
-                *t,
-                *l0,
-                *p0,
-                *q,
-            ))),
+            } => {
+                check_tenure(*tabu_tenure)?;
+                // `q` and `1 - q` are the shares of the two weak perturbations.
+                if !(0.0..=1.0).contains(q) {
+                    return Err(OptError::Config(format!("'q' must be in [0, 1], got {q}")));
+                }
+                Ok(Box::new(bls_for_max_cut(
+                    cond,
+                    *tabu_tenure,
+                    *t,
+                    *l0,
+                    *p0,
+                    *q,
+                )))
+            }
             _ => Err(unsupported::<Self>(config)),
         }
     }
@@ -684,14 +691,40 @@ impl ConfigurableProblem for Vrp {
                 target_feasible,
                 restart_generations,
                 ..
-            } => Ok(Box::new(HybridGeneticSearchForVrp::new(
-                cond,
-                min_population_size.unwrap_or(25),
-                generation_size.unwrap_or(40),
-                granularity.unwrap_or(20),
-                target_feasible.unwrap_or(0.2),
-                Some(restart_generations.unwrap_or(20_000)),
-            ))),
+            } => {
+                let min_population_size = min_population_size.unwrap_or(25);
+                let generation_size = generation_size.unwrap_or(40);
+                let granularity = granularity.unwrap_or(20);
+                let target_feasible = target_feasible.unwrap_or(0.2);
+                // The constructor asserts the same, so a config fails here
+                // rather than panicking in a run.
+                if min_population_size < 4 {
+                    return Err(OptError::Config(format!(
+                        "'min_population_size' must be at least 4, got {min_population_size}"
+                    )));
+                }
+                for (name, value) in [
+                    ("generation_size", generation_size),
+                    ("granularity", granularity),
+                ] {
+                    if value == 0 {
+                        return Err(OptError::Config(format!("'{name}' must be at least 1")));
+                    }
+                }
+                if !(target_feasible > 0.0 && target_feasible < 1.0) {
+                    return Err(OptError::Config(format!(
+                        "'target_feasible' must be in (0, 1), got {target_feasible}"
+                    )));
+                }
+                Ok(Box::new(HybridGeneticSearchForVrp::new(
+                    cond,
+                    min_population_size,
+                    generation_size,
+                    granularity,
+                    target_feasible,
+                    Some(restart_generations.unwrap_or(20_000)),
+                )))
+            }
             _ => Err(unsupported::<Self>(config)),
         }
     }
