@@ -790,10 +790,12 @@ fn interaction_neighbors(objective: &Poly, constraints: &[Poly], n: usize) -> Ve
 }
 
 /// A solution of a [`FormulaProblem`].
-#[derive(Debug, Clone, Rankable, Distance)]
+#[derive(Debug, Clone, Rankable, Evaluate, Distance)]
 pub struct FormulaSolution {
     #[distance(hamming)]
     values: Vec<i64>,
+    /// The penalized objective, with the direction of the problem.
+    #[objective]
     objective: Evaluable<f64>,
     /// The value of each constraint's expression, `lhs - rhs` or `expr`.
     constraint_vals: Vec<f64>,
@@ -806,13 +808,6 @@ impl FormulaSolution {
     /// The value of every variable, in index order.
     pub fn values(&self) -> &[i64] {
         &self.values
-    }
-}
-
-impl Evaluate for FormulaSolution {
-    /// The penalized objective, with the direction of the problem.
-    fn evaluate(&self) -> Evaluable<f64> {
-        self.objective
     }
 }
 

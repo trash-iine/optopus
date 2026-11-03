@@ -58,8 +58,10 @@ impl MyMove {
 ```
 
 `#[derive(Evaluate)]` reports the marked field, wrapped in the direction the
-attribute names. A number that is not one field, a sum of two of them say, is
-an `impl Evaluate` written by hand instead.
+attribute names. A number that a method computes, a sum of two fields say,
+is named on the type instead, as in `#[objective(minimize = cost())]`, and a
+field that already holds an `Evaluable<f64>` is marked with a bare
+`#[objective]`.
 
 `#[derive(Rankable)]` gives the move [`Rankable`](../traits.md#core-trait-reference),
 and the solution derives it the same way. `Rankable` is how `LocalSearch`,

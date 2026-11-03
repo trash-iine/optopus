@@ -3,7 +3,7 @@
 
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{format_ident, quote};
+use quote::{format_ident, quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{Data, DeriveInput, Expr, Fields, Ident, Index, Meta, Token, parse_macro_input};
 
@@ -34,12 +34,21 @@ pub fn derive_rankable(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Implements `optopus::trait_defs::Evaluate` from one field.
+/// Implements `optopus::trait_defs::Evaluate` from one field or one method.
 ///
-/// The field is marked `#[objective(minimize)]` or `#[objective(maximize)]`,
-/// and `evaluate` returns it as an `f64` in `Evaluable::Minimize` or
-/// `Evaluable::Maximize`. On a solution the field is its objective, and on a
-/// move it is the change the move would make. Exactly one field is marked.
+/// The number is named in one of three ways, and exactly once.
+///
+/// - A field marked `#[objective(minimize)]` or `#[objective(maximize)]`,
+///   which `evaluate` returns as an `f64` in `Evaluable::Minimize` or
+///   `Evaluable::Maximize`.
+/// - The type marked `#[objective(minimize = cost())]` or
+///   `#[objective(maximize = cost())]`, which does the same with a method
+///   that takes only `&self`, or with a field.
+/// - A field of type `Evaluable<f64>` marked with a bare `#[objective]`,
+///   which `evaluate` returns as it is.
+///
+/// On a solution the number is its objective, and on a move it is the change
+/// the move would make.
 ///
 /// The `Evaluate` page of the optopus documentation has examples.
 #[proc_macro_derive(Evaluate, attributes(objective))]
@@ -189,14 +198,20 @@ pub fn derive_distance(input: TokenStream) -> TokenStream {
 }
 
 fn evaluate(input: &DeriveInput) -> syn::Result<TokenStream2> {
-    let (field, keyword) = marked_field(input, "objective")?;
-    let variant = match keyword.to_string().as_str() {
-        "minimize" => quote!(Minimize),
-        "maximize" => quote!(Maximize),
-        other => {
+    let body = match (container_objective(input)?, field_objective(input)?) {
+        (Some((span, _)), Some(_)) => {
             return Err(syn::Error::new(
-                keyword.span(),
-                format!("expected `minimize` or `maximize`, found `{other}`"),
+                span,
+                "name the objective either on the type or on a field, not both",
+            ));
+        }
+        (Some((_, body)), None) | (None, Some(body)) => body,
+        (None, None) => {
+            return Err(syn::Error::new(
+                input.ident.span(),
+                "mark the field this derive reads with `#[objective(minimize)]` or \
+                 `#[objective(maximize)]`, or name a method on the type, as in \
+                 `#[objective(maximize = value())]`",
             ));
         }
     };
@@ -206,10 +221,101 @@ fn evaluate(input: &DeriveInput) -> syn::Result<TokenStream2> {
         impl #impl_generics ::optopus::trait_defs::Evaluate for #name #ty_generics #where_clause {
             #[inline]
             fn evaluate(&self) -> ::optopus::trait_defs::Evaluable<f64> {
-                ::optopus::trait_defs::Evaluable::#variant(self.#field as f64)
+                #body
             }
         }
     })
+}
+
+/// `Evaluable::Minimize` or `Evaluable::Maximize`, from the keyword naming it.
+fn objective_variant(keyword: &Ident) -> syn::Result<TokenStream2> {
+    match keyword.to_string().as_str() {
+        "minimize" => Ok(quote!(Minimize)),
+        "maximize" => Ok(quote!(Maximize)),
+        other => Err(syn::Error::new(
+            keyword.span(),
+            format!("expected `minimize` or `maximize`, found `{other}`"),
+        )),
+    }
+}
+
+/// The objective named on the type, `#[objective(maximize = value())]`, with
+/// the span of its attribute.
+fn container_objective(
+    input: &DeriveInput,
+) -> syn::Result<Option<(proc_macro2::Span, TokenStream2)>> {
+    let mut found: Option<(proc_macro2::Span, TokenStream2)> = None;
+    for attr in input
+        .attrs
+        .iter()
+        .filter(|a| a.path().is_ident("objective"))
+    {
+        let entries = attr.parse_args_with(
+            syn::punctuated::Punctuated::<syn::MetaNameValue, Token![,]>::parse_terminated,
+        )?;
+        for entry in entries {
+            if found.is_some() {
+                return Err(syn::Error::new(
+                    entry.span(),
+                    "the type names one objective, as in `#[objective(maximize = value())]`",
+                ));
+            }
+            let variant = objective_variant(entry.path.require_ident()?)?;
+            let value = read_on(&entry.value, quote!(self))?;
+            found = Some((
+                attr.span(),
+                quote!(::optopus::trait_defs::Evaluable::#variant(#value as f64)),
+            ));
+        }
+    }
+    Ok(found)
+}
+
+/// The objective marked on a field: `#[objective(minimize)]` or
+/// `#[objective(maximize)]` on a number, or a bare `#[objective]` on a field
+/// that is already an `Evaluable<f64>`.
+fn field_objective(input: &DeriveInput) -> syn::Result<Option<TokenStream2>> {
+    let Data::Struct(data) = &input.data else {
+        return Ok(None);
+    };
+    let mut found: Option<TokenStream2> = None;
+    for (i, field) in data.fields.iter().enumerate() {
+        for attr in field
+            .attrs
+            .iter()
+            .filter(|a| a.path().is_ident("objective"))
+        {
+            if found.is_some() {
+                return Err(syn::Error::new(
+                    attr.span(),
+                    "only one field can be marked `#[objective(..)]`",
+                ));
+            }
+            let access = match &field.ident {
+                Some(ident) => quote!(#ident),
+                None => {
+                    let index = Index::from(i);
+                    quote!(#index)
+                }
+            };
+            found = Some(match &attr.meta {
+                // Spanned at the field, so one that is not an `Evaluable<f64>`
+                // is a type error there.
+                Meta::Path(_) => quote_spanned!(field.ty.span()=> self.#access),
+                Meta::List(_) => {
+                    let variant = objective_variant(&attr.parse_args::<Ident>()?)?;
+                    quote!(::optopus::trait_defs::Evaluable::#variant(self.#access as f64))
+                }
+                Meta::NameValue(_) => {
+                    return Err(syn::Error::new(
+                        attr.span(),
+                        "expected `#[objective]`, `#[objective(minimize)]` or `#[objective(maximize)]`",
+                    ));
+                }
+            });
+        }
+    }
+    Ok(found)
 }
 
 fn distance(input: &DeriveInput) -> syn::Result<TokenStream2> {
@@ -391,15 +497,26 @@ fn container_keys(input: &DeriveInput) -> syn::Result<Option<(proc_macro2::Span,
 
 /// How a key named on the type is read, a field or a method taking `&self`.
 fn key_access(value: &Expr) -> syn::Result<(TokenStream2, TokenStream2)> {
+    let on_self = read_on(value, quote!(self))?;
+    let on_other = read_on(value, quote!(other))?;
+    Ok(match value {
+        Expr::Path(_) => (quote!(&#on_self), quote!(&#on_other)),
+        _ => (on_self, on_other),
+    })
+}
+
+/// A field or a method taking only `&self`, named on the type, as it is read
+/// from `receiver`.
+fn read_on(value: &Expr, receiver: TokenStream2) -> syn::Result<TokenStream2> {
     match value {
         Expr::Path(path) if path.qself.is_none() => {
             let field = path.path.require_ident()?;
-            Ok((quote!(&self.#field), quote!(&other.#field)))
+            Ok(quote!(#receiver.#field))
         }
         Expr::Call(call) if call.args.is_empty() => match &*call.func {
             Expr::Path(path) if path.qself.is_none() => {
                 let method = path.path.require_ident()?;
-                Ok((quote!(self.#method()), quote!(other.#method())))
+                Ok(quote!(#receiver.#method()))
             }
             other => Err(syn::Error::new(other.span(), "expected a method name")),
         },
