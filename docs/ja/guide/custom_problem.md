@@ -49,7 +49,8 @@ impl MyMove {
 ```
 
 `#[derive(Evaluate)]` は印を付けたフィールドを、属性が示す向きで包んで返します。
-二つのフィールドの和のように、一つのフィールドで表せない数値は `impl Evaluate` を手で書きます。
+二つのフィールドの和のようにメソッドで求める数値は、`#[objective(minimize = cost())]` のように型の側に書きます。
+すでに `Evaluable<f64>` を持つフィールドには、引数のない `#[objective]` を付けます。
 
 `#[derive(Rankable)]` で move に [`Rankable`](../traits.md#core-trait-reference) が付きます。解にも同じように derive します。
 `LocalSearch`、`RandomWalk`、`BeamSearch`、`TabuSearch` が move を選ぶのも、どのヒューリスティクスでも解が改善したかを判断するのもこれを通してです。

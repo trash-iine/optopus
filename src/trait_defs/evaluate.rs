@@ -113,7 +113,40 @@ impl Evaluable<f64> {
 /// assert!(matches!(s.evaluate(), Evaluable::Minimize(m) if m == 12.0));
 /// ```
 ///
-/// Exactly one field is marked, so the number is stated once.
+/// A number that a method computes is named on the type, with the method in
+/// the place of the field. A field that already holds an `Evaluable<f64>`,
+/// with its direction chosen at run time, is marked with a bare
+/// `#[objective]` and returned as it is.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Evaluate, Rankable)]
+/// #[objective(maximize = ones())]
+/// struct Bits {
+///     bits: Vec<bool>,
+/// }
+///
+/// impl Bits {
+///     fn ones(&self) -> usize {
+///         self.bits.iter().filter(|&&b| b).count()
+///     }
+/// }
+///
+/// #[derive(Evaluate)]
+/// struct Scored {
+///     #[objective]
+///     score: Evaluable<f64>,
+/// }
+///
+/// let b = Bits { bits: vec![true, false, true] };
+/// assert!(matches!(b.evaluate(), Evaluable::Maximize(n) if n == 2.0));
+/// let s = Scored { score: Evaluable::Minimize(1.5) };
+/// assert!(matches!(s.evaluate(), Evaluable::Minimize(v) if v == 1.5));
+/// ```
+///
+/// The number is stated once, so two marked fields do not compile,
+///
 ///
 /// ```compile_fail
 /// use optopus::prelude::*;
@@ -124,6 +157,38 @@ impl Evaluable<f64> {
 ///     cost: f64,
 ///     #[objective(minimize)]
 ///     time: f64,
+/// }
+/// ```
+///
+/// and neither does a type that names its number and marks a field too.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Evaluate)]
+/// #[objective(minimize = total())]
+/// struct Both {
+///     #[objective(minimize)]
+///     cost: f64,
+/// }
+///
+/// impl Both {
+///     fn total(&self) -> f64 {
+///         self.cost
+///     }
+/// }
+/// ```
+///
+/// A bare `#[objective]` has no direction to add, so it marks only an
+/// `Evaluable<f64>`.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Evaluate)]
+/// struct Plain {
+///     #[objective]
+///     cost: f64,
 /// }
 /// ```
 ///

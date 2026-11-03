@@ -1,8 +1,7 @@
 use crate::building_blocks::representation::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
-use crate::trait_defs::Rankable;
-use crate::trait_defs::{Branchable, IntAssignment};
+use crate::trait_defs::{Branchable, Distance, IntAssignment, Rankable};
 use rand::Rng;
 
 /// An assignment of a value to every variable of an [`IntegerProblem`],
@@ -13,9 +12,11 @@ use rand::Rng;
 /// [`new_solution`](ProblemTrait::new_solution) or
 /// [`IntegerProblem::solution_from`] and changed only by the moves of this
 /// module.
-#[derive(Clone, Debug, Rankable)]
+#[derive(Clone, Debug, Rankable, Evaluate, Distance)]
 pub struct IntSolution {
+    #[distance(hamming)]
     values: Vec<i64>,
+    #[objective]
     objective: Evaluable<f64>,
 }
 
@@ -28,19 +29,6 @@ impl IntSolution {
     /// The value of variable `i`.
     pub fn value(&self, i: usize) -> i64 {
         self.values[i]
-    }
-}
-
-impl Evaluate for IntSolution {
-    fn evaluate(&self) -> Evaluable<f64> {
-        self.objective
-    }
-}
-
-impl crate::search_state::Distance for IntSolution {
-    /// The number of variables whose values differ.
-    fn distance(&self, other: &Self) -> usize {
-        crate::building_blocks::representation::hamming_distance(&self.values, &other.values)
     }
 }
 

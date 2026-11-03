@@ -24,7 +24,10 @@ struct OneMaxProblem {
 }
 
 // ─── Solution definition ────────────────────────────────────
-#[derive(Clone, Rankable)]
+// OneMax maximizes the number of set bits. `maximize` is the only place
+// this problem states its direction, and `Rankable` follows it.
+#[derive(Clone, Evaluate, Rankable)]
+#[objective(maximize = objective())]
 struct OneMaxSolution {
     bits: Vec<bool>,
 }
@@ -32,15 +35,6 @@ struct OneMaxSolution {
 impl OneMaxSolution {
     fn objective(&self) -> usize {
         self.bits.iter().filter(|&&b| b).count()
-    }
-}
-
-impl Evaluate for OneMaxSolution {
-    /// OneMax maximizes the number of set bits. Wrapping it in `Maximize` is
-    /// the only place this problem states its direction, and it is also what
-    /// gives the solution `Rankable`.
-    fn evaluate(&self) -> Evaluable<f64> {
-        Evaluable::Maximize(self.objective() as f64)
     }
 }
 
