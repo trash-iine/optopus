@@ -126,6 +126,7 @@ that kind.
 | Qap | `Swap` |
 | BinPacking | `Relocate`, `Swap` |
 | VRP | `Relocate`, `Swap`, `TwoOpt` |
+| GraphColoring | `Flip` (recolor one vertex), `Swap` |
 
 The problem-specific kinds (`BreakoutLocalSearch`, `LinKernighanHelsgaun`,
 `AdaptiveLargeNeighborhoodSearch`, `WalkSat`, …) take no `neighbor`, they own
@@ -188,7 +189,9 @@ BenchmarkReport
 ```
 
 `trajectory` is the anytime curve, monotone in the problem's optimization
-direction. It is what the benchmark viewer plots. The `Option` fields are
+direction. It ends at the run's best, so a run whose initial solution is
+already its best has an empty curve and a `time_to_best_secs` of 0. It is what
+the benchmark viewer plots. The `Option` fields are
 absent for runs that ended in an error. `proven_optimal` and `dual_bound` are
 set only for a top-level `BranchAndBound`: whether the run proved
 `best_objective` optimal, and the best objective a solution not yet ruled out

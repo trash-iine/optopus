@@ -12,7 +12,7 @@ entry `src/main.rs` turns a TOML config into a benchmark run and a TOML report.
 
 This file is the map: where things live, what to touch when adding something,
 and the conventions this repo holds itself to. It deliberately does not explain
-the algorithms or the traits, because three other places do that better.
+the algorithms, the traits or the config format, because other places do that better.
 
 | Question | Read |
 |---|---|
@@ -20,6 +20,8 @@ the algorithms or the traits, because three other places do that better.
 | What does this problem look like, and what is its file format? | `docs/problems/` |
 | What do the core traits require? | `docs/traits.md` and `src/trait_defs/` |
 | How does `SearchState` work? | `docs/search_state.md` |
+| How is a benchmark config written, and what does the report hold? | `docs/guide/benchmarking.md`, and each heuristic page's "Benchmark config" section for its fields |
+| Where do the instances come from, and which are generated locally? | `data/instances/README.md` |
 | Why is it built this way, and what has already been tried? | `decisions/README.md` |
 | How do I use the library? | the rustdoc, and the site built from `docs/` |
 
@@ -35,192 +37,104 @@ library and carry none of that material.
 1. One row in the `problems!` table, `Variant => ProblemType, minimize;`. It makes the `ProblemKind` variant (the TOML spelling, also the name in error messages), the `with_problem` arm, the direction the report reads, and `load_instance`, which calls the type's inherent `load_file(path)`. A test checks that direction against the solution's `Evaluate`, and its `instance` match asks for a small instance of the new kind.
 2. One impl block each: `BenchmarkProblem` (decode_indices, the inverse of encode) + `BenchmarkSolution` (encode_as_indices; best_objective_f64 defaults to the solution's `Evaluate` value) + `ConfigurableProblem` (a `neighbors!` table of `NeighborKind => move type`, a `crossovers!` table of `Name => operator` whose first row is the default, optional `build_special_heuristic` / `build_branch_and_bound`, where `ruin_and_recreate` builds GRASP and ALNS on a `Ruinable` problem and `binary_branch_and_bound!()` the binary bound)
 
-Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). A move derives `Rankable` with the solution's keys as its changes to them (none when the solution ranks by its objective), and its `move_to_be_better_than` is `is_better_after_move(self, src, other)`. A move's tabu policy is `#[derive(EnabledTabu)]` with `#[tabu(..)]` keys (by hand only when it checks other keys than it forbids), and its `MoveToNeighbor::tabu_policy`, which has no default, returns `Some(self)`. A built-in move with a policy that returned `None` would run with no tabu list, and `trait_defs/tabu.rs` has the test that pins every one.
+Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). A move derives `Rankable` with the solution's keys as its changes to them (none when the solution ranks by its objective) and the solution's `tolerance` if it has one, and its `move_to_be_better_than` is `is_better_after_move(self, src, other)`. A move's tabu policy is `#[derive(EnabledTabu)]` with `#[tabu(..)]` keys (by hand only when it checks other keys than it forbids), and its `MoveToNeighbor::tabu_policy`, which has no default, returns `Some(self)`. A built-in move with a policy that returned `None` would run with no tabu list, and `trait_defs/tabu.rs` has the test that pins every one.
+
+The user-facing pages follow in the same PR: a page under `docs/problems/`, its ja page, the nav, and the neighbor table in `docs/guide/benchmarking.md`.
 
 ### Add a new base metaheuristic
 
-Implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/mod.rs` + prelude, then add one `HeuristicConfig` variant in `src/benchmark/config.rs` with its name in the `heuristic_kinds!` list (by whether it carries a `neighbor`, `steps` or neither), and follow the compile errors to its arm in `build_heuristic` and `BaseBuilder::visit` in `src/benchmark/factory.rs`. Every match over the kinds names each one, so none of these is missed silently. The base-heuristic dispatch is written once, not per problem.
+Implement `Heuristic<P>` in `src/heuristic/<name>.rs`, re-export via `heuristic/mod.rs` + prelude, then add one `HeuristicConfig` variant in `src/benchmark/config.rs` with its name in the `heuristic_kinds!` list (by whether it carries a `neighbor`, `steps` or neither), and follow the compile errors to its arm in `build_heuristic` and `BaseBuilder::visit` in `src/benchmark/factory.rs`. Every match over the kinds names each one, so none of these is missed silently. The base-heuristic dispatch is written once, not per problem. Its page under `docs/heuristics/` carries a "Benchmark config" section, and `docs/guide/benchmarking.md` lists the kind.
 
 ## Module Map
 
+Each entry says what a file is for, or where something lives that its name would
+not suggest. Type and function names are left to grep and the rustdoc.
+
 ```
-optopus-derive/               the proc-macro crate of the workspace, the derives of Rankable,
+optopus-derive/               the proc-macro crate of the workspace: the derives of Rankable,
                               Evaluate, Distance and EnabledTabu, each re-exported from
                               optopus::trait_defs beside its trait
 src/
-├── lib.rs / main.rs / prelude.rs / error.rs (OptError)
-├── benchmark/
-│   ├── config.rs             NeighborKind, HeuristicConfig (its accessors from the
-│   │                         heuristic_kinds! list), BenchmarkConfig
-│   ├── factory.rs            ConfigNeighbor, NeighborVisitor, ConfigurableProblem,
-│   │                         BaseBuilder, build_heuristic (the single generic factory)
-│   ├── problems.rs           the problems! table (ProblemKind, with_problem, Registered)
-│   │                         and all per-problem registration
-│   ├── runner.rs             run_from_config, run loop, per-run seed derivation
-│   └── report.rs             SingleRunResult, Summary, BenchmarkReport
-├── search_state/mod.rs       SearchState<'a, P>, SearchStateCloneType
+├── lib.rs / main.rs / prelude.rs / error.rs
+├── benchmark/                config → runs → report, the one layer that dispatches over every
+│                             problem
+│   ├── config.rs             the TOML schema, with the heuristic_kinds! list
+│   ├── factory.rs            build_heuristic, the single generic factory, and the trait a
+│   │                         problem registers its neighbors and special heuristics through
+│   ├── problems.rs           the problems! table and all per-problem registration
+│   ├── runner.rs             the run loop, per-run seeds, the anytime curve
+│   └── report.rs
+├── search_state/
 ├── trait_defs/               every trait the problem side implements and a heuristic calls;
-│                             a trait both implemented and used inside one layer
-│                             (Heuristic, PerturbationSchedule, ChangeDelta) stays by its type
-│   ├── rankable.rs           Rankable (derived by optopus-derive, with RankKeys),
-│   │                         is_better_after_move, is_better_by_objective, key_cmp (the
-│   │                         tolerant key comparison), rank_cmp, filter_best,
-│   │                         Distance
-│   ├── problem.rs            ProblemTrait
-│   ├── neighbor.rs           MoveToNeighbor
-│   ├── evaluate.rs           Evaluable (+ crate-internal raw, with_value), Evaluate
-│   ├── crossover.rs          Crossover, SubProblemExtractable
-│   ├── tabu.rs               EnabledTabu (object safe on purpose)
-│   ├── binary.rs             BinaryProblem, FixVariables (folding fixed variables)
-│   ├── int_assignment.rs     IntAssignment (read / write one integer of an own solution)
-│   ├── branch.rs             BranchSpace (what BranchAndBound asks), Branchable
-│   │                         (integer), Relaxation
-│   ├── ruinable.rs           Ruinable, LocalRepair
-│   └── reduction.rs          ProblemReduction
+│   │                         a trait both implemented and used inside one layer
+│   │                         (Heuristic, PerturbationSchedule, ChangeDelta) stays by its type
+│   ├── rankable.rs           the one place solutions and moves are compared:
+│   │                         is_better_after_move (every move's move_to_be_better_than),
+│   │                         key_cmp (the tolerant key comparison), and Distance
+│   ├── evaluate.rs           the numeric surrogate, for where a size is needed
+│   ├── tabu.rs               EnabledTabu, object safe on purpose, and the test that pins
+│   │                         every built-in move's policy
+│   ├── branch.rs             what BranchAndBound asks, and its integer and relaxation sides
+│   └── problem.rs / neighbor.rs / crossover.rs / binary.rs / int_assignment.rs /
+│       ruinable.rs / reduction.rs
 ├── building_blocks/          what problems and heuristics are built from, in three groups.
 │   │                         New shared code goes in the group it belongs to, and code that
 │   │                         fits none of them gets its place decided first. Items are
 │   │                         reached through their group (building_blocks::instance::Graph)
-│   ├── instance/             what an instance is built from and read with
-│   │   ├── graph/            Graph (mod.rs), random and lattice generators (generator.rs),
-│   │   │                     seeded_rng
-│   │   ├── distance_store.rs DistanceStore (full matrix / k nearest / given matrix)
-│   │   │                     and EdgeWeightType, shared by Tsp and Vrp
-│   │   └── parse.rs          InstanceLines
-│   ├── representation/       helpers per kind of decision variable, plus hamming_distance (mod.rs)
-│   │   ├── binary/           crossover.rs (uniform_binary_crossover, lift_binary_solution,
-│   │   │                     lift_compact_binary_solution), fix.rs (BinaryFixing,
-│   │   │                     BinaryRelaxation, the binary BranchSpace glue: binary_ranges
-│   │   │                     etc. and the exported binary_branch_space! macro each
-│   │   │                     problem's fix.rs calls), neighbor.rs (apply_swap_as_two_flips,
-│   │   │                     differing_pairs, differing_pairs_by_row, random_differing_pair)
-│   │   ├── integer.rs        IntVar, IntVars (+ permutation), DomainRestriction and the
-│   │   │                     BranchSpace blanket impl over Branchable
-│   │   └── permutation.rs    order_crossover (OX)
-│   └── search/               search machinery that knows no problem, plus MIN_IMPROVEMENT (mod.rs)
-│       ├── tabu.rs           TabuKey (Var / Pair / Triple), TabuMemory
-│       ├── biased_fitness.rs BiasedFitnessPopulation, binary_tournament
-│       ├── ruin_recreate.rs  the destroy / repair operators over any Ruinable, plus
-│       │                     restricted_candidate_insertion (GRASP's construction)
-│       ├── sampling.rs       random_distinct_pair, the endpoints the position moves draw
-│       ├── pair_scan.rs      pair_scan, two nested index ranges as plain loops, which the
-│       │                     QAP, bin packing relocate and VRP swap / 2-opt scans list with
-│       ├── adaptive_weights.rs  AdaptiveWeights, the roulette the operators are picked by
-│       ├── metropolis.rs     boltzmann_accept and the Metropolis sweep PA and PT share
-│       └── anchored_sweep.rs AnchoredSweep, the anchor widening and shuffled sweep
-│                             every LocalRepair descent runs
-├── heuristic/
-│   ├── mod.rs                Heuristic trait, StopCondition
-│   ├── local_search.rs / simulated_annealing.rs (+BangBang) / tabu_search.rs
-│   ├── late_acceptance.rs / beam_search.rs / random_walk.rs / restart.rs
-│   ├── sequential.rs         Sequential<P>, Iterated<P> (ILS lives here too)
-│   ├── variable_neighborhood_search.rs
-│   ├── genetic_algorithm.rs  GeneticAlgorithm<P, C>, ParentSelection
-│   ├── population_annealing.rs  PopulationAnnealing<P, N>
-│   ├── parallel_tempering.rs  ParallelTempering<P, N>, a fixed ladder with exchanges
-│   ├── alns.rs               AdaptiveLargeNeighborhoodSearch<P: Ruinable>
-│   ├── iterated_greedy.rs    IteratedGreedy<P: Ruinable>, temperature a function of the instance
-│   ├── greedy_randomized_construction.rs  one GRASP construction over any Ruinable
-│   ├── branch_and_bound.rs   BranchAndBound<P: BranchSpace, R: Relaxation<P>>
-│   ├── bls.rs                BreakoutLocalSearch<P, S>, PerturbationSchedule,
-│   │                         AdaptivePerturbation
-│   ├── crossover.rs          SubProblemBasedCrossover<P>
-│   ├── reinforcement_learning/  ReinforcementLearningSearch<N>
-│   └── specific/             one directory per problem once it has several
-│       ├── max_cut/          mod.rs (bls_for_max_cut and the MaxCut descent
-│       │                     and kicks), best_swap.rs (the one operator with
-│       │                     no generic equivalent)
-│       ├── vrp/              hgs/ (mod.rs driver, population.rs), alns_for_vrp
-│       ├── tsp/              lkh.rs, alns_for_tsp
-│       ├── flow_shop.rs      iterated_greedy_for_flow_shop, alns_for_flow_shop
-│       └── walksat_for_sat.rs
-└── problem/                  each holds problem, solution, neighbors, crossover
-    ├── max_cut/              + kernel.rs (MaxCutKernel, an exact ProblemReduction),
-    │                         eigen.rs (EigenvalueRelaxation, certified by Cholesky),
-    │                         planted.rs (PlantedMaxCut)
-    ├── qubo/ sat/ vertex_cover/ job_shop_scheduling/ graph_coloring/ qap/
-    │                         (max_cut, qubo, sat, vertex_cover each add fix.rs,
-    │                         FixVariables and BranchSpace)
-    ├── integer/              IntegerProblem (a struct built from a closure),
-    │                         formula.rs (FormulaProblem, Expr, Constraint),
-    │                         Change / Swap / Reverse moves over IntAssignment,
-    │                         crossover.rs (IntCrossover)
-    │                         IntervalRelaxation in formula.rs
-    ├── vrp/                  one problem for the homogeneous and the heterogeneous
-    │                         fleet (VehicleType slots, service time, TotalTime or
-    │                         Makespan; CVRPLIB or TOML instances; decisions/0014)
-    │                         + split.rs (split_giant_tour), adjacency.rs (RouteAdjacency),
-    │                         ops/ (pricing.rs = the one route-edit price, RouteState,
-    │                         granular.rs, Descent), ruin.rs (Ruinable + LocalRepair)
-    ├── tsp/                  + ruin.rs (Ruinable with the tour as the one container,
-    │                         AnchoredTourDescent)
-    ├── bin_packing/          + ruin.rs (Ruinable whose bins open and close,
-    │                         one empty bin always offered)
-    └── flow_shop/            + taillard.rs (HeadsTails, the O(m) insertion and removal
-                              prices), ruin.rs (Ruinable over the sequence, whose partial
-                              keeps the heads and tails, FlowShopInsertionDescent)
+│   ├── instance/             what an instance is built from and read with: the graph and
+│   │                         its generators, the distance store Tsp and Vrp share, parsing
+│   ├── representation/       helpers per kind of decision variable
+│   │   ├── binary/           crossover, fixing (with the binary_branch_space! macro each
+│   │   │                     problem's fix.rs calls) and the swap helpers
+│   │   ├── integer.rs        integer variables, and the BranchSpace blanket impl over
+│   │   │                     Branchable
+│   │   └── permutation.rs    order crossover
+│   └── search/               search machinery that knows no problem, plus MIN_IMPROVEMENT
+│       ├── tabu.rs           the tabu keys and memory
+│       ├── biased_fitness.rs the population ranking GA and HGS share
+│       ├── ruin_recreate.rs  destroy and repair over any Ruinable, GRASP's construction too
+│       ├── sampling.rs       the endpoints the position moves draw
+│       ├── pair_scan.rs      two nested index ranges as plain loops, which the QAP, bin
+│       │                     packing relocate and VRP swap / 2-opt scans list with
+│       ├── adaptive_weights.rs  the roulette ALNS picks its operators by
+│       ├── metropolis.rs     the Metropolis acceptance SA, PT and PA share, and their sweeps
+│       └── anchored_sweep.rs the anchor widening and shuffled sweep every LocalRepair
+│                             descent runs
+├── heuristic/                one file per heuristic, named after it
+│   ├── mod.rs                the Heuristic trait and StopCondition
+│   ├── sequential.rs         Sequential and Iterated, so ILS lives here too
+│   ├── simulated_annealing.rs  BangBangSimulatedAnnealing too
+│   ├── crossover.rs          the crossover that solves a sub-problem
+│   └── specific/             one directory per problem once it has several: the MaxCut
+│                             parts of BLS, LKH, HGS, WalkSat, the ALNS presets of TSP,
+│                             VRP and FlowShop, and FlowShop's IG
+└── problem/                  one directory per problem with problem, neighbor and crossover.
+    │                         The files beyond those:
+    ├── max_cut/              kernel.rs (an exact reduction), eigen.rs (a relaxation
+    │                         certified by Cholesky), planted.rs (an optimum known by
+    │                         construction)
+    ├── max_cut/ qubo/ sat/ vertex_cover/
+    │                         fix.rs, fixing variables and the branch space
+    ├── integer/              IntegerProblem, built from a closure, and formula.rs, the
+    │                         expression model, with IntervalRelaxation in it too
+    ├── vrp/                  one problem for one vehicle type or several (decisions/0014).
+    │                         ops/pricing.rs is the one route-edit price, split.rs splits a
+    │                         giant tour
+    ├── tsp/ bin_packing/ flow_shop/ vrp/
+    │                         ruin.rs, the Ruinable side, and its repair descent on all
+    │                         but bin_packing, whose bins open and close instead
+    └── flow_shop/            taillard.rs, the O(m) insertion and removal prices
 ```
 
 ## Benchmarking (`src/benchmark/`)
 
 A TOML config becomes a `BenchmarkConfig`, each heuristic runs on each instance
 N times (rayon-parallel), and a `BenchmarkReport` is written as timestamped TOML
-under `result/`. `docs/guide/benchmarking.md` is the user-facing guide.
-
-```toml
-num_runs = 10
-seed = 42                      # optional: makes every run bit-reproducible
-[[instances]]
-path = "data/instances/max_cut/G*"   # globs supported (Gset files have no extension)
-problem = "MaxCut"             # MaxCut | Qubo | Sat | Tsp | VertexCover | JobShop | FlowShop | Qap | BinPacking | Vrp | GraphColoring
-[[heuristics]]
-kind = "LocalSearch"           # see the table below
-neighbor = "Flip"              # Flip | Swap | TwoOpt | Relocate
-[heuristics.stop_condition]
-max_iteration = 100000         # max_duration_secs / max_failed_update also supported
-```
-
-`HeuristicConfig` is an internally-tagged enum (`#[serde(tag = "kind")]`), so
-each `kind` declares its own required fields, and missing fields or unknown
-kinds fail at parse time.
-
-| `kind` | Applies to | Required fields | Optional fields |
-|---|---|---|---|
-| `LocalSearch` | all | | |
-| `TabuSearch` | all | `tabu_tenure = [min, max]` | |
-| `SimulatedAnnealing` | all | `initial_temperature`, `cooling_rate` | |
-| `LateAcceptanceHillClimbing` | all | `history_length` | |
-| `BeamSearch` | all | `beam_width` | |
-| `RandomWalk` | all | a `stop_condition` (an empty one never terminates) | |
-| `ReinforcementLearningSearch` | all | | `learning_rate`, `softmax_temperature`, `reward_shaping`, `policy_weights`, `max_candidates` |
-| `BreakoutLocalSearch` | MaxCut | `tabu_tenure`, `t`, `l0`, `p0`, `q` | |
-| `PopulationAnnealing` | all | `neighbor`, `population_size` | `initial_beta`, `delta_beta`, `sweeps_per_step`, `reset_period`, `sweep_length` |
-| `ParallelTempering` | all | `neighbor`, `num_replicas` | `beta_min`, `beta_max`, `sweeps_per_exchange`, `sweep_length` |
-| `LinKernighanHelsgaun` | TSP | | `num_neighbors`, `max_depth` |
-| `WalkSat` | SAT | | `noise`, `adaptive_noise` |
-| `AdaptiveLargeNeighborhoodSearch` | VRP, TSP, FlowShop, BinPacking | | `removal_fraction`, `cooling_rate` |
-| `IteratedGreedy` | FlowShop | | `removal_count`, `temperature_factor` |
-| `GreedyRandomizedConstruction` | VRP, TSP, FlowShop, BinPacking | | `alpha` (one construction, GRASP is `Iterated` with it as `steps[1]`) |
-| `HybridGeneticSearch` | VRP | | `min_population_size`, `generation_size`, `granularity`, `target_feasible`, `restart_generations` |
-| `BranchAndBound` | MaxCut, Qubo, Sat, VertexCover | `steps[0]` = node search | `relaxation` (`Binary` / `Eigenvalue` on MaxCut), `eigen_max_iterations`, `eigen_lanczos_steps`, `eigen_certify_limit` |
-| `Sequential` | all | `steps` | |
-| `Iterated` | all | `steps[0]` = search, `steps[1]` = perturbation | |
-| `VariableNeighborhoodSearch` | all | `steps[0]` = search, `steps[1..]` = shakes | |
-| `Restart` | all | `steps[0]`, `restart_condition` | |
-| `GeneticAlgorithm` | all | `population_size` | `crossover_kind`, `parent_selection`, `parent_top_k`, `n_elite`, `n_closest` |
-
-`ReinforcementLearningSearch` still parses `discount` and ignores it with a warning, since
-single-step REINFORCE has none.
-
-A `SingleRunResult` carries `best_objective`, `best_iteration`, timing, the
-per-run `seed`, `solution` (0-indexed), and `trajectory`, the
-`(elapsed_secs, objective)` anytime curve made monotone in the problem's
-direction. `Summary` aggregates those across runs.
-
-MaxCut instance suites: besides the G-set, `examples/generate_dense_maxcut.rs`,
-`generate_sparse_maxcut.rs` and `generate_hard_maxcut.rs` produce suites locally
-from fixed seeds, so they are never committed. The hard suite has an exact
-optimum by construction, and its generator records where its parameters come from.
+under `result/`. `HeuristicConfig` is an internally-tagged enum
+(`#[serde(tag = "kind")]`), so each `kind` declares its own required fields, and
+missing fields or unknown kinds fail at parse time. The config format, every
+kind with the problems it applies to, and the report's fields are documented for
+users in `docs/guide/benchmarking.md`.
 
 ## Documentation site (`docs/` + `mkdocs.yml`)
 
@@ -255,4 +169,3 @@ counterpart in the same PR, and a new page gets a ja page and a nav entry in
 both sections. Algorithm and problem names stay in English there. A translated
 heading that something links to keeps the English anchor with `{ #id }`, so
 links between pages read the same in both editions.
-
