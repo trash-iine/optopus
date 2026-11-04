@@ -48,12 +48,20 @@ fn failed_run(run_index: usize, status: String, seed: Option<u64>) -> SingleRunR
 /// from `ClearBest`/`StartBest` sub-runs track the sub-run's local best,
 /// which can be worse than an earlier global best; this filter restores the
 /// monotone anytime curve.
+///
+/// The curve ends where the run found its best. A sub-run's local best after
+/// that can read as a lower number without ranking better, a difference of
+/// rounding that the order ties, and it is not an improvement of the run.
 fn monotone_trajectory(
     state: &SearchState<'_, impl crate::trait_defs::ProblemTrait>,
     minimize: bool,
 ) -> Vec<(f64, f64)> {
     let mut out: Vec<(f64, f64)> = Vec::with_capacity(state.trajectory.len());
-    for p in &state.trajectory {
+    for p in state
+        .trajectory
+        .iter()
+        .filter(|p| p.instant <= state.best_time)
+    {
         let improves = out.last().is_none_or(|&(_, incumbent)| {
             if minimize {
                 p.objective < incumbent

@@ -63,7 +63,8 @@ src/
 │                             a trait both implemented and used inside one layer
 │                             (Heuristic, PerturbationSchedule, ChangeDelta) stays by its type
 │   ├── rankable.rs           Rankable (derived by optopus-derive, with RankKeys),
-│   │                         is_better_after_move, is_better_by_objective, rank_cmp, filter_best,
+│   │                         is_better_after_move, is_better_by_objective, key_cmp (the
+│   │                         tolerant key comparison), rank_cmp, filter_best,
 │   │                         Distance
 │   ├── problem.rs            ProblemTrait
 │   ├── neighbor.rs           MoveToNeighbor

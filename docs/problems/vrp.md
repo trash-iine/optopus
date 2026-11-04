@@ -32,14 +32,21 @@ CVRP generalizes TSP, a single vehicle with unlimited capacity recovers it
 exactly, and is the base case of the routing-problem family used throughout
 logistics and last-mile delivery planning.
 
-Every constraint is soft, handled with a penalty exactly like
-[Vertex Cover](vertex_cover.md): `penalty_weight` is an upper bound on the
-whole non-penalty part of the objective plus one, so whenever a feasible
-solution exists, every optimum of the penalty-augmented objective is
-feasible. The bound is deliberately loose, only strict dominance matters.
-Overload and shortfall are integers, so any violation of them costs the full
-weight; route-time excess is continuous, so a violation smaller than one time
-unit is scaled down accordingly.
+Every constraint is soft. Solutions are ranked by their violation first,
+`overload + time_excess + min_count_shortfall`, and by the objective before
+the penalty second, so a solution that violates less beats any that violates
+more whatever it costs. Both are compared within the relative tolerance
+`Vrp::TOLERANCE`, so the rounding the incrementally moved caches carry never
+counts as an improvement, and a violation that close to zero counts as none.
+
+The penalty-augmented `objective` above is the number the searches that
+weigh how much worse a candidate is read, simulated annealing for one.
+`penalty_weight` is an upper bound on the whole non-penalty part of the
+objective plus one, so this number orders solutions as the ranking does
+wherever the violation is overload or shortfall, which are integers. A
+route-time excess is continuous, and one smaller than a time unit costs less
+than the full weight, so there the number can prefer a slightly late
+solution that the ranking does not.
 
 ## Example
 
@@ -165,6 +172,7 @@ meaning a different set of trips.
 |---|---|---|
 | `routes` | `Vec<Vec<usize>>` | one route per slot, the customers in visiting order, the depot implicit at both ends |
 | `objective` | `f64` | the penalty-augmented objective, lower is better |
+| `base_objective` | `f64` | the objective before the penalty, the second key of the ranking |
 | `total_cost` | `f64` | fixed costs of the used vehicles plus distance costs |
 | `total_time` | `f64` | the sum of route durations |
 | `makespan` | `f64` | the longest route duration |
@@ -186,7 +194,9 @@ retimes and possibly recapacitates that customer under the destination type.
 Relocate is the only move that can change which slots are used, so it is the
 only one that moves the fixed cost, `used_count` and `min_count_shortfall`.
 
-These moves bake `penalty_weight` into their gains. A heuristic that needs to
+Each move carries its change to the two ranking keys, `violation_delta` and
+`base_delta`, and ranks by them as the solution does. These moves also bake
+`penalty_weight` into their `gain`. A heuristic that needs to
 tune the penalty at runtime, as [HybridGeneticSearchForVrp](../heuristics/hgs.md)
 does, prices the same edits under its own penalty through the route machinery
 the problem shares with it.

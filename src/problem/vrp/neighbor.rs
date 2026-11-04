@@ -24,6 +24,7 @@ use crate::trait_defs::{EnabledTabu, Evaluate, MoveToNeighbor};
 /// route-time limit, relocating across a type boundary is also how the search
 /// reassigns work between vehicle types.
 #[derive(Debug, Clone, Rankable, Evaluate)]
+#[rankable(tolerance = Vrp::TOLERANCE)]
 pub struct VrpRelocateNeighbor {
     /// Source slot index.
     pub from_r: usize,
@@ -35,7 +36,15 @@ pub struct VrpRelocateNeighbor {
     pub to_i: usize,
     /// The relocated customer (cached for `apply` / tabu keying).
     pub customer: usize,
-    /// Change in objective (negative = improvement).
+    /// Change in the solution's violation, the key it ranks by first.
+    #[rankable(minimize)]
+    pub violation_delta: f64,
+    /// Change in the solution's objective before the penalty, the key it
+    /// ranks by second.
+    #[rankable(minimize)]
+    pub base_delta: f64,
+    /// Change in the penalized objective (negative = improvement), the
+    /// number the searches that weigh a worsening read.
     #[objective(minimize)]
     pub gain: f64,
 }
@@ -176,13 +185,16 @@ impl VrpRelocateNeighbor {
         penalty: f64,
     ) -> Self {
         let edits = lifted.edits(prob, sol, to_r, to_i);
+        let edit_price = price(prob, sol, penalty, &edits);
         Self {
             from_r: lifted.from_r,
             from_i,
             to_r,
             to_i,
             customer: lifted.customer,
-            gain: price(prob, sol, penalty, &edits).gain,
+            violation_delta: edit_price.violation_delta,
+            base_delta: edit_price.base_delta,
+            gain: edit_price.gain,
         }
     }
 }
@@ -278,6 +290,7 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
 /// fixed cost and the `min_count` shortfall — cannot change.
 #[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
 #[tabu(unordered(c1, c2))]
+#[rankable(tolerance = Vrp::TOLERANCE)]
 pub struct VrpSwapNeighbor {
     pub r1: usize,
     pub i1: usize,
@@ -287,7 +300,15 @@ pub struct VrpSwapNeighbor {
     pub c1: usize,
     /// Customer originally at `(r2, i2)`.
     pub c2: usize,
-    /// Change in objective (negative = improvement).
+    /// Change in the solution's violation, the key it ranks by first.
+    #[rankable(minimize)]
+    pub violation_delta: f64,
+    /// Change in the solution's objective before the penalty, the key it
+    /// ranks by second.
+    #[rankable(minimize)]
+    pub base_delta: f64,
+    /// Change in the penalized objective (negative = improvement), the
+    /// number the searches that weigh a worsening read.
     #[objective(minimize)]
     pub gain: f64,
 }
@@ -417,6 +438,7 @@ impl VrpSwapNeighbor {
         penalty: f64,
     ) -> Self {
         let edits = Swapped::edits(prob, a, b);
+        let edit_price = price(prob, sol, penalty, &edits);
         Self {
             r1: a.slot,
             i1,
@@ -424,7 +446,9 @@ impl VrpSwapNeighbor {
             i2,
             c1: a.customer,
             c2: b.customer,
-            gain: price(prob, sol, penalty, &edits).gain,
+            violation_delta: edit_price.violation_delta,
+            base_delta: edit_price.base_delta,
+            gain: edit_price.gain,
         }
     }
 }
@@ -502,11 +526,20 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
 /// and the route-time excess) and into the distance-proportional cost.
 #[derive(Debug, Clone, Rankable, Evaluate, EnabledTabu)]
 #[tabu(triple(r, p, q))]
+#[rankable(tolerance = Vrp::TOLERANCE)]
 pub struct VrpTwoOptNeighbor {
     pub r: usize,
     pub p: usize,
     pub q: usize,
-    /// Change in objective (negative = improvement).
+    /// Change in the solution's violation, the key it ranks by first.
+    #[rankable(minimize)]
+    pub violation_delta: f64,
+    /// Change in the solution's objective before the penalty, the key it
+    /// ranks by second.
+    #[rankable(minimize)]
+    pub base_delta: f64,
+    /// Change in the penalized objective (negative = improvement), the
+    /// number the searches that weigh a worsening read.
     #[objective(minimize)]
     pub gain: f64,
 }
@@ -568,11 +601,14 @@ impl VrpTwoOptNeighbor {
     #[inline]
     fn priced(prob: &Vrp, sol: &VrpSolution, r: usize, p: usize, q: usize, penalty: f64) -> Self {
         let edit = Self::edit(prob, sol, r, p, q);
+        let edit_price = price(prob, sol, penalty, &edit);
         Self {
             r,
             p,
             q,
-            gain: price(prob, sol, penalty, &edit).gain,
+            violation_delta: edit_price.violation_delta,
+            base_delta: edit_price.base_delta,
+            gain: edit_price.gain,
         }
     }
 }
@@ -713,8 +749,22 @@ mod tests {
         close(sol.makespan, want.makespan, "makespan");
         close(sol.time_excess, want.time_excess, "time_excess");
         close(sol.total_cost, want.total_cost, "total_cost");
+        close(sol.base_objective, want.base_objective, "base_objective");
         close(sol.objective, want.objective, "objective");
         prob.validate_routes(&sol.routes).unwrap();
+    }
+
+    /// A move's rank keys are its changes to the solution's, what
+    /// `is_better_after_move` adds to them.
+    fn assert_key_deltas(before: &VrpSolution, after: &VrpSolution, violation: f64, base: f64) {
+        assert!(
+            (after.violation() - (before.violation() + violation)).abs() < 1e-6,
+            "violation delta mismatch"
+        );
+        assert!(
+            (after.base_objective - (before.base_objective + base)).abs() < 1e-6,
+            "base delta mismatch"
+        );
     }
 
     fn start_routes() -> Vec<Vec<usize>> {
@@ -737,6 +787,7 @@ mod tests {
                         (s.objective - (sol.objective + nb.gain)).abs() < 1e-6,
                         "gain mismatch"
                     );
+                    assert_key_deltas(&sol, &s, nb.violation_delta, nb.base_delta);
                 }
             }
         }
@@ -751,6 +802,7 @@ mod tests {
                 nb.apply_to_solution(&prob, &mut s).unwrap();
                 assert_caches_consistent(&prob, &s);
                 assert!((s.objective - (sol.objective + nb.gain)).abs() < 1e-6);
+                assert_key_deltas(&sol, &s, nb.violation_delta, nb.base_delta);
             }
         }
     }
@@ -766,6 +818,7 @@ mod tests {
                 nb.apply_to_solution(&prob, &mut s).unwrap();
                 assert_caches_consistent(&prob, &s);
                 assert!((s.objective - (sol.objective + nb.gain)).abs() < 1e-6);
+                assert_key_deltas(&sol, &s, nb.violation_delta, nb.base_delta);
             }
         }
     }

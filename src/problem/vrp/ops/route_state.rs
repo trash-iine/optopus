@@ -53,7 +53,7 @@ impl RouteState {
     pub(crate) fn from_solution(prob: &Vrp, mut sol: VrpSolution, penalty: f64) -> Self {
         let n = prob.get_n();
         let slots = sol.routes.len();
-        sol.objective = prob.objective_under(&sol, penalty);
+        prob.price_objective(&mut sol, penalty);
         let mut state = Self {
             sol,
             penalty,
@@ -73,7 +73,7 @@ impl RouteState {
     /// Re-prices the objective under a new penalty.
     pub(crate) fn set_penalty(&mut self, prob: &Vrp, penalty: f64) {
         self.penalty = penalty;
-        self.sol.objective = prob.objective_under(&self.sol, penalty);
+        prob.price_objective(&mut self.sol, penalty);
     }
 
     /// The objective under `penalty`, computed from the aggregates rather
