@@ -22,7 +22,7 @@ pub fn uniform_binary_crossover<P: BinaryProblem>(
     let mut sol = sol1.clone();
     for i in prob.variable_indices() {
         if P::variable(&sol, i) != P::variable(sol2, i) && rng.random::<bool>() {
-            P::flip_move(&sol, i).apply_to_solution(prob, &mut sol)?;
+            prob.flip_move(&sol, i).apply_to_solution(prob, &mut sol)?;
         }
     }
     Ok(sol)
@@ -50,7 +50,7 @@ pub fn lift_binary_solution<P: BinaryProblem>(
             continue; // fixed variable — both parents agree
         }
         if P::variable(&sol, i) != P::variable(sub_sol, i) {
-            P::flip_move(&sol, i)
+            prob.flip_move(&sol, i)
                 .apply_to_solution(prob, &mut sol)
                 .expect("flip on a valid variable index cannot fail");
         }
@@ -75,7 +75,7 @@ pub fn lift_compact_binary_solution<P: BinaryProblem>(
             continue; // fixed variable — not part of the sub-problem
         }
         if P::variable(&sol, i) != P::variable(sub_sol, sub_idx) {
-            P::flip_move(&sol, i)
+            prob.flip_move(&sol, i)
                 .apply_to_solution(prob, &mut sol)
                 .expect("flip on a valid variable index cannot fail");
         }

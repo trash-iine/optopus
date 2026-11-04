@@ -9,23 +9,31 @@ use syn::{Data, DeriveInput, Expr, Fields, Ident, Index, Meta, Token, parse_macr
 
 /// Implements `optopus::trait_defs::Rankable`.
 ///
-/// With no `rank` attribute the order is the objective, and the type must
+/// With no `rankable` attribute the order is the objective, and the type must
 /// implement `Evaluate`. The impl compares the two objectives through
-/// `optopus::trait_defs::better_by_objective`.
+/// `optopus::trait_defs::is_better_by_objective`.
 ///
-/// With `rank` attributes the order compares keys one after another, the first
-/// that differs deciding. The keys are named in one of two places, never both.
+/// With `rankable` attributes the order compares keys one after another, the
+/// first that differs deciding. The keys are named in one of two places, never
+/// both.
 ///
-/// - On fields, `#[rank(min)]` or `#[rank(max)]`, compared in the order the
-///   fields are declared.
-/// - On the type, `#[rank(min = violation(), max = value)]`, compared in the
-///   order written. A key is a field, or a method that takes only `&self`.
+/// - On fields, `#[rankable(minimize)]` or `#[rankable(maximize)]`, compared
+///   in the order the fields are declared.
+/// - On the type, `#[rankable(minimize = violation(), maximize = value)]`,
+///   compared in the order written. A key is a field, or a method that takes
+///   only `&self`.
 ///
-/// `min` ranks the lower key better and `max` the higher one. A key needs only
-/// `PartialOrd`, and two keys that are neither less nor greater count as equal.
+/// `minimize` ranks the lower key better and `maximize` the higher one, the
+/// same words `Evaluate` takes. A key is a number, an integer or a float, and
+/// two keys that are neither less nor greater count as equal.
+///
+/// The derive also implements `optopus::trait_defs::RankKeys`, the same keys
+/// as `f64` turned so that lower is better, which is what
+/// `optopus::trait_defs::is_better_after_move` adds a move to. With no `rankable`
+/// attribute that is the one key `evaluate().minimized()`.
 ///
 /// The `Rankable` page of the optopus documentation has examples.
-#[proc_macro_derive(Rankable, attributes(rank))]
+#[proc_macro_derive(Rankable, attributes(rankable))]
 pub fn derive_rankable(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match rankable(&input) {
@@ -387,21 +395,23 @@ enum Direction {
 impl Direction {
     fn parse(ident: &Ident) -> syn::Result<Self> {
         match ident.to_string().as_str() {
-            "min" => Ok(Self::Min),
-            "max" => Ok(Self::Max),
+            "minimize" => Ok(Self::Min),
+            "maximize" => Ok(Self::Max),
             other => Err(syn::Error::new(
                 ident.span(),
-                format!("expected `min` or `max`, found `{other}`"),
+                format!("expected `minimize` or `maximize`, found `{other}`"),
             )),
         }
     }
 }
 
-/// One key, as the code that reads it from `self` and from `other`.
+/// One key, as the code that reads it from `self` and from `other`, and its
+/// value on `self`, which `RankKeys` casts to `f64`.
 struct Key {
     direction: Direction,
     on_self: TokenStream2,
     on_other: TokenStream2,
+    value: TokenStream2,
 }
 
 fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
@@ -410,14 +420,14 @@ fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
     let container = container_keys(input)?;
     let fields = field_keys(input)?;
 
-    let body = match (container, fields) {
+    let keys = match (container, fields) {
         (Some((span, _)), Some(_)) => {
             return Err(syn::Error::new(
                 span,
                 "name the keys either on the type or on its fields, not both",
             ));
         }
-        (Some((_, keys)), None) | (None, Some(keys)) => compare_keys(&keys),
+        (Some((_, keys)), None) | (None, Some(keys)) => keys,
         (None, None) => {
             let mut where_clause = where_clause
                 .cloned()
@@ -429,18 +439,42 @@ fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
                 impl #impl_generics ::optopus::trait_defs::Rankable for #name #ty_generics #where_clause {
                     #[inline]
                     fn is_better_than(&self, other: &Self) -> bool {
-                        ::optopus::trait_defs::better_by_objective(self, other)
+                        ::optopus::trait_defs::is_better_by_objective(self, other)
+                    }
+                }
+
+                impl #impl_generics ::optopus::trait_defs::RankKeys<1> for #name #ty_generics #where_clause {
+                    #[inline]
+                    fn rank_keys(&self) -> [f64; 1] {
+                        [::optopus::trait_defs::Evaluate::evaluate(self).minimized()]
                     }
                 }
             });
         }
     };
 
+    let body = compare_keys(&keys);
+    let count = keys.len();
+    let values = keys.iter().map(|key| {
+        let value = &key.value;
+        let value = quote!((#value as f64));
+        match key.direction {
+            Direction::Min => value,
+            Direction::Max => quote!(-#value),
+        }
+    });
     Ok(quote! {
         impl #impl_generics ::optopus::trait_defs::Rankable for #name #ty_generics #where_clause {
             #[inline]
             fn is_better_than(&self, other: &Self) -> bool {
                 #body
+            }
+        }
+
+        impl #impl_generics ::optopus::trait_defs::RankKeys<#count> for #name #ty_generics #where_clause {
+            #[inline]
+            fn rank_keys(&self) -> [f64; #count] {
+                [#(#values),*]
             }
         }
     })
@@ -474,10 +508,10 @@ fn compare_keys(keys: &[Key]) -> TokenStream2 {
     }
 }
 
-/// The keys named on the type, with the span of the first `rank` attribute.
+/// The keys named on the type, with the span of the first `rankable` attribute.
 fn container_keys(input: &DeriveInput) -> syn::Result<Option<(proc_macro2::Span, Vec<Key>)>> {
     let mut found: Option<(proc_macro2::Span, Vec<Key>)> = None;
-    for attr in input.attrs.iter().filter(|a| a.path().is_ident("rank")) {
+    for attr in input.attrs.iter().filter(|a| a.path().is_ident("rankable")) {
         let entries = attr.parse_args_with(
             syn::punctuated::Punctuated::<syn::MetaNameValue, Token![,]>::parse_terminated,
         )?;
@@ -489,6 +523,7 @@ fn container_keys(input: &DeriveInput) -> syn::Result<Option<(proc_macro2::Span,
                 direction,
                 on_self,
                 on_other,
+                value: read_on(&entry.value, quote!(self))?,
             });
         }
     }
@@ -537,11 +572,11 @@ fn field_keys(input: &DeriveInput) -> syn::Result<Option<Vec<Key>>> {
     };
     let mut keys = Vec::new();
     for (i, field) in fields.iter().enumerate() {
-        for attr in field.attrs.iter().filter(|a| a.path().is_ident("rank")) {
+        for attr in field.attrs.iter().filter(|a| a.path().is_ident("rankable")) {
             let Meta::List(list) = &attr.meta else {
                 return Err(syn::Error::new(
                     attr.span(),
-                    "expected `#[rank(min)]` or `#[rank(max)]`",
+                    "expected `#[rankable(minimize)]` or `#[rankable(maximize)]`",
                 ));
             };
             let direction = Direction::parse(&list.parse_args::<Ident>()?)?;
@@ -557,6 +592,7 @@ fn field_keys(input: &DeriveInput) -> syn::Result<Option<Vec<Key>>> {
                 direction,
                 on_self: quote!(&self.#access),
                 on_other: quote!(&other.#access),
+                value: quote!(self.#access),
             });
         }
     }

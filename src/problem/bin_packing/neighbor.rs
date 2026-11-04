@@ -1,4 +1,4 @@
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, is_better_after_move};
 use rand::Rng;
 use rand::rngs::SmallRng;
 use rand::seq::IteratorRandom;
@@ -147,8 +147,7 @@ impl MoveToNeighbor<BinPacking> for BinPackingRelocateNeighbor {
         src: &BinPackingSolution,
         other: &BinPackingSolution,
     ) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     fn apply_to_solution(
@@ -264,8 +263,7 @@ impl MoveToNeighbor<BinPacking> for BinPackingSwapNeighbor {
         src: &BinPackingSolution,
         other: &BinPackingSolution,
     ) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     fn apply_to_solution(

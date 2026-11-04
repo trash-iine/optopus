@@ -12,12 +12,14 @@ minimize  Σ_v x_v   subject to   x_i + x_j ≥ 1  for every edge (i,j) ∈ E
 
 Vertex Cover は NP 困難です。補集合をとることで Independent Set や Clique と等価になります。
 
-実行可能性はソフトに扱います。ソルバが実際に最適化するのはペナルティを加えた目的関数で、
-`penalty_weight` はその最適解が必ず実行可能 (被覆されない辺がない) になるだけ大きく選ばれています。
+解は被覆されない辺の数で先に比べ、被覆の大きさで次に比べます。したがって、どの被覆も、辺を一つでも残す集合より良くなります。
+解はペナルティを加えた数値も一つ報告します。焼きなまし法のように、候補がどれだけ悪いかを量る探索はこれを読みます。
 
 ```text
 objective(x) = cover_size(x) + penalty_weight · uncovered_edges(x)
 ```
+
+被覆の大きさは `n` 以下なので、`penalty_weight = n + 1` とすれば、この数値は比べる順序と同じ順に解を並べます。
 
 ## 例 { #example }
 

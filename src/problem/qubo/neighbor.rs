@@ -16,7 +16,7 @@
 //! [`EnabledTabu`]: crate::search_state::EnabledTabu
 
 use super::problem::{Coefficient, Qubo};
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
@@ -99,8 +99,7 @@ impl MoveToNeighbor<Qubo> for QuboFlipNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): picks a uniformly random variable.
@@ -137,8 +136,8 @@ impl QuboFlipNeighbor {
     /// let flip = QuboFlipNeighbor::new(&qubo, &sol, 0);
     /// assert_eq!(flip.gain, sol.gain[0]);
     /// ```
-    pub fn new(_prob: &Qubo, sol: &QuboSolution, i: usize) -> Self {
-        <Qubo as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
+    pub fn new(prob: &Qubo, sol: &QuboSolution, i: usize) -> Self {
+        crate::trait_defs::BinaryProblem::flip_move(prob, sol, i)
     }
 }
 
@@ -232,8 +231,7 @@ impl MoveToNeighbor<Qubo> for QuboSwapNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Qubo, src: &QuboSolution, other: &QuboSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(n): one variable of each value, uniformly over all differing pairs.

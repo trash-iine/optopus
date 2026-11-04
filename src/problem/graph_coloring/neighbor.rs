@@ -1,7 +1,7 @@
 //! Neighborhood move types for the [`GraphColoring`] problem.
 
 use super::problem::{GraphColoring, GraphColoringSolution};
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     building_blocks::search::random_distinct_pair,
     error::OptError,
@@ -12,9 +12,11 @@ use rand::rngs::SmallRng;
 
 /// A recolor move: assign vertex `v` a new color.
 ///
-/// `gain` holds the change in (penalty-augmented) objective after the move
-/// (negative = improvement, since Graph Coloring is minimization). Applying it
-/// refreshes the `gamma` row of every neighbor of `v`, i.e. O(degree(v)) work.
+/// It ranks as the solution does, by the change in conflicts first and the
+/// change in colors used second. `gain` is the same change as one penalized
+/// number (negative = improvement), the value [`Evaluate`] reports for
+/// acceptance probabilities. Applying it refreshes the `gamma` row of every
+/// neighbor of `v`, i.e. O(degree(v)) work.
 #[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
 #[tabu(dense(v))]
 pub struct GraphColoringRecolorNeighbor {
@@ -22,7 +24,14 @@ pub struct GraphColoringRecolorNeighbor {
     pub v: usize,
     /// The target color.
     pub new_color: usize,
-    /// Change in objective after the recolor.
+    /// Change in the number of conflicts.
+    #[rankable(minimize)]
+    pub conflicts_delta: i64,
+    /// Change in the number of colors used.
+    #[rankable(minimize)]
+    pub colors_delta: i64,
+    /// Change in the penalized objective,
+    /// `colors_delta + penalty_weight * conflicts_delta`.
     #[objective(minimize)]
     pub gain: i64,
 }
@@ -36,10 +45,13 @@ impl GraphColoringRecolorNeighbor {
         v: usize,
         new_color: usize,
     ) -> Self {
+        let (conflicts_delta, colors_delta) = prob.recolor_deltas(sol, v, new_color);
         Self {
             v,
             new_color,
-            gain: prob.recolor_gain(sol, v, new_color),
+            conflicts_delta,
+            colors_delta,
+            gain: prob.penalized(conflicts_delta, colors_delta),
         }
     }
 }
@@ -80,8 +92,7 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringRecolorNeighbor {
         src: &GraphColoringSolution,
         other: &GraphColoringSolution,
     ) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): a uniformly random vertex and a uniformly random color other
@@ -113,12 +124,23 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringRecolorNeighbor {
 /// and `j < i` are enumerated. Applying the move performs two recolors in
 /// sequence (`apply_to_iteration` returns `iter + 2`), each doing O(degree)
 /// work.
+///
+/// It ranks like the recolor, by the change in conflicts and then in colors
+/// used, which a swap leaves at `0`.
 #[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
 #[tabu(dense(i), dense(j))]
 pub struct GraphColoringSwapNeighbor {
     pub i: usize,
     pub j: usize,
-    /// Change in objective after the swap.
+    /// Change in the number of conflicts.
+    #[rankable(minimize)]
+    pub conflicts_delta: i64,
+    /// Change in the number of colors used, always `0`, kept so the move
+    /// has the solution's two keys.
+    #[rankable(minimize)]
+    pub colors_delta: i64,
+    /// Change in the penalized objective,
+    /// `penalty_weight * conflicts_delta`.
     #[objective(minimize)]
     pub gain: i64,
 }
@@ -129,10 +151,13 @@ impl GraphColoringSwapNeighbor {
     /// construction site goes through here and the correction cannot be
     /// forgotten at one of them.
     pub fn new(prob: &GraphColoring, sol: &GraphColoringSolution, i: usize, j: usize) -> Self {
+        let conflicts_delta = prob.swap_conflicts_delta(sol, i, j);
         Self {
             i,
             j,
-            gain: prob.swap_gain(sol, i, j),
+            conflicts_delta,
+            colors_delta: 0,
+            gain: prob.penalized(conflicts_delta, 0),
         }
     }
 }
@@ -178,8 +203,7 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringSwapNeighbor {
         src: &GraphColoringSolution,
         other: &GraphColoringSolution,
     ) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// Rejection-samples a pair of differently colored vertices, which is

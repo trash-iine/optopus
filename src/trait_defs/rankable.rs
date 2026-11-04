@@ -17,8 +17,8 @@ use super::Evaluate;
 /// # Deriving it
 ///
 /// `#[derive(Rankable)]` writes the impl, and every built-in solution and move
-/// uses it. With no `rank` attribute the order is the objective, compared by
-/// [`better_by_objective`], so the type also implements `Evaluate`.
+/// uses it. With no `rankable` attribute the order is the objective, compared by
+/// [`is_better_by_objective`], so the type also implements `Evaluate`.
 ///
 /// ```
 /// use optopus::prelude::*;
@@ -36,18 +36,18 @@ use super::Evaluate;
 /// ```
 ///
 /// An order of keys compared one after another, the first that differs
-/// deciding, is named with `rank` attributes. `min` ranks the lower key better
-/// and `max` the higher one. On fields they are compared in the order the
-/// fields are declared.
+/// deciding, is named with `rankable` attributes. `minimize` ranks the lower
+/// key better and `maximize` the higher one, the same words as `Evaluate`. On
+/// fields they are compared in the order the fields are declared.
 ///
 /// ```
 /// use optopus::prelude::*;
 ///
 /// #[derive(Rankable)]
 /// struct Packing {
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     overfull_bins: u32,
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     bins: u32,
 /// }
 ///
@@ -63,7 +63,7 @@ use super::Evaluate;
 /// use optopus::prelude::*;
 ///
 /// #[derive(Rankable)]
-/// #[rank(min = violation(), min = cost)]
+/// #[rankable(minimize = violation(), minimize = cost)]
 /// struct Routes {
 ///     overload: f64,
 ///     lateness: f64,
@@ -88,9 +88,22 @@ use super::Evaluate;
 /// use optopus::prelude::*;
 ///
 /// #[derive(Rankable)]
-/// #[rank(min = cost)]
+/// #[rankable(minimize = cost)]
 /// struct Twice {
-///     #[rank(min)]
+///     #[rankable(minimize)]
+///     cost: f64,
+/// }
+/// ```
+///
+/// The direction is spelled out, `minimize` or `maximize`, as `Evaluate`
+/// spells it.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Short {
+///     #[rankable(min)]
 ///     cost: f64,
 /// }
 /// ```
@@ -102,18 +115,128 @@ use super::Evaluate;
 /// use optopus::prelude::*;
 ///
 /// #[derive(Rankable)]
-/// #[rank(min = cost * 2.0)]
+/// #[rankable(minimize = cost * 2.0)]
 /// struct Scaled {
 ///     cost: f64,
 /// }
 /// ```
 ///
-/// A move ranks the same way, by its own fields. A problem whose solution is
-/// ranked by keys gives its moves the keys of the solution each would lead
-/// to, since a move ranked by its delta follows the objective and not that
-/// order.
+/// A key is a number, so each field or method named a key returns an integer
+/// or a float.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Named {
+///     #[rankable(minimize)]
+///     name: String,
+/// }
+/// ```
+///
+/// # Moves
+///
+/// A move ranks by the change it makes to each key of the solution, named with
+/// the same attributes in the same order. Two moves from one solution then
+/// rank as the solutions they lead to.
+///
+/// The derive also implements [`RankKeys`], and [`is_better_after_move`] adds a
+/// move's keys to a solution's to ask whether the move leads somewhere better.
+/// That is the whole body of
+/// [`move_to_be_better_than`](super::MoveToNeighbor::move_to_be_better_than)
+/// for a move derived this way.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Cover {
+///     #[rankable(minimize)]
+///     uncovered: i64,
+///     #[rankable(minimize)]
+///     size: i64,
+/// }
+///
+/// #[derive(Rankable)]
+/// struct Remove {
+///     #[rankable(minimize)]
+///     uncovered: i64,
+///     #[rankable(minimize)]
+///     size: i64,
+/// }
+///
+/// let at = Cover { uncovered: 0, size: 5 };
+/// // Leaves one edge uncovered for a smaller cover, so it is worse.
+/// let remove = Remove { uncovered: 1, size: -1 };
+/// assert!(!is_better_after_move(&remove, &at, &at));
+/// ```
 pub trait Rankable {
     fn is_better_than(&self, other: &Self) -> bool;
+}
+
+/// The keys a [`Rankable`] order compares, first to last, each as an `f64`
+/// turned so that lower is better.
+///
+/// `#[derive(Rankable)]` implements it. A `maximize` key is negated, and with no
+/// `rankable` attribute the one key is
+/// [`evaluate().minimized()`](super::Evaluable::minimized). A move's keys are
+/// the changes it makes to the solution's, which is what [`is_better_after_move`]
+/// reads.
+pub trait RankKeys<const N: usize> {
+    fn rank_keys(&self) -> [f64; N];
+}
+
+/// Whether applying `mv` to `src` leads to a solution better than `other`.
+///
+/// Each key of `src` plus the same key of `mv` is compared with the key of
+/// `other`, first to last, the first that differs deciding. Strict, so a move
+/// to a solution equal to `other` is not better. A move and a solution with a
+/// different number of keys do not compile.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Cover {
+///     #[rankable(minimize)]
+///     uncovered: i64,
+///     #[rankable(minimize)]
+///     size: i64,
+/// }
+///
+/// #[derive(Rankable, Evaluate)]
+/// struct Flip {
+///     #[objective(minimize)]
+///     gain: i64,
+/// }
+///
+/// let at = Cover { uncovered: 0, size: 5 };
+/// is_better_after_move(&Flip { gain: -1 }, &at, &at);
+/// ```
+///
+/// With one key this is `src + mv < other` on the minimized objectives, so a
+/// move that reports its change in the objective needs nothing more than this
+/// for its
+/// [`move_to_be_better_than`](super::MoveToNeighbor::move_to_be_better_than).
+#[inline]
+pub fn is_better_after_move<const N: usize, M, S>(mv: &M, src: &S, other: &S) -> bool
+where
+    M: RankKeys<N>,
+    S: RankKeys<N>,
+{
+    let from = src.rank_keys();
+    let delta = mv.rank_keys();
+    let over = other.rank_keys();
+    for i in 0..N {
+        let after = from[i] + delta[i];
+        if after < over[i] {
+            return true;
+        }
+        if after > over[i] {
+            return false;
+        }
+    }
+    false
 }
 
 /// Whether `a` is better than `b` by their objectives, which is a lower
@@ -122,10 +245,10 @@ pub trait Rankable {
 ///
 /// Strict, so two equal values rank as neither better, which is what
 /// [`rank_cmp`] reports as `Equal` and what the tie rules downstream are
-/// written against. `#[derive(Rankable)]` with no `rank` attribute implements
+/// written against. `#[derive(Rankable)]` with no `rankable` attribute implements
 /// [`Rankable`] with this, and an impl written by hand can call it too.
 #[inline]
-pub fn better_by_objective<T: Evaluate>(a: &T, b: &T) -> bool {
+pub fn is_better_by_objective<T: Evaluate>(a: &T, b: &T) -> bool {
     a.evaluate().minimized() < b.evaluate().minimized()
 }
 
@@ -298,7 +421,7 @@ mod tests {
         };
         assert!(feasible.is_better_than(&cheap));
         assert!(
-            !better_by_objective(&feasible, &cheap),
+            !is_better_by_objective(&feasible, &cheap),
             "the surrogate disagrees"
         );
 

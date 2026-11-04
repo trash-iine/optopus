@@ -1,7 +1,7 @@
 //! Neighborhood move types for the [`VertexCover`] problem.
 
 use super::VertexCover;
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
@@ -12,16 +12,25 @@ use rand::Rng;
 
 /// A flip move that toggles whether vertex `i` is in the cover.
 ///
-/// `gain` holds the change in (penalty-augmented) objective after the flip
-/// (negative = improvement, since Vertex Cover is minimization). Applying the
-/// move refreshes the gain of every neighbor of `i` and the uncovered-edge
-/// count, i.e. O(degree(i)) work.
+/// It ranks as the solution does, by the change in uncovered edges first and
+/// the change in cover size second. `gain` is the same change as one
+/// penalized number (negative = improvement), the value
+/// [`Evaluate`] reports for acceptance probabilities. Applying the move
+/// refreshes the gain of every neighbor of `i` and the uncovered-edge count,
+/// i.e. O(degree(i)) work.
 #[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
 #[tabu(dense(i))]
 pub struct VertexCoverFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
-    /// Change in objective after the flip.
+    /// Change in the number of uncovered edges.
+    #[rankable(minimize)]
+    pub uncovered_delta: i32,
+    /// Change in the cover size, `+1` or `-1`.
+    #[rankable(minimize)]
+    pub cover_delta: i32,
+    /// Change in the penalized objective,
+    /// `cover_delta + penalty_weight * uncovered_delta`.
     #[objective(minimize)]
     pub gain: i32,
 }
@@ -32,11 +41,9 @@ impl VertexCoverFlipNeighbor {
     /// A flip's gain needs no correction. It is exactly the value the solution
     /// already maintains, so this is [`BinaryProblem::flip_move`](crate::trait_defs::BinaryProblem::flip_move)
     /// spelled like the other constructors, keeping every construction site
-    /// on one path, the way [`VertexCoverSwapNeighbor::new`] does. `prob` is
-    /// unused for that reason and taken only so the two constructors read alike
-    /// at the call site.
-    pub fn new(_prob: &VertexCover, sol: &VertexCoverSolution, i: usize) -> Self {
-        <VertexCover as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
+    /// on one path, the way [`VertexCoverSwapNeighbor::new`] does.
+    pub fn new(prob: &VertexCover, sol: &VertexCoverSolution, i: usize) -> Self {
+        crate::trait_defs::BinaryProblem::flip_move(prob, sol, i)
     }
 }
 
@@ -110,8 +117,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
         src: &VertexCoverSolution,
         other: &VertexCoverSolution,
     ) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): picks a uniformly random vertex.
@@ -134,11 +140,22 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
 /// Only pairs `(i, j)` with `cover[i] != cover[j]` and `i < j` are enumerated.
 /// Applying the move performs two flips in sequence (`apply_to_iteration`
 /// returns `iter + 2`), each doing O(degree) work.
+///
+/// It ranks like the flip, by the change in uncovered edges and then in cover
+/// size, which a swap leaves at `0`.
 #[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
 #[tabu(dense(i), dense(j))]
 pub struct VertexCoverSwapNeighbor {
     pub i: usize,
     pub j: usize,
+    /// Change in the number of uncovered edges.
+    #[rankable(minimize)]
+    pub uncovered_delta: i32,
+    /// Change in the cover size, always `0`, kept so the move has the
+    /// solution's two keys.
+    #[rankable(minimize)]
+    pub cover_delta: i32,
+    /// Change in the penalized objective, `penalty_weight * uncovered_delta`.
     #[objective(minimize)]
     pub gain: i32,
 }
@@ -177,10 +194,13 @@ impl VertexCoverSwapNeighbor {
         adjacent: bool,
     ) -> Self {
         let edge_correction = if adjacent { prob.penalty_weight() } else { 0 };
+        let gain = sol.gain[i] + sol.gain[j] - edge_correction;
         Self {
             i,
             j,
-            gain: sol.gain[i] + sol.gain[j] - edge_correction,
+            uncovered_delta: prob.uncovered_delta(gain, 0),
+            cover_delta: 0,
+            gain,
         }
     }
 }
@@ -217,8 +237,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
         src: &VertexCoverSolution,
         other: &VertexCoverSolution,
     ) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(n): one vertex in the cover and one outside it, uniformly over all
@@ -253,10 +272,7 @@ mod tests {
         state.solution = vc.solution_from_assignment(&[false, false, false]).unwrap();
         state.best_solution = state.solution.clone();
 
-        let n = VertexCoverFlipNeighbor {
-            i: 0,
-            gain: state.solution.gain[0],
-        };
+        let n = VertexCoverFlipNeighbor::new(&vc, &state.solution, 0);
         state.apply(&n).unwrap();
 
         // After inserting vertex 0: cover_size = 1, uncovered edges = 1 (only (1,2)).
@@ -282,13 +298,15 @@ mod tests {
         // Swap vertex 0 (in cover) with vertex 1 (out of cover).
         // Both cover sizes are 1; uncovered edges before = {(1,2)}; after = {(0,2)}.
         // Δobjective = 0.
-        let swap = VertexCoverSwapNeighbor {
-            i: 1,
-            j: 0,
-            gain: state.solution.gain[1] + state.solution.gain[0] - vc.penalty_weight(),
-        };
+        let swap = VertexCoverSwapNeighbor::new(&vc, &state.solution, 1, 0);
         let predicted_gain = swap.gain;
+        let uncovered_before = state.solution.uncovered_edges as i32;
         state.apply(&swap).unwrap();
+        assert_eq!(swap.cover_delta, 0);
+        assert_eq!(
+            state.solution.uncovered_edges as i32 - uncovered_before,
+            swap.uncovered_delta
+        );
 
         let (gain, obj, cs, ue) = vc.calculate_state(&state.solution.x);
         assert_eq!(state.solution.gain, gain);

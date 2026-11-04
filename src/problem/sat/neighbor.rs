@@ -1,5 +1,5 @@
 use super::problem::{Sat, SatSolution};
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
@@ -31,8 +31,8 @@ impl SatFlipNeighbor {
     /// on one path, the way [`SatSwapNeighbor::new`] does. `prob` is unused for
     /// that reason and taken only so the two constructors read alike at the call
     /// site.
-    pub fn new(_prob: &Sat, sol: &SatSolution, i: usize) -> Self {
-        <Sat as crate::trait_defs::BinaryProblem>::flip_move(sol, i)
+    pub fn new(prob: &Sat, sol: &SatSolution, i: usize) -> Self {
+        crate::trait_defs::BinaryProblem::flip_move(prob, sol, i)
     }
 }
 
@@ -63,8 +63,7 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): picks a uniformly random variable.
@@ -244,8 +243,7 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(clause): picks a uniformly random pair from the precomputed

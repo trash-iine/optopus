@@ -1,4 +1,4 @@
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, is_better_after_move};
 use rand::Rng;
 use rand::rngs::SmallRng;
 use rand::seq::IteratorRandom;
@@ -246,8 +246,7 @@ impl MoveToNeighbor<Vrp> for VrpRelocateNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Vrp, src: &VrpSolution, other: &VrpSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     fn random_neighbor(prob: &Vrp, sol: &VrpSolution, rng: &mut SmallRng) -> Option<Self> {
@@ -472,8 +471,7 @@ impl MoveToNeighbor<Vrp> for VrpSwapNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Vrp, src: &VrpSolution, other: &VrpSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     fn random_neighbor(prob: &Vrp, sol: &VrpSolution, rng: &mut SmallRng) -> Option<Self> {
@@ -610,8 +608,7 @@ impl MoveToNeighbor<Vrp> for VrpTwoOptNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Vrp, src: &VrpSolution, other: &VrpSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     fn random_neighbor(prob: &Vrp, sol: &VrpSolution, rng: &mut SmallRng) -> Option<Self> {

@@ -19,7 +19,7 @@ Every heuristic runs under the search state, recording its behavior and enable t
    move, `MoveToNeighbor` on the solution move across the problem) and
    `LocalSearch`, `RandomWalk`, `BeamSearch`, `SimulatedAnnealing` and every
    meta-heuristic work as-is. `Rankable` is
-   `#[derive(Rankable)]` on each, which compares objectives unless `rank`
+   `#[derive(Rankable)]` on each, which compares objectives unless `rankable`
    attributes name other keys. The rest are unlocked one trait at a time, with `EnabledTabu` for
    Tabu Search and `Distance` + a `Crossover` for Genetic Algorithm. 
    Full signatures and the per-heuristic requirement matrix are in

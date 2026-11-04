@@ -391,7 +391,7 @@ impl crate::trait_defs::BinaryProblem for Sat {
         sol.x[i]
     }
 
-    fn flip_move(sol: &SatSolution, i: usize) -> Self::Flip {
+    fn flip_move(&self, sol: &SatSolution, i: usize) -> Self::Flip {
         super::SatFlipNeighbor {
             i,
             gain: sol.gain[i],

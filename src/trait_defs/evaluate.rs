@@ -36,23 +36,6 @@ impl Evaluable<f64> {
         }
     }
 
-    /// Whether this delta, applied to the solution `from`, lands better than
-    /// the solution `over`.
-    ///
-    /// The three values are read through [`minimized`](Self::minimized), so the
-    /// optimization direction is stated once, by the `Evaluate` impls, and the
-    /// comparison itself does not restate it. This is the body every
-    /// [`MoveToNeighbor::move_to_be_better_than`](crate::trait_defs::MoveToNeighbor::move_to_be_better_than)
-    /// override in the crate spells out.
-    ///
-    /// It agrees with the solution's [`Rankable`](super::Rankable) only where
-    /// the solution ranks by its objective, which `#[derive(Rankable)]` with no
-    /// `rank` attribute does. An override for a solution ranked by keys
-    /// compares in that order instead.
-    pub fn improves_over(self, from: Evaluable<f64>, over: Evaluable<f64>) -> bool {
-        from.minimized() + self.minimized() < over.minimized()
-    }
-
     /// The number inside, without its direction.
     pub(crate) fn raw(self) -> f64 {
         match self {
@@ -85,7 +68,7 @@ impl Evaluable<f64> {
 ///
 /// [`Rankable`](super::Rankable) answers "is this better?" and is enough for a
 /// search that only compares. Implement this as well where the number itself is
-/// used. Where the two agree, `#[derive(Rankable)]` with no `rank` attribute
+/// used. Where the two agree, `#[derive(Rankable)]` with no `rankable` attribute
 /// writes the `Rankable` impl from this one.
 ///
 /// `T` is the numeric type returned (default `f64`). Use `T = f64` for

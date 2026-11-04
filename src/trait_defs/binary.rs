@@ -60,7 +60,7 @@ pub trait BinaryProblem: ProblemTrait + Sized {
     fn variable(sol: &Self::Solution, i: usize) -> bool;
 
     /// Returns the flip move for variable `i`, carrying the gain cached in `sol`.
-    fn flip_move(sol: &Self::Solution, i: usize) -> Self::Flip;
+    fn flip_move(&self, sol: &Self::Solution, i: usize) -> Self::Flip;
 
     /// The solution assigning `values[i]` to each variable `i`.
     ///
@@ -78,7 +78,7 @@ pub trait BinaryProblem: ProblemTrait + Sized {
         let mut sol = self.new_solution(&mut rand::rngs::SmallRng::seed_from_u64(0));
         for i in self.variable_indices() {
             if Self::variable(&sol, i) != values[i] {
-                Self::flip_move(&sol, i)
+                self.flip_move(&sol, i)
                     .apply_to_solution(self, &mut sol)
                     .expect("flip on a valid variable index cannot fail");
             }

@@ -1,6 +1,6 @@
 //! The moves every [`IntAssignment`] gets.
 
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     building_blocks::{representation::IntVar, search::random_distinct_pair},
     error::OptError,
@@ -170,8 +170,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &P, src: &P::Solution, other: &P::Solution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// One draw of a slot, uniform over every move
@@ -279,8 +278,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &P, src: &P::Solution, other: &P::Solution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// Draws two distinct positions until they form a move, up to 64 times,
@@ -353,8 +351,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntReverseNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &P, src: &P::Solution, other: &P::Solution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// Draws two distinct ends until they form a move, up to 64 times, then

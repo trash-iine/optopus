@@ -28,7 +28,7 @@ const LIMIT: usize = 4;
 
 /// Fewer violations first, then more value.
 #[derive(Clone, Debug, Rankable, Distance)]
-#[rank(min = violations(), max = value)]
+#[rankable(minimize = violations(), maximize = value)]
 struct Picked {
     #[distance(hamming)]
     x: Vec<bool>,

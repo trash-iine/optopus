@@ -35,7 +35,7 @@ library and carry none of that material.
 1. One row in the `problems!` table, `Variant => ProblemType, minimize;`. It makes the `ProblemKind` variant (the TOML spelling, also the name in error messages), the `with_problem` arm, the direction the report reads, and `load_instance`, which calls the type's inherent `load_file(path)`. A test checks that direction against the solution's `Evaluate`, and its `instance` match asks for a small instance of the new kind.
 2. One impl block each: `BenchmarkProblem` (decode_indices, the inverse of encode) + `BenchmarkSolution` (encode_as_indices; best_objective_f64 defaults to the solution's `Evaluate` value) + `ConfigurableProblem` (a `neighbors!` table of `NeighborKind => move type`, a `crossovers!` table of `Name => operator` whose first row is the default, optional `build_special_heuristic` / `build_branch_and_bound`, where `ruin_and_recreate` builds GRASP and ALNS on a `Ruinable` problem and `binary_branch_and_bound!()` the binary bound)
 
-Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). A move's tabu policy is `#[derive(EnabledTabu)]` with `#[tabu(..)]` keys (by hand only when it checks other keys than it forbids), and its `MoveToNeighbor::tabu_policy`, which has no default, returns `Some(self)`. A built-in move with a policy that returned `None` would run with no tabu list, and `trait_defs/tabu.rs` has the test that pins every one.
+Plus the library side: `src/problem/<name>/{mod,problem,neighbor,crossover}.rs` (private mods + `pub use`), re-exports in `src/problem/mod.rs` (all types including the crossover) and `src/prelude.rs` (problem / solution / neighbor types; most crossovers are exported only from `problem/mod.rs`). A move derives `Rankable` with the solution's keys as its changes to them (none when the solution ranks by its objective), and its `move_to_be_better_than` is `is_better_after_move(self, src, other)`. A move's tabu policy is `#[derive(EnabledTabu)]` with `#[tabu(..)]` keys (by hand only when it checks other keys than it forbids), and its `MoveToNeighbor::tabu_policy`, which has no default, returns `Some(self)`. A built-in move with a policy that returned `None` would run with no tabu list, and `trait_defs/tabu.rs` has the test that pins every one.
 
 ### Add a new base metaheuristic
 
@@ -62,8 +62,9 @@ src/
 ├── trait_defs/               every trait the problem side implements and a heuristic calls;
 │                             a trait both implemented and used inside one layer
 │                             (Heuristic, PerturbationSchedule, ChangeDelta) stays by its type
-│   ├── rankable.rs           Rankable (derived by optopus-derive), better_by_objective, rank_cmp,
-│   │                         filter_best, Distance
+│   ├── rankable.rs           Rankable (derived by optopus-derive, with RankKeys),
+│   │                         is_better_after_move, is_better_by_objective, rank_cmp, filter_best,
+│   │                         Distance
 │   ├── problem.rs            ProblemTrait
 │   ├── neighbor.rs           MoveToNeighbor
 │   ├── evaluate.rs           Evaluable (+ crate-internal raw, with_value), Evaluate

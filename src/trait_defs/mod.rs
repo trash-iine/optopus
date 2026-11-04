@@ -38,7 +38,10 @@ pub use int_assignment::IntAssignment;
 pub use neighbor::MoveToNeighbor;
 pub use optopus_derive::{Distance, EnabledTabu, Evaluate, Rankable};
 pub use problem::ProblemTrait;
-pub use rankable::{Distance, Rankable, better_by_objective, filter_best, rank_cmp};
+pub use rankable::{
+    Distance, RankKeys, Rankable, filter_best, is_better_after_move, is_better_by_objective,
+    rank_cmp,
+};
 pub use reduction::ProblemReduction;
 pub use ruinable::{LocalRepair, Ruinable};
 pub use tabu::EnabledTabu;

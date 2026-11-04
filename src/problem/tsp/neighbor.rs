@@ -1,5 +1,5 @@
 use super::problem::{Tsp, TspSolution};
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
@@ -191,8 +191,7 @@ impl MoveToNeighbor<Tsp> for TspTwoOptNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Tsp, src: &TspSolution, other: &TspSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(1) expected: rejection-samples a uniformly random valid `(i, j)`
@@ -363,8 +362,7 @@ impl MoveToNeighbor<Tsp> for TspRelocateNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Tsp, src: &TspSolution, other: &TspSolution) -> bool {
-        self.evaluate()
-            .improves_over(src.evaluate(), other.evaluate())
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): samples a uniformly random `(pos, ins)` pair with
