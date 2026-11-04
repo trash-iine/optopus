@@ -1,4 +1,4 @@
-use crate::trait_defs::{Rankable, better_after_move};
+use crate::trait_defs::{Rankable, is_better_after_move};
 use std::iter::once;
 
 use rand::rngs::SmallRng;
@@ -87,7 +87,7 @@ impl MoveToNeighbor<FlowShop> for FlowShopInsertNeighbor {
         src: &FlowShopSolution,
         other: &FlowShopSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     fn apply_to_solution(
@@ -188,7 +188,7 @@ impl MoveToNeighbor<FlowShop> for FlowShopSwapNeighbor {
         src: &FlowShopSolution,
         other: &FlowShopSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     fn apply_to_solution(

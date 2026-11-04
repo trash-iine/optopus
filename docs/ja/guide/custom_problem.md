@@ -97,7 +97,7 @@ impl MoveToNeighbor<MyProblem> for MyMove {
     fn move_to_be_better_than(&self, _prob: &MyProblem, src: &MySolution, other: &MySolution) -> bool {
         // この move の変化量を src の目的関数値に足して other と比べる。
         // オーバーライドしなければ、既定の impl が src をクローンして move を適用する
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 }
 
@@ -168,7 +168,7 @@ VRP の relocate のように確認するキーと禁止するキーが違う mo
 ## 性能についての注意 { #performance-note }
 
 既定の `move_to_be_better_than` は解をクローンして move を適用します。
-move と解がどちらも `Rankable` を derive していれば、O(1) のオーバーライドは骨組みのとおり `better_after_move(self, src, other)` の1行です。
+move と解がどちらも `Rankable` を derive していれば、O(1) のオーバーライドは骨組みのとおり `is_better_after_move(self, src, other)` の1行です。
 これは `src` の各キーに move の変化量を足し、その結果を `other` と比べます。
 向きとキーの順序は derive から読むので、比較演算子として書き直すことはありません。
 `MaxCutFlipNeighbor` は目的関数値で、`VertexCoverFlipNeighbor` は未被覆の辺、次に被覆の大きさで比べ、どちらもこの形でオーバーライドしています。

@@ -1,7 +1,7 @@
 //! Neighborhood move types for the [`GraphColoring`] problem.
 
 use super::problem::{GraphColoring, GraphColoringSolution};
-use crate::trait_defs::{Rankable, better_after_move};
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     building_blocks::search::random_distinct_pair,
     error::OptError,
@@ -92,7 +92,7 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringRecolorNeighbor {
         src: &GraphColoringSolution,
         other: &GraphColoringSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): a uniformly random vertex and a uniformly random color other
@@ -203,7 +203,7 @@ impl MoveToNeighbor<GraphColoring> for GraphColoringSwapNeighbor {
         src: &GraphColoringSolution,
         other: &GraphColoringSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// Rejection-samples a pair of differently colored vertices, which is

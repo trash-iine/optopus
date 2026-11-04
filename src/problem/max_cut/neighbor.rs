@@ -16,7 +16,7 @@
 //! [`EnabledTabu`]: crate::search_state::EnabledTabu
 
 use super::{MaxCut, MaxCutSolution};
-use crate::trait_defs::{Rankable, better_after_move};
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
@@ -116,7 +116,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutFlipNeighbor {
         src: &MaxCutSolution,
         other: &MaxCutSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): picks a uniformly random vertex.
@@ -274,7 +274,7 @@ impl MoveToNeighbor<MaxCut> for MaxCutSwapNeighbor {
         src: &MaxCutSolution,
         other: &MaxCutSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(n): one vertex from each side, uniformly over all cross-side pairs.

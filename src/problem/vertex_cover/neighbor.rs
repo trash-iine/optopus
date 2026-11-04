@@ -1,7 +1,7 @@
 //! Neighborhood move types for the [`VertexCover`] problem.
 
 use super::VertexCover;
-use crate::trait_defs::{Rankable, better_after_move};
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     building_blocks::representation::{differing_pairs_by_row, random_differing_pair},
     error::OptError,
@@ -117,7 +117,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverFlipNeighbor {
         src: &VertexCoverSolution,
         other: &VertexCoverSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): picks a uniformly random vertex.
@@ -237,7 +237,7 @@ impl MoveToNeighbor<VertexCover> for VertexCoverSwapNeighbor {
         src: &VertexCoverSolution,
         other: &VertexCoverSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(n): one vertex in the cover and one outside it, uniformly over all

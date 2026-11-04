@@ -104,7 +104,7 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
 
     /// Whether this flip takes `src` somewhere better than `other`, without
     /// building the flipped solution. Both types derive `Rankable`, so
-    /// `better_after_move` adds the move's `gain` to the solution's objective
+    /// `is_better_after_move` adds the move's `gain` to the solution's objective
     /// and compares the sum with `other`'s.
     fn move_to_be_better_than(
         &self,
@@ -112,7 +112,7 @@ impl MoveToNeighbor<OneMaxProblem> for FlipMove {
         src: &OneMaxSolution,
         other: &OneMaxSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 }
 

@@ -11,7 +11,7 @@ use syn::{Data, DeriveInput, Expr, Fields, Ident, Index, Meta, Token, parse_macr
 ///
 /// With no `rankable` attribute the order is the objective, and the type must
 /// implement `Evaluate`. The impl compares the two objectives through
-/// `optopus::trait_defs::better_by_objective`.
+/// `optopus::trait_defs::is_better_by_objective`.
 ///
 /// With `rankable` attributes the order compares keys one after another, the
 /// first that differs deciding. The keys are named in one of two places, never
@@ -29,7 +29,7 @@ use syn::{Data, DeriveInput, Expr, Fields, Ident, Index, Meta, Token, parse_macr
 ///
 /// The derive also implements `optopus::trait_defs::RankKeys`, the same keys
 /// as `f64` turned so that lower is better, which is what
-/// `optopus::trait_defs::better_after_move` adds a move to. With no `rankable`
+/// `optopus::trait_defs::is_better_after_move` adds a move to. With no `rankable`
 /// attribute that is the one key `evaluate().minimized()`.
 ///
 /// The `Rankable` page of the optopus documentation has examples.
@@ -437,7 +437,7 @@ fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
                 impl #impl_generics ::optopus::trait_defs::Rankable for #name #ty_generics #where_clause {
                     #[inline]
                     fn is_better_than(&self, other: &Self) -> bool {
-                        ::optopus::trait_defs::better_by_objective(self, other)
+                        ::optopus::trait_defs::is_better_by_objective(self, other)
                     }
                 }
 

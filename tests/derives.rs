@@ -2,7 +2,7 @@
 //! the order, and `Evaluate` and `Distance` from one marked field.
 
 use optopus::trait_defs::{
-    Distance, Evaluable, Evaluate, RankKeys, Rankable, better_after_move, rank_cmp,
+    Distance, Evaluable, Evaluate, RankKeys, Rankable, is_better_after_move, rank_cmp,
 };
 use std::cmp::Ordering;
 
@@ -150,41 +150,41 @@ struct Reassign {
 }
 
 #[test]
-fn better_after_move_adds_the_move_to_the_solution_key_by_key() {
+fn is_better_after_move_adds_the_move_to_the_solution_key_by_key() {
     let at = assignment(1, 10.0);
     // Removes the violation at a cost in value, which the order prefers.
     let repair = Reassign {
         violations: -1,
         value: -8.0,
     };
-    assert!(better_after_move(&repair, &at, &at));
+    assert!(is_better_after_move(&repair, &at, &at));
     // Gains value but adds a violation.
     let greedy = Reassign {
         violations: 1,
         value: 50.0,
     };
-    assert!(!better_after_move(&greedy, &at, &at));
+    assert!(!is_better_after_move(&greedy, &at, &at));
     // Ties on the first key fall to the second, and `other` need not be `src`.
     let gain = Reassign {
         violations: 0,
         value: 1.0,
     };
-    assert!(better_after_move(&gain, &at, &assignment(1, 10.5)));
-    assert!(!better_after_move(&gain, &at, &assignment(1, 11.0)));
+    assert!(is_better_after_move(&gain, &at, &assignment(1, 10.5)));
+    assert!(!is_better_after_move(&gain, &at, &assignment(1, 11.0)));
     // A move to a solution equal to `other` is not better.
     let still = Reassign {
         violations: 0,
         value: 0.0,
     };
-    assert!(!better_after_move(&still, &at, &at));
+    assert!(!is_better_after_move(&still, &at, &at));
 }
 
 #[test]
-fn better_after_move_with_one_key_is_the_objective_plus_the_gain() {
+fn is_better_after_move_with_one_key_is_the_objective_plus_the_gain() {
     // Maximized, so a gain of 1 on 2 lands at 3.
-    assert!(better_after_move(&Gain(1), &Cut(2.0), &Cut(2.5)));
-    assert!(!better_after_move(&Gain(1), &Cut(2.0), &Cut(3.0)));
-    assert!(!better_after_move(&Gain(-1), &Cut(2.0), &Cut(2.0)));
+    assert!(is_better_after_move(&Gain(1), &Cut(2.0), &Cut(2.5)));
+    assert!(!is_better_after_move(&Gain(1), &Cut(2.0), &Cut(3.0)));
+    assert!(!is_better_after_move(&Gain(-1), &Cut(2.0), &Cut(2.0)));
 }
 
 /// A minimized integer objective, read as an `f64`.

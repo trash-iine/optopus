@@ -113,7 +113,7 @@ impl MoveToNeighbor<MyProblem> for MyMove {
     fn move_to_be_better_than(&self, _prob: &MyProblem, src: &MySolution, other: &MySolution) -> bool {
         // Adds this move's change to src's objective and compares with other.
         // Without this override, the default clones src and applies the move.
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 }
 
@@ -197,7 +197,7 @@ problem.
 
 The default `move_to_be_better_than` clones the solution and applies the move.
 Where the move and the solution both derive `Rankable`, the O(1) override is
-the one line `better_after_move(self, src, other)`, as in the skeleton. It adds
+the one line `is_better_after_move(self, src, other)`, as in the skeleton. It adds
 the move's change to each key of `src` and compares the result with `other`,
 so the direction and the order of the keys come from the derives and are not
 restated as comparison operators. `MaxCutFlipNeighbor` ranks by the objective

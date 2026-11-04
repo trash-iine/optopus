@@ -1,4 +1,4 @@
-use crate::trait_defs::{Rankable, better_after_move};
+use crate::trait_defs::{Rankable, is_better_after_move};
 use rand::Rng;
 use rayon::prelude::*;
 
@@ -238,7 +238,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopSwapNeighbor {
         src: &JobShopSolution,
         other: &JobShopSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(n) + one decode: collects the non-identity swap positions once,
@@ -388,7 +388,7 @@ impl MoveToNeighbor<JobShopScheduling> for JobShopRelocateNeighbor {
         src: &JobShopSolution,
         other: &JobShopSolution,
     ) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(1) + one decode: samples a uniformly random `(from, to)` pair with

@@ -18,7 +18,7 @@ use super::Evaluate;
 ///
 /// `#[derive(Rankable)]` writes the impl, and every built-in solution and move
 /// uses it. With no `rankable` attribute the order is the objective, compared by
-/// [`better_by_objective`], so the type also implements `Evaluate`.
+/// [`is_better_by_objective`], so the type also implements `Evaluate`.
 ///
 /// ```
 /// use optopus::prelude::*;
@@ -140,7 +140,7 @@ use super::Evaluate;
 /// the same attributes in the same order. Two moves from one solution then
 /// rank as the solutions they lead to.
 ///
-/// The derive also implements [`RankKeys`], and [`better_after_move`] adds a
+/// The derive also implements [`RankKeys`], and [`is_better_after_move`] adds a
 /// move's keys to a solution's to ask whether the move leads somewhere better.
 /// That is the whole body of
 /// [`move_to_be_better_than`](super::MoveToNeighbor::move_to_be_better_than)
@@ -168,7 +168,7 @@ use super::Evaluate;
 /// let at = Cover { uncovered: 0, size: 5 };
 /// // Leaves one edge uncovered for a smaller cover, so it is worse.
 /// let remove = Remove { uncovered: 1, size: -1 };
-/// assert!(!better_after_move(&remove, &at, &at));
+/// assert!(!is_better_after_move(&remove, &at, &at));
 /// ```
 pub trait Rankable {
     fn is_better_than(&self, other: &Self) -> bool;
@@ -180,7 +180,7 @@ pub trait Rankable {
 /// `#[derive(Rankable)]` implements it. A `maximize` key is negated, and with no
 /// `rankable` attribute the one key is
 /// [`evaluate().minimized()`](super::Evaluable::minimized). A move's keys are
-/// the changes it makes to the solution's, which is what [`better_after_move`]
+/// the changes it makes to the solution's, which is what [`is_better_after_move`]
 /// reads.
 pub trait RankKeys<const N: usize> {
     fn rank_keys(&self) -> [f64; N];
@@ -239,7 +239,7 @@ impl<T: RankKey + ?Sized> RankKey for &T {
 /// }
 ///
 /// let at = Cover { uncovered: 0, size: 5 };
-/// better_after_move(&Flip { gain: -1 }, &at, &at);
+/// is_better_after_move(&Flip { gain: -1 }, &at, &at);
 /// ```
 ///
 /// With one key this is `src + mv < other` on the minimized objectives, so a
@@ -247,7 +247,7 @@ impl<T: RankKey + ?Sized> RankKey for &T {
 /// for its
 /// [`move_to_be_better_than`](super::MoveToNeighbor::move_to_be_better_than).
 #[inline]
-pub fn better_after_move<const N: usize, M, S>(mv: &M, src: &S, other: &S) -> bool
+pub fn is_better_after_move<const N: usize, M, S>(mv: &M, src: &S, other: &S) -> bool
 where
     M: RankKeys<N>,
     S: RankKeys<N>,
@@ -276,7 +276,7 @@ where
 /// written against. `#[derive(Rankable)]` with no `rankable` attribute implements
 /// [`Rankable`] with this, and an impl written by hand can call it too.
 #[inline]
-pub fn better_by_objective<T: Evaluate>(a: &T, b: &T) -> bool {
+pub fn is_better_by_objective<T: Evaluate>(a: &T, b: &T) -> bool {
     a.evaluate().minimized() < b.evaluate().minimized()
 }
 
@@ -449,7 +449,7 @@ mod tests {
         };
         assert!(feasible.is_better_than(&cheap));
         assert!(
-            !better_by_objective(&feasible, &cheap),
+            !is_better_by_objective(&feasible, &cheap),
             "the surrogate disagrees"
         );
 

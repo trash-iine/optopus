@@ -1,5 +1,5 @@
 use super::problem::{Sat, SatSolution};
-use crate::trait_defs::{Rankable, better_after_move};
+use crate::trait_defs::{Rankable, is_better_after_move};
 use crate::{
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
@@ -63,7 +63,7 @@ impl MoveToNeighbor<Sat> for SatFlipNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(1): picks a uniformly random variable.
@@ -243,7 +243,7 @@ impl MoveToNeighbor<Sat> for SatSwapNeighbor {
     }
 
     fn move_to_be_better_than(&self, _: &Sat, src: &SatSolution, other: &SatSolution) -> bool {
-        better_after_move(self, src, other)
+        is_better_after_move(self, src, other)
     }
 
     /// O(clause): picks a uniformly random pair from the precomputed

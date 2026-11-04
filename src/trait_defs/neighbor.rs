@@ -97,7 +97,7 @@ where
     /// Override this method with a more efficient implementation if possible.
     /// Where the move and the solution both derive <code>Rankable</code>, the
     /// override is the one line
-    /// <code>better_after_move(self, src, other)</code>, which adds the move's
+    /// <code>is_better_after_move(self, src, other)</code>, which adds the move's
     /// keys to the solution's. A solution ranked by hand needs an override
     /// that compares in the same order as its <code>Rankable</code>.
     ///
@@ -121,7 +121,7 @@ where
                 move_type = std::any::type_name::<Self>(),
                 "Using the default clone+apply implementation of \
                  move_to_be_better_than. Override it with \
-                 better_after_move(self, src, other) where the move and \
+                 is_better_after_move(self, src, other) where the move and \
                  the solution derive Rankable, or another O(1) check, for \
                  hot-path heuristics."
             );
