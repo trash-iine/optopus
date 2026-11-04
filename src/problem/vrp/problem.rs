@@ -1584,7 +1584,7 @@ mod tests {
         // Rounding left by summed deltas ties both ways, on either key.
         let mut drifted = sol.clone();
         drifted.base_objective *= 1.0 - 1e-12;
-        drifted.time_excess = 1e-12;
+        drifted.time_excess = 1e-10;
         assert!(!drifted.is_better_than(&sol));
         assert!(!sol.is_better_than(&drifted));
 
