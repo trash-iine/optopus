@@ -406,19 +406,28 @@ impl Direction {
 }
 
 /// One key, as the code that reads it from `self` and from `other`, and its
-/// value on `self`, which `RankKeys` casts to `f64`.
+/// value on each, which `RankKeys` and a tolerant comparison cast to `f64`.
 struct Key {
     direction: Direction,
     on_self: TokenStream2,
     on_other: TokenStream2,
     value: TokenStream2,
+    value_other: TokenStream2,
 }
 
 fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let container = container_keys(input)?;
+    let (container, tolerance) = container_keys(input)?;
     let fields = field_keys(input)?;
+
+    if let (Some((span, _)), None, None) = (&tolerance, &container, &fields) {
+        return Err(syn::Error::new(
+            *span,
+            "a tolerance needs keys to compare, since with none the order is the \
+             objective compared exactly",
+        ));
+    }
 
     let keys = match (container, fields) {
         (Some((span, _)), Some(_)) => {
@@ -453,8 +462,17 @@ fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
         }
     };
 
-    let body = compare_keys(&keys);
     let count = keys.len();
+    let (body, tolerance_const) = match &tolerance {
+        None => (compare_keys(&keys), quote!()),
+        Some((_, tol)) => (
+            compare_keys_within(
+                &keys,
+                quote!(<Self as ::optopus::trait_defs::RankKeys<#count>>::TOLERANCE),
+            ),
+            quote!(const TOLERANCE: f64 = #tol;),
+        ),
+    };
     let values = keys.iter().map(|key| {
         let value = &key.value;
         let value = quote!((#value as f64));
@@ -472,12 +490,42 @@ fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
         }
 
         impl #impl_generics ::optopus::trait_defs::RankKeys<#count> for #name #ty_generics #where_clause {
+            #tolerance_const
+
             #[inline]
             fn rank_keys(&self) -> [f64; #count] {
                 [#(#values),*]
             }
         }
     })
+}
+
+/// The comparison of `keys` in order through `key_cmp` with `tolerance`, the
+/// first that does not tie deciding.
+fn compare_keys_within(keys: &[Key], tolerance: TokenStream2) -> TokenStream2 {
+    let steps = keys.iter().map(|key| {
+        let value = &key.value;
+        let value_other = &key.value_other;
+        let (lower, higher) = match key.direction {
+            Direction::Min => (quote!(true), quote!(false)),
+            Direction::Max => (quote!(false), quote!(true)),
+        };
+        quote! {
+            match ::optopus::trait_defs::key_cmp(
+                (#value as f64),
+                (#value_other as f64),
+                #tolerance,
+            ) {
+                ::std::cmp::Ordering::Less => return #lower,
+                ::std::cmp::Ordering::Greater => return #higher,
+                ::std::cmp::Ordering::Equal => {}
+            }
+        }
+    });
+    quote! {
+        #(#steps)*
+        false
+    }
 }
 
 /// The comparison of `keys` in order, the first that differs deciding.
@@ -508,26 +556,45 @@ fn compare_keys(keys: &[Key]) -> TokenStream2 {
     }
 }
 
-/// The keys named on the type, with the span of the first `rankable` attribute.
-fn container_keys(input: &DeriveInput) -> syn::Result<Option<(proc_macro2::Span, Vec<Key>)>> {
+/// The keys named on the type, with the span of the first `rankable` attribute
+/// that names one, and the tolerance with the span of its entry.
+type ContainerKeys = (
+    Option<(proc_macro2::Span, Vec<Key>)>,
+    Option<(proc_macro2::Span, Expr)>,
+);
+
+fn container_keys(input: &DeriveInput) -> syn::Result<ContainerKeys> {
     let mut found: Option<(proc_macro2::Span, Vec<Key>)> = None;
+    let mut tolerance: Option<(proc_macro2::Span, Expr)> = None;
     for attr in input.attrs.iter().filter(|a| a.path().is_ident("rankable")) {
         let entries = attr.parse_args_with(
             syn::punctuated::Punctuated::<syn::MetaNameValue, Token![,]>::parse_terminated,
         )?;
-        let keys = found.get_or_insert_with(|| (attr.span(), Vec::new()));
         for entry in entries {
-            let direction = Direction::parse(entry.path.require_ident()?)?;
+            let ident = entry.path.require_ident()?;
+            if ident == "tolerance" {
+                if tolerance.is_some() {
+                    return Err(syn::Error::new(
+                        entry.span(),
+                        "the type names one tolerance",
+                    ));
+                }
+                tolerance = Some((entry.span(), entry.value));
+                continue;
+            }
+            let direction = Direction::parse(ident)?;
             let (on_self, on_other) = key_access(&entry.value)?;
+            let keys = found.get_or_insert_with(|| (attr.span(), Vec::new()));
             keys.1.push(Key {
                 direction,
                 on_self,
                 on_other,
                 value: read_on(&entry.value, quote!(self))?,
+                value_other: read_on(&entry.value, quote!(other))?,
             });
         }
     }
-    Ok(found)
+    Ok((found, tolerance))
 }
 
 /// How a key named on the type is read, a field or a method taking `&self`.
@@ -593,6 +660,7 @@ fn field_keys(input: &DeriveInput) -> syn::Result<Option<Vec<Key>>> {
                 on_self: quote!(&self.#access),
                 on_other: quote!(&other.#access),
                 value: quote!(self.#access),
+                value_other: quote!(other.#access),
             });
         }
     }

@@ -245,10 +245,20 @@ pub enum ObjectiveMode {
 /// incrementally; [`Vrp::solution_from_routes`] recomputes all of them from
 /// scratch and is the reference the incremental updates are tested against.
 ///
-/// All three violations (capacity, route time, minimum fleet usage) are soft,
-/// weighted by [`Vrp::penalty_weight`] exactly as [`crate::problem::Vrp`]
-/// handles capacity.
+/// All three violations (capacity, route time, minimum fleet usage) are soft.
+/// Solutions rank by the [`violation`](VrpSolution::violation) first and the
+/// [`base_objective`](VrpSolution::base_objective) second, each compared within
+/// [`Vrp::TOLERANCE`], so a solution that violates less is better whatever it
+/// costs, and rounding in the caches never decides. `objective` adds the
+/// violation weighted by [`Vrp::penalty_weight`] to the base. It is the number
+/// the searches that weigh a worsening read, and it ranks the same way except
+/// where a route-time excess below one time unit is outweighed by the cost.
 #[derive(Debug, Clone, Rankable, Evaluate)]
+#[rankable(
+    minimize = violation(),
+    minimize = base_objective,
+    tolerance = Vrp::TOLERANCE
+)]
 pub struct VrpSolution {
     /// Ordered customers per slot; length is always `num_slots`.
     pub routes: Vec<Vec<usize>>,
@@ -273,6 +283,9 @@ pub struct VrpSolution {
     /// `Σ fixed_cost(type)` over the used slots plus
     /// `Σ variable_cost_per_distance(type) × route_distance` over all slots.
     pub total_cost: f64,
+    /// The objective before the penalty (see [`Vrp`]),
+    /// `time_component + cost_weight · total_cost`.
+    pub base_objective: f64,
     /// Penalty-augmented objective (see [`Vrp`]); lower is better.
     #[objective(minimize)]
     pub objective: f64,
@@ -356,7 +369,11 @@ impl VrpSolution {
 ///           + penalty_weight() * (overload + time_excess + min_count_shortfall)
 /// ```
 ///
-/// Minimized. The distances live in a [`DistanceStore`]. An instance is built
+/// Minimized. Solutions are compared violation first and the rest of the
+/// objective second, within [`Vrp::TOLERANCE`], as [`VrpSolution`] states, and
+/// this sum is the number the searches that weigh a worsening read.
+///
+/// The distances live in a [`DistanceStore`]. An instance is built
 /// from 2D coordinates, either as the full distance matrix or as the `k`
 /// nearest neighbours of every node with the remaining pairs computed from
 /// the coordinates on demand ([`Vrp::with_nearest_neighbors`]), or from a
@@ -403,6 +420,14 @@ pub(crate) struct SlotTerms {
 }
 
 impl Vrp {
+    /// The relative tolerance solutions and moves compare their keys with,
+    /// as [`key_cmp`](crate::trait_defs::key_cmp) takes it.
+    ///
+    /// The caches move by summed deltas, so a solution carries rounding that
+    /// grows with the objective and with the moves it took. Two keys this
+    /// close tie, so that rounding is never counted as an improvement, and a
+    /// violation this close to zero ties with none.
+    pub const TOLERANCE: f64 = 1e-8;
     /// Largest number of nodes (depot + customers) for which the coordinate
     /// constructors keep the full distance matrix (memory `nodes² × 8` bytes,
     /// 32 MB at this cap). Larger instances keep
@@ -869,9 +894,21 @@ impl Vrp {
     /// [`Vrp::penalty_weight`]. The searches that adapt their own penalty
     /// price their solutions with it; `sol.objective` itself is not read.
     pub fn objective_under(&self, sol: &VrpSolution, penalty: f64) -> f64 {
-        sol.time_component(self.objective_mode)
-            + self.cost_weight * sol.total_cost
-            + penalty * sol.violation()
+        self.base_objective_of(sol) + penalty * sol.violation()
+    }
+
+    /// The objective of `sol`'s caches before the penalty,
+    /// `time_component + cost_weight · total_cost`.
+    fn base_objective_of(&self, sol: &VrpSolution) -> f64 {
+        sol.time_component(self.objective_mode) + self.cost_weight * sol.total_cost
+    }
+
+    /// Sets `sol.base_objective` and `sol.objective` from its other caches,
+    /// the objective under `penalty`. Every write of the two from scratch goes
+    /// through here, so they cannot disagree.
+    pub(crate) fn price_objective(&self, sol: &mut VrpSolution, penalty: f64) {
+        sol.base_objective = self.base_objective_of(sol);
+        sol.objective = sol.base_objective + penalty * sol.violation();
     }
 
     /// Penalty weight applied per unit of overload, of route-time excess and of
@@ -1024,9 +1061,10 @@ impl Vrp {
             time_excess,
             min_count_shortfall,
             total_cost,
+            base_objective: 0.0,
             objective: 0.0,
         };
-        sol.objective = self.objective_under(&sol, self.penalty_weight());
+        self.price_objective(&mut sol, self.penalty_weight());
         Ok(sol)
     }
 
@@ -1528,8 +1566,42 @@ mod tests {
         // Fixed 6.0 (two used trucks and a van) plus variable 2.2.
         assert!((sol.total_cost - 8.2).abs() < 1e-9);
 
+        assert!((sol.base_objective - (16.5 + 8.2)).abs() < 1e-9);
         let expected = 16.5 + 8.2 + prob.penalty_weight() * 5.0;
         assert!((sol.objective - expected).abs() < 1e-6);
+    }
+
+    /// The violation decides before the base whatever the base saves, and
+    /// differences within `Vrp::TOLERANCE` are not differences.
+    #[test]
+    fn solutions_rank_by_violation_then_base_within_the_tolerance() {
+        let prob = fixture(ObjectiveMode::TotalTime);
+        let sol = prob
+            .solution_from_routes(vec![vec![1], vec![2], vec![3]])
+            .unwrap();
+        assert_eq!(sol.violation(), 0.0);
+
+        // Rounding left by summed deltas ties both ways, on either key.
+        let mut drifted = sol.clone();
+        drifted.base_objective *= 1.0 - 1e-12;
+        drifted.time_excess = 1e-12;
+        assert!(!drifted.is_better_than(&sol));
+        assert!(!sol.is_better_than(&drifted));
+
+        // A fraction of a time unit late loses to any saving in the base,
+        // though the penalized number ranks it the other way.
+        let mut late = sol.clone();
+        late.time_excess = 1e-3;
+        late.base_objective = sol.base_objective - 0.5 * prob.penalty_weight();
+        late.objective = late.base_objective + prob.penalty_weight() * late.violation();
+        assert!(late.objective < sol.objective);
+        assert!(sol.is_better_than(&late));
+        assert!(!late.is_better_than(&sol));
+
+        // With the violation tied, the base decides.
+        let mut cheaper = sol.clone();
+        cheaper.base_objective -= 1.0;
+        assert!(cheaper.is_better_than(&sol));
     }
 
     #[test]

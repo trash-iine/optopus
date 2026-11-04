@@ -139,12 +139,23 @@ max_iteration = 5
     let report = run_benchmark(&config_toml);
     let _ = std::fs::remove_file(&instance);
 
+    assert!(
+        report.results[0]
+            .runs
+            .iter()
+            .any(|run| !run.trajectory.is_empty()),
+        "an improving run must record trajectory points"
+    );
     for run in &report.results[0].runs {
         assert_eq!(run.status, "success");
-        assert!(
-            !run.trajectory.is_empty(),
-            "an improving run must record trajectory points"
-        );
+        if run.trajectory.is_empty() {
+            // The run started at its best. Sub-runs that found the same value
+            // again did not improve the run, so the curve has no point and the
+            // best was there from the start.
+            assert_eq!(Some(run.best_objective), run.initial_objective);
+            assert_eq!(run.time_to_best_secs, 0.0);
+            continue;
+        }
         // MaxCut maximizes: objectives strictly increase, times never decrease.
         for pair in run.trajectory.windows(2) {
             assert!(pair[1].1 > pair[0].1, "objective must strictly improve");

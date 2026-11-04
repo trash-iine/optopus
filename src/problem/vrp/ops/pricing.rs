@@ -170,6 +170,12 @@ pub(crate) struct EditPrice {
     /// Change in the objective under the penalty the edit was priced with;
     /// negative is an improvement.
     pub gain: f64,
+    /// Change in the objective before the penalty, the base the solution
+    /// ranks by second.
+    pub base_delta: f64,
+    /// Change in the violation the solution ranks by first, the three soft
+    /// constraints summed as [`VrpSolution::violation`] sums them.
+    pub violation_delta: f64,
     pub delta_total_time: f64,
     pub delta_cost: f64,
     pub delta_overload: i64,
@@ -273,12 +279,14 @@ pub(crate) fn price<const N: usize>(
             (new - sol.makespan, Some(new))
         }
     };
-    let gain = time_component_delta
-        + prob.cost_weight() * delta_cost
-        + penalty * (delta_overload as f64 + delta_time_excess + delta_shortfall as f64);
+    let base_delta = time_component_delta + prob.cost_weight() * delta_cost;
+    let violation_delta = delta_overload as f64 + delta_time_excess + delta_shortfall as f64;
+    let gain = base_delta + penalty * violation_delta;
 
     EditPrice {
         gain,
+        base_delta,
+        violation_delta,
         delta_total_time,
         delta_cost,
         delta_overload,
@@ -382,6 +390,7 @@ pub(crate) fn apply<const N: usize>(
     sol.time_excess += price.delta_time_excess;
     sol.min_count_shortfall += price.delta_shortfall;
     sol.total_cost += price.delta_cost;
+    sol.base_objective += price.base_delta;
     sol.objective += price.gain;
 
     sol.makespan = match price.makespan_after {

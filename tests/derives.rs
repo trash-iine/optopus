@@ -179,6 +179,54 @@ fn is_better_after_move_adds_the_move_to_the_solution_key_by_key() {
     assert!(!is_better_after_move(&still, &at, &at));
 }
 
+/// Keys named on the type with a tolerance, one maximized to check that the
+/// direction survives the tolerant comparison.
+#[derive(Rankable)]
+#[rankable(minimize = lateness, maximize = value, tolerance = 1e-6)]
+struct Delivery {
+    lateness: f64,
+    value: f64,
+}
+
+/// The same with the keys on the fields, a tolerance on the type.
+#[derive(Rankable)]
+#[rankable(tolerance = 1e-6)]
+struct DeliveryMove {
+    #[rankable(minimize)]
+    lateness: f64,
+    #[rankable(maximize)]
+    value: f64,
+}
+
+#[test]
+fn a_tolerance_ties_keys_closer_than_it_relative_to_their_size() {
+    let at = |lateness, value| Delivery { lateness, value };
+    assert_eq!(<Delivery as RankKeys<2>>::TOLERANCE, 1e-6);
+    assert_eq!(<DeliveryMove as RankKeys<2>>::TOLERANCE, 1e-6);
+    assert_eq!(<Reassign as RankKeys<2>>::TOLERANCE, 0.0);
+
+    // Relative to 1000, 1e-4 is inside 1e-6 and 1e-2 is outside it.
+    assert!(!at(0.0, 1000.0 + 1e-4).is_better_than(&at(0.0, 1000.0)));
+    assert!(at(0.0, 1000.0 + 1e-2).is_better_than(&at(0.0, 1000.0)));
+    // Near zero the floor of 1 makes it absolute, so the second key decides.
+    assert!(at(1e-9, 2.0).is_better_than(&at(0.0, 1.0)));
+    assert!(at(0.0, 1.0).is_better_than(&at(1e-3, 2.0)));
+
+    // A move compares within the solution's tolerance.
+    let step = |lateness, value| DeliveryMove { lateness, value };
+    let src = at(0.0, 1000.0);
+    assert!(!is_better_after_move(&step(0.0, 1e-4), &src, &src));
+    assert!(is_better_after_move(&step(0.0, 1e-2), &src, &src));
+    assert!(is_better_after_move(&step(1e-9, 1.0), &src, &src));
+    assert!(!is_better_after_move(&step(1e-3, 50.0), &src, &src));
+    // And moves rank among themselves within theirs.
+    assert_eq!(rank_cmp(&step(1e-9, 1.0), &step(0.0, 1.0)), Ordering::Equal);
+    assert_eq!(
+        rank_cmp(&step(0.0, 2.0), &step(0.0, 1.0)),
+        Ordering::Greater
+    );
+}
+
 #[test]
 fn is_better_after_move_with_one_key_is_the_objective_plus_the_gain() {
     // Maximized, so a gain of 1 on 2 lands at 3.

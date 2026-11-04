@@ -134,6 +134,45 @@ use super::Evaluate;
 /// }
 /// ```
 ///
+/// # Tolerance
+///
+/// Keys that are sums of floats carry rounding, so two solutions that are the
+/// same can differ in the last digits, and a search would count that
+/// difference as an improvement. `#[rankable(tolerance = ..)]` on the type
+/// makes two keys tie when they are that close relative to their size, as
+/// [`key_cmp`] states, and the next key decides. It goes with keys named on
+/// the type or on the fields.
+///
+/// ```
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// #[rankable(minimize = violation, minimize = cost, tolerance = 1e-9)]
+/// struct Routes {
+///     violation: f64,
+///     cost: f64,
+/// }
+///
+/// let summed = Routes { violation: 0.1 + 0.2 - 0.3, cost: 99.0 };
+/// let feasible = Routes { violation: 0.0, cost: 100.0 };
+/// // The violation left by rounding ties with none, so the cost decides.
+/// assert!(summed.is_better_than(&feasible));
+/// ```
+///
+/// With no keys the order is the objective, compared exactly by
+/// [`is_better_by_objective`], so a tolerance alone is refused.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable, Evaluate)]
+/// #[rankable(tolerance = 1e-9)]
+/// struct Tour {
+///     #[objective(minimize)]
+///     length: f64,
+/// }
+/// ```
+///
 /// # Moves
 ///
 /// A move ranks by the change it makes to each key of the solution, named with
@@ -183,15 +222,51 @@ pub trait Rankable {
 /// the changes it makes to the solution's, which is what [`is_better_after_move`]
 /// reads.
 pub trait RankKeys<const N: usize> {
+    /// The relative tolerance the keys are compared with, as [`key_cmp`]
+    /// takes it. `0.0`, the exact comparison, unless the type names one with
+    /// `#[rankable(tolerance = ..)]`.
+    const TOLERANCE: f64 = 0.0;
+
     fn rank_keys(&self) -> [f64; N];
+}
+
+/// How key `a` compares with key `b` when values within `tolerance` of each
+/// other, relative to the larger of `|a|`, `|b|` and `1`, tie.
+///
+/// `Less` when `a < b − t` and `Greater` when `a > b + t`, for
+/// `t = tolerance · max(1, |a|, |b|)`, and `Equal` otherwise. The floor of `1`
+/// makes the tolerance absolute near zero, where a violation left by rounding
+/// should tie with none. A NaN compares `Equal`, so the next key decides. With
+/// a tolerance of `0.0` this is the exact comparison.
+///
+/// ```
+/// use optopus::trait_defs::key_cmp;
+/// use std::cmp::Ordering;
+///
+/// assert_eq!(key_cmp(1000.0, 1000.0 + 1e-7, 1e-9), Ordering::Equal);
+/// assert_eq!(key_cmp(1000.0, 1000.0 + 1e-5, 1e-9), Ordering::Less);
+/// assert_eq!(key_cmp(1e-12, 0.0, 1e-9), Ordering::Equal);
+/// ```
+#[inline]
+pub fn key_cmp(a: f64, b: f64, tolerance: f64) -> std::cmp::Ordering {
+    let t = tolerance * a.abs().max(b.abs()).max(1.0);
+    if a < b - t {
+        std::cmp::Ordering::Less
+    } else if a > b + t {
+        std::cmp::Ordering::Greater
+    } else {
+        std::cmp::Ordering::Equal
+    }
 }
 
 /// Whether applying `mv` to `src` leads to a solution better than `other`.
 ///
 /// Each key of `src` plus the same key of `mv` is compared with the key of
 /// `other`, first to last, the first that differs deciding. Strict, so a move
-/// to a solution equal to `other` is not better. A move and a solution with a
-/// different number of keys do not compile.
+/// to a solution equal to `other` is not better. The solution's
+/// [`TOLERANCE`](RankKeys::TOLERANCE) is the one used, as its own
+/// [`Rankable`] order uses it. A move and a solution with a different number
+/// of keys do not compile.
 ///
 /// ```compile_fail
 /// use optopus::prelude::*;
@@ -229,11 +304,20 @@ where
     let over = other.rank_keys();
     for i in 0..N {
         let after = from[i] + delta[i];
-        if after < over[i] {
-            return true;
-        }
-        if after > over[i] {
-            return false;
+        // A constant, so a type with no tolerance keeps the plain comparison.
+        if S::TOLERANCE == 0.0 {
+            if after < over[i] {
+                return true;
+            }
+            if after > over[i] {
+                return false;
+            }
+        } else {
+            match key_cmp(after, over[i], S::TOLERANCE) {
+                std::cmp::Ordering::Less => return true,
+                std::cmp::Ordering::Greater => return false,
+                std::cmp::Ordering::Equal => {}
+            }
         }
     }
     false

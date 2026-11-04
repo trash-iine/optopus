@@ -71,7 +71,7 @@ impl Ruinable for Vrp {
         // cumulative distances are the descent's, and cloning them here would
         // allocate one vector per route to throw away.
         let mut sol = partial.state.sol.clone();
-        sol.objective = self.objective_under(&sol, self.penalty_weight());
+        self.price_objective(&mut sol, self.penalty_weight());
         sol
     }
 
