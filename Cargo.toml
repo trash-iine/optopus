@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["optimization", "metaheuristics", "simulated-annealing", "tabu-search", "maxcut"]
 categories = ["algorithms", "science", "mathematics"]
 authors = ["Trash-iine"]
-exclude = ["data/", "docs/", "result/", ".claude/", ".github/"]
+exclude = ["data/", "docs/", ".claude/", ".github/"]
 
 [workspace]
 members = ["optopus-derive"]
