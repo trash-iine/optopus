@@ -11,7 +11,7 @@ use crate::building_blocks::representation::IntVars;
 /// [`assign_delta`](Self::assign_delta).
 ///
 /// A move prices one number, the change in the objective, so the solution
-/// ranks by that objective too, with `#[derive(Rankable)]` and no `rank`
+/// ranks by that objective too, with `#[derive(Rankable)]` and no `rankable`
 /// attribute. That is the one key of [`RankKeys`] the moves add their change
 /// to.
 ///

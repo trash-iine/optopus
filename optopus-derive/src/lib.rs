@@ -9,29 +9,31 @@ use syn::{Data, DeriveInput, Expr, Fields, Ident, Index, Meta, Token, parse_macr
 
 /// Implements `optopus::trait_defs::Rankable`.
 ///
-/// With no `rank` attribute the order is the objective, and the type must
+/// With no `rankable` attribute the order is the objective, and the type must
 /// implement `Evaluate`. The impl compares the two objectives through
 /// `optopus::trait_defs::better_by_objective`.
 ///
-/// With `rank` attributes the order compares keys one after another, the first
-/// that differs deciding. The keys are named in one of two places, never both.
+/// With `rankable` attributes the order compares keys one after another, the
+/// first that differs deciding. The keys are named in one of two places, never
+/// both.
 ///
-/// - On fields, `#[rank(min)]` or `#[rank(max)]`, compared in the order the
-///   fields are declared.
-/// - On the type, `#[rank(min = violation(), max = value)]`, compared in the
-///   order written. A key is a field, or a method that takes only `&self`.
+/// - On fields, `#[rankable(minimize)]` or `#[rankable(maximize)]`, compared
+///   in the order the fields are declared.
+/// - On the type, `#[rankable(minimize = violation(), maximize = value)]`,
+///   compared in the order written. A key is a field, or a method that takes
+///   only `&self`.
 ///
-/// `min` ranks the lower key better and `max` the higher one. A key is a
-/// number, an integer or a float, and two keys that are neither less nor
-/// greater count as equal.
+/// `minimize` ranks the lower key better and `maximize` the higher one, the
+/// same words `Evaluate` takes. A key is a number, an integer or a float, and
+/// two keys that are neither less nor greater count as equal.
 ///
 /// The derive also implements `optopus::trait_defs::RankKeys`, the same keys
 /// as `f64` turned so that lower is better, which is what
-/// `optopus::trait_defs::better_after_move` adds a move to. With no `rank`
+/// `optopus::trait_defs::better_after_move` adds a move to. With no `rankable`
 /// attribute that is the one key `evaluate().minimized()`.
 ///
 /// The `Rankable` page of the optopus documentation has examples.
-#[proc_macro_derive(Rankable, attributes(rank))]
+#[proc_macro_derive(Rankable, attributes(rankable))]
 pub fn derive_rankable(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match rankable(&input) {
@@ -393,11 +395,11 @@ enum Direction {
 impl Direction {
     fn parse(ident: &Ident) -> syn::Result<Self> {
         match ident.to_string().as_str() {
-            "min" => Ok(Self::Min),
-            "max" => Ok(Self::Max),
+            "minimize" => Ok(Self::Min),
+            "maximize" => Ok(Self::Max),
             other => Err(syn::Error::new(
                 ident.span(),
-                format!("expected `min` or `max`, found `{other}`"),
+                format!("expected `minimize` or `maximize`, found `{other}`"),
             )),
         }
     }
@@ -504,10 +506,10 @@ fn compare_keys(keys: &[Key]) -> TokenStream2 {
     }
 }
 
-/// The keys named on the type, with the span of the first `rank` attribute.
+/// The keys named on the type, with the span of the first `rankable` attribute.
 fn container_keys(input: &DeriveInput) -> syn::Result<Option<(proc_macro2::Span, Vec<Key>)>> {
     let mut found: Option<(proc_macro2::Span, Vec<Key>)> = None;
-    for attr in input.attrs.iter().filter(|a| a.path().is_ident("rank")) {
+    for attr in input.attrs.iter().filter(|a| a.path().is_ident("rankable")) {
         let entries = attr.parse_args_with(
             syn::punctuated::Punctuated::<syn::MetaNameValue, Token![,]>::parse_terminated,
         )?;
@@ -567,11 +569,11 @@ fn field_keys(input: &DeriveInput) -> syn::Result<Option<Vec<Key>>> {
     };
     let mut keys = Vec::new();
     for (i, field) in fields.iter().enumerate() {
-        for attr in field.attrs.iter().filter(|a| a.path().is_ident("rank")) {
+        for attr in field.attrs.iter().filter(|a| a.path().is_ident("rankable")) {
             let Meta::List(list) = &attr.meta else {
                 return Err(syn::Error::new(
                     attr.span(),
-                    "expected `#[rank(min)]` or `#[rank(max)]`",
+                    "expected `#[rankable(minimize)]` or `#[rankable(maximize)]`",
                 ));
             };
             let direction = Direction::parse(&list.parse_args::<Ident>()?)?;

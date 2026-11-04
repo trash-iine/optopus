@@ -25,10 +25,10 @@ pub struct GraphColoringRecolorNeighbor {
     /// The target color.
     pub new_color: usize,
     /// Change in the number of conflicts.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub conflicts_delta: i64,
     /// Change in the number of colors used.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub colors_delta: i64,
     /// Change in the penalized objective,
     /// `colors_delta + penalty_weight * conflicts_delta`.
@@ -133,11 +133,11 @@ pub struct GraphColoringSwapNeighbor {
     pub i: usize,
     pub j: usize,
     /// Change in the number of conflicts.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub conflicts_delta: i64,
     /// Change in the number of colors used, always `0`, kept so the move
     /// has the solution's two keys.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub colors_delta: i64,
     /// Change in the penalized objective,
     /// `penalty_weight * conflicts_delta`.

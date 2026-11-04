@@ -66,11 +66,11 @@ field that already holds an `Evaluable<f64>` is marked with a bare
 `#[derive(Rankable)]` gives the move [`Rankable`](../traits.md#core-trait-reference),
 and the solution derives it the same way. `Rankable` is how `LocalSearch`,
 `RandomWalk`, `BeamSearch` and `TabuSearch` pick a move and how every
-heuristic decides whether a solution is an improvement. With no `rank`
+heuristic decides whether a solution is an improvement. With no `rankable`
 attribute it compares the two `evaluate` values with the direction applied.
 A problem whose order is not its objective, one that compares violations
 before cost for example, names its keys instead, as in
-`#[rank(min = violation(), min = cost)]`, and keeps `Evaluate` as the number
+`#[rankable(minimize = violation(), minimize = cost)]`, and keeps `Evaluate` as the number
 the annealing heuristics read. Its moves name the same keys, each holding
 the change the move makes to that key. The [`Rankable` rustdoc](../api/optopus/trait_defs/trait.Rankable.html)
 has the forms.

@@ -24,10 +24,10 @@ pub struct VertexCoverFlipNeighbor {
     /// Index of the vertex to flip.
     pub i: usize,
     /// Change in the number of uncovered edges.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub uncovered_delta: i32,
     /// Change in the cover size, `+1` or `-1`.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub cover_delta: i32,
     /// Change in the penalized objective,
     /// `cover_delta + penalty_weight * uncovered_delta`.
@@ -149,11 +149,11 @@ pub struct VertexCoverSwapNeighbor {
     pub i: usize,
     pub j: usize,
     /// Change in the number of uncovered edges.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub uncovered_delta: i32,
     /// Change in the cover size, always `0`, kept so the move has the
     /// solution's two keys.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub cover_delta: i32,
     /// Change in the penalized objective, `penalty_weight * uncovered_delta`.
     #[objective(minimize)]

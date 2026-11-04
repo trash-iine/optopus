@@ -21,10 +21,10 @@ fn no_attribute_ranks_by_the_objective() {
 /// them that is not a key.
 #[derive(Rankable)]
 struct Assignment {
-    #[rank(min)]
+    #[rankable(minimize)]
     violations: u32,
     _label: &'static str,
-    #[rank(max)]
+    #[rankable(maximize)]
     value: f64,
 }
 
@@ -52,7 +52,7 @@ fn field_keys_compare_in_declaration_order() {
 
 /// Keys on the type, a method and then a field.
 #[derive(Rankable)]
-#[rank(min = violation(), min = cost)]
+#[rankable(minimize = violation(), minimize = cost)]
 struct Routes {
     overload: i64,
     lateness: f64,
@@ -89,7 +89,7 @@ fn type_keys_read_methods_and_fields() {
 /// A tuple struct with a const parameter, which the macro_rules form could not
 /// name.
 #[derive(Rankable)]
-struct Pair<const K: usize>(#[rank(max)] u32, #[rank(min)] u32);
+struct Pair<const K: usize>(#[rankable(maximize)] u32, #[rankable(minimize)] u32);
 
 #[test]
 fn tuple_fields_and_generics() {
@@ -127,7 +127,7 @@ fn a_generic_type_ranks_by_its_objective() {
 fn rank_keys_are_the_keys_turned_so_that_lower_is_better() {
     // No attribute: the one key is the minimized objective.
     assert_eq!(Cut(2.5).rank_keys(), [-2.5]);
-    // Field keys in declaration order, the `max` one negated.
+    // Field keys in declaration order, the `maximize` one negated.
     assert_eq!(assignment(3, 7.0).rank_keys(), [3.0, -7.0]);
     // Keys on the type, a method then a field.
     let routes = Routes {
@@ -143,9 +143,9 @@ fn rank_keys_are_the_keys_turned_so_that_lower_is_better() {
 /// A move of [`Assignment`], its keys the changes it makes to the solution's.
 #[derive(Rankable)]
 struct Reassign {
-    #[rank(min)]
+    #[rankable(minimize)]
     violations: i32,
-    #[rank(max)]
+    #[rankable(maximize)]
     value: f64,
 }
 

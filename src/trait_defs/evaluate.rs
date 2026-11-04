@@ -68,7 +68,7 @@ impl Evaluable<f64> {
 ///
 /// [`Rankable`](super::Rankable) answers "is this better?" and is enough for a
 /// search that only compares. Implement this as well where the number itself is
-/// used. Where the two agree, `#[derive(Rankable)]` with no `rank` attribute
+/// used. Where the two agree, `#[derive(Rankable)]` with no `rankable` attribute
 /// writes the `Rankable` impl from this one.
 ///
 /// `T` is the numeric type returned (default `f64`). Use `T = f64` for

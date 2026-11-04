@@ -54,8 +54,8 @@ impl MyMove {
 
 `#[derive(Rankable)]` で move に [`Rankable`](../traits.md#core-trait-reference) が付きます。解にも同じように derive します。
 `LocalSearch`、`RandomWalk`、`BeamSearch`、`TabuSearch` が move を選ぶのも、どのヒューリスティクスでも解が改善したかを判断するのもこれを通してです。
-`rank` 属性がなければ、向きを反映したうえで二つの `evaluate` の値を比べます。
-順序が目的関数値そのものでない問題、たとえば違反をコストより先に比べる問題は、`#[rank(min = violation(), min = cost)]` のように比べるキーを書き、`Evaluate` は焼きなまし系のヒューリスティクスが読む数値として残します。
+`rankable` 属性がなければ、向きを反映したうえで二つの `evaluate` の値を比べます。
+順序が目的関数値そのものでない問題、たとえば違反をコストより先に比べる問題は、`#[rankable(minimize = violation(), minimize = cost)]` のように比べるキーを書き、`Evaluate` は焼きなまし系のヒューリスティクスが読む数値として残します。
 その問題の move も同じキーを書き、それぞれに move がそのキーを変える量を持たせます。
 書き方の一覧は [`Rankable` の rustdoc](../../api/optopus/trait_defs/trait.Rankable.html) にあります。
 

@@ -44,10 +44,10 @@ pub struct GraphColoringSolution {
     class_size: Vec<usize>,
     /// Number of edges whose endpoints share a color, the first thing
     /// solutions are ranked by.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub conflicts: usize,
     /// Number of non-empty color classes, ranked by after the conflicts.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub colors_used: usize,
     /// Penalty-augmented objective: `colors_used + penalty_weight * conflicts`.
     #[objective(minimize)]

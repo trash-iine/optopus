@@ -17,7 +17,7 @@ use super::Evaluate;
 /// # Deriving it
 ///
 /// `#[derive(Rankable)]` writes the impl, and every built-in solution and move
-/// uses it. With no `rank` attribute the order is the objective, compared by
+/// uses it. With no `rankable` attribute the order is the objective, compared by
 /// [`better_by_objective`], so the type also implements `Evaluate`.
 ///
 /// ```
@@ -36,18 +36,18 @@ use super::Evaluate;
 /// ```
 ///
 /// An order of keys compared one after another, the first that differs
-/// deciding, is named with `rank` attributes. `min` ranks the lower key better
-/// and `max` the higher one. On fields they are compared in the order the
-/// fields are declared.
+/// deciding, is named with `rankable` attributes. `minimize` ranks the lower
+/// key better and `maximize` the higher one, the same words as `Evaluate`. On
+/// fields they are compared in the order the fields are declared.
 ///
 /// ```
 /// use optopus::prelude::*;
 ///
 /// #[derive(Rankable)]
 /// struct Packing {
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     overfull_bins: u32,
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     bins: u32,
 /// }
 ///
@@ -63,7 +63,7 @@ use super::Evaluate;
 /// use optopus::prelude::*;
 ///
 /// #[derive(Rankable)]
-/// #[rank(min = violation(), min = cost)]
+/// #[rankable(minimize = violation(), minimize = cost)]
 /// struct Routes {
 ///     overload: f64,
 ///     lateness: f64,
@@ -88,9 +88,22 @@ use super::Evaluate;
 /// use optopus::prelude::*;
 ///
 /// #[derive(Rankable)]
-/// #[rank(min = cost)]
+/// #[rankable(minimize = cost)]
 /// struct Twice {
-///     #[rank(min)]
+///     #[rankable(minimize)]
+///     cost: f64,
+/// }
+/// ```
+///
+/// The direction is spelled out, `minimize` or `maximize`, as `Evaluate`
+/// spells it.
+///
+/// ```compile_fail
+/// use optopus::prelude::*;
+///
+/// #[derive(Rankable)]
+/// struct Short {
+///     #[rankable(min)]
 ///     cost: f64,
 /// }
 /// ```
@@ -102,7 +115,7 @@ use super::Evaluate;
 /// use optopus::prelude::*;
 ///
 /// #[derive(Rankable)]
-/// #[rank(min = cost * 2.0)]
+/// #[rankable(minimize = cost * 2.0)]
 /// struct Scaled {
 ///     cost: f64,
 /// }
@@ -116,7 +129,7 @@ use super::Evaluate;
 ///
 /// #[derive(Rankable)]
 /// struct Named {
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     name: String,
 /// }
 /// ```
@@ -138,17 +151,17 @@ use super::Evaluate;
 ///
 /// #[derive(Rankable)]
 /// struct Cover {
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     uncovered: i64,
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     size: i64,
 /// }
 ///
 /// #[derive(Rankable)]
 /// struct Remove {
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     uncovered: i64,
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     size: i64,
 /// }
 ///
@@ -164,8 +177,8 @@ pub trait Rankable {
 /// The keys a [`Rankable`] order compares, first to last, each as an `f64`
 /// turned so that lower is better.
 ///
-/// `#[derive(Rankable)]` implements it. A `max` key is negated, and with no
-/// `rank` attribute the one key is
+/// `#[derive(Rankable)]` implements it. A `maximize` key is negated, and with no
+/// `rankable` attribute the one key is
 /// [`evaluate().minimized()`](super::Evaluable::minimized). A move's keys are
 /// the changes it makes to the solution's, which is what [`better_after_move`]
 /// reads.
@@ -213,9 +226,9 @@ impl<T: RankKey + ?Sized> RankKey for &T {
 ///
 /// #[derive(Rankable)]
 /// struct Cover {
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     uncovered: i64,
-///     #[rank(min)]
+///     #[rankable(minimize)]
 ///     size: i64,
 /// }
 ///
@@ -260,7 +273,7 @@ where
 ///
 /// Strict, so two equal values rank as neither better, which is what
 /// [`rank_cmp`] reports as `Equal` and what the tie rules downstream are
-/// written against. `#[derive(Rankable)]` with no `rank` attribute implements
+/// written against. `#[derive(Rankable)]` with no `rankable` attribute implements
 /// [`Rankable`] with this, and an impl written by hand can call it too.
 #[inline]
 pub fn better_by_objective<T: Evaluate>(a: &T, b: &T) -> bool {

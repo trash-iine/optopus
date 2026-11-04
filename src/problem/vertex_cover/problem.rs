@@ -35,11 +35,11 @@ pub struct VertexCoverSolution {
     pub objective: i32,
     /// Number of edges currently uncovered (both endpoints out of the cover),
     /// the first thing solutions are ranked by.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub uncovered_edges: usize,
     /// Number of vertices currently in the cover, ranked by after the
     /// uncovered edges.
-    #[rank(min)]
+    #[rankable(minimize)]
     pub cover_size: usize,
 }
 
