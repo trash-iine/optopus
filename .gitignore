@@ -2,6 +2,9 @@
 .DS_Store
 .claude/
 
+# Where the benchmark CLI writes its reports. It is created on the first run.
+/result/
+
 # Raw benchmark result TOMLs carry full per-run solution vectors and are huge
 # (100s of MB per large-band file). Only the slim summaries + index.json are
 # version-controlled and served by the viewer; regenerate slims locally with
