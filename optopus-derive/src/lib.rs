@@ -405,11 +405,13 @@ impl Direction {
     }
 }
 
-/// One key, as the code that reads it from `self` and from `other`.
+/// One key, as the code that reads it from `self` and from `other`, and its
+/// value on `self`, which `RankKeys` casts to `f64`.
 struct Key {
     direction: Direction,
     on_self: TokenStream2,
     on_other: TokenStream2,
+    value: TokenStream2,
 }
 
 fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
@@ -454,8 +456,8 @@ fn rankable(input: &DeriveInput) -> syn::Result<TokenStream2> {
     let body = compare_keys(&keys);
     let count = keys.len();
     let values = keys.iter().map(|key| {
-        let on_self = &key.on_self;
-        let value = quote!(::optopus::trait_defs::RankKey::to_key(&(#on_self)));
+        let value = &key.value;
+        let value = quote!((#value as f64));
         match key.direction {
             Direction::Min => value,
             Direction::Max => quote!(-#value),
@@ -521,6 +523,7 @@ fn container_keys(input: &DeriveInput) -> syn::Result<Option<(proc_macro2::Span,
                 direction,
                 on_self,
                 on_other,
+                value: read_on(&entry.value, quote!(self))?,
             });
         }
     }
@@ -589,6 +592,7 @@ fn field_keys(input: &DeriveInput) -> syn::Result<Option<Vec<Key>>> {
                 direction,
                 on_self: quote!(&self.#access),
                 on_other: quote!(&other.#access),
+                value: quote!(self.#access),
             });
         }
     }

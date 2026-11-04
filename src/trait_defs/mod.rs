@@ -39,8 +39,8 @@ pub use neighbor::MoveToNeighbor;
 pub use optopus_derive::{Distance, EnabledTabu, Evaluate, Rankable};
 pub use problem::ProblemTrait;
 pub use rankable::{
-    Distance, RankKey, RankKeys, Rankable, filter_best, is_better_after_move,
-    is_better_by_objective, rank_cmp,
+    Distance, RankKeys, Rankable, filter_best, is_better_after_move, is_better_by_objective,
+    rank_cmp,
 };
 pub use reduction::ProblemReduction;
 pub use ruinable::{LocalRepair, Ruinable};

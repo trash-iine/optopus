@@ -186,34 +186,6 @@ pub trait RankKeys<const N: usize> {
     fn rank_keys(&self) -> [f64; N];
 }
 
-/// A number a derived key is read as, implemented for every primitive
-/// integer and float.
-pub trait RankKey {
-    fn to_key(&self) -> f64;
-}
-
-macro_rules! rank_key_as_f64 {
-    ($($ty:ty),+) => {
-        $(impl RankKey for $ty {
-            #[inline]
-            fn to_key(&self) -> f64 {
-                *self as f64
-            }
-        })+
-    };
-}
-
-rank_key_as_f64!(
-    i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64
-);
-
-impl<T: RankKey + ?Sized> RankKey for &T {
-    #[inline]
-    fn to_key(&self) -> f64 {
-        (**self).to_key()
-    }
-}
-
 /// Whether applying `mv` to `src` leads to a solution better than `other`.
 ///
 /// Each key of `src` plus the same key of `mv` is compared with the key of
