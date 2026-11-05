@@ -15,6 +15,10 @@ pub struct SingleRunResult {
     pub run_index: usize,
     pub status: String,
     pub best_objective: f64,
+    /// Whether the best solution meets every constraint of its problem. Absent
+    /// on a problem with no constraint a solution can break, and on failed runs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub feasible: Option<bool>,
     pub best_iteration: u64,
     pub time_to_best_secs: f64,
     pub total_time_secs: f64,
@@ -63,6 +67,11 @@ pub struct SingleRunResult {
 pub struct Summary {
     /// Number of successful runs used to compute the statistics.
     pub num_successful_runs: usize,
+    /// How many of the successful runs ended feasible, set as the runs'
+    /// `feasible` is. The objective statistics below are over every successful
+    /// run, feasible or not.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_feasible_runs: Option<usize>,
     pub best_objective: f64,
     pub avg_objective: f64,
     pub worst_objective: f64,
@@ -113,6 +122,7 @@ pub(crate) fn compute_summary(runs: &[SingleRunResult], minimize: bool) -> Summa
     if n == 0 {
         return Summary {
             num_successful_runs: 0,
+            num_feasible_runs: None,
             best_objective: f64::NAN,
             avg_objective: f64::NAN,
             worst_objective: f64::NAN,
@@ -179,6 +189,8 @@ pub(crate) fn compute_summary(runs: &[SingleRunResult], minimize: bool) -> Summa
     };
     let avg_n_accepted = avg_opt(accepted_vals);
     let avg_n_rejected = avg_opt(rejected_vals);
+    let feasible: Vec<bool> = successful.iter().filter_map(|r| r.feasible).collect();
+    let num_feasible_runs = (feasible.len() == n).then(|| feasible.iter().filter(|&&f| f).count());
     let avg_n_best_updates = avg_opt(
         successful
             .iter()
@@ -188,6 +200,7 @@ pub(crate) fn compute_summary(runs: &[SingleRunResult], minimize: bool) -> Summa
 
     Summary {
         num_successful_runs: n,
+        num_feasible_runs,
         best_objective: best,
         avg_objective: avg,
         worst_objective: worst,
@@ -244,6 +257,7 @@ mod report_tests {
             run_index: 0,
             status: status.to_string(),
             best_objective,
+            feasible: None,
             best_iteration: 1,
             time_to_best_secs: 0.5,
             total_time_secs: 1.0,
@@ -360,6 +374,26 @@ mod report_tests {
         runs[0].n_rejected = Some(0);
         let summary = compute_summary(&runs, false);
         assert_eq!(summary.avg_acceptance_rate, Some(0.375)); // (0 + 0.75) / 2
+    }
+
+    /// The feasible count is all-or-nothing like the averages, and a failed
+    /// run is not counted whatever it says.
+    #[test]
+    fn feasible_runs_are_counted_only_when_every_successful_run_says() {
+        let mut runs = [
+            run(1.0, "success"),
+            run(2.0, "success"),
+            run(3.0, "error: out of memory"),
+        ];
+        assert_eq!(compute_summary(&runs, true).num_feasible_runs, None);
+
+        runs[0].feasible = Some(true);
+        runs[1].feasible = Some(false);
+        runs[2].feasible = Some(true);
+        assert_eq!(compute_summary(&runs, true).num_feasible_runs, Some(1));
+
+        runs[1].feasible = None;
+        assert_eq!(compute_summary(&runs, true).num_feasible_runs, None);
     }
 
     #[test]

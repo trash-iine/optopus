@@ -143,6 +143,7 @@ BenchmarkReport
     ├── heuristic: HeuristicConfig
     ├── summary: Summary
     │   ├── num_successful_runs: usize
+    │   ├── num_feasible_runs: Option<usize>    (制約のある問題のみ)
     │   ├── best_objective / avg_objective / worst_objective: f64
     │   ├── std_objective: f64                  (母標準偏差)
     │   ├── best_time_to_best_secs / avg_time_to_best_secs: f64
@@ -154,6 +155,7 @@ BenchmarkReport
         ├── run_index: usize
         ├── status: String                       ("success" | "error: …")
         ├── best_objective: f64
+        ├── feasible: Option<bool>               (制約のある問題のみ)
         ├── best_iteration: u64
         ├── time_to_best_secs / total_time_secs: f64
         ├── initial_objective / improvement: Option<f64>
@@ -167,6 +169,10 @@ BenchmarkReport
 `trajectory` は anytime 曲線で、問題の最適化の向きに単調です。曲線はその実行の最良解に達した時点で終わるので、初期解がすでに最良だった実行では曲線が空になり、`time_to_best_secs` は 0 になります。ベンチマークビューアが描くのはこれです。
 エラーで終わった実行では `Option` のフィールドは出力されません。
 `proven_optimal` と `dual_bound` が出るのはトップレベルの `BranchAndBound` だけです。前者はその実行が `best_objective` の最適性を証明したかどうか、後者はまだ除外されていない解が到達しうる最良の目的関数値で、証明が済むと `best_objective` に一致します。
+
+`feasible` は、その実行の最良解がすべての制約を満たすかどうかです。解が制約を破りうる問題、つまり VRP、VertexCover、GraphColoring でだけ出力されます。
+`num_feasible_runs` は、成功した実行のうち実行可能な解で終わった数です。
+目的関数の統計は成功したすべての実行についてとるので、これらの問題では実行不能な実行のペナルティ付きの目的関数値も含まれます。
 
 解の符号化は次のとおりです。
 

@@ -332,10 +332,18 @@ impl VrpSolution {
     }
 
     /// The three violations as the objective sums them,
-    /// `overload + time_excess + min_count_shortfall`; `0.0` exactly when the
-    /// solution is feasible.
+    /// `overload + time_excess + min_count_shortfall`. The time excess is
+    /// summed from route edits, so a feasible solution can carry a rounding
+    /// residue here, and [`is_feasible`](Self::is_feasible) is the test.
     pub fn violation(&self) -> f64 {
         self.overload as f64 + self.time_excess + self.min_count_shortfall as f64
+    }
+
+    /// Whether the solution meets every constraint, its violation at most
+    /// [`Vrp::TOLERANCE`]. That is the bound within which the ranking ties a
+    /// violation with none.
+    pub fn is_feasible(&self) -> bool {
+        self.violation() <= Vrp::TOLERANCE
     }
 }
 
@@ -1587,6 +1595,7 @@ mod tests {
         drifted.time_excess = 1e-10;
         assert!(!drifted.is_better_than(&sol));
         assert!(!sol.is_better_than(&drifted));
+        assert!(drifted.is_feasible());
 
         // A fraction of a time unit late loses to any saving in the base,
         // though the penalized number ranks it the other way.
@@ -1595,6 +1604,7 @@ mod tests {
         late.base_objective = sol.base_objective - 0.5 * prob.penalty_weight();
         late.objective = late.base_objective + prob.penalty_weight() * late.violation();
         assert!(late.objective < sol.objective);
+        assert!(!late.is_feasible());
         assert!(sol.is_better_than(&late));
         assert!(!late.is_better_than(&sol));
 

@@ -252,6 +252,12 @@ pub trait BenchmarkSolution: Clone + Evaluate {
         self.evaluate().raw()
     }
     fn encode_as_indices(&self) -> Vec<usize>;
+    /// Whether the solution meets every constraint of its problem, read into
+    /// the report. `None`, the default, for a problem with no constraint a
+    /// solution can break.
+    fn is_feasible(&self) -> Option<bool> {
+        None
+    }
 }
 
 /// The positions of the `true` variables, a binary solution's encoding.
@@ -379,6 +385,9 @@ impl BenchmarkSolution for VrpSolution {
         }
         out
     }
+    fn is_feasible(&self) -> Option<bool> {
+        Some(VrpSolution::is_feasible(self))
+    }
 }
 
 impl BenchmarkProblem for VertexCover {
@@ -390,6 +399,9 @@ impl BenchmarkProblem for VertexCover {
 impl BenchmarkSolution for VertexCoverSolution {
     fn encode_as_indices(&self) -> Vec<usize> {
         true_indices(&self.x)
+    }
+    fn is_feasible(&self) -> Option<bool> {
+        Some(self.uncovered_edges == 0)
     }
 }
 
@@ -434,6 +446,9 @@ impl BenchmarkSolution for GraphColoringSolution {
     fn encode_as_indices(&self) -> Vec<usize> {
         // The color assigned to each vertex (0-indexed color ids).
         self.colors.clone()
+    }
+    fn is_feasible(&self) -> Option<bool> {
+        Some(self.conflicts == 0)
     }
 }
 

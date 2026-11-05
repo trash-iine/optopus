@@ -38,6 +38,8 @@ the penalty second, so a solution that violates less beats any that violates
 more whatever it costs. Both are compared within the relative tolerance
 `Vrp::TOLERANCE`, so the rounding the incrementally moved caches carry never
 counts as an improvement, and a violation that close to zero counts as none.
+`VrpSolution::is_feasible` reads a solution feasible by the same bound, and the
+benchmark report's `feasible` is that test.
 
 The penalty-augmented `objective` above is the number the searches that
 weigh how much worse a candidate is read, simulated annealing for one.
@@ -177,7 +179,7 @@ meaning a different set of trips.
 | `total_time` | `f64` | the sum of route durations |
 | `makespan` | `f64` | the longest route duration |
 | `overload` | `i64` | demand above capacity, summed over routes, `0` when feasible |
-| `time_excess` | `f64` | duration above each vehicle's limit, summed, `0` when feasible |
+| `time_excess` | `f64` | duration above each vehicle's limit, summed, `0` when feasible up to rounding |
 
 `Vrp::load_file` numbers the nodes of a CVRPLIB file from 0, so node `k` of the file is `k - 1`. The depot, node 1 of the file, becomes `0`, and a customer with id `k` appears in `routes` as `k - 1`. The remaining cached fields are listed in the rustdoc.
 
