@@ -279,6 +279,8 @@ where
     S: PairDelta,
     R: PairDelta,
 {
+    type Delta = f64;
+
     #[inline]
     fn domains(&self) -> &IntVars {
         &self.vars

@@ -19,13 +19,13 @@ fn main() {
     let gc = GraphColoring::new(Graph::erdos_renyi(120, 0.1, &mut seeded_rng(3)));
     let budget = 30_000;
     let shake = |moves| -> Box<dyn Heuristic<GraphColoring>> {
-        Box::new(RandomWalk::<GraphColoringRecolorNeighbor>::new(
+        Box::new(RandomWalk::<IntChangeNeighbor<2>>::new(
             StopCondition::iterations(moves),
         ))
     };
 
     let mut state = SearchState::new_with_seed(&gc, 42);
-    LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(budget))
+    LocalSearch::<IntChangeNeighbor<2>>::new(StopCondition::iterations(budget))
         .run(&mut state)
         .unwrap();
     report("LocalSearch", &state);
@@ -33,7 +33,7 @@ fn main() {
     let mut state = SearchState::new_with_seed(&gc, 42);
     VariableNeighborhoodSearch::<GraphColoring>::new(
         StopCondition::iterations(budget),
-        Box::new(LocalSearch::<GraphColoringRecolorNeighbor>::new(
+        Box::new(LocalSearch::<IntChangeNeighbor<2>>::new(
             StopCondition::iterations(budget),
         )),
         vec![shake(2), shake(5), shake(12)],

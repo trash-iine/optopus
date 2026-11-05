@@ -331,6 +331,7 @@ impl ProblemTrait for OwnProblem {
 }
 
 impl IntAssignment for OwnProblem {
+    type Delta = f64;
     fn domains(&self) -> &IntVars {
         self.0.domains()
     }

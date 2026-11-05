@@ -54,7 +54,7 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [Quadratic Assignment](docs/problems/qap.md) | `Qap` | `QapSwapNeighbor` |
 | [Bin Packing](docs/problems/bin_packing.md) | `BinPacking` | `BinPackingRelocateNeighbor`, `BinPackingSwapNeighbor` |
 | [VRP](docs/problems/vrp.md) | `Vrp` | `VrpRelocateNeighbor`, `VrpSwapNeighbor`, `VrpTwoOptNeighbor` |
-| [Graph Coloring](docs/problems/graph_coloring.md) | `GraphColoring` | `GraphColoringRecolorNeighbor`, `GraphColoringSwapNeighbor` |
+| [Graph Coloring](docs/problems/graph_coloring.md) | `GraphColoring` | `IntChangeNeighbor<2>`, `IntSwapNeighbor<2>` |
 | [Formula](docs/problems/formula.md) | `FormulaProblem` | `IntChangeNeighbor`, `IntSwapNeighbor` |
 | [Integer variables](docs/problems/integer.md) | `IntegerProblem` | `IntChangeNeighbor`, `IntSwapNeighbor`, `IntReverseNeighbor` |
 

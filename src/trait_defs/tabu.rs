@@ -135,8 +135,8 @@ mod tests {
             Sat => SatSwapNeighbor { i: 0, j: 1, gain: 0 },
             VertexCover => VertexCoverFlipNeighbor { i: 0, uncovered_delta: 0, cover_delta: 0, gain: 0 },
             VertexCover => VertexCoverSwapNeighbor { i: 0, j: 1, uncovered_delta: 0, cover_delta: 0, gain: 0 },
-            GraphColoring => GraphColoringRecolorNeighbor { v: 0, new_color: 1, conflicts_delta: 0, colors_delta: 0, gain: 0 },
-            GraphColoring => GraphColoringSwapNeighbor { i: 0, j: 1, conflicts_delta: 0, colors_delta: 0, gain: 0 },
+            GraphColoring => IntChangeNeighbor { var: 0, value: 1, keys: [0.0; 2], cost: 0.0 },
+            GraphColoring => IntSwapNeighbor { i: 0, j: 1, keys: [0.0; 2], cost: 0.0 },
             Tsp => TspTwoOptNeighbor { i: 0, j: 1, gain: 0.0 },
             Tsp => TspRelocateNeighbor { pos: 0, ins: 2, gain: 0.0 },
             JobShopScheduling => JobShopSwapNeighbor { i: 0, gain: 0 },
@@ -148,11 +148,9 @@ mod tests {
             Vrp => VrpRelocateNeighbor::new(&vrp, &vrp_sol, 0, 0, 1, 0),
             Vrp => VrpSwapNeighbor::new(&vrp, &vrp_sol, 0, 0, 1, 0),
             Vrp => VrpTwoOptNeighbor::new(&vrp, &vrp_sol, 0, 0, 1),
-            OneInt => IntChangeNeighbor {
-                var: 0, value: 1, cost: 0.0,
-            },
-            OneInt => IntSwapNeighbor { i: 0, j: 1, cost: 0.0 },
-            OneInt => IntReverseNeighbor { i: 0, j: 1, cost: 0.0 },
+            OneInt => IntChangeNeighbor { var: 0, value: 1, keys: [0.0], cost: 0.0 },
+            OneInt => IntSwapNeighbor { i: 0, j: 1, keys: [0.0], cost: 0.0 },
+            OneInt => IntReverseNeighbor { i: 0, j: 1, keys: [0.0], cost: 0.0 },
         }
     }
 }
