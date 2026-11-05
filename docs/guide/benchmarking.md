@@ -167,6 +167,7 @@ BenchmarkReport
     ├── heuristic: HeuristicConfig
     ├── summary: Summary
     │   ├── num_successful_runs: usize
+    │   ├── num_feasible_runs: Option<usize>    (problems with constraints only)
     │   ├── best_objective / avg_objective / worst_objective: f64
     │   ├── std_objective: f64                  (population std)
     │   ├── best_time_to_best_secs / avg_time_to_best_secs: f64
@@ -178,6 +179,7 @@ BenchmarkReport
         ├── run_index: usize
         ├── status: String                       ("success" | "error: …")
         ├── best_objective: f64
+        ├── feasible: Option<bool>               (problems with constraints only)
         ├── best_iteration: u64
         ├── time_to_best_secs / total_time_secs: f64
         ├── initial_objective / improvement: Option<f64>
@@ -196,6 +198,12 @@ absent for runs that ended in an error. `proven_optimal` and `dual_bound` are
 set only for a top-level `BranchAndBound`: whether the run proved
 `best_objective` optimal, and the best objective a solution not yet ruled out
 could reach, equal to `best_objective` once proven.
+
+`feasible` says whether the run's best solution meets every constraint, and is
+set for the problems whose solutions can break one, VRP, VertexCover and
+GraphColoring. `num_feasible_runs` counts the successful runs that ended
+feasible. The objective statistics are over every successful run, so on these
+problems an infeasible run's penalized objective is among them.
 
 Solution encoding:
 

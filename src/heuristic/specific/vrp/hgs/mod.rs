@@ -411,7 +411,7 @@ impl HybridGeneticSearch {
         );
 
         self.recent_total += 1;
-        if child.sol.violation() == 0.0 {
+        if child.sol.is_feasible() {
             self.recent_feasible += 1;
             self.absorb(prob, child);
             return;
@@ -429,7 +429,7 @@ impl HybridGeneticSearch {
                     self.penalty_capacity * boost,
                     self.descent_passes,
                 );
-                if repaired.sol.violation() == 0.0 {
+                if repaired.sol.is_feasible() {
                     self.absorb(prob, repaired);
                     break;
                 }
@@ -446,9 +446,10 @@ impl HybridGeneticSearch {
         // Priced at zero penalty, so the individual carries the objective's
         // unpenalized part and the search supplies its own weight.
         let (base, violation) = (prob.objective_under(&sol, 0.0), sol.violation());
+        let feasible = sol.is_feasible();
         let individual = Individual::new(prob.get_n(), sol.routes, base, violation);
 
-        let pool = if individual.is_feasible() {
+        let pool = if feasible {
             &mut self.feasible
         } else {
             &mut self.infeasible

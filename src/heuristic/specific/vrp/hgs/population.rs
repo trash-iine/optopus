@@ -24,8 +24,7 @@ pub(super) struct Individual {
     /// [`Vrp::objective_under`](crate::problem::Vrp::objective_under) adds
     /// the penalty to.
     pub base: f64,
-    /// `overload + time_excess + shortfall`, what the penalty multiplies;
-    /// `0.0` exactly when feasible.
+    /// `overload + time_excess + shortfall`, what the penalty multiplies.
     pub violation: f64,
     adjacency: RouteAdjacency,
 }
@@ -45,10 +44,6 @@ impl Individual {
     /// The penalized objective under the caller's current capacity penalty.
     pub(super) fn cost(&self, penalty: f64) -> f64 {
         self.base + penalty * self.violation
-    }
-
-    pub(super) fn is_feasible(&self) -> bool {
-        self.violation == 0.0
     }
 
     /// Flattens the routes into a giant tour (route boundaries are dropped).

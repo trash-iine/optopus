@@ -871,51 +871,52 @@ fn branch_and_bound_configs_that_cannot_run_are_rejected() {
 }
 
 /// A small instance of every benchmark problem, with a neighbor it accepts:
-/// written to a temp file, or bundled when its format is long.
-fn every_problem() -> Vec<(&'static str, &'static str, String)> {
-    let inline = |tag: &str, text: &str| write_temp_file(tag, text).display().to_string();
+/// written to a temp file, or bundled when its format is long. Each caller
+/// passes its own `caller` tag, so tests running at once never share a file.
+fn every_problem(caller: &str) -> Vec<(&'static str, &'static str, String)> {
+    let inline = |tag: &str, text: &str| {
+        let tag = format!("{caller}_{tag}");
+        write_temp_file(&tag, text).display().to_string()
+    };
     let tsp = "NAME: five\nTYPE: TSP\nDIMENSION: 5\nEDGE_WEIGHT_TYPE: EUC_2D\nNODE_COORD_SECTION\n\
                1 0 0\n2 3 0\n3 3 4\n4 0 4\n5 1 2\nEOF\n";
     vec![
-        ("MaxCut", "Flip", inline("decode_max_cut", SIX_VERTICES)),
+        ("MaxCut", "Flip", inline("max_cut", SIX_VERTICES)),
         (
             "Qubo",
             "Flip",
-            inline("decode_qubo", "3 4\n1 1 -1\n2 2 -1\n3 3 -1\n1 2 2\n"),
+            inline("qubo", "3 4\n1 1 -1\n2 2 -1\n3 3 -1\n1 2 2\n"),
         ),
         (
             "Sat",
             "Flip",
-            inline("decode_sat", "p cnf 3 3\n1 2 0\n-1 2 0\n-2 3 0\n"),
+            inline("sat", "p cnf 3 3\n1 2 0\n-1 2 0\n-2 3 0\n"),
         ),
-        ("Tsp", "TwoOpt", inline("decode_tsp", tsp)),
+        ("Tsp", "TwoOpt", inline("tsp", tsp)),
         (
             "VertexCover",
             "Flip",
-            inline("decode_vertex_cover", "4 3\n1 2\n2 3\n3 4\n"),
+            inline("vertex_cover", "4 3\n1 2\n2 3\n3 4\n"),
         ),
         (
             "JobShop",
             "Swap",
-            inline("decode_job_shop", "2 2\n0 3 1 2\n1 2 0 4\n"),
+            inline("job_shop", "2 2\n0 3 1 2\n1 2 0 4\n"),
         ),
         (
             "FlowShop",
             "Swap",
-            inline("decode_flow_shop", "3 2\n3 2 4\n2 5 1\n"),
+            inline("flow_shop", "3 2\n3 2 4\n2 5 1\n"),
         ),
         (
             "Qap",
             "Swap",
-            inline(
-                "decode_qap",
-                "3\n0 1 2\n1 0 1\n2 1 0\n0 3 1\n3 0 2\n1 2 0\n",
-            ),
+            inline("qap", "3\n0 1 2\n1 0 1\n2 1 0\n0 3 1\n3 0 2\n1 2 0\n"),
         ),
         (
             "BinPacking",
             "Relocate",
-            inline("decode_bin_packing", "5 10\n6\n4\n5\n5\n3\n"),
+            inline("bin_packing", "5 10\n6\n4\n5\n5\n3\n"),
         ),
         (
             "Vrp",
@@ -977,7 +978,7 @@ fn assert_close(a: f64, b: f64, what: &str) {
 /// objective.
 #[test]
 fn every_problem_decodes_the_solutions_its_report_encodes() {
-    for (problem, neighbor, path) in every_problem() {
+    for (problem, neighbor, path) in every_problem("decode") {
         let report = local_search_report(problem, neighbor, &path, 200, None);
         let kind: optopus::benchmark::ProblemKind =
             toml::Value::String(problem.into()).try_into().unwrap();
@@ -998,6 +999,39 @@ fn every_problem_decodes_the_solutions_its_report_encodes() {
             let _ = std::fs::remove_file(&path);
         }
     }
+}
+
+/// A problem with constraints reports whether each run's best meets them, and
+/// the summary counts the runs that do. A problem without any reports neither.
+#[test]
+fn problems_with_constraints_report_feasibility_and_others_do_not() {
+    for (problem, neighbor, path) in every_problem("feasible") {
+        let report = local_search_report(problem, neighbor, &path, 200, None);
+        let result = &report.results[0];
+        let constrained = matches!(problem, "VertexCover" | "GraphColoring" | "Vrp");
+        for run in &result.runs {
+            assert_eq!(run.feasible.is_some(), constrained, "{path}");
+        }
+        let feasible = result.runs.iter().filter(|r| r.feasible == Some(true));
+        let expected = constrained.then_some(feasible.count());
+        assert_eq!(result.summary.num_feasible_runs, expected, "{path}");
+        if path.contains("optopus_e2e_") {
+            let _ = std::fs::remove_file(&path);
+        }
+    }
+
+    // On a path of four vertices the descent covers every edge, while the
+    // empty cover with no iteration to spend leaves all three uncovered.
+    let path = write_temp_file("feasible_path_cover", "4 3\n1 2\n2 3\n3 4\n");
+    let path = path.display().to_string();
+    for (iterations, start, feasible) in [(200, None, true), (0, Some(&[][..]), false)] {
+        let report = local_search_report("VertexCover", "Flip", &path, iterations, start);
+        let result = &report.results[0];
+        assert!(result.runs.iter().all(|r| r.feasible == Some(feasible)));
+        let expected = if feasible { result.runs.len() } else { 0 };
+        assert_eq!(result.summary.num_feasible_runs, Some(expected));
+    }
+    let _ = std::fs::remove_file(&path);
 }
 
 /// A run warm-started from a local optimum cannot leave it, so the descent
