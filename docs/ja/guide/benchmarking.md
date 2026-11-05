@@ -103,6 +103,7 @@ max_failed_update = 5_000
 | Qap | `Swap` |
 | BinPacking | `Relocate`, `Swap` |
 | VRP | `Relocate`, `Swap`, `TwoOpt` |
+| GraphColoring | `Flip` (1 頂点の色を変える), `Swap` |
 
 問題専用の kind (`BreakoutLocalSearch`、`LinKernighanHelsgaun`、
 `AdaptiveLargeNeighborhoodSearch`、`WalkSat` など) は自前の move 集合を持つので、`neighbor` を取りません。
@@ -163,7 +164,7 @@ BenchmarkReport
         └── trajectory: Vec<(f64, f64)>          (改善ごとの (elapsed_secs, objective))
 ```
 
-`trajectory` は anytime 曲線で、問題の最適化の向きに単調です。ベンチマークビューアが描くのはこれです。
+`trajectory` は anytime 曲線で、問題の最適化の向きに単調です。曲線はその実行の最良解に達した時点で終わるので、初期解がすでに最良だった実行では曲線が空になり、`time_to_best_secs` は 0 になります。ベンチマークビューアが描くのはこれです。
 エラーで終わった実行では `Option` のフィールドは出力されません。
 `proven_optimal` と `dual_bound` が出るのはトップレベルの `BranchAndBound` だけです。前者はその実行が `best_objective` の最適性を証明したかどうか、後者はまだ除外されていない解が到達しうる最良の目的関数値で、証明が済むと `best_objective` に一致します。
 
