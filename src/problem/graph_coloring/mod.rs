@@ -1,4 +1,4 @@
-//! Graph Coloring problem definition and neighborhood structures.
+//! Graph Coloring problem definition and its crossover.
 //!
 //! Given an undirected graph, assign each vertex a color in `0..k` so that
 //! adjacent vertices differ, using as few distinct colors as possible.
@@ -8,11 +8,13 @@
 //! proper coloring) is enforced via a penalty term:
 //! `objective = colors_used + penalty_weight * conflicts`, with
 //! `penalty_weight = n + 1` so the global optimum is always a proper coloring.
+//!
+//! The moves are the generic ones of [`IntAssignment`](crate::trait_defs::IntAssignment),
+//! [`IntChangeNeighbor<2>`](crate::problem::IntChangeNeighbor) and
+//! [`IntSwapNeighbor<2>`](crate::problem::IntSwapNeighbor).
 
 mod crossover;
-mod neighbor;
 mod problem;
 
 pub use crossover::GraphColoringUniformCrossover;
-pub use neighbor::{GraphColoringRecolorNeighbor, GraphColoringSwapNeighbor};
 pub use problem::{GraphColoring, GraphColoringSolution};

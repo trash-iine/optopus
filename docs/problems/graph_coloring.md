@@ -41,7 +41,7 @@ use optopus::prelude::*;
 // Or from a file, let gc = GraphColoring::load_file("data/instances/graph_coloring/example.txt")?;
 let gc = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&gc);
-LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(10_000))
+LocalSearch::<IntChangeNeighbor<2>>::new(StopCondition::iterations(10_000))
     .run(&mut state)?;
 
 let sol = &state.best_solution;
@@ -69,10 +69,15 @@ of TabuCol), which is what makes every move's gain O(1).
 
 ## Neighbors
 
+`GraphColoring` is an `IntAssignment` ranked by two keys, one variable per
+vertex ranging over the palette, so its moves are the generic ones of
+[integer variables](integer.md) with two keys. Each is priced in O(1) from the
+Γ matrix.
+
 | Type | Move | Iteration cost |
 |---|---|---|
-| [`GraphColoringRecolorNeighbor`](../api/optopus/problem/graph_coloring/struct.GraphColoringRecolorNeighbor.html) | Give a single vertex a different color. Selected by `neighbor = "Flip"` in a config. | `iter + 1` |
-| [`GraphColoringSwapNeighbor`](../api/optopus/problem/graph_coloring/struct.GraphColoringSwapNeighbor.html) | Exchange the colors of two differently colored vertices. Leaves `colors_used` unchanged. | `iter + 2` |
+| [`IntChangeNeighbor<2>`](../api/optopus/problem/integer/struct.IntChangeNeighbor.html) | Give a single vertex a different color. Selected by `neighbor = "Flip"` in a config. | `iter + 1` |
+| [`IntSwapNeighbor<2>`](../api/optopus/problem/integer/struct.IntSwapNeighbor.html) | Exchange the colors of two differently colored vertices. Leaves `colors_used` unchanged. Selected by `neighbor = "Swap"`. | `iter + 1` |
 
 Single recolors make the color-count term a flat landscape. A conflict is
 repaired strongly, but emptying a color class needs every vertex of that class

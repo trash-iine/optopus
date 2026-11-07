@@ -20,7 +20,7 @@ fn main() {
     let budget = 60_000;
 
     let mut state = SearchState::new_with_seed(&gc, 42);
-    TabuSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(budget), (5, 15))
+    TabuSearch::<IntChangeNeighbor<2>>::new(StopCondition::iterations(budget), (5, 15))
         .run(&mut state)
         .unwrap();
     report("TabuSearch", &state);
@@ -30,7 +30,7 @@ fn main() {
         StopCondition::iterations(budget),
         10,
         GraphColoringUniformCrossover,
-        Box::new(TabuSearch::<GraphColoringRecolorNeighbor>::new(
+        Box::new(TabuSearch::<IntChangeNeighbor<2>>::new(
             StopCondition::failed_updates(300),
             (5, 15),
         )),

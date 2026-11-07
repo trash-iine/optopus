@@ -34,7 +34,7 @@ use optopus::prelude::*;
 // ファイルから読むなら let gc = GraphColoring::load_file("data/instances/graph_coloring/example.txt")?;
 let gc = GraphColoring::new(Graph::from_edges([(0, 1, 1.0), (1, 2, 1.0), (0, 2, 1.0)]));
 let mut state = SearchState::new(&gc);
-LocalSearch::<GraphColoringRecolorNeighbor>::new(StopCondition::iterations(10_000))
+LocalSearch::<IntChangeNeighbor<2>>::new(StopCondition::iterations(10_000))
     .run(&mut state)?;
 
 let sol = &state.best_solution;
@@ -60,10 +60,13 @@ println!("coloring = {:?}", sol.colors); // colors[v] は頂点 v の色
 
 ## 近傍 { #neighbors }
 
+`GraphColoring` は二つのキーで順位づけされる `IntAssignment` で、頂点ごとに一つ、パレットの範囲をとる変数を持ちます。
+そのため近傍は、[整数変数](integer.md)の汎用の近傍をキー二つで使ったものです。どれも Γ 行列から O(1) で値付けされます。
+
 | 型 | move | 反復コスト |
 |---|---|---|
-| [`GraphColoringRecolorNeighbor`](../../api/optopus/problem/graph_coloring/struct.GraphColoringRecolorNeighbor.html) | 頂点一つに別の色を与える。設定では `neighbor = "Flip"` で選ぶ。 | `iter + 1` |
-| [`GraphColoringSwapNeighbor`](../../api/optopus/problem/graph_coloring/struct.GraphColoringSwapNeighbor.html) | 異なる色の二頂点の色を交換する。`colors_used` は変わらない。 | `iter + 2` |
+| [`IntChangeNeighbor<2>`](../../api/optopus/problem/integer/struct.IntChangeNeighbor.html) | 頂点一つに別の色を与える。設定では `neighbor = "Flip"` で選ぶ。 | `iter + 1` |
+| [`IntSwapNeighbor<2>`](../../api/optopus/problem/integer/struct.IntSwapNeighbor.html) | 異なる色の二頂点の色を交換する。`colors_used` は変わらない。設定では `neighbor = "Swap"` で選ぶ。 | `iter + 1` |
 
 一頂点の再彩色だけでは、色数の項は平坦な地形になります。衝突は強く修正されますが、色クラスを一つ空にするにはそのクラスのすべての頂点を一つずつ動かす必要があり、
 最後の一つを動かすまで何の報酬もありません。探索はすぐに正しい彩色に達し、その後ゆっくりと色数を減らしていくと考えてください。

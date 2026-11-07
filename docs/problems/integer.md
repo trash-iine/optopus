@@ -118,6 +118,7 @@ and the objective and nothing more, so such a problem implements the trait
 
 | Method | Required | What it does |
 |---|---|---|
+| `type Delta` | yes | what a change does, `f64`, the change in the objective, when the solution ranks by its objective |
 | `domains` | yes | the variables |
 | `get(sol, i)` | yes | the value of variable `i` |
 | `assign(sol, i, value)` | yes | sets it, keeping the objective and anything cached up to date |
@@ -127,6 +128,15 @@ and the objective and nothing more, so such a problem implements the trait
 Its `ProblemTrait` and the solution's `Evaluate` are written as for any
 [custom problem](../guide/custom_problem.md). The three moves then work as
 they do on an `IntegerProblem`, which is itself an `IntAssignment`.
+
+A solution ranked by several keys, a violation first and a cost second for
+one, implements `IntAssignment<N>` for its `N` keys, with `type Delta =
+KeyDelta<N>`. A `KeyDelta` holds the change in each key, lower being better,
+and the change in the objective, the number a search that weighs how much
+worse a move is reads. The moves are then `IntChangeNeighbor<N>`,
+`IntSwapNeighbor<N>` and `IntReverseNeighbor<N>`, and they compare by the keys.
+[Graph Coloring](graph_coloring.md) is one, with its conflicts and its colors
+used as the two keys.
 
 ## Starting from a given assignment
 

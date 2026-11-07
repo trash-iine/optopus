@@ -823,6 +823,8 @@ impl ProblemTrait for FormulaProblem {
 }
 
 impl IntAssignment for FormulaProblem {
+    type Delta = f64;
+
     #[inline]
     fn domains(&self) -> &IntVars {
         &self.vars

@@ -105,6 +105,7 @@ let prob = IntegerProblem::minimize(IntVars::permutation(n), tour_len)
 
 | メソッド | 必須 | 何をするか |
 |---|---|---|
+| `type Delta` | はい | 変化が何を変えるか。解が目的値で順位づけされるなら、目的値の変化 `f64` |
 | `domains` | はい | 変数 |
 | `get(sol, i)` | はい | 変数 `i` の値 |
 | `assign(sol, i, value)` | はい | 値を設定し、目的値とキャッシュしているものを最新に保つ |
@@ -113,6 +114,11 @@ let prob = IntegerProblem::minimize(IntVars::permutation(n), tour_len)
 
 その `ProblemTrait` と解の `Evaluate` は、ほかの[独自の問題](../guide/custom_problem.md)と同じように書きます。
 そうすれば三つの近傍は `IntegerProblem` のときと同じように動きます。`IntegerProblem` 自身も `IntAssignment` です。
+
+違反を先に、費用を次に比べるといった、複数のキーで順位づけされる解は、キーの数 `N` について `IntAssignment<N>` を実装し、`type Delta = KeyDelta<N>` とします。
+`KeyDelta` は各キーの変化 (小さいほど良い) と、目的値の変化を持ちます。目的値の変化は、move がどれだけ悪いかを量る探索が読む数です。
+近傍は `IntChangeNeighbor<N>`、`IntSwapNeighbor<N>`、`IntReverseNeighbor<N>` になり、キーで比べます。
+[Graph Coloring](graph_coloring.md) がその例で、衝突の数と使った色の数が二つのキーです。
 
 ## 与えた割り当てから始める { #starting-from-a-given-assignment }
 
