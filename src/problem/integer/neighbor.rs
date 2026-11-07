@@ -2,7 +2,10 @@
 
 use crate::trait_defs::{AssignDelta, RankKeys, Rankable, is_better_after_move};
 use crate::{
-    building_blocks::{representation::IntVar, search::random_distinct_pair},
+    building_blocks::{
+        representation::{IntVar, IntVars},
+        search::random_distinct_pair,
+    },
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
     trait_defs::IntAssignment,
@@ -182,6 +185,13 @@ fn keys_better<const N: usize>(a: &[f64; N], b: &[f64; N]) -> bool {
     false
 }
 
+/// The `keys` and `cost` of a move of this module priced at `delta`, `sign`
+/// being the solution's direction.
+#[inline]
+fn price<const N: usize>(sign: f64, delta: impl AssignDelta<N>) -> ([f64; N], f64) {
+    (delta.keys(sign), sign * delta.objective())
+}
+
 /// `Rankable` and `RankKeys<N>` of a move of this module, which ranks by the
 /// change it makes to the solution's keys.
 macro_rules! ranked_by_keys {
@@ -240,11 +250,12 @@ impl<const N: usize> IntChangeNeighbor<N> {
 
     #[inline]
     fn priced(var: usize, value: i64, sign: f64, delta: impl AssignDelta<N>) -> Self {
+        let (keys, cost) = price(sign, delta);
         Self {
             var,
             value,
-            keys: delta.keys(sign),
-            cost: sign * delta.objective(),
+            keys,
+            cost,
         }
     }
 }
@@ -319,13 +330,8 @@ impl<const N: usize> IntSwapNeighbor<N> {
     /// Builds the swap of `i` and `j`, priced by
     /// [`IntAssignment::assign_swap_delta`].
     pub fn new<P: IntAssignment<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
-        let (sign, delta) = (direction(sol), prob.assign_swap_delta(sol, i, j));
-        Self {
-            i,
-            j,
-            keys: delta.keys(sign),
-            cost: sign * delta.objective(),
-        }
+        let (keys, cost) = price(direction(sol), prob.assign_swap_delta(sol, i, j));
+        Self { i, j, keys, cost }
     }
 }
 
@@ -355,18 +361,13 @@ fn sample_pair<M>(
         .map(|(i, j)| build(i, j))
 }
 
-/// Whether exchanging `i` and `j` changes the solution and keeps both values
-/// in range.
+/// Whether exchanging values `a` of `i` and `b` of `j` changes the solution
+/// and keeps both values in range. When every variable has the same range,
+/// as on a permutation or a coloring, any two values fit each other's
+/// variables, and only whether they differ is checked.
 #[inline]
-fn swappable<const N: usize, P: IntAssignment<N>>(
-    prob: &P,
-    sol: &P::Solution,
-    i: usize,
-    j: usize,
-) -> bool {
-    let (a, b) = (P::get(sol, i), P::get(sol, j));
-    let vars = prob.domains();
-    a != b && vars[i].contains(b) && vars[j].contains(a)
+fn swappable(vars: &IntVars, i: usize, j: usize, a: i64, b: i64) -> bool {
+    a != b && (vars.same_range() || (vars[i].contains(b) && vars[j].contains(a)))
 }
 
 impl<const N: usize, P: IntAssignment<N>> MoveToNeighbor<P> for IntSwapNeighbor<N> {
@@ -380,19 +381,13 @@ impl<const N: usize, P: IntAssignment<N>> MoveToNeighbor<P> for IntSwapNeighbor<
     }
 
     /// Every pair `i < j` whose values differ and fit each other's range.
-    /// When every variable has the same range, as on a permutation or a
-    /// coloring, any two values fit each other's variables, and only whether
-    /// they differ is checked.
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
         let vars = prob.domains();
-        let (n, same) = (vars.len(), vars.same_range());
+        let n = vars.len();
         (0..n).flat_map(move |i| {
             let a = P::get(sol, i);
             (i + 1..n)
-                .filter(move |&j| {
-                    let b = P::get(sol, j);
-                    a != b && (same || (vars[i].contains(b) && vars[j].contains(a)))
-                })
+                .filter(move |&j| swappable(vars, i, j, a, P::get(sol, j)))
                 .map(move |j| Self::new(prob, sol, i, j))
         })
     }
@@ -407,7 +402,7 @@ impl<const N: usize, P: IntAssignment<N>> MoveToNeighbor<P> for IntSwapNeighbor<
         sample_pair(
             prob.domains().len(),
             rng,
-            |i, j| swappable(prob, sol, i, j),
+            |i, j| swappable(prob.domains(), i, j, P::get(sol, i), P::get(sol, j)),
             |i, j| Self::new(prob, sol, i, j),
         )
     }
@@ -439,13 +434,8 @@ impl<const N: usize> IntReverseNeighbor<N> {
     /// Builds the reversal of `i..=j`, priced by
     /// [`IntAssignment::assign_reverse_delta`].
     pub fn new<P: IntAssignment<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
-        let (sign, delta) = (direction(sol), prob.assign_reverse_delta(sol, i, j));
-        Self {
-            i,
-            j,
-            keys: delta.keys(sign),
-            cost: sign * delta.objective(),
-        }
+        let (keys, cost) = price(direction(sol), prob.assign_reverse_delta(sol, i, j));
+        Self { i, j, keys, cost }
     }
 }
 
@@ -606,37 +596,27 @@ mod tests {
             (0..TARGETS.len()).map(|_| IntVar::binary()).collect(),
             target_sum as Objective,
         );
+        /// The walk by `next`, by `fold`, and by `fold` after `skip` taken by
+        /// `next`.
+        fn walks<P: IntAssignment>(
+            prob: &P,
+            sol: &P::Solution,
+            skip: usize,
+        ) -> [Vec<(usize, i64, u64)>; 3] {
+            let by_fold = IntChangeNeighbor::iter(prob, sol).fold(Vec::new(), |mut v, m| {
+                v.push(key(&m));
+                v
+            });
+            let mut it = IntChangeNeighbor::iter(prob, sol);
+            let mut resumed: Vec<_> = it.by_ref().take(skip).map(|m| key(&m)).collect();
+            it.for_each(|m| resumed.push(key(&m)));
+            [by_next(Changes::new(prob, sol)), by_fold, resumed]
+        }
         let ranged_sol = ranged.new_solution(&mut rng(13));
         let flip_sol = flips.new_solution(&mut rng(14));
-        let walks: [(Vec<_>, Vec<_>, Vec<_>); 2] = [
-            (
-                by_next(Changes::new(&ranged, &ranged_sol)),
-                IntChangeNeighbor::iter(&ranged, &ranged_sol).fold(Vec::new(), |mut v, m| {
-                    v.push(key(&m));
-                    v
-                }),
-                {
-                    let mut it = IntChangeNeighbor::iter(&ranged, &ranged_sol);
-                    let mut v: Vec<_> = it.by_ref().take(3).map(|m| key(&m)).collect();
-                    it.for_each(|m| v.push(key(&m)));
-                    v
-                },
-            ),
-            (
-                by_next(Changes::new(&flips, &flip_sol)),
-                IntChangeNeighbor::iter(&flips, &flip_sol).fold(Vec::new(), |mut v, m| {
-                    v.push(key(&m));
-                    v
-                }),
-                {
-                    let mut it = IntChangeNeighbor::iter(&flips, &flip_sol);
-                    let mut v: Vec<_> = it.by_ref().take(2).map(|m| key(&m)).collect();
-                    it.for_each(|m| v.push(key(&m)));
-                    v
-                },
-            ),
-        ];
-        for (by_next, by_fold, resumed) in walks {
+        for [by_next, by_fold, resumed] in
+            [walks(&ranged, &ranged_sol, 3), walks(&flips, &flip_sol, 2)]
+        {
             assert!(!by_next.is_empty());
             assert_eq!(by_next, by_fold);
             assert_eq!(by_next, resumed);

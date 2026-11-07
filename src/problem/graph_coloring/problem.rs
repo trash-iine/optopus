@@ -138,8 +138,9 @@ impl GraphColoring {
     }
 
     /// The single incremental-update primitive: recolor vertex `v` to
-    /// `new_color`, updating every cached field in O(degree). Shared by the
-    /// recolor and swap moves. A no-op if `v` already has `new_color`.
+    /// `new_color`, updating every cached field in O(degree). What `assign` does,
+    /// and the default `assign_swap` calls it twice. A no-op if `v` already
+    /// has `new_color`.
     fn recolor(&self, sol: &mut GraphColoringSolution, v: usize, new_color: usize) {
         let cur = sol.colors[v];
         if cur == new_color {
