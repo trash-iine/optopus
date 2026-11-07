@@ -33,10 +33,8 @@ use rand::Rng;
 /// exchanges the colors of two, each priced in O(1) from the solution's
 /// caches.
 pub struct GraphColoring {
-    /// The underlying graph.
-    pub graph: Graph,
-    /// Palette size (number of available colors).
-    pub k: usize,
+    graph: Graph,
+    k: usize,
     /// One variable per vertex over `0..k`, what the generic moves walk.
     domains: IntVars,
 }
@@ -74,6 +72,16 @@ impl GraphColoring {
             .map(|_| IntVar::new(0, k as i64 - 1))
             .collect();
         Self { graph, k, domains }
+    }
+
+    /// The underlying graph.
+    pub fn graph(&self) -> &Graph {
+        &self.graph
+    }
+
+    /// The palette size, the number of available colors.
+    pub fn k(&self) -> usize {
+        self.k
     }
 
     /// Returns the penalty weight applied to each conflicting edge (`graph.len() + 1`).
