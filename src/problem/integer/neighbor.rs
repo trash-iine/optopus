@@ -192,26 +192,6 @@ fn price<const N: usize>(sign: f64, delta: impl AssignDelta<N>) -> ([f64; N], f6
     (delta.keys(sign), sign * delta.objective())
 }
 
-/// `Rankable` and `RankKeys<N>` of a move of this module, which ranks by the
-/// change it makes to the solution's keys.
-macro_rules! ranked_by_keys {
-    ($move:ident) => {
-        impl<const N: usize> RankKeys<N> for $move<N> {
-            #[inline]
-            fn rank_keys(&self) -> [f64; N] {
-                self.keys
-            }
-        }
-
-        impl<const N: usize> Rankable for $move<N> {
-            #[inline]
-            fn is_better_than(&self, other: &Self) -> bool {
-                keys_better(&self.keys, &other.keys)
-            }
-        }
-    };
-}
-
 /// Sets variable `var` to `value`, any value in its range other than the
 /// current one. On a binary variable this is a flip.
 ///
@@ -234,7 +214,19 @@ pub struct IntChangeNeighbor<const N: usize = 1> {
     pub cost: f64,
 }
 
-ranked_by_keys!(IntChangeNeighbor);
+impl<const N: usize> RankKeys<N> for IntChangeNeighbor<N> {
+    #[inline]
+    fn rank_keys(&self) -> [f64; N] {
+        self.keys
+    }
+}
+
+impl<const N: usize> Rankable for IntChangeNeighbor<N> {
+    #[inline]
+    fn is_better_than(&self, other: &Self) -> bool {
+        keys_better(&self.keys, &other.keys)
+    }
+}
 
 impl<const N: usize> IntChangeNeighbor<N> {
     /// Builds the move setting `var` to `value`, priced by
@@ -324,7 +316,19 @@ pub struct IntSwapNeighbor<const N: usize = 1> {
     pub cost: f64,
 }
 
-ranked_by_keys!(IntSwapNeighbor);
+impl<const N: usize> RankKeys<N> for IntSwapNeighbor<N> {
+    #[inline]
+    fn rank_keys(&self) -> [f64; N] {
+        self.keys
+    }
+}
+
+impl<const N: usize> Rankable for IntSwapNeighbor<N> {
+    #[inline]
+    fn is_better_than(&self, other: &Self) -> bool {
+        keys_better(&self.keys, &other.keys)
+    }
+}
 
 impl<const N: usize> IntSwapNeighbor<N> {
     /// Builds the swap of `i` and `j`, priced by
@@ -428,7 +432,19 @@ pub struct IntReverseNeighbor<const N: usize = 1> {
     pub cost: f64,
 }
 
-ranked_by_keys!(IntReverseNeighbor);
+impl<const N: usize> RankKeys<N> for IntReverseNeighbor<N> {
+    #[inline]
+    fn rank_keys(&self) -> [f64; N] {
+        self.keys
+    }
+}
+
+impl<const N: usize> Rankable for IntReverseNeighbor<N> {
+    #[inline]
+    fn is_better_than(&self, other: &Self) -> bool {
+        keys_better(&self.keys, &other.keys)
+    }
+}
 
 impl<const N: usize> IntReverseNeighbor<N> {
     /// Builds the reversal of `i..=j`, priced by
