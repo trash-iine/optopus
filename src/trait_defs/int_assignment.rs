@@ -77,11 +77,13 @@ impl<const N: usize> AssignDelta<N> for KeyDelta<N> {
 /// A problem whose solutions, of the problem's own type, assign an integer to
 /// each variable.
 ///
-/// Reading and writing one value is all the moves of this module need, and
-/// the swap and the reversal have defaults built from those two. The solution
-/// is yours, so it can keep whatever makes pricing a move cheap, such as a per
-/// variable gain updated in [`assign`](Self::assign) and read back in
-/// [`assign_delta`](Self::assign_delta).
+/// Reading and writing one value is all a change of one variable needs, the
+/// move [`IntChangeNeighbor`](crate::problem::IntChangeNeighbor) makes. The
+/// solution is yours, so it can keep whatever makes pricing a move cheap, such
+/// as a per variable gain updated in [`assign`](Self::assign) and read back in
+/// [`assign_delta`](Self::assign_delta). Exchanging two values and reversing a
+/// range mean something only on some problems, so they are the traits
+/// [`IntSwap`] and [`IntReverse`], which a problem implements to opt in.
 ///
 /// The moves compare by the solution's `N` [`RankKeys`], and add their
 /// [`Delta`](Self::Delta) to them. A solution that ranks by its objective,
@@ -134,15 +136,21 @@ pub trait IntAssignment<const N: usize = 1>:
         let _ = slot;
         self.assign_delta(sol, i, value)
     }
+}
 
+/// An [`IntAssignment`] whose variables can exchange their values, what
+/// [`IntSwapNeighbor`](crate::problem::IntSwapNeighbor) needs.
+///
+/// Exchanging two values means something only where a value can sit on more
+/// than one variable, as the colors of a coloring or the cities of a tour, so
+/// a problem opts in by implementing this. Both methods have defaults, so
+/// `impl IntSwap for MyProblem {}` makes the move available, priced on a copy
+/// of the solution.
+pub trait IntSwap<const N: usize = 1>: IntAssignment<N> {
     /// Exchanges the values of variables `i` and `j`. The default is two
-    /// [`assign`](Self::assign) calls.
+    /// [`assign`](IntAssignment::assign) calls.
     fn assign_swap(&self, sol: &mut Self::Solution, i: usize, j: usize) {
-        let (a, b) = (Self::get(sol, i), Self::get(sol, j));
-        if a != b {
-            self.assign(sol, i, b);
-            self.assign(sol, j, a);
-        }
+        exchange(self, sol, i, j);
     }
 
     /// What exchanging `i` and `j` changes. The default copies the solution,
@@ -152,19 +160,30 @@ pub trait IntAssignment<const N: usize = 1>:
         WARNED.get_or_init(|| {
             tracing::warn!(
                 problem_type = std::any::type_name::<Self>(),
-                "Using the default implementation of IntAssignment::assign_swap_delta, \
+                "Using the default implementation of IntSwap::assign_swap_delta, \
                  which copies the solution for every candidate move."
             );
         });
         copied_delta(sol, |copy| self.assign_swap(copy, i, j))
     }
+}
 
-    /// Reverses the values of variables `i..=j`. The default swaps from both
-    /// ends inwards.
+/// An [`IntAssignment`] whose variables can have the order of their values
+/// reversed over a range, what
+/// [`IntReverseNeighbor`](crate::problem::IntReverseNeighbor) needs.
+///
+/// Reversing means something only where the order of the variables does, as
+/// on a permutation read as a tour, so a problem opts in by implementing
+/// this. Both methods have defaults, so `impl IntReverse for MyProblem {}`
+/// makes the move available, priced on a copy of the solution.
+pub trait IntReverse<const N: usize = 1>: IntAssignment<N> {
+    /// Reverses the values of variables `i..=j`. The default exchanges them
+    /// from both ends inwards, two [`assign`](IntAssignment::assign) calls
+    /// each.
     fn assign_reverse(&self, sol: &mut Self::Solution, i: usize, j: usize) {
         let (mut a, mut b) = (i, j);
         while a < b {
-            self.assign_swap(sol, a, b);
+            exchange(self, sol, a, b);
             a += 1;
             b -= 1;
         }
@@ -177,11 +196,26 @@ pub trait IntAssignment<const N: usize = 1>:
         WARNED.get_or_init(|| {
             tracing::warn!(
                 problem_type = std::any::type_name::<Self>(),
-                "Using the default implementation of IntAssignment::assign_reverse_delta, \
+                "Using the default implementation of IntReverse::assign_reverse_delta, \
                  which copies the solution for every candidate move."
             );
         });
         copied_delta(sol, |copy| self.assign_reverse(copy, i, j))
+    }
+}
+
+/// Exchanges the values of `i` and `j` by two [`assign`](IntAssignment::assign)
+/// calls, nothing when they are equal. What the swap and reversal defaults do.
+fn exchange<const N: usize, P: IntAssignment<N> + ?Sized>(
+    prob: &P,
+    sol: &mut P::Solution,
+    i: usize,
+    j: usize,
+) {
+    let (a, b) = (P::get(sol, i), P::get(sol, j));
+    if a != b {
+        prob.assign(sol, i, b);
+        prob.assign(sol, j, a);
     }
 }
 

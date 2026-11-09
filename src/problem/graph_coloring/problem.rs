@@ -2,7 +2,7 @@ use crate::building_blocks::instance::Graph;
 use crate::building_blocks::representation::{IntVar, IntVars};
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluate, ProblemTrait};
-use crate::trait_defs::{IntAssignment, KeyDelta, Rankable};
+use crate::trait_defs::{IntAssignment, IntSwap, KeyDelta, Rankable};
 use rand::Rng;
 
 /// The Graph Coloring problem in a self-contained, penalty-augmented form.
@@ -250,7 +250,11 @@ impl IntAssignment<2> for GraphColoring {
         let (d_conflicts, d_colors) = self.recolor_deltas(sol, i, value as usize);
         self.keyed(d_conflicts, d_colors)
     }
+}
 
+/// Exchanging the colors of two vertices. Reversing a range of vertices means
+/// nothing on a coloring, so `GraphColoring` is not an `IntReverse`.
+impl IntSwap<2> for GraphColoring {
     /// A swap of two differently colored vertices leaves the colors used as
     /// they are, and corrects for the two being adjacent.
     #[inline]

@@ -7,7 +7,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::building_blocks::representation::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
-use crate::trait_defs::{Branchable, IntAssignment, Relaxation};
+use crate::trait_defs::{Branchable, IntAssignment, IntReverse, IntSwap, Relaxation};
 use rand::Rng;
 
 /// An arithmetic expression over integer variables.
@@ -879,7 +879,9 @@ impl IntAssignment for FormulaProblem {
     fn slot_delta(&self, sol: &FormulaSolution, slot: usize, _: usize, _: i64) -> f64 {
         sol.deltas[slot]
     }
+}
 
+impl IntSwap for FormulaProblem {
     /// Priced from the monomials and constraints reading `i` or `j`.
     fn assign_swap_delta(&self, sol: &FormulaSolution, i: usize, j: usize) -> f64 {
         let x = &sol.values;
@@ -891,6 +893,9 @@ impl IntAssignment for FormulaProblem {
         )
     }
 }
+
+/// Priced by the default, on a copy of the solution.
+impl IntReverse for FormulaProblem {}
 
 /// The union of two ascending lists, ascending and without repeats.
 fn union_sorted<'a>(a: &'a [usize], b: &'a [usize]) -> impl Iterator<Item = usize> + 'a {

@@ -8,7 +8,7 @@ use crate::{
     },
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
-    trait_defs::IntAssignment,
+    trait_defs::{IntAssignment, IntReverse, IntSwap},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -332,8 +332,8 @@ impl<const N: usize> Rankable for IntSwapNeighbor<N> {
 
 impl<const N: usize> IntSwapNeighbor<N> {
     /// Builds the swap of `i` and `j`, priced by
-    /// [`IntAssignment::assign_swap_delta`].
-    pub fn new<P: IntAssignment<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
+    /// [`IntSwap::assign_swap_delta`].
+    pub fn new<P: IntSwap<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
         let (keys, cost) = price(direction(sol), prob.assign_swap_delta(sol, i, j));
         Self { i, j, keys, cost }
     }
@@ -374,7 +374,7 @@ fn swappable(vars: &IntVars, i: usize, j: usize, a: i64, b: i64) -> bool {
     a != b && (vars.same_range() || (vars[i].contains(b) && vars[j].contains(a)))
 }
 
-impl<const N: usize, P: IntAssignment<N>> MoveToNeighbor<P> for IntSwapNeighbor<N> {
+impl<const N: usize, P: IntSwap<N>> MoveToNeighbor<P> for IntSwapNeighbor<N> {
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
         Some(self)
     }
@@ -448,8 +448,8 @@ impl<const N: usize> Rankable for IntReverseNeighbor<N> {
 
 impl<const N: usize> IntReverseNeighbor<N> {
     /// Builds the reversal of `i..=j`, priced by
-    /// [`IntAssignment::assign_reverse_delta`].
-    pub fn new<P: IntAssignment<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
+    /// [`IntReverse::assign_reverse_delta`].
+    pub fn new<P: IntReverse<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
         let (keys, cost) = price(direction(sol), prob.assign_reverse_delta(sol, i, j));
         Self { i, j, keys, cost }
     }
@@ -468,7 +468,7 @@ fn reversible<const N: usize, P: IntAssignment<N>>(
     vars.same_range() || (i..=j).all(|p| vars[p].contains(P::get(sol, i + j - p)))
 }
 
-impl<const N: usize, P: IntAssignment<N>> MoveToNeighbor<P> for IntReverseNeighbor<N> {
+impl<const N: usize, P: IntReverse<N>> MoveToNeighbor<P> for IntReverseNeighbor<N> {
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
         Some(self)
     }

@@ -1,7 +1,7 @@
 use crate::building_blocks::representation::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
-use crate::trait_defs::{Branchable, Distance, IntAssignment, Rankable};
+use crate::trait_defs::{Branchable, Distance, IntAssignment, IntReverse, IntSwap, Rankable};
 use rand::Rng;
 
 /// An assignment of a value to every variable of an [`IntegerProblem`],
@@ -304,7 +304,15 @@ where
             None => self.full_delta(sol, "IntChangeNeighbor", |v| v[i] = value),
         }
     }
+}
 
+impl<F, D, S, R> IntSwap for IntegerProblem<F, D, S, R>
+where
+    F: Fn(&[i64]) -> f64 + Sync,
+    D: ChangeDelta,
+    S: PairDelta,
+    R: PairDelta,
+{
     #[inline]
     fn assign_swap(&self, sol: &mut IntSolution, i: usize, j: usize) {
         let delta = self.swap_delta.pair_delta(sol, i, j);
@@ -318,7 +326,15 @@ where
             None => self.full_delta(sol, "IntSwapNeighbor", |v| v.swap(i, j)),
         }
     }
+}
 
+impl<F, D, S, R> IntReverse for IntegerProblem<F, D, S, R>
+where
+    F: Fn(&[i64]) -> f64 + Sync,
+    D: ChangeDelta,
+    S: PairDelta,
+    R: PairDelta,
+{
     #[inline]
     fn assign_reverse(&self, sol: &mut IntSolution, i: usize, j: usize) {
         let delta = self.reverse_delta.pair_delta(sol, i, j);
