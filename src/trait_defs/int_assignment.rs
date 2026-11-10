@@ -13,7 +13,10 @@ use crate::building_blocks::representation::IntVars;
 /// itself, so a plain `f64`, the change in the raw objective, is the delta of
 /// `IntAssignment<1>`. A solution ranked by several keys, a violation first
 /// and a cost second for one, prices a move as a [`KeyDelta`].
-pub trait AssignDelta<const N: usize>: Copy + Send + Sync {
+///
+/// These two are the only implementations, and the trait is sealed, so an
+/// [`IntAssignment`] picks its `Delta` from them and never implements this.
+pub trait AssignDelta<const N: usize>: sealed::Sealed + Copy + Send + Sync {
     /// The change in the raw objective, new minus old.
     fn objective(&self) -> f64;
 
@@ -24,6 +27,13 @@ pub trait AssignDelta<const N: usize>: Copy + Send + Sync {
 
     /// The change from `before` to `after`, read off the two solutions.
     fn between<S: Evaluate + RankKeys<N>>(before: &S, after: &S) -> Self;
+}
+
+/// Keeps [`AssignDelta`] to the types of this module.
+mod sealed {
+    pub trait Sealed {}
+    impl Sealed for f64 {}
+    impl<const N: usize> Sealed for super::KeyDelta<N> {}
 }
 
 /// The change in the raw objective, the delta of a solution whose one rank
