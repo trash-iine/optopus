@@ -219,7 +219,7 @@ impl GraphColoring {
     /// `colors_used` by `d_colors`, as the two keys and the change in the
     /// penalized objective, which is minimized.
     #[inline]
-    fn keyed(&self, d_conflicts: i64, d_colors: i64) -> KeyDelta<2> {
+    fn key_delta(&self, d_conflicts: i64, d_colors: i64) -> KeyDelta<2> {
         let (d_conflicts, d_colors) = (d_conflicts as f64, d_colors as f64);
         KeyDelta {
             keys: [d_conflicts, d_colors],
@@ -246,7 +246,7 @@ impl IntAssignment<2> for GraphColoring {
     #[inline]
     fn assign_delta(&self, sol: &GraphColoringSolution, i: usize, value: i64) -> KeyDelta<2> {
         let (d_conflicts, d_colors) = self.recolor_deltas(sol, i, value as usize);
-        self.keyed(d_conflicts, d_colors)
+        self.key_delta(d_conflicts, d_colors)
     }
 }
 
@@ -257,7 +257,7 @@ impl IntSwap<2> for GraphColoring {
     /// they are, and corrects for the two being adjacent.
     #[inline]
     fn assign_swap_delta(&self, sol: &GraphColoringSolution, i: usize, j: usize) -> KeyDelta<2> {
-        self.keyed(self.swap_conflicts_delta(sol, i, j), 0)
+        self.key_delta(self.swap_conflicts_delta(sol, i, j), 0)
     }
 }
 
