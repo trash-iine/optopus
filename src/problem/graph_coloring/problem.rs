@@ -145,60 +145,6 @@ impl GraphColoring {
         })
     }
 
-    /// The single incremental-update primitive: recolor vertex `v` to
-    /// `new_color`, updating every cached field in O(degree). What `assign` does,
-    /// and the default `assign_swap` calls it twice. A no-op if `v` already
-    /// has `new_color`.
-    fn recolor(&self, sol: &mut GraphColoringSolution, v: usize, new_color: usize) {
-        let cur = sol.colors[v];
-        if cur == new_color {
-            return;
-        }
-        let k = self.k;
-
-        // Conflict delta: neighbors currently equal to `cur` stop conflicting,
-        // neighbors equal to `new_color` start conflicting.
-        let removed = sol.gamma[v * k + cur] as usize;
-        let added = sol.gamma[v * k + new_color] as usize;
-        sol.conflicts = sol.conflicts + added - removed;
-
-        // Neighbors see `v` change color.
-        for &(u, _w) in self.graph.iter_on_adjacency(v) {
-            sol.gamma[u * k + cur] -= 1;
-            sol.gamma[u * k + new_color] += 1;
-        }
-
-        // Color-class bookkeeping.
-        sol.class_size[cur] -= 1;
-        if sol.class_size[cur] == 0 {
-            sol.colors_used -= 1;
-        }
-        if sol.class_size[new_color] == 0 {
-            sol.colors_used += 1;
-        }
-        sol.class_size[new_color] += 1;
-
-        sol.colors[v] = new_color;
-        sol.objective = sol.colors_used as i64 + self.penalty_weight() * sol.conflicts as i64;
-    }
-
-    /// O(1) changes in `(conflicts, colors_used)` if vertex `v` is recolored
-    /// to `new_color`.
-    fn recolor_deltas(
-        &self,
-        sol: &GraphColoringSolution,
-        v: usize,
-        new_color: usize,
-    ) -> (i64, i64) {
-        let cur = sol.colors[v];
-        let k = self.k;
-        let d_conflicts = sol.gamma[v * k + new_color] as i64 - sol.gamma[v * k + cur] as i64;
-        // `new_color` becomes non-empty, `cur` becomes empty.
-        let d_colors =
-            i64::from(sol.class_size[new_color] == 0) - i64::from(sol.class_size[cur] == 1);
-        (d_conflicts, d_colors)
-    }
-
     /// O(1) change in `conflicts` if the colors of `i` and `j` are exchanged.
     ///
     /// Requires `colors[i] != colors[j]`. The number of colors used is
@@ -238,14 +184,55 @@ impl IntAssignment<2> for GraphColoring {
         sol.colors[i] as i64
     }
 
+    /// Recolors vertex `v` and updates every cached field in O(degree), and
+    /// does nothing if `v` already has that color. The default `assign_swap`
+    /// calls it twice.
     #[inline]
-    fn assign(&self, sol: &mut GraphColoringSolution, i: usize, value: i64) {
-        self.recolor(sol, i, value as usize);
+    fn assign(&self, sol: &mut GraphColoringSolution, v: usize, new_color: i64) {
+        let new_color = new_color as usize;
+        let cur = sol.colors[v];
+        if cur == new_color {
+            return;
+        }
+        let k = self.k;
+
+        // Neighbors colored `cur` stop conflicting with `v`, and those colored
+        // `new_color` start.
+        let removed = sol.gamma[v * k + cur] as usize;
+        let added = sol.gamma[v * k + new_color] as usize;
+        sol.conflicts = sol.conflicts + added - removed;
+
+        // Neighbors see `v` change color.
+        for &(u, _w) in self.graph.iter_on_adjacency(v) {
+            sol.gamma[u * k + cur] -= 1;
+            sol.gamma[u * k + new_color] += 1;
+        }
+
+        // Color-class bookkeeping.
+        sol.class_size[cur] -= 1;
+        if sol.class_size[cur] == 0 {
+            sol.colors_used -= 1;
+        }
+        if sol.class_size[new_color] == 0 {
+            sol.colors_used += 1;
+        }
+        sol.class_size[new_color] += 1;
+
+        sol.colors[v] = new_color;
+        sol.objective = sol.colors_used as i64 + self.penalty_weight() * sol.conflicts as i64;
     }
 
+    /// Prices a recolor of `v` in O(1) from its row of `gamma` and the class
+    /// sizes.
     #[inline]
-    fn assign_delta(&self, sol: &GraphColoringSolution, i: usize, value: i64) -> KeyDelta<2> {
-        let (d_conflicts, d_colors) = self.recolor_deltas(sol, i, value as usize);
+    fn assign_delta(&self, sol: &GraphColoringSolution, v: usize, new_color: i64) -> KeyDelta<2> {
+        let new_color = new_color as usize;
+        let cur = sol.colors[v];
+        let k = self.k;
+        let d_conflicts = sol.gamma[v * k + new_color] as i64 - sol.gamma[v * k + cur] as i64;
+        // `new_color` becomes non-empty, `cur` becomes empty.
+        let d_colors =
+            i64::from(sol.class_size[new_color] == 0) - i64::from(sol.class_size[cur] == 1);
         self.key_delta(d_conflicts, d_colors)
     }
 }
