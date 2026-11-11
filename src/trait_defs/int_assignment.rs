@@ -2,84 +2,43 @@ use super::{Evaluate, ProblemTrait, RankKeys};
 use crate::building_blocks::representation::IntVars;
 
 /// What a change to an [`IntAssignment`] solution does, as the moves of this
-/// module price it.
+/// module price it, everything in it new minus old and lower being better.
 ///
-/// A move needs two things from it. The change in the solution's
-/// [`RankKeys`], which is what the move is compared by, and the change in the
-/// raw objective, which is what a search that weighs how much worse a move is
-/// reads through [`Evaluate`].
+/// `keys` is the change in each of the solution's [`RankKeys`], which is what
+/// the move is compared by. `cost` is the change in the objective with its
+/// direction applied, which is what a search that weighs how much worse a
+/// move is reads through [`Evaluate`].
 ///
 /// A solution that ranks by its objective alone has one key, the objective
-/// itself, so a plain `f64`, the change in the raw objective, is the delta of
-/// `IntAssignment<1>`. A solution ranked by several keys, a violation first
-/// and a cost second for one, prices a move as a [`KeyDelta`].
-///
-/// These two are the only implementations, and the trait is sealed, so an
-/// [`IntAssignment`] picks its `Delta` from them and never implements this.
-pub trait AssignDelta<const N: usize>: sealed::Sealed + Copy + Send + Sync {
-    /// The change in the raw objective, new minus old.
-    fn objective(&self) -> f64;
-
-    /// The change in each rank key, new minus old, with the keys oriented as
-    /// [`RankKeys`] reports them, lower being better. `sign` is `1.0` on a
-    /// minimized objective and `-1.0` on a maximized one.
-    fn keys(&self, sign: f64) -> [f64; N];
-
-    /// The change from `before` to `after`, read off the two solutions.
-    fn between<S: Evaluate + RankKeys<N>>(before: &S, after: &S) -> Self;
-}
-
-/// Keeps [`AssignDelta`] to the types of this module.
-mod sealed {
-    pub trait Sealed {}
-    impl Sealed for f64 {}
-    impl<const N: usize> Sealed for super::KeyDelta<N> {}
-}
-
-/// The change in the raw objective, the delta of a solution whose one rank
-/// key is its objective.
-impl AssignDelta<1> for f64 {
-    #[inline]
-    fn objective(&self) -> f64 {
-        *self
-    }
-
-    #[inline]
-    fn keys(&self, sign: f64) -> [f64; 1] {
-        [sign * self]
-    }
-
-    fn between<S: Evaluate + RankKeys<1>>(before: &S, after: &S) -> Self {
-        after.evaluate().raw() - before.evaluate().raw()
-    }
-}
-
-/// The change a move makes to a solution ranked by `N` keys.
+/// itself, and builds its delta with [`from_objective`](KeyDelta::from_objective).
+/// A solution ranked by several keys, a violation first and a cost second for
+/// one, fills in both fields itself.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct KeyDelta<const N: usize> {
-    /// The change in each rank key, new minus old, oriented as [`RankKeys`]
-    /// reports them, lower being better.
+pub struct KeyDelta<const N: usize = 1> {
+    /// The change in each rank key, oriented as [`RankKeys`] reports them.
     pub keys: [f64; N],
-    /// The change in the raw objective, new minus old.
-    pub objective: f64,
+    /// The change in the objective, negated on a maximized one.
+    pub cost: f64,
 }
 
-impl<const N: usize> AssignDelta<N> for KeyDelta<N> {
+impl KeyDelta {
+    /// The delta of a solution whose one rank key is its objective, from
+    /// `change`, the change in the plain objective. The direction is read off
+    /// `sol`, so a gain on a maximized objective comes out negative.
     #[inline]
-    fn objective(&self) -> f64 {
-        self.objective
+    pub fn from_objective<S: Evaluate>(sol: &S, change: f64) -> Self {
+        let cost = sol.evaluate().with_value(change).minimized();
+        Self { keys: [cost], cost }
     }
+}
 
-    #[inline]
-    fn keys(&self, _sign: f64) -> [f64; N] {
-        self.keys
-    }
-
+impl<const N: usize> KeyDelta<N> {
+    /// The change from `before` to `after`, read off the two solutions.
     fn between<S: Evaluate + RankKeys<N>>(before: &S, after: &S) -> Self {
         let (b, a) = (before.rank_keys(), after.rank_keys());
         Self {
             keys: std::array::from_fn(|k| a[k] - b[k]),
-            objective: after.evaluate().raw() - before.evaluate().raw(),
+            cost: after.evaluate().minimized() - before.evaluate().minimized(),
         }
     }
 }
@@ -95,22 +54,18 @@ impl<const N: usize> AssignDelta<N> for KeyDelta<N> {
 /// range mean something only on some problems, so they are the traits
 /// [`IntSwap`] and [`IntReverse`], which a problem implements to opt in.
 ///
-/// The moves compare by the solution's `N` [`RankKeys`], and add their
-/// [`Delta`](Self::Delta) to them. A solution that ranks by its objective,
-/// with `#[derive(Rankable)]` and no `rankable` attribute, has one key, and
-/// its delta is the `f64` change in the objective. A solution ranked by a
-/// violation first and a cost second has two, and prices each move as a
-/// [`KeyDelta<2>`](KeyDelta).
+/// The moves compare by the solution's `N` [`RankKeys`], and price each
+/// change as a [`KeyDelta`]. A solution that ranks by its objective, with
+/// `#[derive(Rankable)]` and no `rankable` attribute, has one key, and its
+/// delta comes from the change in the objective by
+/// [`KeyDelta::from_objective`]. A solution ranked by a violation first and
+/// a cost second has two, and prices each move as a `KeyDelta<2>`.
 ///
 /// [`IntegerProblem`](crate::problem::IntegerProblem) is the shortcut that
 /// brings its own solution, and is one of these.
 pub trait IntAssignment<const N: usize = 1>:
     ProblemTrait<Solution: Evaluate + RankKeys<N> + Sync> + Sync
 {
-    /// What a change to a solution does to its keys and objective, `f64` when
-    /// the solution ranks by its objective alone.
-    type Delta: AssignDelta<N>;
-
     /// The variables, fixed for the life of the problem.
     fn domains(&self) -> &IntVars;
 
@@ -125,7 +80,7 @@ pub trait IntAssignment<const N: usize = 1>:
     ///
     /// The default copies the solution and calls [`assign`](Self::assign) on
     /// the copy, and warns once at runtime that it does.
-    fn assign_delta(&self, sol: &Self::Solution, i: usize, value: i64) -> Self::Delta {
+    fn assign_delta(&self, sol: &Self::Solution, i: usize, value: i64) -> KeyDelta<N> {
         static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
         WARNED.get_or_init(|| {
             tracing::warn!(
@@ -142,7 +97,7 @@ pub trait IntAssignment<const N: usize = 1>:
     /// each variable's other values ascending. A solution that keeps a table
     /// of deltas in that layout is read here, and the default ignores `slot`.
     #[inline]
-    fn slot_delta(&self, sol: &Self::Solution, slot: usize, i: usize, value: i64) -> Self::Delta {
+    fn slot_delta(&self, sol: &Self::Solution, slot: usize, i: usize, value: i64) -> KeyDelta<N> {
         let _ = slot;
         self.assign_delta(sol, i, value)
     }
@@ -165,7 +120,7 @@ pub trait IntSwap<const N: usize = 1>: IntAssignment<N> {
 
     /// What exchanging `i` and `j` changes. The default copies the solution,
     /// and warns once at runtime that it does.
-    fn assign_swap_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> Self::Delta {
+    fn assign_swap_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> KeyDelta<N> {
         static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
         WARNED.get_or_init(|| {
             tracing::warn!(
@@ -201,7 +156,7 @@ pub trait IntReverse<const N: usize = 1>: IntAssignment<N> {
 
     /// What reversing `i..=j` changes. The default copies the solution, and
     /// warns once at runtime that it does.
-    fn assign_reverse_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> Self::Delta {
+    fn assign_reverse_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> KeyDelta<N> {
         static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
         WARNED.get_or_init(|| {
             tracing::warn!(
@@ -231,12 +186,11 @@ fn exchange<const N: usize, P: IntAssignment<N> + ?Sized>(
 
 /// The change `edit` makes to `sol`, found on a copy. What the defaults above
 /// price a move by.
-fn copied_delta<const N: usize, S, D>(sol: &S, edit: impl FnOnce(&mut S)) -> D
+fn copied_delta<const N: usize, S>(sol: &S, edit: impl FnOnce(&mut S)) -> KeyDelta<N>
 where
     S: Clone + Evaluate + RankKeys<N>,
-    D: AssignDelta<N>,
 {
     let mut copy = sol.clone();
     edit(&mut copy);
-    D::between(sol, &copy)
+    KeyDelta::between(sol, &copy)
 }

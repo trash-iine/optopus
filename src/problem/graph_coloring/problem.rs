@@ -216,21 +216,19 @@ impl GraphColoring {
     }
 
     /// The change a move makes that changes `conflicts` by `d_conflicts` and
-    /// `colors_used` by `d_colors`, as the two keys and the penalized
-    /// objective.
+    /// `colors_used` by `d_colors`, as the two keys and the change in the
+    /// penalized objective, which is minimized.
     #[inline]
     fn keyed(&self, d_conflicts: i64, d_colors: i64) -> KeyDelta<2> {
         let (d_conflicts, d_colors) = (d_conflicts as f64, d_colors as f64);
         KeyDelta {
             keys: [d_conflicts, d_colors],
-            objective: d_colors + self.penalty_weight() as f64 * d_conflicts,
+            cost: d_colors + self.penalty_weight() as f64 * d_conflicts,
         }
     }
 }
 
 impl IntAssignment<2> for GraphColoring {
-    type Delta = KeyDelta<2>;
-
     fn domains(&self) -> &IntVars {
         &self.domains
     }

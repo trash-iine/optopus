@@ -34,7 +34,7 @@ pub use binary::{BinaryProblem, FixVariables, FixedVariables, Placed, check_assi
 pub use branch::{BranchSpace, Branchable, Relaxation};
 pub use crossover::{Crossover, SubProblemExtractable};
 pub use evaluate::{Evaluable, Evaluate};
-pub use int_assignment::{AssignDelta, IntAssignment, IntReverse, IntSwap, KeyDelta};
+pub use int_assignment::{IntAssignment, IntReverse, IntSwap, KeyDelta};
 pub use neighbor::MoveToNeighbor;
 pub use optopus_derive::{Distance, EnabledTabu, Evaluate, Rankable};
 pub use problem::ProblemTrait;

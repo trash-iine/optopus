@@ -1,6 +1,6 @@
 //! The moves every [`IntAssignment`] gets.
 
-use crate::trait_defs::{AssignDelta, RankKeys, Rankable, is_better_after_move};
+use crate::trait_defs::{KeyDelta, RankKeys, Rankable, is_better_after_move};
 use crate::{
     building_blocks::{
         representation::{IntVar, IntVars},
@@ -21,9 +21,6 @@ struct Changes<'p, 's, const N: usize, P: IntAssignment<N>> {
     sol: &'s P::Solution,
     /// The slot of the next change.
     slot: usize,
-    /// `-1.0` on a maximized objective and `1.0` on a minimized one, read
-    /// once so that no candidate branches on the direction.
-    sign: f64,
     walk: Walk,
 }
 
@@ -43,13 +40,6 @@ enum Walk {
         row_start: usize,
         row_end: usize,
     },
-}
-
-/// The factor that turns a change in the raw objective of `sol` into a cost,
-/// lower being better.
-#[inline]
-fn direction<S: Evaluate>(sol: &S) -> f64 {
-    sol.evaluate().with_value(1.0).minimized()
 }
 
 impl<'p, 's, const N: usize, P: IntAssignment<N>> Changes<'p, 's, N, P> {
@@ -75,7 +65,6 @@ impl<'p, 's, const N: usize, P: IntAssignment<N>> Changes<'p, 's, N, P> {
             prob,
             sol,
             slot: 0,
-            sign: direction(sol),
             walk,
         }
     }
@@ -119,7 +108,6 @@ impl<const N: usize, P: IntAssignment<N>> Iterator for Changes<'_, '_, N, P> {
         Some(IntChangeNeighbor::priced(
             var,
             value,
-            self.sign,
             self.prob.slot_delta(self.sol, slot, var, value),
         ))
     }
@@ -130,12 +118,12 @@ impl<const N: usize, P: IntAssignment<N>> Iterator for Changes<'_, '_, N, P> {
     /// what lets the pricing inline into them.
     #[inline]
     fn fold<B, F: FnMut(B, Self::Item) -> B>(self, init: B, mut f: F) -> B {
-        let (prob, sol, sign) = (self.prob, self.sol, self.sign);
+        let (prob, sol) = (self.prob, self.sol);
         let mut slot = self.slot;
         let mut acc = init;
         let mut emit = |acc: B, slot: usize, var: usize, value: i64| {
             let delta = prob.slot_delta(sol, slot, var, value);
-            f(acc, IntChangeNeighbor::priced(var, value, sign, delta))
+            f(acc, IntChangeNeighbor::priced(var, value, delta))
         };
         match self.walk {
             Walk::Flip { sum, end } => {
@@ -185,13 +173,6 @@ fn keys_better<const N: usize>(a: &[f64; N], b: &[f64; N]) -> bool {
     false
 }
 
-/// The `keys` and `cost` of a move of this module priced at `delta`, `sign`
-/// being the solution's direction.
-#[inline]
-fn price<const N: usize>(sign: f64, delta: impl AssignDelta<N>) -> ([f64; N], f64) {
-    (delta.keys(sign), sign * delta.objective())
-}
-
 /// Sets variable `var` to `value`, any value in its range other than the
 /// current one. On a binary variable this is a flip.
 ///
@@ -232,17 +213,12 @@ impl<const N: usize> IntChangeNeighbor<N> {
     /// Builds the move setting `var` to `value`, priced by
     /// [`IntAssignment::assign_delta`].
     pub fn new<P: IntAssignment<N>>(prob: &P, sol: &P::Solution, var: usize, value: i64) -> Self {
-        Self::priced(
-            var,
-            value,
-            direction(sol),
-            prob.assign_delta(sol, var, value),
-        )
+        Self::priced(var, value, prob.assign_delta(sol, var, value))
     }
 
     #[inline]
-    fn priced(var: usize, value: i64, sign: f64, delta: impl AssignDelta<N>) -> Self {
-        let (keys, cost) = price(sign, delta);
+    fn priced(var: usize, value: i64, delta: KeyDelta<N>) -> Self {
+        let KeyDelta { keys, cost } = delta;
         Self {
             var,
             value,
@@ -290,7 +266,6 @@ impl<const N: usize, P: IntAssignment<N>> MoveToNeighbor<P> for IntChangeNeighbo
         Some(Self::priced(
             var,
             value,
-            direction(sol),
             prob.slot_delta(sol, slot as usize, var, value),
         ))
     }
@@ -334,7 +309,7 @@ impl<const N: usize> IntSwapNeighbor<N> {
     /// Builds the swap of `i` and `j`, priced by
     /// [`IntSwap::assign_swap_delta`].
     pub fn new<P: IntSwap<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
-        let (keys, cost) = price(direction(sol), prob.assign_swap_delta(sol, i, j));
+        let KeyDelta { keys, cost } = prob.assign_swap_delta(sol, i, j);
         Self { i, j, keys, cost }
     }
 }
@@ -450,7 +425,7 @@ impl<const N: usize> IntReverseNeighbor<N> {
     /// Builds the reversal of `i..=j`, priced by
     /// [`IntReverse::assign_reverse_delta`].
     pub fn new<P: IntReverse<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
-        let (keys, cost) = price(direction(sol), prob.assign_reverse_delta(sol, i, j));
+        let KeyDelta { keys, cost } = prob.assign_reverse_delta(sol, i, j);
         Self { i, j, keys, cost }
     }
 }
@@ -756,7 +731,6 @@ mod tests {
     }
 
     impl IntAssignment for Own {
-        type Delta = f64;
         fn domains(&self) -> &IntVars {
             &self.0
         }
@@ -769,8 +743,8 @@ mod tests {
             sol.terms[i] = t;
             sol.x[i] = value;
         }
-        fn assign_delta(&self, sol: &OwnSolution, i: usize, value: i64) -> f64 {
-            term(i, value) - sol.terms[i]
+        fn assign_delta(&self, sol: &OwnSolution, i: usize, value: i64) -> KeyDelta {
+            KeyDelta::from_objective(sol, term(i, value) - sol.terms[i])
         }
     }
 
@@ -798,7 +772,6 @@ mod tests {
             }
         }
         impl IntAssignment for DefaultDelta {
-            type Delta = f64;
             fn domains(&self) -> &IntVars {
                 self.0.domains()
             }
@@ -812,7 +785,7 @@ mod tests {
         let prob = DefaultDelta(Own(target_vars()));
         let sol = prob.new_solution(&mut rng(8));
         for m in IntChangeNeighbor::iter(&prob, &sol) {
-            assert_eq!(m.cost, prob.0.assign_delta(&sol, m.var, m.value));
+            assert_eq!(m.cost, prob.0.assign_delta(&sol, m.var, m.value).cost);
         }
     }
 
