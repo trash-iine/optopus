@@ -4,7 +4,7 @@ use crate::trait_defs::{KeyDelta, RankKeys, Rankable, is_better_after_move};
 use crate::{
     building_blocks::{
         representation::{IntVar, IntVars},
-        search::random_distinct_pair,
+        search::{pair_scan, random_distinct_pair},
     },
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
@@ -114,45 +114,39 @@ impl<const N: usize, P: IntAssignment<N>> Iterator for Changes<'_, '_, N, P> {
 
     /// The same walk as [`next`](Self::next), slot for slot, written as a loop
     /// over the variables and one over each variable's values. A search that
-    /// picks the best move folds the whole walk, and the nested loops are
-    /// what lets the pricing inline into them.
+    /// picks the best move folds the whole walk, and the change is priced at
+    /// one place in those loops, so the pricing inlines into them.
     #[inline]
     fn fold<B, F: FnMut(B, Self::Item) -> B>(self, init: B, mut f: F) -> B {
         let (prob, sol) = (self.prob, self.sol);
+        let vars = prob.domains();
         let mut slot = self.slot;
         let mut acc = init;
-        let mut emit = |acc: B, slot: usize, var: usize, value: i64| {
-            let delta = prob.slot_delta(sol, slot, var, value);
-            f(acc, IntChangeNeighbor::priced(var, value, delta))
-        };
-        match self.walk {
-            Walk::Flip { sum, end } => {
-                for var in slot..end {
-                    acc = emit(acc, var, var, sum - P::get(sol, var));
-                }
-            }
+        // The variable the walk resumes at and the first of its changes left.
+        // On a flip walk every variable has the first one's range.
+        let (shared, first_var, mut first_k) = match self.walk {
+            Walk::Flip { .. } => (Some(vars[0]), slot, 0),
             Walk::Rows {
-                next_var,
                 var,
-                range,
-                current,
                 row_start,
                 row_end,
-            } => {
-                for k in (slot - row_start)..(row_end - row_start) {
-                    acc = emit(acc, slot, var, range.nth_other(k as u64, current));
-                    slot += 1;
-                }
-                let vars = prob.domains();
-                for var in next_var..vars.len() {
-                    let range = vars[var];
-                    let current = P::get(sol, var);
-                    for k in 0..range.num_changes() {
-                        acc = emit(acc, slot, var, range.nth_other(k, current));
-                        slot += 1;
-                    }
-                }
+                ..
+            } if slot < row_end => (None, var, (slot - row_start) as u64),
+            Walk::Rows { next_var, .. } => (None, next_var, 0),
+        };
+        for var in first_var..vars.len() {
+            let range = match shared {
+                Some(range) => range,
+                None => vars[var],
+            };
+            let current = P::get(sol, var);
+            for k in first_k..range.num_changes() {
+                let value = range.nth_other(k, current);
+                let delta = prob.slot_delta(sol, slot, var, value);
+                acc = f(acc, IntChangeNeighbor::priced(var, value, delta));
+                slot += 1;
             }
+            first_k = 0;
         }
         acc
     }
@@ -363,12 +357,17 @@ impl<const N: usize, P: IntSwap<N>> MoveToNeighbor<P> for IntSwapNeighbor<N> {
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
         let vars = prob.domains();
         let n = vars.len();
-        (0..n).flat_map(move |i| {
-            let a = P::get(sol, i);
-            (i + 1..n)
-                .filter(move |&j| swappable(vars, i, j, a, P::get(sol, j)))
-                .map(move |j| Self::new(prob, sol, i, j))
-        })
+        pair_scan(
+            n,
+            move |i| (P::get(sol, i), i + 1..n),
+            move |&a, i, j| {
+                if swappable(vars, i, j, a, P::get(sol, j)) {
+                    Some(Self::new(prob, sol, i, j))
+                } else {
+                    None
+                }
+            },
+        )
     }
 
     fn move_to_be_better_than(&self, _: &P, src: &P::Solution, other: &P::Solution) -> bool {
@@ -457,11 +456,17 @@ impl<const N: usize, P: IntReverse<N>> MoveToNeighbor<P> for IntReverseNeighbor<
     /// once reversed.
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
         let n = prob.domains().len();
-        (0..n).flat_map(move |i| {
-            (i + 1..n)
-                .filter(move |&j| reversible(prob, sol, i, j))
-                .map(move |j| Self::new(prob, sol, i, j))
-        })
+        pair_scan(
+            n,
+            move |i| ((), i + 1..n),
+            move |_, i, j| {
+                if reversible(prob, sol, i, j) {
+                    Some(Self::new(prob, sol, i, j))
+                } else {
+                    None
+                }
+            },
+        )
     }
 
     fn move_to_be_better_than(&self, _: &P, src: &P::Solution, other: &P::Solution) -> bool {

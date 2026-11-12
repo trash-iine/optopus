@@ -94,8 +94,8 @@ src/
 │       ├── biased_fitness.rs the population ranking GA and HGS share
 │       ├── ruin_recreate.rs  destroy and repair over any Ruinable, GRASP's construction too
 │       ├── sampling.rs       the endpoints the position moves draw
-│       ├── pair_scan.rs      two nested index ranges as plain loops, which the QAP, bin
-│       │                     packing relocate and VRP swap / 2-opt scans list with
+│       ├── pair_scan.rs      two nested index ranges as plain loops, which the pair moves
+│       │                     list their neighborhoods with
 │       ├── adaptive_weights.rs  the roulette ALNS picks its operators by
 │       ├── metropolis.rs     the Metropolis acceptance SA, PT and PA share, and their sweeps
 │       └── anchored_sweep.rs the anchor widening and shuffled sweep every LocalRepair
