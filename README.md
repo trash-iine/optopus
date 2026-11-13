@@ -75,6 +75,7 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [Adaptive Large Neighborhood Search](docs/heuristics/alns.md) | `AdaptiveLargeNeighborhoodSearch<P>` |
 | [Iterated Greedy](docs/heuristics/iterated_greedy.md) | `IteratedGreedy<P>` |
 | [GRASP construction](docs/heuristics/greedy_randomized_construction.md) | `GreedyRandomizedConstruction<P>` |
+| [Weighted Local Search](docs/heuristics/weighted_local_search.md) | `WeightedLocalSearch<P>` |
 | [Breakout Local Search](docs/heuristics/breakout_local_search.md) | `BreakoutLocalSearch<P, S>` |
 | [Sequential / Iterated / VNS / Restart](docs/heuristics/meta.md) | `Sequential<P>`, `Iterated<P>`, `VariableNeighborhoodSearch<P>`, `Restart<P>` |
 | [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |

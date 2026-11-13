@@ -75,6 +75,8 @@ src/
 │   ├── tabu.rs               EnabledTabu, object safe on purpose, and the test that pins
 │   │                         every built-in move's policy
 │   ├── branch.rs             what BranchAndBound asks, and its integer and relaxation sides
+│   ├── weighted.rs           what WeightedLocalSearch asks, the constraint weights and the
+│   │                         prices a problem keeps under them
 │   └── problem.rs / neighbor.rs / crossover.rs / binary.rs / int_assignment.rs /
 │       ruinable.rs / reduction.rs
 ├── building_blocks/          what problems and heuristics are built from, in three groups.
@@ -97,6 +99,8 @@ src/
 │       ├── pair_scan.rs      two nested index ranges as plain loops, which the pair moves
 │       │                     list their neighborhoods with
 │       ├── adaptive_weights.rs  the roulette ALNS picks its operators by
+│       ├── index_set.rs      the set a weighted search keeps its violated constraints in,
+│       │                         updated per move and drawn from uniformly
 │       ├── metropolis.rs     the Metropolis acceptance SA, PT and PA share, and their sweeps
 │       └── anchored_sweep.rs the anchor widening and shuffled sweep every LocalRepair
 │                             descent runs
@@ -115,6 +119,8 @@ src/
     │                         construction)
     ├── max_cut/ qubo/ sat/ vertex_cover/
     │                         fix.rs, fixing variables and the branch space
+    ├── sat/ vertex_cover/    weights.rs, the WeightedConstraints side, one weight per clause
+    │                         or per edge
     ├── integer/              IntegerProblem, built from a closure, and formula.rs, the
     │                         expression model, with IntervalRelaxation in it too
     ├── vrp/                  one problem for one vehicle type or several (decisions/0014).

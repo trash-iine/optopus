@@ -18,8 +18,8 @@ use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearch, BranchAndBound, GreedyRandomizedConstruction, Heuristic,
     HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
-    WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
-    iterated_greedy_for_flow_shop,
+    WalkSatForSat, WeightedLocalSearch, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,
+    bls_for_max_cut, iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
     BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
@@ -42,7 +42,7 @@ use crate::problem::{
     },
 };
 use crate::search_state::{Crossover, Distance, Evaluate, ProblemTrait};
-use crate::trait_defs::{BinaryProblem, BranchSpace, Relaxation, Ruinable};
+use crate::trait_defs::{BinaryProblem, BranchSpace, Relaxation, Ruinable, WeightedConstraints};
 
 // ---------------------------------------------------------------------------
 // The problem table, the one list of the problems a config can name
@@ -559,6 +559,7 @@ impl ConfigurableProblem for Sat {
                     adaptive_noise.unwrap_or(false),
                 )))
             }
+            HeuristicConfig::WeightedLocalSearch { .. } => weighted_local_search(config, cond),
             _ => Err(unsupported::<Self>(config)),
         }
     }
@@ -675,6 +676,16 @@ impl ConfigurableProblem for VertexCover {
         Swap => VertexCoverSwapNeighbor,
     }
 
+    fn build_special_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        match config {
+            HeuristicConfig::WeightedLocalSearch { .. } => weighted_local_search(config, cond),
+            _ => Err(unsupported::<Self>(config)),
+        }
+    }
+
     binary_branch_and_bound!();
 
     crossovers! {
@@ -773,6 +784,40 @@ where
         }
         _ => unreachable!("ruin_and_recreate is only called on GRASP and ALNS configs"),
     }
+}
+
+/// The search of a `WeightedLocalSearch` config, on a problem with
+/// `WeightedConstraints`. The tenure and the smoothing are checked here so a
+/// bad config fails at startup rather than panicking in a run.
+fn weighted_local_search<P>(
+    config: &HeuristicConfig,
+    cond: StopCondition,
+) -> Result<Box<dyn Heuristic<P>>, OptError>
+where
+    P: WeightedConstraints + 'static,
+{
+    let HeuristicConfig::WeightedLocalSearch {
+        tabu_tenure,
+        smoothing,
+        ..
+    } = config
+    else {
+        unreachable!("weighted_local_search is only called on its own config")
+    };
+    let mut search = WeightedLocalSearch::<P>::new(cond);
+    if let Some(tenure) = *tabu_tenure {
+        check_tenure(tenure)?;
+        search = search.with_tabu_tenure(tenure);
+    }
+    if let Some(smoothing) = *smoothing {
+        if !(0.0..=1.0).contains(&smoothing) {
+            return Err(OptError::Config(format!(
+                "'smoothing' must be in [0, 1], got {smoothing}"
+            )));
+        }
+        search = search.with_smoothing(smoothing);
+    }
+    Ok(Box::new(search))
 }
 
 /// A `BranchAndBound` config's search, `steps[0]` searching each node and

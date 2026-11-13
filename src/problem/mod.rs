@@ -64,13 +64,15 @@ pub use max_cut::{
 };
 pub use qap::{Qap, QapOrderCrossover, QapSolution, QapSwapNeighbor};
 pub use qubo::{Qubo, QuboFlipNeighbor, QuboSolution, QuboSwapNeighbor, QuboUniformCrossover};
-pub use sat::{Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor, SatUniformCrossover};
+pub use sat::{
+    Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor, SatUniformCrossover, SatWeights,
+};
 pub use tsp::{
     Tsp, TspOrderCrossover, TspRelocateNeighbor, TspSolution, TspTour, TspTwoOptNeighbor,
 };
 pub use vertex_cover::{
     VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
-    VertexCoverUniformCrossover,
+    VertexCoverUniformCrossover, VertexCoverWeights,
 };
 pub use vrp::{
     ObjectiveMode, VehicleType, Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution,

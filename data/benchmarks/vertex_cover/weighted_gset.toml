@@ -1,0 +1,72 @@
+# WeightedLocalSearch against the general heuristics on vertex cover, G-set graphs.
+# The measurement of decisions/0022.
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/max_cut/G22"
+problem = "VertexCover"
+
+[[instances]]
+path = "data/instances/max_cut/G32"
+problem = "VertexCover"
+
+[[instances]]
+path = "data/instances/max_cut/G35"
+problem = "VertexCover"
+
+[[instances]]
+path = "data/instances/max_cut/G48"
+problem = "VertexCover"
+
+[[instances]]
+path = "data/instances/max_cut/G55"
+problem = "VertexCover"
+
+[[instances]]
+path = "data/instances/max_cut/G70"
+problem = "VertexCover"
+
+[[heuristics]]
+kind = "WeightedLocalSearch"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [3, 200]
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 100.0
+cooling_rate = 0.9995
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+max_iteration = 50000000
+
+[[heuristics]]
+kind = "PopulationAnnealing"
+neighbor = "Flip"
+population_size = 20
+initial_beta = 0.1
+delta_beta = 0.01225
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "Restart"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+[heuristics.restart_condition]
+max_failed_update = 10000
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [3, 200]
+[heuristics.steps.stop_condition]
+max_iteration = 50000

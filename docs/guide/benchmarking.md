@@ -92,6 +92,7 @@ algorithm's own page; this table is only the index.
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | MaxCut so far |
 | [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP only |
 | [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT only |
+| [`WeightedLocalSearch`](../heuristics/weighted_local_search.md#benchmark-config) | SAT, VertexCover |
 | [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop only |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |

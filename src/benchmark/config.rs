@@ -260,6 +260,19 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Local search on constraint weights (Sat and VertexCover).
+    WeightedLocalSearch {
+        /// Range `[min, max]` a move's tenure is drawn from. Default: [3, 12].
+        #[serde(skip_serializing_if = "Option::is_none")]
+        tabu_tenure: Option<(u64, u64)>,
+        /// Probability that a weighted local optimum lowers the weights of
+        /// the satisfied constraints instead of raising those of the
+        /// violated. Default: 0.0003.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        smoothing: Option<f64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Branch-and-bound (MaxCut, Qubo, Sat and VertexCover): `steps[0]`
     /// searches each node, its stop condition a budget per node. A run that
     /// searches every node proves its best solution optimal, which the report
@@ -399,7 +412,8 @@ heuristic_kinds! {
     steps: BranchAndBound, Sequential, Iterated, VariableNeighborhoodSearch, Restart,
         GeneticAlgorithm;
     other: BreakoutLocalSearch, LinKernighanHelsgaun, AdaptiveLargeNeighborhoodSearch,
-        IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch, WalkSat;
+        IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch, WalkSat,
+        WeightedLocalSearch;
 }
 
 /// A single instance entry in the config file.
@@ -616,6 +630,34 @@ cooling_rate = 0.99
         assert_eq!(h.kind_name(), "Iterated");
         assert_eq!(h.steps().len(), 2);
         assert_eq!(h.steps()[1].kind_name(), "SimulatedAnnealing");
+    }
+
+    #[test]
+    fn parses_weighted_local_search_toml() {
+        let bare: HeuristicConfig =
+            toml::from_str(r#"kind = "WeightedLocalSearch""#).expect("a bare kind parses");
+        assert_eq!(bare.kind_name(), "WeightedLocalSearch");
+        assert!(bare.neighbor().is_none());
+
+        let h: HeuristicConfig = toml::from_str(
+            r#"
+kind = "WeightedLocalSearch"
+tabu_tenure = [2, 6]
+smoothing = 0.01
+"#,
+        )
+        .expect("the fields parse");
+        match h {
+            HeuristicConfig::WeightedLocalSearch {
+                tabu_tenure,
+                smoothing,
+                ..
+            } => {
+                assert_eq!(tabu_tenure, Some((2, 6)));
+                assert_eq!(smoothing, Some(0.01));
+            }
+            _ => panic!("expected WeightedLocalSearch"),
+        }
     }
 
     #[test]

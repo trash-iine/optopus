@@ -73,6 +73,7 @@ max_failed_update = 5_000
 | [`BreakoutLocalSearch`](../heuristics/breakout_local_search.md#benchmark-config) | 現在は MaxCut |
 | [`LinKernighanHelsgaun`](../heuristics/lkh.md#benchmark-config) | TSP のみ |
 | [`WalkSat`](../heuristics/walksat.md#benchmark-config) | SAT のみ |
+| [`WeightedLocalSearch`](../heuristics/weighted_local_search.md#benchmark-config) | SAT, VertexCover |
 | [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop のみ |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
