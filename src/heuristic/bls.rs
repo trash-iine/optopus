@@ -228,13 +228,15 @@ where
         // inside it.
         let last = self.directed.len() - 1;
         let mut bound = 0.0;
-        for i in 0..last {
-            bound += p * self.directed[i].1;
+        let mut picked = last;
+        for (i, (_, share)) in self.directed.iter().enumerate().take(last) {
+            bound += p * share;
             if prob <= bound {
-                return self.directed[i].0.as_mut();
+                picked = i;
+                break;
             }
         }
-        self.directed[last].0.as_mut()
+        self.directed[picked].0.as_mut()
     }
 }
 
