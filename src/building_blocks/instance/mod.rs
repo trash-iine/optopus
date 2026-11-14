@@ -9,5 +9,5 @@ mod graph;
 mod parse;
 
 pub use distance_store::{DistanceStore, EdgeWeightType};
-pub use graph::{Graph, seeded_rng};
+pub use graph::{EdgeIndex, Graph, seeded_rng};
 pub use parse::{InstanceLines, InstanceTokens};

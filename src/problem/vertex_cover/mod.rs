@@ -11,7 +11,9 @@ mod crossover;
 mod fix;
 mod neighbor;
 mod problem;
+mod weights;
 
 pub use crossover::VertexCoverUniformCrossover;
 pub use neighbor::{VertexCoverFlipNeighbor, VertexCoverSwapNeighbor};
 pub use problem::{VertexCover, VertexCoverSolution};
+pub use weights::VertexCoverWeights;

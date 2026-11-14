@@ -241,6 +241,7 @@ where
             | HeuristicConfig::GreedyRandomizedConstruction { .. }
             | HeuristicConfig::HybridGeneticSearch { .. }
             | HeuristicConfig::WalkSat { .. }
+            | HeuristicConfig::WeightedLocalSearch { .. }
             | HeuristicConfig::BranchAndBound { .. }
             | HeuristicConfig::Sequential { .. }
             | HeuristicConfig::Iterated { .. }
@@ -627,7 +628,8 @@ where
         | HeuristicConfig::IteratedGreedy { .. }
         | HeuristicConfig::GreedyRandomizedConstruction { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
-        | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
+        | HeuristicConfig::WalkSat { .. }
+        | HeuristicConfig::WeightedLocalSearch { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::BranchAndBound { .. } => {
             P::build_branch_and_bound(config, cond).map(|b| b as Box<dyn Heuristic<P>>)
         }
