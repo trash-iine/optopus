@@ -121,12 +121,35 @@ and the objective and nothing more, so such a problem implements the trait
 | `domains` | yes | the variables |
 | `get(sol, i)` | yes | the value of variable `i` |
 | `assign(sol, i, value)` | yes | sets it, keeping the objective and anything cached up to date |
-| `assign_delta(sol, i, value)` | no | what `assign` would change, read from the cache |
-| `assign_swap`, `assign_reverse` and their `_delta` | no | the same for the other two moves |
+| `assign_delta(sol, i, value)` | no | what `assign` would change, read from the cache, as a `KeyDelta` |
+
+A solution ranked by its objective builds that `KeyDelta` with
+`KeyDelta::from_objective(sol, change)`, from the change in the plain
+objective, new minus old. It reads the direction off `sol`.
 
 Its `ProblemTrait` and the solution's `Evaluate` are written as for any
-[custom problem](../guide/custom_problem.md). The three moves then work as
-they do on an `IntegerProblem`, which is itself an `IntAssignment`.
+[custom problem](../guide/custom_problem.md). `IntChangeNeighbor` then works
+as it does on an `IntegerProblem`, which is itself an `IntAssignment`.
+
+Exchanging two values means something only where a value can sit on more
+than one variable, and reversing a range only where the order of the
+variables does, so the other two moves ask for traits of their own.
+`IntSwapNeighbor` needs `IntSwap`, with `assign_swap` and
+`assign_swap_delta`, and `IntReverseNeighbor` needs `IntReverse`, with
+`assign_reverse` and `assign_reverse_delta`. Both methods of each have
+defaults, so `impl IntSwap for MyProblem {}` is enough to use the move, and
+overriding the delta is what makes it fast.
+
+A solution ranked by several keys, a violation first and a cost second for
+one, implements `IntAssignment<N>` for its `N` keys, and fills in each
+`KeyDelta<N>` itself. It holds the change in each key and the change in the
+objective with its direction applied, both lower being better, the second
+being the number a search that weighs how much worse a move is reads. The
+moves are then `IntChangeNeighbor<N>`, and `IntSwapNeighbor<N>` and
+`IntReverseNeighbor<N>` on an `IntSwap<N>` and an `IntReverse<N>`, and they
+compare by the keys.
+[Graph Coloring](graph_coloring.md) is one, with its conflicts and its colors
+used as the two keys.
 
 ## Starting from a given assignment
 

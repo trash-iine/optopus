@@ -1,11 +1,14 @@
 //! The moves every [`IntAssignment`] gets.
 
-use crate::trait_defs::{Rankable, is_better_after_move};
+use crate::trait_defs::{KeyDelta, RankKeys, Rankable, is_better_after_move};
 use crate::{
-    building_blocks::{representation::IntVar, search::random_distinct_pair},
+    building_blocks::{
+        representation::{IntVar, IntVars},
+        search::{pair_scan, random_distinct_pair},
+    },
     error::OptError,
     search_state::{EnabledTabu, Evaluate, MoveToNeighbor},
-    trait_defs::IntAssignment,
+    trait_defs::{IntAssignment, IntReverse, IntSwap},
 };
 use rand::Rng;
 use rand::rngs::SmallRng;
@@ -13,14 +16,11 @@ use rand::rngs::SmallRng;
 /// Every value but the current one of every variable, in index order and
 /// ascending, as one flat walk over the changes. The walk's position is the
 /// change's slot, which is how [`IntAssignment::slot_delta`] finds it.
-struct Changes<'p, 's, P: IntAssignment> {
+struct Changes<'p, 's, const N: usize, P: IntAssignment<N>> {
     prob: &'p P,
     sol: &'s P::Solution,
     /// The slot of the next change.
     slot: usize,
-    /// `-1.0` on a maximized objective and `1.0` on a minimized one, read
-    /// once so that no candidate branches on the direction.
-    sign: f64,
     walk: Walk,
 }
 
@@ -42,14 +42,7 @@ enum Walk {
     },
 }
 
-/// The factor that turns a change in the raw objective of `sol` into a cost,
-/// lower being better.
-#[inline]
-fn direction<S: Evaluate>(sol: &S) -> f64 {
-    sol.evaluate().with_value(1.0).minimized()
-}
-
-impl<'p, 's, P: IntAssignment> Changes<'p, 's, P> {
+impl<'p, 's, const N: usize, P: IntAssignment<N>> Changes<'p, 's, N, P> {
     fn new(prob: &'p P, sol: &'s P::Solution) -> Self {
         let vars = prob.domains();
         // A permutation has no single change, so its walk is empty.
@@ -72,17 +65,16 @@ impl<'p, 's, P: IntAssignment> Changes<'p, 's, P> {
             prob,
             sol,
             slot: 0,
-            sign: direction(sol),
             walk,
         }
     }
 }
 
-impl<P: IntAssignment> Iterator for Changes<'_, '_, P> {
-    type Item = IntChangeNeighbor;
+impl<const N: usize, P: IntAssignment<N>> Iterator for Changes<'_, '_, N, P> {
+    type Item = IntChangeNeighbor<N>;
 
     #[inline]
-    fn next(&mut self) -> Option<IntChangeNeighbor> {
+    fn next(&mut self) -> Option<IntChangeNeighbor<N>> {
         let slot = self.slot;
         let (var, value) = match &mut self.walk {
             Walk::Flip { sum, end } => {
@@ -113,45 +105,124 @@ impl<P: IntAssignment> Iterator for Changes<'_, '_, P> {
             }
         };
         self.slot += 1;
-        Some(IntChangeNeighbor {
+        Some(IntChangeNeighbor::priced(
             var,
             value,
-            cost: self.sign * self.prob.slot_delta(self.sol, slot, var, value),
-        })
+            self.prob.slot_delta(self.sol, slot, var, value),
+        ))
     }
+
+    /// The same walk as [`next`](Self::next), slot for slot, written as a loop
+    /// over the variables and one over each variable's values. A search that
+    /// picks the best move folds the whole walk, and the change is priced at
+    /// one place in those loops, so the pricing inlines into them.
+    #[inline]
+    fn fold<B, F: FnMut(B, Self::Item) -> B>(self, init: B, mut f: F) -> B {
+        let (prob, sol) = (self.prob, self.sol);
+        let vars = prob.domains();
+        let mut slot = self.slot;
+        let mut acc = init;
+        // The variable the walk resumes at and the first of its changes left.
+        // On a flip walk every variable has the first one's range.
+        let (shared, first_var, mut first_k) = match self.walk {
+            Walk::Flip { .. } => (Some(vars[0]), slot, 0),
+            Walk::Rows {
+                var,
+                row_start,
+                row_end,
+                ..
+            } if slot < row_end => (None, var, (slot - row_start) as u64),
+            Walk::Rows { next_var, .. } => (None, next_var, 0),
+        };
+        for var in first_var..vars.len() {
+            let range = match shared {
+                Some(range) => range,
+                None => vars[var],
+            };
+            let current = P::get(sol, var);
+            for k in first_k..range.num_changes() {
+                let value = range.nth_other(k, current);
+                let delta = prob.slot_delta(sol, slot, var, value);
+                acc = f(acc, IntChangeNeighbor::priced(var, value, delta));
+                slot += 1;
+            }
+            first_k = 0;
+        }
+        acc
+    }
+}
+
+/// Whether keys `a` are better than keys `b`, the first that differs
+/// deciding, lower being better. How two moves of this module compare.
+#[inline]
+fn keys_better<const N: usize>(a: &[f64; N], b: &[f64; N]) -> bool {
+    for k in 0..N {
+        if a[k] < b[k] {
+            return true;
+        }
+        if a[k] > b[k] {
+            return false;
+        }
+    }
+    false
 }
 
 /// Sets variable `var` to `value`, any value in its range other than the
 /// current one. On a binary variable this is a flip.
 ///
+/// It ranks by `keys`, the change it makes to the solution's `N` rank keys.
 /// `cost` is the change the move makes to the objective with its direction
 /// applied, so lower is better. It is what [`Evaluable::minimized`](crate::trait_defs::Evaluable::minimized) reports
-/// for the move.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+/// for the move. On a solution ranked by its objective the two are the same
+/// number.
+#[derive(Debug, Clone, Copy, Evaluate, EnabledTabu)]
 #[tabu(dense(var))]
-pub struct IntChangeNeighbor {
+pub struct IntChangeNeighbor<const N: usize = 1> {
     /// The variable to change.
     pub var: usize,
     /// The value it takes.
     pub value: i64,
+    /// The change the move makes to each rank key, lower is better.
+    pub keys: [f64; N],
     /// The change the move makes, with the direction applied, lower is better.
     #[objective(minimize)]
     pub cost: f64,
 }
 
-impl IntChangeNeighbor {
-    /// Builds the move setting `var` to `value`, its cost from
+impl<const N: usize> RankKeys<N> for IntChangeNeighbor<N> {
+    #[inline]
+    fn rank_keys(&self) -> [f64; N] {
+        self.keys
+    }
+}
+
+impl<const N: usize> Rankable for IntChangeNeighbor<N> {
+    #[inline]
+    fn is_better_than(&self, other: &Self) -> bool {
+        keys_better(&self.keys, &other.keys)
+    }
+}
+
+impl<const N: usize> IntChangeNeighbor<N> {
+    /// Builds the move setting `var` to `value`, priced by
     /// [`IntAssignment::assign_delta`].
-    pub fn new<P: IntAssignment>(prob: &P, sol: &P::Solution, var: usize, value: i64) -> Self {
+    pub fn new<P: IntAssignment<N>>(prob: &P, sol: &P::Solution, var: usize, value: i64) -> Self {
+        Self::priced(var, value, prob.assign_delta(sol, var, value))
+    }
+
+    #[inline]
+    fn priced(var: usize, value: i64, delta: KeyDelta<N>) -> Self {
+        let KeyDelta { keys, cost } = delta;
         Self {
             var,
             value,
-            cost: direction(sol) * prob.assign_delta(sol, var, value),
+            keys,
+            cost,
         }
     }
 }
 
-impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
+impl<const N: usize, P: IntAssignment<N>> MoveToNeighbor<P> for IntChangeNeighbor<N> {
     /// Hands this move's [`EnabledTabu`] policy to the search state, which is
     /// what holds the tabu map.
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
@@ -186,11 +257,11 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
         let var = vars.var_of_change(slot);
         let k = slot - vars.row_start(var) as u64;
         let value = vars[var].nth_other(k, P::get(sol, var));
-        Some(Self {
+        Some(Self::priced(
             var,
             value,
-            cost: direction(sol) * prob.slot_delta(sol, slot as usize, var, value),
-        })
+            prob.slot_delta(sol, slot as usize, var, value),
+        ))
     }
 }
 
@@ -198,27 +269,42 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntChangeNeighbor {
 /// differ and fit each other's range are moves. On a
 /// [permutation](crate::building_blocks::representation::IntVars::permutation)
 /// the result is again one.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+///
+/// It ranks and is evaluated as [`IntChangeNeighbor`] is.
+#[derive(Debug, Clone, Copy, Evaluate, EnabledTabu)]
 #[tabu(pair(i, j))]
-pub struct IntSwapNeighbor {
+pub struct IntSwapNeighbor<const N: usize = 1> {
     /// The smaller of the two variables.
     pub i: usize,
     /// The larger of the two variables.
     pub j: usize,
+    /// The change the move makes to each rank key, lower is better.
+    pub keys: [f64; N],
     /// The change the move makes, with the direction applied, lower is better.
     #[objective(minimize)]
     pub cost: f64,
 }
 
-impl IntSwapNeighbor {
-    /// Builds the swap of `i` and `j`, its cost from
-    /// [`IntAssignment::assign_swap_delta`].
-    pub fn new<P: IntAssignment>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
-        Self {
-            i,
-            j,
-            cost: direction(sol) * prob.assign_swap_delta(sol, i, j),
-        }
+impl<const N: usize> RankKeys<N> for IntSwapNeighbor<N> {
+    #[inline]
+    fn rank_keys(&self) -> [f64; N] {
+        self.keys
+    }
+}
+
+impl<const N: usize> Rankable for IntSwapNeighbor<N> {
+    #[inline]
+    fn is_better_than(&self, other: &Self) -> bool {
+        keys_better(&self.keys, &other.keys)
+    }
+}
+
+impl<const N: usize> IntSwapNeighbor<N> {
+    /// Builds the swap of `i` and `j`, priced by
+    /// [`IntSwap::assign_swap_delta`].
+    pub fn new<P: IntSwap<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
+        let KeyDelta { keys, cost } = prob.assign_swap_delta(sol, i, j);
+        Self { i, j, keys, cost }
     }
 }
 
@@ -248,16 +334,16 @@ fn sample_pair<M>(
         .map(|(i, j)| build(i, j))
 }
 
-/// Whether exchanging `i` and `j` changes the solution and keeps both values
-/// in range.
+/// Whether exchanging values `a` of `i` and `b` of `j` changes the solution
+/// and keeps both values in range. When every variable has the same range,
+/// as on a permutation or a coloring, any two values fit each other's
+/// variables, and only whether they differ is checked.
 #[inline]
-fn swappable<P: IntAssignment>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> bool {
-    let (a, b) = (P::get(sol, i), P::get(sol, j));
-    let vars = prob.domains();
-    a != b && vars[i].contains(b) && vars[j].contains(a)
+fn swappable(vars: &IntVars, i: usize, j: usize, a: i64, b: i64) -> bool {
+    a != b && (vars.same_range() || (vars[i].contains(b) && vars[j].contains(a)))
 }
 
-impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
+impl<const N: usize, P: IntSwap<N>> MoveToNeighbor<P> for IntSwapNeighbor<N> {
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
         Some(self)
     }
@@ -269,12 +355,19 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
 
     /// Every pair `i < j` whose values differ and fit each other's range.
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
-        let n = prob.domains().len();
-        (0..n).flat_map(move |i| {
-            (i + 1..n)
-                .filter(move |&j| swappable(prob, sol, i, j))
-                .map(move |j| Self::new(prob, sol, i, j))
-        })
+        let vars = prob.domains();
+        let n = vars.len();
+        pair_scan(
+            n,
+            move |i| (P::get(sol, i), i + 1..n),
+            move |&a, i, j| {
+                if swappable(vars, i, j, a, P::get(sol, j)) {
+                    Some(Self::new(prob, sol, i, j))
+                } else {
+                    None
+                }
+            },
+        )
     }
 
     fn move_to_be_better_than(&self, _: &P, src: &P::Solution, other: &P::Solution) -> bool {
@@ -287,7 +380,7 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
         sample_pair(
             prob.domains().len(),
             rng,
-            |i, j| swappable(prob, sol, i, j),
+            |i, j| swappable(prob.domains(), i, j, P::get(sol, i), P::get(sol, j)),
             |i, j| Self::new(prob, sol, i, j),
         )
     }
@@ -297,39 +390,59 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntSwapNeighbor {
 /// value fits its new variable's range. On a
 /// [permutation](crate::building_blocks::representation::IntVars::permutation)
 /// read as a tour this is a 2-opt move, and the result is again a permutation.
-#[derive(Debug, Clone, Copy, Rankable, Evaluate, EnabledTabu)]
+///
+/// It ranks and is evaluated as [`IntChangeNeighbor`] is.
+#[derive(Debug, Clone, Copy, Evaluate, EnabledTabu)]
 #[tabu(pair(i, j))]
-pub struct IntReverseNeighbor {
+pub struct IntReverseNeighbor<const N: usize = 1> {
     /// The first variable of the range.
     pub i: usize,
     /// The last variable of the range.
     pub j: usize,
+    /// The change the move makes to each rank key, lower is better.
+    pub keys: [f64; N],
     /// The change the move makes, with the direction applied, lower is better.
     #[objective(minimize)]
     pub cost: f64,
 }
 
-impl IntReverseNeighbor {
-    /// Builds the reversal of `i..=j`, its cost from
-    /// [`IntAssignment::assign_reverse_delta`].
-    pub fn new<P: IntAssignment>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
-        Self {
-            i,
-            j,
-            cost: direction(sol) * prob.assign_reverse_delta(sol, i, j),
-        }
+impl<const N: usize> RankKeys<N> for IntReverseNeighbor<N> {
+    #[inline]
+    fn rank_keys(&self) -> [f64; N] {
+        self.keys
+    }
+}
+
+impl<const N: usize> Rankable for IntReverseNeighbor<N> {
+    #[inline]
+    fn is_better_than(&self, other: &Self) -> bool {
+        keys_better(&self.keys, &other.keys)
+    }
+}
+
+impl<const N: usize> IntReverseNeighbor<N> {
+    /// Builds the reversal of `i..=j`, priced by
+    /// [`IntReverse::assign_reverse_delta`].
+    pub fn new<P: IntReverse<N>>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> Self {
+        let KeyDelta { keys, cost } = prob.assign_reverse_delta(sol, i, j);
+        Self { i, j, keys, cost }
     }
 }
 
 /// Whether reversing `i..=j` keeps every value in its new variable's range.
 /// Free when every variable has the same range, as on a permutation.
 #[inline]
-fn reversible<P: IntAssignment>(prob: &P, sol: &P::Solution, i: usize, j: usize) -> bool {
+fn reversible<const N: usize, P: IntAssignment<N>>(
+    prob: &P,
+    sol: &P::Solution,
+    i: usize,
+    j: usize,
+) -> bool {
     let vars = prob.domains();
     vars.same_range() || (i..=j).all(|p| vars[p].contains(P::get(sol, i + j - p)))
 }
 
-impl<P: IntAssignment> MoveToNeighbor<P> for IntReverseNeighbor {
+impl<const N: usize, P: IntReverse<N>> MoveToNeighbor<P> for IntReverseNeighbor<N> {
     fn tabu_policy(&self) -> Option<&dyn EnabledTabu> {
         Some(self)
     }
@@ -343,11 +456,17 @@ impl<P: IntAssignment> MoveToNeighbor<P> for IntReverseNeighbor {
     /// once reversed.
     fn iter(prob: &P, sol: &P::Solution) -> impl Iterator<Item = Self> + Send {
         let n = prob.domains().len();
-        (0..n).flat_map(move |i| {
-            (i + 1..n)
-                .filter(move |&j| reversible(prob, sol, i, j))
-                .map(move |j| Self::new(prob, sol, i, j))
-        })
+        pair_scan(
+            n,
+            move |i| ((), i + 1..n),
+            move |_, i, j| {
+                if reversible(prob, sol, i, j) {
+                    Some(Self::new(prob, sol, i, j))
+                } else {
+                    None
+                }
+            },
+        )
     }
 
     fn move_to_be_better_than(&self, _: &P, src: &P::Solution, other: &P::Solution) -> bool {
@@ -450,6 +569,54 @@ mod tests {
         assert_eq!(moves.len() as u64, prob.variables().total_changes());
         assert_eq!(prob.variables().total_changes(), 42); // 5 + 6 + 0 + 1 + 30
         assert!(moves.iter().all(|m| m.value != sol.value(m.var)));
+    }
+
+    /// Folding the walk, as a best-move search does, yields the moves `next`
+    /// yields, in the same order and at the same prices, from the start and
+    /// from part way through a variable's values.
+    #[test]
+    fn folding_the_changes_walks_what_next_walks() {
+        fn key(m: &IntChangeNeighbor) -> (usize, i64, u64) {
+            (m.var, m.value, m.cost.to_bits())
+        }
+        // A `for` loop calls `next`, not `fold`.
+        fn by_next<P: IntAssignment>(it: Changes<'_, '_, 1, P>) -> Vec<(usize, i64, u64)> {
+            let mut v = Vec::new();
+            for m in it {
+                v.push(key(&m));
+            }
+            v
+        }
+        let ranged = fast();
+        let flips = IntegerProblem::minimize(
+            (0..TARGETS.len()).map(|_| IntVar::binary()).collect(),
+            target_sum as Objective,
+        );
+        /// The walk by `next`, by `fold`, and by `fold` after `skip` taken by
+        /// `next`.
+        fn walks<P: IntAssignment>(
+            prob: &P,
+            sol: &P::Solution,
+            skip: usize,
+        ) -> [Vec<(usize, i64, u64)>; 3] {
+            let by_fold = IntChangeNeighbor::iter(prob, sol).fold(Vec::new(), |mut v, m| {
+                v.push(key(&m));
+                v
+            });
+            let mut it = IntChangeNeighbor::iter(prob, sol);
+            let mut resumed: Vec<_> = it.by_ref().take(skip).map(|m| key(&m)).collect();
+            it.for_each(|m| resumed.push(key(&m)));
+            [by_next(Changes::new(prob, sol)), by_fold, resumed]
+        }
+        let ranged_sol = ranged.new_solution(&mut rng(13));
+        let flip_sol = flips.new_solution(&mut rng(14));
+        for [by_next, by_fold, resumed] in
+            [walks(&ranged, &ranged_sol, 3), walks(&flips, &flip_sol, 2)]
+        {
+            assert!(!by_next.is_empty());
+            assert_eq!(by_next, by_fold);
+            assert_eq!(by_next, resumed);
+        }
     }
 
     #[test]
@@ -581,8 +748,8 @@ mod tests {
             sol.terms[i] = t;
             sol.x[i] = value;
         }
-        fn assign_delta(&self, sol: &OwnSolution, i: usize, value: i64) -> f64 {
-            term(i, value) - sol.terms[i]
+        fn assign_delta(&self, sol: &OwnSolution, i: usize, value: i64) -> KeyDelta {
+            KeyDelta::from_objective(sol, term(i, value) - sol.terms[i])
         }
     }
 
@@ -623,7 +790,7 @@ mod tests {
         let prob = DefaultDelta(Own(target_vars()));
         let sol = prob.new_solution(&mut rng(8));
         for m in IntChangeNeighbor::iter(&prob, &sol) {
-            assert_eq!(m.cost, prob.0.assign_delta(&sol, m.var, m.value));
+            assert_eq!(m.cost, prob.0.assign_delta(&sol, m.var, m.value).cost);
         }
     }
 

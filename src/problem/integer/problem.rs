@@ -1,7 +1,9 @@
 use crate::building_blocks::representation::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Evaluable, Evaluate, ProblemTrait};
-use crate::trait_defs::{Branchable, Distance, IntAssignment, Rankable};
+use crate::trait_defs::{
+    Branchable, Distance, IntAssignment, IntReverse, IntSwap, KeyDelta, Rankable,
+};
 use rand::Rng;
 
 /// An assignment of a value to every variable of an [`IntegerProblem`],
@@ -296,13 +298,22 @@ where
     }
 
     #[inline]
-    fn assign_delta(&self, sol: &IntSolution, i: usize, value: i64) -> f64 {
-        match self.delta.change_delta(sol, i, value) {
+    fn assign_delta(&self, sol: &IntSolution, i: usize, value: i64) -> KeyDelta {
+        let change = match self.delta.change_delta(sol, i, value) {
             Some(d) => d,
             None => self.full_delta(sol, "IntChangeNeighbor", |v| v[i] = value),
-        }
+        };
+        KeyDelta::from_objective(sol, change)
     }
+}
 
+impl<F, D, S, R> IntSwap for IntegerProblem<F, D, S, R>
+where
+    F: Fn(&[i64]) -> f64 + Sync,
+    D: ChangeDelta,
+    S: PairDelta,
+    R: PairDelta,
+{
     #[inline]
     fn assign_swap(&self, sol: &mut IntSolution, i: usize, j: usize) {
         let delta = self.swap_delta.pair_delta(sol, i, j);
@@ -310,13 +321,22 @@ where
     }
 
     #[inline]
-    fn assign_swap_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-        match self.swap_delta.pair_delta(sol, i, j) {
+    fn assign_swap_delta(&self, sol: &IntSolution, i: usize, j: usize) -> KeyDelta {
+        let change = match self.swap_delta.pair_delta(sol, i, j) {
             Some(d) => d,
             None => self.full_delta(sol, "IntSwapNeighbor", |v| v.swap(i, j)),
-        }
+        };
+        KeyDelta::from_objective(sol, change)
     }
+}
 
+impl<F, D, S, R> IntReverse for IntegerProblem<F, D, S, R>
+where
+    F: Fn(&[i64]) -> f64 + Sync,
+    D: ChangeDelta,
+    S: PairDelta,
+    R: PairDelta,
+{
     #[inline]
     fn assign_reverse(&self, sol: &mut IntSolution, i: usize, j: usize) {
         let delta = self.reverse_delta.pair_delta(sol, i, j);
@@ -324,11 +344,12 @@ where
     }
 
     #[inline]
-    fn assign_reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> f64 {
-        match self.reverse_delta.pair_delta(sol, i, j) {
+    fn assign_reverse_delta(&self, sol: &IntSolution, i: usize, j: usize) -> KeyDelta {
+        let change = match self.reverse_delta.pair_delta(sol, i, j) {
             Some(d) => d,
             None => self.full_delta(sol, "IntReverseNeighbor", |v| v[i..=j].reverse()),
-        }
+        };
+        KeyDelta::from_objective(sol, change)
     }
 }
 

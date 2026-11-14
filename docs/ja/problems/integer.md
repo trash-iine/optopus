@@ -108,11 +108,22 @@ let prob = IntegerProblem::minimize(IntVars::permutation(n), tour_len)
 | `domains` | はい | 変数 |
 | `get(sol, i)` | はい | 変数 `i` の値 |
 | `assign(sol, i, value)` | はい | 値を設定し、目的値とキャッシュしているものを最新に保つ |
-| `assign_delta(sol, i, value)` | いいえ | `assign` で何が変わるかを、キャッシュから読む |
-| `assign_swap`、`assign_reverse` と、それぞれの `_delta` | いいえ | 残り二つの近傍について同じこと |
+| `assign_delta(sol, i, value)` | いいえ | `assign` で何が変わるかを、キャッシュから読んで `KeyDelta` で返す |
+
+解が目的値で順位づけされるなら、その `KeyDelta` は素の目的値の変化 (新しい値から古い値を引いたもの) から
+`KeyDelta::from_objective(sol, change)` で作ります。最適化の向きは `sol` から読みます。
 
 その `ProblemTrait` と解の `Evaluate` は、ほかの[独自の問題](../guide/custom_problem.md)と同じように書きます。
-そうすれば三つの近傍は `IntegerProblem` のときと同じように動きます。`IntegerProblem` 自身も `IntAssignment` です。
+そうすれば `IntChangeNeighbor` は `IntegerProblem` のときと同じように動きます。`IntegerProblem` 自身も `IntAssignment` です。
+
+二つの値の交換は一つの値が複数の変数に入りうるときだけ、区間の反転は変数の並び順に意味があるときだけ意味を持つので、残り二つの近傍はそれぞれ別のトレイトを求めます。
+`IntSwapNeighbor` は `assign_swap` と `assign_swap_delta` を持つ `IntSwap` を、`IntReverseNeighbor` は `assign_reverse` と `assign_reverse_delta` を持つ `IntReverse` を求めます。
+どちらのメソッドにも既定があるので、近傍を使うだけなら `impl IntSwap for MyProblem {}` で足ります。速くするには変化量を上書きします。
+
+違反を先に、費用を次に比べるといった、複数のキーで順位づけされる解は、キーの数 `N` について `IntAssignment<N>` を実装し、`KeyDelta<N>` を自分で埋めます。
+`KeyDelta` は各キーの変化と、向きを適用した目的値の変化を持ち、どちらも小さいほど良い値です。目的値の変化は、move がどれだけ悪いかを量る探索が読む数です。
+近傍は `IntChangeNeighbor<N>` と、`IntSwap<N>` や `IntReverse<N>` を実装した問題での `IntSwapNeighbor<N>`、`IntReverseNeighbor<N>` になり、キーで比べます。
+[Graph Coloring](graph_coloring.md) がその例で、衝突の数と使った色の数が二つのキーです。
 
 ## 与えた割り当てから始める { #starting-from-a-given-assignment }
 

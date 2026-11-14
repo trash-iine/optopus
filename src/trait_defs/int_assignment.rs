@@ -1,23 +1,71 @@
 use super::{Evaluate, ProblemTrait, RankKeys};
 use crate::building_blocks::representation::IntVars;
 
+/// What a change to an [`IntAssignment`] solution does, as the moves of this
+/// module price it, everything in it new minus old and lower being better.
+///
+/// `keys` is the change in each of the solution's [`RankKeys`], which is what
+/// the move is compared by. `cost` is the change in the objective with its
+/// direction applied, which is what a search that weighs how much worse a
+/// move is reads through [`Evaluate`].
+///
+/// A solution that ranks by its objective alone has one key, the objective
+/// itself, and builds its delta with [`from_objective`](KeyDelta::from_objective).
+/// A solution ranked by several keys, a violation first and a cost second for
+/// one, fills in both fields itself.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct KeyDelta<const N: usize = 1> {
+    /// The change in each rank key, oriented as [`RankKeys`] reports them.
+    pub keys: [f64; N],
+    /// The change in the objective, negated on a maximized one.
+    pub cost: f64,
+}
+
+impl KeyDelta {
+    /// The delta of a solution whose one rank key is its objective, from
+    /// `change`, the change in the plain objective. The direction is read off
+    /// `sol`, so a gain on a maximized objective comes out negative.
+    #[inline]
+    pub fn from_objective<S: Evaluate>(sol: &S, change: f64) -> Self {
+        let cost = sol.evaluate().with_value(change).minimized();
+        Self { keys: [cost], cost }
+    }
+}
+
+impl<const N: usize> KeyDelta<N> {
+    /// The change from `before` to `after`, read off the two solutions.
+    fn between<S: Evaluate + RankKeys<N>>(before: &S, after: &S) -> Self {
+        let (b, a) = (before.rank_keys(), after.rank_keys());
+        Self {
+            keys: std::array::from_fn(|k| a[k] - b[k]),
+            cost: after.evaluate().minimized() - before.evaluate().minimized(),
+        }
+    }
+}
+
 /// A problem whose solutions, of the problem's own type, assign an integer to
 /// each variable.
 ///
-/// Reading and writing one value is all the moves of this module need, and
-/// the swap and the reversal have defaults built from those two. The solution
-/// is yours, so it can keep whatever makes pricing a move cheap, such as a per
-/// variable gain updated in [`assign`](Self::assign) and read back in
-/// [`assign_delta`](Self::assign_delta).
+/// Reading and writing one value is all a change of one variable needs, the
+/// move [`IntChangeNeighbor`](crate::problem::IntChangeNeighbor) makes. The
+/// solution is yours, so it can keep whatever makes pricing a move cheap, such
+/// as a per variable gain updated in [`assign`](Self::assign) and read back in
+/// [`assign_delta`](Self::assign_delta). Exchanging two values and reversing a
+/// range mean something only on some problems, so they are the traits
+/// [`IntSwap`] and [`IntReverse`], which a problem implements to opt in.
 ///
-/// A move prices one number, the change in the objective, so the solution
-/// ranks by that objective too, with `#[derive(Rankable)]` and no `rankable`
-/// attribute. That is the one key of [`RankKeys`] the moves add their change
-/// to.
+/// The moves compare by the solution's `N` [`RankKeys`], and price each
+/// change as a [`KeyDelta`]. A solution that ranks by its objective, with
+/// `#[derive(Rankable)]` and no `rankable` attribute, has one key, and its
+/// delta comes from the change in the objective by
+/// [`KeyDelta::from_objective`]. A solution ranked by a violation first and
+/// a cost second has two, and prices each move as a `KeyDelta<2>`.
 ///
 /// [`IntegerProblem`](crate::problem::IntegerProblem) is the shortcut that
 /// brings its own solution, and is one of these.
-pub trait IntAssignment: ProblemTrait<Solution: Evaluate + RankKeys<1> + Sync> + Sync {
+pub trait IntAssignment<const N: usize = 1>:
+    ProblemTrait<Solution: Evaluate + RankKeys<N> + Sync> + Sync
+{
     /// The variables, fixed for the life of the problem.
     fn domains(&self) -> &IntVars;
 
@@ -28,12 +76,11 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + RankKeys<1> + Sync> +
     /// objective, and anything else it caches, up to date.
     fn assign(&self, sol: &mut Self::Solution, i: usize, value: i64);
 
-    /// How much the raw objective changes when variable `i` of `sol` is set to
-    /// `value`, new minus old.
+    /// What setting variable `i` of `sol` to `value` changes.
     ///
     /// The default copies the solution and calls [`assign`](Self::assign) on
     /// the copy, and warns once at runtime that it does.
-    fn assign_delta(&self, sol: &Self::Solution, i: usize, value: i64) -> f64 {
+    fn assign_delta(&self, sol: &Self::Solution, i: usize, value: i64) -> KeyDelta<N> {
         static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
         WARNED.get_or_init(|| {
             tracing::warn!(
@@ -50,54 +97,71 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + RankKeys<1> + Sync> +
     /// each variable's other values ascending. A solution that keeps a table
     /// of deltas in that layout is read here, and the default ignores `slot`.
     #[inline]
-    fn slot_delta(&self, sol: &Self::Solution, slot: usize, i: usize, value: i64) -> f64 {
+    fn slot_delta(&self, sol: &Self::Solution, slot: usize, i: usize, value: i64) -> KeyDelta<N> {
         let _ = slot;
         self.assign_delta(sol, i, value)
     }
+}
 
+/// An [`IntAssignment`] whose variables can exchange their values, what
+/// [`IntSwapNeighbor`](crate::problem::IntSwapNeighbor) needs.
+///
+/// Exchanging two values means something only where a value can sit on more
+/// than one variable, as the colors of a coloring or the cities of a tour, so
+/// a problem opts in by implementing this. Both methods have defaults, so
+/// `impl IntSwap for MyProblem {}` makes the move available, priced on a copy
+/// of the solution.
+pub trait IntSwap<const N: usize = 1>: IntAssignment<N> {
     /// Exchanges the values of variables `i` and `j`. The default is two
-    /// [`assign`](Self::assign) calls.
+    /// [`assign`](IntAssignment::assign) calls.
     fn assign_swap(&self, sol: &mut Self::Solution, i: usize, j: usize) {
-        let (a, b) = (Self::get(sol, i), Self::get(sol, j));
-        if a != b {
-            self.assign(sol, i, b);
-            self.assign(sol, j, a);
-        }
+        exchange(self, sol, i, j);
     }
 
-    /// How much the raw objective changes when `i` and `j` are exchanged. The
-    /// default copies the solution, and warns once at runtime that it does.
-    fn assign_swap_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> f64 {
+    /// What exchanging `i` and `j` changes. The default copies the solution,
+    /// and warns once at runtime that it does.
+    fn assign_swap_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> KeyDelta<N> {
         static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
         WARNED.get_or_init(|| {
             tracing::warn!(
                 problem_type = std::any::type_name::<Self>(),
-                "Using the default implementation of IntAssignment::assign_swap_delta, \
+                "Using the default implementation of IntSwap::assign_swap_delta, \
                  which copies the solution for every candidate move."
             );
         });
         copied_delta(sol, |copy| self.assign_swap(copy, i, j))
     }
+}
 
-    /// Reverses the values of variables `i..=j`. The default swaps from both
-    /// ends inwards.
+/// An [`IntAssignment`] whose variables can have the order of their values
+/// reversed over a range, what
+/// [`IntReverseNeighbor`](crate::problem::IntReverseNeighbor) needs.
+///
+/// Reversing means something only where the order of the variables does, as
+/// on a permutation read as a tour, so a problem opts in by implementing
+/// this. Both methods have defaults, so `impl IntReverse for MyProblem {}`
+/// makes the move available, priced on a copy of the solution.
+pub trait IntReverse<const N: usize = 1>: IntAssignment<N> {
+    /// Reverses the values of variables `i..=j`. The default exchanges them
+    /// from both ends inwards, two [`assign`](IntAssignment::assign) calls
+    /// each.
     fn assign_reverse(&self, sol: &mut Self::Solution, i: usize, j: usize) {
         let (mut a, mut b) = (i, j);
         while a < b {
-            self.assign_swap(sol, a, b);
+            exchange(self, sol, a, b);
             a += 1;
             b -= 1;
         }
     }
 
-    /// How much the raw objective changes when `i..=j` is reversed. The
-    /// default copies the solution, and warns once at runtime that it does.
-    fn assign_reverse_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> f64 {
+    /// What reversing `i..=j` changes. The default copies the solution, and
+    /// warns once at runtime that it does.
+    fn assign_reverse_delta(&self, sol: &Self::Solution, i: usize, j: usize) -> KeyDelta<N> {
         static WARNED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
         WARNED.get_or_init(|| {
             tracing::warn!(
                 problem_type = std::any::type_name::<Self>(),
-                "Using the default implementation of IntAssignment::assign_reverse_delta, \
+                "Using the default implementation of IntReverse::assign_reverse_delta, \
                  which copies the solution for every candidate move."
             );
         });
@@ -105,10 +169,28 @@ pub trait IntAssignment: ProblemTrait<Solution: Evaluate + RankKeys<1> + Sync> +
     }
 }
 
+/// Exchanges the values of `i` and `j` by two [`assign`](IntAssignment::assign)
+/// calls, nothing when they are equal. What the swap and reversal defaults do.
+fn exchange<const N: usize, P: IntAssignment<N> + ?Sized>(
+    prob: &P,
+    sol: &mut P::Solution,
+    i: usize,
+    j: usize,
+) {
+    let (a, b) = (P::get(sol, i), P::get(sol, j));
+    if a != b {
+        prob.assign(sol, i, b);
+        prob.assign(sol, j, a);
+    }
+}
+
 /// The change `edit` makes to `sol`, found on a copy. What the defaults above
 /// price a move by.
-fn copied_delta<S: Clone + Evaluate>(sol: &S, edit: impl FnOnce(&mut S)) -> f64 {
+fn copied_delta<const N: usize, S>(sol: &S, edit: impl FnOnce(&mut S)) -> KeyDelta<N>
+where
+    S: Clone + Evaluate + RankKeys<N>,
+{
     let mut copy = sol.clone();
     edit(&mut copy);
-    copy.evaluate().raw() - sol.evaluate().raw()
+    KeyDelta::between(sol, &copy)
 }

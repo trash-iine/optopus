@@ -25,9 +25,9 @@ use crate::problem::{
     BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
     BinPackingSwapNeighbor, EigenvalueRelaxation, FlowShop, FlowShopInsertNeighbor,
     FlowShopOrderCrossover, FlowShopSolution, FlowShopSwapNeighbor, GraphColoring,
-    GraphColoringRecolorNeighbor, GraphColoringSolution, GraphColoringSwapNeighbor,
-    GraphColoringUniformCrossover, JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling,
-    JobShopSolution, JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
+    GraphColoringSolution, GraphColoringUniformCrossover, IntChangeNeighbor, IntSwapNeighbor,
+    JobShopPpxCrossover, JobShopRelocateNeighbor, JobShopScheduling, JobShopSolution,
+    JobShopSwapNeighbor, MaxCutFlipNeighbor, MaxCutSolution, MaxCutSwapNeighbor,
     MaxCutUniformCrossover, Qap, QapOrderCrossover, QapSolution, QapSwapNeighbor, QuboFlipNeighbor,
     QuboSwapNeighbor, QuboUniformCrossover, SatUniformCrossover, TspOrderCrossover, VertexCover,
     VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
@@ -950,8 +950,8 @@ impl ConfigurableProblem for FlowShop {
 impl ConfigurableProblem for GraphColoring {
     neighbors! {
         // `Flip` is the single-vertex recolor.
-        Flip => GraphColoringRecolorNeighbor,
-        Swap => GraphColoringSwapNeighbor,
+        Flip => IntChangeNeighbor<2>,
+        Swap => IntSwapNeighbor<2>,
     }
 
     crossovers! {

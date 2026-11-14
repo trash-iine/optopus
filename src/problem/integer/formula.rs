@@ -7,7 +7,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::building_blocks::representation::IntVars;
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluable, Evaluate, ProblemTrait, SubProblemExtractable};
-use crate::trait_defs::{Branchable, IntAssignment, Relaxation};
+use crate::trait_defs::{Branchable, IntAssignment, IntReverse, IntSwap, KeyDelta, Relaxation};
 use rand::Rng;
 
 /// An arithmetic expression over integer variables.
@@ -712,6 +712,21 @@ impl FormulaProblem {
         !self.vars.is_permutation()
     }
 
+    /// The change of the raw objective when variable `i` of `sol` goes to
+    /// `value`, read from the table, computed when there is none, and `0.0`
+    /// when `value` is the current value, which is no change.
+    #[inline]
+    fn objective_change(&self, sol: &FormulaSolution, i: usize, value: i64) -> f64 {
+        let current = sol.values[i];
+        if value == current {
+            0.0
+        } else if self.keeps_deltas() {
+            sol.deltas[self.vars.change_slot(i, current, value)]
+        } else {
+            self.change_delta(&sol.values, &sol.constraint_vals, i, value)
+        }
+    }
+
     /// The change of setting `x[i]` to `b`, penalties included, as the
     /// difference of the raw objective.
     #[inline]
@@ -839,7 +854,7 @@ impl IntAssignment for FormulaProblem {
         if value == sol.values[i] {
             return;
         }
-        let delta = self.assign_delta(sol, i, value);
+        let delta = self.objective_change(sol, i, value);
         for &c in &self.var_constraints[i] {
             sol.constraint_vals[c] += self.constraint_polys[c].change_delta(&sol.values, i, value);
         }
@@ -859,36 +874,33 @@ impl IntAssignment for FormulaProblem {
         }
     }
 
-    /// Read from the table, computed when there is none, and `0.0` when
-    /// `value` is the current value, which is no change.
     #[inline]
-    fn assign_delta(&self, sol: &FormulaSolution, i: usize, value: i64) -> f64 {
-        let current = sol.values[i];
-        if value == current {
-            0.0
-        } else if self.keeps_deltas() {
-            sol.deltas[self.vars.change_slot(i, current, value)]
-        } else {
-            self.change_delta(&sol.values, &sol.constraint_vals, i, value)
-        }
+    fn assign_delta(&self, sol: &FormulaSolution, i: usize, value: i64) -> KeyDelta {
+        KeyDelta::from_objective(sol, self.objective_change(sol, i, value))
     }
 
     #[inline]
-    fn slot_delta(&self, sol: &FormulaSolution, slot: usize, _: usize, _: i64) -> f64 {
-        sol.deltas[slot]
+    fn slot_delta(&self, sol: &FormulaSolution, slot: usize, _: usize, _: i64) -> KeyDelta {
+        KeyDelta::from_objective(sol, sol.deltas[slot])
     }
+}
 
+impl IntSwap for FormulaProblem {
     /// Priced from the monomials and constraints reading `i` or `j`.
-    fn assign_swap_delta(&self, sol: &FormulaSolution, i: usize, j: usize) -> f64 {
+    fn assign_swap_delta(&self, sol: &FormulaSolution, i: usize, j: usize) -> KeyDelta {
         let x = &sol.values;
-        self.priced(
+        let change = self.priced(
             self.objective_poly.swap_delta(x, i, j),
             &sol.constraint_vals,
             union_sorted(&self.var_constraints[i], &self.var_constraints[j]),
             |p| p.swap_delta(x, i, j),
-        )
+        );
+        KeyDelta::from_objective(sol, change)
     }
 }
+
+/// Priced by the default, on a copy of the solution.
+impl IntReverse for FormulaProblem {}
 
 /// The union of two ascending lists, ascending and without repeats.
 fn union_sorted<'a>(a: &'a [usize], b: &'a [usize]) -> impl Iterator<Item = usize> + 'a {

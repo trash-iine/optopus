@@ -1,7 +1,8 @@
 use crate::building_blocks::instance::Graph;
+use crate::building_blocks::representation::{IntVar, IntVars};
 use crate::error::OptError;
 use crate::search_state::{Distance, Evaluate, ProblemTrait};
-use crate::trait_defs::Rankable;
+use crate::trait_defs::{IntAssignment, IntSwap, KeyDelta, Rankable};
 use rand::Rng;
 
 /// The Graph Coloring problem in a self-contained, penalty-augmented form.
@@ -24,11 +25,18 @@ use rand::Rng;
 /// orders solutions exactly as the ranking does (as in
 /// [`crate::problem::VertexCover`]). The searches that weigh how much worse a
 /// candidate is read this number.
+///
+/// It is an [`IntAssignment`] over the two keys, one variable per vertex
+/// ranging over the palette, so its moves are the generic ones.
+/// [`IntChangeNeighbor<2>`](crate::problem::IntChangeNeighbor) recolors a
+/// vertex and [`IntSwapNeighbor<2>`](crate::problem::IntSwapNeighbor)
+/// exchanges the colors of two, each priced in O(1) from the solution's
+/// caches.
 pub struct GraphColoring {
-    /// The underlying graph.
-    pub graph: Graph,
-    /// Palette size (number of available colors).
-    pub k: usize,
+    graph: Graph,
+    k: usize,
+    /// One variable per vertex over `0..k`, what the generic moves walk.
+    domains: IntVars,
 }
 
 /// A solution for the Graph Coloring problem.
@@ -59,10 +67,21 @@ impl GraphColoring {
     /// as `max_degree + 1`.
     pub fn new(graph: Graph) -> Self {
         let max_degree = (0..graph.len()).map(|v| graph.degree(v)).max().unwrap_or(0);
-        Self {
-            graph,
-            k: max_degree + 1,
-        }
+        let k = max_degree + 1;
+        let domains = (0..graph.len())
+            .map(|_| IntVar::new(0, k as i64 - 1))
+            .collect();
+        Self { graph, k, domains }
+    }
+
+    /// The underlying graph.
+    pub fn graph(&self) -> &Graph {
+        &self.graph
+    }
+
+    /// The palette size, the number of available colors.
+    pub fn k(&self) -> usize {
+        self.k
     }
 
     /// Returns the penalty weight applied to each conflicting edge (`graph.len() + 1`).
@@ -126,18 +145,59 @@ impl GraphColoring {
         })
     }
 
-    /// The single incremental-update primitive: recolor vertex `v` to
-    /// `new_color`, updating every cached field in O(degree). Shared by the
-    /// recolor and swap moves. A no-op if `v` already has `new_color`.
-    pub(crate) fn recolor(&self, sol: &mut GraphColoringSolution, v: usize, new_color: usize) {
+    /// O(1) change in `conflicts` if the colors of `i` and `j` are exchanged.
+    ///
+    /// Requires `colors[i] != colors[j]`. The number of colors used is
+    /// unchanged by a swap.
+    fn swap_conflicts_delta(&self, sol: &GraphColoringSolution, i: usize, j: usize) -> i64 {
+        let k = self.k;
+        let ci = sol.colors[i];
+        let cj = sol.colors[j];
+        // If `i` and `j` are adjacent, each `gamma` row counts the other vertex,
+        // producing two phantom conflicts (they move simultaneously).
+        let edge_correction = if self.graph.has_edge(i, j) { 2 } else { 0 };
+        (sol.gamma[i * k + cj] as i64 - sol.gamma[i * k + ci] as i64)
+            + (sol.gamma[j * k + ci] as i64 - sol.gamma[j * k + cj] as i64)
+            - edge_correction
+    }
+
+    /// The change a move makes that changes `conflicts` by `d_conflicts` and
+    /// `colors_used` by `d_colors`, as the two keys and the change in the
+    /// penalized objective, which is minimized.
+    #[inline]
+    fn key_delta(&self, d_conflicts: i64, d_colors: i64) -> KeyDelta<2> {
+        let (d_conflicts, d_colors) = (d_conflicts as f64, d_colors as f64);
+        KeyDelta {
+            keys: [d_conflicts, d_colors],
+            cost: d_colors + self.penalty_weight() as f64 * d_conflicts,
+        }
+    }
+}
+
+impl IntAssignment<2> for GraphColoring {
+    fn domains(&self) -> &IntVars {
+        &self.domains
+    }
+
+    #[inline]
+    fn get(sol: &GraphColoringSolution, i: usize) -> i64 {
+        sol.colors[i] as i64
+    }
+
+    /// Recolors vertex `v` and updates every cached field in O(degree), and
+    /// does nothing if `v` already has that color. The default `assign_swap`
+    /// calls it twice.
+    #[inline]
+    fn assign(&self, sol: &mut GraphColoringSolution, v: usize, new_color: i64) {
+        let new_color = new_color as usize;
         let cur = sol.colors[v];
         if cur == new_color {
             return;
         }
         let k = self.k;
 
-        // Conflict delta: neighbors currently equal to `cur` stop conflicting,
-        // neighbors equal to `new_color` start conflicting.
+        // Neighbors colored `cur` stop conflicting with `v`, and those colored
+        // `new_color` start.
         let removed = sol.gamma[v * k + cur] as usize;
         let added = sol.gamma[v * k + new_color] as usize;
         sol.conflicts = sol.conflicts + added - removed;
@@ -162,49 +222,29 @@ impl GraphColoring {
         sol.objective = sol.colors_used as i64 + self.penalty_weight() * sol.conflicts as i64;
     }
 
-    /// O(1) changes in `(conflicts, colors_used)` if vertex `v` is recolored
-    /// to `new_color`.
-    pub(crate) fn recolor_deltas(
-        &self,
-        sol: &GraphColoringSolution,
-        v: usize,
-        new_color: usize,
-    ) -> (i64, i64) {
+    /// Prices a recolor of `v` in O(1) from its row of `gamma` and the class
+    /// sizes.
+    #[inline]
+    fn assign_delta(&self, sol: &GraphColoringSolution, v: usize, new_color: i64) -> KeyDelta<2> {
+        let new_color = new_color as usize;
         let cur = sol.colors[v];
         let k = self.k;
         let d_conflicts = sol.gamma[v * k + new_color] as i64 - sol.gamma[v * k + cur] as i64;
         // `new_color` becomes non-empty, `cur` becomes empty.
         let d_colors =
             i64::from(sol.class_size[new_color] == 0) - i64::from(sol.class_size[cur] == 1);
-        (d_conflicts, d_colors)
+        self.key_delta(d_conflicts, d_colors)
     }
+}
 
-    /// O(1) change in `conflicts` if the colors of `i` and `j` are exchanged.
-    ///
-    /// Requires `colors[i] != colors[j]`. The number of colors used is
-    /// unchanged by a swap.
-    pub(crate) fn swap_conflicts_delta(
-        &self,
-        sol: &GraphColoringSolution,
-        i: usize,
-        j: usize,
-    ) -> i64 {
-        let k = self.k;
-        let ci = sol.colors[i];
-        let cj = sol.colors[j];
-        // If `i` and `j` are adjacent, each `gamma` row counts the other vertex,
-        // producing two phantom conflicts (they move simultaneously).
-        let edge_correction = if self.graph.has_edge(i, j) { 2 } else { 0 };
-        (sol.gamma[i * k + cj] as i64 - sol.gamma[i * k + ci] as i64)
-            + (sol.gamma[j * k + ci] as i64 - sol.gamma[j * k + cj] as i64)
-            - edge_correction
-    }
-
-    /// The change in `objective` that changes `conflicts` by `d_conflicts`
-    /// and `colors_used` by `d_colors`.
+/// Exchanging the colors of two vertices. Reversing a range of vertices means
+/// nothing on a coloring, so `GraphColoring` is not an `IntReverse`.
+impl IntSwap<2> for GraphColoring {
+    /// A swap of two differently colored vertices leaves the colors used as
+    /// they are, and corrects for the two being adjacent.
     #[inline]
-    pub(crate) fn penalized(&self, d_conflicts: i64, d_colors: i64) -> i64 {
-        d_colors + self.penalty_weight() * d_conflicts
+    fn assign_swap_delta(&self, sol: &GraphColoringSolution, i: usize, j: usize) -> KeyDelta<2> {
+        self.key_delta(self.swap_conflicts_delta(sol, i, j), 0)
     }
 }
 
@@ -223,7 +263,7 @@ impl ProblemTrait for GraphColoring {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::problem::graph_coloring::{GraphColoringRecolorNeighbor, GraphColoringSwapNeighbor};
+    use crate::problem::{IntChangeNeighbor, IntSwapNeighbor};
     use crate::search_state::MoveToNeighbor;
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
@@ -287,22 +327,25 @@ mod tests {
         let mut sol = prob.new_solution(&mut rng);
 
         for _ in 0..200 {
-            let moves: Vec<_> = GraphColoringRecolorNeighbor::iter(&prob, &sol).collect();
+            let moves: Vec<IntChangeNeighbor<2>> = IntChangeNeighbor::iter(&prob, &sol).collect();
             let m = moves[rng.random_range(0..moves.len())];
             let before = sol.objective;
             let (conflicts_before, colors_before) = (sol.conflicts, sol.colors_used);
-            let gain = m.gain;
             m.apply_to_solution(&prob, &mut sol).unwrap();
-            assert_eq!(before + gain, sol.objective, "recolor gain mismatch");
             assert_eq!(
-                sol.conflicts as i64 - conflicts_before as i64,
-                m.conflicts_delta,
-                "recolor conflicts_delta mismatch"
+                before as f64 + m.cost,
+                sol.objective as f64,
+                "recolor cost mismatch"
             );
             assert_eq!(
-                sol.colors_used as i64 - colors_before as i64,
-                m.colors_delta,
-                "recolor colors_delta mismatch"
+                sol.conflicts as f64 - conflicts_before as f64,
+                m.keys[0],
+                "recolor conflicts key mismatch"
+            );
+            assert_eq!(
+                sol.colors_used as f64 - colors_before as f64,
+                m.keys[1],
+                "recolor colors key mismatch"
             );
             assert_consistent(&prob, &sol);
         }
@@ -315,7 +358,7 @@ mod tests {
         let mut sol = prob.new_solution(&mut rng);
 
         for _ in 0..200 {
-            let moves: Vec<_> = GraphColoringSwapNeighbor::iter(&prob, &sol).collect();
+            let moves: Vec<IntSwapNeighbor<2>> = IntSwapNeighbor::iter(&prob, &sol).collect();
             if moves.is_empty() {
                 break;
             }
@@ -323,15 +366,18 @@ mod tests {
             let before = sol.objective;
             let colors_used_before = sol.colors_used;
             let conflicts_before = sol.conflicts;
-            let gain = m.gain;
             m.apply_to_solution(&prob, &mut sol).unwrap();
-            assert_eq!(before + gain, sol.objective, "swap gain mismatch");
             assert_eq!(
-                sol.conflicts as i64 - conflicts_before as i64,
-                m.conflicts_delta,
-                "swap conflicts_delta mismatch"
+                before as f64 + m.cost,
+                sol.objective as f64,
+                "swap cost mismatch"
             );
-            assert_eq!(m.colors_delta, 0);
+            assert_eq!(
+                sol.conflicts as f64 - conflicts_before as f64,
+                m.keys[0],
+                "swap conflicts key mismatch"
+            );
+            assert_eq!(m.keys[1], 0.0);
             assert_eq!(
                 colors_used_before, sol.colors_used,
                 "swap must not change colors_used"

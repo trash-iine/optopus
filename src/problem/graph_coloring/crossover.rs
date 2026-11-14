@@ -14,7 +14,7 @@ impl Crossover<GraphColoring> for GraphColoringUniformCrossover {
         sol2: &GraphColoringSolution,
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<GraphColoringSolution, crate::error::OptError> {
-        let n = prob.graph.len();
+        let n = prob.graph().len();
         let colors = (0..n)
             .map(|v| {
                 if rng.random_bool(0.5) {
