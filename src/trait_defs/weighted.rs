@@ -61,7 +61,8 @@ pub trait WeightedConstraints: ProblemTrait + Sized {
     ///
     /// While `sol` violates a constraint these are the moves that satisfy one
     /// violated constraint drawn uniformly. Once it violates none they are the
-    /// moves that improve the objective, whatever they then violate. `out` is
+    /// moves that work toward a better objective, whatever they then violate,
+    /// a vertex leaving a cover or leaving the smallest color class. `out` is
     /// left empty when there is neither, which ends the search.
     fn escape_moves(
         &self,

@@ -11,7 +11,8 @@ being told which constraints are the hard ones.
 Runs on any problem implementing
 [`WeightedConstraints`](../traits.md#core-trait-reference). In a config it is
 registered for [MaxSAT](../problems/sat.md), whose constraints are the clauses,
-and for [vertex cover](../problems/vertex_cover.md), whose constraints are the
+and for [vertex cover](../problems/vertex_cover.md) and
+[graph coloring](../problems/graph_coloring.md), whose constraints are the
 edges.
 
 ## Example
@@ -46,7 +47,8 @@ Each `run_once` makes one step.
 3. Then leave the optimum by the best of the escape moves the problem
    offers. While a constraint is violated these are the moves that satisfy
    one violated constraint drawn uniformly. Once nothing is violated they are
-   the moves that improve the objective. An escape the tabu memory forbids is
+   the moves that work toward a better objective, a vertex leaving a cover or
+   leaving the smallest color class. An escape the tabu memory forbids is
    taken only when it forbids all of them.
 
 A move that was applied may not be undone for a number of steps drawn from
@@ -58,8 +60,9 @@ enter, so what the run reports is comparable with every other heuristic. The
 weights belong to the search and start again at one on every `run`.
 
 A run ends on its stop condition. It also ends at a weighted local optimum
-with no escape, which is a solution that violates nothing and whose objective
-no move improves. On MaxSAT that is an assignment satisfying every clause.
+with no escape, which is a solution that violates nothing and that no move
+takes toward a better objective. On MaxSAT that is an assignment satisfying
+every clause.
 
 ## Constructor
 
@@ -89,9 +92,11 @@ whatever the problem caches to price a move under them.
 | `escape_moves` | Fills the moves that lead out of a weighted local optimum. |
 
 The search scans every move each step, so `weighted_gain` should read a cached
-price. `Sat` keeps a weighted flip gain per variable and `VertexCover` keeps,
-per vertex, the weight of the edges only that vertex covers. Both update the
-cache in the same pass that applies the move.
+price. `Sat` keeps a weighted flip gain per variable, `VertexCover` keeps,
+per vertex, the weight of the edges only that vertex covers, and
+`GraphColoring` keeps, per vertex and color, the weight of the edges to
+neighbors of that color. Each updates its cache in the same pass that applies
+the move.
 
 ## Benchmark config
 

@@ -999,6 +999,16 @@ impl ConfigurableProblem for GraphColoring {
         Swap => IntSwapNeighbor<2>,
     }
 
+    fn build_special_heuristic(
+        config: &HeuristicConfig,
+        cond: StopCondition,
+    ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
+        match config {
+            HeuristicConfig::WeightedLocalSearch { .. } => weighted_local_search(config, cond),
+            _ => Err(unsupported::<Self>(config)),
+        }
+    }
+
     crossovers! {
         Uniform => GraphColoringUniformCrossover,
     }

@@ -47,7 +47,9 @@ pub use flow_shop::{
     FlowShop, FlowShopInsertNeighbor, FlowShopOrderCrossover, FlowShopSolution,
     FlowShopSwapNeighbor,
 };
-pub use graph_coloring::{GraphColoring, GraphColoringSolution, GraphColoringUniformCrossover};
+pub use graph_coloring::{
+    GraphColoring, GraphColoringSolution, GraphColoringUniformCrossover, GraphColoringWeights,
+};
 pub use integer::{
     Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntChangeNeighbor,
     IntCrossover, IntReverseNeighbor, IntSolution, IntSwapNeighbor, IntegerProblem,

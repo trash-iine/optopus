@@ -2,7 +2,8 @@ use super::{Heuristic, StopCondition};
 use crate::error::OptError;
 use crate::search_state::SearchState;
 use crate::trait_defs::{MoveToNeighbor, WeightedConstraints};
-use rand::Rng;
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 
 /// A local search that weights the constraints it keeps violating.
 ///
@@ -19,7 +20,7 @@ use rand::Rng;
 /// loses one. It then leaves by the best of the problem's
 /// [`escape_moves`](WeightedConstraints::escape_moves), the moves that satisfy
 /// one violated constraint drawn uniformly or, once nothing is violated, the
-/// moves that improve the objective. An escape the tabu memory forbids is
+/// moves that work toward a better objective. An escape the tabu memory forbids is
 /// taken only when it forbids them all.
 ///
 /// A move that was applied may not be undone for a number of steps drawn from
@@ -27,8 +28,8 @@ use rand::Rng;
 ///
 /// The best solution is kept by the problem's own order, which the weights do
 /// not enter. The run ends on its [`StopCondition`], or at a weighted local
-/// optimum with no escape, a solution that violates nothing and whose
-/// objective no move improves.
+/// optimum with no escape, a solution that violates nothing and that no move
+/// takes toward a better objective.
 ///
 /// The weights are the search's own and start again at one on every
 /// [`run`](Heuristic::run).
@@ -61,6 +62,9 @@ pub struct WeightedLocalSearch<P: WeightedConstraints> {
     tabu_tenure: (u64, u64),
     smoothing: f64,
     weights: Option<P::Weights>,
+    /// The stream ties in the scan are broken from, forked off the state's on
+    /// the first step of a run so the scan can read the state while drawing.
+    ties: Option<SmallRng>,
     escapes: Vec<P::Move>,
     /// Set at a weighted local optimum that has no escape.
     no_escape: bool,
@@ -82,6 +86,7 @@ impl<P: WeightedConstraints> WeightedLocalSearch<P> {
             tabu_tenure: Self::TABU_TENURE,
             smoothing: Self::SMOOTHING,
             weights: None,
+            ties: None,
             escapes: Vec::new(),
             no_escape: false,
         }
@@ -139,6 +144,7 @@ fn apply<P: WeightedConstraints>(
 impl<P: WeightedConstraints> Heuristic<P> for WeightedLocalSearch<P> {
     fn clear(&mut self) {
         self.weights = None;
+        self.ties = None;
         self.no_escape = false;
     }
 
@@ -160,23 +166,29 @@ impl<P: WeightedConstraints> Heuristic<P> for WeightedLocalSearch<P> {
         state.start_record_tabu(self.tabu_tenure);
         state.stop_record_tabu();
 
+        let tie_rng = self
+            .ties
+            .get_or_insert_with(|| SmallRng::from_rng(&mut state.rng));
+
+        // Driven by `for_each`, so a move type that scans faster through
+        // `fold` is scanned that way.
         let mut best: Option<P::Move> = None;
         let mut best_gain = 0.0;
         let mut ties = 0u32;
-        for mv in P::Move::iter(instance, &state.solution) {
+        P::Move::iter(instance, &state.solution).for_each(|mv| {
             let gain = instance.weighted_gain(&state.solution, weights, &mv);
             if gain <= 0.0 || gain < best_gain || !state.tabu_allows(&mv) {
-                continue;
+                return;
             }
             if gain > best_gain {
                 best_gain = gain;
                 ties = 0;
             }
             ties += 1;
-            if ties == 1 || state.rng.random_range(0..ties) == 0 {
+            if ties == 1 || tie_rng.random_range(0..ties) == 0 {
                 best = Some(mv);
             }
-        }
+        });
         if let Some(mv) = best {
             return apply(state, weights, &mv);
         }
@@ -271,6 +283,26 @@ mod tests {
         search.run(&mut state).unwrap();
         assert_eq!(state.best_solution.uncovered_edges, 0);
         assert_eq!(state.best_solution.cover_size, 20);
+        assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
+    }
+
+    /// The chorded ring on a multiple of three vertices is made of triangles
+    /// and takes three colors, each vertex colored by its index modulo three.
+    #[test]
+    fn colors_a_chorded_ring_with_three_colors() {
+        use crate::problem::GraphColoring;
+        let mut edges = Vec::new();
+        for v in 0..30 {
+            edges.push((v, (v + 1) % 30, 1.0));
+            edges.push((v, (v + 2) % 30, 1.0));
+        }
+        let gc = GraphColoring::new(Graph::from_edges(edges));
+        let mut state = SearchState::new_with_seed(&gc, 4);
+        let mut search =
+            WeightedLocalSearch::<GraphColoring>::new(StopCondition::iterations(20_000));
+        search.run(&mut state).unwrap();
+        assert_eq!(state.best_solution.conflicts, 0);
+        assert_eq!(state.best_solution.colors_used, 3);
         assert_eq!(state.iteration, state.n_accepted + state.n_rejected);
     }
 

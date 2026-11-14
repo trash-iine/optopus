@@ -1,6 +1,7 @@
 //! Edge weights, the [`WeightedConstraints`] side of [`VertexCover`].
 
 use super::{VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution};
+use crate::building_blocks::instance::EdgeIndex;
 use crate::building_blocks::search::IndexSet;
 use crate::error::OptError;
 use crate::trait_defs::{MoveToNeighbor, WeightedConstraints};
@@ -17,12 +18,7 @@ use rand::Rng;
 pub struct VertexCoverWeights {
     /// `weight[e]` is the weight of edge `e`.
     weight: Vec<u32>,
-    /// The two ends of each edge.
-    ends: Vec<(usize, usize)>,
-    /// `incident[first[v]..first[v + 1]]` lists the edges at vertex `v` with
-    /// the vertex at their other end.
-    incident: Vec<(u32, usize)>,
-    first: Vec<usize>,
+    edges: EdgeIndex,
     /// `open[v]` is the total weight of the edges at `v` whose other end is
     /// out of the set, the weight `v` alone stands between and uncovered.
     open: Vec<i64>,
@@ -34,22 +30,12 @@ impl VertexCoverWeights {
     /// The weight of the edge between `i` and `j`, or `None` when they are
     /// not adjacent.
     pub fn weight(&self, i: usize, j: usize) -> Option<u32> {
-        if i + 1 >= self.first.len() {
-            return None;
-        }
-        self.edges_at(i)
-            .iter()
-            .find(|&&(_, other)| other == j)
-            .map(|&(e, _)| self.weight[e as usize])
+        self.edges.between(i, j).map(|e| self.weight[e])
     }
 
     /// How many edges the set leaves uncovered.
     pub fn uncovered_count(&self) -> usize {
         self.uncovered.len()
-    }
-
-    fn edges_at(&self, v: usize) -> &[(u32, usize)] {
-        &self.incident[self.first[v]..self.first[v + 1]]
     }
 }
 
@@ -59,28 +45,12 @@ impl WeightedConstraints for VertexCover {
 
     fn unit_weights(&self, sol: &VertexCoverSolution) -> VertexCoverWeights {
         let n = self.graph.len();
-        let mut ends = Vec::new();
-        let mut id = std::collections::HashMap::new();
-        let mut incident = Vec::new();
-        let mut first = Vec::with_capacity(n + 1);
-        for v in 0..n {
-            first.push(incident.len());
-            for &(u, _) in self.graph.iter_on_adjacency(v) {
-                if u == v {
-                    continue;
-                }
-                let e = *id.entry((v.min(u), v.max(u))).or_insert_with(|| {
-                    ends.push((v.min(u), v.max(u)));
-                    ends.len() - 1
-                });
-                incident.push((e as u32, u));
-            }
-        }
-        first.push(incident.len());
+        let edges = EdgeIndex::new(&self.graph);
 
-        let mut uncovered = IndexSet::new(ends.len());
+        let mut uncovered = IndexSet::new(edges.len());
         let mut open = vec![0i64; n];
-        for (e, &(i, j)) in ends.iter().enumerate() {
+        for e in 0..edges.len() {
+            let (i, j) = edges.ends(e);
             if !sol.x[i] {
                 open[j] += 1;
             }
@@ -92,10 +62,8 @@ impl WeightedConstraints for VertexCover {
             }
         }
         VertexCoverWeights {
-            weight: vec![1; ends.len()],
-            ends,
-            incident,
-            first,
+            weight: vec![1; edges.len()],
+            edges,
             open,
             uncovered,
         }
@@ -126,8 +94,8 @@ impl WeightedConstraints for VertexCover {
         mv.apply_to_solution(self, sol)?;
         let v = mv.i;
         let entered = sol.x[v];
-        for at in 0..weights.edges_at(v).len() {
-            let (e, u) = weights.edges_at(v)[at];
+        for at in 0..weights.edges.at(v).len() {
+            let (e, u) = weights.edges.at(v)[at];
             let w = weights.weight[e as usize] as i64;
             if entered {
                 weights.open[u] -= w;
@@ -147,7 +115,7 @@ impl WeightedConstraints for VertexCover {
             if weights.weight[e] < cap {
                 weights.weight[e] += 1;
                 // Both ends are out, so each stands open to the other.
-                let (i, j) = weights.ends[e];
+                let (i, j) = weights.edges.ends(e);
                 weights.open[i] += 1;
                 weights.open[j] += 1;
             }
@@ -158,7 +126,7 @@ impl WeightedConstraints for VertexCover {
         for e in 0..weights.weight.len() {
             if weights.weight[e] > 1 && !weights.uncovered.contains(e) {
                 weights.weight[e] -= 1;
-                let (i, j) = weights.ends[e];
+                let (i, j) = weights.edges.ends(e);
                 if !sol.x[j] {
                     weights.open[i] -= 1;
                 }
@@ -189,7 +157,9 @@ impl WeightedConstraints for VertexCover {
             );
             return;
         }
-        let (i, j) = weights.ends[uncovered[rng.random_range(0..uncovered.len())]];
+        let (i, j) = weights
+            .edges
+            .ends(uncovered[rng.random_range(0..uncovered.len())]);
         out.push(VertexCoverFlipNeighbor::new(self, sol, i));
         out.push(VertexCoverFlipNeighbor::new(self, sol, j));
     }
@@ -221,12 +191,9 @@ mod tests {
     /// The weighted cost, from scratch.
     fn cost(x: &[bool], w: &VertexCoverWeights) -> i64 {
         let size = x.iter().filter(|&&b| b).count() as i64;
-        let open: i64 = w
-            .ends
-            .iter()
-            .enumerate()
-            .filter(|&(_, &(i, j))| !x[i] && !x[j])
-            .map(|(e, _)| w.weight[e] as i64)
+        let open: i64 = (0..w.edges.len())
+            .filter(|&e| !x[w.edges.ends(e).0] && !x[w.edges.ends(e).1])
+            .map(|e| w.weight[e] as i64)
             .sum();
         size + open
     }
@@ -245,8 +212,8 @@ mod tests {
         }
         let mut got = w.uncovered.as_slice().to_vec();
         got.sort_unstable();
-        let expected: Vec<usize> = (0..w.ends.len())
-            .filter(|&e| !sol.x[w.ends[e].0] && !sol.x[w.ends[e].1])
+        let expected: Vec<usize> = (0..w.edges.len())
+            .filter(|&e| !sol.x[w.edges.ends(e).0] && !sol.x[w.edges.ends(e).1])
             .collect();
         assert_eq!(got, expected);
         assert_eq!(w.uncovered_count(), sol.uncovered_edges);
@@ -258,7 +225,7 @@ mod tests {
         let mut rng = SmallRng::seed_from_u64(2);
         let mut sol = vc.new_solution(&mut rng);
         let mut w = vc.unit_weights(&sol);
-        assert_eq!(w.ends.len(), vc.constraint_count());
+        assert_eq!(w.edges.len(), vc.constraint_count());
         assert_priced(&vc, &sol, &w);
         let mut raised = false;
         for step in 0..300 {

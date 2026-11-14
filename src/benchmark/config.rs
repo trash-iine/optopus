@@ -260,7 +260,7 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
-    /// Local search on constraint weights (Sat and VertexCover).
+    /// Local search on constraint weights (Sat, VertexCover and GraphColoring).
     WeightedLocalSearch {
         /// Range `[min, max]` a move's tenure is drawn from. Default: [3, 12].
         #[serde(skip_serializing_if = "Option::is_none")]

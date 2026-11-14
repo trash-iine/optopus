@@ -59,7 +59,7 @@ they need is stated on the problem rather than on one move type.
 | [AdaptiveLargeNeighborhoodSearch](alns.md) | `AdaptiveLargeNeighborhoodSearch` | `Ruinable`, `Evaluate` on the solution | Ruin-and-recreate with adaptive operator weights and SA acceptance, plus an optional anchored `LocalRepair`. Registered for CVRP, TSP, the flow shop and bin packing. |
 | [IteratedGreedy](iterated_greedy.md) | `IteratedGreedy` | `Ruinable`, `Evaluate` on the solution | Random removal of a fixed count, greedy reinsertion, a `LocalRepair` descent and acceptance at a constant temperature. Registered for the flow shop. |
 | [GreedyRandomizedConstruction](greedy_randomized_construction.md) | `GreedyRandomizedConstruction` | `Ruinable`, `Evaluate` on the solution | One GRASP construction by a restricted candidate list, then stops. GRASP is `Iterated` with this as its second step. Registered for CVRP, TSP, the flow shop and bin packing. |
-| [WeightedLocalSearch](weighted_local_search.md) | `WeightedLocalSearch` | `WeightedConstraints` | Descent on constraint weights that rise on what stays violated, with a short tabu memory. Registered for MaxSAT and vertex cover. |
+| [WeightedLocalSearch](weighted_local_search.md) | `WeightedLocalSearch` | `WeightedConstraints` | Descent on constraint weights that rise on what stays violated, with a short tabu memory. Registered for MaxSAT, vertex cover and graph coloring. |
 | [BranchAndBound](branch_and_bound.md) | none, library only | `BranchSpace` (from `Branchable` or `FixVariables`), and a `Relaxation` of it | Exact search. Any heuristic of the problem finds the solutions and the relaxation prunes. `IntegerProblem`, `FormulaProblem`, MaxCut, QUBO, MaxSAT and vertex cover. |
 
 ## Problem-specific

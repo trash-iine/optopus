@@ -29,7 +29,7 @@ Read the table, open the one file you need.
 | [0019](0019-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
 | [0020](0020-a-profile-loop-found-the-cost-in-the-problems-pricing-and-in-the-shape-of-the-scans.md) | all | reference | A profile loop over every problem found the cost in the problems' pricing and in the shape of their scans, and what was left |
 | [0021](0021-a-scan-prices-each-candidate-at-one-call-site.md) | all | adopted | A scan prices each candidate at one call site, since the pricing can inline into a wrapper that then stays out of line |
-| [0022](0022-weighted-local-search-raises-the-weights-of-violated-constraints.md) | heuristic | adopted | Weighted local search is one heuristic over a constraint-weights trait, with the weights owned by the heuristic, and it pays on vertex cover and MaxSAT while scanning every move |
+| [0022](0022-weighted-local-search-raises-the-weights-of-violated-constraints.md) | heuristic | adopted | Weighted local search is one heuristic over a constraint-weights trait, with the weights owned by the heuristic, and it pays on graph coloring, vertex cover and MaxSAT while scanning every move |
 
 ## Writing a new record
 

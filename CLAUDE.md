@@ -83,8 +83,9 @@ src/
 │   │                         New shared code goes in the group it belongs to, and code that
 │   │                         fits none of them gets its place decided first. Items are
 │   │                         reached through their group (building_blocks::instance::Graph)
-│   ├── instance/             what an instance is built from and read with: the graph and
-│   │                         its generators, the distance store Tsp and Vrp share, parsing
+│   ├── instance/             what an instance is built from and read with: the graph, its
+│   │                         generators and the numbering of its edges, the distance store
+│   │                         Tsp and Vrp share, parsing
 │   ├── representation/       helpers per kind of decision variable
 │   │   ├── binary/           crossover, fixing (with the binary_branch_space! macro each
 │   │   │                     problem's fix.rs calls) and the swap helpers
@@ -119,7 +120,8 @@ src/
     │                         construction)
     ├── max_cut/ qubo/ sat/ vertex_cover/
     │                         fix.rs, fixing variables and the branch space
-    ├── sat/ vertex_cover/    weights.rs, the WeightedConstraints side, one weight per clause
+    ├── sat/ vertex_cover/ graph_coloring/
+    │                         weights.rs, the WeightedConstraints side, one weight per clause
     │                         or per edge
     ├── integer/              IntegerProblem, built from a closure, and formula.rs, the
     │                         expression model, with IntervalRelaxation in it too
