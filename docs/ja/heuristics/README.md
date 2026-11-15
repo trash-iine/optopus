@@ -38,6 +38,8 @@
 - `JobShopPpxCrossover`。重複を許す置換のための Precedence-Preserving Crossover。
 - [`SubProblemBasedCrossover`](genetic_algorithm.md#subproblembasedcrossover)
   は任意の `P: SubProblemExtractable` に使える汎用の交叉です。
+- [`PathRelinkingCrossover`](genetic_algorithm.md#pathrelinkingcrossover)
+  は両親の間を flip でつなぐ経路の上の最良の解を返します。バイナリ変数の問題で使えます。
 
 ## 問題でパラメータ化されるもの { #parameterized-by-the-problem }
 

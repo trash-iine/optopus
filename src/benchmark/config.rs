@@ -321,6 +321,9 @@ pub enum HeuristicConfig {
         /// FlowShop and Qap, "Ppx" for JobShop, "Group" for BinPacking).
         /// MaxCut also accepts "SubProblem" (memetic recombination: solves the
         /// sub-MaxCut of disagreeing variables with an internal bounded BLS).
+        /// MaxCut, Qubo, Sat and VertexCover accept "PathRelinking" and
+        /// "RandomPathRelinking" (the best solution on a path between the
+        /// parents, flipped greedily or at random).
         #[serde(skip_serializing_if = "Option::is_none")]
         crossover_kind: Option<String>,
         /// "Tournament" (default), "DistantTopK" or "BiasedFitness".

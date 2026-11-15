@@ -45,6 +45,9 @@ Used by `GeneticAlgorithm`:
   permutation-with-repetition.
 - [`SubProblemBasedCrossover`](genetic_algorithm.md#subproblembasedcrossover)
   is a generic crossover for any `P: SubProblemExtractable`.
+- [`PathRelinkingCrossover`](genetic_algorithm.md#pathrelinkingcrossover)
+  returns the best solution on a path of flips between the parents, for the
+  binary problems.
 
 ## Parameterized by the problem
 

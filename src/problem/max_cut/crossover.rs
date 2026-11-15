@@ -1,5 +1,8 @@
-use crate::building_blocks::representation::{lift_binary_solution, uniform_binary_crossover};
+use crate::building_blocks::representation::{
+    PathRelinkingCrossover, differing_variables, lift_binary_solution, uniform_binary_crossover,
+};
 use crate::search_state::{Crossover, SubProblemExtractable};
+use crate::trait_defs::BinaryProblem;
 
 use super::problem::{MaxCut, MaxCutSolution};
 
@@ -49,6 +52,31 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<MaxCutSolution, crate::error::OptError> {
         uniform_binary_crossover(prob, sol1, sol2, rng)
+    }
+}
+
+impl Crossover<MaxCut> for PathRelinkingCrossover {
+    /// Relinks from `sol1` toward `sol2`, or toward its complement when that is nearer.
+    ///
+    /// Swapping the two sides of a cut leaves the cut unchanged, so a parent
+    /// and its complement are one solution, and the shorter path is the one
+    /// between the two cuts.
+    fn crossover(
+        &mut self,
+        prob: &MaxCut,
+        sol1: &MaxCutSolution,
+        sol2: &MaxCutSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<MaxCutSolution, crate::error::OptError> {
+        let mut flips = differing_variables(prob, sol1, sol2);
+        let n = prob.variable_indices().count();
+        if 2 * flips.len() > n {
+            flips = prob
+                .variable_indices()
+                .filter(|&i| sol1.x[i] == sol2.x[i])
+                .collect();
+        }
+        self.relink(prob, sol1, flips, rng)
     }
 }
 

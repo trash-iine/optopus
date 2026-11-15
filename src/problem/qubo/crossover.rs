@@ -1,4 +1,6 @@
-use crate::building_blocks::representation::{lift_binary_solution, uniform_binary_crossover};
+use crate::building_blocks::representation::{
+    PathRelinkingCrossover, differing_variables, lift_binary_solution, uniform_binary_crossover,
+};
 use crate::search_state::{Crossover, SubProblemExtractable};
 
 use super::problem::{Qubo, QuboSolution, make_sub_problem_from};
@@ -18,6 +20,19 @@ impl Crossover<Qubo> for QuboUniformCrossover {
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<QuboSolution, crate::error::OptError> {
         uniform_binary_crossover(prob, sol1, sol2, rng)
+    }
+}
+
+impl Crossover<Qubo> for PathRelinkingCrossover {
+    /// Relinks from `sol1` toward `sol2`.
+    fn crossover(
+        &mut self,
+        prob: &Qubo,
+        sol1: &QuboSolution,
+        sol2: &QuboSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<QuboSolution, crate::error::OptError> {
+        self.relink(prob, sol1, differing_variables(prob, sol1, sol2), rng)
     }
 }
 

@@ -1,5 +1,6 @@
 use crate::building_blocks::representation::{
-    lift_compact_binary_solution, uniform_binary_crossover,
+    PathRelinkingCrossover, differing_variables, lift_compact_binary_solution,
+    uniform_binary_crossover,
 };
 use crate::search_state::{Crossover, SubProblemExtractable};
 
@@ -20,6 +21,19 @@ impl Crossover<Sat> for SatUniformCrossover {
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<SatSolution, crate::error::OptError> {
         uniform_binary_crossover(prob, sol1, sol2, rng)
+    }
+}
+
+impl Crossover<Sat> for PathRelinkingCrossover {
+    /// Relinks from `sol1` toward `sol2`.
+    fn crossover(
+        &mut self,
+        prob: &Sat,
+        sol1: &SatSolution,
+        sol2: &SatSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<SatSolution, crate::error::OptError> {
+        self.relink(prob, sol1, differing_variables(prob, sol1, sol2), rng)
     }
 }
 

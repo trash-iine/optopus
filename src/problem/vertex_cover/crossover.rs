@@ -1,4 +1,6 @@
-use crate::building_blocks::representation::{lift_binary_solution, uniform_binary_crossover};
+use crate::building_blocks::representation::{
+    PathRelinkingCrossover, differing_variables, lift_binary_solution, uniform_binary_crossover,
+};
 use crate::search_state::{Crossover, SubProblemExtractable};
 
 use super::problem::{VertexCover, VertexCoverSolution};
@@ -18,6 +20,19 @@ impl Crossover<VertexCover> for VertexCoverUniformCrossover {
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<VertexCoverSolution, crate::error::OptError> {
         uniform_binary_crossover(prob, sol1, sol2, rng)
+    }
+}
+
+impl Crossover<VertexCover> for PathRelinkingCrossover {
+    /// Relinks from `sol1` toward `sol2`.
+    fn crossover(
+        &mut self,
+        prob: &VertexCover,
+        sol1: &VertexCoverSolution,
+        sol2: &VertexCoverSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<VertexCoverSolution, crate::error::OptError> {
+        self.relink(prob, sol1, differing_variables(prob, sol1, sol2), rng)
     }
 }
 

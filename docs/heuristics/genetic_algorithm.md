@@ -161,6 +161,40 @@ let crossover = SubProblemBasedCrossover {
 
 Implemented by MaxCut, QUBO, SAT, Vertex Cover, and Formula.
 
+## PathRelinkingCrossover
+
+A crossover for the binary problems, MaxCut, QUBO, MaxSAT and vertex cover.
+The offspring is a solution on a path from the first parent toward the second.
+
+1. The variables the parents disagree on are listed. The path flips them one
+   at a time, so every solution on it keeps what the parents share.
+2. `PathRelinkingCrossover::greedy()` takes at every step the flip that leaves
+   the best solution. `PathRelinkingCrossover::random()` draws the flip.
+3. Of the solutions at least a third of the path away from both parents, the
+   best is the offspring.
+
+```rust
+use optopus::building_blocks::representation::PathRelinkingCrossover;
+
+let crossover = PathRelinkingCrossover::greedy().with_distance_scale(0.25);
+```
+
+The distance is what keeps the offspring from falling back into a parent
+under the mutation step, and `with_distance_scale` sets it as a share of the
+path, `1/3` by default. With two parents `d` variables apart the greedy path
+prices O(d²) flips, where the uniform crossover applies `d / 2`, so it pays
+when the mutation step costs more than that. Parents fewer than two variables
+apart have nothing between them and give back the first parent.
+
+On MaxCut the two sides of a cut can be swapped without changing it, so a
+parent and its complement are the same solution. The path leads to whichever
+of the two is nearer.
+
+The operator is path relinking as the reference below applies it to QUBO,
+with the tabu search of that method left to the mutation step. Its reference
+set, which pairs every member with every other in turn, is not reproduced.
+The parents here are the ones `parent_selection` picks.
+
 ## Benchmark config
 
 ```toml
@@ -193,7 +227,10 @@ max_failed_update = 1
 and `"Ppx"` for JobShop. MaxCut additionally accepts `"SubProblem"`, memetic
 recombination that solves the sub-MaxCut of the disagreeing variables with an
 internal bounded BLS (see
-[SubProblemBasedCrossover](#subproblembasedcrossover)).
+[SubProblemBasedCrossover](#subproblembasedcrossover)). MaxCut, QUBO, SAT and
+VertexCover accept `"PathRelinking"` and `"RandomPathRelinking"`, the greedy
+and the random path of [PathRelinkingCrossover](#pathrelinkingcrossover) at
+the default distance.
 
 ## References
 
@@ -206,3 +243,6 @@ internal bounded BLS (see
 - Vidal, T. et al. "A Hybrid Genetic Algorithm for Multidepot and Periodic
   Vehicle Routing Problems." *Operations Research*, 60(3), 611-624, 2012.
   (Biased fitness.)
+- Wang, Y., Lü, Z., Glover, F. and Hao, J.-K. "Path relinking for
+  unconstrained binary quadratic programming." *European Journal of
+  Operational Research*, 223(3), 595-604, 2012. (Path relinking.)

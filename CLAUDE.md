@@ -84,8 +84,9 @@ src/
 │   ├── instance/             what an instance is built from and read with: the graph and
 │   │                         its generators, the distance store Tsp and Vrp share, parsing
 │   ├── representation/       helpers per kind of decision variable
-│   │   ├── binary/           crossover, fixing (with the binary_branch_space! macro each
-│   │   │                     problem's fix.rs calls) and the swap helpers
+│   │   ├── binary/           crossover, path relinking, fixing (with the
+│   │   │                     binary_branch_space! macro each problem's fix.rs calls)
+│   │   │                     and the swap helpers
 │   │   ├── integer.rs        integer variables, and the BranchSpace blanket impl over
 │   │   │                     Branchable
 │   │   └── permutation.rs    order crossover

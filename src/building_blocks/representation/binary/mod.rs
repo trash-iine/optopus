@@ -5,7 +5,10 @@ mod crossover;
 mod fix;
 mod neighbor;
 
-pub use crossover::{lift_binary_solution, lift_compact_binary_solution, uniform_binary_crossover};
+pub use crossover::{
+    PathOrder, PathRelinkingCrossover, differing_variables, lift_binary_solution,
+    lift_compact_binary_solution, uniform_binary_crossover,
+};
 pub(crate) use fix::fixed_by;
 pub use fix::{
     BinaryFixing, BinaryRelaxation, binary_node, binary_ranges, binary_solution_with, binary_value,
