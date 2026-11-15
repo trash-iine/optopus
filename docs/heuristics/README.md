@@ -68,5 +68,6 @@ These take no `neighbor` in a config either, but each owns its own move set.
 | Algorithm | Config `kind` | Problem | Notes |
 |---|---|---|---|
 | [LinKernighanHelsgaunForTsp](lkh.md) | `LinKernighanHelsgaun` | TSP 2D | Variable-depth k-opt with candidate lists. |
+| [EdgeAssemblyCrossoverForTsp](eax.md) | `EdgeAssemblyCrossover` | TSP, symmetric | Genetic algorithm. An offspring is one parent with one cycle of alternating parent edges exchanged and its sub-tours joined, and replaces that parent by a selection that weighs the entropy of the population's edges. |
 | [WalkSatForSat](walksat.md) | `WalkSat` | MaxSAT | Focused SKC flips inside a random unsatisfied clause; optional adaptive noise. |
 | [HybridGeneticSearchForVrp](hgs.md) | `HybridGeneticSearch` | CVRP | Giant-tour GA + optimal Split + granular local search; biased fitness over feasible/infeasible sub-populations. |

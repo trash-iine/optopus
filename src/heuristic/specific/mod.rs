@@ -14,6 +14,9 @@ pub use max_cut::{
     BreakoutLocalSearchForMaxCut, PerturbationType as MaxCutPerturbation, bls_for_max_cut,
     max_cut_descent, max_cut_perturbation,
 };
-pub use tsp::{LinKernighanHelsgaun as LinKernighanHelsgaunForTsp, alns_for_tsp};
+pub use tsp::{
+    EaxSelection, EdgeAssemblyCrossover as EdgeAssemblyCrossoverForTsp,
+    LinKernighanHelsgaun as LinKernighanHelsgaunForTsp, alns_for_tsp,
+};
 pub use vrp::{HybridGeneticSearch as HybridGeneticSearchForVrp, alns_for_vrp};
 pub use walksat_for_sat::WalkSat as WalkSatForSat;

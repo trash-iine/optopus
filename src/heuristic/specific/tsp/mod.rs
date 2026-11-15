@@ -1,13 +1,15 @@
 //! TSP-specific heuristics.
 //!
-//! [`lkh`] is the one search here. Ruin-and-recreate runs on a tour through
+//! [`lkh`] and [`eax`] are the searches here. Ruin-and-recreate runs on a tour through
 //! [`Ruinable`](crate::trait_defs::Ruinable) like on any other problem, so what
 //! stays behind is [`alns_for_tsp`], the wiring that hands the generic search
 //! the anchored tour descent, the same shape `alns_for_vrp` has on the VRP
 //! side.
 
+mod eax;
 mod lkh;
 
+pub use eax::{EaxSelection, EdgeAssemblyCrossover};
 pub use lkh::LinKernighanHelsgaun;
 
 use crate::heuristic::{AdaptiveLargeNeighborhoodSearch, StopCondition};

@@ -60,5 +60,6 @@
 | アルゴリズム | 設定の `kind` | 問題 | 補足 |
 |---|---|---|---|
 | [LinKernighanHelsgaunForTsp](lkh.md) | `LinKernighanHelsgaun` | 2 次元の TSP | 候補リストを使う可変深さの k-opt。 |
+| [EdgeAssemblyCrossoverForTsp](eax.md) | `EdgeAssemblyCrossover` | 対称な TSP | 遺伝的アルゴリズム。子は、片方の親で両親の辺が交互に並ぶ閉路を 1 つ入れ替え、部分巡回路をつないだもの。集団の辺のエントロピーを考慮した選択で、その親を置き換える。 |
 | [WalkSatForSat](walksat.md) | `WalkSat` | MaxSAT | ランダムな非充足節の中での集中的な SKC flip。任意で適応的なノイズ。 |
 | [HybridGeneticSearchForVrp](hgs.md) | `HybridGeneticSearch` | CVRP | giant tour の GA、最適な Split、granular な局所探索。実行可能と実行不能の部分集団に対する biased fitness。 |

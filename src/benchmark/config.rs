@@ -196,6 +196,20 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// The genetic algorithm with edge assembly crossover (TSP only).
+    EdgeAssemblyCrossover {
+        /// Tours in the population. Default: 300.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        population_size: Option<usize>,
+        /// Offspring a pair of parents makes. Default: 30.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        offspring_per_pair: Option<usize>,
+        /// "Entropy" (default) or "Greedy".
+        #[serde(skip_serializing_if = "Option::is_none")]
+        selection: Option<String>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Adaptive Large Neighborhood Search (VRP, TSP, FlowShop and BinPacking).
     AdaptiveLargeNeighborhoodSearch {
         /// Fraction of elements ruined each iteration. Default: 0.15.
@@ -398,7 +412,8 @@ heuristic_kinds! {
         RandomWalk, ReinforcementLearningSearch, PopulationAnnealing, ParallelTempering;
     steps: BranchAndBound, Sequential, Iterated, VariableNeighborhoodSearch, Restart,
         GeneticAlgorithm;
-    other: BreakoutLocalSearch, LinKernighanHelsgaun, AdaptiveLargeNeighborhoodSearch,
+    other: BreakoutLocalSearch, LinKernighanHelsgaun, EdgeAssemblyCrossover,
+        AdaptiveLargeNeighborhoodSearch,
         IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch, WalkSat;
 }
 

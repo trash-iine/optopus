@@ -29,6 +29,7 @@ Read the table, open the one file you need.
 | [0019](0019-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
 | [0020](0020-a-profile-loop-found-the-cost-in-the-problems-pricing-and-in-the-shape-of-the-scans.md) | all | reference | A profile loop over every problem found the cost in the problems' pricing and in the shape of their scans, and what was left |
 | [0021](0021-a-scan-prices-each-candidate-at-one-call-site.md) | all | adopted | A scan prices each candidate at one call site, since the pricing can inline into a wrapper that then stays out of line |
+| [0026](0026-edge-assembly-crossover-runs-as-its-own-genetic-algorithm-and-its-first-stage-is-enough-here.md) | heuristic, tsp | adopted | Edge assembly crossover runs as its own genetic algorithm with its replacement, and its first stage alone ends at the optimum of dsj1000 in every run |
 
 ## Writing a new record
 

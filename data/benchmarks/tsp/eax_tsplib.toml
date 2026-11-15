@@ -1,0 +1,53 @@
+# EdgeAssemblyCrossover against iterated Lin-Kernighan-Helsgaun and ALNS on
+# the TSP. The measurement of decisions/0026.
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/tsp/eil101.tsp"
+problem = "Tsp"
+
+[[instances]]
+path = "data/instances/tsp/ch150.tsp"
+problem = "Tsp"
+
+[[instances]]
+path = "data/instances/tsp/dsj1000.tsp"
+problem = "Tsp"
+
+[[heuristics]]
+kind = "EdgeAssemblyCrossover"
+[heuristics.stop_condition]
+max_duration_secs = 60.0
+
+[[heuristics]]
+kind = "EdgeAssemblyCrossover"
+selection = "Greedy"
+[heuristics.stop_condition]
+max_duration_secs = 60.0
+
+# Lin-Kernighan-Helsgaun ends at its first local optimum, so it is iterated
+# with a kick of five random 2-opt moves, as its page shows.
+[[heuristics]]
+kind = "Iterated"
+[heuristics.stop_condition]
+max_duration_secs = 60.0
+
+[[heuristics.steps]]
+kind = "LinKernighanHelsgaun"
+num_neighbors = 5
+max_depth = 5
+[heuristics.steps.stop_condition]
+max_iteration = 10000
+
+[[heuristics.steps]]
+kind = "RandomWalk"
+neighbor = "TwoOpt"
+[heuristics.steps.stop_condition]
+max_iteration = 5
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+[heuristics.stop_condition]
+max_duration_secs = 60.0
