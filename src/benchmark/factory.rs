@@ -239,6 +239,7 @@ where
             | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
             | HeuristicConfig::IteratedGreedy { .. }
             | HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::IterativeBeamSearch { .. }
             | HeuristicConfig::HybridGeneticSearch { .. }
             | HeuristicConfig::WalkSat { .. }
             | HeuristicConfig::BranchAndBound { .. }
@@ -626,6 +627,7 @@ where
         | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
         | HeuristicConfig::IteratedGreedy { .. }
         | HeuristicConfig::GreedyRandomizedConstruction { .. }
+        | HeuristicConfig::IterativeBeamSearch { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::BranchAndBound { .. } => {
@@ -899,6 +901,38 @@ mod factory_tests {
         assert!(
             msg.contains("not supported for MaxCut") && msg.contains("HybridGeneticSearch"),
             "{msg}"
+        );
+    }
+
+    /// The beam search builds on the four `Ruinable` problems, and the
+    /// values its builders would panic on are config errors.
+    #[test]
+    fn iterative_beam_search_builds_on_ruinable_problems_and_checks_its_values() {
+        let beam = |body: &str| -> HeuristicConfig {
+            toml::from_str(&format!("kind = \"IterativeBeamSearch\"\n{body}"))
+                .expect("the config parses")
+        };
+        for kind in [
+            ProblemKind::Tsp,
+            ProblemKind::Vrp,
+            ProblemKind::FlowShop,
+            ProblemKind::BinPacking,
+        ] {
+            try_build(&kind, &beam("")).unwrap_or_else(|e| panic!("{kind:?}: {e}"));
+        }
+        try_build(&ProblemKind::Tsp, &beam("initial_width = 4\ngrowth = 1.5"))
+            .expect("both values set");
+        for (body, field) in [
+            ("initial_width = 0", "initial_width"),
+            ("growth = 0.5", "growth"),
+        ] {
+            let err = try_build(&ProblemKind::Tsp, &beam(body)).expect_err(body);
+            assert!(err.to_string().contains(field), "{body}: {err}");
+        }
+        let err = try_build(&ProblemKind::MaxCut, &beam("")).expect_err("MaxCut is not Ruinable");
+        assert!(
+            err.to_string().contains("not supported for MaxCut"),
+            "{err}"
         );
     }
 

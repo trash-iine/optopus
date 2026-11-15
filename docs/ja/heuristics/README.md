@@ -51,6 +51,7 @@
 | [AdaptiveLargeNeighborhoodSearch](alns.md) | `AdaptiveLargeNeighborhoodSearch` | `Ruinable`、解に `Evaluate` | 適応的なオペレータ重みと SA 受理による ruin-and-recreate。任意でアンカー付きの `LocalRepair`。CVRP、TSP、フローショップ、Bin Packing に登録済み。 |
 | [IteratedGreedy](iterated_greedy.md) | `IteratedGreedy` | `Ruinable`、解に `Evaluate` | 固定個数のランダム除去、貪欲な再挿入、`LocalRepair` の降下、一定温度での受理。フローショップに登録済み。 |
 | [GreedyRandomizedConstruction](greedy_randomized_construction.md) | `GreedyRandomizedConstruction` | `Ruinable`、解に `Evaluate` | 制限付き候補リストによる GRASP の構築を 1 回行って止まる。GRASP はこれを第 2 ステップにした `Iterated`。CVRP、TSP、フローショップ、Bin Packing に登録済み。 |
+| [IterativeBeamSearch](iterative_beam_search.md) | `IterativeBeamSearch` | `Clone` な partial を持つ `Ruinable`、解に `Evaluate` | 良い部分解を数個残しながら挿入で解を組み立て、幅を 2 倍にして繰り返す。CVRP、TSP、フローショップ、Bin Packing に登録済み。 |
 | [BranchAndBound](branch_and_bound.md) | なし、ライブラリ専用 | `BranchSpace` (`Branchable` か `FixVariables` から)と、その `Relaxation` | 厳密な探索。問題の任意のヒューリスティクスが解を見つけ、緩和が枝を刈る。`IntegerProblem`、`FormulaProblem`、MaxCut、QUBO、MaxSAT、vertex cover。 |
 
 ## 問題専用 { #problem-specific }

@@ -26,6 +26,7 @@ const NOT_PLACED: usize = usize::MAX;
 /// the running length that [`Ruinable::partial_energy`] reads. Every edit
 /// through the trait and through [`AnchoredTourDescent`] keeps the three in
 /// step.
+#[derive(Clone)]
 pub struct TspPartial {
     /// The cities currently placed, in tour order.
     tour: Vec<usize>,

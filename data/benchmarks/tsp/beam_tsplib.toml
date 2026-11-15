@@ -1,0 +1,40 @@
+# IterativeBeamSearch against ALNS and GRASP on the TSP. The measurement
+# of decisions/0025.
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/tsp/eil101.tsp"
+problem = "Tsp"
+
+[[instances]]
+path = "data/instances/tsp/ch150.tsp"
+problem = "Tsp"
+
+[[instances]]
+path = "data/instances/tsp/dsj1000.tsp"
+problem = "Tsp"
+
+[[heuristics]]
+kind = "IterativeBeamSearch"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "Iterated"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "TwoOpt"
+
+[[heuristics.steps]]
+kind = "GreedyRandomizedConstruction"
+alpha = 0.2

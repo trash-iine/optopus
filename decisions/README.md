@@ -29,6 +29,7 @@ Read the table, open the one file you need.
 | [0019](0019-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
 | [0020](0020-a-profile-loop-found-the-cost-in-the-problems-pricing-and-in-the-shape-of-the-scans.md) | all | reference | A profile loop over every problem found the cost in the problems' pricing and in the shape of their scans, and what was left |
 | [0021](0021-a-scan-prices-each-candidate-at-one-call-site.md) | all | adopted | A scan prices each candidate at one call site, since the pricing can inline into a wrapper that then stays out of line |
+| [0025](0025-a-beam-over-insertions-in-a-drawn-order-is-behind-alns-on-every-instance-measured.md) | heuristic, tsp, flow_shop | adopted | A beam over insertions in a drawn order, widened by restarts, is a generic construction and is behind ALNS on every instance measured |
 
 ## Writing a new record
 
