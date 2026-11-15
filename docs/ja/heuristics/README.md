@@ -62,3 +62,4 @@
 | [LinKernighanHelsgaunForTsp](lkh.md) | `LinKernighanHelsgaun` | 2 次元の TSP | 候補リストを使う可変深さの k-opt。 |
 | [WalkSatForSat](walksat.md) | `WalkSat` | MaxSAT | ランダムな非充足節の中での集中的な SKC flip。任意で適応的なノイズ。 |
 | [HybridGeneticSearchForVrp](hgs.md) | `HybridGeneticSearch` | CVRP | giant tour の GA、最適な Split、granular な局所探索。実行可能と実行不能の部分集団に対する biased fitness。 |
+| [SlackInductionByStringRemovalForVrp](sisr.md) | `SlackInductionByStringRemoval` | CVRP | ruin と recreate を 1 つずつ持つ ruin-and-recreate。種の近くのルートから連続した顧客の列を抜き、位置をランダムに読み飛ばしながら貪欲に戻し、SA で受理する。局所探索なし。 |

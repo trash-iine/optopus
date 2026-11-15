@@ -36,6 +36,21 @@ pub struct VrpPartial {
     state: RouteState,
 }
 
+impl VrpPartial {
+    /// The routes as they stand, one per vehicle slot, an idle slot empty.
+    #[inline]
+    pub fn routes(&self) -> &[Vec<usize>] {
+        self.state.routes()
+    }
+
+    /// The route and the position in it of a customer that is placed. For a
+    /// customer a ruin has taken out, the pair is where it last stood.
+    #[inline]
+    pub fn locate(&self, customer: usize) -> (usize, usize) {
+        self.state.locate(customer)
+    }
+}
+
 impl Vrp {
     /// The edit that puts `element` before `place` of route `bucket`, which
     /// [`Ruinable::insertion_cost`] prices and [`Ruinable::insert`] applies.

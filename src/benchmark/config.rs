@@ -227,6 +227,35 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Slack Induction by String Removals (VRP only).
+    SlackInductionByStringRemoval {
+        /// Iterations over which the temperature falls to its final value.
+        /// Default: the stop condition's `max_iteration`, which must then be
+        /// set.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        cooling_iterations: Option<u64>,
+        /// Temperature the search starts at, in objective units. Default: 100.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        initial_temperature: Option<f64>,
+        /// Temperature the search ends at. Default: 1.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        final_temperature: Option<f64>,
+        /// Average number of customers removed per iteration. Default: 10.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        average_removal: Option<f64>,
+        /// Longest string removed from one route. Default: 10.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        max_string_length: Option<usize>,
+        /// Probability that the run a split string keeps stops growing.
+        /// Default: 0.01.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        split_stop_rate: Option<f64>,
+        /// Probability that the recreate skips a place. Default: 0.01.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        blink_rate: Option<f64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Hybrid Genetic Search (VRP only).
     HybridGeneticSearch {
         /// Target size of each sub-population (μ). Default: 25.
@@ -399,7 +428,8 @@ heuristic_kinds! {
     steps: BranchAndBound, Sequential, Iterated, VariableNeighborhoodSearch, Restart,
         GeneticAlgorithm;
     other: BreakoutLocalSearch, LinKernighanHelsgaun, AdaptiveLargeNeighborhoodSearch,
-        IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch, WalkSat;
+        IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch,
+        SlackInductionByStringRemoval, WalkSat;
 }
 
 /// A single instance entry in the config file.

@@ -240,6 +240,7 @@ where
             | HeuristicConfig::IteratedGreedy { .. }
             | HeuristicConfig::GreedyRandomizedConstruction { .. }
             | HeuristicConfig::HybridGeneticSearch { .. }
+            | HeuristicConfig::SlackInductionByStringRemoval { .. }
             | HeuristicConfig::WalkSat { .. }
             | HeuristicConfig::BranchAndBound { .. }
             | HeuristicConfig::Sequential { .. }
@@ -627,6 +628,7 @@ where
         | HeuristicConfig::IteratedGreedy { .. }
         | HeuristicConfig::GreedyRandomizedConstruction { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
+        | HeuristicConfig::SlackInductionByStringRemoval { .. }
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::BranchAndBound { .. } => {
             P::build_branch_and_bound(config, cond).map(|b| b as Box<dyn Heuristic<P>>)
@@ -900,6 +902,41 @@ mod factory_tests {
             msg.contains("not supported for MaxCut") && msg.contains("HybridGeneticSearch"),
             "{msg}"
         );
+    }
+
+    /// The cooling of SISR needs a length, its own or the stop condition's
+    /// iteration count, and the values its builders would panic on are
+    /// config errors.
+    #[test]
+    fn sisr_needs_a_cooling_length_and_rejects_what_its_builders_cannot_take() {
+        let sisr = |body: &str| -> HeuristicConfig {
+            toml::from_str(&format!("kind = \"SlackInductionByStringRemoval\"\n{body}"))
+                .expect("the config parses")
+        };
+        let vrp = &ProblemKind::Vrp;
+        try_build(vrp, &sisr("cooling_iterations = 1000")).expect("an explicit length builds");
+        try_build(vrp, &sisr("[stop_condition]\nmax_iteration = 1000"))
+            .expect("the stop condition's count is the default length");
+        let err = try_build(vrp, &sisr("")).expect_err("no length at all");
+        assert!(err.to_string().contains("cooling_iterations"), "{err}");
+
+        for (body, field) in [
+            ("cooling_iterations = 0", "cooling_iterations"),
+            ("initial_temperature = 0.5", "initial_temperature"),
+            ("final_temperature = 200.0", "final_temperature"),
+            ("average_removal = 0.0", "average_removal"),
+            ("max_string_length = 0", "max_string_length"),
+            ("split_stop_rate = 1.5", "split_stop_rate"),
+            ("blink_rate = 1.0", "blink_rate"),
+        ] {
+            // The stop condition gives the length, so `body` may set its own.
+            let config = sisr(&format!("{body}\n[stop_condition]\nmax_iteration = 1000"));
+            let err = try_build(vrp, &config).expect_err(body);
+            assert!(err.to_string().contains(field), "{body}: {err}");
+        }
+        let err = try_build(&ProblemKind::Tsp, &sisr("cooling_iterations = 1000"))
+            .expect_err("SISR is for Vrp");
+        assert!(err.to_string().contains("not supported for Tsp"), "{err}");
     }
 
     /// A value the constructor of SA, BLS or HGS cannot take is a config

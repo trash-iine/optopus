@@ -17,9 +17,9 @@ use crate::building_blocks::representation::BinaryRelaxation;
 use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearch, BranchAndBound, GreedyRandomizedConstruction, Heuristic,
-    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
-    WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
-    iterated_greedy_for_flow_shop,
+    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, SlackInductionByStringRemovalForVrp,
+    StopCondition, SubProblemBasedCrossover, WalkSatForSat, alns_for_flow_shop, alns_for_tsp,
+    alns_for_vrp, bls_for_max_cut, iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
     BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
@@ -659,6 +659,72 @@ impl ConfigurableProblem for Vrp {
                     target_feasible,
                     Some(restart_generations.unwrap_or(20_000)),
                 )))
+            }
+            HeuristicConfig::SlackInductionByStringRemoval {
+                cooling_iterations,
+                initial_temperature,
+                final_temperature,
+                average_removal,
+                max_string_length,
+                split_stop_rate,
+                blink_rate,
+                ..
+            } => {
+                type Sisr = SlackInductionByStringRemovalForVrp;
+                let cooling_iterations =
+                    cooling_iterations.or(cond.max_iteration).ok_or_else(|| {
+                        OptError::Config(
+                            "'cooling_iterations' is required when the stop condition sets no \
+                             'max_iteration'"
+                                .into(),
+                        )
+                    })?;
+                let initial = initial_temperature.unwrap_or(Sisr::INITIAL_TEMPERATURE);
+                let last = final_temperature.unwrap_or(Sisr::FINAL_TEMPERATURE);
+                let average_removal = average_removal.unwrap_or(Sisr::AVERAGE_REMOVAL);
+                let max_string_length = max_string_length.unwrap_or(Sisr::MAX_STRING_LENGTH);
+                let split_stop_rate = split_stop_rate.unwrap_or(Sisr::SPLIT_STOP_RATE);
+                let blink_rate = blink_rate.unwrap_or(Sisr::BLINK_RATE);
+                // The builders assert the same, so a config fails here rather
+                // than panicking in a run.
+                if cooling_iterations == 0 {
+                    return Err(OptError::Config(
+                        "'cooling_iterations' must be at least 1".into(),
+                    ));
+                }
+                if !(last > 0.0 && initial >= last) {
+                    return Err(OptError::Config(format!(
+                        "'initial_temperature' and 'final_temperature' must satisfy \
+                         initial >= final > 0, got ({initial}, {last})"
+                    )));
+                }
+                if average_removal.is_nan() || average_removal <= 0.0 {
+                    return Err(OptError::Config(format!(
+                        "'average_removal' must be positive, got {average_removal}"
+                    )));
+                }
+                if max_string_length == 0 {
+                    return Err(OptError::Config(
+                        "'max_string_length' must be at least 1".into(),
+                    ));
+                }
+                if !(0.0..=1.0).contains(&split_stop_rate) {
+                    return Err(OptError::Config(format!(
+                        "'split_stop_rate' must be in [0, 1], got {split_stop_rate}"
+                    )));
+                }
+                if !(0.0..1.0).contains(&blink_rate) {
+                    return Err(OptError::Config(format!(
+                        "'blink_rate' must be in [0, 1), got {blink_rate}"
+                    )));
+                }
+                Ok(Box::new(
+                    Sisr::new(cond, cooling_iterations)
+                        .with_temperatures(initial, last)
+                        .with_removal(average_removal, max_string_length)
+                        .with_split_stop_rate(split_stop_rate)
+                        .with_blink_rate(blink_rate),
+                ))
             }
             _ => Err(unsupported::<Self>(config)),
         }

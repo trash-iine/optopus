@@ -26,9 +26,10 @@ pub use crate::heuristic::{
     LateAcceptanceHillClimbing, LinKernighanHelsgaunForTsp, LocalSearch, MaxCutPerturbation,
     ParallelTempering, ParentSelection, PerturbationSchedule, PopulationAnnealing, RandomWalk,
     ReinforcementLearningSearch, Restart, RewardShaping, Sequential, SimulatedAnnealing,
-    StopCondition, SubProblemBasedCrossover, TabuSearch, VariableNeighborhoodSearch, WalkSatForSat,
-    alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut, boltzmann_accept,
-    iterated_greedy_for_flow_shop, max_cut_descent, max_cut_perturbation,
+    SlackInductionByStringRemovalForVrp, StopCondition, SubProblemBasedCrossover, TabuSearch,
+    VariableNeighborhoodSearch, WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,
+    bls_for_max_cut, boltzmann_accept, iterated_greedy_for_flow_shop, max_cut_descent,
+    max_cut_perturbation,
 };
 
 // Traits
