@@ -80,6 +80,7 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |
 | [WalkSAT (MaxSAT)](docs/heuristics/walksat.md) | `WalkSatForSat` |
 | [Hybrid Genetic Search (CVRP)](docs/heuristics/hgs.md) | `HybridGeneticSearchForVrp` |
+| [Adaptive Iterated Local Search (CVRP)](docs/heuristics/ails.md) | `AdaptiveIteratedLocalSearchForVrp` |
 
 ## Benchmark CLI
 

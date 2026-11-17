@@ -16,10 +16,10 @@ use super::factory::{
 use crate::building_blocks::representation::BinaryRelaxation;
 use crate::error::OptError;
 use crate::heuristic::{
-    AdaptiveLargeNeighborhoodSearch, BranchAndBound, GreedyRandomizedConstruction, Heuristic,
-    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
-    WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
-    iterated_greedy_for_flow_shop,
+    AdaptiveIteratedLocalSearchForVrp, AdaptiveLargeNeighborhoodSearch, BranchAndBound,
+    GreedyRandomizedConstruction, Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp,
+    StopCondition, SubProblemBasedCrossover, WalkSatForSat, alns_for_flow_shop, alns_for_tsp,
+    alns_for_vrp, bls_for_max_cut, iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
     BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
@@ -659,6 +659,65 @@ impl ConfigurableProblem for Vrp {
                     target_feasible,
                     Some(restart_generations.unwrap_or(20_000)),
                 )))
+            }
+            HeuristicConfig::AdaptiveIteratedLocalSearch {
+                expected_iterations,
+                gamma,
+                distance_min,
+                distance_max,
+                eta_min,
+                neighbors,
+                ..
+            } => {
+                type Ails = AdaptiveIteratedLocalSearchForVrp;
+                let gamma = gamma.unwrap_or(Ails::GAMMA);
+                let distance_min = distance_min.unwrap_or(Ails::DISTANCE_MIN);
+                let distance_max = distance_max.unwrap_or(Ails::DISTANCE_MAX);
+                let eta_min = eta_min.unwrap_or(Ails::ETA_MIN);
+                let neighbors = neighbors.unwrap_or(Ails::NEIGHBORS);
+                // The builders assert the same, so a config fails here rather
+                // than panicking in a run.
+                if cond.max_iteration.is_none()
+                    && cond.max_duration.is_none()
+                    && expected_iterations.is_none()
+                {
+                    return Err(OptError::Config(
+                        "'expected_iterations' is required when the stop condition sets neither \
+                         'max_iteration' nor 'max_duration_secs'"
+                            .into(),
+                    ));
+                }
+                if *expected_iterations == Some(0) {
+                    return Err(OptError::Config(
+                        "'expected_iterations' must be at least 1".into(),
+                    ));
+                }
+                if gamma == 0 {
+                    return Err(OptError::Config("'gamma' must be at least 1".into()));
+                }
+                if !(distance_min > 0.0 && distance_min <= distance_max) {
+                    return Err(OptError::Config(format!(
+                        "'distance_min' and 'distance_max' must satisfy 0 < min <= max, got \
+                         ({distance_min}, {distance_max})"
+                    )));
+                }
+                if !(eta_min > 0.0 && eta_min <= 1.0) {
+                    return Err(OptError::Config(format!(
+                        "'eta_min' must be in (0, 1], got {eta_min}"
+                    )));
+                }
+                if neighbors == 0 {
+                    return Err(OptError::Config("'neighbors' must be at least 1".into()));
+                }
+                let mut search = Ails::new(cond)
+                    .with_gamma(gamma)
+                    .with_distances(distance_min, distance_max)
+                    .with_eta_min(eta_min)
+                    .with_neighbors(neighbors);
+                if let Some(iterations) = expected_iterations {
+                    search = search.with_expected_iterations(*iterations);
+                }
+                Ok(Box::new(search))
             }
             _ => Err(unsupported::<Self>(config)),
         }

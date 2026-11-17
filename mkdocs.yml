@@ -127,6 +127,7 @@ nav:
       - Lin-Kernighan-Helsgaun (TSP): heuristics/lkh.md
       - WalkSAT (MaxSAT): heuristics/walksat.md
       - Hybrid Genetic Search (VRP): heuristics/hgs.md
+      - Adaptive Iterated Local Search (VRP): heuristics/ails.md
   - Guides:
       - Stop conditions: guide/stop_conditions.md
       - Benchmarking: guide/benchmarking.md
@@ -182,6 +183,7 @@ nav:
           - Lin-Kernighan-Helsgaun (TSP): ja/heuristics/lkh.md
           - WalkSAT (MaxSAT): ja/heuristics/walksat.md
           - Hybrid Genetic Search (VRP): ja/heuristics/hgs.md
+          - Adaptive Iterated Local Search (VRP): ja/heuristics/ails.md
       - ガイド:
           - 停止条件: ja/guide/stop_conditions.md
           - ベンチマーク: ja/guide/benchmarking.md

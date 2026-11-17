@@ -240,6 +240,7 @@ where
             | HeuristicConfig::IteratedGreedy { .. }
             | HeuristicConfig::GreedyRandomizedConstruction { .. }
             | HeuristicConfig::HybridGeneticSearch { .. }
+            | HeuristicConfig::AdaptiveIteratedLocalSearch { .. }
             | HeuristicConfig::WalkSat { .. }
             | HeuristicConfig::BranchAndBound { .. }
             | HeuristicConfig::Sequential { .. }
@@ -627,6 +628,7 @@ where
         | HeuristicConfig::IteratedGreedy { .. }
         | HeuristicConfig::GreedyRandomizedConstruction { .. }
         | HeuristicConfig::HybridGeneticSearch { .. }
+        | HeuristicConfig::AdaptiveIteratedLocalSearch { .. }
         | HeuristicConfig::WalkSat { .. } => P::build_special_heuristic(config, cond),
         HeuristicConfig::BranchAndBound { .. } => {
             P::build_branch_and_bound(config, cond).map(|b| b as Box<dyn Heuristic<P>>)
@@ -900,6 +902,38 @@ mod factory_tests {
             msg.contains("not supported for MaxCut") && msg.contains("HybridGeneticSearch"),
             "{msg}"
         );
+    }
+
+    /// The schedules of AILS need the length of the run from somewhere, and
+    /// the values its builders would panic on are config errors.
+    #[test]
+    fn ails_needs_a_run_length_and_rejects_what_its_builders_cannot_take() {
+        let ails = |body: &str| -> HeuristicConfig {
+            toml::from_str(&format!("kind = \"AdaptiveIteratedLocalSearch\"\n{body}"))
+                .expect("the config parses")
+        };
+        let vrp = &ProblemKind::Vrp;
+        let limited = "[stop_condition]\nmax_iteration = 1000";
+        try_build(vrp, &ails(limited)).expect("an iteration limit is a length");
+        try_build(vrp, &ails("[stop_condition]\nmax_duration_secs = 1.0"))
+            .expect("a time limit is a length");
+        try_build(vrp, &ails("expected_iterations = 500")).expect("an explicit length");
+        let err = try_build(vrp, &ails("[stop_condition]\nmax_failed_update = 10"))
+            .expect_err("failed updates say nothing of the length");
+        assert!(err.to_string().contains("expected_iterations"), "{err}");
+
+        for (body, field) in [
+            ("expected_iterations = 0", "expected_iterations"),
+            ("gamma = 0", "gamma"),
+            ("distance_min = 40.0", "distance_min"),
+            ("eta_min = 0.0", "eta_min"),
+            ("neighbors = 0", "neighbors"),
+        ] {
+            let err = try_build(vrp, &ails(&format!("{body}\n{limited}"))).expect_err(body);
+            assert!(err.to_string().contains(field), "{body}: {err}");
+        }
+        let err = try_build(&ProblemKind::Tsp, &ails(limited)).expect_err("AILS is for Vrp");
+        assert!(err.to_string().contains("not supported for Tsp"), "{err}");
     }
 
     /// A value the constructor of SA, BLS or HGS cannot take is a config

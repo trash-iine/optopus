@@ -77,6 +77,7 @@ max_failed_update = 5_000
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop のみ |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP のみ |
+| [`AdaptiveIteratedLocalSearch`](../heuristics/ails.md#benchmark-config) | VRP のみ |
 | [`BranchAndBound`](../heuristics/branch_and_bound.md#benchmark-config) | MaxCut, Qubo, Sat, VertexCover |
 
 未知の kind や必須フィールドの欠落は、実行が始まる前のパースの時点でエラーになります。

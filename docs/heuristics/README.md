@@ -70,3 +70,4 @@ These take no `neighbor` in a config either, but each owns its own move set.
 | [LinKernighanHelsgaunForTsp](lkh.md) | `LinKernighanHelsgaun` | TSP 2D | Variable-depth k-opt with candidate lists. |
 | [WalkSatForSat](walksat.md) | `WalkSat` | MaxSAT | Focused SKC flips inside a random unsatisfied clause; optional adaptive noise. |
 | [HybridGeneticSearchForVrp](hgs.md) | `HybridGeneticSearch` | CVRP | Giant-tour GA + optimal Split + granular local search; biased fitness over feasible/infeasible sub-populations. |
+| [AdaptiveIteratedLocalSearchForVrp](ails.md) | `AdaptiveIteratedLocalSearch` | CVRP | Iterated local search whose perturbation size follows the distance its results end from the reference, with a threshold acceptance that tightens over the run. Concentric and sequential removals, insertion by distance or cost, the granular route descent. |
