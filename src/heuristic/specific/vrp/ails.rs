@@ -8,7 +8,7 @@ use rand::seq::SliceRandom;
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::Vrp;
-use crate::problem::vrp::ops::build_neighbor_lists;
+use crate::problem::vrp::ops::{build_neighbor_lists, insertion_cost};
 use crate::problem::vrp::{AnchoredRouteDescent, RouteAdjacency, VrpPartial};
 use crate::search_state::SearchState;
 use crate::trait_defs::{LocalRepair, Rankable, Ruinable};
@@ -52,15 +52,6 @@ enum Removal {
     Sequential,
 }
 
-/// Where a removed customer goes back.
-#[derive(Debug, Clone, Copy)]
-enum Insertion {
-    /// Beside its nearest placed customer.
-    Distance,
-    /// Beside whichever of its nearest placed customers costs the least.
-    Cost,
-}
-
 /// A removal with the number of customers it takes, which follows how far
 /// its perturbations have been ending from the reference solution.
 #[derive(Debug, Clone)]
@@ -69,9 +60,8 @@ struct Operator {
     /// The perturbation degree, the number of customers to remove.
     degree: f64,
     /// How far from the reference the local search has been ending after
-    /// this removal.
+    /// this removal, its count the uses of the removal.
     reached: MovingMean,
-    uses: u64,
 }
 
 /// Adaptive Iterated Local Search, the variant for large instances.
@@ -159,8 +149,25 @@ pub struct AdaptiveIteratedLocalSearch {
     distance_max: f64,
     eta_min: f64,
     neighbors: usize,
+    /// The iterations the schedules are laid out over, the stop condition's
+    /// limit unless the builder says otherwise. Without one the length is
+    /// estimated from the time limit.
     expected_iterations: Option<u64>,
+    /// What the current run adapts, unset until it starts.
+    run: Option<Run>,
 
+    descent: AnchoredRouteDescent,
+    /// For each customer, its nearest customers and how many of them are
+    /// nearer than the depot.
+    nearest: Vec<Vec<usize>>,
+    depot_rank: Vec<usize>,
+    removed: Vec<usize>,
+    absent: Vec<bool>,
+}
+
+/// What one run adapts, built when the run starts.
+struct Run {
+    /// The two removals, the sequential one first.
     operators: [Operator; 2],
     ideal_distance: f64,
     eta: f64,
@@ -173,18 +180,8 @@ pub struct AdaptiveIteratedLocalSearch {
     /// one did.
     low: f64,
     low_next: f64,
-    iterations: u64,
-    started: bool,
-
-    descent: AnchoredRouteDescent,
-    /// For each customer, its nearest customers and how many of them are
-    /// nearer than the depot.
-    nearest: Vec<Vec<usize>>,
-    depot_rank: Vec<usize>,
-    reference: Option<RouteAdjacency>,
-    removed: Vec<usize>,
-    absent: Vec<bool>,
-    everyone: Vec<usize>,
+    /// The edges of the reference solution.
+    reference: RouteAdjacency,
 }
 
 impl AdaptiveIteratedLocalSearch {
@@ -210,37 +207,20 @@ impl AdaptiveIteratedLocalSearch {
 
     /// A search with the published parameters.
     pub fn new(stop_condition: StopCondition) -> Self {
-        let operator = |removal| Operator {
-            removal,
-            degree: Self::DISTANCE_MAX,
-            reached: MovingMean::new(Self::GAMMA),
-            uses: 0,
-        };
         Self {
+            expected_iterations: stop_condition.max_iteration,
             stop_condition,
             gamma: Self::GAMMA,
             distance_min: Self::DISTANCE_MIN,
             distance_max: Self::DISTANCE_MAX,
             eta_min: Self::ETA_MIN,
             neighbors: Self::NEIGHBORS,
-            expected_iterations: None,
-            operators: [operator(Removal::Sequential), operator(Removal::Concentric)],
-            ideal_distance: Self::DISTANCE_MAX,
-            eta: 1.0,
-            distance_decay: 1.0,
-            eta_decay: 1.0,
-            costs: MovingMean::new(Self::GAMMA),
-            low: f64::INFINITY,
-            low_next: f64::INFINITY,
-            iterations: 0,
-            started: false,
+            run: None,
             descent: Self::descent(Self::NEIGHBORS),
             nearest: Vec::new(),
             depot_rank: Vec::new(),
-            reference: None,
             removed: Vec::new(),
             absent: Vec::new(),
-            everyone: Vec::new(),
         }
     }
 
@@ -304,7 +284,7 @@ impl AdaptiveIteratedLocalSearch {
     }
 
     /// Builder-style: the number of iterations the two schedules are laid
-    /// out over, for a run whose stop condition does not say.
+    /// out over, in place of the stop condition's.
     ///
     /// # Panics
     ///
@@ -315,53 +295,23 @@ impl AdaptiveIteratedLocalSearch {
         self
     }
 
-    /// Whether anything says how long the run is.
-    fn has_a_length(&self) -> bool {
-        self.expected_iterations.is_some()
-            || self.stop_condition.max_iteration.is_some()
-            || self.stop_condition.max_duration.is_some()
-    }
-
-    /// Puts every schedule back to the start of a run.
-    fn rewind(&mut self) {
-        for op in &mut self.operators {
-            op.degree = self.distance_max;
-            op.reached = MovingMean::new(self.gamma);
-            op.uses = 0;
-        }
-        self.ideal_distance = self.distance_max;
-        self.eta = 1.0;
-        self.distance_decay = 1.0;
-        self.eta_decay = 1.0;
-        self.costs = MovingMean::new(self.gamma);
-        self.low = f64::INFINITY;
-        self.low_next = f64::INFINITY;
-        self.iterations = 0;
-        self.started = false;
-        self.reference = None;
-    }
-
-    /// Renews the two decay factors from the number of iterations the run is
-    /// now expected to make.
-    fn renew_decays(&mut self, state: &SearchState<'_, Vrp>) {
-        let total = match (
-            self.expected_iterations,
-            self.stop_condition.max_iteration,
-            self.stop_condition.max_duration,
-        ) {
-            (Some(total), _, _) | (None, Some(total), _) => total as f64,
-            (None, None, Some(limit)) => {
+    /// Renews the two decay factors of `run` from the number of iterations
+    /// the run is now expected to make.
+    fn renew_decays(&self, state: &SearchState<'_, Vrp>, run: &mut Run) {
+        let total = match (self.expected_iterations, self.stop_condition.max_duration) {
+            (Some(total), _) => total as f64,
+            (None, Some(limit)) => {
                 let share = state.duration().as_secs_f64() / limit.as_secs_f64();
                 if share <= 0.0 {
                     return;
                 }
-                self.iterations as f64 / share
+                state.iterations_this_run() as f64 / share
             }
-            (None, None, None) => return,
+            (None, None) => return,
         };
         if total >= 1.0 {
-            self.distance_decay = (self.distance_min / self.distance_max).powf(1.0 / total);
-            self.eta_decay = self.eta_min.powf(1.0 / total);
+            run.distance_decay = (self.distance_min / self.distance_max).powf(1.0 / total);
+            run.eta_decay = self.eta_min.powf(1.0 / total);
         }
     }
 
@@ -381,17 +331,30 @@ impl AdaptiveIteratedLocalSearch {
             })
             .collect();
         self.absent = vec![false; n + 1];
-        self.everyone = (1..=n).collect();
-        if self.stop_condition.max_iteration.is_some() || self.expected_iterations.is_some() {
-            self.renew_decays(state);
-        }
 
         let mut partial = prob.to_partial(&state.solution);
+        let everyone: Vec<usize> = (1..=n).collect();
         self.descent
-            .repair_around(prob, &mut partial, &self.everyone, &mut state.rng);
+            .repair_around(prob, &mut partial, &everyone, &mut state.rng);
         state.solution = prob.finish(&partial);
-        self.reference = Some(RouteAdjacency::from_routes(n, &state.solution.routes));
-        self.started = true;
+        let operator = |removal| Operator {
+            removal,
+            degree: self.distance_max,
+            reached: MovingMean::new(self.gamma),
+        };
+        let mut run = Run {
+            operators: [operator(Removal::Sequential), operator(Removal::Concentric)],
+            ideal_distance: self.distance_max,
+            eta: 1.0,
+            distance_decay: 1.0,
+            eta_decay: 1.0,
+            costs: MovingMean::new(self.gamma),
+            low: f64::INFINITY,
+            low_next: f64::INFINITY,
+            reference: RouteAdjacency::from_routes(n, &state.solution.routes),
+        };
+        self.renew_decays(state, &mut run);
+        self.run = Some(run);
         state.iteration += 1;
         state.n_accepted += 1;
         state.update_best();
@@ -415,6 +378,9 @@ impl AdaptiveIteratedLocalSearch {
                 let count = (degree.ceil() as usize).min(self.nearest[center].len());
                 self.removed
                     .extend_from_slice(&self.nearest[center][..count]);
+                for &c in &self.removed {
+                    self.absent[c] = true;
+                }
                 prob.remove_all(partial, &self.removed);
             }
             Removal::Sequential => {
@@ -441,32 +407,27 @@ impl AdaptiveIteratedLocalSearch {
                 }
             }
         }
-        for &c in &self.removed {
-            self.absent[c] = true;
-        }
     }
 
-    /// Where `c` goes back, as a route and an index in it.
+    /// Where `c` goes back, as a route and a gap in it.
     ///
     /// The customers of `c`'s nearest list that are placed are walked nearest
     /// first, up to `reach` of them, and the one after which `c` makes the
     /// smallest detour is kept. The depot takes its turn where it falls in
     /// that order, standing for the start of every route. `c` then goes
-    /// before or after the one kept, whichever is cheaper.
+    /// after or before the one kept, whichever is cheaper.
     fn place(&self, prob: &Vrp, partial: &VrpPartial, c: usize, reach: usize) -> (usize, usize) {
         let routes = partial.routes();
-        let detour =
-            |a: usize, b: usize| prob.distance(a, c) + prob.distance(c, b) - prob.distance(a, b);
-        let after = |r: usize, pos: usize| {
-            let route = &routes[r];
-            let next = route.get(pos + 1).copied().unwrap_or(0);
-            detour(route[pos], next)
+        let cost_at = |r: usize, gap: usize| insertion_cost(prob, &routes[r], gap, c, c);
+        // (cost, route, gap, the gap on the other side of the same neighbor)
+        type Candidate = (f64, usize, usize, usize);
+        let consider = |best: &mut Option<Candidate>, candidate: Candidate| {
+            if best.is_none_or(|held| candidate.0 < held.0) {
+                *best = Some(candidate);
+            }
         };
-
-        // (detour, route, index of the neighbor in it, or `None` for the
-        // depot at the start of the route)
-        let mut best: Option<(f64, usize, Option<usize>)> = None;
-        let starts = |best: &mut Option<(f64, usize, Option<usize>)>| {
+        // The depot, after it at the start of a route or before it at the end.
+        let starts = |best: &mut Option<Candidate>| {
             let mut any = false;
             for (r, route) in routes.iter().enumerate() {
                 // An idle vehicle stands for every idle one of its type.
@@ -474,13 +435,12 @@ impl AdaptiveIteratedLocalSearch {
                     continue;
                 }
                 any = true;
-                let cost = detour(0, route.first().copied().unwrap_or(0));
-                if best.is_none_or(|(b, _, _)| cost < b) {
-                    *best = Some((cost, r, None));
-                }
+                consider(best, (cost_at(r, 0), r, 0, route.len()));
             }
             any
         };
+
+        let mut best = None;
         let mut seen = 0;
         for (rank, &o) in self.nearest[c].iter().enumerate() {
             if seen >= reach {
@@ -497,44 +457,22 @@ impl AdaptiveIteratedLocalSearch {
             }
             seen += 1;
             let (r, pos) = partial.locate(o);
-            let cost = after(r, pos);
-            if best.is_none_or(|(b, _, _)| cost < b) {
-                best = Some((cost, r, Some(pos)));
-            }
+            consider(&mut best, (cost_at(r, pos + 1), r, pos + 1, pos));
         }
         if best.is_none() {
             // Nothing near `c` is placed, so every place is priced.
             starts(&mut best);
             for (r, route) in routes.iter().enumerate() {
                 for pos in 0..route.len() {
-                    let cost = after(r, pos);
-                    if best.is_none_or(|(b, _, _)| cost < b) {
-                        best = Some((cost, r, Some(pos)));
-                    }
+                    consider(&mut best, (cost_at(r, pos + 1), r, pos + 1, pos));
                 }
             }
         }
-        let (cost, r, at) = best.expect("a solution has at least one route to start");
-        let route = &routes[r];
-        match at {
-            // After the depot at the start, or before it at the end.
-            None => {
-                let at_end = detour(route.last().copied().unwrap_or(0), 0);
-                if cost < at_end {
-                    (r, 0)
-                } else {
-                    (r, route.len())
-                }
-            }
-            Some(pos) => {
-                let prev = if pos == 0 { 0 } else { route[pos - 1] };
-                let before = detour(prev, route[pos]);
-                if cost < before {
-                    (r, pos + 1)
-                } else {
-                    (r, pos)
-                }
-            }
+        let (cost, r, gap, other) = best.expect("a solution has at least one route to start");
+        if cost < cost_at(r, other) {
+            (r, gap)
+        } else {
+            (r, other)
         }
     }
 
@@ -542,24 +480,22 @@ impl AdaptiveIteratedLocalSearch {
     fn step(&mut self, state: &mut SearchState<'_, Vrp>) {
         let prob: &Vrp = state.instance;
         let n = prob.get_n();
-        let which = state.rng.random_range(0..self.operators.len());
-        let removal = self.operators[which].removal;
-        let degree = self.operators[which]
-            .degree
-            .clamp(1.0, n.saturating_sub(2).max(1) as f64);
-        let insertion = if state.rng.random_bool(0.5) {
-            Insertion::Distance
+        let max_degree = n.saturating_sub(2).max(1) as f64;
+        let mut run = self.run.take().expect("the search has started");
+        let which = state.rng.random_range(0..run.operators.len());
+        let removal = run.operators[which].removal;
+        let degree = run.operators[which].degree.clamp(1.0, max_degree);
+        // Insertion by distance looks at the nearest placed customer, and
+        // insertion by cost at the `neighbors` nearest.
+        let reach = if state.rng.random_bool(0.5) {
+            1
         } else {
-            Insertion::Cost
+            self.neighbors
         };
 
         let mut partial = prob.to_partial(&state.solution);
         self.remove(prob, &mut partial, removal, degree, &mut state.rng);
         self.removed.shuffle(&mut state.rng);
-        let reach = match insertion {
-            Insertion::Distance => 1,
-            Insertion::Cost => self.neighbors,
-        };
         for k in 0..self.removed.len() {
             let c = self.removed[k];
             let (r, place) = self.place(prob, &partial, c, reach);
@@ -568,62 +504,60 @@ impl AdaptiveIteratedLocalSearch {
         }
         self.descent
             .repair_around(prob, &mut partial, &self.removed, &mut state.rng);
-        let result = prob.finish(&partial);
 
-        let reference = self.reference.as_ref().expect("the search has started");
-        let adjacency = RouteAdjacency::from_routes(n, &result.routes);
-        let distance = adjacency.broken_pairs_from(reference) as f64;
+        let adjacency = RouteAdjacency::from_routes(n, partial.routes());
+        let distance = adjacency.broken_pairs_from(&run.reference) as f64;
 
-        self.iterations += 1;
-        if self.iterations.is_multiple_of(self.gamma) {
-            self.renew_decays(state);
+        let iteration = state.iterations_this_run();
+        if iteration.is_multiple_of(self.gamma) {
+            self.renew_decays(state, &mut run);
         }
-        self.ideal_distance =
-            (self.ideal_distance * self.distance_decay).clamp(self.distance_min, self.distance_max);
+        run.ideal_distance =
+            (run.ideal_distance * run.distance_decay).clamp(self.distance_min, self.distance_max);
+        run.eta = (run.eta * run.eta_decay).max(self.eta_min);
 
-        let op = &mut self.operators[which];
-        op.uses += 1;
+        let op = &mut run.operators[which];
         op.reached.push(distance);
-        if op.uses.is_multiple_of(self.gamma) {
+        if op.reached.seen.is_multiple_of(self.gamma) {
             // A removal whose results all fell back onto the reference
             // divides by zero here, and the bound below is its degree.
-            op.degree = (op.degree / op.reached.value * self.ideal_distance)
-                .clamp(1.0, n.saturating_sub(2).max(1) as f64);
+            op.degree = (op.degree / op.reached.value * run.ideal_distance).clamp(1.0, max_degree);
         }
 
-        let accepted = if result.is_feasible() {
-            let cost = result.objective;
-            self.costs.push(cost);
-            if self.iterations.is_multiple_of(self.gamma) {
-                self.low = self.low_next;
-                self.low_next = f64::INFINITY;
+        // Only an accepted result is turned into a solution.
+        let accepted = if partial.is_feasible() {
+            let cost = prob.partial_energy(&partial);
+            run.costs.push(cost);
+            if iteration.is_multiple_of(self.gamma) {
+                run.low = run.low_next;
+                run.low_next = f64::INFINITY;
             }
-            self.low_next = self.low_next.min(cost);
-            self.low = self.low.min(cost);
-            self.eta = (self.eta * self.eta_decay).max(self.eta_min);
-            cost <= self.low + self.eta * (self.costs.value - self.low)
+            run.low_next = run.low_next.min(cost);
+            run.low = run.low.min(cost);
+            (cost <= run.low + run.eta * (run.costs.value - run.low)).then(|| prob.finish(&partial))
         } else {
             // A result that breaks a constraint stays out of the averages,
             // and replaces only a reference that breaks one worse.
-            self.eta = (self.eta * self.eta_decay).max(self.eta_min);
-            result.is_better_than(&state.solution)
+            let result = prob.finish(&partial);
+            result.is_better_than(&state.solution).then_some(result)
         };
 
-        if accepted {
+        if let Some(result) = accepted {
             state.solution = result;
-            self.reference = Some(adjacency);
+            run.reference = adjacency;
             state.iteration += 1;
             state.n_accepted += 1;
             state.update_best();
         } else {
             state.progress_iteration();
         }
+        self.run = Some(run);
     }
 }
 
 impl Heuristic<Vrp> for AdaptiveIteratedLocalSearch {
     fn clear(&mut self) {
-        self.rewind();
+        self.run = None;
     }
 
     fn stop_condition(&self) -> &StopCondition {
@@ -635,8 +569,8 @@ impl Heuristic<Vrp> for AdaptiveIteratedLocalSearch {
             state.progress_iteration();
             return Ok(());
         }
-        if !self.started {
-            if !self.has_a_length() {
+        if self.run.is_none() {
+            if self.expected_iterations.is_none() && self.stop_condition.max_duration.is_none() {
                 return Err(OptError::InvalidState(
                     "AdaptiveIteratedLocalSearch needs the length of the run: an iteration or \
                      time limit in its stop condition, or with_expected_iterations"
@@ -785,10 +719,11 @@ mod tests {
         let mut state = SearchState::new_with_seed(&vrp, 11);
         let mut search = AdaptiveIteratedLocalSearch::new(StopCondition::iterations(90));
         search.run(&mut state).unwrap();
-        assert!((search.eta - AdaptiveIteratedLocalSearch::ETA_MIN).abs() < 2e-3);
-        assert!(search.ideal_distance < AdaptiveIteratedLocalSearch::DISTANCE_MIN + 0.2);
-        for op in &search.operators {
-            assert!(op.uses > 0);
+        let run = search.run.as_ref().expect("the run started");
+        assert!((run.eta - AdaptiveIteratedLocalSearch::ETA_MIN).abs() < 2e-3);
+        assert!(run.ideal_distance < AdaptiveIteratedLocalSearch::DISTANCE_MIN + 0.2);
+        for op in &run.operators {
+            assert!(op.reached.seen > 0);
             assert!(op.degree >= 1.0 && op.degree <= 28.0);
         }
     }
