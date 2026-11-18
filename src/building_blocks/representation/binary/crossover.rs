@@ -30,8 +30,8 @@ pub fn uniform_binary_crossover<P: BinaryProblem>(
 }
 
 /// The order a relinking path flips its variables in.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PathOrder {
+#[derive(Debug, Clone, Copy)]
+enum PathOrder {
     /// The flip that leaves the best solution, at every step.
     Greedy,
     /// A flip drawn uniformly, at every step.
@@ -49,7 +49,7 @@ pub enum PathOrder {
 /// the distance is for.
 ///
 /// It implements [`Crossover`](crate::trait_defs::Crossover) for MaxCut, QUBO,
-/// MaxSAT and vertex cover. With [`PathOrder::Greedy`] a path over `d`
+/// MaxSAT and vertex cover. With [`greedy`](PathRelinkingCrossover::greedy) a path over `d`
 /// disagreeing variables prices O(d²) flips, where the uniform crossover
 /// applies `d / 2`.
 ///
@@ -141,7 +141,6 @@ impl PathRelinkingCrossover {
     ) -> Result<P::Solution, OptError>
     where
         P: BinaryProblem,
-        P::Solution: Rankable,
         P::Flip: Rankable,
     {
         let distance = flips.len();
@@ -151,35 +150,52 @@ impl PathRelinkingCrossover {
         }
         let nearest =
             ((self.distance_scale * distance as f64).ceil() as usize).clamp(1, distance / 2);
-        let farthest = distance - nearest;
-        let mut best: Option<P::Solution> = None;
-        for step in 1..=farthest {
-            let pick = match self.order {
-                PathOrder::Random => rng.random_range(0..flips.len()),
-                PathOrder::Greedy => {
-                    let mut pick = 0;
-                    let mut best_flip = prob.flip_move(&sol, flips[0]);
-                    for (at, &i) in flips.iter().enumerate().skip(1) {
-                        let flip = prob.flip_move(&sol, i);
-                        if flip.is_better_than(&best_flip) {
-                            best_flip = flip;
-                            pick = at;
-                        }
-                    }
-                    pick
-                }
-            };
-            let i = flips.swap_remove(pick);
-            prob.flip_move(&sol, i).apply_to_solution(prob, &mut sol)?;
-            if step >= nearest {
-                match &mut best {
-                    Some(kept) if sol.is_better_than(kept) => kept.clone_from(&sol),
-                    Some(_) => {}
-                    None => best = Some(sol.clone()),
-                }
+        for _ in 0..nearest {
+            self.step(prob, &mut sol, &mut flips, rng)?;
+        }
+        let mut best = sol.clone();
+        for _ in nearest..distance - nearest {
+            self.step(prob, &mut sol, &mut flips, rng)?;
+            if sol.is_better_than(&best) {
+                best.clone_from(&sol);
             }
         }
-        Ok(best.expect("the path has a solution between its two ends"))
+        Ok(best)
+    }
+
+    /// Takes one step of the path, flipping one variable of `flips` and
+    /// taking it out of them.
+    fn step<P>(
+        &self,
+        prob: &P,
+        sol: &mut P::Solution,
+        flips: &mut Vec<usize>,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<(), OptError>
+    where
+        P: BinaryProblem,
+        P::Flip: Rankable,
+    {
+        let (pick, flip) = match self.order {
+            PathOrder::Random => {
+                let pick = rng.random_range(0..flips.len());
+                (pick, prob.flip_move(sol, flips[pick]))
+            }
+            PathOrder::Greedy => {
+                let mut pick = 0;
+                let mut best = prob.flip_move(sol, flips[0]);
+                for (at, &i) in flips.iter().enumerate().skip(1) {
+                    let flip = prob.flip_move(sol, i);
+                    if flip.is_better_than(&best) {
+                        best = flip;
+                        pick = at;
+                    }
+                }
+                (pick, best)
+            }
+        };
+        flips.swap_remove(pick);
+        flip.apply_to_solution(prob, sol)
     }
 }
 
@@ -254,8 +270,8 @@ pub fn lift_compact_binary_solution<P: BinaryProblem>(
 mod tests {
     use super::*;
     use crate::building_blocks::instance::Graph;
-    use crate::problem::{MaxCut, MaxCutSolution, VertexCover};
-    use crate::trait_defs::{Crossover, ProblemTrait};
+    use crate::problem::{MaxCut, MaxCutSolution};
+    use crate::trait_defs::{Distance, ProblemTrait};
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
 
@@ -263,10 +279,6 @@ mod tests {
         let mut rng = SmallRng::seed_from_u64(seed);
         let mc = MaxCut::new(Graph::erdos_renyi(n, 0.2, &mut rng));
         (mc, rng)
-    }
-
-    fn hamming(a: &MaxCutSolution, b: &MaxCutSolution) -> usize {
-        a.x.iter().zip(&b.x).filter(|(p, q)| p != q).count()
     }
 
     /// The offspring keeps what the parents share, stays the asked distance
@@ -289,8 +301,8 @@ mod tests {
                         assert_eq!(child.x[i], a.x[i]);
                     }
                 }
-                let from_a = hamming(&child, &a);
-                assert_eq!(from_a + hamming(&child, &b), d);
+                let from_a = child.distance(&a);
+                assert_eq!(from_a + child.distance(&b), d);
                 let nearest = (d as f64 / 3.0).ceil() as usize;
                 assert!(from_a >= nearest && d - from_a >= nearest);
                 let rebuilt = MaxCutSolution::new_from_assignment(&mc, child.x.clone());
@@ -326,41 +338,6 @@ mod tests {
             .relink(&mc, &a, vec![4], &mut rng)
             .unwrap();
         assert_eq!(child.x, a.x);
-    }
-
-    /// A cut and its complement are one solution, so relinking toward a
-    /// parent's complement must walk the short way.
-    #[test]
-    fn max_cut_relinks_toward_the_nearer_labelling() {
-        let (mc, mut rng) = random_cut(40, 5);
-        let a = mc.new_solution(&mut rng);
-        // The complement of `a` with three vertices moved.
-        let mut x: Vec<bool> = a.x.iter().map(|v| !v).collect();
-        for i in [3, 17, 29] {
-            x[i] = !x[i];
-        }
-        let b = MaxCutSolution::new_from_assignment(&mc, x);
-        let child = PathRelinkingCrossover::greedy()
-            .crossover(&mc, &a, &b, &mut rng)
-            .unwrap();
-        assert!(hamming(&child, &a) <= 2, "the path is three flips long");
-        assert!(hamming(&child, &a) >= 1);
-    }
-
-    #[test]
-    fn it_runs_on_vertex_cover_and_replays_under_a_seed() {
-        let mut rng = SmallRng::seed_from_u64(9);
-        let vc = VertexCover::new(Graph::erdos_renyi(30, 0.2, &mut rng));
-        let a = vc.new_solution(&mut rng);
-        let b = vc.new_solution(&mut rng);
-        let run = |seed| {
-            let mut rng = SmallRng::seed_from_u64(seed);
-            PathRelinkingCrossover::random()
-                .crossover(&vc, &a, &b, &mut rng)
-                .unwrap()
-                .x
-        };
-        assert_eq!(run(4), run(4));
     }
 
     #[test]

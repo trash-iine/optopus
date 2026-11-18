@@ -76,6 +76,28 @@ mod tests {
     }
 
     #[test]
+    fn path_relinking_runs_and_replays_under_a_seed() {
+        use crate::building_blocks::instance::Graph;
+        use crate::building_blocks::representation::PathRelinkingCrossover;
+        use crate::trait_defs::ProblemTrait;
+        use rand::SeedableRng;
+        use rand::rngs::SmallRng;
+
+        let mut rng = SmallRng::seed_from_u64(9);
+        let vc = VertexCover::new(Graph::erdos_renyi(30, 0.2, &mut rng));
+        let a = vc.new_solution(&mut rng);
+        let b = vc.new_solution(&mut rng);
+        let run = |seed| {
+            let mut rng = SmallRng::seed_from_u64(seed);
+            PathRelinkingCrossover::random()
+                .crossover(&vc, &a, &b, &mut rng)
+                .unwrap()
+                .x
+        };
+        assert_eq!(run(4), run(4));
+    }
+
+    #[test]
     fn test_uniform_crossover_identical_parents() {
         let vc = make_vc();
         let s = vc.solution_from_assignment(&[true, false, true]).unwrap();

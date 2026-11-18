@@ -12,10 +12,10 @@ mod permutation;
 
 pub(crate) use binary::fixed_by;
 pub use binary::{
-    BinaryFixing, BinaryRelaxation, PathOrder, PathRelinkingCrossover, apply_swap_as_two_flips,
-    binary_node, binary_ranges, binary_solution_with, binary_value, differing_pairs,
-    differing_pairs_by_row, differing_variables, lift_binary_solution,
-    lift_compact_binary_solution, random_differing_pair, uniform_binary_crossover, variable_slots,
+    BinaryFixing, BinaryRelaxation, PathRelinkingCrossover, apply_swap_as_two_flips, binary_node,
+    binary_ranges, binary_solution_with, binary_value, differing_pairs, differing_pairs_by_row,
+    differing_variables, lift_binary_solution, lift_compact_binary_solution, random_differing_pair,
+    uniform_binary_crossover, variable_slots,
 };
 pub use integer::{DomainRestriction, IntVar, IntVars};
 pub use permutation::{check_permutation, order_crossover};

@@ -6,7 +6,7 @@ mod fix;
 mod neighbor;
 
 pub use crossover::{
-    PathOrder, PathRelinkingCrossover, differing_variables, lift_binary_solution,
+    PathRelinkingCrossover, differing_variables, lift_binary_solution,
     lift_compact_binary_solution, uniform_binary_crossover,
 };
 pub(crate) use fix::fixed_by;
