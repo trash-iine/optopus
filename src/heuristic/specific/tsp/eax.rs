@@ -8,7 +8,7 @@ use rand::seq::SliceRandom;
 use crate::building_blocks::search::MIN_IMPROVEMENT;
 use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
-use crate::problem::tsp::{AnchoredTourDescent, Tsp, TspSolution};
+use crate::problem::tsp::{AnchoredTourDescent, NeighborLists, Tsp, TspSolution};
 use crate::search_state::SearchState;
 use crate::trait_defs::{LocalRepair, Ruinable};
 
@@ -24,6 +24,20 @@ pub enum EaxSelection {
     /// entropy the population loses by taking it.
     #[default]
     Entropy,
+}
+
+/// The cities of the cycle through `start` in `adj`, from `start` on.
+fn around(adj: &[[u32; 2]], start: u32) -> impl Iterator<Item = u32> + '_ {
+    let mut prev = NONE;
+    let mut cur = Some(start);
+    std::iter::from_fn(move || {
+        let here = cur?;
+        let [x, y] = adj[here as usize];
+        let next = if x != prev { x } else { y };
+        prev = here;
+        cur = (next != start).then_some(next);
+        Some(here)
+    })
 }
 
 /// A tour as the two neighbors of every city, with its length.
@@ -42,20 +56,9 @@ impl Member {
         Self { adj, length }
     }
 
-    /// Writes the cities in tour order from city zero into `out`.
-    fn tour_into(&self, out: &mut Vec<usize>) {
-        out.clear();
-        let (mut prev, mut cur) = (NONE, 0u32);
-        loop {
-            out.push(cur as usize);
-            let [a, b] = self.adj[cur as usize];
-            let next = if a != prev { a } else { b };
-            prev = cur;
-            cur = next;
-            if cur == 0 {
-                break;
-            }
-        }
+    /// The cities in tour order from city zero.
+    fn tour(&self) -> Vec<usize> {
+        around(&self.adj, 0).map(|c| c as usize).collect()
     }
 }
 
@@ -75,41 +78,32 @@ impl EdgeCounts {
         self.by_city.resize(n, Vec::new());
     }
 
-    fn get(&self, u: u32, v: u32) -> u32 {
-        let (lo, hi) = (u.min(v), u.max(v));
-        self.by_city[lo as usize]
-            .iter()
-            .find(|e| e.0 == hi)
-            .map_or(0, |e| e.1)
-    }
-
-    fn add(&mut self, u: u32, v: u32) {
+    /// Adds one holder of the edge between `u` and `v`, or takes one away,
+    /// and returns how many held it before.
+    fn change(&mut self, u: u32, v: u32, added: bool) -> u32 {
         let (lo, hi) = (u.min(v), u.max(v));
         let list = &mut self.by_city[lo as usize];
-        match list.iter_mut().find(|e| e.0 == hi) {
-            Some(e) => e.1 += 1,
-            None => list.push((hi, 1)),
-        }
-    }
-
-    fn remove(&mut self, u: u32, v: u32) {
-        let (lo, hi) = (u.min(v), u.max(v));
-        let list = &mut self.by_city[lo as usize];
-        let at = list
-            .iter()
-            .position(|e| e.0 == hi)
-            .expect("a removed edge is one the population holds");
-        list[at].1 -= 1;
-        if list[at].1 == 0 {
+        let Some(at) = list.iter().position(|e| e.0 == hi) else {
+            assert!(added, "a removed edge is one the population holds");
+            list.push((hi, 1));
+            return 0;
+        };
+        let held = list[at].1;
+        if added {
+            list[at].1 += 1;
+        } else if held == 1 {
             list.swap_remove(at);
+        } else {
+            list[at].1 -= 1;
         }
+        held
     }
 
     fn add_member(&mut self, member: &Member) {
         for (v, nbs) in member.adj.iter().enumerate() {
             for &w in nbs {
                 if (v as u32) < w {
-                    self.add(v as u32, w);
+                    self.change(v as u32, w, true);
                 }
             }
         }
@@ -156,7 +150,9 @@ struct Mating {
     cycles: Vec<u32>,
     spans: Vec<(u32, u32)>,
     gains: Vec<f64>,
-    picks: Vec<u32>,
+    /// The nearest cities of each city a join looks among, fetched once per
+    /// mating.
+    near: NeighborLists,
 
     // One offspring.
     writes: Vec<SlotWrite>,
@@ -196,15 +192,11 @@ impl Mating {
         self.work.extend_from_slice(&a.adj);
 
         self.order.clear();
-        let (mut prev, mut cur) = (NONE, 0u32);
-        for k in 0..n {
-            self.order.push(cur);
-            self.inv[cur as usize] = k as u32;
-            let [x, y] = a.adj[cur as usize];
-            let next = if x != prev { x } else { y };
-            prev = cur;
-            cur = next;
+        for (k, c) in around(&a.adj, 0).enumerate() {
+            self.order.push(c);
+            self.inv[c as usize] = k as u32;
         }
+        self.near = prob.nearest_neighbors(Self::FAR.min(n - 1));
 
         self.open.clear();
         for v in 0..n {
@@ -448,46 +440,40 @@ impl Mating {
             self.cuts[root as usize - 1] + 1
         };
         self.unit.clear();
-        let start = self.order[first_pos as usize];
-        let (mut prev, mut cur) = (NONE, start);
-        loop {
-            self.unit.push(cur);
-            self.in_unit[cur as usize] = true;
-            let [x, y] = self.work[cur as usize];
-            let next = if x != prev { x } else { y };
-            prev = cur;
-            cur = next;
-            if cur == start {
-                break;
-            }
+        for c in around(&self.work, self.order[first_pos as usize]) {
+            self.unit.push(c);
+            self.in_unit[c as usize] = true;
         }
 
         // (a, b) leaves the sub-tour, (c, d) leaves another, and (a, c)
         // and (b, d) come in.
         let mut best: Option<(f64, [u32; 4])> = None;
-        let near = prob.nearest_neighbors(Self::FAR.min(n - 1));
+        let dist = |i: u32, j: u32| prob.distance(i as usize, j as usize);
         for reach in [Self::NEAR, Self::FAR] {
             for &a in &self.unit {
-                for &c in near[a as usize].iter().take(reach) {
+                let bs = self.work[a as usize];
+                let ab = bs.map(|b| dist(a, b));
+                for &c in self.near[a as usize].iter().take(reach) {
                     if self.in_unit[c] {
                         continue;
                     }
                     let c = c as u32;
-                    for b in self.work[a as usize] {
-                        for d in self.work[c as usize] {
-                            let out = prob.distance(a as usize, b as usize)
-                                + prob.distance(c as usize, d as usize);
-                            let straight = out
-                                - prob.distance(a as usize, c as usize)
-                                - prob.distance(b as usize, d as usize);
-                            if best.is_none_or(|(g, _)| straight > g) {
-                                best = Some((straight, [a, b, c, d]));
-                            }
-                            let crossed = out
-                                - prob.distance(a as usize, d as usize)
-                                - prob.distance(b as usize, c as usize);
-                            if best.is_none_or(|(g, _)| crossed > g) {
-                                best = Some((crossed, [a, b, d, c]));
+                    let ds = self.work[c as usize];
+                    let ac = dist(a, c);
+                    let cd = ds.map(|d| dist(c, d));
+                    let ad = ds.map(|d| dist(a, d));
+                    let bc = bs.map(|b| dist(b, c));
+                    for (i, b) in bs.into_iter().enumerate() {
+                        for (j, d) in ds.into_iter().enumerate() {
+                            let out = ab[i] + cd[j];
+                            // Straight, a to c and b to d, then crossed, a
+                            // to d and b to c.
+                            for (g, x, y) in
+                                [(out - ac - dist(b, d), c, d), (out - ad[j] - bc[i], d, c)]
+                            {
+                                if best.is_none_or(|(held, _)| g > held) {
+                                    best = Some((g, [a, b, x, y]));
+                                }
                             }
                         }
                     }
@@ -548,21 +534,12 @@ impl Mating {
         };
         let mut delta = 0.0;
         for c in &self.changes {
-            let held = counts.get(c.u, c.v);
-            if c.added {
-                delta += term(held) - term(held + 1);
-                counts.add(c.u, c.v);
-            } else {
-                delta += term(held) - term(held - 1);
-                counts.remove(c.u, c.v);
-            }
+            let held = counts.change(c.u, c.v, c.added);
+            let now = if c.added { held + 1 } else { held - 1 };
+            delta += term(held) - term(now);
         }
         for c in self.changes.iter().rev() {
-            if c.added {
-                counts.remove(c.u, c.v);
-            } else {
-                counts.add(c.u, c.v);
-            }
+            counts.change(c.u, c.v, !c.added);
         }
         -delta
     }
@@ -660,16 +637,15 @@ pub struct EdgeAssemblyCrossover {
     mating_order: Vec<usize>,
     next_pair: usize,
     generation: u64,
-    /// Generations since the best tour last improved, and the limit on them
-    /// once one is set.
-    stagnant: u64,
+    /// The generation that last found a better tour, and the limit on the
+    /// generations since then once one is set.
+    improved_in: u64,
     stagnation_limit: Option<u64>,
-    improved_this_generation: bool,
     finished: bool,
     mating: Mating,
+    /// The AB-cycles of the current pair, the first ones the offspring.
+    picks: Vec<u32>,
     descent: AnchoredTourDescent,
-    cities: Vec<usize>,
-    tour: Vec<usize>,
 }
 
 impl EdgeAssemblyCrossover {
@@ -707,16 +683,14 @@ impl EdgeAssemblyCrossover {
             mating_order: Vec::new(),
             next_pair: 0,
             generation: 0,
-            stagnant: 0,
+            improved_in: 0,
             stagnation_limit: None,
-            improved_this_generation: false,
             finished: false,
             mating: Mating::default(),
+            picks: Vec::new(),
             // A member has to be a local optimum, so the descent runs until
             // a pass changes nothing.
             descent: AnchoredTourDescent::new().with_max_passes(usize::MAX),
-            cities: Vec::new(),
-            tour: Vec::new(),
         }
     }
 
@@ -741,8 +715,9 @@ impl EdgeAssemblyCrossover {
             crate::trait_defs::ProblemTrait::new_solution(prob, &mut state.rng)
         };
         let mut partial = prob.to_partial(&start);
+        let cities: Vec<usize> = (0..prob.get_n()).collect();
         self.descent
-            .repair_around(prob, &mut partial, &self.cities, &mut state.rng);
+            .repair_around(prob, &mut partial, &cities, &mut state.rng);
         let sol = prob.finish(&partial);
         let member = Member::from_tour(&sol.tour, sol.objective);
         if self.selection == EaxSelection::Entropy {
@@ -758,21 +733,16 @@ impl EdgeAssemblyCrossover {
     /// Closes a generation: draws the next mating order and applies the two
     /// rules that end a run.
     fn turn_generation(&mut self, rng: &mut SmallRng) {
-        if self.generation > 0 || self.next_pair > 0 {
+        // Only the first call comes before any mating.
+        if self.next_pair > 0 {
             self.generation += 1;
-            if self.improved_this_generation {
-                self.stagnant = 0;
-            } else {
-                self.stagnant += 1;
-            }
-            self.improved_this_generation = false;
-
+            let stagnant = self.generation - self.improved_in;
             let patience = (Self::STAGNATION_OFFSPRING / self.offspring_per_pair) as u64;
             match self.stagnation_limit {
-                None if self.stagnant == patience.max(1) => {
+                None if stagnant == patience.max(1) => {
                     self.stagnation_limit = Some(self.generation / 10);
                 }
-                Some(limit) if limit <= self.stagnant => self.finished = true,
+                Some(limit) if limit <= stagnant => self.finished = true,
                 _ => {}
             }
             let (lo, hi) = self
@@ -801,16 +771,16 @@ impl EdgeAssemblyCrossover {
         let mating = &mut self.mating;
         mating.set_parents(prob, &self.members[ia], &self.members[ib], &mut state.rng);
         let cycles = mating.spans.len();
-        mating.picks.clear();
-        mating.picks.extend(0..cycles as u32);
+        self.picks.clear();
+        self.picks.extend(0..cycles as u32);
         let take = self.offspring_per_pair.min(cycles);
-        let (chosen, _) = mating.picks.partial_shuffle(&mut state.rng, take);
-        let chosen: Vec<u32> = chosen.to_vec();
+        let (chosen, _) = self.picks.partial_shuffle(&mut state.rng, take);
 
         let mut best_score = 0.0;
         let mut best_gain = 0.0;
-        for which in chosen {
+        for &which in chosen.iter() {
             let gain = mating.build(prob, which as usize, &mut state.rng);
+            let mut kept = false;
             if gain > MIN_IMPROVEMENT {
                 let score = match self.selection {
                     EaxSelection::Greedy => gain,
@@ -822,11 +792,16 @@ impl EdgeAssemblyCrossover {
                 if score > best_score {
                     best_score = score;
                     best_gain = gain;
-                    mating.best_writes.clone_from(&mating.writes);
-                    mating.best_changes.clone_from(&mating.changes);
+                    kept = true;
                 }
             }
             mating.undo();
+            if kept {
+                // The next offspring starts from empty edit lists, so the two
+                // pairs trade places instead of being copied.
+                std::mem::swap(&mut mating.best_writes, &mut mating.writes);
+                std::mem::swap(&mut mating.best_changes, &mut mating.changes);
+            }
         }
         if best_score <= 0.0 {
             return false;
@@ -839,29 +814,22 @@ impl EdgeAssemblyCrossover {
         member.length -= best_gain;
         if self.selection == EaxSelection::Entropy {
             for c in &mating.best_changes {
-                if c.added {
-                    self.counts.add(c.u, c.v);
-                } else {
-                    self.counts.remove(c.u, c.v);
-                }
+                self.counts.change(c.u, c.v, c.added);
             }
         }
 
         if member.length < state.best_solution.objective - MIN_IMPROVEMENT {
-            member.tour_into(&mut self.tour);
+            let tour = member.tour();
             // Measured afresh, so the length a long line of offspring
             // carried along does not drift from the tour.
             let objective = prob
-                .calculate_tour_length(&self.tour)
+                .calculate_tour_length(&tour)
                 .expect("an offspring visits every city once");
             member.length = objective;
             if objective < state.best_solution.objective - MIN_IMPROVEMENT {
-                state.solution = TspSolution {
-                    tour: self.tour.clone(),
-                    objective,
-                };
+                state.solution = TspSolution { tour, objective };
                 state.update_best();
-                self.improved_this_generation = true;
+                self.improved_in = self.generation + 1;
             }
         }
         true
@@ -874,9 +842,8 @@ impl Heuristic<Tsp> for EdgeAssemblyCrossover {
         self.mating_order.clear();
         self.next_pair = 0;
         self.generation = 0;
-        self.stagnant = 0;
+        self.improved_in = 0;
         self.stagnation_limit = None;
-        self.improved_this_generation = false;
         self.finished = false;
     }
 
@@ -906,8 +873,6 @@ impl Heuristic<Tsp> for EdgeAssemblyCrossover {
                     "EdgeAssemblyCrossover needs symmetric distances".into(),
                 ));
             }
-            self.cities.clear();
-            self.cities.extend(0..n);
             if self.selection == EaxSelection::Entropy {
                 self.counts.reset(n);
             }
@@ -1001,7 +966,6 @@ mod tests {
         let tsp = scattered(80, 3);
         let mut rng = SmallRng::seed_from_u64(4);
         let mut mating = Mating::default();
-        let mut tour = Vec::new();
         for _ in 0..10 {
             let (a, b) = (member(&tsp, &mut rng), member(&tsp, &mut rng));
             mating.set_parents(&tsp, &a, &b, &mut rng);
@@ -1011,7 +975,7 @@ mod tests {
                     adj: mating.work.clone(),
                     length: 0.0,
                 };
-                child.tour_into(&mut tour);
+                let tour = child.tour();
                 assert_eq!(tour.len(), 80, "the sub-tours were all joined");
                 let length = tsp.calculate_tour_length(&tour).unwrap();
                 assert!((a.length - gain - length).abs() < 1e-6);
