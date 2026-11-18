@@ -230,10 +230,7 @@ pub enum HeuristicConfig {
     /// Slack Induction by String Removals (VRP only).
     SlackInductionByStringRemoval {
         /// Iterations over which the temperature falls to its final value.
-        /// Default: the stop condition's `max_iteration`, which must then be
-        /// set.
-        #[serde(skip_serializing_if = "Option::is_none")]
-        cooling_iterations: Option<u64>,
+        cooling_iterations: u64,
         /// Temperature the search starts at, in objective units. Default: 100.
         #[serde(skip_serializing_if = "Option::is_none")]
         initial_temperature: Option<f64>,

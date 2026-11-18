@@ -13,31 +13,6 @@ use crate::problem::vrp::VrpPartial;
 use crate::search_state::SearchState;
 use crate::trait_defs::Ruinable;
 
-/// The order the removed customers go back in.
-#[derive(Debug, Clone, Copy)]
-enum InsertionOrder {
-    /// As a shuffle leaves them.
-    Random,
-    /// The largest demand first.
-    Demand,
-    /// The farthest from the depot first.
-    Far,
-    /// The closest to the depot first.
-    Close,
-}
-
-impl InsertionOrder {
-    /// Draws an order with the weights four, four, two and one.
-    fn draw(rng: &mut SmallRng) -> Self {
-        match rng.random_range(0..11) {
-            0..4 => Self::Random,
-            4..8 => Self::Demand,
-            8..10 => Self::Far,
-            _ => Self::Close,
-        }
-    }
-}
-
 /// Slack Induction by String Removals.
 ///
 /// Each iteration takes strings of consecutive customers out of a few routes
@@ -45,44 +20,14 @@ impl InsertionOrder {
 /// cheapest place found, and keeps the result by a simulated annealing test.
 /// There is no local search and no bank of operators to choose from.
 ///
-/// # The ruin
-///
-/// A seed customer is drawn, and the customers are walked from the nearest to
-/// it outward. Each one found in a route not yet ruined marks that route, and
-/// a string that contains the customer is taken out of it. The walk ends when
-/// the drawn number of routes are ruined. Half of the strings are taken whole.
-/// The other half are split, a longer string is chosen and a run of customers
-/// inside it stays in the route.
-///
-/// The number of strings and their lengths come from two numbers,
-/// `average_removal` and `max_string_length`. With `L` the smaller of
-/// `max_string_length` and the average number of customers on a route in use,
-/// the number of strings is drawn from `1` to `4 · average_removal / (1 + L) − 1`
-/// and each length from `1` to the smaller of `L` and its route's length.
-///
-/// # The recreate
-///
-/// The removed customers are sorted, at random, by demand, or by distance
-/// from the depot in either direction, the order itself drawn each iteration.
-/// Each is then priced at every place of every route and put at the cheapest,
-/// except that each place is skipped with probability `blink_rate`. A skipped
-/// best place leaves the customer at the second best, which is where the
-/// variety of the search comes from.
-///
-/// A place is priced with the penalty [`Vrp`] charges a violated capacity or
-/// route time at, so a route with room always wins over one without, and an
-/// idle vehicle is one more place. When every vehicle is in use and none has
-/// room, the customer goes where the violation costs least and the search
-/// continues on the penalized objective.
-///
-/// # The acceptance
-///
-/// A candidate of cost `c'` replaces the incumbent of cost `c` when
-/// `c' < c − T · ln(u)`, with `u` uniform on `(0, 1]`. The temperature `T`
-/// falls geometrically from `initial_temperature` to `final_temperature` over
-/// `cooling_iterations` iterations and stays there if the run goes on. Both
-/// temperatures are in the units of the objective, so an instance with much
-/// shorter or longer distances than the CVRPLIB ones needs its own.
+/// The ruin walks the customers outward from a drawn seed and takes one
+/// string, whole or split around a run that stays, from each route it meets
+/// until it has ruined a drawn number of routes. The recreate puts the
+/// customers back in a drawn order, each at the cheapest place priced with the
+/// problem's penalty, skipping each place with probability `blink_rate`. A
+/// candidate is accepted when `c' < c − T · ln(u)`, with the temperature `T`
+/// falling geometrically to its final value over `cooling_iterations`
+/// iterations. The temperatures are in the units of the objective.
 ///
 /// # Example
 ///
@@ -113,8 +58,6 @@ pub struct SlackInductionByStringRemoval {
     max_string_length: usize,
     split_stop_rate: f64,
     blink_rate: f64,
-    /// The factor the temperature is multiplied by each iteration.
-    cooling: f64,
     /// The temperature of the next iteration, unset until the first.
     temperature: Option<f64>,
     /// The customers by distance from the seed, sorted as far as the walk got.
@@ -155,15 +98,9 @@ impl SlackInductionByStringRemoval {
             cooling_iterations >= 1,
             "cooling_iterations must be at least 1"
         );
-        let cooling = Self::cooling(
-            Self::INITIAL_TEMPERATURE,
-            Self::FINAL_TEMPERATURE,
-            cooling_iterations,
-        );
         Self {
             stop_condition,
             cooling_iterations,
-            cooling,
             initial_temperature: Self::INITIAL_TEMPERATURE,
             final_temperature: Self::FINAL_TEMPERATURE,
             average_removal: Self::AVERAGE_REMOVAL,
@@ -190,7 +127,6 @@ impl SlackInductionByStringRemoval {
         );
         self.initial_temperature = initial;
         self.final_temperature = last;
-        self.cooling = Self::cooling(initial, last, self.cooling_iterations);
         self
     }
 
@@ -240,11 +176,6 @@ impl SlackInductionByStringRemoval {
         self
     }
 
-    /// The factor that takes `initial` to `last` in `iterations` steps.
-    fn cooling(initial: f64, last: f64, iterations: u64) -> f64 {
-        (last / initial).powf(1.0 / iterations as f64)
-    }
-
     /// Takes strings out of the routes nearest one seed customer, leaving
     /// the customers taken in `self.removed`.
     fn ruin(&mut self, prob: &Vrp, partial: &mut VrpPartial, rng: &mut SmallRng) {
@@ -267,54 +198,76 @@ impl SlackInductionByStringRemoval {
 
         let n = prob.get_n();
         let seed = rng.random_range(1..=n);
-        let mut by_distance = std::mem::take(&mut self.by_distance);
-        by_distance.clear();
-        by_distance.extend((1..=n).map(|c| (prob.distance(seed, c), c)));
-        // The seed leads the walk even when another customer sits on it.
-        by_distance[seed - 1].0 = f64::NEG_INFINITY;
-        let nearer = |a: &(f64, usize), b: &(f64, usize)| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1));
-
         self.ruined.clear();
         self.ruined.resize(routes.len(), false);
-        let mut done = 0;
-        // The walk rarely goes far, so the list is sorted a block at a time.
-        let (mut start, mut block) = (0, 64);
-        while start < n && done < strings {
-            let end = (start + block).min(n);
-            if end < n {
-                by_distance[start..].select_nth_unstable_by(end - start, nearer);
-            }
-            by_distance[start..end].sort_unstable_by(nearer);
-            for &(_, c) in &by_distance[start..end] {
-                if done == strings {
-                    break;
-                }
+        let split_stop_rate = self.split_stop_rate;
+        // Takes a string from the route `c` is on, unless that route is
+        // already ruined, and says whether it did.
+        let ruin_route_of =
+            |c: usize, ruined: &mut [bool], removed: &mut Vec<usize>, rng: &mut SmallRng| {
                 let (r, pos) = partial.locate(c);
-                if self.ruined[r] {
-                    continue;
+                if ruined[r] {
+                    return false;
                 }
-                self.ruined[r] = true;
-                done += 1;
+                ruined[r] = true;
                 let route = &routes[r];
                 let longest = string_cap.min(route.len() as f64);
                 let len = (rng.random_range(1.0..longest + 1.0) as usize).min(route.len());
-                self.take_string(route, pos, len, rng);
+                Self::take_string(removed, split_stop_rate, route, pos, len, rng);
+                true
+            };
+
+        // The seed leads the walk, so its string is taken before anything is
+        // sorted, and an iteration that wants one string sorts nothing.
+        ruin_route_of(seed, &mut self.ruined, &mut self.removed, rng);
+        let mut done = 1;
+        if done < strings {
+            self.by_distance.clear();
+            self.by_distance
+                .extend((1..=n).map(|c| (prob.distance(seed, c), c)));
+            // The seed leads even when another customer sits on it.
+            self.by_distance[seed - 1].0 = f64::NEG_INFINITY;
+            let nearer =
+                |a: &(f64, usize), b: &(f64, usize)| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1));
+            // The walk rarely goes far, so the list is sorted a block at a
+            // time.
+            let (mut start, mut block) = (0, 16);
+            while start < n && done < strings {
+                let end = (start + block).min(n);
+                if end < n {
+                    self.by_distance[start..].select_nth_unstable_by(end - start, nearer);
+                }
+                self.by_distance[start..end].sort_unstable_by(nearer);
+                for &(_, c) in &self.by_distance[start..end] {
+                    if done == strings {
+                        break;
+                    }
+                    if ruin_route_of(c, &mut self.ruined, &mut self.removed, rng) {
+                        done += 1;
+                    }
+                }
+                start = end;
+                block *= 2;
             }
-            start = end;
-            block *= 2;
         }
-        self.by_distance = by_distance;
         prob.remove_all(partial, &self.removed);
     }
 
-    /// Marks `len` customers of `route` for removal, in a string that holds
+    /// Adds to `removed` `len` customers of `route`, in a string that holds
     /// position `pos`, whole or split around a run that stays.
-    fn take_string(&mut self, route: &[usize], pos: usize, len: usize, rng: &mut SmallRng) {
+    fn take_string(
+        removed: &mut Vec<usize>,
+        split_stop_rate: f64,
+        route: &[usize],
+        pos: usize,
+        len: usize,
+        rng: &mut SmallRng,
+    ) {
         let spare = route.len() - len;
         let mut kept = 0;
         if spare > 0 && rng.random_bool(0.5) {
             kept = 1;
-            while kept < spare && rng.random::<f64>() >= self.split_stop_rate {
+            while kept < spare && rng.random::<f64>() >= split_stop_rate {
                 kept += 1;
             }
         }
@@ -329,25 +282,28 @@ impl SlackInductionByStringRemoval {
         } else {
             rng.random_range(0..=1)
         };
-        self.removed
-            .extend_from_slice(&route[first..first + before]);
-        self.removed
-            .extend_from_slice(&route[first + before + kept..first + span]);
+        removed.extend_from_slice(&route[first..first + before]);
+        removed.extend_from_slice(&route[first + before + kept..first + span]);
     }
 
     /// Puts the removed customers back, each at the cheapest place the blinks
     /// let it see.
     fn recreate(&mut self, prob: &Vrp, partial: &mut VrpPartial, rng: &mut SmallRng) {
         self.removed.shuffle(rng);
-        match InsertionOrder::draw(rng) {
-            InsertionOrder::Random => {}
-            InsertionOrder::Demand => self
+        // The order, drawn with the weights four, four, two and one.
+        match rng.random_range(0..11) {
+            // As the shuffle left them.
+            0..4 => {}
+            // The largest demand first.
+            4..8 => self
                 .removed
                 .sort_by_key(|&c| std::cmp::Reverse(prob.demands[c])),
-            InsertionOrder::Far => self
+            // The farthest from the depot first.
+            8..10 => self
                 .removed
                 .sort_by(|&a, &b| prob.distance(0, b).total_cmp(&prob.distance(0, a))),
-            InsertionOrder::Close => self
+            // The closest to the depot first.
+            _ => self
                 .removed
                 .sort_by(|&a, &b| prob.distance(0, a).total_cmp(&prob.distance(0, b))),
         }
@@ -404,7 +360,11 @@ impl Heuristic<Vrp> for SlackInductionByStringRemoval {
             state.progress_iteration();
         }
 
-        self.temperature = Some((temperature * self.cooling).max(self.final_temperature));
+        // The factor that takes the initial temperature to the final one in
+        // `cooling_iterations` steps.
+        let cooling = (self.final_temperature / self.initial_temperature)
+            .powf(1.0 / self.cooling_iterations as f64);
+        self.temperature = Some((temperature * cooling).max(self.final_temperature));
         Ok(())
     }
 }
@@ -501,7 +461,14 @@ mod tests {
         let mut split = 0;
         for _ in 0..200 {
             search.removed.clear();
-            search.take_string(&route, 5, 4, &mut rng);
+            SlackInductionByStringRemoval::take_string(
+                &mut search.removed,
+                search.split_stop_rate,
+                &route,
+                5,
+                4,
+                &mut rng,
+            );
             assert_eq!(search.removed.len(), 4);
             let (lo, hi) = (search.removed[0], search.removed[3]);
             assert!(lo <= 6 && 6 <= hi, "the string spans position 5");

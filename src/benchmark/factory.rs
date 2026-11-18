@@ -904,9 +904,8 @@ mod factory_tests {
         );
     }
 
-    /// The cooling of SISR needs a length, its own or the stop condition's
-    /// iteration count, and the values its builders would panic on are
-    /// config errors.
+    /// The cooling of SISR needs a length, and the values its builders would
+    /// panic on are config errors.
     #[test]
     fn sisr_needs_a_cooling_length_and_rejects_what_its_builders_cannot_take() {
         let sisr = |body: &str| -> HeuristicConfig {
@@ -915,13 +914,13 @@ mod factory_tests {
         };
         let vrp = &ProblemKind::Vrp;
         try_build(vrp, &sisr("cooling_iterations = 1000")).expect("an explicit length builds");
-        try_build(vrp, &sisr("[stop_condition]\nmax_iteration = 1000"))
-            .expect("the stop condition's count is the default length");
-        let err = try_build(vrp, &sisr("")).expect_err("no length at all");
-        assert!(err.to_string().contains("cooling_iterations"), "{err}");
+        assert!(
+            toml::from_str::<HeuristicConfig>("kind = \"SlackInductionByStringRemoval\"").is_err(),
+            "a config without a length fails to parse"
+        );
 
+        try_build(vrp, &sisr("cooling_iterations = 0")).expect_err("a zero length");
         for (body, field) in [
-            ("cooling_iterations = 0", "cooling_iterations"),
             ("initial_temperature = 0.5", "initial_temperature"),
             ("final_temperature = 200.0", "final_temperature"),
             ("average_removal = 0.0", "average_removal"),
@@ -929,8 +928,7 @@ mod factory_tests {
             ("split_stop_rate = 1.5", "split_stop_rate"),
             ("blink_rate = 1.0", "blink_rate"),
         ] {
-            // The stop condition gives the length, so `body` may set its own.
-            let config = sisr(&format!("{body}\n[stop_condition]\nmax_iteration = 1000"));
+            let config = sisr(&format!("cooling_iterations = 1000\n{body}"));
             let err = try_build(vrp, &config).expect_err(body);
             assert!(err.to_string().contains(field), "{body}: {err}");
         }

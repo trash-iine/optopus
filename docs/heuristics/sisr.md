@@ -134,7 +134,7 @@ builders set.
 ```toml
 [[heuristics]]
 kind = "SlackInductionByStringRemoval"
-cooling_iterations = 2000000   # optional when max_iteration is set
+cooling_iterations = 2000000   # required
 initial_temperature = 100.0    # optional (default shown)
 final_temperature = 1.0        # optional (default shown)
 average_removal = 10.0         # optional (default shown)
@@ -145,10 +145,8 @@ blink_rate = 0.01              # optional (default shown)
 max_duration_secs = 60.0
 ```
 
-`cooling_iterations` defaults to the stop condition's `max_iteration`. A
-config that sets neither is rejected, since the cooling would have no length.
-Under a time limit, pick a count the run reaches. A count it never reaches
-leaves the search at a high temperature to the end. The report's
+Under a time limit, pick a `cooling_iterations` the run reaches. A count it
+never reaches leaves the search at a high temperature to the end. The report's
 `n_accepted + n_rejected` of a first run is how many iterations the limit
 allows.
 

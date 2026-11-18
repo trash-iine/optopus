@@ -108,7 +108,7 @@ SlackInductionByStringRemovalForVrp::new(
 ```toml
 [[heuristics]]
 kind = "SlackInductionByStringRemoval"
-cooling_iterations = 2000000   # max_iteration があれば省略可
+cooling_iterations = 2000000   # 必須
 initial_temperature = 100.0    # 省略可(既定値)
 final_temperature = 1.0        # 省略可(既定値)
 average_removal = 10.0         # 省略可(既定値)
@@ -119,8 +119,7 @@ blink_rate = 0.01              # 省略可(既定値)
 max_duration_secs = 60.0
 ```
 
-`cooling_iterations` の既定値は停止条件の `max_iteration` です。どちらも設定していない config は、冷却の長さが決まらないので拒否されます。
-時間制限のもとでは、実行が届く反復数を選んでください。届かない数にすると、探索は最後まで高い温度のままになります。
+時間制限のもとでは、実行が届く `cooling_iterations` を選んでください。届かない数にすると、探索は最後まで高い温度のままになります。
 1 回目の実行のレポートにある `n_accepted + n_rejected` が、その制限で回せる反復数です。
 
 ## 参考文献 { #references }

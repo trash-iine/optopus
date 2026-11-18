@@ -671,14 +671,7 @@ impl ConfigurableProblem for Vrp {
                 ..
             } => {
                 type Sisr = SlackInductionByStringRemovalForVrp;
-                let cooling_iterations =
-                    cooling_iterations.or(cond.max_iteration).ok_or_else(|| {
-                        OptError::Config(
-                            "'cooling_iterations' is required when the stop condition sets no \
-                             'max_iteration'"
-                                .into(),
-                        )
-                    })?;
+                let cooling_iterations = *cooling_iterations;
                 let initial = initial_temperature.unwrap_or(Sisr::INITIAL_TEMPERATURE);
                 let last = final_temperature.unwrap_or(Sisr::FINAL_TEMPERATURE);
                 let average_removal = average_removal.unwrap_or(Sisr::AVERAGE_REMOVAL);
