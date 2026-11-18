@@ -7,12 +7,6 @@ use crate::heuristic::{Heuristic, StopCondition};
 use crate::search_state::SearchState;
 use crate::trait_defs::{Evaluate, Ruinable};
 
-/// A partial solution on the beam, with the energy it stands at.
-struct Node<P: Ruinable> {
-    partial: P::Partial,
-    energy: f64,
-}
-
 /// One way to place the next element: in `parent`, at `(bucket, place)`,
 /// leaving a partial of energy `energy`.
 #[derive(Clone, Copy)]
@@ -103,7 +97,8 @@ pub struct IterativeBeamSearch<P: Ruinable> {
     width: usize,
     /// The elements, in the order the current pass places them.
     order: Vec<P::Element>,
-    /// Every placement of the current element, then the ones kept.
+    /// The cheapest placements of the current element found so far, at most
+    /// twice the width, then the ones kept.
     children: Vec<Child>,
 }
 
@@ -154,11 +149,13 @@ impl<P: Ruinable> IterativeBeamSearch<P> {
         self.growth = growth;
         self
     }
+}
 
-    /// The width the next pass runs at.
-    pub fn width(&self) -> usize {
-        self.width
-    }
+/// Keeps the `width` cheapest of `children` and returns the dearest of them.
+fn keep_cheapest(children: &mut Vec<Child>, width: usize) -> Child {
+    children.select_nth_unstable_by(width - 1, Child::cmp);
+    children.truncate(width);
+    children[width - 1]
 }
 
 impl<P> Heuristic<P> for IterativeBeamSearch<P>
@@ -182,35 +179,36 @@ where
         prob.remove_all(&mut root, &self.order);
         self.order.shuffle(&mut state.rng);
 
-        let energy = prob.partial_energy(&root);
-        let mut beam = vec![Node::<P> {
-            partial: root,
-            energy,
-        }];
-        let mut next: Vec<Node<P>> = Vec::with_capacity(self.width);
-        for (level, &element) in self.order.iter().enumerate() {
-            // Only a time limit can fire here, since the iteration count
-            // moves once per pass.
-            if level > 0
-                && self
-                    .stop_condition
-                    .max_duration
-                    .is_some_and(|d| state.duration() >= d)
-            {
+        let mut beam = vec![root];
+        let mut next: Vec<P::Partial> = Vec::with_capacity(self.width);
+        for &element in &self.order {
+            if self.stop_condition.is_done(state) {
                 return Ok(());
             }
             self.children.clear();
-            for (parent, node) in beam.iter().enumerate() {
-                for bucket in 0..prob.num_buckets(&node.partial) {
-                    for place in 0..prob.num_places(&node.partial, bucket) {
-                        let cost = prob.insertion_cost(&node.partial, bucket, place, element);
-                        if cost.is_finite() {
-                            self.children.push(Child {
-                                energy: node.energy + cost,
-                                parent,
-                                bucket,
-                                place,
-                            });
+            // Once the buffer has been cut to the width, a placement dearer
+            // than the dearest kept can never be kept.
+            let mut cutoff: Option<Child> = None;
+            for (parent, partial) in beam.iter().enumerate() {
+                let energy = prob.partial_energy(partial);
+                for bucket in 0..prob.num_buckets(partial) {
+                    for place in 0..prob.num_places(partial, bucket) {
+                        let cost = prob.insertion_cost(partial, bucket, place, element);
+                        if !cost.is_finite() {
+                            continue;
+                        }
+                        let child = Child {
+                            energy: energy + cost,
+                            parent,
+                            bucket,
+                            place,
+                        };
+                        if cutoff.is_some_and(|c| child.cmp(&c).is_gt()) {
+                            continue;
+                        }
+                        self.children.push(child);
+                        if self.children.len() >= self.width.saturating_mul(2) {
+                            cutoff = Some(keep_cheapest(&mut self.children, self.width));
                         }
                     }
                 }
@@ -223,47 +221,36 @@ where
                 ));
             }
             if self.children.len() > self.width {
-                self.children
-                    .select_nth_unstable_by(self.width - 1, Child::cmp);
-                self.children.truncate(self.width);
+                keep_cheapest(&mut self.children, self.width);
             }
             // Grouped by parent, so the last child of a parent takes its
             // partial and only the others copy it.
             self.children
                 .sort_unstable_by(|a, b| a.parent.cmp(&b.parent).then_with(|| a.cmp(b)));
-            let mut parents: Vec<Option<Node<P>>> = beam.drain(..).map(Some).collect();
-            for (k, child) in self.children.iter().enumerate() {
-                let last = self
-                    .children
-                    .get(k + 1)
-                    .is_none_or(|c| c.parent != child.parent);
-                let slot = &mut parents[child.parent];
-                let mut partial = if last {
-                    slot.take().expect("a parent is taken once").partial
-                } else {
-                    slot.as_ref()
-                        .expect("a parent outlives its copies")
-                        .partial
-                        .clone()
-                };
-                prob.insert(&mut partial, child.bucket, child.place, element);
-                // Read back rather than summed, so the energies of a long
-                // pass do not drift from the partials they rank.
-                let energy = prob.partial_energy(&partial);
-                next.push(Node { partial, energy });
+            let mut parents = beam.drain(..).enumerate();
+            for group in self.children.chunk_by(|a, b| a.parent == b.parent) {
+                let (_, parent) = parents
+                    .find(|&(i, _)| i == group[0].parent)
+                    .expect("the children are sorted by parent");
+                for (mut partial, child) in std::iter::repeat_n(parent, group.len()).zip(group) {
+                    prob.insert(&mut partial, child.bucket, child.place, element);
+                    next.push(partial);
+                }
             }
+            drop(parents);
             std::mem::swap(&mut beam, &mut next);
         }
 
-        let best = beam
+        let (_, best) = beam
             .iter()
-            .min_by(|a, b| a.energy.total_cmp(&b.energy))
+            .map(|partial| (prob.partial_energy(partial), partial))
+            .min_by(|a, b| a.0.total_cmp(&b.0))
             .expect("the beam holds at least the root");
-        state.solution = prob.finish(&best.partial);
+        state.solution = prob.finish(best);
         state.iteration += 1;
         state.n_accepted += 1;
         state.update_best();
-        self.width = ((self.width as f64 * self.growth).ceil() as usize).max(self.width);
+        self.width = (self.width as f64 * self.growth).ceil() as usize;
         Ok(())
     }
 }
@@ -291,7 +278,7 @@ mod tests {
             let mut state = SearchState::new_with_seed(&tsp, 5);
             let mut search = IterativeBeamSearch::<Tsp>::new(StopCondition::iterations(5));
             search.run(&mut state).unwrap();
-            assert_eq!(search.width(), 32);
+            assert_eq!(search.width, 32);
             let best = &state.best_solution;
             assert_eq!(
                 tsp.calculate_tour_length(&best.tour).unwrap(),
@@ -368,9 +355,9 @@ mod tests {
             .with_growth(3.0);
         let mut state = SearchState::new_with_seed(&tsp, 1);
         search.run(&mut state).unwrap();
-        assert_eq!(search.width(), 54);
+        assert_eq!(search.width, 54);
         search.clear();
-        assert_eq!(search.width(), 2);
+        assert_eq!(search.width, 2);
     }
 
     #[test]
