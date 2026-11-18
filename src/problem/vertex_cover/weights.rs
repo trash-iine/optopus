@@ -32,11 +32,6 @@ impl VertexCoverWeights {
     pub fn weight(&self, i: usize, j: usize) -> Option<u32> {
         self.edges.between(i, j).map(|e| self.weight[e])
     }
-
-    /// How many edges the set leaves uncovered.
-    pub fn uncovered_count(&self) -> usize {
-        self.uncovered.len()
-    }
 }
 
 impl WeightedConstraints for VertexCover {
@@ -94,16 +89,15 @@ impl WeightedConstraints for VertexCover {
         mv.apply_to_solution(self, sol)?;
         let v = mv.i;
         let entered = sol.x[v];
-        for at in 0..weights.edges.at(v).len() {
-            let (e, u) = weights.edges.at(v)[at];
-            let w = weights.weight[e as usize] as i64;
+        for &(e, u) in weights.edges.at(v) {
+            let w = weights.weight[e] as i64;
             if entered {
                 weights.open[u] -= w;
-                weights.uncovered.remove(e as usize);
+                weights.uncovered.remove(e);
             } else {
                 weights.open[u] += w;
                 if !sol.x[u] {
-                    weights.uncovered.insert(e as usize);
+                    weights.uncovered.insert(e);
                 }
             }
         }
@@ -216,7 +210,7 @@ mod tests {
             .filter(|&e| !sol.x[w.edges.ends(e).0] && !sol.x[w.edges.ends(e).1])
             .collect();
         assert_eq!(got, expected);
-        assert_eq!(w.uncovered_count(), sol.uncovered_edges);
+        assert_eq!(w.uncovered.len(), sol.uncovered_edges);
     }
 
     #[test]
@@ -265,7 +259,7 @@ mod tests {
             .solution_from_assignment(&[true, false, true, true, false, true])
             .unwrap();
         let w = vc.unit_weights(&cover);
-        assert_eq!(w.uncovered_count(), 0);
+        assert_eq!(w.uncovered.len(), 0);
         vc.escape_moves(&cover, &w, &mut rng, &mut out);
         let mut leaving: Vec<usize> = out.iter().map(|mv| mv.i).collect();
         leaving.sort_unstable();

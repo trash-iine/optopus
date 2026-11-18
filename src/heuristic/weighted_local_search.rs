@@ -62,6 +62,8 @@ pub struct WeightedLocalSearch<P: WeightedConstraints> {
     tabu_tenure: (u64, u64),
     smoothing: f64,
     weights: Option<P::Weights>,
+    /// The weight no constraint is raised past, set with the weights.
+    cap: u32,
     /// The stream ties in the scan are broken from, forked off the state's on
     /// the first step of a run so the scan can read the state while drawing.
     ties: Option<SmallRng>,
@@ -88,6 +90,7 @@ impl<P: WeightedConstraints> WeightedLocalSearch<P> {
             weights: None,
             ties: None,
             escapes: Vec::new(),
+            cap: Self::MIN_WEIGHT_CAP,
             no_escape: false,
         }
     }
@@ -158,9 +161,12 @@ impl<P: WeightedConstraints> Heuristic<P> for WeightedLocalSearch<P> {
 
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let instance = state.instance;
-        let weights = self
-            .weights
-            .get_or_insert_with(|| instance.unit_weights(&state.solution));
+        if self.weights.is_none() {
+            self.weights = Some(instance.unit_weights(&state.solution));
+            self.cap = Self::MIN_WEIGHT_CAP
+                .max(u32::try_from(instance.constraint_count()).unwrap_or(u32::MAX));
+        }
+        let weights = self.weights.as_mut().expect("the weights are built above");
         // The tenure is set without the mode, since the moves are applied
         // through the problem and recorded by hand.
         state.start_record_tabu(self.tabu_tenure);
@@ -196,9 +202,7 @@ impl<P: WeightedConstraints> Heuristic<P> for WeightedLocalSearch<P> {
         if state.rng.random::<f64>() < self.smoothing {
             instance.lower_satisfied(&state.solution, weights);
         } else {
-            let cap = Self::MIN_WEIGHT_CAP
-                .max(u32::try_from(instance.constraint_count()).unwrap_or(u32::MAX));
-            instance.raise_violated(&state.solution, weights, cap);
+            instance.raise_violated(&state.solution, weights, self.cap);
         }
 
         self.escapes.clear();
@@ -291,12 +295,7 @@ mod tests {
     #[test]
     fn colors_a_chorded_ring_with_three_colors() {
         use crate::problem::GraphColoring;
-        let mut edges = Vec::new();
-        for v in 0..30 {
-            edges.push((v, (v + 1) % 30, 1.0));
-            edges.push((v, (v + 2) % 30, 1.0));
-        }
-        let gc = GraphColoring::new(Graph::from_edges(edges));
+        let gc = GraphColoring::new(chorded_ring(30).graph);
         let mut state = SearchState::new_with_seed(&gc, 4);
         let mut search =
             WeightedLocalSearch::<GraphColoring>::new(StopCondition::iterations(20_000));
@@ -347,8 +346,8 @@ mod tests {
         assert_eq!(run(12), run(12));
     }
 
-    /// A move just made is not undone while its tenure lasts, unless every
-    /// escape is forbidden.
+    /// Of two clauses that cannot both hold, the one left violated gains
+    /// weight at every local optimum.
     #[test]
     fn weights_rise_on_what_stays_violated() {
         // Two clauses that cannot both hold, so one is always violated.

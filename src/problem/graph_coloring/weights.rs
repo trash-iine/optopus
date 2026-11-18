@@ -19,9 +19,7 @@ pub struct GraphColoringWeights {
     /// `weight[e]` is the weight of edge `e`.
     weight: Vec<u32>,
     edges: EdgeIndex,
-    /// The palette size, the width of a row of `met`.
-    k: usize,
-    /// `met[v * k + c]` is the total weight of the edges at `v` whose other
+    /// `met[v * k + c]`, with `k` the palette size, is the total weight of the edges at `v` whose other
     /// end has color `c`, what `v` would conflict with under that color.
     met: Vec<i64>,
     /// The edges whose two ends share a color.
@@ -33,11 +31,6 @@ impl GraphColoringWeights {
     /// not adjacent.
     pub fn weight(&self, i: usize, j: usize) -> Option<u32> {
         self.edges.between(i, j).map(|e| self.weight[e])
-    }
-
-    /// How many edges have two ends of one color.
-    pub fn conflicting_count(&self) -> usize {
-        self.conflicting.len()
     }
 }
 
@@ -61,7 +54,6 @@ impl WeightedConstraints for GraphColoring {
         GraphColoringWeights {
             weight: vec![1; edges.len()],
             edges,
-            k,
             met,
             conflicting,
         }
@@ -80,7 +72,7 @@ impl WeightedConstraints for GraphColoring {
         weights: &GraphColoringWeights,
         mv: &IntChangeNeighbor<2>,
     ) -> f64 {
-        let row = mv.var * weights.k;
+        let row = mv.var * self.k();
         let left = weights.met[row + sol.colors[mv.var]];
         let entered = weights.met[row + mv.value as usize];
         (left - entered) as f64 - mv.keys[1]
@@ -98,16 +90,15 @@ impl WeightedConstraints for GraphColoring {
         if old == new {
             return Ok(());
         }
-        let k = weights.k;
-        for at in 0..weights.edges.at(v).len() {
-            let (e, u) = weights.edges.at(v)[at];
-            let w = weights.weight[e as usize] as i64;
+        let k = self.k();
+        for &(e, u) in weights.edges.at(v) {
+            let w = weights.weight[e] as i64;
             weights.met[u * k + old] -= w;
             weights.met[u * k + new] += w;
             if sol.colors[u] == old {
-                weights.conflicting.remove(e as usize);
+                weights.conflicting.remove(e);
             } else if sol.colors[u] == new {
-                weights.conflicting.insert(e as usize);
+                weights.conflicting.insert(e);
             }
         }
         Ok(())
@@ -119,7 +110,7 @@ impl WeightedConstraints for GraphColoring {
         weights: &mut GraphColoringWeights,
         cap: u32,
     ) {
-        let k = weights.k;
+        let k = self.k();
         for &e in weights.conflicting.as_slice() {
             if weights.weight[e] < cap {
                 weights.weight[e] += 1;
@@ -133,7 +124,7 @@ impl WeightedConstraints for GraphColoring {
     }
 
     fn lower_satisfied(&self, sol: &GraphColoringSolution, weights: &mut GraphColoringWeights) {
-        let k = weights.k;
+        let k = self.k();
         for e in 0..weights.weight.len() {
             if weights.weight[e] > 1 && !weights.conflicting.contains(e) {
                 weights.weight[e] -= 1;
@@ -242,7 +233,7 @@ mod tests {
             .filter(|&e| sol.colors[w.edges.ends(e).0] == sol.colors[w.edges.ends(e).1])
             .collect();
         assert_eq!(got, expected);
-        assert_eq!(w.conflicting_count(), sol.conflicts);
+        assert_eq!(w.conflicting.len(), sol.conflicts);
     }
 
     #[test]
@@ -284,7 +275,7 @@ mod tests {
 
         let clash = gc.solution_from_colors(vec![0, 0, 1, 2, 1, 3]).unwrap();
         let w = gc.unit_weights(&clash);
-        assert_eq!(w.conflicting_count(), 1);
+        assert_eq!(w.conflicting.len(), 1);
         gc.escape_moves(&clash, &w, &mut rng, &mut out);
         assert_eq!(out.len(), 2 * (gc.k() - 1));
         assert!(out.iter().all(|mv| mv.var <= 1 && mv.value != 0));
@@ -292,7 +283,7 @@ mod tests {
         out.clear();
         let proper = gc.solution_from_colors(vec![0, 1, 0, 1, 2, 3]).unwrap();
         let w = gc.unit_weights(&proper);
-        assert_eq!(w.conflicting_count(), 0);
+        assert_eq!(w.conflicting.len(), 0);
         gc.escape_moves(&proper, &w, &mut rng, &mut out);
         // Color 2 is the first of the two smallest classes, held by vertex 4.
         let mut targets: Vec<i64> = out.iter().map(|mv| mv.value).collect();

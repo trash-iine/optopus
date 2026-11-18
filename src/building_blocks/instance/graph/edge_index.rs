@@ -25,34 +25,34 @@ pub struct EdgeIndex {
     ends: Vec<(usize, usize)>,
     /// `incident[first[v]..first[v + 1]]` lists the edges at vertex `v`, each
     /// with the vertex at its other end.
-    incident: Vec<(u32, usize)>,
+    incident: Vec<(usize, usize)>,
     first: Vec<usize>,
 }
 
 impl EdgeIndex {
-    /// Numbers the edges of `graph` in the order its adjacency lists first
-    /// reach them.
+    /// Numbers the edges of `graph` in the order [`Graph::edges`] lists them.
+    ///
+    /// Each vertex's edges come out in the order of the vertex at their other
+    /// end, which is the order of its adjacency list.
     pub fn new(graph: &Graph) -> Self {
         let n = graph.len();
-        let mut ends = Vec::new();
-        let mut number = std::collections::HashMap::new();
-        let mut incident = Vec::new();
-        let mut first = Vec::with_capacity(n + 1);
-        for v in 0..n {
-            first.push(incident.len());
-            for &(u, _) in graph.iter_on_adjacency(v) {
-                if u == v {
-                    continue;
-                }
-                let key = (v.min(u), v.max(u));
-                let e = *number.entry(key).or_insert_with(|| {
-                    ends.push(key);
-                    ends.len() - 1
-                });
-                incident.push((e as u32, u));
-            }
+        let ends: Vec<(usize, usize)> = graph.edges().map(|(i, j, _)| (i, j)).collect();
+        let mut first = vec![0; n + 1];
+        for &(i, j) in &ends {
+            first[i + 1] += 1;
+            first[j + 1] += 1;
         }
-        first.push(incident.len());
+        for v in 0..n {
+            first[v + 1] += first[v];
+        }
+        let mut next = first[..n].to_vec();
+        let mut incident = vec![(0, 0); first[n]];
+        for (e, &(i, j)) in ends.iter().enumerate() {
+            incident[next[i]] = (e, j);
+            next[i] += 1;
+            incident[next[j]] = (e, i);
+            next[j] += 1;
+        }
         Self {
             ends,
             incident,
@@ -79,7 +79,7 @@ impl EdgeIndex {
     /// The edges at vertex `v`, each as its number and the vertex at its
     /// other end.
     #[inline]
-    pub fn at(&self, v: usize) -> &[(u32, usize)] {
+    pub fn at(&self, v: usize) -> &[(usize, usize)] {
         &self.incident[self.first[v]..self.first[v + 1]]
     }
 
@@ -92,7 +92,7 @@ impl EdgeIndex {
         self.at(i)
             .iter()
             .find(|&&(_, other)| other == j)
-            .map(|&(e, _)| e as usize)
+            .map(|&(e, _)| e)
     }
 }
 
@@ -114,8 +114,8 @@ mod tests {
         for e in 0..edges.len() {
             let (i, j) = edges.ends(e);
             assert!(i < j && graph.has_edge(i, j));
-            assert!(edges.at(i).contains(&(e as u32, j)));
-            assert!(edges.at(j).contains(&(e as u32, i)));
+            assert!(edges.at(i).contains(&(e, j)));
+            assert!(edges.at(j).contains(&(e, i)));
             assert_eq!(edges.between(i, j), Some(e));
             assert_eq!(edges.between(j, i), Some(e));
         }

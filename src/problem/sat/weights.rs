@@ -26,11 +26,6 @@ impl SatWeights {
     pub fn weight(&self, c: usize) -> u32 {
         self.weight[c]
     }
-
-    /// How many clauses the assignment leaves unsatisfied.
-    pub fn unsatisfied_count(&self) -> usize {
-        self.unsatisfied.len()
-    }
 }
 
 impl WeightedConstraints for Sat {
