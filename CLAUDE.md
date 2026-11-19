@@ -106,7 +106,7 @@ src/
 │   ├── simulated_annealing.rs  BangBangSimulatedAnnealing too
 │   ├── crossover.rs          the crossover that solves a sub-problem
 │   └── specific/             one directory per problem once it has several: the MaxCut
-│                             parts of BLS, LKH, HGS, WalkSat, the ALNS presets of TSP,
+│                             parts of BLS, LKH, HGS, AILS, WalkSat, the ALNS presets of TSP,
 │                             VRP and FlowShop, and FlowShop's IG
 └── problem/                  one directory per problem with problem, neighbor and crossover.
     │                         The files beyond those:

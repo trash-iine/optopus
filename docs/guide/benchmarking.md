@@ -96,6 +96,7 @@ algorithm's own page; this table is only the index.
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop only |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
+| [`AdaptiveIteratedLocalSearch`](../heuristics/ails.md#benchmark-config) | VRP only |
 | [`BranchAndBound`](../heuristics/branch_and_bound.md#benchmark-config) | MaxCut, Qubo, Sat, VertexCover |
 
 Unknown kinds and missing required fields fail at parse time, before any run

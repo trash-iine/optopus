@@ -29,6 +29,7 @@ Read the table, open the one file you need.
 | [0019](0019-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
 | [0020](0020-a-profile-loop-found-the-cost-in-the-problems-pricing-and-in-the-shape-of-the-scans.md) | all | reference | A profile loop over every problem found the cost in the problems' pricing and in the shape of their scans, and what was left |
 | [0021](0021-a-scan-prices-each-candidate-at-one-call-site.md) | all | adopted | A scan prices each candidate at one call site, since the pricing can inline into a wrapper that then stays out of line |
+| [0027](0027-ails-keeps-its-diversity-control-and-borrows-the-granular-descent.md) | heuristic, vrp | adopted | AILS keeps its perturbation degree and threshold acceptance and borrows the granular descent for its repair and local search, ahead of ALNS and HGS from X-n303 up and by 5% on X-n1001 |
 
 ## Writing a new record
 

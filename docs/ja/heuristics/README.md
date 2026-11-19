@@ -62,3 +62,4 @@
 | [LinKernighanHelsgaunForTsp](lkh.md) | `LinKernighanHelsgaun` | 2 次元の TSP | 候補リストを使う可変深さの k-opt。 |
 | [WalkSatForSat](walksat.md) | `WalkSat` | MaxSAT | ランダムな非充足節の中での集中的な SKC flip。任意で適応的なノイズ。 |
 | [HybridGeneticSearchForVrp](hgs.md) | `HybridGeneticSearch` | CVRP | giant tour の GA、最適な Split、granular な局所探索。実行可能と実行不能の部分集団に対する biased fitness。 |
+| [AdaptiveIteratedLocalSearchForVrp](ails.md) | `AdaptiveIteratedLocalSearch` | CVRP | 摂動の大きさを、結果が参照解から離れた距離に合わせて調整する反復局所探索。受理の閾値は実行を通じて厳しくなる。Concentric と Sequential の除去、距離またはコストによる挿入、granular な経路降下。 |

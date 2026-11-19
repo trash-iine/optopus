@@ -40,9 +40,10 @@ pub use restart::Restart;
 pub use sequential::{Iterated, Sequential};
 pub use simulated_annealing::{BangBangSimulatedAnnealing, SimulatedAnnealing};
 pub use specific::{
-    BreakoutLocalSearchForMaxCut, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp,
-    MaxCutPerturbation, WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,
-    bls_for_max_cut, iterated_greedy_for_flow_shop, max_cut_descent, max_cut_perturbation,
+    AdaptiveIteratedLocalSearchForVrp, BreakoutLocalSearchForMaxCut, HybridGeneticSearchForVrp,
+    LinKernighanHelsgaunForTsp, MaxCutPerturbation, WalkSatForSat, alns_for_flow_shop,
+    alns_for_tsp, alns_for_vrp, bls_for_max_cut, iterated_greedy_for_flow_shop, max_cut_descent,
+    max_cut_perturbation,
 };
 pub use tabu_search::TabuSearch;
 pub use variable_neighborhood_search::VariableNeighborhoodSearch;

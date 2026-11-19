@@ -227,6 +227,34 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Adaptive Iterated Local Search, the variant for large instances (VRP
+    /// only).
+    AdaptiveIteratedLocalSearch {
+        /// Iterations the two schedules are laid out over. Default: the stop
+        /// condition's `max_iteration`, or an estimate from its
+        /// `max_duration_secs`.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        expected_iterations: Option<u64>,
+        /// Iterations between two adjustments of a removal's degree.
+        /// Default: 30.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        gamma: Option<u64>,
+        /// Distance from the reference a result should end at, at the end of
+        /// the run. Default: 15.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        distance_min: Option<f64>,
+        /// The same at the start of the run. Default: 30.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        distance_max: Option<f64>,
+        /// What the acceptance's `eta` falls to. Default: 0.01.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        eta_min: Option<f64>,
+        /// Nearest customers an insertion and a move consider. Default: 40.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        neighbors: Option<usize>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Hybrid Genetic Search (VRP only).
     HybridGeneticSearch {
         /// Target size of each sub-population (μ). Default: 25.
@@ -399,7 +427,8 @@ heuristic_kinds! {
     steps: BranchAndBound, Sequential, Iterated, VariableNeighborhoodSearch, Restart,
         GeneticAlgorithm;
     other: BreakoutLocalSearch, LinKernighanHelsgaun, AdaptiveLargeNeighborhoodSearch,
-        IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch, WalkSat;
+        IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch,
+        AdaptiveIteratedLocalSearch, WalkSat;
 }
 
 /// A single instance entry in the config file.

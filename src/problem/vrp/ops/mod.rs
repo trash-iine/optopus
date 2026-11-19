@@ -35,7 +35,7 @@ pub(crate) mod pricing;
 mod route_state;
 
 pub(crate) use descent::Descent;
-use granular::build_neighbor_lists;
+pub(crate) use granular::build_neighbor_lists;
 pub(crate) use route_state::RouteState;
 
 use crate::building_blocks::instance::DistanceStore;

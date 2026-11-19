@@ -1,6 +1,6 @@
 //! VRP-specific heuristics.
 //!
-//! [`hgs`] is the one search left here. Ruin-and-recreate turned out to need
+//! [`hgs`] and [`ails`] are the searches here. Ruin-and-recreate turned out to need
 //! nothing of VRP beyond what [`Ruinable`](crate::trait_defs::Ruinable) asks
 //! any problem, so it generalized into
 //! [`AdaptiveLargeNeighborhoodSearch`](crate::heuristic::AdaptiveLargeNeighborhoodSearch),
@@ -14,8 +14,10 @@
 //! decode from a customer permutation into a route partition that no other
 //! problem has.
 
+mod ails;
 mod hgs;
 
+pub use ails::AdaptiveIteratedLocalSearch;
 pub use hgs::HybridGeneticSearch;
 
 use crate::heuristic::{AdaptiveLargeNeighborhoodSearch, StopCondition};

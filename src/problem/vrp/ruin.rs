@@ -36,6 +36,26 @@ pub struct VrpPartial {
     state: RouteState,
 }
 
+impl VrpPartial {
+    /// The routes as they stand, one per vehicle slot, an idle slot empty.
+    #[inline]
+    pub(crate) fn routes(&self) -> &[Vec<usize>] {
+        self.state.routes()
+    }
+
+    /// The route and the position in it of a customer that is placed.
+    #[inline]
+    pub(crate) fn locate(&self, customer: usize) -> (usize, usize) {
+        self.state.locate(customer)
+    }
+
+    /// Whether the routes as they stand meet every constraint.
+    #[inline]
+    pub(crate) fn is_feasible(&self) -> bool {
+        self.state.sol.is_feasible()
+    }
+}
+
 impl Vrp {
     /// The edit that puts `element` before `place` of route `bucket`, which
     /// [`Ruinable::insertion_cost`] prices and [`Ruinable::insert`] applies.
