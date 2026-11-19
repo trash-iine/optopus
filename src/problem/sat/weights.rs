@@ -17,7 +17,8 @@ pub struct SatWeights {
     /// `gain[i]` is the weight flipping variable `i` satisfies minus the
     /// weight it leaves unsatisfied.
     gain: Vec<i64>,
-    /// The clauses the assignment leaves unsatisfied.
+    /// The clauses the assignment leaves unsatisfied, an empty clause left
+    /// out, since no flip can satisfy it.
     unsatisfied: IndexSet,
 }
 
@@ -35,7 +36,7 @@ impl WeightedConstraints for Sat {
     fn unit_weights(&self, sol: &SatSolution) -> SatWeights {
         let mut unsatisfied = IndexSet::new(self.n_clauses());
         for (c, clause) in self.all_clauses().enumerate() {
-            if !Sat::is_clause_satisfied(clause, &sol.x) {
+            if !clause.is_empty() && !Sat::is_clause_satisfied(clause, &sol.x) {
                 unsatisfied.insert(c);
             }
         }
@@ -196,6 +197,27 @@ mod tests {
             assert!(w.weight.iter().all(|&x| (1..=4).contains(&x)));
         }
         assert!(w.weight.iter().any(|&x| x > 1), "some weight was raised");
+    }
+
+    /// An empty clause is never satisfied and no flip reaches it, so it
+    /// offers no escape and does not end a search that can still satisfy
+    /// other clauses.
+    #[test]
+    fn an_empty_clause_is_not_an_escape() {
+        let mut sat = Sat::new(2);
+        sat.add_clause([]);
+        sat.add_clause([1]);
+        let sol = SatSolution::new_from_assignment(&sat, vec![false, false]);
+        let w = sat.unit_weights(&sol);
+        assert_eq!(w.unsatisfied.as_slice(), &[1]);
+        let mut rng = SmallRng::seed_from_u64(0);
+        let mut out = Vec::new();
+        for _ in 0..20 {
+            out.clear();
+            sat.escape_moves(&sol, &w, &mut rng, &mut out);
+            assert_eq!(out.len(), 1, "the one clause a flip can satisfy is drawn");
+            assert_eq!(out[0].i, 0);
+        }
     }
 
     #[test]

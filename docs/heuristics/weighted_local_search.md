@@ -93,8 +93,9 @@ whatever the problem caches to price a move under them.
 
 The search scans every move each step, so `weighted_gain` should read a cached
 price. `Sat` keeps a weighted flip gain per variable, `VertexCover` keeps,
-per vertex, the weight of the edges only that vertex covers, and
-`GraphColoring` keeps, per vertex and color, the weight of the edges to
+per vertex, the weight of its edges whose other end is out of the set, the
+edges it alone covers when it is in the set and the uncovered ones it would
+cover by entering, and `GraphColoring` keeps, per vertex and color, the weight of the edges to
 neighbors of that color. Each updates its cache in the same pass that applies
 the move.
 

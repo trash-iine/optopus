@@ -60,7 +60,7 @@ WeightedLocalSearch::<P>::new(stop_condition: StopCondition) -> Self
 | `lower_satisfied` | 満たされていて重みが 1 より大きい制約すべてから 1 を引く。 |
 | `escape_moves` | 重み付き局所最適から出る move を詰める。 |
 
-探索はステップごとにすべての move を走査するので、`weighted_gain` はキャッシュした値を読むようにします。`Sat` は変数ごとに重み付きの flip gain を持ち、`VertexCover` は頂点ごとに、その頂点だけが覆っている辺の重みを持ちます。`GraphColoring` は頂点と色の組ごとに、その色の隣接頂点への辺の重みを持ちます。いずれも、move を適用するのと同じ走査でキャッシュを更新します。
+探索はステップごとにすべての move を走査するので、`weighted_gain` はキャッシュした値を読むようにします。`Sat` は変数ごとに重み付きの flip gain を持ち、`VertexCover` は頂点ごとに、もう一方の端が集合の外にある辺の重みを持ちます。その頂点が集合の中にあればそれだけが覆っている辺、外にあれば入ることで覆う未被覆の辺です。`GraphColoring` は頂点と色の組ごとに、その色の隣接頂点への辺の重みを持ちます。いずれも、move を適用するのと同じ走査でキャッシュを更新します。
 
 ## ベンチマーク設定 { #benchmark-config }
 
