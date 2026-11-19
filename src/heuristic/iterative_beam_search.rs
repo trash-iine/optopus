@@ -180,7 +180,9 @@ where
         self.order.shuffle(&mut state.rng);
 
         let mut beam = vec![root];
-        let mut next: Vec<P::Partial> = Vec::with_capacity(self.width);
+        // Grown by what is pushed, not sized by the width, which outgrows
+        // any allocation once the passes are fast enough.
+        let mut next: Vec<P::Partial> = Vec::new();
         for &element in &self.order {
             if self.stop_condition.is_done(state) {
                 return Ok(());
@@ -358,6 +360,17 @@ mod tests {
         assert_eq!(search.width, 54);
         search.clear();
         assert_eq!(search.width, 2);
+    }
+
+    /// On a tour of a few cities every pass is quick, so the width doubles
+    /// past anything that could be allocated, and the passes still run.
+    #[test]
+    fn the_width_may_outgrow_memory() {
+        let tsp = scattered_tsp(5, 4);
+        let mut state = SearchState::new_with_seed(&tsp, 1);
+        let mut search = IterativeBeamSearch::<Tsp>::new(StopCondition::iterations(80));
+        search.run(&mut state).unwrap();
+        assert_eq!(search.width, usize::MAX);
     }
 
     #[test]
