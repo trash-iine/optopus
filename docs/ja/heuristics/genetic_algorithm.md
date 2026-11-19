@@ -156,7 +156,7 @@ use optopus::building_blocks::representation::PathRelinkingCrossover;
 let crossover = PathRelinkingCrossover::greedy().with_distance_scale(0.25);
 ```
 
-この距離があるので、子は突然変異のステップで親に戻ってしまいません。`with_distance_scale` は距離を経路に対する割合で設定し、既定値は `1/3` です。
+この距離があるので、子は突然変異のステップで親に戻ってしまいません。`with_distance_scale` は距離を経路に対する割合で設定し、既定値は `1/3` です。割合は flip の回数に切り上げたうえで、1 から経路の半分(切り捨て)までに収めます。そのため短い経路では子が指定より親に近くなることがあり、1/2 以上の割合はどれも経路の中央を返します。
 両親が `d` 個の変数で異なるとき、greedy な経路は O(d²) 回の flip を価格付けします。一様交叉が適用する flip は `d / 2` 回なので、突然変異のステップがそれより重いときに見合います。
 異なる変数が 2 個未満の両親の間には解がないので、1 人目の親がそのまま返ります。
 

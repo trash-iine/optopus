@@ -107,8 +107,11 @@ impl PathRelinkingCrossover {
     }
 
     /// Builder-style: how far, as a share of the path, the offspring stays
-    /// from both parents. Past one half no solution qualifies, and the middle
-    /// of the path is returned.
+    /// from both parents. The share of a path of `d` flips is rounded up to a
+    /// whole number of flips and kept between one and `d / 2` rounded down.
+    /// So on a short or odd path the offspring can be nearer a parent than
+    /// the share asks, and every share from one half up gives the middle of
+    /// the path.
     ///
     /// # Panics
     ///

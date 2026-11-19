@@ -181,7 +181,10 @@ let crossover = PathRelinkingCrossover::greedy().with_distance_scale(0.25);
 
 The distance is what keeps the offspring from falling back into a parent
 under the mutation step, and `with_distance_scale` sets it as a share of the
-path, `1/3` by default. With two parents `d` variables apart the greedy path
+path, `1/3` by default. The share is rounded up to whole flips and kept
+between one and half the path rounded down, so a short path can leave the
+offspring nearer a parent than asked, and any share from one half up gives the
+middle of the path. With two parents `d` variables apart the greedy path
 prices O(d²) flips, where the uniform crossover applies `d / 2`, so it pays
 when the mutation step costs more than that. Parents fewer than two variables
 apart have nothing between them and give back the first parent.

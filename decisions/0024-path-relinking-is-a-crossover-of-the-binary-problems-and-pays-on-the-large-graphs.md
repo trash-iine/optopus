@@ -1,7 +1,7 @@
 # Path relinking is a crossover of the binary problems, and the greedy path pays on the large graphs
 
 - Status: adopted
-- Area: heuristic, max_cut, qubo, sat, vertex_cover
+- Area: heuristic, max_cut, qubo
 - Date: 2026-11-15
 - Code: src/building_blocks/representation/binary/crossover.rs, src/problem/max_cut/crossover.rs
 
