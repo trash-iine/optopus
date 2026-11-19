@@ -28,6 +28,7 @@ mod rankable;
 mod reduction;
 mod ruinable;
 mod tabu;
+mod weighted;
 
 pub(crate) use binary::variable_count;
 pub use binary::{BinaryProblem, FixVariables, FixedVariables, Placed, check_assignment};
@@ -45,3 +46,4 @@ pub use rankable::{
 pub use reduction::ProblemReduction;
 pub use ruinable::{LocalRepair, Ruinable};
 pub use tabu::EnabledTabu;
+pub use weighted::WeightedConstraints;

@@ -1,6 +1,8 @@
 //! An undirected weighted graph stored as sorted adjacency lists.
 
+mod edge_index;
 mod generator;
+pub use edge_index::EdgeIndex;
 pub use generator::seeded_rng;
 
 /// Shared zero constant returned by `Index` for non-existent edges.

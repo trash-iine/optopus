@@ -7,7 +7,9 @@ mod crossover;
 mod fix;
 mod neighbor;
 mod problem;
+mod weights;
 
 pub use crossover::SatUniformCrossover;
 pub use neighbor::{SatFlipNeighbor, SatSwapNeighbor};
 pub use problem::{Sat, SatSolution};
+pub use weights::SatWeights;
