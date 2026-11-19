@@ -113,7 +113,9 @@ struct Operator {
 /// this order, the one set by
 /// [`with_expected_iterations`](Self::with_expected_iterations), the stop
 /// condition's iteration limit, or an estimate from the share of the stop
-/// condition's time limit that has passed, renewed every `gamma` iterations.
+/// condition's time limit that has passed since the first iteration, renewed
+/// every `gamma` iterations. The descent that makes the first reference is
+/// not counted, so a long one does not shorten the schedules.
 /// A run with none of the three is an error.
 ///
 /// # Example
@@ -182,6 +184,8 @@ struct Run {
     low_next: f64,
     /// The edges of the reference solution.
     reference: RouteAdjacency,
+    /// When the first iteration started, which a time limit is measured from.
+    begun: std::time::Instant,
 }
 
 impl AdaptiveIteratedLocalSearch {
@@ -301,7 +305,7 @@ impl AdaptiveIteratedLocalSearch {
         let total = match (self.expected_iterations, self.stop_condition.max_duration) {
             (Some(total), _) => total as f64,
             (None, Some(limit)) => {
-                let share = state.duration().as_secs_f64() / limit.as_secs_f64();
+                let share = run.begun.elapsed().as_secs_f64() / limit.as_secs_f64();
                 if share <= 0.0 {
                     return;
                 }
@@ -352,6 +356,7 @@ impl AdaptiveIteratedLocalSearch {
             low: f64::INFINITY,
             low_next: f64::INFINITY,
             reference: RouteAdjacency::from_routes(n, &state.solution.routes),
+            begun: std::time::Instant::now(),
         };
         self.renew_decays(state, &mut run);
         self.run = Some(run);
@@ -524,14 +529,14 @@ impl AdaptiveIteratedLocalSearch {
             op.degree = (op.degree / op.reached.value * run.ideal_distance).clamp(1.0, max_degree);
         }
 
+        if iteration.is_multiple_of(self.gamma) {
+            run.low = run.low_next;
+            run.low_next = f64::INFINITY;
+        }
         // Only an accepted result is turned into a solution.
         let accepted = if partial.is_feasible() {
             let cost = prob.partial_energy(&partial);
             run.costs.push(cost);
-            if iteration.is_multiple_of(self.gamma) {
-                run.low = run.low_next;
-                run.low_next = f64::INFINITY;
-            }
             run.low_next = run.low_next.min(cost);
             run.low = run.low.min(cost);
             (cost <= run.low + run.eta * (run.costs.value - run.low)).then(|| prob.finish(&partial))

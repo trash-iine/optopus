@@ -99,7 +99,9 @@ That number is, in this order,
 1. the one given to `with_expected_iterations`,
 2. the stop condition's iteration limit,
 3. an estimate from the share of the stop condition's time limit that has
-   passed, renewed every `gamma` iterations.
+   passed since the first iteration, renewed every `gamma` iterations. The
+   descent that makes the first reference is not counted, so a long one does
+   not shorten the schedules.
 
 A run with none of the three is an error. A stop on failed updates alone does
 not say how long the run is.

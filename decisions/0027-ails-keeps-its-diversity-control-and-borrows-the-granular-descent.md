@@ -45,15 +45,24 @@ parallel on an Apple M4. Average objective, every run feasible.
 
 | Instance | AdaptiveIteratedLocalSearch | AdaptiveLargeNeighborhoodSearch | HybridGeneticSearch |
 |---|---|---|---|
-| X-n214-k11 | 10971.8 | 10967.4 | 11033.8 |
-| X-n303-k21 | 21864.8 | 22020.8 | 22185.2 |
-| X-n401-k29 | 66580.6 | 67868.4 | 67541.0 |
-| X-n1001-k43 | 73443.0 | 81213.8 | 77436.2 |
+| X-n214-k11 | 10994.2 | 10967.4 | 11033.8 |
+| X-n303-k21 | 21921.2 | 22020.8 | 22185.2 |
+| X-n401-k29 | 66557.2 | 67868.4 | 67541.0 |
+| X-n1001-k43 | 73581.6 | 81213.8 | 77436.2 |
 
-On X-n214-k11 it is level with ALNS, 4 apart with standard deviations of 18
-and 41. It leads from X-n303-k21 up, and by 5% over the next best on
-X-n1001-k43. It made 78 to 101 thousand iterations per run on every instance,
-so the cost of an iteration did not grow with the instance.
+On X-n214-k11 it is 27 behind ALNS, with standard deviations of 23 and 41.
+It leads from X-n303-k21 up, and by 5% over the next best on X-n1001-k43. It
+made 71 to 89 thousand iterations per run on every instance, so the cost of an
+iteration did not grow with the instance.
+
+The AILS column was measured again after two fixes. The time estimate now
+counts from the first iteration, as the authors' code does, where it had
+counted the first descent too and so ran both schedules out early. The window
+of the best recent cost now turns over on every `gamma`-th iteration, not only
+on a feasible one. The earlier column read 10971.8, 21864.8, 66580.6 and
+73443.0, so the averages moved by −23 to +139, about one standard deviation or
+less. The ALNS and HGS columns are from the first measurement, their code
+unchanged.
 
 One run of 20 s each with 20 neighbors instead of 40 gave 10979 against 10990
 on X-n214-k11 and 73876 against 73822 on X-n1001-k43, with twice the
