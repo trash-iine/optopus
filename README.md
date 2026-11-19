@@ -78,6 +78,7 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [Breakout Local Search](docs/heuristics/breakout_local_search.md) | `BreakoutLocalSearch<P, S>` |
 | [Sequential / Iterated / VNS / Restart](docs/heuristics/meta.md) | `Sequential<P>`, `Iterated<P>`, `VariableNeighborhoodSearch<P>`, `Restart<P>` |
 | [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |
+| [Edge Assembly Crossover (TSP)](docs/heuristics/eax.md) | `EdgeAssemblyCrossoverForTsp` |
 | [WalkSAT (MaxSAT)](docs/heuristics/walksat.md) | `WalkSatForSat` |
 | [Hybrid Genetic Search (CVRP)](docs/heuristics/hgs.md) | `HybridGeneticSearchForVrp` |
 

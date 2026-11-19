@@ -16,10 +16,10 @@ use super::factory::{
 use crate::building_blocks::representation::BinaryRelaxation;
 use crate::error::OptError;
 use crate::heuristic::{
-    AdaptiveLargeNeighborhoodSearch, BranchAndBound, GreedyRandomizedConstruction, Heuristic,
-    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
-    WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
-    iterated_greedy_for_flow_shop,
+    AdaptiveLargeNeighborhoodSearch, BranchAndBound, EaxSelection, EdgeAssemblyCrossoverForTsp,
+    GreedyRandomizedConstruction, Heuristic, HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp,
+    StopCondition, SubProblemBasedCrossover, WalkSatForSat, alns_for_flow_shop, alns_for_tsp,
+    alns_for_vrp, bls_for_max_cut, iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
     BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
@@ -590,6 +590,40 @@ impl ConfigurableProblem for Tsp {
                 num_neighbors.unwrap_or(5),
                 max_depth.unwrap_or(5),
             ))),
+            HeuristicConfig::EdgeAssemblyCrossover {
+                population_size,
+                offspring_per_pair,
+                selection,
+                ..
+            } => {
+                type Eax = EdgeAssemblyCrossoverForTsp;
+                let population_size = population_size.unwrap_or(Eax::POPULATION_SIZE);
+                let offspring_per_pair = offspring_per_pair.unwrap_or(Eax::OFFSPRING_PER_PAIR);
+                // The constructor asserts the same, so a config fails here
+                // rather than panicking in a run.
+                if population_size < 2 {
+                    return Err(OptError::Config(format!(
+                        "'population_size' must be at least 2, got {population_size}"
+                    )));
+                }
+                if offspring_per_pair == 0 {
+                    return Err(OptError::Config(
+                        "'offspring_per_pair' must be at least 1".into(),
+                    ));
+                }
+                let selection = match selection.as_deref() {
+                    None | Some("Entropy") => EaxSelection::Entropy,
+                    Some("Greedy") => EaxSelection::Greedy,
+                    Some(other) => {
+                        return Err(OptError::Config(format!(
+                            "Unknown selection '{other}' (expected 'Entropy' or 'Greedy')"
+                        )));
+                    }
+                };
+                Ok(Box::new(
+                    Eax::new(cond, population_size, offspring_per_pair).with_selection(selection),
+                ))
+            }
             HeuristicConfig::GreedyRandomizedConstruction { .. }
             | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => {
                 ruin_and_recreate(config, cond, alns_for_tsp)

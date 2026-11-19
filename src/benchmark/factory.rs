@@ -236,6 +236,7 @@ where
             // does not compile.
             HeuristicConfig::BreakoutLocalSearch { .. }
             | HeuristicConfig::LinKernighanHelsgaun { .. }
+            | HeuristicConfig::EdgeAssemblyCrossover { .. }
             | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
             | HeuristicConfig::IteratedGreedy { .. }
             | HeuristicConfig::GreedyRandomizedConstruction { .. }
@@ -623,6 +624,7 @@ where
         }
         HeuristicConfig::BreakoutLocalSearch { .. }
         | HeuristicConfig::LinKernighanHelsgaun { .. }
+        | HeuristicConfig::EdgeAssemblyCrossover { .. }
         | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. }
         | HeuristicConfig::IteratedGreedy { .. }
         | HeuristicConfig::GreedyRandomizedConstruction { .. }
@@ -900,6 +902,32 @@ mod factory_tests {
             msg.contains("not supported for MaxCut") && msg.contains("HybridGeneticSearch"),
             "{msg}"
         );
+    }
+
+    /// The edge assembly search builds on the TSP alone, and the values its
+    /// constructor would panic on are config errors.
+    #[test]
+    fn edge_assembly_crossover_is_for_tsp_and_checks_its_values() {
+        let eax = |body: &str| -> HeuristicConfig {
+            toml::from_str(&format!("kind = \"EdgeAssemblyCrossover\"\n{body}"))
+                .expect("the config parses")
+        };
+        try_build(&ProblemKind::Tsp, &eax("")).expect("the defaults build");
+        try_build(
+            &ProblemKind::Tsp,
+            &eax("population_size = 50\noffspring_per_pair = 10\nselection = \"Greedy\""),
+        )
+        .expect("every value set");
+        for (body, field) in [
+            ("population_size = 1", "population_size"),
+            ("offspring_per_pair = 0", "offspring_per_pair"),
+            ("selection = \"Roulette\"", "Roulette"),
+        ] {
+            let err = try_build(&ProblemKind::Tsp, &eax(body)).expect_err(body);
+            assert!(err.to_string().contains(field), "{body}: {err}");
+        }
+        let err = try_build(&ProblemKind::Vrp, &eax("")).expect_err("EAX is for Tsp");
+        assert!(err.to_string().contains("not supported for Vrp"), "{err}");
     }
 
     /// A value the constructor of SA, BLS or HGS cannot take is a config
