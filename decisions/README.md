@@ -29,6 +29,7 @@ Read the table, open the one file you need.
 | [0019](0019-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
 | [0020](0020-a-profile-loop-found-the-cost-in-the-problems-pricing-and-in-the-shape-of-the-scans.md) | all | reference | A profile loop over every problem found the cost in the problems' pricing and in the shape of their scans, and what was left |
 | [0021](0021-a-scan-prices-each-candidate-at-one-call-site.md) | all | adopted | A scan prices each candidate at one call site, since the pricing can inline into a wrapper that then stays out of line |
+| [0024](0024-path-relinking-is-a-crossover-of-the-binary-problems-and-pays-on-the-large-graphs.md) | heuristic, max_cut, qubo | adopted | Path relinking is a crossover of the binary problems, with the greedy path ahead of the uniform crossover on G-set graphs of 5000 vertices and more and tied below |
 
 ## Writing a new record
 

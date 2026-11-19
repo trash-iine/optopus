@@ -1,4 +1,6 @@
-use crate::building_blocks::representation::{lift_binary_solution, uniform_binary_crossover};
+use crate::building_blocks::representation::{
+    PathRelinkingCrossover, differing_variables, lift_binary_solution, uniform_binary_crossover,
+};
 use crate::search_state::{Crossover, SubProblemExtractable};
 
 use super::problem::{VertexCover, VertexCoverSolution};
@@ -18,6 +20,19 @@ impl Crossover<VertexCover> for VertexCoverUniformCrossover {
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<VertexCoverSolution, crate::error::OptError> {
         uniform_binary_crossover(prob, sol1, sol2, rng)
+    }
+}
+
+impl Crossover<VertexCover> for PathRelinkingCrossover {
+    /// Relinks from `sol1` toward `sol2`.
+    fn crossover(
+        &mut self,
+        prob: &VertexCover,
+        sol1: &VertexCoverSolution,
+        sol2: &VertexCoverSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<VertexCoverSolution, crate::error::OptError> {
+        self.relink(prob, sol1, differing_variables(prob, sol1, sol2), rng)
     }
 }
 
@@ -58,6 +73,28 @@ mod tests {
         g.add_edge(1, 2);
         g.add_edge(0, 2);
         VertexCover::new(g)
+    }
+
+    #[test]
+    fn path_relinking_runs_and_replays_under_a_seed() {
+        use crate::building_blocks::instance::Graph;
+        use crate::building_blocks::representation::PathRelinkingCrossover;
+        use crate::trait_defs::ProblemTrait;
+        use rand::SeedableRng;
+        use rand::rngs::SmallRng;
+
+        let mut rng = SmallRng::seed_from_u64(9);
+        let vc = VertexCover::new(Graph::erdos_renyi(30, 0.2, &mut rng));
+        let a = vc.new_solution(&mut rng);
+        let b = vc.new_solution(&mut rng);
+        let run = |seed| {
+            let mut rng = SmallRng::seed_from_u64(seed);
+            PathRelinkingCrossover::random()
+                .crossover(&vc, &a, &b, &mut rng)
+                .unwrap()
+                .x
+        };
+        assert_eq!(run(4), run(4));
     }
 
     #[test]

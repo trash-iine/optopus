@@ -1,0 +1,85 @@
+# A genetic search with the same tabu search under three crossovers, on MaxCut.
+# steps[0] improves each offspring and steps[1] each initial member. The
+# measurement of decisions/0024.
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/max_cut/G22"
+problem = "MaxCut"
+
+[[instances]]
+path = "data/instances/max_cut/G55"
+problem = "MaxCut"
+
+[[instances]]
+path = "data/instances/max_cut/G60"
+problem = "MaxCut"
+
+[[instances]]
+path = "data/instances/max_cut/G70"
+problem = "MaxCut"
+
+[[heuristics]]
+kind = "GeneticAlgorithm"
+population_size = 10
+crossover_kind = "PathRelinking"
+[heuristics.stop_condition]
+max_duration_secs = 60.0
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [15, 300]
+[heuristics.steps.stop_condition]
+max_failed_update = 10000
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [15, 300]
+[heuristics.steps.stop_condition]
+max_failed_update = 10000
+
+[[heuristics]]
+kind = "GeneticAlgorithm"
+population_size = 10
+crossover_kind = "RandomPathRelinking"
+[heuristics.stop_condition]
+max_duration_secs = 60.0
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [15, 300]
+[heuristics.steps.stop_condition]
+max_failed_update = 10000
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [15, 300]
+[heuristics.steps.stop_condition]
+max_failed_update = 10000
+
+[[heuristics]]
+kind = "GeneticAlgorithm"
+population_size = 10
+crossover_kind = "Uniform"
+[heuristics.stop_condition]
+max_duration_secs = 60.0
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [15, 300]
+[heuristics.steps.stop_condition]
+max_failed_update = 10000
+
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [15, 300]
+[heuristics.steps.stop_condition]
+max_failed_update = 10000

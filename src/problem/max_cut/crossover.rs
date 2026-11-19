@@ -1,5 +1,8 @@
-use crate::building_blocks::representation::{lift_binary_solution, uniform_binary_crossover};
+use crate::building_blocks::representation::{
+    PathRelinkingCrossover, lift_binary_solution, uniform_binary_crossover,
+};
 use crate::search_state::{Crossover, SubProblemExtractable};
+use crate::trait_defs::BinaryProblem;
 
 use super::problem::{MaxCut, MaxCutSolution};
 
@@ -49,6 +52,31 @@ impl Crossover<MaxCut> for MaxCutUniformCrossover {
         rng: &mut rand::rngs::SmallRng,
     ) -> Result<MaxCutSolution, crate::error::OptError> {
         uniform_binary_crossover(prob, sol1, sol2, rng)
+    }
+}
+
+impl Crossover<MaxCut> for PathRelinkingCrossover {
+    /// Relinks from `sol1` toward `sol2`, or toward its complement when that is nearer.
+    ///
+    /// Swapping the two sides of a cut leaves the cut unchanged, so a parent
+    /// and its complement are one solution, and the shorter path is the one
+    /// between the two cuts.
+    fn crossover(
+        &mut self,
+        prob: &MaxCut,
+        sol1: &MaxCutSolution,
+        sol2: &MaxCutSolution,
+        rng: &mut rand::rngs::SmallRng,
+    ) -> Result<MaxCutSolution, crate::error::OptError> {
+        let (differ, agree): (Vec<usize>, Vec<usize>) = prob
+            .variable_indices()
+            .partition(|&i| sol1.x[i] != sol2.x[i]);
+        let flips = if differ.len() > agree.len() {
+            agree
+        } else {
+            differ
+        };
+        self.relink(prob, sol1, flips, rng)
     }
 }
 
@@ -148,6 +176,30 @@ mod tests {
             cut[v] = side;
         }
         MaxCutSolution::new_from_assignment(mc, cut)
+    }
+
+    /// A cut and its complement are one solution, so relinking toward a
+    /// parent's complement walks the short way.
+    #[test]
+    fn path_relinking_walks_toward_the_nearer_labelling() {
+        use crate::building_blocks::instance::Graph;
+        use crate::building_blocks::representation::PathRelinkingCrossover;
+        use crate::trait_defs::{Distance, ProblemTrait};
+
+        let mut rng = rand::rngs::SmallRng::seed_from_u64(5);
+        let mc = MaxCut::new(Graph::erdos_renyi(40, 0.2, &mut rng));
+        let a = mc.new_solution(&mut rng);
+        // The complement of `a` with three vertices moved.
+        let mut x: Vec<bool> = a.x.iter().map(|v| !v).collect();
+        for i in [3, 17, 29] {
+            x[i] = !x[i];
+        }
+        let b = MaxCutSolution::new_from_assignment(&mc, x);
+        let child = PathRelinkingCrossover::greedy()
+            .crossover(&mc, &a, &b, &mut rng)
+            .unwrap();
+        assert!(child.distance(&a) <= 2, "the path is three flips long");
+        assert!(child.distance(&a) >= 1);
     }
 
     #[test]

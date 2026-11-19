@@ -1042,6 +1042,26 @@ mod factory_tests {
         )
         .expect_err("SubProblem crossover is MaxCut-only for now");
         assert!(err.to_string().contains("SubProblem"), "{err}");
+
+        // Path relinking is registered for the four binary problems, and for
+        // no other.
+        for kind in [
+            ProblemKind::MaxCut,
+            ProblemKind::Qubo,
+            ProblemKind::Sat,
+            ProblemKind::VertexCover,
+        ] {
+            for name in ["PathRelinking", "RandomPathRelinking"] {
+                try_build(&kind, &ga(Some(name.to_string())))
+                    .unwrap_or_else(|e| panic!("{name} on {kind:?}: {e}"));
+            }
+        }
+        let err = try_build(
+            &ProblemKind::GraphColoring,
+            &ga(Some("PathRelinking".to_string())),
+        )
+        .expect_err("graph coloring is not binary");
+        assert!(err.to_string().contains("PathRelinking"), "{err}");
     }
 
     /// A top-level `BranchAndBound` keeps its type, so a run can read what it

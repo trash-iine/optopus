@@ -13,7 +13,7 @@ use super::factory::{
     ConfigurableProblem, NeighborVisitor, ProvingSearch, build_heuristic, check_tenure,
     invalid_neighbor, unsupported,
 };
-use crate::building_blocks::representation::BinaryRelaxation;
+use crate::building_blocks::representation::{BinaryRelaxation, PathRelinkingCrossover};
 use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearch, BranchAndBound, GreedyRandomizedConstruction, Heuristic,
@@ -515,6 +515,8 @@ impl ConfigurableProblem for MaxCut {
                 0.5,
             )),
         },
+        PathRelinking => PathRelinkingCrossover::greedy(),
+        RandomPathRelinking => PathRelinkingCrossover::random(),
     }
 }
 
@@ -528,6 +530,8 @@ impl ConfigurableProblem for Qubo {
 
     crossovers! {
         Uniform => QuboUniformCrossover,
+        PathRelinking => PathRelinkingCrossover::greedy(),
+        RandomPathRelinking => PathRelinkingCrossover::random(),
     }
 }
 
@@ -567,6 +571,8 @@ impl ConfigurableProblem for Sat {
 
     crossovers! {
         Uniform => SatUniformCrossover,
+        PathRelinking => PathRelinkingCrossover::greedy(),
+        RandomPathRelinking => PathRelinkingCrossover::random(),
     }
 }
 
@@ -679,6 +685,8 @@ impl ConfigurableProblem for VertexCover {
 
     crossovers! {
         Uniform => VertexCoverUniformCrossover,
+        PathRelinking => PathRelinkingCrossover::greedy(),
+        RandomPathRelinking => PathRelinkingCrossover::random(),
     }
 }
 

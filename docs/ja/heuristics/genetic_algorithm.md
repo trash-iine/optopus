@@ -142,6 +142,29 @@ let crossover = SubProblemBasedCrossover {
 
 MaxCut、QUBO、SAT、Vertex Cover、Formula が実装しています。
 
+## PathRelinkingCrossover { #pathrelinkingcrossover }
+
+バイナリ変数の問題、つまり MaxCut、QUBO、MaxSAT、Vertex Cover に使える交叉です。子は、1 人目の親から 2 人目の親へ向かう経路の上の解です。
+
+1. 両親で値が異なる変数を並べます。経路はそれらを 1 つずつ flip していくので、経路上のどの解も両親が共有する部分を保ちます。
+2. `PathRelinkingCrossover::greedy()` は、各ステップで最も良い解を残す flip を取ります。`PathRelinkingCrossover::random()` は flip をランダムに引きます。
+3. どちらの親からも経路の 3 分の 1 以上離れた解のうち、最良のものが子になります。
+
+```rust
+use optopus::building_blocks::representation::PathRelinkingCrossover;
+
+let crossover = PathRelinkingCrossover::greedy().with_distance_scale(0.25);
+```
+
+この距離があるので、子は突然変異のステップで親に戻ってしまいません。`with_distance_scale` は距離を経路に対する割合で設定し、既定値は `1/3` です。割合は flip の回数に切り上げたうえで、1 から経路の半分(切り捨て)までに収めます。そのため短い経路では子が指定より親に近くなることがあり、1/2 以上の割合はどれも経路の中央を返します。
+両親が `d` 個の変数で異なるとき、greedy な経路は O(d²) 回の flip を価格付けします。一様交叉が適用する flip は `d / 2` 回なので、突然変異のステップがそれより重いときに見合います。
+異なる変数が 2 個未満の両親の間には解がないので、1 人目の親がそのまま返ります。
+
+MaxCut では、カットの両側を入れ替えてもカットは変わらないので、親とその補集合は同じ解です。経路は 2 つのうち近いほうへ向かいます。
+
+このオペレータは、下の参考文献が QUBO に適用している path relinking で、その手法の tabu search は突然変異のステップに任せています。
+すべての個体を順に組み合わせる reference set は再現していません。ここでの親は `parent_selection` が選びます。
+
 ## ベンチマーク設定 { #benchmark-config }
 
 ```toml
@@ -173,6 +196,7 @@ max_failed_update = 1
 `crossover_kind` の既定は `"Uniform"` で、TSP と CVRP では `"Order"`、JobShop では `"Ppx"` です。
 MaxCut はさらに `"SubProblem"` を受け付けます。これは一致しない変数からなる部分 MaxCut を内部の上限付き BLS で解く memetic な組み換えです
 ([SubProblemBasedCrossover](#subproblembasedcrossover) を参照)。
+MaxCut、QUBO、SAT、VertexCover は `"PathRelinking"` と `"RandomPathRelinking"` も受け付けます。[PathRelinkingCrossover](#pathrelinkingcrossover) の greedy な経路とランダムな経路で、距離は既定値です。
 
 ## 参考文献 { #references }
 
@@ -185,3 +209,6 @@ MaxCut はさらに `"SubProblem"` を受け付けます。これは一致しな
 - Vidal, T. et al. "A Hybrid Genetic Algorithm for Multidepot and Periodic
   Vehicle Routing Problems." *Operations Research*, 60(3), 611-624, 2012.
   (Biased fitness です。)
+- Wang, Y., Lü, Z., Glover, F. and Hao, J.-K. "Path relinking for
+  unconstrained binary quadratic programming." *European Journal of
+  Operational Research*, 223(3), 595-604, 2012. (Path relinking.)
