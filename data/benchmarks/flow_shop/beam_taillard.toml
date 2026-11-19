@@ -1,0 +1,40 @@
+# IterativeBeamSearch against ALNS and GRASP on the flow shop. The
+# measurement of decisions/0025.
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta031.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta051.txt"
+problem = "FlowShop"
+
+[[instances]]
+path = "data/instances/flow_shop/taillard/ta081.txt"
+problem = "FlowShop"
+
+[[heuristics]]
+kind = "IterativeBeamSearch"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "AdaptiveLargeNeighborhoodSearch"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "Iterated"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics.steps]]
+kind = "LocalSearch"
+neighbor = "Relocate"
+
+[[heuristics.steps]]
+kind = "GreedyRandomizedConstruction"
+alpha = 0.2

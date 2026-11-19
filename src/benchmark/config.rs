@@ -227,6 +227,17 @@ pub enum HeuristicConfig {
         #[serde(default)]
         stop_condition: StopConditionConfig,
     },
+    /// Iterative beam search (TSP, VRP, FlowShop, BinPacking).
+    IterativeBeamSearch {
+        /// Width of the first pass. Default: 1.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        initial_width: Option<usize>,
+        /// Factor the width grows by each pass. Default: 2.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        growth: Option<f64>,
+        #[serde(default)]
+        stop_condition: StopConditionConfig,
+    },
     /// Hybrid Genetic Search (VRP only).
     HybridGeneticSearch {
         /// Target size of each sub-population (μ). Default: 25.
@@ -399,7 +410,8 @@ heuristic_kinds! {
     steps: BranchAndBound, Sequential, Iterated, VariableNeighborhoodSearch, Restart,
         GeneticAlgorithm;
     other: BreakoutLocalSearch, LinKernighanHelsgaun, AdaptiveLargeNeighborhoodSearch,
-        IteratedGreedy, GreedyRandomizedConstruction, HybridGeneticSearch, WalkSat;
+        IteratedGreedy, GreedyRandomizedConstruction, IterativeBeamSearch, HybridGeneticSearch,
+        WalkSat;
 }
 
 /// A single instance entry in the config file.

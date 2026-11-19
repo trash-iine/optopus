@@ -32,6 +32,7 @@ use crate::trait_defs::{LocalRepair, Ruinable};
 /// from the state, the two `Ruinable` methods that charge violations and the
 /// anchored descent alike, so nothing can improve against one weight and
 /// score against another.
+#[derive(Clone)]
 pub struct VrpPartial {
     state: RouteState,
 }

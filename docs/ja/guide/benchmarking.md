@@ -48,7 +48,7 @@ max_failed_update = 5_000
 
 `initial_solution` を書くと、そのインスタンスのすべての実行をランダムな解ではなくその解から始めます。あるベンチマークの最良解から次のベンチマークを続けられます。
 書き方はレポートの `solution` と同じで ([出力レポート](#output-report) の符号化の表を参照)、インスタンスに合わない解を与えると各実行が `initial solution error: …` で失敗します。1 つのインスタンスを指すので、`path` が 2 つ以上のファイルに一致すると config エラーになります。
-自前で新しい解を引くヒューリスティクス (`PopulationAnnealing`、`ParallelTempering`、`GeneticAlgorithm`、最初のリスタート以降の `Restart`、`GreedyRandomizedConstruction`) では、最初の暫定解になるだけです。また、同じシードでもランダムな開始とは別の乱数を引きます。
+自前で新しい解を引くヒューリスティクス (`PopulationAnnealing`、`ParallelTempering`、`GeneticAlgorithm`、最初のリスタート以降の `Restart`、`GreedyRandomizedConstruction`、`IterativeBeamSearch`) では、最初の暫定解になるだけです。また、同じシードでもランダムな開始とは別の乱数を引きます。
 
 `Benchmark::evaluate_solution(problem, path, solution)` は、同じ符号化の解を何も実行せずに採点します。返すのは、その解で終わった実行が報告する `best_objective` です。
 
@@ -76,6 +76,7 @@ max_failed_update = 5_000
 | [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop のみ |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
+| [`IterativeBeamSearch`](../heuristics/iterative_beam_search.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP のみ |
 | [`BranchAndBound`](../heuristics/branch_and_bound.md#benchmark-config) | MaxCut, Qubo, Sat, VertexCover |
 

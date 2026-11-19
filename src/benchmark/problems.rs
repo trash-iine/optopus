@@ -17,9 +17,9 @@ use crate::building_blocks::representation::BinaryRelaxation;
 use crate::error::OptError;
 use crate::heuristic::{
     AdaptiveLargeNeighborhoodSearch, BranchAndBound, GreedyRandomizedConstruction, Heuristic,
-    HybridGeneticSearchForVrp, LinKernighanHelsgaunForTsp, StopCondition, SubProblemBasedCrossover,
-    WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp, bls_for_max_cut,
-    iterated_greedy_for_flow_shop,
+    HybridGeneticSearchForVrp, IterativeBeamSearch, LinKernighanHelsgaunForTsp, StopCondition,
+    SubProblemBasedCrossover, WalkSatForSat, alns_for_flow_shop, alns_for_tsp, alns_for_vrp,
+    bls_for_max_cut, iterated_greedy_for_flow_shop,
 };
 use crate::problem::{
     BinPacking, BinPackingGroupCrossover, BinPackingRelocateNeighbor, BinPackingSolution,
@@ -591,6 +591,7 @@ impl ConfigurableProblem for Tsp {
                 max_depth.unwrap_or(5),
             ))),
             HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::IterativeBeamSearch { .. }
             | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => {
                 ruin_and_recreate(config, cond, alns_for_tsp)
             }
@@ -616,6 +617,7 @@ impl ConfigurableProblem for Vrp {
     ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
         match config {
             HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::IterativeBeamSearch { .. }
             | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => {
                 ruin_and_recreate(config, cond, alns_for_vrp)
             }
@@ -737,7 +739,8 @@ fn alns_params(
     Ok((removal_fraction, cooling_rate))
 }
 
-/// The GRASP construction or the ALNS of a `GreedyRandomizedConstruction` or
+/// The GRASP construction, the beam search or the ALNS of a
+/// `GreedyRandomizedConstruction`, `IterativeBeamSearch` or
 /// `AdaptiveLargeNeighborhoodSearch` config, on a `Ruinable` problem. `alns`
 /// makes the problem's ALNS from the stop condition, the removal fraction
 /// and the cooling rate, which are checked here so a bad config fails at
@@ -749,9 +752,33 @@ fn ruin_and_recreate<P>(
 ) -> Result<Box<dyn Heuristic<P>>, OptError>
 where
     P: Ruinable + 'static,
+    P::Partial: Clone,
     P::Solution: Evaluate,
 {
     match config {
+        HeuristicConfig::IterativeBeamSearch {
+            initial_width,
+            growth,
+            ..
+        } => {
+            let initial_width = initial_width.unwrap_or(IterativeBeamSearch::<P>::INITIAL_WIDTH);
+            let growth = growth.unwrap_or(IterativeBeamSearch::<P>::GROWTH);
+            if initial_width == 0 {
+                return Err(OptError::Config(
+                    "'initial_width' must be at least 1".into(),
+                ));
+            }
+            if !(growth >= 1.0 && growth.is_finite()) {
+                return Err(OptError::Config(format!(
+                    "'growth' must be at least 1, got {growth}"
+                )));
+            }
+            Ok(Box::new(
+                IterativeBeamSearch::<P>::new(cond)
+                    .with_initial_width(initial_width)
+                    .with_growth(growth),
+            ))
+        }
         HeuristicConfig::GreedyRandomizedConstruction { alpha, .. } => {
             let alpha = alpha.unwrap_or(0.2);
             if !(0.0..=1.0).contains(&alpha) {
@@ -771,7 +798,7 @@ where
             let (removal_fraction, cooling_rate) = alns_params(*removal_fraction, *cooling_rate)?;
             Ok(Box::new(alns(cond, removal_fraction, cooling_rate)))
         }
-        _ => unreachable!("ruin_and_recreate is only called on GRASP and ALNS configs"),
+        _ => unreachable!("ruin_and_recreate is only called on GRASP, beam and ALNS configs"),
     }
 }
 
@@ -886,6 +913,7 @@ impl ConfigurableProblem for BinPacking {
     ) -> Result<Box<dyn Heuristic<Self>>, OptError> {
         match config {
             HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::IterativeBeamSearch { .. }
             | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => ruin_and_recreate(
                 config,
                 cond,
@@ -935,6 +963,7 @@ impl ConfigurableProblem for FlowShop {
                 )))
             }
             HeuristicConfig::GreedyRandomizedConstruction { .. }
+            | HeuristicConfig::IterativeBeamSearch { .. }
             | HeuristicConfig::AdaptiveLargeNeighborhoodSearch { .. } => {
                 ruin_and_recreate(config, cond, alns_for_flow_shop)
             }

@@ -25,6 +25,7 @@ const NOT_PLACED: usize = usize::MAX;
 /// The sequence, the position of every job in it, and its heads and tails are
 /// kept in step by one private refresh, the only place any of them is
 /// derived, and every edit calls it.
+#[derive(Clone)]
 pub struct FlowShopPartial {
     /// The jobs currently placed, in order.
     sequence: Vec<usize>,

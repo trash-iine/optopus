@@ -62,7 +62,7 @@ under [Output report](#output-report)), and a solution that does not fit the
 instance fails each run with `initial solution error: …`. It names one
 instance, so a `path` matching more than one file is a config error. A heuristic that draws fresh solutions of its
 own (`PopulationAnnealing`, `ParallelTempering`, `GeneticAlgorithm`, `Restart`
-after its first restart, `GreedyRandomizedConstruction`) starts only its first
+after its first restart, `GreedyRandomizedConstruction`, `IterativeBeamSearch`) starts only its first
 incumbent there, and a warm start draws other random numbers than a random
 start under the same seed.
 
@@ -95,6 +95,7 @@ algorithm's own page; this table is only the index.
 | [`AdaptiveLargeNeighborhoodSearch`](../heuristics/alns.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`IteratedGreedy`](../heuristics/iterated_greedy.md#benchmark-config) | FlowShop only |
 | [`GreedyRandomizedConstruction`](../heuristics/greedy_randomized_construction.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
+| [`IterativeBeamSearch`](../heuristics/iterative_beam_search.md#benchmark-config) | VRP, TSP, FlowShop, BinPacking |
 | [`HybridGeneticSearch`](../heuristics/hgs.md#benchmark-config) | VRP only |
 | [`BranchAndBound`](../heuristics/branch_and_bound.md#benchmark-config) | MaxCut, Qubo, Sat, VertexCover |
 
