@@ -119,11 +119,11 @@ impl SlackInductionByStringRemoval {
     ///
     /// # Panics
     ///
-    /// Panics unless `initial >= last > 0`.
+    /// Panics unless `initial >= last > 0` and `initial` is finite.
     pub fn with_temperatures(mut self, initial: f64, last: f64) -> Self {
         assert!(
-            last > 0.0 && initial >= last,
-            "temperatures must satisfy initial >= final > 0, got ({initial}, {last})"
+            last > 0.0 && initial >= last && initial.is_finite(),
+            "temperatures must satisfy initial >= final > 0 and be finite, got ({initial}, {last})"
         );
         self.initial_temperature = initial;
         self.final_temperature = last;
@@ -135,10 +135,13 @@ impl SlackInductionByStringRemoval {
     ///
     /// # Panics
     ///
-    /// Panics if `average_removal` is not positive or `max_string_length` is
-    /// zero.
+    /// Panics if `average_removal` is not positive and finite or
+    /// `max_string_length` is zero.
     pub fn with_removal(mut self, average_removal: f64, max_string_length: usize) -> Self {
-        assert!(average_removal > 0.0, "average_removal must be positive");
+        assert!(
+            average_removal > 0.0 && average_removal.is_finite(),
+            "average_removal must be positive and finite"
+        );
         assert!(
             max_string_length >= 1,
             "max_string_length must be at least 1"
@@ -189,7 +192,10 @@ impl SlackInductionByStringRemoval {
             return;
         }
         let string_cap = (self.max_string_length as f64).min(served as f64 / in_use as f64);
-        let most_strings = 4.0 * self.average_removal / (1.0 + string_cap) - 1.0;
+        // No more strings than customers, which also keeps a huge removal
+        // from overflowing the range.
+        let most_strings =
+            (4.0 * self.average_removal / (1.0 + string_cap) - 1.0).min(prob.get_n() as f64);
         let strings = if most_strings > 0.0 {
             rng.random_range(1.0..most_strings + 1.0) as usize
         } else {
@@ -504,6 +510,25 @@ mod tests {
     #[should_panic(expected = "cooling_iterations must be at least 1")]
     fn zero_cooling_iterations_are_rejected() {
         let _ = SlackInductionByStringRemoval::new(StopCondition::iterations(1), 0);
+    }
+
+    /// A removal whose four times overflows still draws a count of strings,
+    /// at most one per customer.
+    #[test]
+    fn a_huge_removal_ruins_every_route() {
+        let vrp = rings(40, 20, 8);
+        let mut rng: SmallRng = rand::SeedableRng::seed_from_u64(5);
+        let sol = crate::search_state::ProblemTrait::new_solution(&vrp, &mut rng);
+        let mut partial = vrp.to_partial(&sol);
+        let mut search = sisr(1).with_removal(f64::MAX, 10);
+        search.ruin(&vrp, &mut partial, &mut rng);
+        assert!(!search.removed.is_empty());
+    }
+
+    #[test]
+    #[should_panic(expected = "average_removal must be positive and finite")]
+    fn an_infinite_removal_is_rejected() {
+        let _ = sisr(1).with_removal(f64::INFINITY, 10);
     }
 
     #[test]

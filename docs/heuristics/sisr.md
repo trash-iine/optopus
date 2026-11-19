@@ -45,11 +45,12 @@ Each `run_once` produces one candidate from the incumbent.
 2. Draw a seed customer and walk the customers from the nearest to it outward.
 3. Each customer found on a route not yet ruined marks that route. A length
    is drawn from `1` to the smaller of `L` and the route's length, and a
-   string of that length containing the customer is taken out.
+   string of that length is taken out around the customer.
 4. Stop when the drawn number of routes are ruined.
 
-Half of the strings are taken whole. The other half are split. A longer
-string is chosen, and a run of customers inside it stays on the route. The run
+Half of the strings are taken whole, the customer among them. The other half
+are split. A longer string around the customer is chosen, and a run of
+customers inside it stays on the route, which may hold the customer. The run
 starts at one customer and grows by one with probability
 `1 − split_stop_rate` until the route has no more customers to give, so with
 the default rate it is usually as long as it can be and what leaves the route

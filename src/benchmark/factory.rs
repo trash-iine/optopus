@@ -924,6 +924,8 @@ mod factory_tests {
             ("initial_temperature = 0.5", "initial_temperature"),
             ("final_temperature = 200.0", "final_temperature"),
             ("average_removal = 0.0", "average_removal"),
+            ("average_removal = inf", "average_removal"),
+            ("initial_temperature = inf", "initial_temperature"),
             ("max_string_length = 0", "max_string_length"),
             ("split_stop_rate = 1.5", "split_stop_rate"),
             ("blink_rate = 1.0", "blink_rate"),

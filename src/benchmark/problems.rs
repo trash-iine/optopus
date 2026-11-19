@@ -685,15 +685,15 @@ impl ConfigurableProblem for Vrp {
                         "'cooling_iterations' must be at least 1".into(),
                     ));
                 }
-                if !(last > 0.0 && initial >= last) {
+                if !(last > 0.0 && initial >= last && initial.is_finite()) {
                     return Err(OptError::Config(format!(
                         "'initial_temperature' and 'final_temperature' must satisfy \
-                         initial >= final > 0, got ({initial}, {last})"
+                         initial >= final > 0 and be finite, got ({initial}, {last})"
                     )));
                 }
-                if average_removal.is_nan() || average_removal <= 0.0 {
+                if !(average_removal > 0.0 && average_removal.is_finite()) {
                     return Err(OptError::Config(format!(
-                        "'average_removal' must be positive, got {average_removal}"
+                        "'average_removal' must be positive and finite, got {average_removal}"
                     )));
                 }
                 if max_string_length == 0 {
