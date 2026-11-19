@@ -80,6 +80,7 @@ at [`docs/ja/README.md`](docs/ja/README.md).
 | [Lin-Kernighan-Helsgaun (TSP)](docs/heuristics/lkh.md) | `LinKernighanHelsgaunForTsp` |
 | [WalkSAT (MaxSAT)](docs/heuristics/walksat.md) | `WalkSatForSat` |
 | [Hybrid Genetic Search (CVRP)](docs/heuristics/hgs.md) | `HybridGeneticSearchForVrp` |
+| [Slack Induction by String Removals (CVRP)](docs/heuristics/sisr.md) | `SlackInductionByStringRemovalForVrp` |
 
 ## Benchmark CLI
 

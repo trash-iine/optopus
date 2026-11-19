@@ -1,7 +1,7 @@
 //! VRP-specific heuristics.
 //!
-//! [`hgs`] is the one search left here. Ruin-and-recreate turned out to need
-//! nothing of VRP beyond what [`Ruinable`](crate::trait_defs::Ruinable) asks
+//! [`hgs`] and [`sisr`] are the searches here. The adaptive ruin-and-recreate
+//! turned out to need nothing of VRP beyond what [`Ruinable`](crate::trait_defs::Ruinable) asks
 //! any problem, so it generalized into
 //! [`AdaptiveLargeNeighborhoodSearch`](crate::heuristic::AdaptiveLargeNeighborhoodSearch),
 //! and the route machinery both searches read moved to
@@ -12,11 +12,15 @@
 //!
 //! What keeps Hybrid Genetic Search here is the giant-tour recombination, a
 //! decode from a customer permutation into a route partition that no other
-//! problem has.
+//! problem has. What keeps the string removal here is the string, a run of
+//! consecutive customers on one route among several, and an order of insertion
+//! that reads demands and the depot.
 
 mod hgs;
+mod sisr;
 
 pub use hgs::HybridGeneticSearch;
+pub use sisr::SlackInductionByStringRemoval;
 
 use crate::heuristic::{AdaptiveLargeNeighborhoodSearch, StopCondition};
 use crate::problem::Vrp;

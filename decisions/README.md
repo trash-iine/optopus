@@ -29,6 +29,7 @@ Read the table, open the one file you need.
 | [0019](0019-alns-greedy-repair-is-the-papers-basic-greedy.md) | heuristic, vrp, tsp | adopted | The ALNS greedy repair is the paper's basic greedy, slower on large instances and no better per iteration |
 | [0020](0020-a-profile-loop-found-the-cost-in-the-problems-pricing-and-in-the-shape-of-the-scans.md) | all | reference | A profile loop over every problem found the cost in the problems' pricing and in the shape of their scans, and what was left |
 | [0021](0021-a-scan-prices-each-candidate-at-one-call-site.md) | all | adopted | A scan prices each candidate at one call site, since the pricing can inline into a wrapper that then stays out of line |
+| [0023](0023-string-removal-with-blinks-runs-on-routes-without-a-local-search.md) | heuristic, vrp | adopted | String removal with blinks runs on routes without a local search and stays a VRP heuristic, ahead of ALNS and HGS at 60 s on three X instances |
 
 ## Writing a new record
 
