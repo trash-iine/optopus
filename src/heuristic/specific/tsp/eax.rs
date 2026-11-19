@@ -10,7 +10,7 @@ use crate::error::OptError;
 use crate::heuristic::{Heuristic, StopCondition};
 use crate::problem::tsp::{AnchoredTourDescent, NeighborLists, Tsp, TspSolution};
 use crate::search_state::SearchState;
-use crate::trait_defs::{LocalRepair, Ruinable};
+use crate::trait_defs::{LocalRepair, Rankable, Ruinable};
 
 /// A slot of an adjacency or a position that holds nothing.
 const NONE: u32 = u32::MAX;
@@ -569,7 +569,8 @@ impl Mating {
 ///
 /// An offspring differs from its first parent by one cycle and a few joins,
 /// so a mating reads both parents once and builds each offspring in time
-/// that grows with the cycle, not with the tour.
+/// that grows with the cycle and the sub-tours it joins. That is less than
+/// the tour unless the cycle splits it into large parts.
 ///
 /// # The selection
 ///
@@ -724,7 +725,9 @@ impl EdgeAssemblyCrossover {
             self.counts.add_member(&member);
         }
         self.members.push(member);
-        state.solution = sol;
+        if self.members.len() == 1 || sol.is_better_than(&state.solution) {
+            state.solution = sol;
+        }
         state.iteration += 1;
         state.n_accepted += 1;
         state.update_best();
@@ -831,6 +834,14 @@ impl EdgeAssemblyCrossover {
                 state.update_best();
                 self.improved_in = self.generation + 1;
             }
+        } else if member.length < state.solution.objective - MIN_IMPROVEMENT {
+            // Not a new best, but the best member, which the solution
+            // follows so that a step composed after this one starts there.
+            let tour = member.tour();
+            let objective = prob
+                .calculate_tour_length(&tour)
+                .expect("an offspring visits every city once");
+            state.solution = TspSolution { tour, objective };
         }
         true
     }
@@ -1060,6 +1071,28 @@ mod tests {
     }
 
     /// A population that has become one tour ends the run by itself.
+    /// The solution a run leaves is the best tour of the population, not the
+    /// last member built, so a step composed after it starts there.
+    #[test]
+    fn the_solution_left_is_the_best_member() {
+        let tsp = scattered(60, 21);
+        let mut state = SearchState::new_with_seed(&tsp, 2);
+        let mut search = EdgeAssemblyCrossover::new(StopCondition::iterations(200), 12, 8);
+        search.run(&mut state).unwrap();
+        let shortest = search
+            .members
+            .iter()
+            .map(|m| m.length)
+            .fold(f64::INFINITY, f64::min);
+        let sol = &state.solution;
+        assert!(
+            sol.objective <= shortest + 1e-6,
+            "{} against {shortest}",
+            sol.objective
+        );
+        assert_eq!(tsp.calculate_tour_length(&sol.tour).unwrap(), sol.objective);
+    }
+
     #[test]
     fn a_converged_population_ends_the_run() {
         let tsp = scattered(30, 11);

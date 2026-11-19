@@ -42,7 +42,7 @@ println!("tour length = {}", state.best_solution.objective);
 
 1 回の交配は、重複なしで引いた最大 `offspring_per_pair` 個の AB-cycle から、子を 1 つずつ作ります。
 
-子が 1 人目の親と違うのは、cycle 1 つと数回のつなぎ替えだけです。交配は両親を 1 回ずつ読み、子 1 つを作る時間は巡回路の長さではなく cycle の長さに比例します。
+子が 1 人目の親と違うのは、cycle 1 つと数回のつなぎ替えだけです。交配は両親を 1 回ずつ読み、子 1 つを作る時間は cycle と、つなぐ部分巡回路の長さに比例します。cycle が巡回路を大きく分けない限り、巡回路全体の長さより短く済みます。
 
 ### 選択と置き換え { #selection-and-replacement }
 

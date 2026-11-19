@@ -60,7 +60,8 @@ AB-cycles, drawn without repetition.
 
 An offspring differs from its first parent by one cycle and a few joins. A
 mating reads both parents once, and builds each offspring in time that grows
-with the cycle, not with the tour.
+with the cycle and the sub-tours it joins, which is less than the tour unless
+the cycle splits it into large parts.
 
 ### Selection and replacement
 
