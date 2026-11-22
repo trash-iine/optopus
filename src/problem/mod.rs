@@ -48,7 +48,7 @@ pub use flow_shop::{
     FlowShopSwapNeighbor,
 };
 pub use graph_coloring::{
-    GraphColoring, GraphColoringSolution, GraphColoringUniformCrossover, GraphColoringWeights,
+    GraphColoring, GraphColoringPrices, GraphColoringSolution, GraphColoringUniformCrossover,
 };
 pub use integer::{
     Constraint, ConstraintRel, Expr, FormulaProblem, FormulaSolution, IntChangeNeighbor,
@@ -66,15 +66,13 @@ pub use max_cut::{
 };
 pub use qap::{Qap, QapOrderCrossover, QapSolution, QapSwapNeighbor};
 pub use qubo::{Qubo, QuboFlipNeighbor, QuboSolution, QuboSwapNeighbor, QuboUniformCrossover};
-pub use sat::{
-    Sat, SatFlipNeighbor, SatSolution, SatSwapNeighbor, SatUniformCrossover, SatWeights,
-};
+pub use sat::{Sat, SatFlipNeighbor, SatPrices, SatSolution, SatSwapNeighbor, SatUniformCrossover};
 pub use tsp::{
     Tsp, TspOrderCrossover, TspRelocateNeighbor, TspSolution, TspTour, TspTwoOptNeighbor,
 };
 pub use vertex_cover::{
-    VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution, VertexCoverSwapNeighbor,
-    VertexCoverUniformCrossover, VertexCoverWeights,
+    VertexCover, VertexCoverFlipNeighbor, VertexCoverPrices, VertexCoverSolution,
+    VertexCoverSwapNeighbor, VertexCoverUniformCrossover,
 };
 pub use vrp::{
     ObjectiveMode, VehicleType, Vrp, VrpOrderCrossover, VrpRelocateNeighbor, VrpSolution,

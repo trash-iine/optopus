@@ -12,4 +12,4 @@ mod weights;
 pub use crossover::SatUniformCrossover;
 pub use neighbor::{SatFlipNeighbor, SatSwapNeighbor};
 pub use problem::{Sat, SatSolution};
-pub use weights::SatWeights;
+pub use weights::SatPrices;

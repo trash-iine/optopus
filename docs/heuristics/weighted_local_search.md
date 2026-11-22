@@ -73,23 +73,25 @@ WeightedLocalSearch::<P>::new(stop_condition: StopCondition) -> Self
 `with_tabu_tenure((min, max))` sets the tenure range, `(3, 12)` unless set, and
 panics on an empty range. `with_smoothing(p)` sets the smoothing probability,
 `0.0003` unless set, and panics outside `[0, 1]`. `weights()` returns the
-weights of the run in progress or of the last one.
+`ConstraintWeights` of the run in progress or of the last one, which give the
+weight of each constraint, the violated ones and the problem's prices.
 
 ## Adding it to a problem
 
 A problem opts in by implementing `WeightedConstraints`. It names the move the
-search makes and a `Weights` type that holds one weight per constraint beside
-whatever the problem caches to price a move under them.
+search makes and a `Prices` type, whatever the problem caches to price a move
+under the weights. The search keeps the weights, the set of violated
+constraints and the rule that raises and lowers them, and calls the problem
+back when a weight changes.
 
 | Method | What it does |
 |---|---|
-| `unit_weights` | Builds the weights, all at one, priced for a solution. |
-| `constraint_count` | Gives the number of constraints, which sets the cap. |
+| `unit_prices` | Builds the prices with every weight at one, and the set of the constraints a solution violates. The size of that set is the number of constraints. |
 | `weighted_gain` | Prices a move, positive when it lowers the weighted cost. |
-| `apply_weighted` | Applies a move to the solution and reprices the weights for the result. |
-| `raise_violated` | Adds one to the weight of every violated constraint, up to the cap. |
-| `lower_satisfied` | Takes one from every satisfied constraint above one. |
-| `escape_moves` | Fills the moves that lead out of a weighted local optimum. |
+| `apply_weighted` | Applies a move to the solution, reprices the prices and updates the violated set for the result. |
+| `reweight` | Reprices after the weight of one constraint changed. |
+| `repairs` | Fills the moves that satisfy one violated constraint. |
+| `objective_escapes` | Fills the moves that work toward a better objective once nothing is violated. Optional, with none by default, which ends the search there as on MaxSAT. |
 
 The search scans every move each step, so `weighted_gain` should read a cached
 price. `Sat` keeps a weighted flip gain per variable, `VertexCover` keeps,

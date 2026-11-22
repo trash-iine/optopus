@@ -13,15 +13,14 @@ one to every violated constraint with probability `1 - smoothing`, otherwise
 takes one from every satisfied constraint above one, then leaves by the best
 escape move. The rule, the `smoothing` of 0.0003, the cap of
 `max(1000, constraints)` and the tenure of 3 to 12 are those of the integer
-programming local search of arXiv 2305.00188, read in the original.
+programming local search of arXiv 2305.00188, read in the original. Unlike it
+the objective has no weight of its own, and a local optimum that violates
+nothing leaves by the best move toward a better objective under the weights,
+not a random one. On a coloring that empties the smallest class.
 
-Unlike that source the objective has no weight of its own, and a local optimum
-that violates nothing leaves by the best move toward a better objective under
-the weights rather than by one drawn at random. On a coloring no single move
-lowers the colors used, so the escape there empties the smallest class.
-
-The weights and their prices live in the problem's `Weights`, owned by the
-heuristic, and `apply_weighted` changes the solution and the prices in one call.
+The heuristic owns the weights, the violated set and the raise and lower rule
+in `ConstraintWeights`. The problem owns its prices, kept with the solution by
+`apply_weighted`, and gives `reweight`, `repairs` and `objective_escapes`.
 
 It scans every move each step, as `TabuSearch` does. It still uses about a
 fifth of the colors the best general heuristic does on four of six G-set graphs
@@ -30,14 +29,14 @@ beats WalkSat on five of seven large formulas in a tenth of the steps or fewer.
 
 ## Do not retry
 
-Do not put the weights in the solution or in `SearchState`. A solution carrying
-them is cloned with them at every sub-run and its rank has to ignore part of
-itself.
-
-Do not rebuild it as `Iterated` over `LocalSearch` and a weight step. A
-weighted descent lasts a few moves, and `Iterated` clones the state per phase.
-Do not narrow the scan to the moves of violated constraints without measuring
-vertex cover, where leaving a cover is a move of no violated constraint.
+Do not put the weights in the solution or in `SearchState`, which clones them
+at every sub-run and ranks a solution that has to ignore part of itself. Do not
+rebuild it as `Iterated` over `LocalSearch` and a weight step, since a weighted
+descent lasts a few moves and `Iterated` clones the state per phase. Do not
+narrow the scan to the moves of violated constraints without measuring vertex
+cover, where leaving a cover is a move of no violated constraint. Do not let
+the local optimum steps of `ConstraintWeights` inline into the search step,
+where the scan then reloads a loop invariant per candidate (appendix).
 
 ## Appendix
 
@@ -94,3 +93,9 @@ The lead on coloring_4g_5color_170 is inside the spread of the five runs, 65.6
 against 30.3. On sliding_puzzle57 an earlier build that broke ties from another
 random stream averaged 163447.6 with a spread of 10.4, where this one gives
 163438.8 with 0.4, so five runs do not settle that formula.
+
+The local optimum steps of `ConstraintWeights` are kept out of line. Inlined
+into the step, the scan reloaded a loop invariant on every candidate, 6.4% more
+instructions on vertex cover G22 at 400000 iterations and 4.6% on graph
+coloring G1 at 15000, with the same trajectory. Out of line they match the
+earlier trait on vertex cover and are 4.6% fewer on coloring.

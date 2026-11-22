@@ -83,6 +83,13 @@ impl IndexSet {
     pub fn is_empty(&self) -> bool {
         self.members.is_empty()
     }
+
+    /// The bound the set was made with, one past the largest index it can
+    /// hold.
+    #[inline]
+    pub fn bound(&self) -> usize {
+        self.position.len()
+    }
 }
 
 #[cfg(test)]

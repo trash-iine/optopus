@@ -19,4 +19,4 @@ mod weights;
 
 pub use crossover::GraphColoringUniformCrossover;
 pub use problem::{GraphColoring, GraphColoringSolution};
-pub use weights::GraphColoringWeights;
+pub use weights::GraphColoringPrices;

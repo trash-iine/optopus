@@ -1,6 +1,7 @@
 //! Constraints a search can weight.
 
 use super::{EnabledTabu, MoveToNeighbor, ProblemTrait};
+use crate::building_blocks::search::IndexSet;
 use crate::error::OptError;
 
 /// A problem whose constraints a search can weight.
@@ -13,10 +14,12 @@ use crate::error::OptError;
 /// that cost and raises the weights of what stays violated, so the constraints
 /// a search keeps failing come to outweigh the rest.
 ///
-/// The weights live in [`Weights`](Self::Weights), beside whatever the problem
-/// caches to price a move under them. The solution is not touched by a change
-/// of weight, and it ranks as it always does, so the best solution a weighted
-/// search reports is the best by the problem's own order.
+/// The search keeps the weights, the set of violated constraints and when to
+/// change a weight. The problem keeps [`Prices`](Self::Prices), whatever it
+/// caches to price a move under the weights, and says which moves satisfy a
+/// constraint. The solution is not touched by a change of weight, and it ranks
+/// as it always does, so the best solution a weighted search reports is the
+/// best by the problem's own order.
 ///
 /// The gain of a move is the drop in the weighted cost, positive when the move
 /// lowers it. With every weight at one it counts each constraint the move
@@ -25,50 +28,57 @@ pub trait WeightedConstraints: ProblemTrait + Sized {
     /// The move a weighted search makes.
     type Move: MoveToNeighbor<Self> + EnabledTabu;
 
-    /// The weights, with the prices the problem keeps under them.
-    type Weights;
+    /// What the problem caches to price a move under the weights.
+    type Prices;
 
-    /// Every constraint at weight one, priced for `sol`.
-    fn unit_weights(&self, sol: &Self::Solution) -> Self::Weights;
-
-    /// How many constraints the problem has.
-    fn constraint_count(&self) -> usize;
+    /// The prices for `sol` with every weight at one, and the constraints
+    /// `sol` violates.
+    ///
+    /// The set is over every constraint, so its
+    /// [`bound`](IndexSet::bound) is how many there are. A constraint that no
+    /// move can satisfy, such as an empty clause, is left out of it.
+    fn unit_prices(&self, sol: &Self::Solution) -> (Self::Prices, IndexSet);
 
     /// The drop in the weighted cost if `mv` were applied to `sol`.
-    fn weighted_gain(&self, sol: &Self::Solution, weights: &Self::Weights, mv: &Self::Move) -> f64;
+    fn weighted_gain(&self, sol: &Self::Solution, prices: &Self::Prices, mv: &Self::Move) -> f64;
 
-    /// Applies `mv` to `sol` and reprices `weights` for the result.
+    /// Applies `mv` to `sol`, and reprices `prices` and updates `violated`
+    /// for the result. `weight[c]` is the weight of constraint `c`.
     ///
-    /// The two change together because the prices follow the solution. A move
-    /// applied any other way leaves `weights` priced for a solution that is
+    /// The three change together because the prices follow the solution. A
+    /// move applied any other way leaves them priced for a solution that is
     /// gone.
     fn apply_weighted(
         &self,
         sol: &mut Self::Solution,
-        weights: &mut Self::Weights,
         mv: &Self::Move,
+        weight: &[u32],
+        prices: &mut Self::Prices,
+        violated: &mut IndexSet,
     ) -> Result<(), OptError>;
 
-    /// Raises by one the weight of every constraint `sol` violates, up to
-    /// `cap`.
-    fn raise_violated(&self, sol: &Self::Solution, weights: &mut Self::Weights, cap: u32);
+    /// Reprices `prices` after the weight of constraint `c` changed by
+    /// `delta`, with `sol` unchanged.
+    fn reweight(&self, sol: &Self::Solution, prices: &mut Self::Prices, c: usize, delta: i64);
 
-    /// Lowers by one the weight, where it is above one, of every constraint
-    /// `sol` satisfies.
-    fn lower_satisfied(&self, sol: &Self::Solution, weights: &mut Self::Weights);
-
-    /// Fills `out` with the moves that lead out of a weighted local optimum.
-    ///
-    /// While `sol` violates a constraint these are the moves that satisfy one
-    /// violated constraint drawn uniformly. Once it violates none they are the
-    /// moves that work toward a better objective, whatever they then violate,
-    /// a vertex leaving a cover or leaving the smallest color class. `out` is
-    /// left empty when there is neither, which ends the search.
-    fn escape_moves(
+    /// Fills `out` with the moves that satisfy constraint `c`, which `sol`
+    /// violates.
+    fn repairs(
         &self,
         sol: &Self::Solution,
-        weights: &Self::Weights,
-        rng: &mut rand::rngs::SmallRng,
+        prices: &Self::Prices,
+        c: usize,
         out: &mut Vec<Self::Move>,
     );
+
+    /// Fills `out` with the moves that lead out of a weighted local optimum
+    /// that violates nothing, the moves that work toward a better objective
+    /// whatever they then violate. A vertex leaving a cover is one, and so is
+    /// a vertex leaving the smallest color class.
+    ///
+    /// None by default, which ends the search there. That is right for a
+    /// problem whose objective is the constraints alone, such as MaxSAT.
+    fn objective_escapes(&self, sol: &Self::Solution, out: &mut Vec<Self::Move>) {
+        let _ = (sol, out);
+    }
 }

@@ -1,44 +1,38 @@
-//! Edge weights, the [`WeightedConstraints`] side of [`VertexCover`].
+//! Edge prices, the [`WeightedConstraints`] side of [`VertexCover`].
 
 use super::{VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution};
 use crate::building_blocks::instance::EdgeIndex;
 use crate::building_blocks::search::IndexSet;
 use crate::error::OptError;
 use crate::trait_defs::{MoveToNeighbor, WeightedConstraints};
-use rand::Rng;
 
-/// One weight per edge of a [`VertexCover`], with what each vertex would
-/// leave uncovered under them.
+/// What a [`VertexCover`] keeps to price a flip under edge weights, which
+/// each vertex would leave uncovered.
 ///
-/// The constraints are the edges, and the weighted cost of a vertex set is its
-/// size plus the total weight of the edges it leaves uncovered. A loop from a
-/// vertex to itself is no constraint here, as it is none in the uncovered
-/// count of the solution.
+/// The constraints are the edges, numbered by [`EdgeIndex`], and the weighted
+/// cost of a vertex set is its size plus the total weight of the edges it
+/// leaves uncovered. A loop from a vertex to itself is no constraint here, as
+/// it is none in the uncovered count of the solution.
 #[derive(Debug, Clone)]
-pub struct VertexCoverWeights {
-    /// `weight[e]` is the weight of edge `e`.
-    weight: Vec<u32>,
+pub struct VertexCoverPrices {
     edges: EdgeIndex,
     /// `open[v]` is the total weight of the edges at `v` whose other end is
     /// out of the set, the weight `v` alone stands between and uncovered.
     open: Vec<i64>,
-    /// The edges with both ends out of the set.
-    uncovered: IndexSet,
 }
 
-impl VertexCoverWeights {
-    /// The weight of the edge between `i` and `j`, or `None` when they are
-    /// not adjacent.
-    pub fn weight(&self, i: usize, j: usize) -> Option<u32> {
-        self.edges.between(i, j).map(|e| self.weight[e])
+impl VertexCoverPrices {
+    /// The numbering of the edges, the constraints the weights are on.
+    pub fn edges(&self) -> &EdgeIndex {
+        &self.edges
     }
 }
 
 impl WeightedConstraints for VertexCover {
     type Move = VertexCoverFlipNeighbor;
-    type Weights = VertexCoverWeights;
+    type Prices = VertexCoverPrices;
 
-    fn unit_weights(&self, sol: &VertexCoverSolution) -> VertexCoverWeights {
+    fn unit_prices(&self, sol: &VertexCoverSolution) -> (VertexCoverPrices, IndexSet) {
         let n = self.graph.len();
         let edges = EdgeIndex::new(&self.graph);
 
@@ -56,16 +50,7 @@ impl WeightedConstraints for VertexCover {
                 uncovered.insert(e);
             }
         }
-        VertexCoverWeights {
-            weight: vec![1; edges.len()],
-            edges,
-            open,
-            uncovered,
-        }
-    }
-
-    fn constraint_count(&self) -> usize {
-        self.graph.num_edges()
+        (VertexCoverPrices { edges, open }, uncovered)
     }
 
     /// Leaving the set saves one vertex and uncovers `open`, entering it does
@@ -73,89 +58,80 @@ impl WeightedConstraints for VertexCover {
     fn weighted_gain(
         &self,
         sol: &VertexCoverSolution,
-        weights: &VertexCoverWeights,
+        prices: &VertexCoverPrices,
         mv: &VertexCoverFlipNeighbor,
     ) -> f64 {
-        let open = weights.open[mv.i];
+        let open = prices.open[mv.i];
         (if sol.x[mv.i] { 1 - open } else { open - 1 }) as f64
     }
 
     fn apply_weighted(
         &self,
         sol: &mut VertexCoverSolution,
-        weights: &mut VertexCoverWeights,
         mv: &VertexCoverFlipNeighbor,
+        weight: &[u32],
+        prices: &mut VertexCoverPrices,
+        uncovered: &mut IndexSet,
     ) -> Result<(), OptError> {
         mv.apply_to_solution(self, sol)?;
         let v = mv.i;
         let entered = sol.x[v];
-        for &(e, u) in weights.edges.at(v) {
-            let w = weights.weight[e] as i64;
+        for &(e, u) in prices.edges.at(v) {
+            let w = weight[e] as i64;
             if entered {
-                weights.open[u] -= w;
-                weights.uncovered.remove(e);
+                prices.open[u] -= w;
+                uncovered.remove(e);
             } else {
-                weights.open[u] += w;
+                prices.open[u] += w;
                 if !sol.x[u] {
-                    weights.uncovered.insert(e);
+                    uncovered.insert(e);
                 }
             }
         }
         Ok(())
     }
 
-    fn raise_violated(&self, _: &VertexCoverSolution, weights: &mut VertexCoverWeights, cap: u32) {
-        for &e in weights.uncovered.as_slice() {
-            if weights.weight[e] < cap {
-                weights.weight[e] += 1;
-                // Both ends are out, so each stands open to the other.
-                let (i, j) = weights.edges.ends(e);
-                weights.open[i] += 1;
-                weights.open[j] += 1;
-            }
-        }
-    }
-
-    fn lower_satisfied(&self, sol: &VertexCoverSolution, weights: &mut VertexCoverWeights) {
-        for e in 0..weights.weight.len() {
-            if weights.weight[e] > 1 && !weights.uncovered.contains(e) {
-                weights.weight[e] -= 1;
-                let (i, j) = weights.edges.ends(e);
-                if !sol.x[j] {
-                    weights.open[i] -= 1;
-                }
-                if !sol.x[i] {
-                    weights.open[j] -= 1;
-                }
-            }
-        }
-    }
-
-    /// The two ends of one uncovered edge, either of which covers it by
-    /// entering. Once every edge is covered, the vertices of the cover, any of
-    /// which shrinks it by leaving.
-    fn escape_moves(
+    /// Each end that is out of the set stands open to the other by the
+    /// weight of the edge.
+    #[inline]
+    fn reweight(
         &self,
         sol: &VertexCoverSolution,
-        weights: &VertexCoverWeights,
-        rng: &mut rand::rngs::SmallRng,
+        prices: &mut VertexCoverPrices,
+        e: usize,
+        delta: i64,
+    ) {
+        let (i, j) = prices.edges.ends(e);
+        if !sol.x[j] {
+            prices.open[i] += delta;
+        }
+        if !sol.x[i] {
+            prices.open[j] += delta;
+        }
+    }
+
+    /// The two ends of an uncovered edge, either of which covers it by
+    /// entering.
+    fn repairs(
+        &self,
+        sol: &VertexCoverSolution,
+        prices: &VertexCoverPrices,
+        e: usize,
         out: &mut Vec<VertexCoverFlipNeighbor>,
     ) {
-        let uncovered = weights.uncovered.as_slice();
-        if uncovered.is_empty() {
-            out.extend(
-                self.graph
-                    .iter_on_vertices()
-                    .filter(|&&v| sol.x[v])
-                    .map(|&v| VertexCoverFlipNeighbor::new(self, sol, v)),
-            );
-            return;
-        }
-        let (i, j) = weights
-            .edges
-            .ends(uncovered[rng.random_range(0..uncovered.len())]);
+        let (i, j) = prices.edges.ends(e);
         out.push(VertexCoverFlipNeighbor::new(self, sol, i));
         out.push(VertexCoverFlipNeighbor::new(self, sol, j));
+    }
+
+    /// The vertices of the cover, any of which shrinks it by leaving.
+    fn objective_escapes(&self, sol: &VertexCoverSolution, out: &mut Vec<VertexCoverFlipNeighbor>) {
+        out.extend(
+            self.graph
+                .iter_on_vertices()
+                .filter(|&&v| sol.x[v])
+                .map(|&v| VertexCoverFlipNeighbor::new(self, sol, v)),
+        );
     }
 }
 
@@ -163,7 +139,9 @@ impl WeightedConstraints for VertexCover {
 mod tests {
     use super::*;
     use crate::building_blocks::instance::Graph;
+    use crate::heuristic::ConstraintWeights;
     use crate::trait_defs::ProblemTrait;
+    use rand::Rng;
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
 
@@ -182,35 +160,39 @@ mod tests {
         ]))
     }
 
+    type Weights = ConstraintWeights<VertexCover>;
+
     /// The weighted cost, from scratch.
-    fn cost(x: &[bool], w: &VertexCoverWeights) -> i64 {
+    fn cost(x: &[bool], w: &Weights) -> i64 {
+        let edges = w.prices().edges();
         let size = x.iter().filter(|&&b| b).count() as i64;
-        let open: i64 = (0..w.edges.len())
-            .filter(|&e| !x[w.edges.ends(e).0] && !x[w.edges.ends(e).1])
-            .map(|e| w.weight[e] as i64)
+        let open: i64 = (0..edges.len())
+            .filter(|&e| !x[edges.ends(e).0] && !x[edges.ends(e).1])
+            .map(|e| w.weight(e) as i64)
             .sum();
         size + open
     }
 
-    fn assert_priced(vc: &VertexCover, sol: &VertexCoverSolution, w: &VertexCoverWeights) {
+    fn assert_priced(vc: &VertexCover, sol: &VertexCoverSolution, w: &Weights) {
+        let edges = w.prices().edges();
         let now = cost(&sol.x, w);
         for v in 0..vc.graph.len() {
             let mut x = sol.x.clone();
             x[v] = !x[v];
             let mv = VertexCoverFlipNeighbor::new(vc, sol, v);
             assert_eq!(
-                vc.weighted_gain(sol, w, &mv),
+                vc.weighted_gain(sol, w.prices(), &mv),
                 (now - cost(&x, w)) as f64,
                 "gain of {v}"
             );
         }
-        let mut got = w.uncovered.as_slice().to_vec();
+        let mut got = w.violated().as_slice().to_vec();
         got.sort_unstable();
-        let expected: Vec<usize> = (0..w.edges.len())
-            .filter(|&e| !sol.x[w.edges.ends(e).0] && !sol.x[w.edges.ends(e).1])
+        let expected: Vec<usize> = (0..edges.len())
+            .filter(|&e| !sol.x[edges.ends(e).0] && !sol.x[edges.ends(e).1])
             .collect();
         assert_eq!(got, expected);
-        assert_eq!(w.uncovered.len(), sol.uncovered_edges);
+        assert_eq!(w.violated().len(), sol.uncovered_edges);
     }
 
     #[test]
@@ -218,28 +200,27 @@ mod tests {
         let vc = wheel();
         let mut rng = SmallRng::seed_from_u64(2);
         let mut sol = vc.new_solution(&mut rng);
-        let mut w = vc.unit_weights(&sol);
-        assert_eq!(w.edges.len(), vc.constraint_count());
+        let mut w = Weights::new(&vc, &sol, 5);
+        assert_eq!(w.len(), vc.graph.num_edges());
+        assert_eq!(w.cap(), 10, "the cap is the edge count when that is larger");
         assert_priced(&vc, &sol, &w);
         let mut raised = false;
         for step in 0..300 {
             match step % 5 {
                 1 => {
-                    vc.raise_violated(&sol, &mut w, 5);
-                    raised |= w.weight.iter().any(|&x| x > 1);
+                    w.raise_violated(&vc, &sol);
+                    raised |= (0..w.len()).any(|e| w.weight(e) > 1);
                 }
-                4 => vc.lower_satisfied(&sol, &mut w),
+                4 => w.lower_satisfied(&vc, &sol),
                 _ => {
                     let mv = VertexCoverFlipNeighbor::new(&vc, &sol, rng.random_range(0..6));
-                    vc.apply_weighted(&mut sol, &mut w, &mv).unwrap();
+                    w.apply(&vc, &mut sol, &mv).unwrap();
                 }
             }
             assert_priced(&vc, &sol, &w);
-            assert!(w.weight.iter().all(|&x| (1..=5).contains(&x)));
+            assert!((0..w.len()).all(|e| (1..=w.cap()).contains(&w.weight(e))));
         }
         assert!(raised, "some weight was raised");
-        assert_eq!(w.weight(0, 5), w.weight(5, 0));
-        assert_eq!(w.weight(0, 2), None);
     }
 
     #[test]
@@ -249,8 +230,8 @@ mod tests {
         let mut out = Vec::new();
 
         let open = vc.solution_from_assignment(&[false; 6]).unwrap();
-        let w = vc.unit_weights(&open);
-        vc.escape_moves(&open, &w, &mut rng, &mut out);
+        let w = Weights::new(&vc, &open, 5);
+        w.escape_moves(&vc, &open, &mut rng, &mut out);
         assert_eq!(out.len(), 2);
         assert!(vc.graph.has_edge(out[0].i, out[1].i));
 
@@ -258,9 +239,9 @@ mod tests {
         let cover = vc
             .solution_from_assignment(&[true, false, true, true, false, true])
             .unwrap();
-        let w = vc.unit_weights(&cover);
-        assert_eq!(w.uncovered.len(), 0);
-        vc.escape_moves(&cover, &w, &mut rng, &mut out);
+        let w = Weights::new(&vc, &cover, 5);
+        assert!(w.violated().is_empty());
+        w.escape_moves(&vc, &cover, &mut rng, &mut out);
         let mut leaving: Vec<usize> = out.iter().map(|mv| mv.i).collect();
         leaving.sort_unstable();
         assert_eq!(leaving, vec![0, 2, 3, 5]);

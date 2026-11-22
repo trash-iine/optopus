@@ -75,8 +75,8 @@ src/
 │   ├── tabu.rs               EnabledTabu, object safe on purpose, and the test that pins
 │   │                         every built-in move's policy
 │   ├── branch.rs             what BranchAndBound asks, and its integer and relaxation sides
-│   ├── weighted.rs           what WeightedLocalSearch asks, the constraint weights and the
-│   │                         prices a problem keeps under them
+│   ├── weighted.rs           what WeightedLocalSearch asks, the prices a problem keeps
+│   │                         under the constraint weights the search owns
 │   └── problem.rs / neighbor.rs / crossover.rs / binary.rs / int_assignment.rs /
 │       ruinable.rs / reduction.rs
 ├── building_blocks/          what problems and heuristics are built from, in three groups.
@@ -121,8 +121,8 @@ src/
     ├── max_cut/ qubo/ sat/ vertex_cover/
     │                         fix.rs, fixing variables and the branch space
     ├── sat/ vertex_cover/ graph_coloring/
-    │                         weights.rs, the WeightedConstraints side, one weight per clause
-    │                         or per edge
+    │                         weights.rs, the WeightedConstraints side, the prices of a move
+    │                         under clause or edge weights
     ├── integer/              IntegerProblem, built from a closure, and formula.rs, the
     │                         expression model, with IntervalRelaxation in it too
     ├── vrp/                  one problem for one vehicle type or several (decisions/0014).

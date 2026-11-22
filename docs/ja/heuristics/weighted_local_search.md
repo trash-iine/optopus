@@ -44,21 +44,20 @@ println!("cover size = {}", state.best_solution.cover_size);
 WeightedLocalSearch::<P>::new(stop_condition: StopCondition) -> Self
 ```
 
-`with_tabu_tenure((min, max))` はタブー期間の範囲を設定します。設定しなければ `(3, 12)` で、空の範囲では panic します。`with_smoothing(p)` は smoothing の確率を設定します。設定しなければ `0.0003` で、`[0, 1]` の外では panic します。`weights()` は、実行中の、または最後の実行の重みを返します。
+`with_tabu_tenure((min, max))` はタブー期間の範囲を設定します。設定しなければ `(3, 12)` で、空の範囲では panic します。`with_smoothing(p)` は smoothing の確率を設定します。設定しなければ `0.0003` で、`[0, 1]` の外では panic します。`weights()` は、実行中の、または最後の実行の `ConstraintWeights` を返します。そこから、制約ごとの重み、破れている制約、問題のキャッシュを読めます。
 
 ## 問題に追加する { #adding-it-to-a-problem }
 
-問題は `WeightedConstraints` を実装して参加します。探索が使う move と、`Weights` 型を指定します。`Weights` は制約ごとの重みと、その重みのもとで move に値を付けるために問題が持つキャッシュを保持します。
+問題は `WeightedConstraints` を実装して参加します。探索が使う move と、`Prices` 型を指定します。`Prices` は、重みのもとで move に値を付けるために問題が持つキャッシュです。重みそのもの、破れている制約の集合、重みを上げ下げする規則は探索の側が持ち、重みが変わったときに問題を呼び戻します。
 
 | メソッド | すること |
 |---|---|
-| `unit_weights` | すべて 1 の重みを、ある解に対して値付けした状態で作る。 |
-| `constraint_count` | 制約の数を返す。重みの上限がこれで決まる。 |
+| `unit_prices` | すべての重みが 1 のときのキャッシュと、ある解が破っている制約の集合を作る。集合の大きさが制約の数になる。 |
 | `weighted_gain` | move に値を付ける。重み付きコストを下げるとき正。 |
-| `apply_weighted` | move を解に適用し、その結果に合わせて重みの値付けを更新する。 |
-| `raise_violated` | 破れている制約すべての重みに、上限まで 1 を足す。 |
-| `lower_satisfied` | 満たされていて重みが 1 より大きい制約すべてから 1 を引く。 |
-| `escape_moves` | 重み付き局所最適から出る move を詰める。 |
+| `apply_weighted` | move を解に適用し、その結果に合わせてキャッシュと破れている制約の集合を更新する。 |
+| `reweight` | 制約一つの重みが変わった後に、キャッシュを直す。 |
+| `repairs` | 破れている制約一つを満たす move を詰める。 |
+| `objective_escapes` | 何も破れていないときに、目的関数を良くする方向へ進む move を詰める。省略でき、既定では何も詰めない。そのときは MaxSAT と同じく探索がそこで終わる。 |
 
 探索はステップごとにすべての move を走査するので、`weighted_gain` はキャッシュした値を読むようにします。`Sat` は変数ごとに重み付きの flip gain を持ち、`VertexCover` は頂点ごとに、もう一方の端が集合の外にある辺の重みを持ちます。その頂点が集合の中にあればそれだけが覆っている辺、外にあれば入ることで覆う未被覆の辺です。`GraphColoring` は頂点と色の組ごとに、その色の隣接頂点への辺の重みを持ちます。いずれも、move を適用するのと同じ走査でキャッシュを更新します。
 

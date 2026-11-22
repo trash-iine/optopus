@@ -1,4 +1,5 @@
 use super::{Heuristic, StopCondition};
+use crate::building_blocks::search::IndexSet;
 use crate::error::OptError;
 use crate::search_state::SearchState;
 use crate::trait_defs::{MoveToNeighbor, WeightedConstraints};
@@ -17,10 +18,11 @@ use rand::{Rng, SeedableRng};
 /// optimum and changes the weights instead. With probability `1 - smoothing`
 /// every violated constraint gains one, up to the larger of `1000` and the
 /// number of constraints. Otherwise every satisfied constraint above one
-/// loses one. It then leaves by the best of the problem's
-/// [`escape_moves`](WeightedConstraints::escape_moves), the moves that satisfy
-/// one violated constraint drawn uniformly or, once nothing is violated, the
-/// moves that work toward a better objective. An escape the tabu memory forbids is
+/// loses one. It then leaves by the best escape. While something is violated
+/// the escapes are the problem's [`repairs`](WeightedConstraints::repairs) of
+/// one violated constraint drawn uniformly, and once nothing is they are its
+/// [`objective_escapes`](WeightedConstraints::objective_escapes), the moves
+/// that work toward a better objective. An escape the tabu memory forbids is
 /// taken only when it forbids them all.
 ///
 /// A move that was applied may not be undone for a number of steps drawn from
@@ -61,9 +63,7 @@ pub struct WeightedLocalSearch<P: WeightedConstraints> {
     stop_condition: StopCondition,
     tabu_tenure: (u64, u64),
     smoothing: f64,
-    weights: Option<P::Weights>,
-    /// The weight no constraint is raised past, set with the weights.
-    cap: u32,
+    weights: Option<ConstraintWeights<P>>,
     /// The stream ties in the scan are broken from, forked off the state's on
     /// the first step of a run so the scan can read the state while drawing.
     ties: Option<SmallRng>,
@@ -90,7 +90,6 @@ impl<P: WeightedConstraints> WeightedLocalSearch<P> {
             weights: None,
             ties: None,
             escapes: Vec::new(),
-            cap: Self::MIN_WEIGHT_CAP,
             no_escape: false,
         }
     }
@@ -122,7 +121,7 @@ impl<P: WeightedConstraints> WeightedLocalSearch<P> {
     }
 
     /// The weights of the run in progress, or of the last one.
-    pub fn weights(&self) -> Option<&P::Weights> {
+    pub fn weights(&self) -> Option<&ConstraintWeights<P>> {
         self.weights.as_ref()
     }
 }
@@ -131,14 +130,12 @@ impl<P: WeightedConstraints> WeightedLocalSearch<P> {
 /// solution, and counts it as [`SearchState::apply`] would.
 fn apply<P: WeightedConstraints>(
     state: &mut SearchState<'_, P>,
-    weights: &mut P::Weights,
+    weights: &mut ConstraintWeights<P>,
     mv: &P::Move,
 ) -> Result<(), OptError> {
     state.record_tabu(mv);
     state.iteration = mv.apply_to_iteration(state.iteration);
-    state
-        .instance
-        .apply_weighted(&mut state.solution, weights, mv)?;
+    weights.apply(state.instance, &mut state.solution, mv)?;
     state.n_accepted += 1;
     state.update_best();
     Ok(())
@@ -162,9 +159,11 @@ impl<P: WeightedConstraints> Heuristic<P> for WeightedLocalSearch<P> {
     fn run_once<'a>(&mut self, state: &mut SearchState<'a, P>) -> Result<(), OptError> {
         let instance = state.instance;
         if self.weights.is_none() {
-            self.weights = Some(instance.unit_weights(&state.solution));
-            self.cap = Self::MIN_WEIGHT_CAP
-                .max(u32::try_from(instance.constraint_count()).unwrap_or(u32::MAX));
+            self.weights = Some(ConstraintWeights::new(
+                instance,
+                &state.solution,
+                Self::MIN_WEIGHT_CAP,
+            ));
         }
         let weights = self.weights.as_mut().expect("the weights are built above");
         // The tenure is set without the mode, since the moves are applied
@@ -182,7 +181,7 @@ impl<P: WeightedConstraints> Heuristic<P> for WeightedLocalSearch<P> {
         let mut best_gain = 0.0;
         let mut ties = 0u32;
         P::Move::iter(instance, &state.solution).for_each(|mv| {
-            let gain = instance.weighted_gain(&state.solution, weights, &mv);
+            let gain = instance.weighted_gain(&state.solution, &weights.prices, &mv);
             if gain <= 0.0 || gain < best_gain || !state.tabu_allows(&mv) {
                 return;
             }
@@ -200,20 +199,20 @@ impl<P: WeightedConstraints> Heuristic<P> for WeightedLocalSearch<P> {
         }
 
         if state.rng.random::<f64>() < self.smoothing {
-            instance.lower_satisfied(&state.solution, weights);
+            weights.lower_satisfied(instance, &state.solution);
         } else {
-            instance.raise_violated(&state.solution, weights, self.cap);
+            weights.raise_violated(instance, &state.solution);
         }
 
         self.escapes.clear();
-        instance.escape_moves(&state.solution, weights, &mut state.rng, &mut self.escapes);
+        weights.escape_moves(instance, &state.solution, &mut state.rng, &mut self.escapes);
         // (allowed, gain) orders an allowed escape above any forbidden one.
         let mut chosen: Option<(usize, (bool, f64))> = None;
         let mut ties = 0u32;
         for (at, mv) in self.escapes.iter().enumerate() {
             let key = (
                 state.tabu_allows(mv),
-                instance.weighted_gain(&state.solution, weights, mv),
+                instance.weighted_gain(&state.solution, &weights.prices, mv),
             );
             match chosen {
                 Some((_, held)) if key < held => continue,
@@ -232,6 +231,125 @@ impl<P: WeightedConstraints> Heuristic<P> for WeightedLocalSearch<P> {
                 state.progress_iteration();
                 Ok(())
             }
+        }
+    }
+}
+
+/// The weights of a [`WeightedLocalSearch`] run, the set of the constraints
+/// the solution violates, and the prices the problem keeps under them.
+///
+/// The search changes a weight only through
+/// [`raise_violated`](Self::raise_violated) and
+/// [`lower_satisfied`](Self::lower_satisfied), and each change reprices
+/// through [`WeightedConstraints::reweight`] in the same call. The problem
+/// reads the weights and never writes them.
+pub struct ConstraintWeights<P: WeightedConstraints> {
+    /// `weight[c]` is the weight of constraint `c`.
+    weight: Vec<u32>,
+    violated: IndexSet,
+    prices: P::Prices,
+    /// The weight no constraint is raised past.
+    cap: u32,
+}
+
+impl<P: WeightedConstraints> ConstraintWeights<P> {
+    /// Every constraint at weight one, priced for `sol`, with a cap of the
+    /// larger of `min_cap` and the number of constraints.
+    pub fn new(problem: &P, sol: &P::Solution, min_cap: u32) -> Self {
+        let (prices, violated) = problem.unit_prices(sol);
+        let n = violated.bound();
+        Self {
+            weight: vec![1; n],
+            violated,
+            prices,
+            cap: min_cap.max(u32::try_from(n).unwrap_or(u32::MAX)),
+        }
+    }
+
+    /// The weight of constraint `c`.
+    pub fn weight(&self, c: usize) -> u32 {
+        self.weight[c]
+    }
+
+    /// The weight no constraint is raised past.
+    pub fn cap(&self) -> u32 {
+        self.cap
+    }
+
+    /// How many constraints there are.
+    pub fn len(&self) -> usize {
+        self.weight.len()
+    }
+
+    /// Whether there is no constraint.
+    pub fn is_empty(&self) -> bool {
+        self.weight.is_empty()
+    }
+
+    /// The constraints the solution violates.
+    pub fn violated(&self) -> &IndexSet {
+        &self.violated
+    }
+
+    /// What the problem caches to price a move under the weights.
+    pub fn prices(&self) -> &P::Prices {
+        &self.prices
+    }
+
+    /// Applies `mv` to `sol` through the problem, so the prices follow.
+    pub fn apply(
+        &mut self,
+        problem: &P,
+        sol: &mut P::Solution,
+        mv: &P::Move,
+    ) -> Result<(), OptError> {
+        problem.apply_weighted(sol, mv, &self.weight, &mut self.prices, &mut self.violated)
+    }
+
+    /// Raises by one the weight of every constraint `sol` violates, up to the
+    /// cap.
+    // This and the two below run once per local optimum and stay out of
+    // line, since inlined into the search step they cost the move scan
+    // there a register and it reloads a loop invariant on every candidate.
+    #[inline(never)]
+    pub fn raise_violated(&mut self, problem: &P, sol: &P::Solution) {
+        for &c in self.violated.as_slice() {
+            if self.weight[c] < self.cap {
+                self.weight[c] += 1;
+                problem.reweight(sol, &mut self.prices, c, 1);
+            }
+        }
+    }
+
+    /// Lowers by one the weight, where it is above one, of every constraint
+    /// `sol` satisfies.
+    #[inline(never)]
+    pub fn lower_satisfied(&mut self, problem: &P, sol: &P::Solution) {
+        for c in 0..self.weight.len() {
+            if self.weight[c] > 1 && !self.violated.contains(c) {
+                self.weight[c] -= 1;
+                problem.reweight(sol, &mut self.prices, c, -1);
+            }
+        }
+    }
+
+    /// Fills `out` with the moves that lead out of a weighted local optimum,
+    /// the repairs of one violated constraint drawn uniformly or, once
+    /// nothing is violated, the problem's objective escapes.
+    #[inline(never)]
+    pub fn escape_moves(
+        &self,
+        problem: &P,
+        sol: &P::Solution,
+        rng: &mut SmallRng,
+        out: &mut Vec<P::Move>,
+    ) {
+        let violated = self.violated.as_slice();
+        if violated.is_empty() {
+            problem.objective_escapes(sol, out);
+        } else {
+            let c = violated[rng.random_range(0..violated.len())];
+            problem.repairs(sol, &self.prices, c, out);
         }
     }
 }
