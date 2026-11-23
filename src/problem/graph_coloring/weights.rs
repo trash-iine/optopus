@@ -74,10 +74,10 @@ impl WeightedConstraints for GraphColoring {
     ) -> Result<(), OptError> {
         let v = mv.var;
         let (old, new) = (sol.colors[v], mv.value as usize);
-        mv.apply_to_solution(self, sol)?;
         if old == new {
             return Ok(());
         }
+        mv.apply_to_solution(self, sol)?;
         let k = self.k();
         for &(e, u) in prices.edges.at(v) {
             let w = weight[e] as i64;
