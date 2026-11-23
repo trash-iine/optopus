@@ -309,8 +309,12 @@ impl<P: WeightedConstraints> ConstraintWeights<P> {
     /// Raises by one the weight of every constraint `sol` violates, up to the
     /// cap.
     // This and the two below run once per local optimum and stay out of
-    // line, since inlined into the search step they cost the move scan
-    // there a register and it reloads a loop invariant on every candidate.
+    // line. Inlined into the search step, two things slow the step down.
+    // The move scan reads what the problem keeps for pricing again on every
+    // candidate, behind the call that breaks ties, where a smaller step
+    // keeps it in a register. And the pushes of `escape_moves` write and
+    // read back the length of the vector per move, which they do not when
+    // `out` is an argument nothing else can point to.
     #[inline(never)]
     pub fn raise_violated(&mut self, problem: &P, sol: &P::Solution) {
         for &c in self.violated.as_slice() {

@@ -34,9 +34,9 @@ at every sub-run and ranks a solution that has to ignore part of itself. Do not
 rebuild it as `Iterated` over `LocalSearch` and a weight step, since a weighted
 descent lasts a few moves and `Iterated` clones the state per phase. Do not
 narrow the scan to the moves of violated constraints without measuring vertex
-cover, where leaving a cover is a move of no violated constraint. Do not let
-the local optimum steps of `ConstraintWeights` inline into the search step,
-where the scan then reloads a loop invariant per candidate (appendix).
+cover, where leaving a cover is a move of no violated constraint. Do not inline
+the local optimum steps of `ConstraintWeights` into the step, nor swap that for
+iterator escapes or a tie break without a call (appendix).
 
 ## Appendix
 
@@ -94,8 +94,40 @@ against 30.3. On sliding_puzzle57 an earlier build that broke ties from another
 random stream averaged 163447.6 with a spread of 10.4, where this one gives
 163438.8 with 0.4, so five runs do not settle that formula.
 
-The local optimum steps of `ConstraintWeights` are kept out of line. Inlined
-into the step, the scan reloaded a loop invariant on every candidate, 6.4% more
-instructions on vertex cover G22 at 400000 iterations and 4.6% on graph
-coloring G1 at 15000, with the same trajectory. Out of line they match the
-earlier trait on vertex cover and are 4.6% fewer on coloring.
+The local optimum steps of `ConstraintWeights` are kept out of line, for two
+causes read in the disassembly of the step. Both keep the trajectory.
+
+- The tie break in the move scan calls `random_range` out of line, so the
+  scan cannot move reads of the problem and the solution out of the loop.
+  With the steps inlined the step grows, and the scan rereads per candidate
+  what the smaller step keeps in a register, `penalty_weight()` on vertex
+  cover and `k`, `colors[var]` and `var * k` on coloring. A build without
+  that call does not reread them. Raising `-memdep-block-scan-limit` and
+  `-memssa-check-limit` does not change it.
+- Inlined, the loop that pushes the escapes into the heuristic's vector
+  stores and reloads the length of the vector per move, since the element
+  written might be the length. As an argument of a function of its own,
+  `out` is known to alias nothing.
+
+Cost of inlining all three, 6.4% more instructions on vertex cover G22 at
+400000 iterations and 4.6% on graph coloring G1 at 15000. The vector pushes
+cost cycles more than instructions. The earlier trait pushed its escapes
+inline, which is why vertex cover now runs 20 to 40% faster in wall time at
+the same instruction count.
+
+Fixed iterations, instructions and cycles, in G (1e9).
+
+| Build | VC G22 | VC G70 | GC G1 | Trajectory |
+|---|---|---|---|---|
+| earlier trait | | 9.1 cycles | | |
+| out of line (adopted) | 37.89 / 5.29 | 36.49 / 5.31 | 32.81 / 3.51 | same |
+| `escape_moves` alone out of line | | 5.8 cycles | | same |
+| escapes as an iterator, no `inline(never)` | 44.05 / 6.32 | 41.78 / 5.94 | 36.06 / 3.84 | same |
+| the same, with vertex cover reading `penalty_weight()` once per scan | 40.87 / 5.50 | 38.37 / 5.10 | 36.06 / 3.84 | same |
+| tie break by a multiply of `next_u32`, steps inlined | 7.02 cycles | 9.51 cycles | 34.32 / 3.66 | changes |
+
+The iterator removes the vector but walks `Chain` and `Flatten` from outside.
+Reading `penalty_weight()` once removes the reread on vertex cover only, and
+doing it on coloring means changing the generic `IntChangeNeighbor` scan. The
+tie break without a call leaves the vector pushes in place and changes the
+random stream.
