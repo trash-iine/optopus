@@ -804,19 +804,15 @@ where
     else {
         unreachable!("weighted_local_search is only called on its own config")
     };
-    let mut search = WeightedLocalSearch::<P>::new(cond);
-    if let Some(tenure) = *tabu_tenure {
-        check_tenure(tenure)?;
-        search = search.with_tabu_tenure(tenure);
+    let tenure = tabu_tenure.unwrap_or((3, 12));
+    check_tenure(tenure)?;
+    let smoothing = smoothing.unwrap_or(0.0003);
+    if !(0.0..=1.0).contains(&smoothing) {
+        return Err(OptError::Config(format!(
+            "'smoothing' must be in [0, 1], got {smoothing}"
+        )));
     }
-    if let Some(smoothing) = *smoothing {
-        if !(0.0..=1.0).contains(&smoothing) {
-            return Err(OptError::Config(format!(
-                "'smoothing' must be in [0, 1], got {smoothing}"
-            )));
-        }
-        search = search.with_smoothing(smoothing);
-    }
+    let search = WeightedLocalSearch::<P>::new(cond, tenure, smoothing);
     Ok(Box::new(search))
 }
 

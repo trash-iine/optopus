@@ -2,30 +2,25 @@
 
 use super::{VertexCover, VertexCoverFlipNeighbor, VertexCoverSolution};
 use crate::building_blocks::instance::EdgeIndex;
+use crate::building_blocks::representation::uniform_binary_crossover;
 use crate::building_blocks::search::IndexSet;
 use crate::error::OptError;
-use crate::trait_defs::{MoveToNeighbor, WeightedConstraints};
+use crate::trait_defs::{MoveToNeighbor, ProblemTrait, WeightedConstraints};
+use rand::rngs::SmallRng;
 
 /// What a [`VertexCover`] keeps to price a flip under edge weights, which
 /// each vertex would leave uncovered.
 ///
-/// The constraints are the edges, numbered by [`EdgeIndex`], and the weighted
-/// cost of a vertex set is its size plus the total weight of the edges it
-/// leaves uncovered. A loop from a vertex to itself is no constraint here, as
+/// The constraints are the edges, numbered by [`EdgeIndex`], and the
+/// objective is the size of the set. A loop from a vertex to itself is no constraint here, as
 /// it is none in the uncovered count of the solution.
 #[derive(Debug, Clone)]
 pub struct VertexCoverPrices {
     edges: EdgeIndex,
     /// `open[v]` is the total weight of the edges at `v` whose other end is
-    /// out of the set, the weight `v` alone stands between and uncovered.
+    /// out of the set. When `v` is in the set these are the edges only `v`
+    /// covers, and when it is out they are the uncovered edges it would cover.
     open: Vec<i64>,
-}
-
-impl VertexCoverPrices {
-    /// The numbering of the edges, the constraints the weights are on.
-    pub fn edges(&self) -> &EdgeIndex {
-        &self.edges
-    }
 }
 
 impl WeightedConstraints for VertexCover {
@@ -37,7 +32,7 @@ impl WeightedConstraints for VertexCover {
         let edges = EdgeIndex::new(&self.graph);
 
         let mut uncovered = IndexSet::new(edges.len());
-        let mut open = vec![0i64; n];
+        let mut open = vec![0; n];
         for e in 0..edges.len() {
             let (i, j) = edges.ends(e);
             if !sol.x[i] {
@@ -53,16 +48,15 @@ impl WeightedConstraints for VertexCover {
         (VertexCoverPrices { edges, open }, uncovered)
     }
 
-    /// Leaving the set saves one vertex and uncovers `open`, entering it does
-    /// the reverse.
-    fn weighted_gain(
+    /// Leaving the set uncovers `open`, entering it covers `open`.
+    fn weight_gain(
         &self,
         sol: &VertexCoverSolution,
         prices: &VertexCoverPrices,
         mv: &VertexCoverFlipNeighbor,
-    ) -> f64 {
+    ) -> i64 {
         let open = prices.open[mv.i];
-        (if sol.x[mv.i] { 1 - open } else { open - 1 }) as f64
+        if sol.x[mv.i] { -open } else { open }
     }
 
     fn apply_weighted(
@@ -76,7 +70,7 @@ impl WeightedConstraints for VertexCover {
         mv.apply_to_solution(self, sol)?;
         let v = mv.i;
         let entered = sol.x[v];
-        for &(e, u) in prices.edges.at(v) {
+        for &(e, u) in prices.edges.incident(v) {
             let w = weight[e] as i64;
             if entered {
                 prices.open[u] -= w;
@@ -111,8 +105,10 @@ impl WeightedConstraints for VertexCover {
     }
 
     /// The two ends of an uncovered edge, either of which covers it by
-    /// entering.
-    fn repairs(
+    /// entering, and the two ends of an edge both ends of which are in the
+    /// set, either of which can leave it covered. An edge with one end in has
+    /// none.
+    fn tight_moves(
         &self,
         sol: &VertexCoverSolution,
         prices: &VertexCoverPrices,
@@ -120,11 +116,13 @@ impl WeightedConstraints for VertexCover {
         out: &mut Vec<VertexCoverFlipNeighbor>,
     ) {
         let (i, j) = prices.edges.ends(e);
-        out.push(VertexCoverFlipNeighbor::new(self, sol, i));
-        out.push(VertexCoverFlipNeighbor::new(self, sol, j));
+        if sol.x[i] == sol.x[j] {
+            out.push(VertexCoverFlipNeighbor::new(self, sol, i));
+            out.push(VertexCoverFlipNeighbor::new(self, sol, j));
+        }
     }
 
-    /// The vertices of the cover, any of which shrinks it by leaving.
+    /// The vertices of the set, any of which shrinks it by leaving.
     fn objective_escapes(&self, sol: &VertexCoverSolution, out: &mut Vec<VertexCoverFlipNeighbor>) {
         out.extend(
             self.graph
@@ -133,14 +131,27 @@ impl WeightedConstraints for VertexCover {
                 .map(|&v| VertexCoverFlipNeighbor::new(self, sol, v)),
         );
     }
+
+    fn objective(&self, sol: &VertexCoverSolution) -> f64 {
+        sol.cover_size as f64
+    }
+
+    fn objective_change(&self, sol: &VertexCoverSolution, mv: &VertexCoverFlipNeighbor) -> f64 {
+        if sol.x[mv.i] { -1.0 } else { 1.0 }
+    }
+
+    /// Each vertex in or out as in `best` or as in a fresh set, with even odds.
+    fn restart_from(&self, best: &VertexCoverSolution, rng: &mut SmallRng) -> VertexCoverSolution {
+        let fresh = self.new_solution(rng);
+        uniform_binary_crossover(self, best, &fresh, rng).expect("a uniform crossover cannot fail")
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::building_blocks::instance::Graph;
-    use crate::heuristic::ConstraintWeights;
-    use crate::trait_defs::ProblemTrait;
+    use crate::building_blocks::search::ConstraintWeights;
     use rand::Rng;
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
@@ -162,29 +173,29 @@ mod tests {
 
     type Weights = ConstraintWeights<VertexCover>;
 
-    /// The weighted cost, from scratch.
-    fn cost(x: &[bool], w: &Weights) -> i64 {
-        let edges = w.prices().edges();
-        let size = x.iter().filter(|&&b| b).count() as i64;
-        let open: i64 = (0..edges.len())
+    /// The weight of the uncovered edges, from scratch.
+    fn open_weight(x: &[bool], w: &Weights) -> i64 {
+        let edges = &w.prices().edges;
+        (0..edges.len())
             .filter(|&e| !x[edges.ends(e).0] && !x[edges.ends(e).1])
             .map(|e| w.weight(e) as i64)
-            .sum();
-        size + open
+            .sum()
     }
 
     fn assert_priced(vc: &VertexCover, sol: &VertexCoverSolution, w: &Weights) {
-        let edges = w.prices().edges();
-        let now = cost(&sol.x, w);
+        let edges = &w.prices().edges;
+        let now = open_weight(&sol.x, w);
         for v in 0..vc.graph.len() {
             let mut x = sol.x.clone();
             x[v] = !x[v];
             let mv = VertexCoverFlipNeighbor::new(vc, sol, v);
             assert_eq!(
-                vc.weighted_gain(sol, w.prices(), &mv),
-                (now - cost(&x, w)) as f64,
+                vc.weight_gain(sol, w.prices(), &mv),
+                now - open_weight(&x, w),
                 "gain of {v}"
             );
+            let size = |x: &[bool]| x.iter().filter(|&&b| b).count() as f64;
+            assert_eq!(vc.objective_change(sol, &mv), size(&x) - size(&sol.x));
         }
         let mut got = w.violated().as_slice().to_vec();
         got.sort_unstable();
@@ -224,26 +235,27 @@ mod tests {
     }
 
     #[test]
-    fn escape_covers_an_edge_or_shrinks_a_cover() {
+    fn tight_moves_cover_an_edge_or_leave_it_covered() {
         let vc = wheel();
-        let mut rng = SmallRng::seed_from_u64(9);
-        let mut out = Vec::new();
-
-        let open = vc.solution_from_assignment(&[false; 6]).unwrap();
-        let w = Weights::new(&vc, &open, 5);
-        w.escape_moves(&vc, &open, &mut rng, &mut out);
-        assert_eq!(out.len(), 2);
-        assert!(vc.graph.has_edge(out[0].i, out[1].i));
-
-        out.clear();
-        let cover = vc
-            .solution_from_assignment(&[true, false, true, true, false, true])
+        let sol = vc
+            .solution_from_assignment(&[true, false, false, true, false, true])
             .unwrap();
-        let w = Weights::new(&vc, &cover, 5);
-        assert!(w.violated().is_empty());
-        w.escape_moves(&vc, &cover, &mut rng, &mut out);
-        let mut leaving: Vec<usize> = out.iter().map(|mv| mv.i).collect();
-        leaving.sort_unstable();
-        assert_eq!(leaving, vec![0, 2, 3, 5]);
+        let w = Weights::new(&vc, &sol, 5);
+        let edges = &w.prices().edges;
+        for e in 0..edges.len() {
+            let (i, j) = edges.ends(e);
+            let mut out = Vec::new();
+            vc.tight_moves(&sol, w.prices(), e, &mut out);
+            let flipped: Vec<usize> = out.iter().map(|mv| mv.i).collect();
+            if sol.x[i] == sol.x[j] {
+                assert_eq!(flipped, vec![i, j], "edge {e}");
+            } else {
+                assert!(flipped.is_empty(), "edge {e}");
+            }
+        }
+        let mut out = Vec::new();
+        vc.objective_escapes(&sol, &mut out);
+        let leaving: Vec<usize> = out.iter().map(|mv| mv.i).collect();
+        assert_eq!(leaving, vec![0, 3, 5]);
     }
 }

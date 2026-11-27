@@ -47,7 +47,7 @@ pub use specific::{
 };
 pub use tabu_search::TabuSearch;
 pub use variable_neighborhood_search::VariableNeighborhoodSearch;
-pub use weighted_local_search::{ConstraintWeights, WeightedLocalSearch};
+pub use weighted_local_search::WeightedLocalSearch;
 
 use crate::error::OptError;
 use crate::search_state::{ProblemTrait, SearchState};

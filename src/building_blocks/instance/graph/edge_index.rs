@@ -16,8 +16,7 @@ use super::Graph;
 /// let edges = EdgeIndex::new(&graph);
 /// assert_eq!(edges.len(), 2);
 /// assert_eq!(edges.ends(0), (0, 1));
-/// assert_eq!(edges.at(1), &[(0, 0), (1, 2)]);
-/// assert_eq!(edges.between(2, 1), Some(1));
+/// assert_eq!(edges.incident(1), &[(0, 0), (1, 2)]);
 /// ```
 #[derive(Debug, Clone)]
 pub struct EdgeIndex {
@@ -79,20 +78,8 @@ impl EdgeIndex {
     /// The edges at vertex `v`, each as its number and the vertex at its
     /// other end.
     #[inline]
-    pub fn at(&self, v: usize) -> &[(usize, usize)] {
+    pub fn incident(&self, v: usize) -> &[(usize, usize)] {
         &self.incident[self.first[v]..self.first[v + 1]]
-    }
-
-    /// The number of the edge between `i` and `j`, or `None` when they are
-    /// not adjacent.
-    pub fn between(&self, i: usize, j: usize) -> Option<usize> {
-        if i + 1 >= self.first.len() {
-            return None;
-        }
-        self.at(i)
-            .iter()
-            .find(|&&(_, other)| other == j)
-            .map(|&(e, _)| e)
     }
 }
 
@@ -114,13 +101,9 @@ mod tests {
         for e in 0..edges.len() {
             let (i, j) = edges.ends(e);
             assert!(i < j && graph.has_edge(i, j));
-            assert!(edges.at(i).contains(&(e, j)));
-            assert!(edges.at(j).contains(&(e, i)));
-            assert_eq!(edges.between(i, j), Some(e));
-            assert_eq!(edges.between(j, i), Some(e));
+            assert!(edges.incident(i).contains(&(e, j)));
+            assert!(edges.incident(j).contains(&(e, i)));
         }
-        assert_eq!(edges.between(1, 3), None);
-        assert_eq!(edges.between(9, 0), None);
-        assert!(edges.at(4).is_empty());
+        assert!(edges.incident(4).is_empty());
     }
 }

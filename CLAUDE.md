@@ -100,8 +100,10 @@ src/
 │       ├── pair_scan.rs      two nested index ranges as plain loops, which the pair moves
 │       │                     list their neighborhoods with
 │       ├── adaptive_weights.rs  the roulette ALNS picks its operators by
+│       ├── constraint_weights.rs  the weights WeightedLocalSearch raises and lowers, with
+│       │                     the violated set and the problem's prices under them
 │       ├── index_set.rs      the set a weighted search keeps its violated constraints in,
-│       │                         updated per move and drawn from uniformly
+│       │                     updated per move and drawn from uniformly
 │       ├── metropolis.rs     the Metropolis acceptance SA, PT and PA share, and their sweeps
 │       └── anchored_sweep.rs the anchor widening and shuffled sweep every LocalRepair
 │                             descent runs

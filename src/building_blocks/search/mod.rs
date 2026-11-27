@@ -5,14 +5,15 @@
 //! genetic searches, the anchored sweep the ruin repairs descend with, the
 //! Metropolis sweep the replica annealers share, the draw of two distinct
 //! positions the moves sample with, the scan over pairs of indices they list
-//! their neighborhoods with, and the set of indices a weighted search keeps its
-//! violated constraints in.
+//! their neighborhoods with, and the constraint weights of a weighted search
+//! with the set of indices it keeps its violated constraints in.
 //! Heuristics, `SearchState` and the problems' own moves and descents all use
 //! these, and none of them is about a particular problem.
 
 mod adaptive_weights;
 mod anchored_sweep;
 mod biased_fitness;
+mod constraint_weights;
 mod index_set;
 mod metropolis;
 mod pair_scan;
@@ -23,6 +24,7 @@ mod tabu;
 pub use adaptive_weights::AdaptiveWeights;
 pub use anchored_sweep::AnchoredSweep;
 pub use biased_fitness::{BiasedFitnessPopulation, DistanceFn, OrderFn, binary_tournament};
+pub use constraint_weights::ConstraintWeights;
 pub use index_set::IndexSet;
 pub use metropolis::{
     best_replica, boltzmann_accept, metropolis_accept, metropolis_sweeps, sweep_length,
