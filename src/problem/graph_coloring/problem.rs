@@ -62,6 +62,13 @@ pub struct GraphColoringSolution {
     pub objective: i64,
 }
 
+impl GraphColoringSolution {
+    /// How many vertices have color `c`.
+    pub fn class_size(&self, c: usize) -> usize {
+        self.class_size[c]
+    }
+}
+
 impl GraphColoring {
     /// Creates a [`GraphColoring`] from a [`Graph`], deriving the palette size
     /// as `max_degree + 1`.

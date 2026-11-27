@@ -1,0 +1,44 @@
+# WeightedLocalSearch against WalkSat and TabuSearch on MaxSAT.
+# The measurement of decisions/0022. Fetch the instances first with
+#   bash data/instances/scripts/fetch_satcomp2026.sh
+#   bash data/instances/scripts/fetch_sat.sh
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/sat/satcomp2026/*.cnf"
+problem = "Sat"
+
+[[instances]]
+path = "data/instances/sat/satlib/uf200-860/uf200-01.cnf"
+problem = "Sat"
+
+[[instances]]
+path = "data/instances/sat/satlib/uf200-860/uf200-010.cnf"
+problem = "Sat"
+
+[[heuristics]]
+kind = "WeightedLocalSearch"
+[heuristics.stop_condition]
+max_duration_secs = 15.0
+
+[[heuristics]]
+kind = "WalkSat"
+noise = 0.3
+[heuristics.stop_condition]
+max_duration_secs = 15.0
+
+[[heuristics]]
+kind = "WalkSat"
+noise = 0.3
+adaptive_noise = true
+[heuristics.stop_condition]
+max_duration_secs = 15.0
+
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [5, 20]
+[heuristics.stop_condition]
+max_duration_secs = 15.0

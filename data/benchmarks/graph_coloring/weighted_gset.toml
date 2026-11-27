@@ -1,0 +1,63 @@
+# WeightedLocalSearch against the general heuristics on graph coloring, G-set graphs.
+# The measurement of decisions/0022.
+
+num_runs = 5
+seed = 42
+
+[[instances]]
+path = "data/instances/max_cut/G1"
+problem = "GraphColoring"
+
+[[instances]]
+path = "data/instances/max_cut/G11"
+problem = "GraphColoring"
+
+[[instances]]
+path = "data/instances/max_cut/G14"
+problem = "GraphColoring"
+
+[[instances]]
+path = "data/instances/max_cut/G43"
+problem = "GraphColoring"
+
+[[instances]]
+path = "data/instances/max_cut/G22"
+problem = "GraphColoring"
+
+[[instances]]
+path = "data/instances/max_cut/G32"
+problem = "GraphColoring"
+
+[[heuristics]]
+kind = "WeightedLocalSearch"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [3, 200]
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+
+[[heuristics]]
+kind = "SimulatedAnnealing"
+neighbor = "Flip"
+initial_temperature = 3.0
+cooling_rate = 0.9995
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+max_iteration = 50000000
+
+[[heuristics]]
+kind = "Restart"
+[heuristics.stop_condition]
+max_duration_secs = 20.0
+[heuristics.restart_condition]
+max_failed_update = 10000
+[[heuristics.steps]]
+kind = "TabuSearch"
+neighbor = "Flip"
+tabu_tenure = [3, 200]
+[heuristics.steps.stop_condition]
+max_iteration = 50000

@@ -59,6 +59,7 @@ A metaheuristic optimization library for combinatorial problems, written in Rust
 - [Parallel Tempering](heuristics/parallel_tempering.md)
 - [Adaptive Large Neighborhood Search](heuristics/alns.md)
 - [Iterated Greedy](heuristics/iterated_greedy.md)
+- [Weighted Local Search](heuristics/weighted_local_search.md)
 - [GRASP construction](heuristics/greedy_randomized_construction.md)
 - [Breakout Local Search](heuristics/breakout_local_search.md)
 - [Branch and Bound](heuristics/branch_and_bound.md)

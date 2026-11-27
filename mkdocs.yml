@@ -120,6 +120,7 @@ nav:
       - Parallel Tempering: heuristics/parallel_tempering.md
       - Adaptive Large Neighborhood Search: heuristics/alns.md
       - Iterated Greedy: heuristics/iterated_greedy.md
+      - Weighted Local Search: heuristics/weighted_local_search.md
       - GRASP construction: heuristics/greedy_randomized_construction.md
       - Breakout Local Search: heuristics/breakout_local_search.md
       - Branch and Bound: heuristics/branch_and_bound.md
@@ -175,6 +176,7 @@ nav:
           - Parallel Tempering: ja/heuristics/parallel_tempering.md
           - Adaptive Large Neighborhood Search: ja/heuristics/alns.md
           - Iterated Greedy: ja/heuristics/iterated_greedy.md
+          - Weighted Local Search: ja/heuristics/weighted_local_search.md
           - GRASP construction: ja/heuristics/greedy_randomized_construction.md
           - Breakout Local Search: ja/heuristics/breakout_local_search.md
           - Branch and Bound: ja/heuristics/branch_and_bound.md

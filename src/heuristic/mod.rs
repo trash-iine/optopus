@@ -20,6 +20,7 @@ mod simulated_annealing;
 mod specific;
 mod tabu_search;
 mod variable_neighborhood_search;
+mod weighted_local_search;
 
 pub use crate::building_blocks::search::boltzmann_accept;
 pub use alns::AdaptiveLargeNeighborhoodSearch;
@@ -46,6 +47,7 @@ pub use specific::{
 };
 pub use tabu_search::TabuSearch;
 pub use variable_neighborhood_search::VariableNeighborhoodSearch;
+pub use weighted_local_search::WeightedLocalSearch;
 
 use crate::error::OptError;
 use crate::search_state::{ProblemTrait, SearchState};

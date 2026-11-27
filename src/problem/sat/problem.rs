@@ -247,6 +247,20 @@ impl Sat {
     /// changes, in O(length) per clause. A variable that occurs twice flips
     /// all its occurrences at once, as in [`Sat::calc_gain`].
     pub(crate) fn add_clause_shares(&self, c: usize, x: &[bool], gain: &mut [i64], sign: i64) {
+        self.clause_shares(c, x, |v, share| gain[v] += sign * share);
+    }
+
+    /// Hands `add` clause `c`'s share of the flip gain of each variable in
+    /// it, as [`add_clause_shares`](Self::add_clause_shares) adds them, and
+    /// returns whether `x` satisfies the clause. Several gains can be kept in
+    /// one walk of the clause this way.
+    #[inline(always)]
+    pub(crate) fn clause_shares(
+        &self,
+        c: usize,
+        x: &[bool],
+        mut add: impl FnMut(usize, i64),
+    ) -> bool {
         let clause = &self.clauses[c];
         let var = |lit: i64| lit.unsigned_abs() as usize - 1;
         let sat = |lit: i64| x[var(lit)] == (lit > 0);
@@ -256,9 +270,9 @@ impl Sat {
             for &lit in clause {
                 let s = sat(lit) as usize;
                 let after = true_now - s + (1 - s);
-                gain[var(lit)] += sign * ((after > 0) as i64 - was);
+                add(var(lit), (after > 0) as i64 - was);
             }
-            return;
+            return true_now > 0;
         }
         for (p, &lit) in clause.iter().enumerate() {
             let v = var(lit);
@@ -274,8 +288,9 @@ impl Sat {
                 }
             }
             let after = true_now - s + u;
-            gain[v] += sign * ((after > 0) as i64 - was);
+            add(v, (after > 0) as i64 - was);
         }
+        true_now > 0
     }
 
     /// Sets `gain[i]` to [`Sat::calc_gain`] of every variable under `x`.
